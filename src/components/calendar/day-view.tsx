@@ -111,7 +111,7 @@ export function DayView({ date, containerRef }: { date: Date, containerRef: Reac
                         const eventsInRow = groupedEvents[location];
                         return (
                             <div key={location} className={cn("flex", { "border-b": index < locations.length - 1 })}>
-                                <div className="w-[160px] shrink-0 p-2 border-r flex items-center justify-start bg-card sticky left-0 z-10">
+                                <div className="w-[160px] shrink-0 p-2 border-r flex items-center justify-start bg-card sticky left-0 z-20">
                                     <p className="font-medium text-sm truncate">{location}</p>
                                 </div>
                                 <div className="relative flex-1 h-20">
