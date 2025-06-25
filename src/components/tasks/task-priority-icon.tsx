@@ -1,29 +1,28 @@
-import { ChevronsUp, ChevronUp, Minus, ChevronDown, ChevronsDown } from 'lucide-react';
+
 import { type Task } from '@/types';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
 type PriorityConfig = {
   label: string;
-  icon: React.ElementType;
   color: string;
 };
 
 const priorityConfig: Record<Task['priority'], PriorityConfig> = {
-  P0: { label: 'P0 - Highest', icon: ChevronsUp, color: 'text-red-600' },
-  P1: { label: 'P1 - High', icon: ChevronUp, color: 'text-orange-500' },
-  P2: { label: 'P2 - Medium', icon: Minus, color: 'text-yellow-500' },
-  P3: { label: 'P3 - Low', icon: ChevronDown, color: 'text-gray-500' },
-  P4: { label: 'P4 - Lowest', icon: ChevronsDown, color: 'text-gray-400' },
+  P0: { label: 'P0 - Highest', color: 'bg-red-500' },
+  P1: { label: 'P1 - High', color: 'bg-orange-500' },
+  P2: { label: 'P2 - Medium', color: 'bg-yellow-500' },
+  P3: { label: 'P3 - Low', color: 'bg-green-500' },
+  P4: { label: 'P4 - Lowest', color: 'bg-gray-700' },
 };
 
 export function TaskPriorityIcon({ priority }: { priority: Task['priority'] }) {
-  const { label, icon: Icon, color } = priorityConfig[priority];
+  const { label, color } = priorityConfig[priority];
   return (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger>
           <div className="flex items-center gap-2">
-            <Icon className={`h-5 w-5 ${color}`} />
+            <div className={`h-3 w-3 rounded-full ${color}`} />
             <span>{priority}</span>
           </div>
         </TooltipTrigger>
