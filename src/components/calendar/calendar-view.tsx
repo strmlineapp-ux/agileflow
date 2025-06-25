@@ -2,12 +2,16 @@
 "use client";
 
 import React from 'react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isToday, isSameMonth, isSaturday, isSunday } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isToday, isSameMonth, isSaturday, isSunday, isSameDay } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { Badge } from '../ui/badge';
 import { type Event } from '@/types';
-import { mockEvents } from '@/lib/mock-data';
+import { mockEvents, mockHolidays } from '@/lib/mock-data';
+
+const isHoliday = (day: Date) => {
+    return mockHolidays.some(holiday => isSameDay(day, holiday));
+}
 
 export function MonthView({ date }: { date: Date }) {
     const firstDayOfMonth = startOfMonth(date);
@@ -39,11 +43,12 @@ export function MonthView({ date }: { date: Date }) {
                     {daysInMonth.map((day, index) => {
                         const dayEvents = getEventsForDay(day);
                         const isWeekend = isSaturday(day) || isSunday(day);
+                        const holiday = isHoliday(day);
                         return (
                             <div key={index} className={cn(
                                 "border-r border-b p-2 flex flex-col", 
                                 { "bg-accent/10": isToday(day) },
-                                { "bg-muted/30": isWeekend }
+                                { "bg-muted/30": isWeekend || holiday }
                             )}>
                                 <span className={cn(
                                     "font-semibold h-6 w-6 flex items-center justify-center rounded-full text-sm", 
