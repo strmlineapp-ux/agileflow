@@ -43,12 +43,12 @@ export function MonthView({ date }: { date: Date }) {
                     {daysInMonth.map((day, index) => {
                         const dayEvents = getEventsForDay(day);
                         const isWeekend = isSaturday(day) || isSunday(day);
-                        const holiday = isHoliday(day);
+                        const isDayHoliday = isHoliday(day);
                         return (
                             <div key={index} className={cn(
                                 "border-r border-b p-2 flex flex-col", 
                                 { "bg-accent/10": isToday(day) },
-                                { "bg-muted/30": isWeekend || holiday }
+                                { "bg-muted/50": isWeekend || isDayHoliday }
                             )}>
                                 <span className={cn(
                                     "font-semibold h-6 w-6 flex items-center justify-center rounded-full text-sm", 

@@ -28,7 +28,7 @@ export function DayView({ date }: { date: Date }) {
     }
 
     const isWeekend = isSaturday(date) || isSunday(date);
-    const holiday = isHoliday(date);
+    const isDayHoliday = isHoliday(date);
 
     return (
         <Card className="h-full flex flex-col">
@@ -44,7 +44,7 @@ export function DayView({ date }: { date: Date }) {
                     </div>
 
                     {/* Day column */}
-                    <div className={cn("relative", { "bg-muted/30": isWeekend || holiday })}>
+                    <div className={cn("relative", { "bg-muted/50": isWeekend || isDayHoliday })}>
                         {/* Grid lines */}
                         {hours.map(hour => (
                             <div key={hour} className="h-[60px] border-b"></div>

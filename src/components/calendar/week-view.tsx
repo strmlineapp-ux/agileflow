@@ -43,7 +43,7 @@ export function WeekView({ date }: { date: Date }) {
                 <div className={cn("grid", gridColsClass)}>
                     <div className="w-20"></div> {/* Timeline spacer */}
                     {displayedDays.map(day => (
-                        <div key={day.toString()} className={cn("text-center p-2 border-l", { "bg-muted/30": isSaturday(day) || isSunday(day) || isHoliday(day) })}>
+                        <div key={day.toString()} className={cn("text-center p-2 border-l", { "bg-muted/50": isSaturday(day) || isSunday(day) || isHoliday(day) })}>
                             <p className="text-sm font-medium text-muted-foreground">{format(day, 'EEE')}</p>
                             <p className={cn(
                                 "text-2xl font-semibold",
@@ -68,7 +68,7 @@ export function WeekView({ date }: { date: Date }) {
 
                     {/* Day columns */}
                     {displayedDays.map(day => (
-                        <div key={day.toString()} className={cn("relative border-l", { "bg-muted/30": isSaturday(day) || isSunday(day) || isHoliday(day) })}>
+                        <div key={day.toString()} className={cn("relative border-l", { "bg-muted/50": isSaturday(day) || isSunday(day) || isHoliday(day) })}>
                             {/* Grid lines */}
                             {hours.map(hour => (
                                 <div key={hour} className="h-[60px] border-b"></div>
