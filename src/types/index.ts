@@ -10,6 +10,8 @@ export interface User {
   location?: string;
   phone?: string;
   title?: string;
+  canEditEvents?: boolean;
+  skills?: string[];
 }
 
 export interface Task {

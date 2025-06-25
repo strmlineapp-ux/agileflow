@@ -31,13 +31,15 @@ import {
   } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 
 
 const mockUsers: User[] = [
-    { userId: '1', displayName: 'Alice Johnson', email: 'alice@example.com', role: 'admin', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Product Manager', location: 'New York, USA', phone: '123-456-7890' },
-    { userId: '2', displayName: 'Bob Williams', email: 'bob@example.com', role: 'manager', googleCalendarLinked: false, avatarUrl: 'https://placehold.co/40x40.png', title: 'Lead Engineer', location: 'San Francisco, USA' },
-    { userId: '3', displayName: 'Charlie Brown', email: 'charlie@example.com', role: 'team_member', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Software Engineer', location: 'Austin, USA' },
-    { userId: '4', displayName: 'Diana Prince', email: 'diana@example.com', role: 'team_member', googleCalendarLinked: false, avatarUrl: 'https://placehold.co/40x40.png', title: 'UX Designer', location: 'Chicago, USA', phone: '098-765-4321' },
+    { userId: '1', displayName: 'Alice Johnson', email: 'alice@example.com', role: 'admin', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Product Manager', location: 'New York, USA', phone: '123-456-7890', canEditEvents: true, skills: ['Video Director', 'TD'] },
+    { userId: '2', displayName: 'Bob Williams', email: 'bob@example.com', role: 'manager', googleCalendarLinked: false, avatarUrl: 'https://placehold.co/40x40.png', title: 'Lead Engineer', location: 'San Francisco, USA', canEditEvents: false, skills: ['Camera', 'Audio'] },
+    { userId: '3', displayName: 'Charlie Brown', email: 'charlie@example.com', role: 'team_member', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Software Engineer', location: 'Austin, USA', canEditEvents: false, skills: ["D.o.P."] },
+    { userId: '4', displayName: 'Diana Prince', email: 'diana@example.com', role: 'team_member', googleCalendarLinked: false, avatarUrl: 'https://placehold.co/40x40.png', title: 'UX Designer', location: 'Chicago, USA', phone: '098-765-4321', canEditEvents: true, skills: ['Content Op', 'ES Operator', '1st AD'] },
 ];
 
 const currentUserId = '1';
@@ -52,6 +54,31 @@ export function UserManagement() {
     const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
     const currentUser = users.find(u => u.userId === currentUserId);
+
+    const allSkills = [
+        'Video Director', 'D.o.P.', 'Camera', 'Audio', 
+        'ES Operator', 'TD', '1st AD', 'Content Op'
+    ];
+
+    const handleCanEditEventsChange = (userId: string, checked: boolean) => {
+        setUsers(users.map(u => u.userId === userId ? {...u, canEditEvents: checked} : u));
+    };
+
+    const handleSkillChange = (userId: string, skill: string, checked: boolean) => {
+        setUsers(users.map(user => {
+            if (user.userId === userId) {
+                const skills = user.skills || [];
+                if (checked) {
+                    if (!skills.includes(skill)) {
+                        return { ...user, skills: [...skills, skill] };
+                    }
+                } else {
+                    return { ...user, skills: skills.filter(s => s !== skill) };
+                }
+            }
+            return user;
+        }));
+    };
 
     const toggleRow = (userId: string) => {
         setExpandedRows(prev => {
@@ -155,14 +182,38 @@ export function UserManagement() {
                                         <TableRow className="bg-muted/50 hover:bg-muted/50">
                                             <TableCell />
                                             <TableCell colSpan={4} className="p-4">
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                                     <div>
                                                         <p className="font-medium text-sm">Contact</p>
-                                                        <p className="text-sm text-muted-foreground">{user.phone || 'Not provided'}</p>
-                                                    </div>
-                                                    <div>
+                                                        <p className="text-sm text-muted-foreground mb-4">{user.phone || 'Not provided'}</p>
                                                         <p className="font-medium text-sm">Location</p>
                                                         <p className="text-sm text-muted-foreground">{user.location || 'N/A'}</p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-medium text-sm mb-2">Permissions</p>
+                                                        <div className="flex items-center space-x-2">
+                                                            <Switch
+                                                                id={`edit-events-${user.userId}`}
+                                                                checked={!!user.canEditEvents}
+                                                                onCheckedChange={(checked) => handleCanEditEventsChange(user.userId, checked)}
+                                                            />
+                                                            <Label htmlFor={`edit-events-${user.userId}`}>Edit Events</Label>
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-medium text-sm mb-2">Skills</p>
+                                                        <div className="grid grid-cols-2 gap-2">
+                                                            {allSkills.map(skill => (
+                                                                <div key={skill} className="flex items-center space-x-2">
+                                                                    <Checkbox
+                                                                        id={`${user.userId}-${skill}`}
+                                                                        checked={user.skills?.includes(skill)}
+                                                                        onCheckedChange={(checked) => handleSkillChange(user.userId, skill, !!checked)}
+                                                                    />
+                                                                    <Label htmlFor={`${user.userId}-${skill}`} className="text-sm font-normal">{skill}</Label>
+                                                                </div>
+                                                            ))}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </TableCell>
