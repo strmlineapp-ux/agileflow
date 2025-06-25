@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, Fragment } from 'react';
 import { type User } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, ChevronDown, ChevronRight } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -49,8 +49,21 @@ export function UserManagement() {
     const [isRoleModalOpen, setRoleModalOpen] = useState(false);
     const [phoneInput, setPhoneInput] = useState('');
     const [roleInput, setRoleInput] = useState<'admin' | 'manager' | 'team_member'>('team_member');
+    const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
     const currentUser = users.find(u => u.userId === currentUserId);
+
+    const toggleRow = (userId: string) => {
+        setExpandedRows(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(userId)) {
+                newSet.delete(userId);
+            } else {
+                newSet.add(userId);
+            }
+            return newSet;
+        });
+    };
 
     const handleRoleChange = () => {
         if (selectedUser) {
@@ -88,52 +101,74 @@ export function UserManagement() {
                     <Table>
                         <TableHeader>
                             <TableRow>
+                                <TableHead className="w-[48px]" />
                                 <TableHead>User</TableHead>
                                 <TableHead>Title</TableHead>
                                 <TableHead>Role</TableHead>
-                                <TableHead>Contact</TableHead>
-                                <TableHead>Location</TableHead>
                                 <TableHead><span className="sr-only">Actions</span></TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {users.map(user => (
-                                <TableRow key={user.userId}>
-                                    <TableCell>
-                                        <div className="flex items-center gap-3">
-                                            <Avatar>
-                                                <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar"/>
-                                                <AvatarFallback>{user.displayName.slice(0,2).toUpperCase()}</AvatarFallback>
-                                            </Avatar>
-                                            <div>
-                                                <p className="font-medium">{user.displayName}</p>
-                                                <p className="text-sm text-muted-foreground">{user.email}</p>
+                                <Fragment key={user.userId}>
+                                    <TableRow>
+                                        <TableCell>
+                                            <Button variant="ghost" size="icon" onClick={() => toggleRow(user.userId)}>
+                                                {expandedRows.has(user.userId) ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                                                <span className="sr-only">Toggle row</span>
+                                            </Button>
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="flex items-center gap-3">
+                                                <Avatar>
+                                                    <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar"/>
+                                                    <AvatarFallback>{user.displayName.slice(0,2).toUpperCase()}</AvatarFallback>
+                                                </Avatar>
+                                                <div>
+                                                    <p className="font-medium">{user.displayName}</p>
+                                                    <p className="text-sm text-muted-foreground">{user.email}</p>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell>{user.title || 'N/A'}</TableCell>
-                                    <TableCell className="capitalize">{user.role.replace('_', ' ')}</TableCell>
-                                    <TableCell>{user.phone || 'Not provided'}</TableCell>
-                                    <TableCell>{user.location || 'N/A'}</TableCell>
-                                    <TableCell>
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="icon">
-                                                    <MoreHorizontal className="h-4 w-4" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent>
-                                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                {user.userId === currentUserId && (
-                                                    <DropdownMenuItem onSelect={() => openEditModal(user)}>Edit Phone</DropdownMenuItem>
-                                                )}
-                                                {(currentUser?.role === 'admin') && user.userId !== currentUserId && (
-                                                    <DropdownMenuItem onSelect={() => openRoleModal(user)}>Change Role</DropdownMenuItem>
-                                                )}
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    </TableCell>
-                                </TableRow>
+                                        </TableCell>
+                                        <TableCell>{user.title || 'N/A'}</TableCell>
+                                        <TableCell className="capitalize">{user.role.replace('_', ' ')}</TableCell>
+                                        <TableCell>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" size="icon">
+                                                        <MoreHorizontal className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent>
+                                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                    {user.userId === currentUserId && (
+                                                        <DropdownMenuItem onSelect={() => openEditModal(user)}>Edit Phone</DropdownMenuItem>
+                                                    )}
+                                                    {(currentUser?.role === 'admin') && user.userId !== currentUserId && (
+                                                        <DropdownMenuItem onSelect={() => openRoleModal(user)}>Change Role</DropdownMenuItem>
+                                                    )}
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </TableCell>
+                                    </TableRow>
+                                    {expandedRows.has(user.userId) && (
+                                        <TableRow className="bg-muted/50 hover:bg-muted/50">
+                                            <TableCell />
+                                            <TableCell colSpan={4} className="p-4">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <div>
+                                                        <p className="font-medium text-sm">Contact</p>
+                                                        <p className="text-sm text-muted-foreground">{user.phone || 'Not provided'}</p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-medium text-sm">Location</p>
+                                                        <p className="text-sm text-muted-foreground">{user.location || 'N/A'}</p>
+                                                    </div>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                </Fragment>
                             ))}
                         </TableBody>
                     </Table>
