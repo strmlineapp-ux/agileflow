@@ -81,7 +81,7 @@ export default function CalendarPage() {
             <TabsTrigger value="day">Day</TabsTrigger>
         </TabsList>
       </div>
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-y-auto">
         <TabsContent value="month" className="m-0 h-full">
             <MonthView date={currentDate} />
         </TabsContent>

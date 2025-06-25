@@ -72,7 +72,7 @@ export function DayView({ date }: { date: Date }) {
                     </div>
                 </div>
             </CardHeader>
-            <CardContent ref={scrollContainerRef} className="p-0 flex-1 relative overflow-y-auto">
+            <CardContent ref={scrollContainerRef} className="p-0 flex-1 relative">
                 <div className="grid grid-cols-[auto,1fr] h-full">
                     {/* Timeline */}
                     <div className="w-20 border-r">
