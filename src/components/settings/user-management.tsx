@@ -6,10 +6,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, Pencil } from 'lucide-react';
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox";
-
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 
 const mockUsers: User[] = [
     { userId: '1', displayName: 'Alice Johnson', email: 'alice@example.com', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Product Manager', location: 'New York, USA', phone: '123-456-7890', skills: ['Video Director', 'TD', 'Edit Events'], permissions: ['Admin', 'Events', 'Event Users', 'Studio Productions'] },
@@ -18,9 +25,13 @@ const mockUsers: User[] = [
     { userId: '4', displayName: 'Diana Prince', email: 'diana@example.com', googleCalendarLinked: false, avatarUrl: 'https://placehold.co/40x40.png', title: 'UX Designer', location: 'Chicago, USA', phone: '098-765-4321', skills: ['Content Op', 'ES Operator', '1st AD', 'Edit Events'], permissions: ['Events'] },
 ];
 
+const currentUserId = '1';
+
 export function UserManagement() {
     const [users, setUsers] = useState<User[]>(mockUsers);
     const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+    const [editingUser, setEditingUser] = useState<User | null>(null);
+    const [phone, setPhone] = useState('');
 
     const allSkills = [
         'Video Director', 'D.o.P.', 'Camera', 'Audio', 
@@ -76,6 +87,15 @@ export function UserManagement() {
         });
     };
 
+    const handleSavePhone = () => {
+        if (!editingUser) return;
+
+        setUsers(users.map(user => 
+            user.userId === editingUser.userId ? { ...user, phone: phone } : user
+        ));
+        setEditingUser(null);
+    };
+
     return (
         <>
             <Card>
@@ -89,6 +109,8 @@ export function UserManagement() {
                                 <TableHead className="w-[48px]" />
                                 <TableHead>User</TableHead>
                                 <TableHead>Title</TableHead>
+                                <TableHead>Location</TableHead>
+                                <TableHead><span className="sr-only">Actions</span></TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -114,17 +136,27 @@ export function UserManagement() {
                                             </div>
                                         </TableCell>
                                         <TableCell>{user.title || 'N/A'}</TableCell>
+                                        <TableCell>{user.location || 'N/A'}</TableCell>
+                                        <TableCell className="text-right">
+                                            {user.userId === currentUserId && (
+                                                <Button variant="ghost" size="icon" onClick={() => {
+                                                    setEditingUser(user);
+                                                    setPhone(user.phone || '');
+                                                }}>
+                                                    <Pencil className="h-4 w-4" />
+                                                    <span className="sr-only">Edit phone number</span>
+                                                </Button>
+                                            )}
+                                        </TableCell>
                                     </TableRow>
                                     {expandedRows.has(user.userId) && (
                                         <TableRow className="bg-muted/50 hover:bg-muted/50">
                                             <TableCell />
-                                            <TableCell colSpan={4} className="p-4">
+                                            <TableCell colSpan={4}>
                                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                                     <div>
                                                         <p className="font-medium text-sm">Contact</p>
                                                         <p className="text-sm text-muted-foreground mb-4">{user.phone || 'Not provided'}</p>
-                                                        <p className="font-medium text-sm">Location</p>
-                                                        <p className="text-sm text-muted-foreground">{user.location || 'N/A'}</p>
                                                     </div>
                                                     <div>
                                                         <p className="font-medium text-sm mb-2">Permissions</p>
@@ -166,6 +198,32 @@ export function UserManagement() {
                     </Table>
                 </CardContent>
             </Card>
+
+            <Dialog open={!!editingUser} onOpenChange={(isOpen) => !isOpen && setEditingUser(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Edit contact number</DialogTitle>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="phone-number" className="text-right">
+                                Phone
+                            </Label>
+                            <Input
+                                id="phone-number"
+                                value={phone}
+                                onChange={(e) => setPhone(e.target.value)}
+                                className="col-span-3"
+                                placeholder="e.g. 123-456-7890"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setEditingUser(null)}>Cancel</Button>
+                        <Button onClick={handleSavePhone}>Save changes</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </>
     )
 }
