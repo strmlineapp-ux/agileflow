@@ -2,11 +2,15 @@
 'use client';
 
 import React from 'react';
-import { format, startOfWeek, addDays, eachDayOfInterval, startOfDay, addHours, isToday, isSaturday, isSunday } from 'date-fns';
+import { format, startOfWeek, addDays, eachDayOfInterval, startOfDay, addHours, isToday, isSaturday, isSunday, isSameDay } from 'date-fns';
 import { type Event } from '@/types';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { mockEvents } from '@/lib/mock-data';
+import { mockEvents, mockHolidays } from '@/lib/mock-data';
+
+const isHoliday = (day: Date) => {
+    return mockHolidays.some(holiday => isSameDay(day, holiday));
+}
 
 export function WeekView({ date }: { date: Date }) {
     const weekStart = startOfWeek(date, { weekStartsOn: 1 });
@@ -39,7 +43,7 @@ export function WeekView({ date }: { date: Date }) {
                 <div className={cn("grid", gridColsClass)}>
                     <div className="w-20"></div> {/* Timeline spacer */}
                     {displayedDays.map(day => (
-                        <div key={day.toString()} className={cn("text-center p-2 border-l", { "bg-muted/30": isSaturday(day) || isSunday(day) })}>
+                        <div key={day.toString()} className={cn("text-center p-2 border-l", { "bg-muted/30": isSaturday(day) || isSunday(day) || isHoliday(day) })}>
                             <p className="text-sm font-medium text-muted-foreground">{format(day, 'EEE')}</p>
                             <p className={cn(
                                 "text-2xl font-semibold",
@@ -64,7 +68,7 @@ export function WeekView({ date }: { date: Date }) {
 
                     {/* Day columns */}
                     {displayedDays.map(day => (
-                        <div key={day.toString()} className={cn("relative border-l", { "bg-muted/30": isSaturday(day) || isSunday(day) })}>
+                        <div key={day.toString()} className={cn("relative border-l", { "bg-muted/30": isSaturday(day) || isSunday(day) || isHoliday(day) })}>
                             {/* Grid lines */}
                             {hours.map(hour => (
                                 <div key={hour} className="h-[60px] border-b"></div>

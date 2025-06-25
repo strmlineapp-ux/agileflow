@@ -2,10 +2,15 @@
 'use client';
 
 import React from 'react';
-import { format, addHours, startOfDay } from 'date-fns';
+import { format, addHours, startOfDay, isSaturday, isSunday, isSameDay } from 'date-fns';
 import { type Event } from '@/types';
 import { Card, CardContent } from '@/components/ui/card';
-import { mockEvents } from '@/lib/mock-data';
+import { mockEvents, mockHolidays } from '@/lib/mock-data';
+import { cn } from '@/lib/utils';
+
+const isHoliday = (day: Date) => {
+    return mockHolidays.some(holiday => isSameDay(day, holiday));
+}
 
 export function DayView({ date }: { date: Date }) {
     const hours = Array.from({ length: 24 }, (_, i) => i);
@@ -22,6 +27,9 @@ export function DayView({ date }: { date: Date }) {
         return { top, height };
     }
 
+    const isWeekend = isSaturday(date) || isSunday(date);
+    const holiday = isHoliday(date);
+
     return (
         <Card className="h-full flex flex-col">
             <CardContent className="p-0 flex-1 relative overflow-y-auto">
@@ -36,7 +44,7 @@ export function DayView({ date }: { date: Date }) {
                     </div>
 
                     {/* Day column */}
-                    <div className="relative">
+                    <div className={cn("relative", { "bg-muted/30": isWeekend || holiday })}>
                         {/* Grid lines */}
                         {hours.map(hour => (
                             <div key={hour} className="h-[60px] border-b"></div>

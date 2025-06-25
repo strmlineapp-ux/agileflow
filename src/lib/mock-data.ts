@@ -53,3 +53,10 @@ export const mockEvents: Event[] = [
         lastUpdated: new Date() 
     },
 ];
+
+const currentYear = new Date().getFullYear();
+export const mockHolidays: Date[] = [
+    new Date(currentYear, 0, 1), // New Year's Day
+    new Date(currentYear, 6, 4), // Independence Day
+    new Date(currentYear, 11, 25), // Christmas Day
+];
