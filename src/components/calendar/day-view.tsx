@@ -52,7 +52,7 @@ export function DayView({ date }: { date: Date }) {
                     </div>
 
                     {/* Day column */}
-                    <div className={cn("relative", { "bg-muted/60": isWeekend || isDayHoliday })}>
+                    <div className={cn("relative", { "bg-muted opacity-50": isWeekend || isDayHoliday })}>
                         {/* Grid lines */}
                         {hours.map(hour => (
                             <div key={hour} className="h-[60px] border-b"></div>
