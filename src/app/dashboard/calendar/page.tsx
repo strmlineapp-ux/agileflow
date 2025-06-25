@@ -68,7 +68,7 @@ export default function CalendarPage() {
       return (
         <>
           <span>Week {weekNumber}</span>
-          <span>{dateRange}</span>
+          <span className="text-xl text-muted-foreground">{dateRange}</span>
         </>
       );
     }
