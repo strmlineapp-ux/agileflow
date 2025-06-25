@@ -118,7 +118,7 @@ export function TaskList({ limit }: { limit?: number }) {
   }
 
   return (
-    <Tabs defaultValue="all">
+    <Tabs defaultValue="my-tasks">
         <TabsList>
             <TabsTrigger value="all">All Tasks</TabsTrigger>
             <TabsTrigger value="my-tasks">My Tasks</TabsTrigger>
