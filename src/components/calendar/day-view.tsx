@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { format, addHours, startOfDay, isSaturday, isSunday, isSameDay, isToday } from 'date-fns';
 import { type Event } from '@/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -13,7 +13,6 @@ const isHoliday = (day: Date) => {
 }
 
 export function DayView({ date }: { date: Date }) {
-    const scrollContainerRef = useRef<HTMLDivElement>(null);
     const [now, setNow] = useState<Date | null>(null);
 
     useEffect(() => {
@@ -42,13 +41,6 @@ export function DayView({ date }: { date: Date }) {
     const isWeekend = isSaturday(date) || isSunday(date);
     const isDayHoliday = isHoliday(date);
     const isViewingToday = isSameDay(date, new Date());
-
-    useEffect(() => {
-        if (scrollContainerRef.current) {
-            // Scroll to 8 AM. Each hour is 60px high.
-            scrollContainerRef.current.scrollTop = 8 * 60;
-        }
-    }, [date]);
     
     const calculateCurrentTimePosition = () => {
         if (!now) return 0;
@@ -56,8 +48,8 @@ export function DayView({ date }: { date: Date }) {
     }
 
     return (
-        <Card className="h-full flex flex-col">
-            <CardHeader className="p-0 border-b sticky top-0 bg-card z-10">
+        <Card>
+            <CardHeader className="p-0 border-b">
                 <div className="grid grid-cols-[auto,1fr]">
                     <div className="w-20"></div> {/* Spacer for timeline */}
                     <div className={cn("text-center p-2 border-l", { "bg-muted/50": isWeekend || isDayHoliday })}>
@@ -72,7 +64,7 @@ export function DayView({ date }: { date: Date }) {
                     </div>
                 </div>
             </CardHeader>
-            <CardContent ref={scrollContainerRef} className="p-0 flex-1 relative overflow-y-auto">
+            <CardContent className="p-0 relative">
                 <div className="grid grid-cols-[auto,1fr] h-full">
                     {/* Timeline */}
                     <div className="w-20 border-r">

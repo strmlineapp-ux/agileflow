@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -53,7 +52,7 @@ export default function CalendarPage() {
       const end = addDays(start, 6);
       if (format(start, 'MMMM yyyy') === format(end, 'MMMM yyyy')) {
           if(format(start, 'MMMM') === format(end, 'MMMM')) {
-            return `${format(start, 'MMMM d')} – ${format(end, 'd, yyyy')}`;
+            return `${format(start, 'd')} – ${format(end, 'd MMMM, yyyy')}`;
           }
           return `${format(start, 'MMM d')} – ${format(end, 'MMM d, yyyy')}`;
       }
@@ -63,8 +62,8 @@ export default function CalendarPage() {
   };
 
   return (
-    <Tabs defaultValue="day" value={view} onValueChange={(v) => setView(v as any)} className="flex h-full flex-col gap-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <Tabs defaultValue="day" value={view} onValueChange={(v) => setView(v as any)} className="flex h-full flex-col">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 shrink-0">
         <div className="flex items-center gap-2">
             <Button variant="outline" onClick={goToToday}>Today</Button>
             <Button variant="outline" size="icon" onClick={handlePrev}>
@@ -81,14 +80,14 @@ export default function CalendarPage() {
             <TabsTrigger value="day">Day</TabsTrigger>
         </TabsList>
       </div>
-      <div className="flex-1">
-        <TabsContent value="month" className="m-0 h-full">
+      <div className="flex-1 relative">
+        <TabsContent value="month" className="absolute inset-0 overflow-y-auto">
             <MonthView date={currentDate} />
         </TabsContent>
-        <TabsContent value="week" className="m-0 h-full">
+        <TabsContent value="week" className="absolute inset-0 overflow-y-auto">
             <WeekView date={currentDate} />
         </TabsContent>
-        <TabsContent value="day" className="m-0 h-full">
+        <TabsContent value="day" className="absolute inset-0 overflow-y-auto">
             <DayView date={currentDate} />
         </TabsContent>
       </div>

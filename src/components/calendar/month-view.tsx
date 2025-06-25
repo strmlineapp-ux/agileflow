@@ -89,8 +89,8 @@ export function MonthView({ date }: { date: Date }) {
     }
 
     return (
-        <Card className="h-full flex flex-col">
-            <div className={cn("grid border-b border-t sticky top-0 bg-card z-10 shrink-0", gridColsClass)}>
+        <Card>
+            <div className={cn("grid border-b border-t", gridColsClass)}>
                 {displayedWeekdays.map((day) => (
                     <div key={day} className={cn("text-center font-medium p-2 text-sm border-r last:border-r-0 relative", {
                         "bg-muted/50 text-muted-foreground/50": (day === 'Sat' || day === 'Sun'),
@@ -110,8 +110,8 @@ export function MonthView({ date }: { date: Date }) {
                     </div>
                 ))}
             </div>
-            <CardContent className="p-0 flex-1 flex flex-col overflow-y-auto">
-                <div className={cn("grid grid-rows-5", gridColsClass)}>
+            <CardContent className="p-0">
+                <div className={cn("grid", gridColsClass)}>
                     {dayCells}
                 </div>
             </CardContent>

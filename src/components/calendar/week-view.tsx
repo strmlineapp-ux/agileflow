@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useRef, useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { format, startOfWeek, addDays, eachDayOfInterval, startOfDay, addHours, isToday, isSaturday, isSunday, isSameDay } from 'date-fns';
 import { type Event } from '@/types';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
@@ -15,7 +15,6 @@ const isHoliday = (day: Date) => {
 }
 
 export function WeekView({ date }: { date: Date }) {
-    const scrollContainerRef = useRef<HTMLDivElement>(null);
     const [now, setNow] = useState<Date | null>(null);
 
     useEffect(() => {
@@ -51,12 +50,6 @@ export function WeekView({ date }: { date: Date }) {
         return { top, height };
     }
     
-    useEffect(() => {
-        if (scrollContainerRef.current) {
-            scrollContainerRef.current.scrollTop = 8 * 60;
-        }
-    }, [date]);
-
     const calculateCurrentTimePosition = () => {
         if (!now) return 0;
         return (now.getHours() + now.getMinutes() / 60) * 60;
@@ -65,8 +58,8 @@ export function WeekView({ date }: { date: Date }) {
     const gridColsClass = showWeekends ? 'grid-cols-[auto,1fr,1fr,1fr,1fr,1fr,1fr,1fr]' : 'grid-cols-[auto,1fr,1fr,1fr,1fr,1fr]';
 
     return (
-        <Card className="h-full flex flex-col">
-            <CardHeader className="p-0 border-b sticky top-0 bg-card z-10">
+        <Card>
+            <CardHeader className="p-0 border-b">
                 <div className={cn("grid", gridColsClass)}>
                     <div className="w-20"></div> {/* Timeline spacer */}
                     {displayedDays.map(day => {
@@ -97,7 +90,7 @@ export function WeekView({ date }: { date: Date }) {
                     })}
                 </div>
             </CardHeader>
-            <CardContent ref={scrollContainerRef} className="p-0 flex-1 relative overflow-y-auto">
+            <CardContent className="p-0 relative">
                 <div className={cn("grid min-h-full", gridColsClass)}>
                     {/* Timeline */}
                     <div className="w-20 border-r">
