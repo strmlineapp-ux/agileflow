@@ -1,8 +1,7 @@
-
 'use client';
 
 import Link from 'next/link';
-import { Calendar, ListChecks, PanelLeft, Settings, LogOut, LayoutDashboard } from 'lucide-react';
+import { Calendar, ListChecks, PanelLeft, Settings, LogOut, LayoutDashboard, UserCheck, ArrowLeftRight } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -11,11 +10,22 @@ import {
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/icons/logo';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '../ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuPortal, DropdownMenuSubContent } from '../ui/dropdown-menu';
+import { useUser } from '@/context/user-context';
 
 export function Header() {
+  const { realUser, viewAsUser, setViewAsUser, users } = useUser();
+  const isAdmin = realUser.permissions?.includes('Admin');
+  const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
+
   return (
-    <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-card px-4 sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 sm:py-4">
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-card px-4 sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 sm:py-4">
+      {isViewingAsSomeoneElse && (
+        <div className="flex items-center gap-2 text-sm font-semibold text-orange-600 bg-orange-100 dark:bg-orange-900/50 p-2 rounded-md absolute left-1/2 -translate-x-1/2">
+          <ArrowLeftRight className="h-4 w-4" />
+          <span>Viewing as {viewAsUser.displayName}</span>
+        </div>
+      )}
       <Sheet>
         <SheetTrigger asChild>
           <Button size="icon" variant="outline" className="sm:hidden">
@@ -57,18 +67,45 @@ export function Header() {
         <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                 <Avatar className="h-9 w-9">
-                    <AvatarImage src="https://placehold.co/40x40.png" alt="@user" data-ai-hint="user avatar" />
-                    <AvatarFallback>JD</AvatarFallback>
+                    <AvatarImage src={viewAsUser.avatarUrl} alt={viewAsUser.displayName} data-ai-hint="user avatar" />
+                    <AvatarFallback>{viewAsUser.displayName.slice(0,2).toUpperCase()}</AvatarFallback>
                 </Avatar>
             </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
+        <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuItem asChild>
                 <Link href="/dashboard/settings">
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Settings</span>
                 </Link>
             </DropdownMenuItem>
+            
+            {isAdmin && (
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <UserCheck className="mr-2 h-4 w-4" />
+                  <span>View as</span>
+                </DropdownMenuSubTrigger>
+                <DropdownMenuPortal>
+                  <DropdownMenuSubContent>
+                    {isViewingAsSomeoneElse && (
+                      <>
+                        <DropdownMenuItem onSelect={() => setViewAsUser(realUser.userId)}>
+                          Return to your view ({realUser.displayName})
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                      </>
+                    )}
+                    {users.filter(u => u.userId !== realUser.userId).map(user => (
+                      <DropdownMenuItem key={user.userId} onSelect={() => setViewAsUser(user.userId)}>
+                        {user.displayName}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuSubContent>
+                </DropdownMenuPortal>
+              </DropdownMenuSub>
+            )}
+
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
                 <Link href="/login">

@@ -19,17 +19,11 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-
-const mockUsers: User[] = [
-    { userId: '1', displayName: 'Alice Johnson', email: 'alice@example.com', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Product Manager', location: 'New York, USA', phone: '123-456-7890', skills: ['Video Director', 'TD', 'Edit Events'], permissions: ['Admin', 'Events', 'Event Users', 'Studio Productions'], directReports: ['2', '3'] },
-    { userId: '2', displayName: 'Bob Williams', email: 'bob@example.com', googleCalendarLinked: false, avatarUrl: 'https://placehold.co/40x40.png', title: 'Lead Engineer', location: 'San Francisco, USA', skills: ['Camera', 'Audio'], permissions: ['Events'], directReports: ['4'] },
-    { userId: '3', displayName: 'Charlie Brown', email: 'charlie@example.com', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Software Engineer', location: 'Austin, USA', skills: ["D.o.P."], directReports: [] },
-    { userId: '4', displayName: 'Diana Prince', email: 'diana@example.com', googleCalendarLinked: false, avatarUrl: 'https://placehold.co/40x40.png', title: 'UX Designer', location: 'Chicago, USA', phone: '098-765-4321', skills: ['Content Op', 'ES Operator', '1st AD', 'Edit Events'], permissions: ['Events'], directReports: [] },
-];
-
-const currentUserId = '2';
+import { useUser } from '@/context/user-context';
+import { mockUsers } from '@/lib/mock-data';
 
 export function UserManagement() {
+    const { realUser } = useUser();
     const [users, setUsers] = useState<User[]>(mockUsers);
     const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
     const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -207,7 +201,7 @@ export function UserManagement() {
                                                     <div>
                                                         <div className="flex items-center gap-2 mb-2">
                                                             <p className="font-medium text-sm">Contact</p>
-                                                            {user.userId === currentUserId && (
+                                                            {user.userId === realUser.userId && (
                                                                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => {
                                                                     setEditingUser(user);
                                                                     setPhone(user.phone || '');

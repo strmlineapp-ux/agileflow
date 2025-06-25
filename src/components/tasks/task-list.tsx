@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { format, isToday } from 'date-fns';
 import { MoreHorizontal, ArrowUpDown } from 'lucide-react';
-import { type Task, type User } from '@/types';
+import { type Task } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -26,23 +26,9 @@ import { TaskStatusBadge } from './task-status-badge';
 import { TaskPriorityIcon } from './task-priority-icon';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from '@/components/ui/badge';
+import { useUser } from '@/context/user-context';
+import { mockTasks } from '@/lib/mock-data';
 
-
-const mockUsers: User[] = [
-    { userId: '1', displayName: 'Alice Johnson', email: 'alice@example.com', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Product Manager', location: 'New York, USA', phone: '123-456-7890' },
-    { userId: '2', displayName: 'Bob Williams', email: 'bob@example.com', googleCalendarLinked: false, avatarUrl: 'https://placehold.co/40x40.png', title: 'Lead Engineer', location: 'San Francisco, USA' },
-    { userId: '3', displayName: 'Charlie Brown', email: 'charlie@example.com', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Software Engineer', location: 'Austin, USA' },
-];
-
-const mockTasks: Task[] = [
-  { taskId: '1', title: 'Design new dashboard layout', assignedTo: [mockUsers[0]], dueDate: new Date(), priority: 'P1', status: 'in_progress', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
-  { taskId: '2', title: 'Develop authentication API', assignedTo: [mockUsers[1], mockUsers[2]], dueDate: new Date(new Date().setDate(new Date().getDate() + 1)), priority: 'P0', status: 'awaiting_review', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
-  { taskId: '3', title: 'Write documentation for components', assignedTo: [mockUsers[2]], dueDate: new Date(new Date().setDate(new Date().getDate() + 7)), priority: 'P2', status: 'not_started', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
-  { taskId: '4', title: 'Fix login page CSS bug', assignedTo: [mockUsers[1]], dueDate: new Date(new Date().setDate(new Date().getDate() - 2)), priority: 'P3', status: 'completed', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
-  { taskId: '5', title: 'Setup CI/CD pipeline', assignedTo: [mockUsers[0], mockUsers[1]], dueDate: new Date(new Date().setDate(new Date().getDate() + 2)), priority: 'P1', status: 'blocked', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
-  { taskId: '6', title: 'User testing for new features', assignedTo: [mockUsers[2]], dueDate: new Date(), priority: 'P2', status: 'in_progress', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
-  { taskId: '7', title: 'Update project dependencies', assignedTo: [mockUsers[1]], dueDate: new Date(new Date().setDate(new Date().getDate() + 10)), priority: 'P4', status: 'not_started', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
-];
 
 const statusOrder: Task['status'][] = ['in_progress', 'awaiting_review', 'not_started', 'blocked', 'completed'];
 
@@ -54,9 +40,9 @@ const statusLabels: Record<Task['status'], string> = {
   completed: 'Completed',
 };
 
-const currentUserId = '2'; // Assuming Bob is the logged in user
-
 export function TaskList({ limit }: { limit?: number }) {
+  const { viewAsUser } = useUser();
+
   const renderTable = (tasks: Task[]) => (
     <Card>
       <CardContent className="p-0">
@@ -183,7 +169,7 @@ export function TaskList({ limit }: { limit?: number }) {
   }
 
   const allTasks = mockTasks;
-  const myTasks = mockTasks.filter(task => task.assignedTo.some(user => user.userId === currentUserId));
+  const myTasks = mockTasks.filter(task => task.assignedTo.some(user => user.userId === viewAsUser.userId));
 
   return (
     <Tabs defaultValue="my-tasks">
