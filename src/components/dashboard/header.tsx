@@ -1,7 +1,8 @@
+
 'use client';
 
 import Link from 'next/link';
-import { Home, Calendar, ListChecks, PanelLeft, Settings, LogOut, LayoutDashboard } from 'lucide-react';
+import { Calendar, ListChecks, PanelLeft, Settings, LogOut, LayoutDashboard } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -26,7 +27,7 @@ export function Header() {
           <nav className="grid gap-6 text-lg font-medium">
             <Logo className="mb-4" />
             <Link href="/dashboard/calendar" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
-              <Home className="h-5 w-5" />
+              <Calendar className="h-5 w-5" />
               Calendar
             </Link>
             <Link href="/dashboard" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
