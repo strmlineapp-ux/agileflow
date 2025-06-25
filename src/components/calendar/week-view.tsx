@@ -16,6 +16,17 @@ const isHoliday = (day: Date) => {
 
 export function WeekView({ date }: { date: Date }) {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const [now, setNow] = useState<Date | null>(null);
+
+    useEffect(() => {
+        setNow(new Date());
+        const timer = setInterval(() => {
+            setNow(new Date());
+        }, 60 * 1000); // Update every minute
+
+        return () => clearInterval(timer);
+    }, []);
+
     const weekStart = startOfWeek(date, { weekStartsOn: 1 });
     const weekDays = eachDayOfInterval({ start: weekStart, end: addDays(weekStart, 6) });
     const hours = Array.from({ length: 24 }, (_, i) => i);
@@ -45,6 +56,11 @@ export function WeekView({ date }: { date: Date }) {
             scrollContainerRef.current.scrollTop = 8 * 60;
         }
     }, [date]);
+
+    const calculateCurrentTimePosition = () => {
+        if (!now) return 0;
+        return (now.getHours() + now.getMinutes() / 60) * 60;
+    }
 
     const gridColsClass = showWeekends ? 'grid-cols-[auto,1fr,1fr,1fr,1fr,1fr,1fr,1fr]' : 'grid-cols-[auto,1fr,1fr,1fr,1fr,1fr]';
 
@@ -117,6 +133,16 @@ export function WeekView({ date }: { date: Date }) {
                                             </div>
                                         )
                                     })}
+                                    {isToday(day) && now && (
+                                        <div 
+                                            className="absolute w-full z-10"
+                                            style={{ top: `${calculateCurrentTimePosition()}px` }}
+                                        >
+                                            <div className="relative h-0.5 bg-primary">
+                                                <div className="absolute -left-1.5 -top-[5px] h-3 w-3 rounded-full bg-primary border-2 border-background"></div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         )

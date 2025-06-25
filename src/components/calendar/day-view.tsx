@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { format, addHours, startOfDay, isSaturday, isSunday, isSameDay } from 'date-fns';
 import { type Event } from '@/types';
 import { Card, CardContent } from '@/components/ui/card';
@@ -14,6 +14,17 @@ const isHoliday = (day: Date) => {
 
 export function DayView({ date }: { date: Date }) {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const [now, setNow] = useState<Date | null>(null);
+
+    useEffect(() => {
+        setNow(new Date());
+        const timer = setInterval(() => {
+            setNow(new Date());
+        }, 60 * 1000); // Update every minute
+
+        return () => clearInterval(timer);
+    }, []);
+
     const hours = Array.from({ length: 24 }, (_, i) => i);
     const dayEvents = mockEvents.filter(event => format(event.startTime, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd'));
 
@@ -30,6 +41,7 @@ export function DayView({ date }: { date: Date }) {
 
     const isWeekend = isSaturday(date) || isSunday(date);
     const isDayHoliday = isHoliday(date);
+    const isViewingToday = isSameDay(date, new Date());
 
     useEffect(() => {
         if (scrollContainerRef.current) {
@@ -37,6 +49,11 @@ export function DayView({ date }: { date: Date }) {
             scrollContainerRef.current.scrollTop = 8 * 60;
         }
     }, [date]);
+    
+    const calculateCurrentTimePosition = () => {
+        if (!now) return 0;
+        return (now.getHours() + now.getMinutes() / 60) * 60;
+    }
 
     return (
         <Card className="h-full flex flex-col">
@@ -72,6 +89,16 @@ export function DayView({ date }: { date: Date }) {
                                     </div>
                                 )
                             })}
+                             {isViewingToday && now && (
+                                <div 
+                                    className="absolute w-full z-10"
+                                    style={{ top: `${calculateCurrentTimePosition()}px` }}
+                                >
+                                    <div className="relative h-0.5 bg-primary">
+                                        <div className="absolute -left-1.5 -top-[5px] h-3 w-3 rounded-full bg-primary border-2 border-background"></div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
