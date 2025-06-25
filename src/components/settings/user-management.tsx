@@ -6,51 +6,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, ChevronDown, ChevronRight } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-  } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox";
 
 
 const mockUsers: User[] = [
-    { userId: '1', displayName: 'Alice Johnson', email: 'alice@example.com', role: 'admin', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Product Manager', location: 'New York, USA', phone: '123-456-7890', skills: ['Video Director', 'TD', 'Edit Events'], permissions: ['Admin', 'Events', 'Event Users', 'Studio Productions'] },
-    { userId: '2', displayName: 'Bob Williams', email: 'bob@example.com', role: 'manager', googleCalendarLinked: false, avatarUrl: 'https://placehold.co/40x40.png', title: 'Lead Engineer', location: 'San Francisco, USA', skills: ['Camera', 'Audio'], permissions: ['Events'] },
-    { userId: '3', displayName: 'Charlie Brown', email: 'charlie@example.com', role: 'team_member', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Software Engineer', location: 'Austin, USA', skills: ["D.o.P."] },
-    { userId: '4', displayName: 'Diana Prince', email: 'diana@example.com', role: 'team_member', googleCalendarLinked: false, avatarUrl: 'https://placehold.co/40x40.png', title: 'UX Designer', location: 'Chicago, USA', phone: '098-765-4321', skills: ['Content Op', 'ES Operator', '1st AD', 'Edit Events'], permissions: ['Events'] },
+    { userId: '1', displayName: 'Alice Johnson', email: 'alice@example.com', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Product Manager', location: 'New York, USA', phone: '123-456-7890', skills: ['Video Director', 'TD', 'Edit Events'], permissions: ['Admin', 'Events', 'Event Users', 'Studio Productions'] },
+    { userId: '2', displayName: 'Bob Williams', email: 'bob@example.com', googleCalendarLinked: false, avatarUrl: 'https://placehold.co/40x40.png', title: 'Lead Engineer', location: 'San Francisco, USA', skills: ['Camera', 'Audio'], permissions: ['Events'] },
+    { userId: '3', displayName: 'Charlie Brown', email: 'charlie@example.com', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Software Engineer', location: 'Austin, USA', skills: ["D.o.P."] },
+    { userId: '4', displayName: 'Diana Prince', email: 'diana@example.com', googleCalendarLinked: false, avatarUrl: 'https://placehold.co/40x40.png', title: 'UX Designer', location: 'Chicago, USA', phone: '098-765-4321', skills: ['Content Op', 'ES Operator', '1st AD', 'Edit Events'], permissions: ['Events'] },
 ];
-
-const currentUserId = '1';
 
 export function UserManagement() {
     const [users, setUsers] = useState<User[]>(mockUsers);
-    const [selectedUser, setSelectedUser] = useState<User | null>(null);
-    const [isRoleModalOpen, setRoleModalOpen] = useState(false);
-    const [roleInput, setRoleInput] = useState<'admin' | 'manager' | 'team_member'>('team_member');
     const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
-
-    const currentUser = users.find(u => u.userId === currentUserId);
 
     const allSkills = [
         'Video Director', 'D.o.P.', 'Camera', 'Audio', 
@@ -106,19 +76,6 @@ export function UserManagement() {
         });
     };
 
-    const handleRoleChange = () => {
-        if (selectedUser) {
-            setUsers(users.map(u => u.userId === selectedUser.userId ? {...u, role: roleInput} : u));
-            setRoleModalOpen(false);
-        }
-    };
-    
-    const openRoleModal = (user: User) => {
-        setSelectedUser(user);
-        setRoleInput(user.role);
-        setRoleModalOpen(true);
-    }
-
     return (
         <>
             <Card>
@@ -132,8 +89,6 @@ export function UserManagement() {
                                 <TableHead className="w-[48px]" />
                                 <TableHead>User</TableHead>
                                 <TableHead>Title</TableHead>
-                                <TableHead>Role</TableHead>
-                                <TableHead><span className="sr-only">Actions</span></TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -159,22 +114,6 @@ export function UserManagement() {
                                             </div>
                                         </TableCell>
                                         <TableCell>{user.title || 'N/A'}</TableCell>
-                                        <TableCell className="capitalize">{user.role.replace('_', ' ')}</TableCell>
-                                        <TableCell>
-                                            {(currentUser?.role === 'admin' && user.userId !== currentUserId) && (
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button variant="ghost" size="icon">
-                                                            <MoreHorizontal className="h-4 w-4" />
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent>
-                                                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                        <DropdownMenuItem onSelect={() => openRoleModal(user)}>Change Role</DropdownMenuItem>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
-                                            )}
-                                        </TableCell>
                                     </TableRow>
                                     {expandedRows.has(user.userId) && (
                                         <TableRow className="bg-muted/50 hover:bg-muted/50">
@@ -227,32 +166,6 @@ export function UserManagement() {
                     </Table>
                 </CardContent>
             </Card>
-
-            <Dialog open={isRoleModalOpen} onOpenChange={setRoleModalOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Change Role</DialogTitle>
-                        <DialogDescription>Select a new role for {selectedUser?.displayName}.</DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        <Label htmlFor="role">Role</Label>
-                         <Select value={roleInput} onValueChange={(value) => setRoleInput(value as any)}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select a role" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="admin">Admin</SelectItem>
-                                <SelectItem value="manager">Manager</SelectItem>
-                                <SelectItem value="team_member">Team Member</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <DialogFooter>
-                         <Button variant="outline" onClick={() => setRoleModalOpen(false)}>Cancel</Button>
-                         <Button onClick={handleRoleChange}>Save Changes</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
         </>
     )
 }

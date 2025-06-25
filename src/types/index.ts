@@ -2,7 +2,6 @@ export interface User {
   userId: string;
   email: string;
   displayName: string;
-  role: 'admin' | 'manager' | 'team_member';
   teamId?: string;
   googleCalendarLinked: boolean;
   googleCalendarId?: string;
