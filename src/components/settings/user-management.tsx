@@ -32,14 +32,13 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox";
-import { Switch } from "@/components/ui/switch";
 
 
 const mockUsers: User[] = [
-    { userId: '1', displayName: 'Alice Johnson', email: 'alice@example.com', role: 'admin', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Product Manager', location: 'New York, USA', phone: '123-456-7890', canEditEvents: true, skills: ['Video Director', 'TD'] },
-    { userId: '2', displayName: 'Bob Williams', email: 'bob@example.com', role: 'manager', googleCalendarLinked: false, avatarUrl: 'https://placehold.co/40x40.png', title: 'Lead Engineer', location: 'San Francisco, USA', canEditEvents: false, skills: ['Camera', 'Audio'] },
-    { userId: '3', displayName: 'Charlie Brown', email: 'charlie@example.com', role: 'team_member', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Software Engineer', location: 'Austin, USA', canEditEvents: false, skills: ["D.o.P."] },
-    { userId: '4', displayName: 'Diana Prince', email: 'diana@example.com', role: 'team_member', googleCalendarLinked: false, avatarUrl: 'https://placehold.co/40x40.png', title: 'UX Designer', location: 'Chicago, USA', phone: '098-765-4321', canEditEvents: true, skills: ['Content Op', 'ES Operator', '1st AD'] },
+    { userId: '1', displayName: 'Alice Johnson', email: 'alice@example.com', role: 'admin', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Product Manager', location: 'New York, USA', phone: '123-456-7890', skills: ['Video Director', 'TD', 'Edit Events'], permissions: ['Admin', 'Events', 'Event Users', 'Studio Productions'] },
+    { userId: '2', displayName: 'Bob Williams', email: 'bob@example.com', role: 'manager', googleCalendarLinked: false, avatarUrl: 'https://placehold.co/40x40.png', title: 'Lead Engineer', location: 'San Francisco, USA', skills: ['Camera', 'Audio'], permissions: ['Events'] },
+    { userId: '3', displayName: 'Charlie Brown', email: 'charlie@example.com', role: 'team_member', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Software Engineer', location: 'Austin, USA', skills: ["D.o.P."] },
+    { userId: '4', displayName: 'Diana Prince', email: 'diana@example.com', role: 'team_member', googleCalendarLinked: false, avatarUrl: 'https://placehold.co/40x40.png', title: 'UX Designer', location: 'Chicago, USA', phone: '098-765-4321', skills: ['Content Op', 'ES Operator', '1st AD', 'Edit Events'], permissions: ['Events'] },
 ];
 
 const currentUserId = '1';
@@ -57,11 +56,28 @@ export function UserManagement() {
 
     const allSkills = [
         'Video Director', 'D.o.P.', 'Camera', 'Audio', 
-        'ES Operator', 'TD', '1st AD', 'Content Op'
+        'ES Operator', 'TD', '1st AD', 'Content Op', 'Edit Events'
     ];
 
-    const handleCanEditEventsChange = (userId: string, checked: boolean) => {
-        setUsers(users.map(u => u.userId === userId ? {...u, canEditEvents: checked} : u));
+    const allPermissions = [
+        "Events", "Event Users", "Studio Productions", "Studio Production Users",
+        "Production", "Production Management", "Service Delivery Manager", "Admin"
+    ];
+
+    const handlePermissionChange = (userId: string, permission: string, checked: boolean) => {
+        setUsers(users.map(user => {
+            if (user.userId === userId) {
+                const permissions = user.permissions || [];
+                if (checked) {
+                    if (!permissions.includes(permission)) {
+                        return { ...user, permissions: [...permissions, permission] };
+                    }
+                } else {
+                    return { ...user, permissions: permissions.filter(p => p !== permission) };
+                }
+            }
+            return user;
+        }));
     };
 
     const handleSkillChange = (userId: string, skill: string, checked: boolean) => {
@@ -191,13 +207,17 @@ export function UserManagement() {
                                                     </div>
                                                     <div>
                                                         <p className="font-medium text-sm mb-2">Permissions</p>
-                                                        <div className="flex items-center space-x-2">
-                                                            <Switch
-                                                                id={`edit-events-${user.userId}`}
-                                                                checked={!!user.canEditEvents}
-                                                                onCheckedChange={(checked) => handleCanEditEventsChange(user.userId, checked)}
-                                                            />
-                                                            <Label htmlFor={`edit-events-${user.userId}`}>Edit Events</Label>
+                                                        <div className="grid grid-cols-2 gap-2">
+                                                            {allPermissions.map(permission => (
+                                                                <div key={permission} className="flex items-center space-x-2">
+                                                                    <Checkbox
+                                                                        id={`${user.userId}-${permission}`}
+                                                                        checked={user.permissions?.includes(permission)}
+                                                                        onCheckedChange={(checked) => handlePermissionChange(user.userId, permission, !!checked)}
+                                                                    />
+                                                                    <Label htmlFor={`${user.userId}-${permission}`} className="text-sm font-normal">{permission}</Label>
+                                                                </div>
+                                                            ))}
                                                         </div>
                                                     </div>
                                                     <div>
