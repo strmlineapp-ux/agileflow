@@ -7,7 +7,7 @@ import { WeekView } from '@/components/calendar/week-view';
 import { DayView } from '@/components/calendar/day-view';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { format, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays, startOfWeek } from 'date-fns';
+import { format, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays, startOfWeek, getWeek } from 'date-fns';
 
 export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -51,15 +51,21 @@ export default function CalendarPage() {
   const getTitle = () => {
     if (view === 'day') return format(currentDate, 'MMMM d, yyyy');
     if (view === 'week') {
+      const weekNumber = getWeek(currentDate, { weekStartsOn: 1 });
       const start = startOfWeek(currentDate, { weekStartsOn: 1 });
       const end = addDays(start, 6);
+      let dateRange;
+
       if (format(start, 'MMMM yyyy') === format(end, 'MMMM yyyy')) {
           if(format(start, 'MMMM') === format(end, 'MMMM')) {
-            return `${format(start, 'd')} – ${format(end, 'd MMMM, yyyy')}`;
+            dateRange = `${format(start, 'd')} – ${format(end, 'd MMMM, yyyy')}`;
+          } else {
+            dateRange = `${format(start, 'MMM d')} – ${format(end, 'MMM d, yyyy')}`;
           }
-          return `${format(start, 'MMM d')} – ${format(end, 'MMM d, yyyy')}`;
+      } else {
+        dateRange = `${format(start, 'MMM d, yyyy')} – ${format(end, 'MMM d, yyyy')}`;
       }
-      return `${format(start, 'MMM d, yyyy')} – ${format(end, 'MMM d, yyyy')}`;
+      return `Week ${weekNumber}: ${dateRange}`;
     }
     return format(currentDate, 'MMMM yyyy');
   };
