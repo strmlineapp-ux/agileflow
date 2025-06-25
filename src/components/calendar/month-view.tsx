@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isToday, isSameMonth, isSaturday, isSunday, isSameDay } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -15,10 +15,25 @@ const isHoliday = (day: Date) => {
     return mockHolidays.some(holiday => isSameDay(day, holiday));
 }
 
-export function MonthView({ date }: { date: Date }) {
+export function MonthView({ date, containerRef }: { date: Date; containerRef: React.RefObject<HTMLDivElement> }) {
+    const todayRef = useRef<HTMLDivElement>(null);
     const firstDayOfMonth = startOfMonth(date);
     const lastDayOfMonth = endOfMonth(date);
     const daysInMonth = eachDayOfInterval({ start: firstDayOfMonth, end: lastDayOfMonth });
+
+    useEffect(() => {
+        if (isSameMonth(date, new Date()) && todayRef.current && containerRef.current) {
+            const container = containerRef.current;
+            const todayElement = todayRef.current;
+            
+            const scrollTop = todayElement.offsetTop - (container.offsetHeight / 2) + (todayElement.offsetHeight / 2);
+            
+            container.scrollTo({
+                top: scrollTop,
+                behavior: 'smooth',
+            });
+        }
+    }, [date, containerRef]);
 
     const getEventsForDay = (day: Date) => {
         return mockEvents.filter(event => format(event.startTime, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd'));
@@ -41,15 +56,20 @@ export function MonthView({ date }: { date: Date }) {
         const dayEvents = getEventsForDay(day);
         const isWeekend = isSaturday(day) || isSunday(day);
         const isDayHoliday = isHoliday(day);
+        const isDayToday = isToday(day);
+
         return (
-            <div key={key} className={cn(
+            <div 
+                key={key} 
+                ref={isDayToday ? todayRef : null}
+                className={cn(
                 "border-r border-b p-2 flex flex-col min-h-[120px]",
-                { "bg-accent/10": isToday(day) },
+                { "bg-accent/10": isDayToday },
                 { "bg-muted/50": (isWeekend || isDayHoliday) && isSameMonth(day, date) }
             )}>
                 <span className={cn(
                     "font-semibold h-6 w-6 flex items-center justify-center rounded-full text-sm",
-                    { "bg-primary text-primary-foreground": isToday(day) },
+                    { "bg-primary text-primary-foreground": isDayToday },
                     { "text-muted-foreground": !isSameMonth(day, date) },
                     { "text-muted-foreground/50": (isWeekend || isDayHoliday) }
                 )}>

@@ -12,6 +12,7 @@ import { format, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays, sta
 export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'month' | 'week' | 'day'>('day');
+  const monthViewContainerRef = useRef<HTMLDivElement>(null);
   const dayViewContainerRef = useRef<HTMLDivElement>(null);
   const weekViewContainerRef = useRef<HTMLDivElement>(null);
 
@@ -83,8 +84,8 @@ export default function CalendarPage() {
         </TabsList>
       </div>
       <div className="flex-1 relative">
-        <TabsContent value="month" className="absolute inset-0 overflow-y-auto">
-            <MonthView date={currentDate} />
+        <TabsContent value="month" ref={monthViewContainerRef} className="absolute inset-0 overflow-y-auto">
+            <MonthView date={currentDate} containerRef={monthViewContainerRef} />
         </TabsContent>
         <TabsContent value="week" ref={weekViewContainerRef} className="absolute inset-0 overflow-y-auto">
             <WeekView date={currentDate} containerRef={weekViewContainerRef} />
