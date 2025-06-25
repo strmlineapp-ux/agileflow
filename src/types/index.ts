@@ -11,6 +11,7 @@ export interface User {
   title?: string;
   skills?: string[];
   permissions?: string[];
+  directReports?: string[];
 }
 
 export interface Task {

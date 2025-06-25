@@ -19,10 +19,10 @@ import {
 import { Input } from '@/components/ui/input';
 
 const mockUsers: User[] = [
-    { userId: '1', displayName: 'Alice Johnson', email: 'alice@example.com', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Product Manager', location: 'New York, USA', phone: '123-456-7890', skills: ['Video Director', 'TD', 'Edit Events'], permissions: ['Admin', 'Events', 'Event Users', 'Studio Productions'] },
-    { userId: '2', displayName: 'Bob Williams', email: 'bob@example.com', googleCalendarLinked: false, avatarUrl: 'https://placehold.co/40x40.png', title: 'Lead Engineer', location: 'San Francisco, USA', skills: ['Camera', 'Audio'], permissions: ['Events'] },
-    { userId: '3', displayName: 'Charlie Brown', email: 'charlie@example.com', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Software Engineer', location: 'Austin, USA', skills: ["D.o.P."] },
-    { userId: '4', displayName: 'Diana Prince', email: 'diana@example.com', googleCalendarLinked: false, avatarUrl: 'https://placehold.co/40x40.png', title: 'UX Designer', location: 'Chicago, USA', phone: '098-765-4321', skills: ['Content Op', 'ES Operator', '1st AD', 'Edit Events'], permissions: ['Events'] },
+    { userId: '1', displayName: 'Alice Johnson', email: 'alice@example.com', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Product Manager', location: 'New York, USA', phone: '123-456-7890', skills: ['Video Director', 'TD', 'Edit Events'], permissions: ['Admin', 'Events', 'Event Users', 'Studio Productions'], directReports: ['2', '3'] },
+    { userId: '2', displayName: 'Bob Williams', email: 'bob@example.com', googleCalendarLinked: false, avatarUrl: 'https://placehold.co/40x40.png', title: 'Lead Engineer', location: 'San Francisco, USA', skills: ['Camera', 'Audio'], permissions: ['Events'], directReports: ['4'] },
+    { userId: '3', displayName: 'Charlie Brown', email: 'charlie@example.com', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Software Engineer', location: 'Austin, USA', skills: ["D.o.P."], directReports: [] },
+    { userId: '4', displayName: 'Diana Prince', email: 'diana@example.com', googleCalendarLinked: false, avatarUrl: 'https://placehold.co/40x40.png', title: 'UX Designer', location: 'Chicago, USA', phone: '098-765-4321', skills: ['Content Op', 'ES Operator', '1st AD', 'Edit Events'], permissions: ['Events'], directReports: [] },
 ];
 
 const currentUserId = '1';
@@ -32,6 +32,8 @@ export function UserManagement() {
     const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
     const [editingUser, setEditingUser] = useState<User | null>(null);
     const [phone, setPhone] = useState('');
+    const [editingReportingLine, setEditingReportingLine] = useState<User | null>(null);
+    const [tempDirectReports, setTempDirectReports] = useState<string[]>([]);
 
     const allSkills = [
         'Video Director', 'D.o.P.', 'Camera', 'Audio', 
@@ -94,6 +96,34 @@ export function UserManagement() {
             user.userId === editingUser.userId ? { ...user, phone: phone } : user
         ));
         setEditingUser(null);
+    };
+
+    const handleEditReportingLine = (user: User) => {
+        setEditingReportingLine(user);
+        setTempDirectReports(user.directReports || []);
+    };
+
+    const handleSaveReportingLine = () => {
+        if (!editingReportingLine) return;
+
+        setUsers(users.map(user =>
+            user.userId === editingReportingLine.userId
+                ? { ...user, directReports: tempDirectReports }
+                : user
+        ));
+        setEditingReportingLine(null);
+    };
+
+    const handleReportSelectionChange = (reportId: string, checked: boolean) => {
+        setTempDirectReports(prev => {
+            const newSet = new Set(prev);
+            if (checked) {
+                newSet.add(reportId);
+            } else {
+                newSet.delete(reportId);
+            }
+            return Array.from(newSet);
+        });
     };
 
     return (
@@ -160,6 +190,30 @@ export function UserManagement() {
                                                             )}
                                                         </div>
                                                         <p className="text-sm text-muted-foreground">{user.phone || 'Not provided'}</p>
+
+                                                        <div className="mt-4">
+                                                            <div className="flex items-center gap-2 mb-2">
+                                                                <p className="font-medium text-sm">Reporting Line</p>
+                                                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEditReportingLine(user)}>
+                                                                    <Pencil className="h-4 w-4" />
+                                                                    <span className="sr-only">Edit reporting line</span>
+                                                                </Button>
+                                                            </div>
+                                                            <div>
+                                                                {(user.directReports && user.directReports.length > 0) ? (
+                                                                    user.directReports.map(reportId => {
+                                                                        const reportUser = users.find(u => u.userId === reportId);
+                                                                        return (
+                                                                            <div key={reportId} className="text-sm text-muted-foreground">
+                                                                                {reportUser?.displayName || 'Unknown User'}
+                                                                            </div>
+                                                                        );
+                                                                    })
+                                                                ) : (
+                                                                    <p className="text-sm text-muted-foreground">No direct reports.</p>
+                                                                )}
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                     <div>
                                                         <p className="font-medium text-sm mb-2">Permissions</p>
@@ -224,6 +278,35 @@ export function UserManagement() {
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setEditingUser(null)}>Cancel</Button>
                         <Button onClick={handleSavePhone}>Save changes</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={!!editingReportingLine} onOpenChange={(isOpen) => !isOpen && setEditingReportingLine(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Edit Reporting Line for {editingReportingLine?.displayName}</DialogTitle>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <p className="text-sm text-muted-foreground">Select users that report to {editingReportingLine?.displayName}.</p>
+                        <div className="space-y-2 max-h-60 overflow-y-auto">
+                            {users
+                                .filter(u => u.userId !== editingReportingLine?.userId)
+                                .map(u => (
+                                    <div key={u.userId} className="flex items-center space-x-2">
+                                        <Checkbox
+                                            id={`report-${u.userId}`}
+                                            checked={tempDirectReports.includes(u.userId)}
+                                            onCheckedChange={(checked) => handleReportSelectionChange(u.userId, !!checked)}
+                                        />
+                                        <Label htmlFor={`report-${u.userId}`} className="font-normal">{u.displayName}</Label>
+                                    </div>
+                                ))}
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setEditingReportingLine(null)}>Cancel</Button>
+                        <Button onClick={handleSaveReportingLine}>Save changes</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
