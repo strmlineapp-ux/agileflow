@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { format, addHours, startOfDay, isSaturday, isSunday, isSameDay, isToday } from 'date-fns';
 import { type Event } from '@/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -14,17 +14,29 @@ const isHoliday = (day: Date) => {
 const HOUR_WIDTH_PX = 120;
 const LOCATION_LABEL_WIDTH_PX = 160;
 
-export function DayView({ date }: { date: Date }) {
+export function DayView({ date, containerRef }: { date: Date, containerRef: React.RefObject<HTMLDivElement> }) {
     const [now, setNow] = useState<Date | null>(null);
+    const nowMarkerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        setNow(new Date());
-        const timer = setInterval(() => {
-            setNow(new Date());
-        }, 60 * 1000); // Update every minute
-
+        const updateNow = () => setNow(new Date());
+        updateNow();
+        const timer = setInterval(updateNow, 60 * 1000); // Update every minute
         return () => clearInterval(timer);
     }, []);
+
+    useEffect(() => {
+        if (isSameDay(date, new Date()) && containerRef.current && nowMarkerRef.current) {
+            const container = containerRef.current;
+            const marker = nowMarkerRef.current;
+            const scrollLeft = marker.offsetLeft - (container.offsetWidth / 2);
+            container.scrollTo({
+                left: scrollLeft,
+                behavior: 'smooth',
+            });
+        }
+    }, [date, now, containerRef]);
+
 
     const hours = Array.from({ length: 24 }, (_, i) => i);
 
@@ -129,6 +141,7 @@ export function DayView({ date }: { date: Date }) {
                     {/* Current Time Marker */}
                     {isViewingToday && now && (
                         <div 
+                            ref={nowMarkerRef}
                             className="absolute top-0 bottom-0 z-20 pointer-events-none"
                             style={{ left: `${LOCATION_LABEL_WIDTH_PX + calculateCurrentTimePosition()}px` }}
                         >

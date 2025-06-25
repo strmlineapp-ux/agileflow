@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { format, startOfWeek, addDays, eachDayOfInterval, startOfDay, addHours, isToday, isSaturday, isSunday, isSameDay } from 'date-fns';
 import { type Event } from '@/types';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
@@ -14,17 +14,29 @@ const isHoliday = (day: Date) => {
     return mockHolidays.some(holiday => isSameDay(day, holiday));
 }
 
-export function WeekView({ date }: { date: Date }) {
+export function WeekView({ date, containerRef }: { date: Date, containerRef: React.RefObject<HTMLDivElement> }) {
     const [now, setNow] = useState<Date | null>(null);
+    const nowMarkerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        setNow(new Date());
-        const timer = setInterval(() => {
-            setNow(new Date());
-        }, 60 * 1000); // Update every minute
-
+        const updateNow = () => setNow(new Date());
+        updateNow();
+        const timer = setInterval(updateNow, 60 * 1000); // Update every minute
         return () => clearInterval(timer);
     }, []);
+
+    useEffect(() => {
+        const weekDays = eachDayOfInterval({ start: startOfWeek(date, { weekStartsOn: 1 }), end: addDays(startOfWeek(date, { weekStartsOn: 1 }), 6) });
+        if (weekDays.some(isToday) && containerRef.current && nowMarkerRef.current) {
+            const container = containerRef.current;
+            const marker = nowMarkerRef.current;
+            const scrollTop = marker.offsetTop - (container.offsetHeight / 2);
+            container.scrollTo({
+                top: scrollTop,
+                behavior: 'smooth',
+            });
+        }
+    }, [date, now, containerRef]);
 
     const weekStart = startOfWeek(date, { weekStartsOn: 1 });
     const weekDays = eachDayOfInterval({ start: weekStart, end: addDays(weekStart, 6) });
@@ -128,6 +140,7 @@ export function WeekView({ date }: { date: Date }) {
                                     })}
                                     {isToday(day) && now && (
                                         <div 
+                                            ref={nowMarkerRef}
                                             className="absolute w-full z-10"
                                             style={{ top: `${calculateCurrentTimePosition()}px` }}
                                         >

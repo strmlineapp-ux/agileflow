@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { MonthView } from '@/components/calendar/month-view';
 import { WeekView } from '@/components/calendar/week-view';
@@ -12,6 +12,8 @@ import { format, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays, sta
 export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'month' | 'week' | 'day'>('day');
+  const dayViewContainerRef = useRef<HTMLDivElement>(null);
+  const weekViewContainerRef = useRef<HTMLDivElement>(null);
 
   const handlePrev = () => {
     switch (view) {
@@ -84,11 +86,11 @@ export default function CalendarPage() {
         <TabsContent value="month" className="absolute inset-0 overflow-y-auto">
             <MonthView date={currentDate} />
         </TabsContent>
-        <TabsContent value="week" className="absolute inset-0 overflow-y-auto">
-            <WeekView date={currentDate} />
+        <TabsContent value="week" ref={weekViewContainerRef} className="absolute inset-0 overflow-y-auto">
+            <WeekView date={currentDate} containerRef={weekViewContainerRef} />
         </TabsContent>
-        <TabsContent value="day" className="absolute inset-0 overflow-auto">
-            <DayView date={currentDate} />
+        <TabsContent value="day" ref={dayViewContainerRef} className="absolute inset-0 overflow-auto">
+            <DayView date={currentDate} containerRef={dayViewContainerRef} />
         </TabsContent>
       </div>
     </Tabs>
