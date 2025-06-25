@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { format } from 'date-fns';
+import { format, isToday } from 'date-fns';
 import { MoreHorizontal, ArrowUpDown } from 'lucide-react';
 import { type Task, type User } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -35,18 +35,37 @@ const mockUsers: User[] = [
 ];
 
 const mockTasks: Task[] = [
-  { taskId: '1', title: 'Design new dashboard layout', assignedTo: [mockUsers[0]], dueDate: new Date('2024-08-15'), priority: 'high', status: 'in_progress', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
-  { taskId: '2', title: 'Develop authentication API', assignedTo: [mockUsers[1], mockUsers[2]], dueDate: new Date('2024-08-20'), priority: 'high', status: 'awaiting_review', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
-  { taskId: '3', title: 'Write documentation for components', assignedTo: [mockUsers[2]], dueDate: new Date('2024-08-25'), priority: 'medium', status: 'not_started', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
-  { taskId: '4', title: 'Fix login page CSS bug', assignedTo: [mockUsers[1]], dueDate: new Date('2024-08-12'), priority: 'low', status: 'completed', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
-  { taskId: '5', title: 'Setup CI/CD pipeline', assignedTo: [mockUsers[0], mockUsers[1]], dueDate: new Date('2024-09-01'), priority: 'high', status: 'blocked', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
-  { taskId: '6', title: 'User testing for new features', assignedTo: [mockUsers[2]], dueDate: new Date('2024-08-18'), priority: 'medium', status: 'in_progress', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
+  { taskId: '1', title: 'Design new dashboard layout', assignedTo: [mockUsers[0]], dueDate: new Date(), priority: 'high', status: 'in_progress', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
+  { taskId: '2', title: 'Develop authentication API', assignedTo: [mockUsers[1], mockUsers[2]], dueDate: new Date(new Date().setDate(new Date().getDate() + 1)), priority: 'high', status: 'awaiting_review', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
+  { taskId: '3', title: 'Write documentation for components', assignedTo: [mockUsers[2]], dueDate: new Date(new Date().setDate(new Date().getDate() + 7)), priority: 'medium', status: 'not_started', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
+  { taskId: '4', title: 'Fix login page CSS bug', assignedTo: [mockUsers[1]], dueDate: new Date(new Date().setDate(new Date().getDate() - 2)), priority: 'low', status: 'completed', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
+  { taskId: '5', title: 'Setup CI/CD pipeline', assignedTo: [mockUsers[0], mockUsers[1]], dueDate: new Date(new Date().setDate(new Date().getDate() + 2)), priority: 'high', status: 'blocked', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
+  { taskId: '6', title: 'User testing for new features', assignedTo: [mockUsers[2]], dueDate: new Date(), priority: 'medium', status: 'in_progress', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
 ];
 
-export function TaskList({ limit }: { limit?: number }) {
-  const tasksToShow = limit ? mockTasks.slice(0, limit) : mockTasks;
+const statusOrder: Task['status'][] = ['in_progress', 'awaiting_review', 'not_started', 'blocked', 'completed'];
 
-  const renderTable = () => (
+const sortedTasks = [...mockTasks].sort((a, b) => {
+    const aIsToday = isToday(a.dueDate);
+    const bIsToday = isToday(b.dueDate);
+
+    if (aIsToday && !bIsToday) return -1;
+    if (!aIsToday && bIsToday) return 1;
+
+    const statusAIndex = statusOrder.indexOf(a.status);
+    const statusBIndex = statusOrder.indexOf(b.status);
+
+    if (statusAIndex !== statusBIndex) {
+        return statusAIndex - statusBIndex;
+    }
+
+    return a.dueDate.getTime() - b.dueDate.getTime();
+});
+
+const currentUserId = '1'; // Assuming Alice is the logged in user
+
+export function TaskList({ limit }: { limit?: number }) {
+  const renderTable = (tasks: Task[]) => (
     <Card>
       <CardContent className="p-0">
         <Table>
@@ -68,7 +87,7 @@ export function TaskList({ limit }: { limit?: number }) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {tasksToShow.map((task) => (
+            {tasks.map((task) => (
               <TableRow key={task.taskId}>
                 <TableCell className="font-medium">{task.title}</TableCell>
                 <TableCell>
@@ -87,7 +106,7 @@ export function TaskList({ limit }: { limit?: number }) {
                 <TableCell>
                   <TaskPriorityIcon priority={task.priority} />
                 </TableCell>
-                <TableCell>{format(task.dueDate, 'MMM dd, yyyy')}</TableCell>
+                <TableCell>{isToday(task.dueDate) ? 'Today' : format(task.dueDate, 'MMM dd, yyyy')}</TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -114,20 +133,23 @@ export function TaskList({ limit }: { limit?: number }) {
   );
 
   if(limit) {
-    return renderTable();
+    return renderTable(sortedTasks.slice(0, limit));
   }
+
+  const allTasks = sortedTasks;
+  const myTasks = sortedTasks.filter(task => task.assignedTo.some(user => user.userId === currentUserId));
 
   return (
     <Tabs defaultValue="my-tasks">
         <TabsList>
-            <TabsTrigger value="all">All Tasks</TabsTrigger>
             <TabsTrigger value="my-tasks">My Tasks</TabsTrigger>
+            <TabsTrigger value="all">All Tasks</TabsTrigger>
         </TabsList>
         <TabsContent value="all" className="mt-4">
-           {renderTable()}
+           {renderTable(allTasks)}
         </TabsContent>
         <TabsContent value="my-tasks" className="mt-4">
-            {renderTable()}
+            {renderTable(myTasks)}
         </TabsContent>
     </Tabs>
   )
