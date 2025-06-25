@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, Fragment } from 'react';
@@ -23,8 +24,8 @@ import { useUser } from '@/context/user-context';
 import { mockUsers } from '@/lib/mock-data';
 
 export function UserManagement() {
-    const { realUser } = useUser();
-    const isAdmin = realUser.permissions?.includes('Admin');
+    const { realUser, viewAsUser } = useUser();
+    const canEditReportingLine = viewAsUser.permissions?.includes('Admin');
     const [users, setUsers] = useState<User[]>(mockUsers);
     const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
     const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -217,7 +218,7 @@ export function UserManagement() {
                                                         <div className="mt-4">
                                                             <div className="flex items-center gap-2 mb-2">
                                                                 <p className="font-medium text-sm">Reporting Line</p>
-                                                                {isAdmin && (
+                                                                {canEditReportingLine && (
                                                                     <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEditReportingLine(user)}>
                                                                         <Pencil className="h-4 w-4" />
                                                                         <span className="sr-only">Edit reporting line</span>
