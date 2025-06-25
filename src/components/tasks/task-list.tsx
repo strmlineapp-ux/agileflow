@@ -25,7 +25,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { TaskStatusBadge } from './task-status-badge';
 import { TaskPriorityIcon } from './task-priority-icon';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Badge } from '@/components/ui/badge';
 
 
 const mockUsers: User[] = [
@@ -35,32 +36,24 @@ const mockUsers: User[] = [
 ];
 
 const mockTasks: Task[] = [
-  { taskId: '1', title: 'Design new dashboard layout', assignedTo: [mockUsers[0]], dueDate: new Date(), priority: 'high', status: 'in_progress', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
-  { taskId: '2', title: 'Develop authentication API', assignedTo: [mockUsers[1], mockUsers[2]], dueDate: new Date(new Date().setDate(new Date().getDate() + 1)), priority: 'high', status: 'awaiting_review', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
-  { taskId: '3', title: 'Write documentation for components', assignedTo: [mockUsers[2]], dueDate: new Date(new Date().setDate(new Date().getDate() + 7)), priority: 'medium', status: 'not_started', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
-  { taskId: '4', title: 'Fix login page CSS bug', assignedTo: [mockUsers[1]], dueDate: new Date(new Date().setDate(new Date().getDate() - 2)), priority: 'low', status: 'completed', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
-  { taskId: '5', title: 'Setup CI/CD pipeline', assignedTo: [mockUsers[0], mockUsers[1]], dueDate: new Date(new Date().setDate(new Date().getDate() + 2)), priority: 'high', status: 'blocked', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
-  { taskId: '6', title: 'User testing for new features', assignedTo: [mockUsers[2]], dueDate: new Date(), priority: 'medium', status: 'in_progress', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
+  { taskId: '1', title: 'Design new dashboard layout', assignedTo: [mockUsers[0]], dueDate: new Date(), priority: 'P1', status: 'in_progress', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
+  { taskId: '2', title: 'Develop authentication API', assignedTo: [mockUsers[1], mockUsers[2]], dueDate: new Date(new Date().setDate(new Date().getDate() + 1)), priority: 'P0', status: 'awaiting_review', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
+  { taskId: '3', title: 'Write documentation for components', assignedTo: [mockUsers[2]], dueDate: new Date(new Date().setDate(new Date().getDate() + 7)), priority: 'P2', status: 'not_started', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
+  { taskId: '4', title: 'Fix login page CSS bug', assignedTo: [mockUsers[1]], dueDate: new Date(new Date().setDate(new Date().getDate() - 2)), priority: 'P3', status: 'completed', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
+  { taskId: '5', title: 'Setup CI/CD pipeline', assignedTo: [mockUsers[0], mockUsers[1]], dueDate: new Date(new Date().setDate(new Date().getDate() + 2)), priority: 'P1', status: 'blocked', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
+  { taskId: '6', title: 'User testing for new features', assignedTo: [mockUsers[2]], dueDate: new Date(), priority: 'P2', status: 'in_progress', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
+  { taskId: '7', title: 'Update project dependencies', assignedTo: [mockUsers[1]], dueDate: new Date(new Date().setDate(new Date().getDate() + 10)), priority: 'P4', status: 'not_started', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
 ];
 
 const statusOrder: Task['status'][] = ['in_progress', 'awaiting_review', 'not_started', 'blocked', 'completed'];
 
-const sortedTasks = [...mockTasks].sort((a, b) => {
-    const aIsToday = isToday(a.dueDate);
-    const bIsToday = isToday(b.dueDate);
-
-    if (aIsToday && !bIsToday) return -1;
-    if (!aIsToday && bIsToday) return 1;
-
-    const statusAIndex = statusOrder.indexOf(a.status);
-    const statusBIndex = statusOrder.indexOf(b.status);
-
-    if (statusAIndex !== statusBIndex) {
-        return statusAIndex - statusBIndex;
-    }
-
-    return a.dueDate.getTime() - b.dueDate.getTime();
-});
+const statusLabels: Record<Task['status'], string> = {
+  in_progress: 'In Progress',
+  awaiting_review: 'Awaiting Review',
+  not_started: 'Not Started',
+  blocked: 'Blocked',
+  completed: 'Completed',
+};
 
 const currentUserId = '1'; // Assuming Alice is the logged in user
 
@@ -132,12 +125,67 @@ export function TaskList({ limit }: { limit?: number }) {
     </Card>
   );
 
+  const renderGroupedTasks = (tasks: Task[]) => {
+    const groupedTasks = tasks.reduce((acc, task) => {
+        const status = task.status;
+        if (!acc[status]) {
+            acc[status] = [];
+        }
+        acc[status].push(task);
+        return acc;
+    }, {} as Record<Task['status'], Task[]>);
+
+    return (
+        <div className="space-y-8">
+            {statusOrder.map(status => {
+                let tasksInGroup = groupedTasks[status];
+                if (!tasksInGroup || tasksInGroup.length === 0) return null;
+                
+                tasksInGroup = tasksInGroup.sort((a, b) => {
+                    const aIsToday = isToday(a.dueDate);
+                    const bIsToday = isToday(b.dueDate);
+                    if (aIsToday && !bIsToday) return -1;
+                    if (!aIsToday && bIsToday) return 1;
+            
+                    return a.dueDate.getTime() - b.dueDate.getTime();
+                });
+
+                return (
+                    <div key={status}>
+                        <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                           <span>{statusLabels[status]}</span>
+                           <Badge variant="secondary">{tasksInGroup.length}</Badge>
+                        </h3>
+                        {renderTable(tasksInGroup)}
+                    </div>
+                );
+            })}
+        </div>
+    );
+  };
+  
   if(limit) {
+    const sortedTasks = [...mockTasks].sort((a, b) => {
+        const aIsToday = isToday(a.dueDate);
+        const bIsToday = isToday(b.dueDate);
+
+        if (aIsToday && !bIsToday) return -1;
+        if (!aIsToday && bIsToday) return 1;
+
+        const statusAIndex = statusOrder.indexOf(a.status);
+        const statusBIndex = statusOrder.indexOf(b.status);
+
+        if (statusAIndex !== statusBIndex) {
+            return statusAIndex - statusBIndex;
+        }
+
+        return a.dueDate.getTime() - b.dueDate.getTime();
+    });
     return renderTable(sortedTasks.slice(0, limit));
   }
 
-  const allTasks = sortedTasks;
-  const myTasks = sortedTasks.filter(task => task.assignedTo.some(user => user.userId === currentUserId));
+  const allTasks = mockTasks;
+  const myTasks = mockTasks.filter(task => task.assignedTo.some(user => user.userId === currentUserId));
 
   return (
     <Tabs defaultValue="my-tasks">
@@ -145,11 +193,11 @@ export function TaskList({ limit }: { limit?: number }) {
             <TabsTrigger value="my-tasks">My Tasks</TabsTrigger>
             <TabsTrigger value="all">All Tasks</TabsTrigger>
         </TabsList>
-        <TabsContent value="all" className="mt-4">
-           {renderTable(allTasks)}
-        </TabsContent>
         <TabsContent value="my-tasks" className="mt-4">
-            {renderTable(myTasks)}
+           {renderGroupedTasks(myTasks)}
+        </TabsContent>
+        <TabsContent value="all" className="mt-4">
+            {renderGroupedTasks(allTasks)}
         </TabsContent>
     </Tabs>
   )

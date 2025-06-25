@@ -18,7 +18,7 @@ export interface Task {
   description?: string;
   assignedTo: User[];
   dueDate: Date;
-  priority: 'low' | 'medium' | 'high';
+  priority: 'P0' | 'P1' | 'P2' | 'P3' | 'P4';
   status: 'not_started' | 'in_progress' | 'awaiting_review' | 'completed' | 'blocked';
   createdBy: string; // userId
   createdAt: Date;
