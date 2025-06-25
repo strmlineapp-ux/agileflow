@@ -87,7 +87,7 @@ export default function CalendarPage() {
         <TabsContent value="week" className="absolute inset-0 overflow-y-auto">
             <WeekView date={currentDate} />
         </TabsContent>
-        <TabsContent value="day" className="absolute inset-0 overflow-y-auto">
+        <TabsContent value="day" className="absolute inset-0 overflow-auto">
             <DayView date={currentDate} />
         </TabsContent>
       </div>

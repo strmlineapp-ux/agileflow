@@ -11,6 +11,8 @@ const isHoliday = (day: Date) => {
     return mockHolidays.some(holiday => isSameDay(day, holiday));
 }
 
+const HOUR_WIDTH_PX = 120;
+
 export function DayView({ date }: { date: Date }) {
     const [now, setNow] = useState<Date | null>(null);
 
@@ -32,9 +34,9 @@ export function DayView({ date }: { date: Date }) {
         const endHour = event.endTime.getHours();
         const endMinute = event.endTime.getMinutes();
 
-        const top = (startHour + startMinute / 60) * 60; // 60px per hour
-        const height = Math.max(((endHour + endMinute / 60) - (startHour + startMinute / 60)) * 60, 30);
-        return { top, height };
+        const left = (startHour + startMinute / 60) * HOUR_WIDTH_PX;
+        const width = Math.max(((endHour + endMinute / 60) - (startHour + startMinute / 60)) * HOUR_WIDTH_PX - 4, 20);
+        return { left, width };
     }
 
     const isWeekend = isSaturday(date) || isSunday(date);
@@ -43,71 +45,52 @@ export function DayView({ date }: { date: Date }) {
     
     const calculateCurrentTimePosition = () => {
         if (!now) return 0;
-        return (now.getHours() + now.getMinutes() / 60) * 60;
+        return (now.getHours() + now.getMinutes() / 60) * HOUR_WIDTH_PX;
     }
 
     return (
-        <Card>
-            <CardHeader className="p-0 border-b sticky top-0 bg-card z-10">
-                <div className="grid grid-cols-[auto,1fr]">
-                    <div className="w-20"></div> {/* Spacer for timeline */}
-                    <div className={cn("text-center p-2 border-l", { "bg-muted/50": isWeekend || isDayHoliday })}>
-                        <p className={cn("text-sm font-medium", { "text-muted-foreground/50": isWeekend || isDayHoliday })}>{format(date, 'EEE')}</p>
-                        <p className={cn(
-                            "text-2xl font-semibold",
-                            isToday(date) && 'text-primary bg-primary/10 rounded-full',
-                            { "text-muted-foreground/50": isWeekend || isDayHoliday }
-                        )}>
-                            {format(date, 'd')}
-                        </p>
+        <Card style={{ width: `${24 * HOUR_WIDTH_PX}px` }}>
+             <CardHeader className="p-0 border-b sticky top-0 bg-card z-10 flex flex-row">
+                {hours.map(hour => (
+                    <div key={hour} className="w-[120px] shrink-0 text-left p-2 border-r">
+                        <span className="text-xs text-muted-foreground">{format(addHours(startOfDay(date), hour), 'HH:mm')}</span>
                     </div>
-                </div>
+                ))}
             </CardHeader>
-            <CardContent className="p-0 relative">
-                <div className="grid grid-cols-[auto,1fr] h-full">
-                    {/* Timeline */}
-                    <div className="w-20 border-r">
-                        {hours.map(hour => (
-                            <div key={hour} className="h-[60px] relative text-right pr-2">
-                                <span className="text-xs text-muted-foreground relative -top-2">{format(addHours(startOfDay(date), hour), 'HH:00')}</span>
-                            </div>
-                        ))}
-                    </div>
+            <CardContent className={cn("p-0 relative h-[calc(100vh-250px)]", { "bg-muted/50": isWeekend || isDayHoliday })}>
+                {/* Vertical Grid lines */}
+                {hours.slice(0, 23).map(hour => (
+                    <div key={`line-${hour}`} className="absolute top-0 bottom-0 border-r" style={{ left: `${(hour + 1) * HOUR_WIDTH_PX}px` }}></div>
+                ))}
 
-                    {/* Day column */}
-                    <div className={cn("relative", { "bg-muted/50": isWeekend || isDayHoliday })}>
-                        {/* Grid lines */}
-                        {hours.map(hour => (
-                            <div key={hour} className="h-[60px] border-b"></div>
-                        ))}
-                        {/* Events */}
-                        <div className="absolute inset-0">
-                            {dayEvents.map(event => {
-                                const { top, height } = getEventPosition(event);
-                                return (
-                                    <div 
-                                        key={event.eventId} 
-                                        className="absolute left-2 right-2 p-2 bg-primary/90 text-primary-foreground rounded-lg shadow-md cursor-pointer hover:bg-primary"
-                                        style={{ top: `${top}px`, height: `${height}px` }}
-                                    >
-                                        <p className="font-semibold text-sm">{event.title}</p>
-                                        <p className="text-xs opacity-90">{format(event.startTime, 'HH:mm')} - {format(event.endTime, 'HH:mm')}</p>
-                                    </div>
-                                )
-                            })}
-                             {isViewingToday && now && (
-                                <div 
-                                    className="absolute w-full z-10"
-                                    style={{ top: `${calculateCurrentTimePosition()}px` }}
-                                >
-                                    <div className="relative h-0.5 bg-primary">
-                                        <div className="absolute -left-1.5 -top-[5px] h-3 w-3 rounded-full bg-primary border-2 border-background"></div>
-                                    </div>
-                                </div>
-                            )}
+                {/* Events */}
+                <div className="absolute inset-0 p-2">
+                    {dayEvents.map(event => {
+                        const { left, width } = getEventPosition(event);
+                        return (
+                            <div 
+                                key={event.eventId} 
+                                className="absolute h-[calc(100%-1rem)] p-2 bg-primary/90 text-primary-foreground rounded-lg shadow-md cursor-pointer hover:bg-primary"
+                                style={{ left: `${left + 2}px`, width: `${width}px` }}
+                            >
+                                <p className="font-semibold text-sm truncate">{event.title}</p>
+                                <p className="text-xs opacity-90 truncate">{format(event.startTime, 'HH:mm')} - {format(event.endTime, 'HH:mm')}</p>
+                            </div>
+                        )
+                    })}
+                </div>
+                
+                {/* Current Time Marker */}
+                {isViewingToday && now && (
+                    <div 
+                        className="absolute top-0 bottom-0 z-10"
+                        style={{ left: `${calculateCurrentTimePosition()}px` }}
+                    >
+                        <div className="relative w-0.5 h-full bg-primary">
+                            <div className="absolute -top-1.5 -left-[5px] h-3 w-3 rounded-full bg-primary border-2 border-background"></div>
                         </div>
                     </div>
-                </div>
+                )}
             </CardContent>
         </Card>
     );
