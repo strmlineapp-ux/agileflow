@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -49,7 +48,7 @@ export function DayView({ date }: { date: Date }) {
 
     return (
         <Card>
-            <CardHeader className="p-0 border-b">
+            <CardHeader className="p-0 border-b sticky top-0 bg-card z-10">
                 <div className="grid grid-cols-[auto,1fr]">
                     <div className="w-20"></div> {/* Spacer for timeline */}
                     <div className={cn("text-center p-2 border-l", { "bg-muted/50": isWeekend || isDayHoliday })}>

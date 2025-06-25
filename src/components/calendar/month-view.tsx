@@ -76,21 +76,23 @@ export function MonthView({ date }: { date: Date }) {
         ];
     } else {
         // Build cells for 5-day week view
+        let emptyCells = [];
         for (let i = 0; i < startingDayIndex; i++) {
             if (i < 5) { // Only add placeholders for Mon-Fri
-                dayCells.push(<div key={`empty-${i}`} className="border-r border-b" />);
+                emptyCells.push(<div key={`empty-${i}`} className="border-r border-b" />);
             }
         }
-        daysInMonth.forEach((day, index) => {
-            if (!isSaturday(day) && !isSunday(day)) {
-                dayCells.push(renderDayCell(day, index));
-            }
-        });
+        dayCells = [
+            ...emptyCells,
+            ...daysInMonth
+                .filter(day => !isSaturday(day) && !isSunday(day))
+                .map((day, index) => renderDayCell(day, `day-${index}`))
+        ];
     }
 
     return (
         <Card>
-            <div className={cn("grid border-b border-t", gridColsClass)}>
+            <div className={cn("grid border-b border-t sticky top-0 bg-card z-10", gridColsClass)}>
                 {displayedWeekdays.map((day) => (
                     <div key={day} className={cn("text-center font-medium p-2 text-sm border-r last:border-r-0 relative", {
                         "bg-muted/50 text-muted-foreground/50": (day === 'Sat' || day === 'Sun'),

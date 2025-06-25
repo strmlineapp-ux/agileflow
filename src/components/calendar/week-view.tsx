@@ -59,7 +59,7 @@ export function WeekView({ date }: { date: Date }) {
 
     return (
         <Card>
-            <CardHeader className="p-0 border-b">
+            <CardHeader className="p-0 border-b sticky top-0 bg-card z-10">
                 <div className={cn("grid", gridColsClass)}>
                     <div className="w-20"></div> {/* Timeline spacer */}
                     {displayedDays.map(day => {
