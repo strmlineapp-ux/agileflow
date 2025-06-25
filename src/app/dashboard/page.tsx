@@ -12,6 +12,7 @@ const stats = [
 export default function DashboardPage() {
   return (
     <div className="flex flex-col gap-6">
+      <h1 className="font-headline text-3xl font-semibold">Overview</h1>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
           <Card key={stat.title}>

@@ -43,7 +43,7 @@ export function SignUpForm() {
     // Simulate API call
     setTimeout(() => {
       setIsLoading(false);
-      router.push('/dashboard');
+      router.push('/dashboard/calendar');
     }, 1000);
   }
 

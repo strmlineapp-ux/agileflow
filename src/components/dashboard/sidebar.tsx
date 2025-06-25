@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Calendar, ListChecks, Settings, LogOut, ChevronRight } from 'lucide-react';
+import { Home, Calendar, ListChecks, Settings, LogOut, LayoutDashboard } from 'lucide-react';
 import Logo from '@/components/icons/logo';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
@@ -10,19 +10,26 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '../ui/dropdown-menu';
 
 const navItems = [
-  { href: '/dashboard', icon: Home, label: 'Dashboard' },
+  { href: '/dashboard/calendar', icon: Home, label: 'Calendar' },
+  { href: '/dashboard', icon: LayoutDashboard, label: 'Overview' },
   { href: '/dashboard/tasks', icon: ListChecks, label: 'Tasks' },
-  { href: '/dashboard/calendar', icon: Calendar, label: 'Calendar' },
   { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
 
+  const isNavItemActive = (href: string) => {
+    if (href === '/dashboard/calendar') {
+      return pathname === href || pathname === '/dashboard';
+    }
+    return pathname === href;
+  }
+
   return (
     <aside className="fixed inset-y-0 left-0 z-10 hidden w-14 flex-col border-r bg-card sm:flex">
       <nav className="flex flex-col items-center gap-4 px-2 py-4">
-        <Link href="/dashboard" className="group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base">
+        <Link href="/dashboard/calendar" className="group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base">
           <svg
             width="20"
             height="20"
@@ -45,7 +52,7 @@ export function Sidebar() {
                   href={item.href}
                   className={cn(
                     'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
-                    pathname === item.href && 'bg-accent text-accent-foreground'
+                    (pathname === item.href || (item.href === '/dashboard/calendar' && pathname === '/dashboard')) && 'bg-accent text-accent-foreground'
                   )}
                 >
                   <item.icon className="h-5 w-5" />

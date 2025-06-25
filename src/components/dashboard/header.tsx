@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Home, Calendar, ListChecks, PanelLeft, Settings, LogOut } from 'lucide-react';
+import { Home, Calendar, ListChecks, PanelLeft, Settings, LogOut, LayoutDashboard } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -25,19 +25,19 @@ export function Header() {
         <SheetContent side="left" className="sm:max-w-xs">
           <nav className="grid gap-6 text-lg font-medium">
             <Logo className="mb-4" />
-            <Link href="/dashboard" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
+            <Link href="/dashboard/calendar" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
               <Home className="h-5 w-5" />
-              Dashboard
+              Calendar
+            </Link>
+            <Link href="/dashboard" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
+              <LayoutDashboard className="h-5 w-5" />
+              Overview
             </Link>
             <Link href="/dashboard/tasks" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
               <ListChecks className="h-5 w-5" />
               Tasks
             </Link>
-            <Link href="/dashboard/calendar" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
-              <Calendar className="h-5 w-5" />
-              Calendar
-            </Link>
-             <Link href="/dashboard/settings" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
+            <Link href="/dashboard/settings" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
               <Settings className="h-5 w-5" />
               Settings
             </Link>
@@ -46,7 +46,6 @@ export function Header() {
       </Sheet>
 
       <div className="hidden sm:block">
-        <h1 className="font-headline text-2xl font-semibold">Dashboard</h1>
       </div>
       
       <div className="relative ml-auto flex-1 md:grow-0">
