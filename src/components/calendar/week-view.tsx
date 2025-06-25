@@ -87,7 +87,7 @@ export function WeekView({ date }: { date: Date }) {
                     <div className="w-20 border-r">
                         {hours.map(hour => (
                             <div key={hour} className="h-[60px] relative text-right pr-2">
-                                <span className="text-xs text-muted-foreground relative -top-2">{format(addHours(startOfDay(date), hour), 'ha')}</span>
+                                <span className="text-xs text-muted-foreground relative -top-2">{format(addHours(startOfDay(date), hour), 'HH:00')}</span>
                             </div>
                         ))}
                     </div>
@@ -113,7 +113,7 @@ export function WeekView({ date }: { date: Date }) {
                                                 style={{ top: `${top}px`, height: `${height}px` }}
                                             >
                                                 <p className="font-semibold text-xs truncate">{event.title}</p>
-                                                <p className="text-[10px] opacity-90 truncate">{format(event.startTime, 'h:mm a')} - {format(event.endTime, 'h:mm a')}</p>
+                                                <p className="text-[10px] opacity-90 truncate">{format(event.startTime, 'HH:mm')} - {format(event.endTime, 'HH:mm')}</p>
                                             </div>
                                         )
                                     })}

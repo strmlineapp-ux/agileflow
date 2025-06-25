@@ -46,13 +46,13 @@ export function DayView({ date }: { date: Date }) {
                     <div className="w-20 border-r">
                         {hours.map(hour => (
                             <div key={hour} className="h-[60px] relative text-right pr-2">
-                                <span className="text-xs text-muted-foreground relative -top-2">{format(addHours(startOfDay(date), hour), 'ha')}</span>
+                                <span className="text-xs text-muted-foreground relative -top-2">{format(addHours(startOfDay(date), hour), 'HH:00')}</span>
                             </div>
                         ))}
                     </div>
 
                     {/* Day column */}
-                    <div className={cn("relative", { "bg-muted opacity-50": isWeekend || isDayHoliday })}>
+                    <div className={cn("relative", { "bg-muted/50": isWeekend || isDayHoliday })}>
                         {/* Grid lines */}
                         {hours.map(hour => (
                             <div key={hour} className="h-[60px] border-b"></div>
@@ -68,7 +68,7 @@ export function DayView({ date }: { date: Date }) {
                                         style={{ top: `${top}px`, height: `${height}px` }}
                                     >
                                         <p className="font-semibold text-sm">{event.title}</p>
-                                        <p className="text-xs opacity-90">{format(event.startTime, 'h:mm a')} - {format(event.endTime, 'h:mm a')}</p>
+                                        <p className="text-xs opacity-90">{format(event.startTime, 'HH:mm')} - {format(event.endTime, 'HH:mm')}</p>
                                     </div>
                                 )
                             })}
