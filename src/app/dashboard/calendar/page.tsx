@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { MonthView } from '@/components/calendar/calendar-view';
+import { MonthView } from '@/components/calendar/month-view';
 import { WeekView } from '@/components/calendar/week-view';
 import { DayView } from '@/components/calendar/day-view';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -81,7 +81,7 @@ export default function CalendarPage() {
             <TabsTrigger value="day">Day</TabsTrigger>
         </TabsList>
       </div>
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1">
         <TabsContent value="month" className="m-0 h-full">
             <MonthView date={currentDate} />
         </TabsContent>

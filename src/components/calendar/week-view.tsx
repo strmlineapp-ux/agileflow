@@ -97,7 +97,7 @@ export function WeekView({ date }: { date: Date }) {
                     })}
                 </div>
             </CardHeader>
-            <CardContent ref={scrollContainerRef} className="p-0 flex-1 relative">
+            <CardContent ref={scrollContainerRef} className="p-0 flex-1 relative overflow-y-auto">
                 <div className={cn("grid min-h-full", gridColsClass)}>
                     {/* Timeline */}
                     <div className="w-20 border-r">
