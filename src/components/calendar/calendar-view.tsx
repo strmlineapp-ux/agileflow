@@ -2,7 +2,7 @@
 "use client";
 
 import React from 'react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isToday, isSameMonth } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isToday, isSameMonth, isSaturday, isSunday } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { Badge } from '../ui/badge';
@@ -13,13 +13,14 @@ export function MonthView({ date }: { date: Date }) {
     const firstDayOfMonth = startOfMonth(date);
     const lastDayOfMonth = endOfMonth(date);
     const daysInMonth = eachDayOfInterval({ start: firstDayOfMonth, end: lastDayOfMonth });
-    const startingDayIndex = getDay(firstDayOfMonth);
+    
+    const startingDayIndex = (getDay(firstDayOfMonth) + 6) % 7; 
 
     const getEventsForDay = (day: Date) => {
         return mockEvents.filter(event => format(event.startTime, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd'));
     }
 
-    const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
     return (
         <Card className="h-full flex flex-col">
@@ -37,8 +38,13 @@ export function MonthView({ date }: { date: Date }) {
                     ))}
                     {daysInMonth.map((day, index) => {
                         const dayEvents = getEventsForDay(day);
+                        const isWeekend = isSaturday(day) || isSunday(day);
                         return (
-                            <div key={index} className={cn("border-r border-b p-2 flex flex-col", { "bg-accent/10": isToday(day) })}>
+                            <div key={index} className={cn(
+                                "border-r border-b p-2 flex flex-col", 
+                                { "bg-accent/10": isToday(day) },
+                                { "bg-muted/30": isWeekend }
+                            )}>
                                 <span className={cn(
                                     "font-semibold h-6 w-6 flex items-center justify-center rounded-full text-sm", 
                                     { "bg-primary text-primary-foreground": isToday(day) },

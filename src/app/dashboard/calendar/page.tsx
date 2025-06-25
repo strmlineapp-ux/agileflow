@@ -49,7 +49,7 @@ export default function CalendarPage() {
   const getTitle = () => {
     if (view === 'day') return format(currentDate, 'MMMM d, yyyy');
     if (view === 'week') {
-      const start = startOfWeek(currentDate, { weekStartsOn: 0 });
+      const start = startOfWeek(currentDate, { weekStartsOn: 1 });
       const end = addDays(start, 6);
       if (format(start, 'MMMM yyyy') === format(end, 'MMMM yyyy')) {
           if(format(start, 'MMMM') === format(end, 'MMMM')) {
