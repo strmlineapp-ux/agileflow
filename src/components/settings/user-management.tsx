@@ -6,17 +6,19 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, ChevronRight, Pencil } from 'lucide-react';
+import { ChevronDown, ChevronRight, Pencil, Lock } from 'lucide-react';
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
 
 const mockUsers: User[] = [
     { userId: '1', displayName: 'Alice Johnson', email: 'alice@example.com', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Product Manager', location: 'New York, USA', phone: '123-456-7890', skills: ['Video Director', 'TD', 'Edit Events'], permissions: ['Admin', 'Events', 'Event Users', 'Studio Productions'], directReports: ['2', '3'] },
@@ -34,6 +36,11 @@ export function UserManagement() {
     const [phone, setPhone] = useState('');
     const [editingReportingLine, setEditingReportingLine] = useState<User | null>(null);
     const [tempDirectReports, setTempDirectReports] = useState<string[]>([]);
+
+    const [is2faDialogOpen, setIs2faDialogOpen] = useState(false);
+    const [editingAdminForUser, setEditingAdminForUser] = useState<User | null>(null);
+    const [twoFactorCode, setTwoFactorCode] = useState('');
+    const { toast } = useToast();
 
     const allSkills = [
         'Video Director', 'D.o.P.', 'Camera', 'Audio', 
@@ -124,6 +131,27 @@ export function UserManagement() {
             }
             return Array.from(newSet);
         });
+    };
+
+    const handleVerifyAndChangeAdmin = () => {
+        if (!editingAdminForUser) return;
+
+        if (twoFactorCode === '123456') { 
+            const isCurrentlyAdmin = editingAdminForUser.permissions?.includes('Admin');
+            handlePermissionChange(editingAdminForUser.userId, 'Admin', !isCurrentlyAdmin);
+            
+            toast({ title: "Success", description: "Admin permission updated successfully." });
+            setIs2faDialogOpen(false);
+            setEditingAdminForUser(null);
+            setTwoFactorCode('');
+        } else {
+            toast({
+                variant: "destructive",
+                title: "Verification Failed",
+                description: "The provided 2FA code is incorrect. Please try again.",
+            });
+            setTwoFactorCode('');
+        }
     };
 
     return (
@@ -223,9 +251,26 @@ export function UserManagement() {
                                                                     <Checkbox
                                                                         id={`${user.userId}-${permission}`}
                                                                         checked={user.permissions?.includes(permission)}
-                                                                        onCheckedChange={(checked) => handlePermissionChange(user.userId, permission, !!checked)}
+                                                                        disabled={permission === 'Admin'}
+                                                                        onCheckedChange={(checked) => {
+                                                                            if (permission !== 'Admin') {
+                                                                                handlePermissionChange(user.userId, permission, !!checked);
+                                                                            }
+                                                                        }}
                                                                     />
-                                                                    <Label htmlFor={`${user.userId}-${permission}`} className="text-sm font-normal">{permission}</Label>
+                                                                    <Label
+                                                                        htmlFor={`${user.userId}-${permission}`}
+                                                                        className="text-sm font-normal flex items-center gap-1 cursor-pointer"
+                                                                        onClick={() => {
+                                                                            if (permission === 'Admin') {
+                                                                                setEditingAdminForUser(user);
+                                                                                setIs2faDialogOpen(true);
+                                                                            }
+                                                                        }}
+                                                                    >
+                                                                        {permission}
+                                                                        {permission === 'Admin' && <Lock className="h-3 w-3 text-muted-foreground" />}
+                                                                    </Label>
                                                                 </div>
                                                             ))}
                                                         </div>
@@ -307,6 +352,39 @@ export function UserManagement() {
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setEditingReportingLine(null)}>Cancel</Button>
                         <Button onClick={handleSaveReportingLine}>Save changes</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={is2faDialogOpen} onOpenChange={setIs2faDialogOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Two-Factor Authentication</DialogTitle>
+                        <DialogDescription>
+                            Changing admin permissions requires secondary authentication. Enter the code from your Google Authenticator app.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="2fa-code" className="text-right">
+                                Code
+                            </Label>
+                            <Input
+                                id="2fa-code"
+                                value={twoFactorCode}
+                                onChange={(e) => setTwoFactorCode(e.target.value)}
+                                className="col-span-3"
+                                placeholder="123456"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                         <Button variant="outline" onClick={() => {
+                             setIs2faDialogOpen(false);
+                             setEditingAdminForUser(null);
+                             setTwoFactorCode('');
+                         }}>Cancel</Button>
+                        <Button onClick={handleVerifyAndChangeAdmin}>Verify & Change</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
