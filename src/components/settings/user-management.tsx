@@ -27,7 +27,7 @@ const mockUsers: User[] = [
     { userId: '4', displayName: 'Diana Prince', email: 'diana@example.com', googleCalendarLinked: false, avatarUrl: 'https://placehold.co/40x40.png', title: 'UX Designer', location: 'Chicago, USA', phone: '098-765-4321', skills: ['Content Op', 'ES Operator', '1st AD', 'Edit Events'], permissions: ['Events'], directReports: [] },
 ];
 
-const currentUserId = '1';
+const currentUserId = '2';
 
 export function UserManagement() {
     const [users, setUsers] = useState<User[]>(mockUsers);

@@ -54,7 +54,7 @@ const statusLabels: Record<Task['status'], string> = {
   completed: 'Completed',
 };
 
-const currentUserId = '1'; // Assuming Alice is the logged in user
+const currentUserId = '2'; // Assuming Bob is the logged in user
 
 export function TaskList({ limit }: { limit?: number }) {
   const renderTable = (tasks: Task[]) => (
