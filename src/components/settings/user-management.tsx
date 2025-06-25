@@ -138,25 +138,28 @@ export function UserManagement() {
                                         <TableCell>{user.title || 'N/A'}</TableCell>
                                         <TableCell>{user.location || 'N/A'}</TableCell>
                                         <TableCell className="text-right">
-                                            {user.userId === currentUserId && (
-                                                <Button variant="ghost" size="icon" onClick={() => {
-                                                    setEditingUser(user);
-                                                    setPhone(user.phone || '');
-                                                }}>
-                                                    <Pencil className="h-4 w-4" />
-                                                    <span className="sr-only">Edit phone number</span>
-                                                </Button>
-                                            )}
+                                            {/* This space is intentionally left blank. Edit button is in the expanded view. */}
                                         </TableCell>
                                     </TableRow>
                                     {expandedRows.has(user.userId) && (
                                         <TableRow className="bg-muted/50 hover:bg-muted/50">
                                             <TableCell />
                                             <TableCell colSpan={4}>
-                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4">
                                                     <div>
-                                                        <p className="font-medium text-sm">Contact</p>
-                                                        <p className="text-sm text-muted-foreground mb-4">{user.phone || 'Not provided'}</p>
+                                                        <div className="flex items-center gap-2 mb-2">
+                                                            <p className="font-medium text-sm">Contact</p>
+                                                            {user.userId === currentUserId && (
+                                                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => {
+                                                                    setEditingUser(user);
+                                                                    setPhone(user.phone || '');
+                                                                }}>
+                                                                    <Pencil className="h-4 w-4" />
+                                                                    <span className="sr-only">Edit phone number</span>
+                                                                </Button>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-sm text-muted-foreground">{user.phone || 'Not provided'}</p>
                                                     </div>
                                                     <div>
                                                         <p className="font-medium text-sm mb-2">Permissions</p>
