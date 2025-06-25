@@ -9,7 +9,7 @@ export default function CalendarPage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <h1 className="font-headline text-3xl font-semibold">Calendar</h1>
         <div className="flex gap-2 items-center">
-            <Tabs defaultValue="month">
+            <Tabs defaultValue="day">
                 <TabsList>
                     <TabsTrigger value="month">Month</TabsTrigger>
                     <TabsTrigger value="week">Week</TabsTrigger>

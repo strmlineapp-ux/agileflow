@@ -13,6 +13,7 @@ const navItems = [
   { href: '/dashboard', icon: Home, label: 'Dashboard' },
   { href: '/dashboard/tasks', icon: ListChecks, label: 'Tasks' },
   { href: '/dashboard/calendar', icon: Calendar, label: 'Calendar' },
+  { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
 ];
 
 export function Sidebar() {
@@ -74,14 +75,18 @@ export function Sidebar() {
               </Tooltip>
             </TooltipProvider>
             <DropdownMenuContent side="right" align="end">
-                <DropdownMenuItem>
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
+                <DropdownMenuItem asChild>
+                    <Link href="/dashboard/settings">
+                        <Settings className="mr-2 h-4 w-4" />
+                        <span>Settings</span>
+                    </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <Link href="/login">Logout</Link>
+                <DropdownMenuItem asChild>
+                    <Link href="/login">
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>Logout</span>
+                    </Link>
                 </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>

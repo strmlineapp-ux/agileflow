@@ -37,6 +37,10 @@ export function Header() {
               <Calendar className="h-5 w-5" />
               Calendar
             </Link>
+             <Link href="/dashboard/settings" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
+              <Settings className="h-5 w-5" />
+              Settings
+            </Link>
           </nav>
         </SheetContent>
       </Sheet>
@@ -59,14 +63,18 @@ export function Header() {
             </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-            <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Settings</span>
+            <DropdownMenuItem asChild>
+                <Link href="/dashboard/settings">
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
+                </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-                <LogOut className="mr-2 h-4 w-4" />
-                <Link href="/login">Logout</Link>
+            <DropdownMenuItem asChild>
+                <Link href="/login">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Logout</span>
+                </Link>
             </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

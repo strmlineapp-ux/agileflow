@@ -7,6 +7,9 @@ export interface User {
   googleCalendarLinked: boolean;
   googleCalendarId?: string;
   avatarUrl?: string;
+  location?: string;
+  phone?: string;
+  title?: string;
 }
 
 export interface Task {
