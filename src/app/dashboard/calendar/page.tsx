@@ -49,7 +49,7 @@ export default function CalendarPage() {
   };
   
   const getTitle = () => {
-    if (view === 'day') return format(currentDate, 'MMMM d, yyyy');
+    if (view === 'day') return <>{format(currentDate, 'MMMM d, yyyy')}</>;
     if (view === 'week') {
       const weekNumber = getWeek(currentDate, { weekStartsOn: 1 });
       const start = startOfWeek(currentDate, { weekStartsOn: 1 });
@@ -65,9 +65,14 @@ export default function CalendarPage() {
       } else {
         dateRange = `${format(start, 'MMM d, yyyy')} – ${format(end, 'MMM d, yyyy')}`;
       }
-      return `Week ${weekNumber}: ${dateRange}`;
+      return (
+        <>
+          <span>Week {weekNumber}</span>
+          <span>{dateRange}</span>
+        </>
+      );
     }
-    return format(currentDate, 'MMMM yyyy');
+    return <>{format(currentDate, 'MMMM yyyy')}</>;
   };
 
   return (
@@ -81,7 +86,7 @@ export default function CalendarPage() {
             <Button variant="outline" size="icon" onClick={handleNext}>
                 <ChevronRight className="h-4 w-4" />
             </Button>
-            <h1 className="font-headline text-2xl font-semibold ml-4">{getTitle()}</h1>
+            <h1 className="font-headline text-2xl font-semibold ml-4 flex items-baseline gap-3">{getTitle()}</h1>
         </div>
         <TabsList>
             <TabsTrigger value="month">Month</TabsTrigger>
