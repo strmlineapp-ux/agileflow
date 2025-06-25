@@ -24,7 +24,7 @@ export function TaskPriorityIcon({ priority }: { priority: Task['priority'] }) {
         <TooltipTrigger>
           <div className="flex items-center gap-2">
             <Icon className={`h-5 w-5 ${color}`} />
-            <span className="sr-only">{label} Priority</span>
+            <span>{priority}</span>
           </div>
         </TooltipTrigger>
         <TooltipContent>

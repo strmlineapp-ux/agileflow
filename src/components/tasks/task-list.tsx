@@ -22,7 +22,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { TaskStatusBadge } from './task-status-badge';
 import { TaskPriorityIcon } from './task-priority-icon';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -84,13 +83,12 @@ export function TaskList({ limit }: { limit?: number }) {
               <TableRow key={task.taskId}>
                 <TableCell className="font-medium">{task.title}</TableCell>
                 <TableCell>
-                  <div className="flex items-center">
-                    {task.assignedTo.map((user) => (
-                      <Avatar key={user.userId} className="h-8 w-8 border-2 border-card -ml-2 first:ml-0">
-                        <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
-                        <AvatarFallback>{user.displayName.substring(0, 2)}</AvatarFallback>
-                      </Avatar>
-                    ))}
+                  <div>
+                    {task.assignedTo.map((user) => {
+                      const nameParts = user.displayName.split(' ');
+                      const formattedName = nameParts.length > 1 ? `${nameParts[0]} ${nameParts[1].charAt(0)}.` : nameParts[0];
+                      return <div key={user.userId}>{formattedName}</div>;
+                    })}
                   </div>
                 </TableCell>
                 <TableCell>
