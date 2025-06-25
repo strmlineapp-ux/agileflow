@@ -48,7 +48,7 @@ export function MonthView({ date }: { date: Date }) {
                             <div key={index} className={cn(
                                 "border-r border-b p-2 flex flex-col", 
                                 { "bg-accent/10": isToday(day) },
-                                { "bg-muted/50": isWeekend || isDayHoliday }
+                                { "bg-border": isWeekend || isDayHoliday }
                             )}>
                                 <span className={cn(
                                     "font-semibold h-6 w-6 flex items-center justify-center rounded-full text-sm", 
