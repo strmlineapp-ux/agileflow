@@ -1,7 +1,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { format, startOfWeek, addDays, eachDayOfInterval, startOfDay, addHours, isToday, isSaturday, isSunday, isSameDay } from 'date-fns';
 import { type Event } from '@/types';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
@@ -13,6 +13,7 @@ const isHoliday = (day: Date) => {
 }
 
 export function WeekView({ date }: { date: Date }) {
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
     const weekStart = startOfWeek(date, { weekStartsOn: 1 });
     const weekDays = eachDayOfInterval({ start: weekStart, end: addDays(weekStart, 6) });
     const hours = Array.from({ length: 24 }, (_, i) => i);
@@ -34,6 +35,13 @@ export function WeekView({ date }: { date: Date }) {
         const height = Math.max(((endHour + endMinute / 60) - (startHour + startMinute / 60)) * 60, 30);
         return { top, height };
     }
+    
+    useEffect(() => {
+        if (scrollContainerRef.current) {
+            // Scroll to 8 AM. Each hour is 60px high.
+            scrollContainerRef.current.scrollTop = 8 * 60;
+        }
+    }, [date]);
 
     const gridColsClass = hasWeekendEvents ? 'grid-cols-[auto,1fr,1fr,1fr,1fr,1fr,1fr,1fr]' : 'grid-cols-[auto,1fr,1fr,1fr,1fr,1fr]';
 
@@ -43,7 +51,7 @@ export function WeekView({ date }: { date: Date }) {
                 <div className={cn("grid", gridColsClass)}>
                     <div className="w-20"></div> {/* Timeline spacer */}
                     {displayedDays.map(day => (
-                        <div key={day.toString()} className={cn("text-center p-2 border-l", { "bg-border": isSaturday(day) || isSunday(day) || isHoliday(day) })}>
+                        <div key={day.toString()} className={cn("text-center p-2 border-l", { "bg-muted/60": isSaturday(day) || isSunday(day) || isHoliday(day) })}>
                             <p className="text-sm font-medium text-muted-foreground">{format(day, 'EEE')}</p>
                             <p className={cn(
                                 "text-2xl font-semibold",
@@ -55,7 +63,7 @@ export function WeekView({ date }: { date: Date }) {
                     ))}
                 </div>
             </CardHeader>
-            <CardContent className="p-0 flex-1 relative overflow-y-auto">
+            <CardContent ref={scrollContainerRef} className="p-0 flex-1 relative overflow-y-auto">
                 <div className={cn("grid min-h-full", gridColsClass)}>
                     {/* Timeline */}
                     <div className="w-20 border-r">
@@ -68,7 +76,7 @@ export function WeekView({ date }: { date: Date }) {
 
                     {/* Day columns */}
                     {displayedDays.map(day => (
-                        <div key={day.toString()} className={cn("relative border-l", { "bg-border": isSaturday(day) || isSunday(day) || isHoliday(day) })}>
+                        <div key={day.toString()} className={cn("relative border-l", { "bg-muted/60": isSaturday(day) || isSunday(day) || isHoliday(day) })}>
                             {/* Grid lines */}
                             {hours.map(hour => (
                                 <div key={hour} className="h-[60px] border-b"></div>

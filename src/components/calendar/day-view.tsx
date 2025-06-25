@@ -1,7 +1,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { format, addHours, startOfDay, isSaturday, isSunday, isSameDay } from 'date-fns';
 import { type Event } from '@/types';
 import { Card, CardContent } from '@/components/ui/card';
@@ -13,6 +13,7 @@ const isHoliday = (day: Date) => {
 }
 
 export function DayView({ date }: { date: Date }) {
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
     const hours = Array.from({ length: 24 }, (_, i) => i);
     const dayEvents = mockEvents.filter(event => format(event.startTime, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd'));
 
@@ -30,9 +31,16 @@ export function DayView({ date }: { date: Date }) {
     const isWeekend = isSaturday(date) || isSunday(date);
     const isDayHoliday = isHoliday(date);
 
+    useEffect(() => {
+        if (scrollContainerRef.current) {
+            // Scroll to 8 AM. Each hour is 60px high.
+            scrollContainerRef.current.scrollTop = 8 * 60;
+        }
+    }, [date]);
+
     return (
         <Card className="h-full flex flex-col">
-            <CardContent className="p-0 flex-1 relative overflow-y-auto">
+            <CardContent ref={scrollContainerRef} className="p-0 flex-1 relative overflow-y-auto">
                 <div className="grid grid-cols-[auto,1fr] h-full">
                     {/* Timeline */}
                     <div className="w-20 border-r">
@@ -44,7 +52,7 @@ export function DayView({ date }: { date: Date }) {
                     </div>
 
                     {/* Day column */}
-                    <div className={cn("relative", { "bg-border": isWeekend || isDayHoliday })}>
+                    <div className={cn("relative", { "bg-muted/60": isWeekend || isDayHoliday })}>
                         {/* Grid lines */}
                         {hours.map(hour => (
                             <div key={hour} className="h-[60px] border-b"></div>
