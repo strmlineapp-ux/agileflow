@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { MonthView } from '@/components/calendar/month-view';
+import { MonthView } from '@/components/calendar/calendar-view';
 import { WeekView } from '@/components/calendar/week-view';
 import { DayView } from '@/components/calendar/day-view';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
