@@ -24,6 +24,7 @@ import { mockUsers } from '@/lib/mock-data';
 
 export function UserManagement() {
     const { realUser } = useUser();
+    const isAdmin = realUser.permissions?.includes('Admin');
     const [users, setUsers] = useState<User[]>(mockUsers);
     const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
     const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -216,10 +217,12 @@ export function UserManagement() {
                                                         <div className="mt-4">
                                                             <div className="flex items-center gap-2 mb-2">
                                                                 <p className="font-medium text-sm">Reporting Line</p>
-                                                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEditReportingLine(user)}>
-                                                                    <Pencil className="h-4 w-4" />
-                                                                    <span className="sr-only">Edit reporting line</span>
-                                                                </Button>
+                                                                {isAdmin && (
+                                                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEditReportingLine(user)}>
+                                                                        <Pencil className="h-4 w-4" />
+                                                                        <span className="sr-only">Edit reporting line</span>
+                                                                    </Button>
+                                                                )}
                                                             </div>
                                                             <div>
                                                                 {(user.directReports && user.directReports.length > 0) ? (
