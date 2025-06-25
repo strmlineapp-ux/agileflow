@@ -8,6 +8,7 @@ export const mockEvents: Event[] = [
         startTime: new Date(new Date().setHours(10, 0, 0, 0)), 
         endTime: new Date(new Date().setHours(11, 0, 0, 0)), 
         attendees: [], 
+        location: 'Conference Room A',
         createdBy: '1', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -18,6 +19,7 @@ export const mockEvents: Event[] = [
         startTime: new Date(new Date().setHours(14, 0, 0, 0)), 
         endTime: new Date(new Date().setHours(15, 30, 0, 0)), 
         attendees: [], 
+        location: 'Conference Room B',
         createdBy: '1', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -28,6 +30,7 @@ export const mockEvents: Event[] = [
         startTime: new Date(new Date(new Date().setDate(new Date().getDate() + 1)).setHours(9, 0, 0, 0)), 
         endTime: new Date(new Date(new Date().setDate(new Date().getDate() + 1)).setHours(10, 0, 0, 0)), 
         attendees: [], 
+        location: 'Conference Room A',
         createdBy: '1', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -45,9 +48,10 @@ export const mockEvents: Event[] = [
      { 
         eventId: '5', 
         title: 'All-hands meeting', 
-        startTime: new Date(new Date(new Date().setDate(15)).setHours(11, 0, 0, 0)), 
-        endTime: new Date(new Date(new Date().setDate(15)).setHours(12, 0, 0, 0)), 
+        startTime: new Date(new Date().getFullYear(), new Date().getMonth(), 15, 11, 0, 0),
+        endTime: new Date(new Date().getFullYear(), new Date().getMonth(), 15, 12, 0, 0),
         attendees: [], 
+        location: 'Main Hall',
         createdBy: '1', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
