@@ -46,9 +46,7 @@ const currentUserId = '1';
 export function UserManagement() {
     const [users, setUsers] = useState<User[]>(mockUsers);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
-    const [isEditModalOpen, setEditModalOpen] = useState(false);
     const [isRoleModalOpen, setRoleModalOpen] = useState(false);
-    const [phoneInput, setPhoneInput] = useState('');
     const [roleInput, setRoleInput] = useState<'admin' | 'manager' | 'team_member'>('team_member');
     const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
@@ -114,20 +112,7 @@ export function UserManagement() {
             setRoleModalOpen(false);
         }
     };
-
-    const handlePhoneChange = () => {
-        if (selectedUser) {
-            setUsers(users.map(u => u.userId === selectedUser.userId ? {...u, phone: phoneInput} : u));
-            setEditModalOpen(false);
-        }
-    }
     
-    const openEditModal = (user: User) => {
-        setSelectedUser(user);
-        setPhoneInput(user.phone || '');
-        setEditModalOpen(true);
-    }
-
     const openRoleModal = (user: User) => {
         setSelectedUser(user);
         setRoleInput(user.role);
@@ -176,22 +161,19 @@ export function UserManagement() {
                                         <TableCell>{user.title || 'N/A'}</TableCell>
                                         <TableCell className="capitalize">{user.role.replace('_', ' ')}</TableCell>
                                         <TableCell>
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" size="icon">
-                                                        <MoreHorizontal className="h-4 w-4" />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent>
-                                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                    {user.userId === currentUserId && (
-                                                        <DropdownMenuItem onSelect={() => openEditModal(user)}>Edit Phone</DropdownMenuItem>
-                                                    )}
-                                                    {(currentUser?.role === 'admin') && user.userId !== currentUserId && (
+                                            {(currentUser?.role === 'admin' && user.userId !== currentUserId) && (
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" size="icon">
+                                                            <MoreHorizontal className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent>
+                                                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                                         <DropdownMenuItem onSelect={() => openRoleModal(user)}>Change Role</DropdownMenuItem>
-                                                    )}
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            )}
                                         </TableCell>
                                     </TableRow>
                                     {expandedRows.has(user.userId) && (
@@ -245,25 +227,6 @@ export function UserManagement() {
                     </Table>
                 </CardContent>
             </Card>
-
-            <Dialog open={isEditModalOpen} onOpenChange={setEditModalOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Edit Phone Number</DialogTitle>
-                        <DialogDescription>Update your phone number.</DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="phone" className="text-right">Phone</Label>
-                            <Input id="phone" value={phoneInput} onChange={(e) => setPhoneInput(e.target.value)} className="col-span-3" />
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setEditModalOpen(false)}>Cancel</Button>
-                        <Button onClick={handlePhoneChange}>Save</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
 
             <Dialog open={isRoleModalOpen} onOpenChange={setRoleModalOpen}>
                 <DialogContent>
