@@ -2,9 +2,9 @@
 'use client';
 
 import React, { useRef, useEffect, useState } from 'react';
-import { format, addHours, startOfDay, isSaturday, isSunday, isSameDay } from 'date-fns';
+import { format, addHours, startOfDay, isSaturday, isSunday, isSameDay, isToday } from 'date-fns';
 import { type Event } from '@/types';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { mockEvents, mockHolidays } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 
@@ -57,6 +57,21 @@ export function DayView({ date }: { date: Date }) {
 
     return (
         <Card className="h-full flex flex-col">
+            <CardHeader className="p-0 border-b sticky top-0 bg-card z-10">
+                <div className="grid grid-cols-[auto,1fr]">
+                    <div className="w-20"></div> {/* Spacer for timeline */}
+                    <div className={cn("text-center p-2 border-l", { "bg-muted/50": isWeekend || isDayHoliday })}>
+                        <p className={cn("text-sm font-medium", { "text-muted-foreground/50": isWeekend || isDayHoliday })}>{format(date, 'EEE')}</p>
+                        <p className={cn(
+                            "text-2xl font-semibold",
+                            isToday(date) && 'text-primary bg-primary/10 rounded-full',
+                            { "text-muted-foreground/50": isWeekend || isDayHoliday }
+                        )}>
+                            {format(date, 'd')}
+                        </p>
+                    </div>
+                </div>
+            </CardHeader>
             <CardContent ref={scrollContainerRef} className="p-0 flex-1 relative overflow-y-auto">
                 <div className="grid grid-cols-[auto,1fr] h-full">
                     {/* Timeline */}
