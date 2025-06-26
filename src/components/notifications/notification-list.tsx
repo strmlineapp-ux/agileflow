@@ -14,7 +14,7 @@ import { Check, X } from 'lucide-react';
 export function NotificationList() {
   const { toast } = useToast();
   const { realUser, users, addUser, notifications, setNotifications } = useUser();
-  const isAdmin = realUser.permissions?.includes('Admin');
+  const isAdmin = realUser.roles?.includes('Admin');
   
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -30,7 +30,6 @@ export function NotificationList() {
         googleCalendarLinked: false,
         avatarUrl: `https://placehold.co/40x40.png`,
         roles: [],
-        permissions: [],
         directReports: []
       };
       addUser(newUser);

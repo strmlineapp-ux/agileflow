@@ -22,7 +22,7 @@ const navItems = [
 export function Sidebar() {
   const pathname = usePathname();
   const { realUser, viewAsUser, setViewAsUser, users, notifications } = useUser();
-  const isAdmin = realUser.permissions?.includes('Admin');
+  const isAdmin = realUser.roles?.includes('Admin');
   const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
   const unreadCount = notifications.filter((n) => !n.read).length;
 
