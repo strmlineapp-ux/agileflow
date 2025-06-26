@@ -7,12 +7,15 @@ import { type Event } from '@/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { mockEvents, mockHolidays } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
-import { ChevronDown, ChevronRight, PlusCircle } from 'lucide-react';
+import { ChevronDown, ChevronRight, PlusCircle, Pencil, Plus, X } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { useUser } from '@/context/user-context';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { Separator } from '../ui/separator';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { toast } from '@/hooks/use-toast';
+
 
 const isHoliday = (day: Date) => {
     return mockHolidays.some(holiday => isSameDay(day, holiday));
@@ -53,7 +56,13 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
     const [collapsedDays, setCollapsedDays] = useState<Set<string>>(new Set());
     const [collapsedLocations, setCollapsedLocations] = useState<Record<string, Set<string>>>({});
     const [dailyCheckAssignments, setDailyCheckAssignments] = useState<Record<string, Record<string, string | null>>>({});
-    const { users } = useUser();
+    const { users, viewAsUser, extraCheckLocations, setExtraCheckLocations } = useUser();
+
+    const [isManageChecksDialogOpen, setIsManageChecksDialogOpen] = useState(false);
+    const [tempCheckLocations, setTempCheckLocations] = useState<string[]>([]);
+    const [newLocationName, setNewLocationName] = useState('');
+    
+    const canManageChecks = viewAsUser.roles?.includes('Manage Checks');
 
     const dailyCheckUsers = useMemo(() => {
         return users.filter(user => user.roles?.includes('ES Daily Checks'));
@@ -82,20 +91,29 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
     const weeklyScheduleData = useMemo(() => {
         return weekDays.map(day => {
             const dayEvents = mockEvents.filter(event => format(event.startTime, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd'));
-            const groupedEvents = [...fixedLocations, ...Object.keys(dayEvents.reduce((acc, event) => {
+            const allLocationsWithEvents = Object.keys(dayEvents.reduce((acc, event) => {
                 const locationKey = event.location || 'No Location';
-                if (!fixedLocations.includes(locationKey) && !acc[locationKey]) {
+                if (!acc[locationKey]) {
                   acc[locationKey] = [];
                 }
                 return acc;
-            }, {} as Record<string, Event[]>)).sort()]
-            .reduce((acc, locationKey) => {
+            }, {} as Record<string, Event[]>));
+
+            const allDayLocations = [...new Set([...fixedLocations, ...allLocationsWithEvents])].sort((a,b) => {
+                const aIsFixed = fixedLocations.includes(a);
+                const bIsFixed = fixedLocations.includes(b);
+                if (aIsFixed && !bIsFixed) return -1;
+                if (!aIsFixed && bIsFixed) return 1;
+                if(aIsFixed && bIsFixed) return fixedLocations.indexOf(a) - fixedLocations.indexOf(b);
+                return a.localeCompare(b);
+            });
+
+            const groupedEvents = allDayLocations.reduce((acc, locationKey) => {
                 acc[locationKey] = dayEvents.filter(e => e.location === locationKey);
                 return acc;
             }, {} as Record<string, Event[]>);
             
             const isWeekend = isSaturday(day) || isSunday(day);
-            const allDayLocations = Object.keys(groupedEvents);
                 
             return { day, groupedEvents, isWeekend, allDayLocations };
         });
@@ -207,12 +225,105 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
         if (!now) return 0;
         return (now.getHours() + now.getMinutes() / 60) * hourWidth;
     }
+    
+    const handleOpenManageChecksDialog = () => {
+        setTempCheckLocations([...extraCheckLocations]);
+        setIsManageChecksDialogOpen(true);
+    };
+
+    const handleAddNewLocation = () => {
+        if (newLocationName && !tempCheckLocations.includes(newLocationName.trim())) {
+            setTempCheckLocations([...tempCheckLocations, newLocationName.trim()]);
+            setNewLocationName('');
+        }
+    };
+
+    const handleRemoveLocation = (locationToRemove: string) => {
+        setTempCheckLocations(tempCheckLocations.filter(loc => loc !== locationToRemove));
+    };
+
+    const handleSaveChanges = () => {
+        setExtraCheckLocations(tempCheckLocations);
+        toast({ title: "Success", description: "Check locations updated." });
+        setIsManageChecksDialogOpen(false);
+    };
 
     const renderLocationRow = (dayIso: string, location: string, eventsInRow: Event[], isLast: boolean) => {
         const isLocationCollapsed = collapsedLocations[dayIso]?.has(location);
         const assignedUserId = dailyCheckAssignments[dayIso]?.[location];
         const assignedUser = users.find(u => u.userId === assignedUserId);
         
+        const assignmentControl = (
+            <>
+                {canManageChecks ? (
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button 
+                                variant="ghost" 
+                                size={assignedUser ? "sm" : "icon"} 
+                                className={cn("h-6 text-xs", assignedUser ? "w-auto px-1.5" : "w-6 ml-1")}
+                            >
+                                {assignedUser ? (
+                                    <>
+                                        {assignedUser.displayName.split(' ')[0]} {assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}
+                                    </>
+                                ) : (
+                                    <>
+                                        <PlusCircle className="h-4 w-4" />
+                                        <span className="sr-only">Assign to daily check</span>
+                                    </>
+                                )}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-56 p-0">
+                            <div className="grid gap-1">
+                                <div className="p-2 border-b">
+                                    <p className="text-sm font-medium text-center">Assign User</p>
+                                </div>
+                                <div className="flex flex-col gap-1 max-h-48 overflow-y-auto p-1">
+                                    {dailyCheckUsers.length > 0 ? dailyCheckUsers.map(user => (
+                                        <Button
+                                            key={user.userId}
+                                            variant="ghost"
+                                            className="justify-start h-8"
+                                            onClick={() => handleAssignCheck(dayIso, location, user.userId)}
+                                        >
+                                            <Avatar className="h-6 w-6 mr-2">
+                                                <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
+                                                <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                            </Avatar>
+                                            <span className="text-sm">{user.displayName}</span>
+                                        </Button>
+                                    )) : (
+                                        <p className="text-sm text-muted-foreground text-center p-2">No users with "ES Daily Checks" role.</p>
+                                    )}
+                                </div>
+                                {assignedUser && (
+                                    <div className="p-1 border-t">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="w-full text-destructive hover:text-destructive"
+                                            onClick={() => handleAssignCheck(dayIso, location, null)}
+                                        >
+                                            Unassign
+                                        </Button>
+                                    </div>
+                                )}
+                            </div>
+                        </PopoverContent>
+                    </Popover>
+                ) : (
+                    assignedUser && (
+                        <div className="h-6 text-xs px-1.5 flex items-center justify-center text-muted-foreground">
+                            {assignedUser.displayName.split(' ')[0]} {assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}
+                        </div>
+                    )
+                )}
+            </>
+        );
+
+
         return (
             <div key={location} className={cn("flex", { "border-b": !isLast })}>
                 <div 
@@ -222,65 +333,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
                         {isLocationCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                         <p className="font-medium text-sm truncate">{location}</p>
                     </div>
-                     {fixedLocations.includes(location) && location !== 'Studio' && (
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <Button 
-                                    variant="ghost" 
-                                    size={assignedUser ? "sm" : "icon"} 
-                                    className={cn("h-6 text-xs", assignedUser ? "w-auto px-1.5" : "w-6 ml-1")}
-                                >
-                                    {assignedUser ? (
-                                        <>
-                                            {assignedUser.displayName.split(' ')[0]} {assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}
-                                        </>
-                                    ) : (
-                                        <>
-                                            <PlusCircle className="h-4 w-4" />
-                                            <span className="sr-only">Assign to daily check</span>
-                                        </>
-                                    )}
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-56 p-0">
-                                <div className="grid gap-1">
-                                    <div className="p-2 border-b">
-                                        <p className="text-sm font-medium text-center">Assign User</p>
-                                    </div>
-                                    <div className="flex flex-col gap-1 max-h-48 overflow-y-auto p-1">
-                                        {dailyCheckUsers.length > 0 ? dailyCheckUsers.map(user => (
-                                            <Button
-                                                key={user.userId}
-                                                variant="ghost"
-                                                className="justify-start h-8"
-                                                onClick={() => handleAssignCheck(dayIso, location, user.userId)}
-                                            >
-                                                <Avatar className="h-6 w-6 mr-2">
-                                                    <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
-                                                    <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                                                </Avatar>
-                                                <span className="text-sm">{user.displayName}</span>
-                                            </Button>
-                                        )) : (
-                                            <p className="text-sm text-muted-foreground text-center p-2">No users with "ES Daily Checks" role.</p>
-                                        )}
-                                    </div>
-                                    {assignedUser && (
-                                        <div className="p-1 border-t">
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="w-full text-destructive hover:text-destructive"
-                                                onClick={() => handleAssignCheck(dayIso, location, null)}
-                                            >
-                                                Unassign
-                                            </Button>
-                                        </div>
-                                    )}
-                                </div>
-                            </PopoverContent>
-                        </Popover>
-                    )}
+                     {fixedLocations.includes(location) && location !== 'Studio' && assignmentControl}
                 </div>
                 <div className={cn("relative flex-1", isLocationCollapsed ? "h-10" : "h-20")}>
                     {hours.slice(0, 23).map(hour => (
@@ -300,8 +353,6 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
         );
     };
 
-    const extraCheckLocations = ["Training Room", "Locke", "Apgar"];
-
     return (
         <div className="space-y-4">
             {weeklyScheduleData.map(({ day, groupedEvents, allDayLocations }) => {
@@ -315,10 +366,33 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
                     <div key={dayIso} ref={isDayToday ? todayCardRef : null}>
                         <Card className="overflow-hidden">
                              <div className="p-2 border-b bg-card flex flex-wrap items-center gap-2">
+                                {canManageChecks && (
+                                     <>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleOpenManageChecksDialog}>
+                                            <Plus className="h-4 w-4" />
+                                            <span className="sr-only">Add new check location</span>
+                                        </Button>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleOpenManageChecksDialog}>
+                                            <Pencil className="h-4 w-4" />
+                                            <span className="sr-only">Edit check locations</span>
+                                        </Button>
+                                    </>
+                                )}
                                 {extraCheckLocations.map(location => {
                                     const assignedUserId = dailyCheckAssignments[dayIso]?.[location];
                                     const assignedUser = users.find(u => u.userId === assignedUserId);
-                                    return (
+                                    
+                                    const pillContent = (
+                                        <>
+                                            {location}
+                                            {assignedUser && (
+                                                <span className="ml-2 font-normal text-muted-foreground">({assignedUser.displayName.split(' ')[0]} {assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''})</span>
+                                            )}
+                                            {!assignedUser && canManageChecks && <PlusCircle className="ml-2 h-4 w-4" />}
+                                        </>
+                                    );
+
+                                    return canManageChecks ? (
                                         <Popover key={location}>
                                             <PopoverTrigger asChild>
                                                 <Button 
@@ -326,12 +400,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
                                                     size="sm" 
                                                     className="rounded-full h-8"
                                                 >
-                                                    {location}
-                                                    {assignedUser ? (
-                                                        <span className="ml-2 font-normal text-muted-foreground">({assignedUser.displayName.split(' ')[0]} {assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''})</span>
-                                                    ) : (
-                                                        <PlusCircle className="ml-2 h-4 w-4" />
-                                                    )}
+                                                   {pillContent}
                                                 </Button>
                                             </PopoverTrigger>
                                              <PopoverContent className="w-56 p-0">
@@ -372,6 +441,16 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
                                                 </div>
                                             </PopoverContent>
                                         </Popover>
+                                    ) : (
+                                        <Button
+                                            key={location}
+                                            variant={assignedUser ? "secondary" : "outline"}
+                                            size="sm"
+                                            className="rounded-full h-8"
+                                            disabled
+                                        >
+                                            {pillContent}
+                                        </Button>
                                     )
                                 })}
                             </div>
@@ -419,6 +498,45 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
                     </div>
                 );
             })}
+             <Dialog open={isManageChecksDialogOpen} onOpenChange={setIsManageChecksDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Manage Check Locations</DialogTitle>
+                        <DialogDescription>
+                            Add or remove pill buttons for daily checks.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2 max-h-60 overflow-y-auto p-1">
+                            {tempCheckLocations.map(loc => (
+                                <div key={loc} className="flex items-center justify-between bg-muted/50 p-2 rounded-md">
+                                    <span className="text-sm">{loc}</span>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleRemoveLocation(loc)}>
+                                        <X className="h-4 w-4" />
+                                        <span className="sr-only">Remove {loc}</span>
+                                    </Button>
+                                </div>
+                            ))}
+                            {tempCheckLocations.length === 0 && (
+                                <p className="text-sm text-muted-foreground text-center">No check locations defined.</p>
+                            )}
+                        </div>
+                        <div className="flex gap-2">
+                            <Input
+                                placeholder="New location name"
+                                value={newLocationName}
+                                onChange={(e) => setNewLocationName(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleAddNewLocation()}
+                            />
+                            <Button onClick={handleAddNewLocation}>Add</Button>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsManageChecksDialogOpen(false)}>Cancel</Button>
+                        <Button onClick={handleSaveChanges}>Save Changes</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

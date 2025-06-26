@@ -73,14 +73,14 @@ export function UserManagement() {
         if (targetIsManager) return false;
 
         if (editor.permissions?.includes('Production Management')) {
-            const editableByProdManager = ["Production", "Studio Productions", "Post-Production"];
+            const editableByProdManager = ["Production", "Studio Productions", "Post-Production", "Events"];
             if (editableByProdManager.includes(permission)) {
                 return true;
             }
         }
         
         if (editor.permissions?.includes('Studio Production Users')) {
-            const editableByStudioUsers = ["Studio Productions", "Post-Production"];
+            const editableByStudioUsers = ["Post-Production", "Studio Productions"];
             if (editableByStudioUsers.includes(permission)) {
                 return true;
             }
@@ -278,7 +278,7 @@ export function UserManagement() {
     };
 
     const handleSaveRoles = () => {
-        setAllRoles(['Manage Checks', ...tempRoles]);
+        setAllRoles(['Manage Checks', ...tempRoles].filter((value, index, self) => self.indexOf(value) === index));
         setIsRolesDialogOpen(false);
     };
 
@@ -468,36 +468,38 @@ export function UserManagement() {
                                                             </div>
                                                           <div className="grid grid-cols-2 gap-2">
                                                               {allRoles.map(role => {
-                                                                    if (role === 'Manage Checks') {
+                                                                    const isThisManager = isManager(user);
+                                                                    const isManageChecksRole = role === 'Manage Checks';
+                                                                    const isChecked = user.roles?.includes(role);
+                                                                    const isDisabled = (isManageChecksRole && isThisManager) || !canViewerEditThisUserRoles;
+
+                                                                    if (isManageChecksRole && !isThisManager && !viewerIsPrivileged) {
+                                                                        // Hide 'Manage Checks' for non-managers if viewer is not privileged
+                                                                        if (isChecked) {
+                                                                            // but show it if they have it
+                                                                        } else {
+                                                                            return null;
+                                                                        }
+                                                                    }
+                                                                    
+                                                                    if (canViewerEditThisUserRoles || user.userId === viewAsUser.userId) {
                                                                         return (
                                                                             <div key={role} className="flex items-center space-x-2">
                                                                                 <Checkbox
                                                                                     id={`${user.userId}-${role}`}
-                                                                                    checked={isManager(user)}
-                                                                                    disabled
+                                                                                    checked={isChecked}
+                                                                                    disabled={isDisabled}
+                                                                                    onCheckedChange={(checked) => handleRoleChange(user.userId, role, !!checked)}
                                                                                 />
                                                                                 <Label htmlFor={`${user.userId}-${role}`} className="text-sm font-normal flex items-center gap-1">
                                                                                     {role}
-                                                                                    <Lock className="h-3 w-3 text-muted-foreground" />
+                                                                                    {isManageChecksRole && isThisManager && <Lock className="h-3 w-3 text-muted-foreground" />}
                                                                                 </Label>
                                                                             </div>
                                                                         );
                                                                     }
-                                                                    
-                                                                    if (canViewerEditThisUserRoles) {
-                                                                        return (
-                                                                            <div key={role} className="flex items-center space-x-2">
-                                                                                <Checkbox
-                                                                                    id={`${user.userId}-${role}`}
-                                                                                    checked={user.roles?.includes(role)}
-                                                                                    onCheckedChange={(checked) => handleRoleChange(user.userId, role, !!checked)}
-                                                                                />
-                                                                                <Label htmlFor={`${user.userId}-${role}`} className="text-sm font-normal">{role}</Label>
-                                                                            </div>
-                                                                        );
-                                                                    }
 
-                                                                    if (user.roles?.includes(role)) {
+                                                                    if (isChecked) {
                                                                          return (
                                                                             <div key={role} className="flex items-center space-x-2">
                                                                                 <Checkbox
@@ -631,7 +633,7 @@ export function UserManagement() {
                             Add or remove roles available for assignment. Changes will affect all users.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-4">
+                    <div className="space-y-4 py-4">
                         <div className="space-y-2 max-h-60 overflow-y-auto p-1">
                             {tempRoles.map(role => (
                                 <div key={role} className="flex items-center justify-between bg-muted/50 p-2 rounded-md">
