@@ -93,11 +93,13 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
     const weeklyScheduleData = useMemo(() => {
         return weekDays.map(day => {
             const dayEvents = mockEvents.filter(event => format(event.startTime, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd'));
+            
             const allLocationsWithEvents = Object.keys(dayEvents.reduce((acc, event) => {
                 const locationKey = event.location || 'No Location';
                 if (!acc[locationKey]) {
                   acc[locationKey] = [];
                 }
+                acc[locationKey].push(event)
                 return acc;
             }, {} as Record<string, Event[]>));
 
@@ -230,7 +232,8 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
     
     const handleOpenManageChecksDialog = (dayIso: string) => {
         setEditingDayIso(dayIso);
-        setTempCheckLocations(extraCheckLocations[dayIso] ?? defaultCheckLocations);
+        const isWeekend = isSaturday(new Date(dayIso)) || isSunday(new Date(dayIso));
+        setTempCheckLocations(extraCheckLocations[dayIso] ?? (isWeekend ? [] : defaultCheckLocations));
         setIsManageChecksDialogOpen(true);
     };
 
@@ -375,7 +378,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
                 const isDayToday = isToday(day);
                 const isWeekend = isSaturday(day) || isSunday(day);
                 const isDayHoliday = isHoliday(day);
-                const dailyExtraLocations = extraCheckLocations[dayIso] ?? defaultCheckLocations;
+                const dailyExtraLocations = extraCheckLocations[dayIso] ?? (isWeekend ? [] : defaultCheckLocations);
 
                 return (
                     <div key={dayIso} ref={isDayToday ? todayCardRef : null}>
@@ -515,7 +518,6 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
                 );
             })}
              <Dialog open={isManageChecksDialogOpen} onOpenChange={(isOpen) => {
-                 setIsManageChecksDialogOpen(isOpen)
                  if (!isOpen) {
                     setEditingDayIso(null);
                  }
