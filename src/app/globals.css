@@ -6,53 +6,53 @@
 @layer base {
   :root,
   .light {
-    --background: 220 20% 97%;
-    --foreground: 220 15% 15%;
-    --card: 220 20% 100%;
-    --card-foreground: 220 15% 15%;
-    --popover: 220 20% 100%;
-    --popover-foreground: 220 15% 15%;
-    --primary: 212 92% 51%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 223 90% 96%;
-    --secondary-foreground: 212 92% 51%;
-    --muted: 220 15% 94%;
-    --muted-foreground: 220 10% 40%;
-    --accent: 170 85% 45%;
+    --background: 234 60% 97%;
+    --foreground: 234 20% 15%;
+    --card: 234 60% 100%;
+    --card-foreground: 234 20% 15%;
+    --popover: 234 60% 100%;
+    --popover-foreground: 234 20% 15%;
+    --primary: 234 62% 67%;
+    --primary-foreground: 234 62% 98%;
+    --secondary: 234 60% 92%;
+    --secondary-foreground: 234 30% 30%;
+    --muted: 234 60% 92%;
+    --muted-foreground: 234 20% 45%;
+    --accent: 230 70% 60%;
     --accent-foreground: 0 0% 100%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
     --warning: 40 90% 55%;
-    --warning-foreground: 40 85% 98%;
-    --border: 220 15% 88%;
-    --input: 220 15% 88%;
-    --ring: 212 92% 51%;
+    --warning-foreground: 40 85% 5%;
+    --border: 234 20% 88%;
+    --input: 234 20% 88%;
+    --ring: 234 62% 67%;
     --radius: 0.5rem;
     --lunch-break-opacity: 0.08;
   }
 
   .dark {
-    --background: 220 18% 12%;
-    --foreground: 220 15% 95%;
-    --card: 220 18% 15%;
-    --card-foreground: 220 15% 95%;
-    --popover: 220 18% 15%;
-    --popover-foreground: 220 15% 95%;
-    --primary: 212 92% 61%;
-    --primary-foreground: 220 15% 10%;
-    --secondary: 220 15% 25%;
-    --secondary-foreground: 220 15% 95%;
-    --muted: 220 15% 25%;
-    --muted-foreground: 220 10% 60%;
-    --accent: 170 85% 55%;
-    --accent-foreground: 220 15% 10%;
-    --destructive: 0 62.8% 50.6%;
+    --background: 28 10% 10%;
+    --foreground: 28 10% 95%;
+    --card: 28 10% 15%;
+    --card-foreground: 28 10% 95%;
+    --popover: 28 10% 15%;
+    --popover-foreground: 28 10% 95%;
+    --primary: 28 96% 55%;
+    --primary-foreground: 28 96% 10%;
+    --secondary: 28 10% 25%;
+    --secondary-foreground: 28 10% 95%;
+    --muted: 28 10% 25%;
+    --muted-foreground: 28 10% 60%;
+    --accent: 43 97% 71%;
+    --accent-foreground: 43 97% 10%;
+    --destructive: 0 63% 51%;
     --destructive-foreground: 0 0% 100%;
-    --warning: 40 90% 60%;
-    --warning-foreground: 40 85% 10%;
-    --border: 220 15% 25%;
-    --input: 220 15% 30%;
-    --ring: 212 92% 61%;
+    --warning: 43 97% 71%;
+    --warning-foreground: 43 97% 10%;
+    --border: 28 10% 25%;
+    --input: 28 10% 30%;
+    --ring: 28 96% 55%;
     --lunch-break-opacity: 0.15;
   }
 
@@ -82,27 +82,27 @@
   }
 
   .firebase {
-    --background: 220 12% 6%;
+    --background: 220 12% 8%;
     --foreground: 210 16% 92%;
-    --card: 220 12% 10%;
+    --card: 220 12% 12%;
     --card-foreground: 210 16% 92%;
-    --popover: 220 12% 10%;
+    --popover: 220 12% 12%;
     --popover-foreground: 210 16% 92%;
-    --primary: 25 95% 53%; /* Fiery Orange */
-    --primary-foreground: 25 95% 10%;
-    --secondary: 220 12% 15%;
+    --primary: 28 96% 55%; /* Orange */
+    --primary-foreground: 28 96% 10%;
+    --secondary: 220 12% 18%;
     --secondary-foreground: 210 16% 92%;
-    --muted: 220 12% 20%;
+    --muted: 220 12% 22%;
     --muted-foreground: 220 8% 60%;
-    --accent: 260 85% 65%; /* Vibrant Purple */
-    --accent-foreground: 260 85% 98%;
-    --destructive: 0 75% 55%; /* More vibrant red */
+    --accent: 337 67% 50%; /* Pink */
+    --accent-foreground: 337 67% 98%;
+    --destructive: 0 75% 55%;
     --destructive-foreground: 0 0% 100%;
-    --warning: 38 92% 56%;
-    --warning-foreground: 38 92% 15%;
-    --border: 220 12% 15%;
-    --input: 220 12% 15%;
-    --ring: 260 85% 65%; /* Purple focus ring */
+    --warning: 43 97% 71%; /* Yellow */
+    --warning-foreground: 43 97% 15%;
+    --border: 220 12% 18%;
+    --input: 220 12% 18%;
+    --ring: 284 61% 49%; /* Purple */
     --radius: 0.5rem;
     --lunch-break-opacity: 0.1;
   }
@@ -130,11 +130,11 @@
 }
 
 @layer components {
-  /* Firebase theme overrides */
+  /* Firebase theme button hover effect */
   .firebase .bg-primary {
-    border-width: 2px;
+    border-width: 1px;
     border-style: solid;
-    border-color: transparent;
+    border-color: hsl(var(--primary));
     background-color: hsl(var(--primary));
     background-clip: padding-box;
     transition: border-color 0.2s ease-in-out;
@@ -142,10 +142,12 @@
 
   .firebase .bg-primary:hover,
   .firebase .bg-primary:focus-visible {
-    border-image: linear-gradient(to right, hsl(48, 96%, 53%), hsl(25, 95%, 53%), hsl(330, 85%, 60%), hsl(260, 85%, 65%)) 1;
+    border-color: transparent;
+    background: linear-gradient(to right, hsl(43, 97%, 71%), hsl(28, 96%, 55%), hsl(337, 67%, 50%), hsl(284, 61%, 49%), hsl(234, 62%, 67%)) border-box;
   }
 
   .firebase .bg-primary:focus-visible {
-    outline: none;
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
   }
 }
