@@ -2,13 +2,16 @@
 
 import React, { createContext, useContext, useState, useMemo } from 'react';
 import { type User } from '@/types';
-import { mockUsers } from '@/lib/mock-data';
+import { mockUsers as initialUsers, mockRoles as initialRoles } from '@/lib/mock-data';
 
 interface UserContextType {
   realUser: User;
   viewAsUser: User;
   setViewAsUser: (userId: string) => void;
   users: User[];
+  setUsers: React.Dispatch<React.SetStateAction<User[]>>;
+  allRoles: string[];
+  setAllRoles: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
 const UserContext = createContext<UserContextType | null>(null);
@@ -17,9 +20,12 @@ const REAL_USER_ID = '1'; // Alice is the admin
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [viewAsUserId, setViewAsUserId] = useState<string>(REAL_USER_ID);
+  const [users, setUsers] = useState<User[]>(initialUsers);
+  const [allRoles, setAllRoles] = useState<string[]>(initialRoles);
 
-  const realUser = useMemo(() => mockUsers.find(u => u.userId === REAL_USER_ID)!, []);
-  const viewAsUser = useMemo(() => mockUsers.find(u => u.userId === viewAsUserId)!, [viewAsUserId]);
+
+  const realUser = useMemo(() => users.find(u => u.userId === REAL_USER_ID)!, [users]);
+  const viewAsUser = useMemo(() => users.find(u => u.userId === viewAsUserId) || users.find(u => u.userId === REAL_USER_ID)!, [users, viewAsUserId]);
 
   if (!realUser || !viewAsUser) {
     // This should not happen with mock data
@@ -30,7 +36,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     realUser,
     viewAsUser,
     setViewAsUser: setViewAsUserId,
-    users: mockUsers,
+    users,
+    setUsers,
+    allRoles,
+    setAllRoles,
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

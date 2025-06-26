@@ -21,11 +21,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/context/user-context';
-import { mockUsers as initialUsers } from '@/lib/mock-data';
 
 export function UserManagement() {
-    const { realUser, viewAsUser } = useUser();
-    const [users, setUsers] = useState<User[]>(initialUsers);
+    const { realUser, viewAsUser, users, setUsers, allRoles, setAllRoles } = useUser();
     const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
     const [editingUser, setEditingUser] = useState<User | null>(null);
     const [phone, setPhone] = useState('');
@@ -40,10 +38,6 @@ export function UserManagement() {
     const [isRolesDialogOpen, setIsRolesDialogOpen] = useState(false);
     const [tempRoles, setTempRoles] = useState<string[]>([]);
     const [newRole, setNewRole] = useState('');
-    const [allRoles, setAllRoles] = useState([
-        'Video Director', 'D.o.P.', 'Camera', 'Audio', 
-        'ES Operator', 'TD', '1st AD', 'Content Op', 'Edit Events', 'ES Daily Checks'
-    ]);
     const [isDeleteRole2faDialogOpen, setIsDeleteRole2faDialogOpen] = useState(false);
     const [roleToDelete, setRoleToDelete] = useState<string | null>(null);
 
@@ -283,7 +277,6 @@ export function UserManagement() {
         <>
             <Card>
                 <CardHeader>
-                    <CardTitle>Users</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <Table>
