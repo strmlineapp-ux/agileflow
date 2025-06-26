@@ -13,7 +13,7 @@ import { Check, X } from 'lucide-react';
 
 export function NotificationList() {
   const { toast } = useToast();
-  const { realUser, users, setUsers, notifications, setNotifications } = useUser();
+  const { realUser, users, addUser, notifications, setNotifications } = useUser();
   const isAdmin = realUser.permissions?.includes('Admin');
   
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -33,7 +33,7 @@ export function NotificationList() {
         permissions: [],
         directReports: []
       };
-      setUsers(prevUsers => [...prevUsers, newUser]);
+      addUser(newUser);
       toast({ title: 'User Approved', description: `${newUser.displayName} has been added to the system.` });
     } else {
       toast({ title: 'User Rejected', description: `Access request for ${notification.data.displayName} has been rejected.`, variant: 'destructive' });

@@ -10,16 +10,16 @@ interface UserContextType {
   viewAsUser: User;
   setViewAsUser: (userId: string) => void;
   users: User[];
-  setUsers: React.Dispatch<React.SetStateAction<User[]>>;
   allRoles: string[];
-  setAllRoles: React.Dispatch<React.SetStateAction<string[]>>;
   extraCheckLocations: Record<string, string[]>;
   setExtraCheckLocations: React.Dispatch<React.SetStateAction<Record<string, string[]>>>;
   notifications: Notification[];
   setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>;
   userStatusAssignments: Record<string, UserStatusAssignment[]>;
   setUserStatusAssignments: React.Dispatch<React.SetStateAction<Record<string, UserStatusAssignment[]>>>;
-  updateUserPreferences: (userId: string, prefs: Partial<Pick<User, 'theme' | 'defaultCalendarView'>>) => Promise<void>;
+  addUser: (newUser: User) => Promise<void>;
+  updateUser: (userId: string, userData: Partial<User>) => Promise<void>;
+  updateAllRoles: (roles: string[]) => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | null>(null);
@@ -38,11 +38,25 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const realUser = useMemo(() => users.find(u => u.userId === REAL_USER_ID)!, [users]);
   const viewAsUser = useMemo(() => users.find(u => u.userId === viewAsUserId) || users.find(u => u.userId === REAL_USER_ID)!, [users, viewAsUserId]);
 
-  const updateUserPreferences = async (userId: string, prefs: Partial<Pick<User, 'theme' | 'defaultCalendarView'>>) => {
+  const updateUser = async (userId: string, userData: Partial<User>) => {
+    // In a real app, this would be an API call to your backend
+    console.log(`Updating user ${userId}:`, userData);
     setUsers(currentUsers =>
-      currentUsers.map(u => (u.userId === userId ? { ...u, ...prefs } : u))
+      currentUsers.map(u => (u.userId === userId ? { ...u, ...userData } : u))
     );
   };
+
+  const addUser = async (newUser: User) => {
+    // In a real app, this would be an API call to your backend
+    console.log('Adding new user:', newUser);
+    setUsers(currentUsers => [...currentUsers, newUser]);
+  }
+
+  const updateAllRoles = async (roles: string[]) => {
+    // In a real app, this would be an API call to your backend
+    console.log('Updating all roles:', roles);
+    setAllRoles(roles);
+  }
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -64,16 +78,16 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     viewAsUser,
     setViewAsUser: setViewAsUserId,
     users,
-    setUsers,
     allRoles,
-    setAllRoles,
     extraCheckLocations,
     setExtraCheckLocations,
     notifications,
     setNotifications,
     userStatusAssignments,
     setUserStatusAssignments,
-    updateUserPreferences,
+    addUser,
+    updateUser,
+    updateAllRoles,
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

@@ -25,7 +25,7 @@ import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 
 export function UserManagement() {
-    const { realUser, viewAsUser, users, setUsers, allRoles, setAllRoles, updateUserPreferences } = useUser();
+    const { realUser, viewAsUser, users, allRoles, updateUser, updateAllRoles } = useUser();
     const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
     const [editingUser, setEditingUser] = useState<User | null>(null);
     const [phone, setPhone] = useState('');
@@ -109,60 +109,62 @@ export function UserManagement() {
 
 
     const handlePermissionChange = (userId: string, permission: string, checked: boolean) => {
-        setUsers(users.map(user => {
-            if (user.userId === userId) {
-                let newPermissions = user.permissions ? [...user.permissions] : [];
-                
-                if (checked) {
-                    if (!newPermissions.includes(permission)) {
-                        newPermissions.push(permission);
-                    }
-                    
-                    const dependencies: Record<string, string[]> = {
-                        'Service Delivery Manager': ['Production Management', 'Studio Production Users', 'Event Users', 'Post-Production'],
-                        'Production Management': ['Post-Production', 'Production', 'Studio Productions', 'Events'],
-                        'Studio Production Users': ['Post-Production', 'Studio Productions'],
-                        'Event Users': ['Events']
-                    };
+        const user = users.find(u => u.userId === userId);
+        if (!user) return;
 
-                    let changed = true;
-                    while(changed) {
-                        changed = false;
-                        for (const parent in dependencies) {
-                            if (newPermissions.includes(parent)) {
-                                dependencies[parent as keyof typeof dependencies].forEach(child => {
-                                    if (!newPermissions.includes(child)) {
-                                        newPermissions.push(child);
-                                        changed = true;
-                                    }
-                                });
-                            }
-                        }
-                    }
-                } else {
-                    newPermissions = newPermissions.filter(p => p !== permission);
-                }
-                
-                return { ...user, permissions: newPermissions };
+        let newPermissions = user.permissions ? [...user.permissions] : [];
+        
+        if (checked) {
+            if (!newPermissions.includes(permission)) {
+                newPermissions.push(permission);
             }
-            return user;
-        }));
+            
+            const dependencies: Record<string, string[]> = {
+                'Service Delivery Manager': ['Production Management', 'Studio Production Users', 'Event Users', 'Post-Production'],
+                'Production Management': ['Post-Production', 'Production', 'Studio Productions', 'Events'],
+                'Studio Production Users': ['Post-Production', 'Studio Productions'],
+                'Event Users': ['Events']
+            };
+
+            let changed = true;
+            while(changed) {
+                changed = false;
+                for (const parent in dependencies) {
+                    if (newPermissions.includes(parent)) {
+                        dependencies[parent as keyof typeof dependencies].forEach(child => {
+                            if (!newPermissions.includes(child)) {
+                                newPermissions.push(child);
+                                changed = true;
+                            }
+                        });
+                    }
+                }
+            }
+        } else {
+            newPermissions = newPermissions.filter(p => p !== permission);
+        }
+        
+        updateUser(userId, { permissions: newPermissions });
     };
 
     const handleRoleChange = (userId: string, role: string, checked: boolean) => {
-        setUsers(users.map(user => {
-            if (user.userId === userId) {
-                const roles = user.roles || [];
-                if (checked) {
-                    if (!roles.includes(role)) {
-                        return { ...user, roles: [...roles, role] };
-                    }
-                } else {
-                    return { ...user, roles: roles.filter(s => s !== role) };
-                }
+        const user = users.find(u => u.userId === userId);
+        if (!user) return;
+
+        const roles = user.roles || [];
+        let newRoles: string[];
+
+        if (checked) {
+            if (!roles.includes(role)) {
+                newRoles = [...roles, role];
+            } else {
+                newRoles = roles;
             }
-            return user;
-        }));
+        } else {
+            newRoles = roles.filter(s => s !== role);
+        }
+        
+        updateUser(userId, { roles: newRoles });
     };
 
     const toggleRow = (userId: string) => {
@@ -179,10 +181,7 @@ export function UserManagement() {
 
     const handleSavePhone = () => {
         if (!editingUser) return;
-
-        setUsers(users.map(user => 
-            user.userId === editingUser.userId ? { ...user, phone: phone } : user
-        ));
+        updateUser(editingUser.userId, { phone });
         setEditingUser(null);
     };
 
@@ -193,12 +192,7 @@ export function UserManagement() {
 
     const handleSaveReportingLine = () => {
         if (!editingReportingLine) return;
-
-        setUsers(users.map(user =>
-            user.userId === editingReportingLine.userId
-                ? { ...user, directReports: tempDirectReports }
-                : user
-        ));
+        updateUser(editingReportingLine.userId, { directReports: tempDirectReports });
         setEditingReportingLine(null);
     };
 
@@ -280,7 +274,7 @@ export function UserManagement() {
     };
 
     const handleSaveRoles = () => {
-        setAllRoles(['Manage Checks', ...tempRoles].filter((value, index, self) => self.indexOf(value) === index));
+        updateAllRoles(['Manage Checks', ...tempRoles].filter((value, index, self) => self.indexOf(value) === index));
         setIsRolesDialogOpen(false);
     };
 
@@ -348,7 +342,7 @@ export function UserManagement() {
                                                                     <Label htmlFor="color-scheme">Colour Scheme</Label>
                                                                     <Select
                                                                         value={realUser.theme || 'light'}
-                                                                        onValueChange={(value) => updateUserPreferences(realUser.userId, { theme: value as any })}
+                                                                        onValueChange={(value) => updateUser(realUser.userId, { theme: value as any })}
                                                                     >
                                                                         <SelectTrigger id="color-scheme" className="col-span-2 h-8">
                                                                             <SelectValue placeholder="Select scheme" />
@@ -364,7 +358,7 @@ export function UserManagement() {
                                                                     <Label htmlFor="calendar-view">Default View</Label>
                                                                     <Select
                                                                         value={realUser.defaultCalendarView || 'day'}
-                                                                        onValueChange={(value) => updateUserPreferences(realUser.userId, { defaultCalendarView: value as any })}
+                                                                        onValueChange={(value) => updateUser(realUser.userId, { defaultCalendarView: value as any })}
                                                                     >
                                                                         <SelectTrigger id="calendar-view" className="col-span-2 h-8">
                                                                             <SelectValue placeholder="Select view" />
