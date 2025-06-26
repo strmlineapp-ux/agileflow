@@ -44,6 +44,9 @@ export function UserManagement() {
         'Video Director', 'D.o.P.', 'Camera', 'Audio', 
         'ES Operator', 'TD', '1st AD', 'Content Op', 'Edit Events'
     ]);
+    const [isDeleteRole2faDialogOpen, setIsDeleteRole2faDialogOpen] = useState(false);
+    const [roleToDelete, setRoleToDelete] = useState<string | null>(null);
+
 
     const allPermissions = [
         "Events", "Event Users", "Studio Productions", "Studio Production Users",
@@ -247,8 +250,28 @@ export function UserManagement() {
         }
     };
 
-    const handleRemoveRole = (roleToRemove: string) => {
-        setTempRoles(tempRoles.filter(role => role !== roleToRemove));
+    const triggerDeleteRole = (role: string) => {
+        setRoleToDelete(role);
+        setIsDeleteRole2faDialogOpen(true);
+    };
+
+    const handleVerifyAndDeleteRole = () => {
+        if (!roleToDelete) return;
+
+        if (twoFactorCode === '123456') {
+            setTempRoles(tempRoles.filter(role => role !== roleToDelete));
+            toast({ title: "Success", description: `Role "${roleToDelete}" deleted successfully.` });
+            setIsDeleteRole2faDialogOpen(false);
+            setRoleToDelete(null);
+            setTwoFactorCode('');
+        } else {
+            toast({
+                variant: "destructive",
+                title: "Verification Failed",
+                description: "The provided 2FA code is incorrect. Please try again.",
+            });
+            setTwoFactorCode('');
+        }
     };
 
     const handleSaveRoles = () => {
@@ -590,7 +613,7 @@ export function UserManagement() {
                             {tempRoles.map(role => (
                                 <div key={role} className="flex items-center justify-between bg-muted/50 p-2 rounded-md">
                                     <span className="text-sm">{role}</span>
-                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleRemoveRole(role)}>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => triggerDeleteRole(role)}>
                                         <X className="h-4 w-4" />
                                         <span className="sr-only">Remove {role}</span>
                                     </Button>
@@ -613,6 +636,47 @@ export function UserManagement() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <Dialog open={isDeleteRole2faDialogOpen} onOpenChange={(isOpen) => {
+                if (!isOpen) {
+                    setIsDeleteRole2faDialogOpen(false);
+                    setRoleToDelete(null);
+                    setTwoFactorCode('');
+                }
+            }}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Two-Factor Authentication</DialogTitle>
+                        <DialogDescription>
+                            Deleting the role "{roleToDelete}" requires secondary authentication. Enter the code from your Google Authenticator app.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="delete-role-2fa-code" className="text-right">
+                                Code
+                            </Label>
+                            <Input
+                                id="delete-role-2fa-code"
+                                value={twoFactorCode}
+                                onChange={(e) => setTwoFactorCode(e.target.value)}
+                                className="col-span-3"
+                                placeholder="123456"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                         <Button variant="outline" onClick={() => {
+                             setIsDeleteRole2faDialogOpen(false);
+                             setRoleToDelete(null);
+                             setTwoFactorCode('');
+                         }}>Cancel</Button>
+                        <Button onClick={handleVerifyAndDeleteRole} variant="destructive">Verify & Delete</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </>
     )
 }
+
+    
