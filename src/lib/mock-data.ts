@@ -84,6 +84,42 @@ export const mockEvents: Event[] = [
     },
 ];
 
+export const mockNotifications = [
+  {
+    id: '1',
+    user: mockUsers[1],
+    action: 'assigned you to a new task:',
+    subject: 'Develop authentication API',
+    time: new Date(new Date().setHours(new Date().getHours() - 1)),
+    read: false,
+  },
+  {
+    id: '2',
+    user: mockUsers[0],
+    action: 'mentioned you in a comment on',
+    subject: 'Project Kickoff',
+    time: new Date(new Date().setDate(new Date().getDate() - 1)),
+    read: false,
+  },
+  {
+    id: '3',
+    user: mockUsers[2],
+    action: 'completed the task:',
+    subject: 'Fix login page CSS bug',
+    time: new Date(new Date().setDate(new Date().getDate() - 2)),
+    read: true,
+  },
+  {
+    id: '4',
+    user: { displayName: 'System', avatarUrl: 'https://placehold.co/40x40.png', userId: 'system', email: 'system', googleCalendarLinked: false },
+    action: 'has a new update:',
+    subject: 'New features are now available in the Calendar view.',
+    time: new Date(new Date().setDate(new Date().getDate() - 3)),
+    read: true,
+  }
+];
+
+
 const currentYear = new Date().getFullYear();
 export const mockHolidays: Date[] = [
     new Date(currentYear, 0, 1), // New Year's Day

@@ -10,10 +10,13 @@ import {
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/icons/logo';
 import { useUser } from '@/context/user-context';
+import { mockNotifications } from '@/lib/mock-data';
+import { Badge } from '@/components/ui/badge';
 
 export function Header() {
   const { realUser, viewAsUser } = useUser();
   const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
+  const unreadCount = mockNotifications.filter((n) => !n.read).length;
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-card px-4 sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 sm:py-4">
@@ -45,9 +48,16 @@ export function Header() {
               <ListChecks className="h-5 w-5" />
               Tasks
             </Link>
-            <Link href="/dashboard/notifications" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
-              <Bell className="h-5 w-5" />
-              Notifications
+            <Link href="/dashboard/notifications" className="flex items-center justify-between gap-4 px-2.5 text-muted-foreground hover:text-foreground">
+              <div className="flex items-center gap-4">
+                <Bell className="h-5 w-5" />
+                Notifications
+              </div>
+              {unreadCount > 0 && (
+                <Badge variant="default" className="flex h-5 w-5 items-center justify-center rounded-full p-0">
+                  {unreadCount}
+                </Badge>
+              )}
             </Link>
             <Link href="/dashboard/settings" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
               <Settings className="h-5 w-5" />

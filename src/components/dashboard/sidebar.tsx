@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal } from '../ui/dropdown-menu';
 import { useUser } from '@/context/user-context';
+import { mockNotifications } from '@/lib/mock-data';
 
 const navItems = [
   { href: '/dashboard/calendar', icon: Calendar, label: 'Calendar' },
@@ -23,6 +24,7 @@ export function Sidebar() {
   const { realUser, viewAsUser, setViewAsUser, users } = useUser();
   const isAdmin = realUser.permissions?.includes('Admin');
   const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
+  const unreadCount = mockNotifications.filter((n) => !n.read).length;
 
 
   return (
@@ -50,11 +52,16 @@ export function Sidebar() {
                 <Link
                   href={item.href}
                   className={cn(
-                    'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
+                    'relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
                     pathname === item.href && 'bg-accent text-accent-foreground'
                   )}
                 >
                   <item.icon className="h-5 w-5" />
+                  {item.href === '/dashboard/notifications' && unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary p-0 text-xs text-primary-foreground">
+                      {unreadCount}
+                    </span>
+                  )}
                   <span className="sr-only">{item.label}</span>
                 </Link>
               </TooltipTrigger>
