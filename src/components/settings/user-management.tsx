@@ -73,7 +73,7 @@ export function UserManagement() {
         if (targetIsManager) return false;
 
         if (editor.permissions?.includes('Production Management')) {
-            const editableByProdManager = ["Production", "Studio Productions", "Post-Production"];
+            const editableByProdManager = ["Production", "Studio Productions", "Post-Production", "Events"];
             if (editableByProdManager.includes(permission)) {
                 return true;
             }
@@ -322,8 +322,11 @@ export function UserManagement() {
                                                             <p className="font-medium text-sm mb-2">Permissions</p>
                                                             <div className="grid grid-cols-2 gap-2">
                                                                 {allPermissions.map(permission => {
-                                                                    if (permission === 'Admin' && !viewerIsPrivileged && user.userId !== viewAsUser.userId) {
-                                                                        return null;
+                                                                    if (permission === 'Admin') {
+                                                                        const canViewAdminPermission = viewerIsPrivileged || user.userId === viewAsUser.userId;
+                                                                        if (!canViewAdminPermission) {
+                                                                            return null;
+                                                                        }
                                                                     }
 
                                                                     const permissionIsEnabled = user.permissions?.includes(permission);
