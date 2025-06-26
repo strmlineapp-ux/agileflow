@@ -51,24 +51,31 @@ export function UserManagement() {
         return user.permissions?.includes('Admin') || user.permissions?.includes('Service Delivery Manager');
     }
 
-    const canSeePermissionsSection = (viewedUser: User): boolean => {
-        if (isPrivilegedUser(viewAsUser)) return true;
-        if (viewAsUser.userId === viewedUser.userId) return true;
-        return false;
-    };
-
     const canEditPermissions = (editor: User, target: User, permission: string): boolean => {
         if (isPrivilegedUser(editor)) return true;
-        if (isPrivilegedUser(target)) return false;
 
-        if (permission === 'Production' && editor.permissions?.includes('Production Management')) return true;
-        if (permission === 'Studio Productions' && editor.permissions?.includes('Studio Production Users')) return true;
-        if (permission === 'Events' && editor.permissions?.includes('Event Users')) return true;
+        const managerialPermissions = ["Admin", "Service Delivery Manager", "Production Management", "Studio Production Users", "Event Users"];
+        const targetIsManager = target.permissions?.some(p => managerialPermissions.includes(p));
+        
+        if (targetIsManager) return false;
+
+        if (editor.permissions?.includes('Production Management')) {
+            const editableByProdManager = ["Events", "Studio Productions", "Production", "Post-Production"];
+            if (editableByProdManager.includes(permission)) {
+                return true;
+            }
+        }
+        
+        if (editor.permissions?.includes('Studio Production Users') && permission === 'Studio Productions') {
+            return true;
+        }
+        
+        if (editor.permissions?.includes('Event Users') && permission === 'Events') {
+            return true;
+        }
 
         return false;
     };
-
-    const canEditReportingLine = isPrivilegedUser(viewAsUser);
 
     const handlePermissionChange = (userId: string, permission: string, checked: boolean) => {
         setUsers(users.map(user => {
@@ -265,7 +272,7 @@ export function UserManagement() {
                                                         <div className="mt-4">
                                                             <div className="flex items-center gap-2 mb-2">
                                                                 <p className="font-medium text-sm">Reporting Line</p>
-                                                                {canEditReportingLine && (
+                                                                {isPrivilegedUser(viewAsUser) && (
                                                                     <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEditReportingLine(user)}>
                                                                         <Pencil className="h-4 w-4" />
                                                                         <span className="sr-only">Edit reporting line</span>
@@ -289,86 +296,83 @@ export function UserManagement() {
                                                         </div>
                                                     </div>
                                                     
-                                                    {canSeePermissionsSection(user) && (
-                                                        <div>
-                                                            <p className="font-medium text-sm mb-2">Permissions</p>
-                                                            <div className="grid grid-cols-2 gap-2">
-                                                                {allPermissions.map(permission => {
-                                                                    const viewerIsPrivileged = isPrivilegedUser(viewAsUser);
-                                                                    const permissionIsEnabled = user.permissions?.includes(permission);
+                                                    <div>
+                                                        <p className="font-medium text-sm mb-2">Permissions</p>
+                                                        <div className="grid grid-cols-2 gap-2">
+                                                            {allPermissions.map(permission => {
+                                                                const viewerIsPrivileged = isPrivilegedUser(viewAsUser);
+                                                                const permissionIsEnabled = user.permissions?.includes(permission);
 
-                                                                    if (!viewerIsPrivileged && !permissionIsEnabled) {
-                                                                        return null;
-                                                                    }
-                                                                    
-                                                                    const hasServiceDeliveryManager = user.permissions?.includes('Service Delivery Manager');
-                                                                    const isProductionManagementLocked = permission === 'Production Management' && hasServiceDeliveryManager;
-                                                                    const isStudioProductionUsersLocked = permission === 'Studio Production Users' && hasServiceDeliveryManager;
-                                                                    const isEventUsersLocked = permission === 'Event Users' && hasServiceDeliveryManager;
-                                                                    const isPostProductionLocked = permission === 'Post-Production' && hasServiceDeliveryManager;
+                                                                if (!viewerIsPrivileged && !permissionIsEnabled) {
+                                                                    return null;
+                                                                }
+                                                                
+                                                                const hasServiceDeliveryManager = user.permissions?.includes('Service Delivery Manager');
+                                                                const isProductionManagementLocked = permission === 'Production Management' && hasServiceDeliveryManager;
+                                                                const isStudioProductionUsersLocked = permission === 'Studio Production Users' && hasServiceDeliveryManager;
+                                                                const isEventUsersLocked = permission === 'Event Users' && hasServiceDeliveryManager;
+                                                                const isPostProductionLocked = permission === 'Post-Production' && hasServiceDeliveryManager;
 
-                                                                    const hasProductionManagement = user.permissions?.includes('Production Management');
-                                                                    const isProductionLocked = permission === 'Production' && hasProductionManagement;
+                                                                const hasProductionManagement = user.permissions?.includes('Production Management');
+                                                                const isProductionLocked = permission === 'Production' && hasProductionManagement;
 
-                                                                    const hasStudioProductionUsers = user.permissions?.includes('Studio Production Users');
-                                                                    const isStudioProductionsLocked = permission === 'Studio Productions' && hasStudioProductionUsers;
-                                                                    
-                                                                    const hasEventUsers = user.permissions?.includes('Event Users');
-                                                                    const isEventsLocked = permission === 'Events' && hasEventUsers;
-                                                                    
-                                                                    const isPrivilegedPermission = permission === 'Admin' || permission === 'Service Delivery Manager';
-                                                                    const isCheckboxDisabled = isPrivilegedPermission || 
-                                                                                             isProductionLocked || 
-                                                                                             isStudioProductionsLocked || 
-                                                                                             isEventsLocked ||
-                                                                                             isProductionManagementLocked ||
-                                                                                             isStudioProductionUsersLocked ||
-                                                                                             isEventUsersLocked ||
-                                                                                             isPostProductionLocked ||
-                                                                                             !canEditPermissions(viewAsUser, user, permission);
+                                                                const hasStudioProductionUsers = user.permissions?.includes('Studio Production Users');
+                                                                const isStudioProductionsLocked = permission === 'Studio Productions' && hasStudioProductionUsers;
+                                                                
+                                                                const hasEventUsers = user.permissions?.includes('Event Users');
+                                                                const isEventsLocked = permission === 'Events' && hasEventUsers;
+                                                                
+                                                                const isPrivilegedPermission = permission === 'Admin' || permission === 'Service Delivery Manager';
+                                                                const isCheckboxDisabled = isPrivilegedPermission || 
+                                                                                         isProductionLocked || 
+                                                                                         isStudioProductionsLocked || 
+                                                                                         isEventsLocked ||
+                                                                                         isProductionManagementLocked ||
+                                                                                         isStudioProductionUsersLocked ||
+                                                                                         isEventUsersLocked ||
+                                                                                         isPostProductionLocked ||
+                                                                                         !canEditPermissions(viewAsUser, user, permission);
 
-                                                                    const isChecked = permissionIsEnabled || isProductionLocked || isStudioProductionsLocked || isEventsLocked || isProductionManagementLocked || isStudioProductionUsersLocked || isEventUsersLocked || isPostProductionLocked;
+                                                                const isChecked = permissionIsEnabled || isProductionLocked || isStudioProductionsLocked || isEventsLocked || isProductionManagementLocked || isStudioProductionUsersLocked || isEventUsersLocked || isPostProductionLocked;
 
-                                                                    return (
-                                                                        <div key={permission} className="flex items-center space-x-2">
-                                                                            <Checkbox
-                                                                                id={`${user.userId}-${permission}`}
-                                                                                checked={isChecked}
-                                                                                disabled={isCheckboxDisabled}
-                                                                                onCheckedChange={(checked) => {
-                                                                                    if (!isPrivilegedPermission && canEditPermissions(viewAsUser, user, permission)) {
-                                                                                        handlePermissionChange(user.userId, permission, !!checked);
+                                                                return (
+                                                                    <div key={permission} className="flex items-center space-x-2">
+                                                                        <Checkbox
+                                                                            id={`${user.userId}-${permission}`}
+                                                                            checked={isChecked}
+                                                                            disabled={isCheckboxDisabled}
+                                                                            onCheckedChange={(checked) => {
+                                                                                if (!isPrivilegedPermission && canEditPermissions(viewAsUser, user, permission)) {
+                                                                                    handlePermissionChange(user.userId, permission, !!checked);
+                                                                                }
+                                                                            }}
+                                                                        />
+                                                                        <Label
+                                                                            htmlFor={`${user.userId}-${permission}`}
+                                                                            className="text-sm font-normal flex items-center gap-1 cursor-pointer"
+                                                                            onClick={() => {
+                                                                                if (isPrivilegedPermission && canEditPermissions(viewAsUser, user, permission)) {
+                                                                                    const isAdminPermission = permission === 'Admin';
+                                                                                    const isSdmNotByAdmin = permission === 'Service Delivery Manager' && !viewAsUser.permissions?.includes('Admin');
+                                                                                    
+                                                                                    if (isAdminPermission || isSdmNotByAdmin) {
+                                                                                        setEditingPermissionState({ user, permission });
+                                                                                        setIs2faDialogOpen(true);
+                                                                                    } else {
+                                                                                        const isCurrentlyEnabled = user.permissions?.includes(permission);
+                                                                                        handlePermissionChange(user.userId, permission, !isCurrentlyEnabled);
                                                                                     }
-                                                                                }}
-                                                                            />
-                                                                            <Label
-                                                                                htmlFor={`${user.userId}-${permission}`}
-                                                                                className="text-sm font-normal flex items-center gap-1 cursor-pointer"
-                                                                                onClick={() => {
-                                                                                    if (isPrivilegedPermission && canEditPermissions(viewAsUser, user, permission)) {
-                                                                                        const isAdminPermission = permission === 'Admin';
-                                                                                        const isSdmNotByAdmin = permission === 'Service Delivery Manager' && !viewAsUser.permissions?.includes('Admin');
-                                                                                        
-                                                                                        if (isAdminPermission || isSdmNotByAdmin) {
-                                                                                            setEditingPermissionState({ user, permission });
-                                                                                            setIs2faDialogOpen(true);
-                                                                                        } else {
-                                                                                            // This case is for an Admin changing the Service Delivery Manager permission.
-                                                                                            const isCurrentlyEnabled = user.permissions?.includes(permission);
-                                                                                            handlePermissionChange(user.userId, permission, !isCurrentlyEnabled);
-                                                                                        }
-                                                                                    }
-                                                                                }}
-                                                                            >
-                                                                                {permission}
-                                                                                {isPrivilegedPermission && <Lock className="h-3 w-3 text-muted-foreground" />}
-                                                                            </Label>
-                                                                        </div>
-                                                                    );
-                                                                })}
-                                                            </div>
+                                                                                }
+                                                                            }}
+                                                                        >
+                                                                            {permission}
+                                                                            {isPrivilegedPermission && <Lock className="h-3 w-3 text-muted-foreground" />}
+                                                                        </Label>
+                                                                    </div>
+                                                                );
+                                                            })}
                                                         </div>
-                                                    )}
+                                                    </div>
 
                                                     <div>
                                                         <p className="font-medium text-sm mb-2">Skills</p>
