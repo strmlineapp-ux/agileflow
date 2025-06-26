@@ -1,19 +1,115 @@
 
 import { type Event, type User, type Task, type Notification, type CalendarEventLabel } from '@/types';
 
+const allAssignableRoles: string[] = [
+    'Admin',
+    'Service Delivery Manager',
+    'Production Management',
+    'Studio Production Users',
+    'Event Users',
+    'Production',
+    'Studio Productions',
+    'Post-Production',
+    'Events',
+    'Video Director',
+    'D.o.P.',
+    'Camera',
+    'Audio',
+    'ES Operator',
+    'TD',
+    '1st AD',
+    'Content Op',
+    'Edit Events',
+    'ES Daily Checks',
+    'Manage Checks'
+].sort();
+
+
 export const mockUsers: User[] = [
-    { userId: '1', displayName: 'Alice Johnson', email: 'alice@example.com', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Product Manager', location: 'New York, USA', phone: '123-456-7890', roles: ['Video Director', 'TD', 'Edit Events', 'Manage Checks'], permissions: ['Admin', 'Event Users', 'Events', 'Studio Productions'], directReports: ['2', '3'], theme: 'light', defaultCalendarView: 'production-schedule' },
-    { userId: '2', displayName: 'Bob Williams', email: 'bob@example.com', googleCalendarLinked: false, avatarUrl: 'https://placehold.co/40x40.png', title: 'Lead Engineer', location: 'San Francisco, USA', roles: ['Camera', 'Audio', 'Manage Checks'], permissions: ['Service Delivery Manager', 'Production Management', 'Studio Production Users', 'Event Users', 'Production', 'Studio Productions', 'Events', 'Post-Production'], directReports: ['4'], theme: 'light', defaultCalendarView: 'week' },
-    { userId: '3', displayName: 'Charlie Brown', email: 'charlie@example.com', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Software Engineer', location: 'Austin, USA', roles: ["D.o.P.", "Manage Checks"], permissions: ['Production Management', 'Production', 'Events'], directReports: ['4'], theme: 'light', defaultCalendarView: 'month' },
-    { userId: '4', displayName: 'Diana Prince', email: 'diana@example.com', googleCalendarLinked: false, avatarUrl: 'https://placehold.co/40x40.png', title: 'UX Designer', location: 'Chicago, USA', phone: '098-765-4321', roles: ['Content Op', 'ES Operator', '1st AD', 'Edit Events', 'ES Daily Checks'], permissions: ['Event Users', 'Events'], directReports: [], theme: 'light', defaultCalendarView: 'day' },
-    { userId: '5', displayName: 'Eve Adams', email: 'eve@example.com', googleCalendarLinked: false, avatarUrl: 'https://placehold.co/40x40.png', title: 'Junior Developer', location: 'Remote', roles: ['Camera'], permissions: ['Production'], directReports: [], theme: 'light', defaultCalendarView: 'production-schedule' },
-    { userId: '6', displayName: 'Frank Miller', email: 'frank@example.com', googleCalendarLinked: false, avatarUrl: 'https://placehold.co/40x40.png', title: 'Studio Technician', location: 'Los Angeles, USA', phone: '555-555-5555', roles: ['Audio', 'Camera', 'ES Daily Checks'], permissions: ['Studio Production Users', 'Studio Productions'], directReports: [], theme: 'light', defaultCalendarView: 'production-schedule' },
+    { 
+        userId: '1', 
+        displayName: 'Alice Johnson', 
+        email: 'alice@example.com', 
+        googleCalendarLinked: true, 
+        avatarUrl: 'https://placehold.co/40x40.png', 
+        title: 'Product Manager', 
+        location: 'New York, USA', 
+        phone: '123-456-7890', 
+        roles: ['Admin', 'Event Users', 'Events', 'Studio Productions', 'Video Director', 'TD', 'Edit Events', 'Manage Checks'], 
+        directReports: ['2', '3'], 
+        theme: 'light', 
+        defaultCalendarView: 'production-schedule' 
+    },
+    { 
+        userId: '2', 
+        displayName: 'Bob Williams', 
+        email: 'bob@example.com', 
+        googleCalendarLinked: false, 
+        avatarUrl: 'https://placehold.co/40x40.png', 
+        title: 'Lead Engineer', 
+        location: 'San Francisco, USA', 
+        roles: ['Service Delivery Manager', 'Production Management', 'Studio Production Users', 'Event Users', 'Production', 'Studio Productions', 'Events', 'Post-Production', 'Camera', 'Audio', 'Manage Checks'], 
+        directReports: ['4'], 
+        theme: 'light', 
+        defaultCalendarView: 'week' 
+    },
+    { 
+        userId: '3', 
+        displayName: 'Charlie Brown', 
+        email: 'charlie@example.com', 
+        googleCalendarLinked: true, 
+        avatarUrl: 'https://placehold.co/40x40.png', 
+        title: 'Software Engineer', 
+        location: 'Austin, USA', 
+        roles: ["Production Management", "Production", "Events", "D.o.P.", "Manage Checks"], 
+        directReports: ['4'], 
+        theme: 'light', 
+        defaultCalendarView: 'month' 
+    },
+    { 
+        userId: '4', 
+        displayName: 'Diana Prince', 
+        email: 'diana@example.com', 
+        googleCalendarLinked: false, 
+        avatarUrl: 'https://placehold.co/40x40.png', 
+        title: 'UX Designer', 
+        location: 'Chicago, USA', 
+        phone: '098-765-4321', 
+        roles: ['Event Users', 'Events', 'Content Op', 'ES Operator', '1st AD', 'Edit Events', 'ES Daily Checks'], 
+        directReports: [], 
+        theme: 'light', 
+        defaultCalendarView: 'day' 
+    },
+    { 
+        userId: '5', 
+        displayName: 'Eve Adams', 
+        email: 'eve@example.com', 
+        googleCalendarLinked: false, 
+        avatarUrl: 'https://placehold.co/40x40.png', 
+        title: 'Junior Developer', 
+        location: 'Remote', 
+        roles: ['Production', 'Camera'], 
+        directReports: [], 
+        theme: 'light', 
+        defaultCalendarView: 'production-schedule' 
+    },
+    { 
+        userId: '6', 
+        displayName: 'Frank Miller', 
+        email: 'frank@example.com', 
+        googleCalendarLinked: false, 
+        avatarUrl: 'https://placehold.co/40x40.png', 
+        title: 'Studio Technician', 
+        location: 'Los Angeles, USA', 
+        phone: '555-555-5555', 
+        roles: ['Studio Production Users', 'Studio Productions', 'Audio', 'Camera', 'ES Daily Checks'], 
+        directReports: [], 
+        theme: 'light', 
+        defaultCalendarView: 'production-schedule' 
+    },
 ];
 
-export const mockRoles: string[] = [
-    'Video Director', 'D.o.P.', 'Camera', 'Audio', 
-    'ES Operator', 'TD', '1st AD', 'Content Op', 'Edit Events', 'ES Daily Checks', 'Manage Checks'
-];
+export const mockRoles: string[] = allAssignableRoles;
 
 export const mockTasks: Task[] = [
   { taskId: '1', title: 'Design new dashboard layout', assignedTo: [mockUsers[0]], dueDate: new Date(), priority: 'P1', status: 'in_progress', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },

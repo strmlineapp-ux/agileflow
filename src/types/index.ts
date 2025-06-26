@@ -11,7 +11,6 @@ export interface User {
   phone?: string;
   title?: string;
   roles?: string[];
-  permissions?: string[];
   directReports?: string[];
   theme?: 'light' | 'dark' | 'high-visibility';
   defaultCalendarView?: 'month' | 'week' | 'day' | 'production-schedule';
