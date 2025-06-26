@@ -13,8 +13,8 @@ interface UserContextType {
   setUsers: React.Dispatch<React.SetStateAction<User[]>>;
   allRoles: string[];
   setAllRoles: React.Dispatch<React.SetStateAction<string[]>>;
-  extraCheckLocations: string[];
-  setExtraCheckLocations: React.Dispatch<React.SetStateAction<string[]>>;
+  extraCheckLocations: Record<string, string[]>;
+  setExtraCheckLocations: React.Dispatch<React.SetStateAction<Record<string, string[]>>>;
 }
 
 const UserContext = createContext<UserContextType | null>(null);
@@ -25,7 +25,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [viewAsUserId, setViewAsUserId] = useState<string>(REAL_USER_ID);
   const [users, setUsers] = useState<User[]>(initialUsers);
   const [allRoles, setAllRoles] = useState<string[]>(initialRoles);
-  const [extraCheckLocations, setExtraCheckLocations] = useState<string[]>(["Training Room", "Locke", "Apgar"]);
+  const [extraCheckLocations, setExtraCheckLocations] = useState<Record<string, string[]>>({});
 
 
   const realUser = useMemo(() => users.find(u => u.userId === REAL_USER_ID)!, [users]);

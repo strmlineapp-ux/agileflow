@@ -59,6 +59,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
     const { users, viewAsUser, extraCheckLocations, setExtraCheckLocations } = useUser();
 
     const [isManageChecksDialogOpen, setIsManageChecksDialogOpen] = useState(false);
+    const [editingDayIso, setEditingDayIso] = useState<string | null>(null);
     const [tempCheckLocations, setTempCheckLocations] = useState<string[]>([]);
     const [newLocationName, setNewLocationName] = useState('');
     
@@ -226,8 +227,9 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
         return (now.getHours() + now.getMinutes() / 60) * hourWidth;
     }
     
-    const handleOpenManageChecksDialog = () => {
-        setTempCheckLocations([...extraCheckLocations]);
+    const handleOpenManageChecksDialog = (dayIso: string) => {
+        setEditingDayIso(dayIso);
+        setTempCheckLocations(extraCheckLocations[dayIso] || []);
         setIsManageChecksDialogOpen(true);
     };
 
@@ -243,10 +245,21 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
     };
 
     const handleSaveChanges = () => {
-        setExtraCheckLocations(tempCheckLocations);
-        toast({ title: "Success", description: "Check locations updated." });
+        if (!editingDayIso) return;
+        setExtraCheckLocations(prev => ({
+            ...prev,
+            [editingDayIso]: tempCheckLocations
+        }));
+        toast({ title: "Success", description: "Check locations updated for this day." });
         setIsManageChecksDialogOpen(false);
+        setEditingDayIso(null);
     };
+
+    const editingDayDate = useMemo(() => {
+        if (!editingDayIso) return null;
+        const data = weeklyScheduleData.find(d => d.day.toISOString() === editingDayIso);
+        return data ? data.day : null;
+    }, [editingDayIso, weeklyScheduleData]);
 
     const renderLocationRow = (dayIso: string, location: string, eventsInRow: Event[], isLast: boolean) => {
         const isLocationCollapsed = collapsedLocations[dayIso]?.has(location);
@@ -361,6 +374,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
                 const isDayToday = isToday(day);
                 const isWeekend = isSaturday(day) || isSunday(day);
                 const isDayHoliday = isHoliday(day);
+                const dailyExtraLocations = extraCheckLocations[dayIso] || [];
 
                 return (
                     <div key={dayIso} ref={isDayToday ? todayCardRef : null}>
@@ -368,17 +382,17 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
                              <div className="p-2 border-b bg-card flex flex-wrap items-center gap-2">
                                 {canManageChecks && (
                                      <>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleOpenManageChecksDialog}>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenManageChecksDialog(dayIso)}>
                                             <Plus className="h-4 w-4" />
                                             <span className="sr-only">Add new check location</span>
                                         </Button>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleOpenManageChecksDialog}>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenManageChecksDialog(dayIso)}>
                                             <Pencil className="h-4 w-4" />
                                             <span className="sr-only">Edit check locations</span>
                                         </Button>
                                     </>
                                 )}
-                                {extraCheckLocations.map(location => {
+                                {dailyExtraLocations.map(location => {
                                     const assignedUserId = dailyCheckAssignments[dayIso]?.[location];
                                     const assignedUser = users.find(u => u.userId === assignedUserId);
                                     
@@ -498,12 +512,17 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
                     </div>
                 );
             })}
-             <Dialog open={isManageChecksDialogOpen} onOpenChange={setIsManageChecksDialogOpen}>
+             <Dialog open={isManageChecksDialogOpen} onOpenChange={(isOpen) => {
+                 setIsManageChecksDialogOpen(isOpen)
+                 if (!isOpen) {
+                    setEditingDayIso(null);
+                 }
+             }}>
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Manage Check Locations</DialogTitle>
                         <DialogDescription>
-                            Add or remove pill buttons for daily checks.
+                            Add or remove pill buttons for {editingDayDate ? format(editingDayDate, 'MMMM d, yyyy') : 'the selected day'}.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
@@ -532,7 +551,10 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsManageChecksDialogOpen(false)}>Cancel</Button>
+                        <Button variant="outline" onClick={() => {
+                            setIsManageChecksDialogOpen(false);
+                            setEditingDayIso(null);
+                        }}>Cancel</Button>
                         <Button onClick={handleSaveChanges}>Save Changes</Button>
                     </DialogFooter>
                 </DialogContent>
