@@ -7,7 +7,7 @@ import { MonthView } from '@/components/calendar/month-view';
 import { WeekView } from '@/components/calendar/week-view';
 import { DayView } from '@/components/calendar/day-view';
 import { ProductionScheduleView } from '@/components/calendar/production-schedule-view';
-import { ChevronLeft, ChevronRight, Shrink, Expand } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Shrink, Expand, ArrowRightLeft } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays, startOfWeek, getWeek } from 'date-fns';
 
@@ -15,6 +15,7 @@ export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'month' | 'week' | 'day' | 'production-schedule'>('day');
   const [zoomLevel, setZoomLevel] = useState<'normal' | 'fit'>('normal');
+  const [dayViewAxis, setDayViewAxis] = useState<'standard' | 'reversed'>('standard');
   const monthViewContainerRef = useRef<HTMLDivElement>(null);
   const dayViewContainerRef = useRef<HTMLDivElement>(null);
   const weekViewContainerRef = useRef<HTMLDivElement>(null);
@@ -105,6 +106,12 @@ export default function CalendarPage() {
                     <span className="sr-only">{zoomLevel === 'normal' ? 'Fit to view' : 'Reset view'}</span>
                 </Button>
             )}
+             {view === 'day' && (
+                <Button variant="outline" size="icon" onClick={() => setDayViewAxis(dayViewAxis === 'standard' ? 'reversed' : 'standard')}>
+                    <ArrowRightLeft className="h-4 w-4" />
+                    <span className="sr-only">{dayViewAxis === 'standard' ? 'Switch to reversed axis view' : 'Switch to standard view'}</span>
+                </Button>
+            )}
             <TabsList>
                 <TabsTrigger value="month">Month</TabsTrigger>
                 <TabsTrigger value="week">Week</TabsTrigger>
@@ -121,7 +128,7 @@ export default function CalendarPage() {
             <WeekView date={currentDate} containerRef={weekViewContainerRef} zoomLevel={zoomLevel} />
         </TabsContent>
         <TabsContent value="day" ref={dayViewContainerRef} className="absolute inset-0 overflow-auto">
-            <DayView date={currentDate} containerRef={dayViewContainerRef} zoomLevel={zoomLevel} />
+            <DayView date={currentDate} containerRef={dayViewContainerRef} zoomLevel={zoomLevel} axisView={dayViewAxis} />
         </TabsContent>
         <TabsContent value="production-schedule" ref={productionScheduleViewContainerRef} className="absolute inset-0 overflow-auto">
             <ProductionScheduleView date={currentDate} containerRef={productionScheduleViewContainerRef} zoomLevel={zoomLevel} />

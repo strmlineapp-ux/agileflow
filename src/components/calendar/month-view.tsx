@@ -52,11 +52,13 @@ export function MonthView({ date, containerRef }: { date: Date; containerRef: Re
     
     const startingDayIndex = (getDay(firstDayOfMonth) + 6) % 7; 
 
-    const renderDayCell = (day: Date, key: string | number) => {
+    const renderDayCell = (day: Date, key: React.Key, dayIndex: number) => {
         const dayEvents = getEventsForDay(day);
         const isWeekend = isSaturday(day) || isSunday(day);
         const isDayHoliday = isHoliday(day);
         const isDayToday = isToday(day);
+        const colIndex = (startingDayIndex + dayIndex) % 7;
+
 
         return (
             <div 
@@ -64,8 +66,9 @@ export function MonthView({ date, containerRef }: { date: Date; containerRef: Re
                 ref={isDayToday ? todayRef : null}
                 className={cn(
                 "border-r border-b p-2 flex flex-col min-h-[120px]",
+                { "bg-muted/10": colIndex % 2 !== 0 },
                 { "bg-accent/10": isDayToday },
-                { "bg-muted/50": (isWeekend || isDayHoliday) && isSameMonth(day, date) }
+                { "bg-muted/50": !isDayToday && (isWeekend || isDayHoliday) && isSameMonth(day, date) }
             )}>
                 <span className={cn(
                     "font-semibold h-6 w-6 flex items-center justify-center rounded-full text-sm",
@@ -92,7 +95,7 @@ export function MonthView({ date, containerRef }: { date: Date; containerRef: Re
             ...Array.from({ length: startingDayIndex }).map((_, index) => (
                 <div key={`empty-${index}`} className="border-r border-b" />
             )),
-            ...daysInMonth.map((day, index) => renderDayCell(day, index))
+            ...daysInMonth.map((day, index) => renderDayCell(day, `day-${index}`, index))
         ];
     } else {
         // Build cells for 5-day week view
@@ -105,19 +108,21 @@ export function MonthView({ date, containerRef }: { date: Date; containerRef: Re
         dayCells = [
             ...emptyCells,
             ...daysInMonth
-                .filter(day => !isSaturday(day) && !isSunday(day))
-                .map((day, index) => renderDayCell(day, `day-${index}`))
+                .map((day, index) => ({ day, index }))
+                .filter(({ day }) => !isSaturday(day) && !isSunday(day))
+                .map(({ day, index }) => renderDayCell(day, `day-${index}`, index))
         ];
     }
 
     return (
         <Card>
             <div className={cn("grid border-b border-t sticky top-0 bg-card z-10", gridColsClass)}>
-                {displayedWeekdays.map((day) => (
-                    <div key={day} className={cn("text-center font-medium p-2 text-sm border-r last:border-r-0 relative", {
-                        "bg-muted/50 text-muted-foreground/50": (day === 'Sat' || day === 'Sun'),
-                        "text-muted-foreground": !(day === 'Sat' || day === 'Sun')
-                    })}>
+                {displayedWeekdays.map((day, index) => (
+                    <div key={day} className={cn("text-center font-medium p-2 text-sm border-r last:border-r-0 relative", 
+                        { "bg-muted/10": index % 2 !== 0},
+                        { "bg-muted/50 text-muted-foreground/50": (day === 'Sat' || day === 'Sun') },
+                        { "text-muted-foreground": !(day === 'Sat' || day === 'Sun') }
+                    )}>
                         {day}
                          {!showWeekends && day === 'Fri' && (
                              <Button variant="ghost" size="icon" className="absolute right-0 top-1/2 -translate-y-1/2 h-full rounded-none" onClick={() => setShowWeekends(true)}>

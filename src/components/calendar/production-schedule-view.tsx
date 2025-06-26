@@ -262,7 +262,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
         return data ? data.day : null;
     }, [editingDayIso, weeklyScheduleData]);
 
-    const renderLocationRow = (dayIso: string, location: string, eventsInRow: Event[], isLast: boolean) => {
+    const renderLocationRow = (dayIso: string, location: string, eventsInRow: Event[], isLast: boolean, index: number) => {
         const isLocationCollapsed = collapsedLocations[dayIso]?.has(location);
         const assignedUserId = dailyCheckAssignments[dayIso]?.[location];
         const assignedUser = users.find(u => u.userId === assignedUserId);
@@ -339,7 +339,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
 
 
         return (
-            <div key={location} className={cn("flex", { "border-b": !isLast })}>
+            <div key={location} className={cn("flex", { "border-b": !isLast }, {"bg-muted/10": index % 2 !== 0})}>
                 <div 
                     className="w-[160px] shrink-0 p-2 border-r flex items-center justify-between bg-card sticky left-0 z-30"
                 >
@@ -491,7 +491,8 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
                                                 dayIso,
                                                 location,
                                                 groupedEvents[location] || [],
-                                                index === allDayLocations.length - 1
+                                                index === allDayLocations.length - 1,
+                                                index
                                             ))}
                                             
                                             {isDayToday && now && (

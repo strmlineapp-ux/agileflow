@@ -95,11 +95,11 @@ export function WeekView({ date, containerRef, zoomLevel }: { date: Date, contai
             <CardHeader className="p-0 border-b sticky top-0 bg-card z-10">
                 <div className={cn("grid", gridColsClass)}>
                     <div className="w-20"></div> {/* Timeline spacer */}
-                    {displayedDays.map(day => {
+                    {displayedDays.map((day, index) => {
                         const isWeekend = isSaturday(day) || isSunday(day);
                         const isDayHoliday = isHoliday(day);
                         return (
-                            <div key={day.toString()} className={cn("text-center p-2 border-l relative", { "bg-muted/50": isWeekend || isDayHoliday })}>
+                            <div key={day.toString()} className={cn("text-center p-2 border-l relative", { "bg-muted/10": index % 2 !== 0 }, { "bg-muted/50": isWeekend || isDayHoliday })}>
                                 <p className={cn("text-sm font-medium", { "text-muted-foreground/50": isWeekend || isDayHoliday })}>{format(day, 'EEE')}</p>
                                 <p className={cn(
                                     "text-2xl font-semibold",
@@ -127,19 +127,19 @@ export function WeekView({ date, containerRef, zoomLevel }: { date: Date, contai
                 <div className={cn("grid min-h-full", gridColsClass)}>
                     {/* Timeline */}
                     <div className="w-20 border-r">
-                        {hours.map(hour => (
-                            <div key={hour} className="relative text-right pr-2" style={{ height: `${hourHeight}px` }}>
+                        {hours.map((hour, index) => (
+                            <div key={hour} className={cn("relative text-right pr-2 border-b", {"bg-muted/10": index % 2 !== 0})} style={{ height: `${hourHeight}px` }}>
                                 <span className="text-xs text-muted-foreground relative -top-2">{format(addHours(startOfDay(date), hour), 'HH:00')}</span>
                             </div>
                         ))}
                     </div>
 
                     {/* Day columns */}
-                    {displayedDays.map(day => {
+                    {displayedDays.map((day, index) => {
                         const isWeekend = isSaturday(day) || isSunday(day);
                         const isDayHoliday = isHoliday(day);
                         return (
-                            <div key={day.toString()} className={cn("relative border-l", { "bg-muted/50": isWeekend || isDayHoliday })}>
+                            <div key={day.toString()} className={cn("relative border-l", { "bg-muted/10": index % 2 !== 0 }, { "bg-muted/50": isWeekend || isDayHoliday })}>
                                 {/* Grid lines */}
                                 {hours.map(hour => (
                                     <div key={hour} className="border-b" style={{ height: `${hourHeight}px` }}></div>
