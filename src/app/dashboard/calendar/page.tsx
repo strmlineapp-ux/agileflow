@@ -7,13 +7,14 @@ import { MonthView } from '@/components/calendar/month-view';
 import { WeekView } from '@/components/calendar/week-view';
 import { DayView } from '@/components/calendar/day-view';
 import { ProductionScheduleView } from '@/components/calendar/production-schedule-view';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Shrink, Expand } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays, startOfWeek, getWeek } from 'date-fns';
 
 export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'month' | 'week' | 'day' | 'production-schedule'>('day');
+  const [zoomLevel, setZoomLevel] = useState<'normal' | 'fit'>('normal');
   const monthViewContainerRef = useRef<HTMLDivElement>(null);
   const dayViewContainerRef = useRef<HTMLDivElement>(null);
   const weekViewContainerRef = useRef<HTMLDivElement>(null);
@@ -51,6 +52,9 @@ export default function CalendarPage() {
 
   const goToToday = () => {
     setCurrentDate(new Date());
+    if (view === 'production-schedule') {
+      setZoomLevel('normal');
+    }
   };
   
   const getTitle = () => {
@@ -94,12 +98,20 @@ export default function CalendarPage() {
             </Button>
             <h1 className="font-headline text-2xl font-semibold ml-4 flex items-baseline gap-3">{getTitle()}</h1>
         </div>
-        <TabsList>
-            <TabsTrigger value="month">Month</TabsTrigger>
-            <TabsTrigger value="week">Week</TabsTrigger>
-            <TabsTrigger value="day">Day</TabsTrigger>
-            <TabsTrigger value="production-schedule">Production Schedule</TabsTrigger>
-        </TabsList>
+        <div className="flex items-center gap-2">
+            {view === 'production-schedule' && (
+                <Button variant="outline" size="icon" onClick={() => setZoomLevel(zoomLevel === 'normal' ? 'fit' : 'normal')}>
+                    {zoomLevel === 'normal' ? <Shrink className="h-4 w-4" /> : <Expand className="h-4 w-4" />}
+                    <span className="sr-only">{zoomLevel === 'normal' ? 'Fit to view' : 'Reset view'}</span>
+                </Button>
+            )}
+            <TabsList>
+                <TabsTrigger value="month">Month</TabsTrigger>
+                <TabsTrigger value="week">Week</TabsTrigger>
+                <TabsTrigger value="day">Day</TabsTrigger>
+                <TabsTrigger value="production-schedule">Production Schedule</TabsTrigger>
+            </TabsList>
+        </div>
       </div>
       <div className="flex-1 relative">
         <TabsContent value="month" ref={monthViewContainerRef} className="absolute inset-0 overflow-y-auto">
@@ -112,7 +124,7 @@ export default function CalendarPage() {
             <DayView date={currentDate} containerRef={dayViewContainerRef} />
         </TabsContent>
         <TabsContent value="production-schedule" ref={productionScheduleViewContainerRef} className="absolute inset-0 overflow-auto">
-            <ProductionScheduleView date={currentDate} containerRef={productionScheduleViewContainerRef} />
+            <ProductionScheduleView date={currentDate} containerRef={productionScheduleViewContainerRef} zoomLevel={zoomLevel} />
         </TabsContent>
       </div>
     </Tabs>
