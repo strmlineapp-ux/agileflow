@@ -290,31 +290,33 @@ export function UserManagement() {
                                                         </div>
                                                         <p className="text-sm text-muted-foreground">{user.phone || 'Not provided'}</p>
 
-                                                        <div className="mt-4">
-                                                            <div className="flex items-center gap-2 mb-2">
-                                                                <p className="font-medium text-sm">Reporting Line</p>
-                                                                {isPrivilegedUser(viewAsUser) && (
-                                                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEditReportingLine(user)}>
-                                                                        <Pencil className="h-4 w-4" />
-                                                                        <span className="sr-only">Edit reporting line</span>
-                                                                    </Button>
-                                                                )}
+                                                        {viewerIsManager && (
+                                                            <div className="mt-4">
+                                                                <div className="flex items-center gap-2 mb-2">
+                                                                    <p className="font-medium text-sm">Reporting Line</p>
+                                                                    {isPrivilegedUser(viewAsUser) && (
+                                                                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEditReportingLine(user)}>
+                                                                            <Pencil className="h-4 w-4" />
+                                                                            <span className="sr-only">Edit reporting line</span>
+                                                                        </Button>
+                                                                    )}
+                                                                </div>
+                                                                <div>
+                                                                    {(user.directReports && user.directReports.length > 0) ? (
+                                                                        user.directReports.map(reportId => {
+                                                                            const reportUser = users.find(u => u.userId === reportId);
+                                                                            return (
+                                                                                <div key={reportId} className="text-sm text-muted-foreground">
+                                                                                    {reportUser?.displayName || 'Unknown User'}
+                                                                                </div>
+                                                                            );
+                                                                        })
+                                                                    ) : (
+                                                                        <p className="text-sm text-muted-foreground">No direct reports.</p>
+                                                                    )}
+                                                                </div>
                                                             </div>
-                                                            <div>
-                                                                {(user.directReports && user.directReports.length > 0) ? (
-                                                                    user.directReports.map(reportId => {
-                                                                        const reportUser = users.find(u => u.userId === reportId);
-                                                                        return (
-                                                                            <div key={reportId} className="text-sm text-muted-foreground">
-                                                                                {reportUser?.displayName || 'Unknown User'}
-                                                                            </div>
-                                                                        );
-                                                                    })
-                                                                ) : (
-                                                                    <p className="text-sm text-muted-foreground">No direct reports.</p>
-                                                                )}
-                                                            </div>
-                                                        </div>
+                                                        )}
                                                     </div>
                                                     
                                                     {(viewerIsManager || user.userId === viewAsUser.userId) && (
@@ -330,7 +332,7 @@ export function UserManagement() {
                                                                     const permissionIsEnabled = user.permissions?.includes(permission);
                                                                     const canEdit = canEditPermissions(viewAsUser, user, permission);
 
-                                                                    if (!viewerIsManager && !permissionIsEnabled && !canEdit && permission !== 'Admin') {
+                                                                    if (!viewerIsManager && !permissionIsEnabled && permission !== 'Admin') {
                                                                         return null;
                                                                     }
                                                                     
