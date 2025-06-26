@@ -95,7 +95,7 @@ export function ProductionScheduleView({ date, containerRef }: { date: Date, con
         <Card>
             <div style={{ width: `${LOCATION_LABEL_WIDTH_PX + (24 * HOUR_WIDTH_PX)}px`}}>
                 <CardHeader className="p-0 border-b sticky top-0 bg-card z-20 flex flex-row">
-                    <div className="w-[160px] shrink-0 border-r p-2 flex items-center font-semibold text-sm sticky left-0 bg-card z-20">
+                    <div className="w-[160px] shrink-0 border-r p-2 flex items-center font-semibold text-sm sticky left-0 bg-card z-30">
                        {format(date, 'EEE, MMMM d, yyyy').toUpperCase()}
                     </div>
                     {hours.map(hour => (
@@ -109,7 +109,7 @@ export function ProductionScheduleView({ date, containerRef }: { date: Date, con
                         const eventsInRow = groupedEvents[location] || [];
                         return (
                             <div key={location} className={cn("flex", { "border-b": index < locations.length - 1 })}>
-                                <div className="w-[160px] shrink-0 p-2 border-r flex items-center justify-start bg-card sticky left-0 z-20">
+                                <div className="w-[160px] shrink-0 p-2 border-r flex items-center justify-start bg-card sticky left-0 z-30">
                                     <p className="font-medium text-sm truncate">{location}</p>
                                 </div>
                                 <div className="relative flex-1 h-20">
