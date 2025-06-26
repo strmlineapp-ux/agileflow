@@ -323,8 +323,17 @@ export function UserManagement() {
                                                                                 className="text-sm font-normal flex items-center gap-1 cursor-pointer"
                                                                                 onClick={() => {
                                                                                     if (isPrivilegedPermission && canEditPermissions(viewAsUser, user, permission)) {
-                                                                                        setEditingPermissionState({ user, permission });
-                                                                                        setIs2faDialogOpen(true);
+                                                                                        const isAdminPermission = permission === 'Admin';
+                                                                                        const isSdmNotByAdmin = permission === 'Service Delivery Manager' && !viewAsUser.permissions?.includes('Admin');
+                                                                                        
+                                                                                        if (isAdminPermission || isSdmNotByAdmin) {
+                                                                                            setEditingPermissionState({ user, permission });
+                                                                                            setIs2faDialogOpen(true);
+                                                                                        } else {
+                                                                                            // This case is for an Admin changing the Service Delivery Manager permission.
+                                                                                            const isCurrentlyEnabled = user.permissions?.includes(permission);
+                                                                                            handlePermissionChange(user.userId, permission, !isCurrentlyEnabled);
+                                                                                        }
                                                                                     }
                                                                                 }}
                                                                             >
