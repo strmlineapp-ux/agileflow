@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef } from 'react';
@@ -24,10 +25,10 @@ export default function CalendarPage() {
         setCurrentDate(subMonths(currentDate, 1));
         break;
       case 'week':
+      case 'production-schedule':
         setCurrentDate(subWeeks(currentDate, 1));
         break;
       case 'day':
-      case 'production-schedule':
         setCurrentDate(subDays(currentDate, 1));
         break;
     }
@@ -39,10 +40,10 @@ export default function CalendarPage() {
         setCurrentDate(addMonths(currentDate, 1));
         break;
       case 'week':
+      case 'production-schedule':
         setCurrentDate(addWeeks(currentDate, 1));
         break;
       case 'day':
-      case 'production-schedule':
         setCurrentDate(addDays(currentDate, 1));
         break;
     }
@@ -53,8 +54,9 @@ export default function CalendarPage() {
   };
   
   const getTitle = () => {
-    if (view === 'day' || view === 'production-schedule') return <>{format(currentDate, 'MMMM d, yyyy')}</>;
-    if (view === 'week') {
+    if (view === 'day') return <>{format(currentDate, 'MMMM d, yyyy')}</>;
+    
+    if (view === 'week' || view === 'production-schedule') {
       const weekNumber = getWeek(currentDate, { weekStartsOn: 1 });
       const start = startOfWeek(currentDate, { weekStartsOn: 1 });
       const end = addDays(start, 6);
