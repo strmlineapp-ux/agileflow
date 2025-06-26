@@ -519,7 +519,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
                                     {usersOnPto.map(userId => {
                                         const user = users.find(u => u.userId === userId);
                                         return user ? (
-                                            <Badge key={userId} variant="secondary" className="rounded-full h-8">
+                                            <Badge key={userId} variant="outline" className="rounded-full h-8 border-destructive/30 bg-destructive/10 text-destructive font-medium">
                                                 {user.displayName}
                                             </Badge>
                                         ) : null;
