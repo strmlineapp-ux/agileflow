@@ -37,7 +37,7 @@ export const mockUsers: User[] = [
         phone: '123-456-7890', 
         roles: ['Admin', 'Live Event Team Admin', 'Live Events', 'Studio Productions', 'Video Director', 'TD', 'Edit Events', 'Manage Checks'], 
         directReports: ['2', '3'], 
-        theme: 'light', 
+        theme: 'dark', 
         defaultCalendarView: 'production-schedule' 
     },
     { 
