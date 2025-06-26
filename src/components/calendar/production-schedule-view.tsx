@@ -3,7 +3,7 @@
 
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { format, addHours, startOfDay, isSaturday, isSunday, isSameDay, isToday, startOfWeek, eachDayOfInterval, addDays } from 'date-fns';
-import { type Event, type User } from '@/types';
+import { type Event, type User, type UserStatus, type UserStatusAssignment } from '@/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { mockEvents, mockHolidays } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
@@ -16,8 +16,9 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { UserStatusBadge } from '@/components/user-status-badge';
 
 
 const isHoliday = (day: Date) => {
@@ -48,6 +49,11 @@ const getEventPosition = (event: Event, hourWidth: number) => {
     return { left, width };
 }
 
+const ALL_USER_STATUSES: UserStatus[] = [
+    'PTO', 'PTO (AM)', 'PTO (PM)', 'TOIL', 'TOIL (AM)', 'TOIL (PM)', 'Sick', 'Offsite', 'Training'
+];
+
+
 export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit' }) {
     const [now, setNow] = useState<Date | null>(null);
     const [hourWidth, setHourWidth] = useState(DEFAULT_HOUR_WIDTH_PX);
@@ -59,7 +65,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
     const [collapsedDays, setCollapsedDays] = useState<Set<string>>(new Set());
     const [collapsedLocations, setCollapsedLocations] = useState<Record<string, Set<string>>>({});
     const [dailyCheckAssignments, setDailyCheckAssignments] = useState<Record<string, Record<string, string | null>>>({});
-    const { users, viewAsUser, extraCheckLocations, setExtraCheckLocations, ptoAssignments, setPtoAssignments } = useUser();
+    const { users, viewAsUser, extraCheckLocations, setExtraCheckLocations, userStatusAssignments, setUserStatusAssignments } = useUser();
     const defaultCheckLocations = useMemo(() => ["Training Room", "Locke", "Apgar"], []);
 
     const [isManageChecksDialogOpen, setIsManageChecksDialogOpen] = useState(false);
@@ -67,13 +73,13 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
     const [tempCheckLocations, setTempCheckLocations] = useState<string[]>([]);
     const [newLocationName, setNewLocationName] = useState('');
 
-    const [isPtoDialogOpen, setIsPtoDialogOpen] = useState(false);
-    const [editingPtoDayIso, setEditingPtoDayIso] = useState<string | null>(null);
-    const [tempPtoUsers, setTempPtoUsers] = useState<string[]>([]);
+    const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
+    const [editingStatusDayIso, setEditingStatusDayIso] = useState<string | null>(null);
+    const [tempStatusAssignments, setTempStatusAssignments] = useState<UserStatusAssignment[]>([]);
     
     const canManageChecks = viewAsUser.roles?.includes('Manage Checks');
     const managerialPermissions = ["Admin", "Service Delivery Manager", "Production Management", "Studio Production Users", "Event Users"];
-    const canManagePto = viewAsUser.permissions?.some(p => managerialPermissions.includes(p));
+    const canManageStatus = viewAsUser.permissions?.some(p => managerialPermissions.includes(p));
 
     const dailyCheckUsers = useMemo(() => {
         return users.filter(user => user.roles?.includes('ES Daily Checks'));
@@ -274,40 +280,53 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
         return data ? data.day : null;
     }, [editingDayIso, weeklyScheduleData]);
 
-    const handleOpenPtoDialog = (dayIso: string) => {
-        setEditingPtoDayIso(dayIso);
-        setTempPtoUsers(ptoAssignments[dayIso] || []);
-        setIsPtoDialogOpen(true);
+    const handleOpenStatusDialog = (dayIso: string) => {
+        setEditingStatusDayIso(dayIso);
+        setTempStatusAssignments(userStatusAssignments[dayIso] || []);
+        setIsStatusDialogOpen(true);
     };
 
-    const handlePtoUserSelectionChange = (userId: string, checked: boolean) => {
-        setTempPtoUsers(prev => {
-            const newSet = new Set(prev);
-            if (checked) {
-                newSet.add(userId);
+    const handleUserStatusChange = (userId: string, newStatus: string) => {
+        setTempStatusAssignments(prev => {
+            const existingIndex = prev.findIndex(a => a.userId === userId);
+            
+            if (newStatus === 'WORKING') {
+                // If status is "WORKING", remove the user from assignments
+                if (existingIndex > -1) {
+                    return prev.filter(a => a.userId !== userId);
+                }
+                return prev;
             } else {
-                newSet.delete(userId);
+                // If status is something else, add or update
+                const newAssignment: UserStatusAssignment = { userId, status: newStatus as UserStatus };
+                if (existingIndex > -1) {
+                    const updated = [...prev];
+                    updated[existingIndex] = newAssignment;
+                    return updated;
+                } else {
+                    return [...prev, newAssignment];
+                }
             }
-            return Array.from(newSet);
         });
     };
+    
 
-    const handleSavePto = () => {
-        if (!editingPtoDayIso) return;
-        setPtoAssignments(prev => ({
+    const handleSaveStatus = () => {
+        if (!editingStatusDayIso) return;
+        setUserStatusAssignments(prev => ({
             ...prev,
-            [editingPtoDayIso]: tempPtoUsers
+            [editingStatusDayIso]: tempStatusAssignments
         }));
-        toast({ title: "Success", description: "PTO updated for this day." });
-        setIsPtoDialogOpen(false);
-        setEditingPtoDayIso(null);
+        toast({ title: "Success", description: "User statuses updated for this day." });
+        setIsStatusDialogOpen(false);
+        setEditingStatusDayIso(null);
     };
 
-    const editingPtoDayDate = useMemo(() => {
-        if (!editingPtoDayIso) return null;
-        const data = weeklyScheduleData.find(d => d.day.toISOString() === editingPtoDayIso);
+    const editingStatusDayDate = useMemo(() => {
+        if (!editingStatusDayIso) return null;
+        const data = weeklyScheduleData.find(d => d.day.toISOString() === editingStatusDayIso);
         return data ? data.day : null;
-    }, [editingPtoDayIso, weeklyScheduleData]);
+    }, [editingStatusDayIso, weeklyScheduleData]);
 
 
     const renderLocationRow = (dayIso: string, location: string, eventsInRow: Event[], isLast: boolean, index: number) => {
@@ -424,7 +443,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
                 const isWeekend = isSaturday(day) || isSunday(day);
                 const isDayHoliday = isHoliday(day);
                 const dailyExtraLocations = extraCheckLocations[dayIso] ?? (isWeekend ? [] : defaultCheckLocations);
-                const usersOnPto = ptoAssignments[dayIso] || [];
+                const dayStatusAssignments = userStatusAssignments[dayIso] || [];
 
                 return (
                     <div key={dayIso} ref={isDayToday ? todayCardRef : null}>
@@ -516,18 +535,18 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
                                     })}
                                 </div>
                                 <div className="flex flex-wrap items-center gap-2">
-                                    {usersOnPto.map(userId => {
+                                    {dayStatusAssignments.map(({ userId, status }) => {
                                         const user = users.find(u => u.userId === userId);
                                         return user ? (
-                                            <Badge key={userId} variant="outline" className="rounded-full h-8 border-destructive/30 bg-destructive/10 text-destructive font-medium">
+                                            <UserStatusBadge key={userId} status={status}>
                                                 {user.displayName}
-                                            </Badge>
+                                            </UserStatusBadge>
                                         ) : null;
                                     })}
-                                    {canManagePto && (
-                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenPtoDialog(dayIso)}>
+                                    {canManageStatus && (
+                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenStatusDialog(dayIso)}>
                                             <Pencil className="h-4 w-4" />
-                                            <span className="sr-only">Edit users on PTO</span>
+                                            <span className="sr-only">Edit user statuses</span>
                                         </Button>
                                     )}
                                 </div>
@@ -644,42 +663,54 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-            <Dialog open={isPtoDialogOpen} onOpenChange={(isOpen) => {
+            <Dialog open={isStatusDialogOpen} onOpenChange={(isOpen) => {
                  if (!isOpen) {
-                    setEditingPtoDayIso(null);
+                    setEditingStatusDayIso(null);
                  }
              }}>
-                <DialogContent>
+                <DialogContent className="max-w-2xl">
                     <DialogHeader>
-                        <DialogTitle>Manage PTO</DialogTitle>
+                        <DialogTitle>Manage User Status</DialogTitle>
                         <DialogDescription>
-                            Select users on PTO for {editingPtoDayDate ? format(editingPtoDayDate, 'MMMM d, yyyy') : 'the selected day'}.
+                            Assign a status to users for {editingStatusDayDate ? format(editingStatusDayDate, 'MMMM d, yyyy') : 'the selected day'}.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-2 max-h-60 overflow-y-auto p-1">
-                        {users.map(user => (
-                            <div key={user.userId} className="flex items-center space-x-2 p-1">
-                                <Checkbox
-                                    id={`pto-user-${user.userId}`}
-                                    checked={tempPtoUsers.includes(user.userId)}
-                                    onCheckedChange={(checked) => handlePtoUserSelectionChange(user.userId, !!checked)}
-                                />
-                                <Label htmlFor={`pto-user-${user.userId}`} className="font-normal flex items-center gap-2 cursor-pointer">
-                                    <Avatar className="h-6 w-6">
-                                        <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
-                                        <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                                    </Avatar>
-                                    {user.displayName}
-                                </Label>
-                            </div>
-                        ))}
+                    <div className="space-y-2 max-h-[60vh] overflow-y-auto p-1 pr-4">
+                        {users.map(user => {
+                            const currentAssignment = tempStatusAssignments.find(a => a.userId === user.userId);
+                            return (
+                                <div key={user.userId} className="flex items-center justify-between gap-4 p-1">
+                                    <Label htmlFor={`status-user-${user.userId}`} className="font-normal flex items-center gap-2 cursor-pointer">
+                                        <Avatar className="h-8 w-8">
+                                            <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
+                                            <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                        </Avatar>
+                                        {user.displayName}
+                                    </Label>
+                                    <Select
+                                        value={currentAssignment?.status || 'WORKING'}
+                                        onValueChange={(value) => handleUserStatusChange(user.userId, value)}
+                                    >
+                                        <SelectTrigger className="w-[180px]">
+                                            <SelectValue placeholder="Select status" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="WORKING">Working</SelectItem>
+                                            {ALL_USER_STATUSES.map(status => (
+                                                <SelectItem key={status} value={status}>{status}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            );
+                        })}
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => {
-                            setIsPtoDialogOpen(false);
-                            setEditingPtoDayIso(null);
+                            setIsStatusDialogOpen(false);
+                            setEditingStatusDayIso(null);
                         }}>Cancel</Button>
-                        <Button onClick={handleSavePto}>Save Changes</Button>
+                        <Button onClick={handleSaveStatus}>Save Changes</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

@@ -43,6 +43,13 @@ export interface Event {
   syncToGoogleCalendar?: boolean;
 }
 
+export type UserStatus = 'PTO' | 'PTO (AM)' | 'PTO (PM)' | 'TOIL' | 'TOIL (AM)' | 'TOIL (PM)' | 'Sick' | 'Offsite' | 'Training';
+
+export interface UserStatusAssignment {
+  userId: string;
+  status: UserStatus;
+}
+
 export interface Notification {
   id: string;
   type: 'access_request' | 'standard';
