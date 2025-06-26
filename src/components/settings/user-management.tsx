@@ -90,7 +90,7 @@ export function UserManagement() {
                     }
                     
                     const dependencies: Record<string, string[]> = {
-                        'Service Delivery Manager': ['Production Management', 'Studio Production Users', 'Event Users'],
+                        'Service Delivery Manager': ['Production Management', 'Studio Production Users', 'Event Users', 'Post-Production'],
                         'Production Management': ['Production'],
                         'Studio Production Users': ['Studio Productions'],
                         'Event Users': ['Events']
@@ -311,6 +311,7 @@ export function UserManagement() {
                                                                     const isProductionManagementLocked = permission === 'Production Management' && hasServiceDeliveryManager;
                                                                     const isStudioProductionUsersLocked = permission === 'Studio Production Users' && hasServiceDeliveryManager;
                                                                     const isEventUsersLocked = permission === 'Event Users' && hasServiceDeliveryManager;
+                                                                    const isPostProductionLocked = permission === 'Post-Production' && hasServiceDeliveryManager;
 
                                                                     const hasProductionManagement = user.permissions?.includes('Production Management');
                                                                     const isProductionLocked = permission === 'Production' && hasProductionManagement;
@@ -329,13 +330,14 @@ export function UserManagement() {
                                                                                              isProductionManagementLocked ||
                                                                                              isStudioProductionUsersLocked ||
                                                                                              isEventUsersLocked ||
+                                                                                             isPostProductionLocked ||
                                                                                              !canEditPermissions(viewAsUser, user, permission);
 
                                                                     return (
                                                                         <div key={permission} className="flex items-center space-x-2">
                                                                             <Checkbox
                                                                                 id={`${user.userId}-${permission}`}
-                                                                                checked={user.permissions?.includes(permission) || isProductionLocked || isStudioProductionsLocked || isEventsLocked || isProductionManagementLocked || isStudioProductionUsersLocked || isEventUsersLocked}
+                                                                                checked={user.permissions?.includes(permission) || isProductionLocked || isStudioProductionsLocked || isEventsLocked || isProductionManagementLocked || isStudioProductionUsersLocked || isEventUsersLocked || isPostProductionLocked}
                                                                                 disabled={isCheckboxDisabled}
                                                                                 onCheckedChange={(checked) => {
                                                                                     if (!isPrivilegedPermission && canEditPermissions(viewAsUser, user, permission)) {
@@ -494,3 +496,4 @@ export function UserManagement() {
         </>
     )
 }
+
