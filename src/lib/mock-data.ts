@@ -3,8 +3,8 @@ import { type Event, type User, type Task } from '@/types';
 
 export const mockUsers: User[] = [
     { userId: '1', displayName: 'Alice Johnson', email: 'alice@example.com', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Product Manager', location: 'New York, USA', phone: '123-456-7890', roles: ['Video Director', 'TD', 'Edit Events', 'Manage Checks'], permissions: ['Admin', 'Event Users', 'Events', 'Studio Productions'], directReports: ['2', '3'] },
-    { userId: '2', displayName: 'Bob Williams', email: 'bob@example.com', googleCalendarLinked: false, avatarUrl: 'https://placehold.co/40x40.png', title: 'Lead Engineer', location: 'San Francisco, USA', roles: ['Camera', 'Audio'], permissions: ['Service Delivery Manager', 'Production Management', 'Studio Production Users', 'Event Users', 'Production', 'Studio Productions', 'Events', 'Post-Production'], directReports: ['4'] },
-    { userId: '3', displayName: 'Charlie Brown', email: 'charlie@example.com', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Software Engineer', location: 'Austin, USA', roles: ["D.o.P."], permissions: ['Production Management', 'Production'], directReports: ['4'] },
+    { userId: '2', displayName: 'Bob Williams', email: 'bob@example.com', googleCalendarLinked: false, avatarUrl: 'https://placehold.co/40x40.png', title: 'Lead Engineer', location: 'San Francisco, USA', roles: ['Camera', 'Audio', 'Manage Checks'], permissions: ['Service Delivery Manager', 'Production Management', 'Studio Production Users', 'Event Users', 'Production', 'Studio Productions', 'Events', 'Post-Production'], directReports: ['4'] },
+    { userId: '3', displayName: 'Charlie Brown', email: 'charlie@example.com', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Software Engineer', location: 'Austin, USA', roles: ["D.o.P.", "Manage Checks"], permissions: ['Production Management', 'Production'], directReports: ['4'] },
     { userId: '4', displayName: 'Diana Prince', email: 'diana@example.com', googleCalendarLinked: false, avatarUrl: 'https://placehold.co/40x40.png', title: 'UX Designer', location: 'Chicago, USA', phone: '098-765-4321', roles: ['Content Op', 'ES Operator', '1st AD', 'Edit Events', 'ES Daily Checks'], permissions: ['Event Users', 'Events'], directReports: [] },
     { userId: '5', displayName: 'Eve Adams', email: 'eve@example.com', googleCalendarLinked: false, avatarUrl: 'https://placehold.co/40x40.png', title: 'Junior Developer', location: 'Remote', roles: ['Camera'], permissions: ['Production'], directReports: [] },
     { userId: '6', displayName: 'Frank Miller', email: 'frank@example.com', googleCalendarLinked: false, avatarUrl: 'https://placehold.co/40x40.png', title: 'Studio Technician', location: 'Los Angeles, USA', phone: '555-555-5555', roles: ['Audio', 'Camera', 'ES Daily Checks'], permissions: ['Studio Production Users', 'Studio Productions'], directReports: [] },
@@ -66,6 +66,7 @@ export const mockEvents: Event[] = [
         startTime: new Date(new Date(new Date().setDate(new Date().getDate() - 1)).setHours(16, 0, 0, 0)), 
         endTime: new Date(new Date(new Date().setDate(new Date().getDate() - 1)).setHours(16, 30, 0, 0)), 
         attendees: [], 
+        location: 'Auditorium',
         createdBy: '1', 
         createdAt: new Date(), 
         lastUpdated: new Date() 

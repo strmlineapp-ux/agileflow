@@ -239,6 +239,10 @@ export function UserManagement() {
 
     const handleAddRole = () => {
         if (newRole && !tempRoles.includes(newRole.trim())) {
+             if (newRole.trim().toLowerCase() === 'manage checks') {
+                toast({ variant: 'destructive', title: 'Error', description: '"Manage Checks" is a reserved role and cannot be added.' });
+                return;
+            }
             setTempRoles([...tempRoles, newRole.trim()]);
             setNewRole('');
         }
@@ -247,6 +251,11 @@ export function UserManagement() {
     const triggerDeleteRole = (role: string) => {
         setRoleToDelete(role);
         setIsDeleteRole2faDialogOpen(true);
+    };
+    
+    const openRolesDialog = () => {
+        setTempRoles(allRoles.filter(r => r !== 'Manage Checks'));
+        setIsRolesDialogOpen(true);
     };
 
     const handleVerifyAndDeleteRole = () => {
@@ -269,7 +278,7 @@ export function UserManagement() {
     };
 
     const handleSaveRoles = () => {
-        setAllRoles(tempRoles);
+        setAllRoles(['Manage Checks', ...tempRoles]);
         setIsRolesDialogOpen(false);
     };
 
@@ -451,40 +460,61 @@ export function UserManagement() {
                                                             <div className="flex items-center gap-2 mb-2">
                                                                 <p className="font-medium text-sm">Roles</p>
                                                                 {viewerIsManager && (
-                                                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => {
-                                                                        setTempRoles([...allRoles]);
-                                                                        setIsRolesDialogOpen(true);
-                                                                    }}>
+                                                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={openRolesDialog}>
                                                                         <Pencil className="h-4 w-4" />
                                                                         <span className="sr-only">Edit roles</span>
                                                                     </Button>
                                                                 )}
                                                             </div>
                                                           <div className="grid grid-cols-2 gap-2">
-                                                              {canViewerEditThisUserRoles
-                                                                  ? allRoles.map(role => (
-                                                                      <div key={role} className="flex items-center space-x-2">
-                                                                          <Checkbox
-                                                                              id={`${user.userId}-${role}`}
-                                                                              checked={user.roles?.includes(role)}
-                                                                              onCheckedChange={(checked) => handleRoleChange(user.userId, role, !!checked)}
-                                                                          />
-                                                                          <Label htmlFor={`${user.userId}-${role}`} className="text-sm font-normal">{role}</Label>
-                                                                      </div>
-                                                                  ))
-                                                                  : user.roles && user.roles.length > 0
-                                                                      ? user.roles.map(role => (
-                                                                          <div key={role} className="flex items-center space-x-2">
-                                                                              <Checkbox
-                                                                                  id={`${user.userId}-${role}`}
-                                                                                  checked={true}
-                                                                                  disabled={true}
-                                                                              />
-                                                                              <Label htmlFor={`${user.userId}-${role}`} className="text-sm font-normal">{role}</Label>
-                                                                          </div>
-                                                                      ))
-                                                                      : <p className="text-sm text-muted-foreground col-span-2">No roles assigned.</p>
-                                                              }
+                                                              {allRoles.map(role => {
+                                                                    if (role === 'Manage Checks') {
+                                                                        return (
+                                                                            <div key={role} className="flex items-center space-x-2">
+                                                                                <Checkbox
+                                                                                    id={`${user.userId}-${role}`}
+                                                                                    checked={isManager(user)}
+                                                                                    disabled
+                                                                                />
+                                                                                <Label htmlFor={`${user.userId}-${role}`} className="text-sm font-normal flex items-center gap-1">
+                                                                                    {role}
+                                                                                    <Lock className="h-3 w-3 text-muted-foreground" />
+                                                                                </Label>
+                                                                            </div>
+                                                                        );
+                                                                    }
+                                                                    
+                                                                    if (canViewerEditThisUserRoles) {
+                                                                        return (
+                                                                            <div key={role} className="flex items-center space-x-2">
+                                                                                <Checkbox
+                                                                                    id={`${user.userId}-${role}`}
+                                                                                    checked={user.roles?.includes(role)}
+                                                                                    onCheckedChange={(checked) => handleRoleChange(user.userId, role, !!checked)}
+                                                                                />
+                                                                                <Label htmlFor={`${user.userId}-${role}`} className="text-sm font-normal">{role}</Label>
+                                                                            </div>
+                                                                        );
+                                                                    }
+
+                                                                    if (user.roles?.includes(role)) {
+                                                                         return (
+                                                                            <div key={role} className="flex items-center space-x-2">
+                                                                                <Checkbox
+                                                                                    id={`${user.userId}-${role}`}
+                                                                                    checked={true}
+                                                                                    disabled={true}
+                                                                                />
+                                                                                <Label htmlFor={`${user.userId}-${role}`} className="text-sm font-normal">{role}</Label>
+                                                                            </div>
+                                                                         );
+                                                                    }
+                                                                    
+                                                                    return null;
+                                                               })}
+                                                                {!canViewerEditThisUserRoles && (!user.roles || user.roles.filter(r => r !== 'Manage Checks').length === 0) && (
+                                                                    <p className="text-sm text-muted-foreground col-span-2">No roles assigned.</p>
+                                                                )}
                                                           </div>
                                                       </div>
                                                     )}
@@ -671,5 +701,3 @@ export function UserManagement() {
         </>
     )
 }
-
-    
