@@ -98,8 +98,8 @@ export function UserManagement() {
                     
                     const dependencies: Record<string, string[]> = {
                         'Service Delivery Manager': ['Production Management', 'Studio Production Users', 'Event Users', 'Post-Production'],
-                        'Production Management': ['Post-Production', 'Studio Productions', 'Events'],
-                        'Studio Production Users': ['Studio Productions'],
+                        'Production Management': ['Post-Production', 'Production', 'Studio Productions', 'Events'],
+                        'Studio Production Users': ['Post-Production', 'Studio Productions'],
                         'Event Users': ['Events']
                     };
 
@@ -315,50 +315,31 @@ export function UserManagement() {
                                                                     const permissionIsEnabled = user.permissions?.includes(permission);
                                                                     const canEdit = canEditPermissions(viewAsUser, user, permission);
 
-                                                                    if (!canEdit && !permissionIsEnabled) {
+                                                                    if (!viewerIsManager && !permissionIsEnabled) {
                                                                         return null;
                                                                     }
                                                                     
                                                                     const hasServiceDeliveryManager = user.permissions?.includes('Service Delivery Manager');
-                                                                    const isProductionManagementLocked = permission === 'Production Management' && hasServiceDeliveryManager;
-                                                                    const isStudioProductionUsersLocked = permission === 'Studio Production Users' && hasServiceDeliveryManager;
-                                                                    const isEventUsersLocked = permission === 'Event Users' && hasServiceDeliveryManager;
-                                                                    const isPostProductionLocked = permission === 'Post-Production' && hasServiceDeliveryManager;
-
                                                                     const hasProductionManagement = user.permissions?.includes('Production Management');
-                                                                    const isPostProductionLockedByProdMgmt = permission === 'Post-Production' && hasProductionManagement;
-                                                                    const isStudioProductionsLockedByProdMgmt = permission === 'Studio Productions' && hasProductionManagement;
-                                                                    const isEventsLockedByProdMgmt = permission === 'Events' && hasProductionManagement;
-
                                                                     const hasStudioProductionUsers = user.permissions?.includes('Studio Production Users');
-                                                                    const isStudioProductionsLocked = permission === 'Studio Productions' && hasStudioProductionUsers;
-                                                                    
                                                                     const hasEventUsers = user.permissions?.includes('Event Users');
-                                                                    const isEventsLocked = permission === 'Events' && hasEventUsers;
+
+                                                                    const isLocked = 
+                                                                        (permission === 'Production Management' && hasServiceDeliveryManager) ||
+                                                                        (permission === 'Studio Production Users' && hasServiceDeliveryManager) ||
+                                                                        (permission === 'Event Users' && hasServiceDeliveryManager) ||
+                                                                        (permission === 'Post-Production' && hasServiceDeliveryManager) ||
+                                                                        (permission === 'Post-Production' && hasProductionManagement) ||
+                                                                        (permission === 'Production' && hasProductionManagement) ||
+                                                                        (permission === 'Studio Productions' && hasProductionManagement) ||
+                                                                        (permission === 'Events' && hasProductionManagement) ||
+                                                                        (permission === 'Post-Production' && hasStudioProductionUsers) ||
+                                                                        (permission === 'Studio Productions' && hasStudioProductionUsers) ||
+                                                                        (permission === 'Events' && hasEventUsers);
                                                                     
                                                                     const isPrivilegedPermission = permission === 'Admin' || permission === 'Service Delivery Manager';
-                                                                    const isCheckboxDisabled = isPrivilegedPermission || 
-                                                                                             isStudioProductionsLocked || 
-                                                                                             isEventsLocked ||
-                                                                                             isProductionManagementLocked ||
-                                                                                             isStudioProductionUsersLocked ||
-                                                                                             isEventUsersLocked ||
-                                                                                             isPostProductionLocked ||
-                                                                                             isPostProductionLockedByProdMgmt ||
-                                                                                             isStudioProductionsLockedByProdMgmt ||
-                                                                                             isEventsLockedByProdMgmt ||
-                                                                                             !canEdit;
-
-                                                                    const isChecked = permissionIsEnabled || 
-                                                                                             isStudioProductionsLocked || 
-                                                                                             isEventsLocked || 
-                                                                                             isProductionManagementLocked || 
-                                                                                             isStudioProductionUsersLocked || 
-                                                                                             isEventUsersLocked || 
-                                                                                             isPostProductionLocked ||
-                                                                                             isPostProductionLockedByProdMgmt ||
-                                                                                             isStudioProductionsLockedByProdMgmt ||
-                                                                                             isEventsLockedByProdMgmt;
+                                                                    const isCheckboxDisabled = isPrivilegedPermission || isLocked || !canEdit;
+                                                                    const isChecked = permissionIsEnabled || isLocked;
 
                                                                     return (
                                                                         <div key={permission} className="flex items-center space-x-2">
