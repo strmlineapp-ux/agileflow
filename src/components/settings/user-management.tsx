@@ -57,14 +57,23 @@ export function UserManagement() {
     };
 
     const canEditPermissions = (editor: User, target: User, permission: string): boolean => {
-        if (isPrivilegedUser(editor)) return true;
+        const editorIsPrivileged = isPrivilegedUser(editor);
+        if (editorIsPrivileged) {
+             if (permission === 'Admin' || (permission === 'Service Delivery Manager' && !editor.permissions?.includes('Admin'))) {
+                return true; 
+            }
+             if (permission === 'Admin' && !editor.permissions?.includes('Admin')) {
+                 return false;
+             }
+            return true;
+        }
 
-        const targetIsManager = target.permissions?.some(p => managerialPermissions.includes(p));
+        const targetIsManager = isManager(target);
         
         if (targetIsManager) return false;
 
         if (editor.permissions?.includes('Production Management')) {
-            const editableByProdManager = ["Events", "Studio Productions", "Production", "Post-Production"];
+            const editableByProdManager = ["Production", "Studio Productions", "Post-Production"];
             if (editableByProdManager.includes(permission)) {
                 return true;
             }
@@ -215,6 +224,7 @@ export function UserManagement() {
     };
     
     const viewerIsManager = isManager(viewAsUser);
+    const viewerIsPrivileged = isPrivilegedUser(viewAsUser);
 
     return (
         <>
@@ -312,10 +322,14 @@ export function UserManagement() {
                                                             <p className="font-medium text-sm mb-2">Permissions</p>
                                                             <div className="grid grid-cols-2 gap-2">
                                                                 {allPermissions.map(permission => {
+                                                                    if (permission === 'Admin' && !viewerIsPrivileged && user.userId !== viewAsUser.userId) {
+                                                                        return null;
+                                                                    }
+
                                                                     const permissionIsEnabled = user.permissions?.includes(permission);
                                                                     const canEdit = canEditPermissions(viewAsUser, user, permission);
 
-                                                                    if (!viewerIsManager && !permissionIsEnabled) {
+                                                                    if (!viewerIsManager && !permissionIsEnabled && !canEdit) {
                                                                         return null;
                                                                     }
                                                                     
