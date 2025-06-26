@@ -6,6 +6,7 @@ export const mockUsers: User[] = [
     { userId: '3', displayName: 'Charlie Brown', email: 'charlie@example.com', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Software Engineer', location: 'Austin, USA', skills: ["D.o.P."], permissions: ['Production Management', 'Production'], directReports: [] },
     { userId: '4', displayName: 'Diana Prince', email: 'diana@example.com', googleCalendarLinked: false, avatarUrl: 'https://placehold.co/40x40.png', title: 'UX Designer', location: 'Chicago, USA', phone: '098-765-4321', skills: ['Content Op', 'ES Operator', '1st AD', 'Edit Events'], permissions: ['Event Users', 'Events'], directReports: [] },
     { userId: '5', displayName: 'Eve Adams', email: 'eve@example.com', googleCalendarLinked: false, avatarUrl: 'https://placehold.co/40x40.png', title: 'Junior Developer', location: 'Remote', skills: ['Camera'], permissions: ['Production'], directReports: [] },
+    { userId: '6', displayName: 'Frank Miller', email: 'frank@example.com', googleCalendarLinked: false, avatarUrl: 'https://placehold.co/40x40.png', title: 'Studio Technician', location: 'Los Angeles, USA', phone: '555-555-5555', skills: ['Audio', 'Camera'], permissions: ['Studio Production Users', 'Studio Productions'], directReports: [] },
 ];
 
 export const mockTasks: Task[] = [
