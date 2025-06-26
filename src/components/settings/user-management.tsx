@@ -70,12 +70,11 @@ export function UserManagement() {
             }
         }
         
-        if (editor.permissions?.includes('Studio Production Users') && permission === 'Studio Productions') {
-            return true;
-        }
-        
-        if (editor.permissions?.includes('Event Users') && permission === 'Events') {
-            return true;
+        if (editor.permissions?.includes('Studio Production Users')) {
+            const editableByStudioUsers = ["Studio Productions", "Post-Production"];
+            if (editableByStudioUsers.includes(permission)) {
+                return true;
+            }
         }
 
         return false;
