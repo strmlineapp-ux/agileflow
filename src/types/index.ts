@@ -13,6 +13,8 @@ export interface User {
   roles?: string[];
   permissions?: string[];
   directReports?: string[];
+  theme?: 'light' | 'dark' | 'high-visibility';
+  defaultCalendarView?: 'month' | 'week' | 'day' | 'production-schedule';
 }
 
 export interface Task {

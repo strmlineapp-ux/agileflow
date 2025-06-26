@@ -10,10 +10,12 @@ import { ProductionScheduleView } from '@/components/calendar/production-schedul
 import { ChevronLeft, ChevronRight, Shrink, Expand, ArrowRightLeft } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays, startOfWeek, getWeek } from 'date-fns';
+import { useUser } from '@/context/user-context';
 
 export default function CalendarPage() {
+  const { realUser } = useUser();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [view, setView] = useState<'month' | 'week' | 'day' | 'production-schedule'>('day');
+  const [view, setView] = useState<'month' | 'week' | 'day' | 'production-schedule'>(realUser.defaultCalendarView || 'day');
   const [zoomLevel, setZoomLevel] = useState<'normal' | 'fit'>('normal');
   const [dayViewAxis, setDayViewAxis] = useState<'standard' | 'reversed'>('standard');
   const monthViewContainerRef = useRef<HTMLDivElement>(null);
@@ -87,7 +89,7 @@ export default function CalendarPage() {
   };
 
   return (
-    <Tabs defaultValue="day" value={view} onValueChange={(v) => setView(v as any)} className="flex h-full flex-col">
+    <Tabs defaultValue={realUser.defaultCalendarView || 'day'} value={view} onValueChange={(v) => setView(v as any)} className="flex h-full flex-col">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 shrink-0">
         <div className="flex items-center gap-2">
             <Button variant="outline" onClick={goToToday}>Today</Button>

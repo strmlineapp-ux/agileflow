@@ -21,9 +21,11 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/context/user-context';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 
 export function UserManagement() {
-    const { realUser, viewAsUser, users, setUsers, allRoles, setAllRoles } = useUser();
+    const { realUser, viewAsUser, users, setUsers, allRoles, setAllRoles, updateUserPreferences } = useUser();
     const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
     const [editingUser, setEditingUser] = useState<User | null>(null);
     const [phone, setPhone] = useState('');
@@ -326,10 +328,59 @@ export function UserManagement() {
                                         <TableCell>{user.location || 'N/A'}</TableCell>
                                         <TableCell className="text-right">
                                             {user.userId === realUser.userId && (
-                                                <Button variant="ghost" size="icon">
-                                                    <Palette className="h-4 w-4" />
-                                                    <span className="sr-only">Change theme</span>
-                                                </Button>
+                                                <Popover>
+                                                    <PopoverTrigger asChild>
+                                                        <Button variant="ghost" size="icon">
+                                                            <Palette className="h-4 w-4" />
+                                                            <span className="sr-only">Change preferences</span>
+                                                        </Button>
+                                                    </PopoverTrigger>
+                                                    <PopoverContent className="w-80">
+                                                        <div className="grid gap-4">
+                                                            <div className="space-y-2">
+                                                                <h4 className="font-medium leading-none">Preferences</h4>
+                                                                <p className="text-sm text-muted-foreground">
+                                                                    Set your color scheme and default calendar view.
+                                                                </p>
+                                                            </div>
+                                                            <div className="grid gap-2">
+                                                                <div className="grid grid-cols-3 items-center gap-4">
+                                                                    <Label htmlFor="color-scheme">Colour Scheme</Label>
+                                                                    <Select
+                                                                        value={realUser.theme || 'light'}
+                                                                        onValueChange={(value) => updateUserPreferences(realUser.userId, { theme: value as any })}
+                                                                    >
+                                                                        <SelectTrigger id="color-scheme" className="col-span-2 h-8">
+                                                                            <SelectValue placeholder="Select scheme" />
+                                                                        </SelectTrigger>
+                                                                        <SelectContent>
+                                                                            <SelectItem value="light">Light</SelectItem>
+                                                                            <SelectItem value="dark">Dark</SelectItem>
+                                                                            <SelectItem value="high-visibility">High Visibility</SelectItem>
+                                                                        </SelectContent>
+                                                                    </Select>
+                                                                </div>
+                                                                <div className="grid grid-cols-3 items-center gap-4">
+                                                                    <Label htmlFor="calendar-view">Default View</Label>
+                                                                    <Select
+                                                                        value={realUser.defaultCalendarView || 'day'}
+                                                                        onValueChange={(value) => updateUserPreferences(realUser.userId, { defaultCalendarView: value as any })}
+                                                                    >
+                                                                        <SelectTrigger id="calendar-view" className="col-span-2 h-8">
+                                                                            <SelectValue placeholder="Select view" />
+                                                                        </SelectTrigger>
+                                                                        <SelectContent>
+                                                                            <SelectItem value="month">Month</SelectItem>
+                                                                            <SelectItem value="week">Week</SelectItem>
+                                                                            <SelectItem value="day">Day</SelectItem>
+                                                                            <SelectItem value="production-schedule">Production Schedule</SelectItem>
+                                                                        </SelectContent>
+                                                                    </Select>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </PopoverContent>
+                                                </Popover>
                                             )}
                                         </TableCell>
                                     </TableRow>

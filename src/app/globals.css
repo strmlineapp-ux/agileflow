@@ -3,7 +3,8 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
+  :root,
+  .light {
     --background: 220 16% 97%;
     --foreground: 220 8% 40%;
     --card: 220 16% 99%;
@@ -26,6 +27,7 @@
     --input: 220 12% 90%;
     --ring: 220 40% 50%;
     --radius: 0.5rem;
+    --lunch-break-opacity: 0.06;
   }
 
   .dark {
@@ -41,7 +43,7 @@
     --secondary-foreground: 210 16% 92%;
     --muted: 220 12% 18%;
     --muted-foreground: 220 8% 50%;
-    --accent: 220 36% 45%;
+    --accent: 220 36% 55%;
     --accent-foreground: 210 16% 98%;
     --destructive: 0 48% 55%;
     --destructive-foreground: 210 16% 98%;
@@ -50,6 +52,32 @@
     --border: 220 12% 20%;
     --input: 220 12% 20%;
     --ring: 220 40% 60%;
+    --lunch-break-opacity: 0.1;
+  }
+
+  .high-visibility {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 5%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 5%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 5%;
+    --primary: 220 90% 55%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 15% 94%;
+    --secondary-foreground: 220 10% 10%;
+    --muted: 220 15% 96%;
+    --muted-foreground: 220 10% 45%;
+    --accent: 220 80% 60%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --warning: 48 96% 53%;
+    --warning-foreground: 48 100% 5%;
+    --border: 220 15% 88%;
+    --input: 220 15% 88%;
+    --ring: 220 90% 55%;
+    --lunch-break-opacity: 0.25;
   }
 }
 
@@ -68,8 +96,8 @@
       -45deg,
       transparent,
       transparent 5px,
-      hsl(var(--border) / 0.125) 5px,
-      hsl(var(--border) / 0.125) 10px
+      hsl(var(--border) / var(--lunch-break-opacity, 0.06)) 5px,
+      hsl(var(--border) / var(--lunch-break-opacity, 0.06)) 10px
     );
   }
 }
