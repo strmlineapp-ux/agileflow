@@ -127,3 +127,15 @@
     );
   }
 }
+
+@layer components {
+  /* Firebase theme overrides */
+  .firebase .bg-primary {
+    background: linear-gradient(to right, hsl(var(--primary)), hsl(var(--accent)));
+  }
+  /* This targets the hover state of the default button variant */
+  .firebase .hover\:bg-primary\/90:hover {
+    background: linear-gradient(to right, hsl(var(--primary)), hsl(var(--accent)));
+    opacity: 0.9;
+  }
+}
