@@ -47,8 +47,10 @@ export function WeekView({ date, containerRef, zoomLevel }: { date: Date, contai
         }
       }, [zoomLevel, containerRef, date, now]);
 
+    const weekStart = startOfWeek(date, { weekStartsOn: 1 });
+    const weekDays = eachDayOfInterval({ start: weekStart, end: addDays(weekStart, 6) });
+
     useEffect(() => {
-        const weekDays = eachDayOfInterval({ start: startOfWeek(date, { weekStartsOn: 1 }), end: addDays(startOfWeek(date, { weekStartsOn: 1 }), 6) });
         if (weekDays.some(isToday) && containerRef.current && nowMarkerRef.current && zoomLevel === 'normal') {
             const container = containerRef.current;
             const marker = nowMarkerRef.current;
@@ -58,10 +60,8 @@ export function WeekView({ date, containerRef, zoomLevel }: { date: Date, contai
                 behavior: 'smooth',
             });
         }
-    }, [date, now, containerRef, zoomLevel]);
+    }, [date, now, containerRef, zoomLevel, weekDays]);
 
-    const weekStart = startOfWeek(date, { weekStartsOn: 1 });
-    const weekDays = eachDayOfInterval({ start: weekStart, end: addDays(weekStart, 6) });
     const hours = Array.from({ length: 24 }, (_, i) => i);
 
     const getEventsForDay = (day: Date) => {
@@ -142,13 +142,13 @@ export function WeekView({ date, containerRef, zoomLevel }: { date: Date, contai
                             <div key={day.toString()} className={cn("relative border-l", { "bg-muted/10": index % 2 !== 0 }, { "bg-muted/50": isWeekend || isDayHoliday })}>
                                  {/* Working Hours Backgrounds */}
                                 {isWeekend || isDayHoliday ? (
-                                    <div className="absolute inset-0 bg-neutral-200 dark:bg-neutral-800 z-0" title="Overtime" />
+                                    <div className="absolute inset-0 bg-accent/20 z-0" title="Overtime" />
                                 ) : (
                                     <>
-                                        <div className="absolute inset-x-0 top-0 bg-neutral-200 dark:bg-neutral-800 z-0" style={{ height: `${8 * hourHeight}px` }} title="Overtime" />
-                                        <div className="absolute inset-x-0 bg-neutral-100 dark:bg-neutral-900 z-0" style={{ top: `${8 * hourHeight}px`, height: `${1 * hourHeight}px` }} title="Extended Working Hours" />
-                                        <div className="absolute inset-x-0 bg-neutral-100 dark:bg-neutral-900 z-0" style={{ top: `${18 * hourHeight}px`, height: `${2 * hourHeight}px` }} title="Extended Working Hours" />
-                                        <div className="absolute inset-x-0 bottom-0 bg-neutral-200 dark:bg-neutral-800 z-0" style={{ height: `${4 * hourHeight}px` }} title="Overtime" />
+                                        <div className="absolute inset-x-0 top-0 bg-accent/20 z-0" style={{ height: `${8 * hourHeight}px` }} title="Overtime" />
+                                        <div className="absolute inset-x-0 bg-accent/10 z-0" style={{ top: `${8 * hourHeight}px`, height: `${1 * hourHeight}px` }} title="Extended Working Hours" />
+                                        <div className="absolute inset-x-0 bg-accent/10 z-0" style={{ top: `${18 * hourHeight}px`, height: `${2 * hourHeight}px` }} title="Extended Working Hours" />
+                                        <div className="absolute inset-x-0 bottom-0 bg-accent/20 z-0" style={{ top: `${20 * hourHeight}px`, bottom: '0px' }} title="Overtime" />
                                     </>
                                 )}
                                 {/* Grid lines */}
