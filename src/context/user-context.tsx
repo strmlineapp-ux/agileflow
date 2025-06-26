@@ -17,6 +17,8 @@ interface UserContextType {
   setExtraCheckLocations: React.Dispatch<React.SetStateAction<Record<string, string[]>>>;
   notifications: Notification[];
   setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>;
+  ptoAssignments: Record<string, string[]>;
+  setPtoAssignments: React.Dispatch<React.SetStateAction<Record<string, string[]>>>;
 }
 
 const UserContext = createContext<UserContextType | null>(null);
@@ -29,6 +31,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [allRoles, setAllRoles] = useState<string[]>(initialRoles);
   const [extraCheckLocations, setExtraCheckLocations] = useState<Record<string, string[]>>({});
   const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
+  const [ptoAssignments, setPtoAssignments] = useState<Record<string, string[]>>({});
 
 
   const realUser = useMemo(() => users.find(u => u.userId === REAL_USER_ID)!, [users]);
@@ -51,6 +54,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setExtraCheckLocations,
     notifications,
     setNotifications,
+    ptoAssignments,
+    setPtoAssignments,
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

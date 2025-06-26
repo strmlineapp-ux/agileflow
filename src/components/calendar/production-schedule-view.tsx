@@ -3,7 +3,7 @@
 
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { format, addHours, startOfDay, isSaturday, isSunday, isSameDay, isToday, startOfWeek, eachDayOfInterval, addDays } from 'date-fns';
-import { type Event } from '@/types';
+import { type Event, type User } from '@/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { mockEvents, mockHolidays } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
@@ -15,6 +15,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 
 
 const isHoliday = (day: Date) => {
@@ -56,15 +59,21 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
     const [collapsedDays, setCollapsedDays] = useState<Set<string>>(new Set());
     const [collapsedLocations, setCollapsedLocations] = useState<Record<string, Set<string>>>({});
     const [dailyCheckAssignments, setDailyCheckAssignments] = useState<Record<string, Record<string, string | null>>>({});
-    const { users, viewAsUser, extraCheckLocations, setExtraCheckLocations } = useUser();
+    const { users, viewAsUser, extraCheckLocations, setExtraCheckLocations, ptoAssignments, setPtoAssignments } = useUser();
     const defaultCheckLocations = useMemo(() => ["Training Room", "Locke", "Apgar"], []);
 
     const [isManageChecksDialogOpen, setIsManageChecksDialogOpen] = useState(false);
     const [editingDayIso, setEditingDayIso] = useState<string | null>(null);
     const [tempCheckLocations, setTempCheckLocations] = useState<string[]>([]);
     const [newLocationName, setNewLocationName] = useState('');
+
+    const [isPtoDialogOpen, setIsPtoDialogOpen] = useState(false);
+    const [editingPtoDayIso, setEditingPtoDayIso] = useState<string | null>(null);
+    const [tempPtoUsers, setTempPtoUsers] = useState<string[]>([]);
     
     const canManageChecks = viewAsUser.roles?.includes('Manage Checks');
+    const managerialPermissions = ["Admin", "Service Delivery Manager", "Production Management", "Studio Production Users", "Event Users"];
+    const canManagePto = viewAsUser.permissions?.some(p => managerialPermissions.includes(p));
 
     const dailyCheckUsers = useMemo(() => {
         return users.filter(user => user.roles?.includes('ES Daily Checks'));
@@ -265,6 +274,42 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
         return data ? data.day : null;
     }, [editingDayIso, weeklyScheduleData]);
 
+    const handleOpenPtoDialog = (dayIso: string) => {
+        setEditingPtoDayIso(dayIso);
+        setTempPtoUsers(ptoAssignments[dayIso] || []);
+        setIsPtoDialogOpen(true);
+    };
+
+    const handlePtoUserSelectionChange = (userId: string, checked: boolean) => {
+        setTempPtoUsers(prev => {
+            const newSet = new Set(prev);
+            if (checked) {
+                newSet.add(userId);
+            } else {
+                newSet.delete(userId);
+            }
+            return Array.from(newSet);
+        });
+    };
+
+    const handleSavePto = () => {
+        if (!editingPtoDayIso) return;
+        setPtoAssignments(prev => ({
+            ...prev,
+            [editingPtoDayIso]: tempPtoUsers
+        }));
+        toast({ title: "Success", description: "PTO updated for this day." });
+        setIsPtoDialogOpen(false);
+        setEditingPtoDayIso(null);
+    };
+
+    const editingPtoDayDate = useMemo(() => {
+        if (!editingPtoDayIso) return null;
+        const data = weeklyScheduleData.find(d => d.day.toISOString() === editingPtoDayIso);
+        return data ? data.day : null;
+    }, [editingPtoDayIso, weeklyScheduleData]);
+
+
     const renderLocationRow = (dayIso: string, location: string, eventsInRow: Event[], isLast: boolean, index: number) => {
         const isLocationCollapsed = collapsedLocations[dayIso]?.has(location);
         const assignedUserId = dailyCheckAssignments[dayIso]?.[location];
@@ -379,94 +424,113 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
                 const isWeekend = isSaturday(day) || isSunday(day);
                 const isDayHoliday = isHoliday(day);
                 const dailyExtraLocations = extraCheckLocations[dayIso] ?? (isWeekend ? [] : defaultCheckLocations);
+                const usersOnPto = ptoAssignments[dayIso] || [];
 
                 return (
                     <div key={dayIso} ref={isDayToday ? todayCardRef : null}>
                         <Card className="overflow-hidden">
-                             <div className="p-2 border-b bg-card flex flex-wrap items-center gap-2">
-                                {canManageChecks && (
-                                     <>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenManageChecksDialog(dayIso)}>
-                                            <Pencil className="h-4 w-4" />
-                                            <span className="sr-only">Edit check locations</span>
-                                        </Button>
-                                    </>
-                                )}
-                                {dailyExtraLocations.map(location => {
-                                    const assignedUserId = dailyCheckAssignments[dayIso]?.[location];
-                                    const assignedUser = users.find(u => u.userId === assignedUserId);
-                                    
-                                    const pillContent = (
+                             <div className="p-2 border-b bg-card flex flex-wrap items-center justify-between gap-4">
+                                <div className="flex flex-wrap items-center gap-2">
+                                    {canManageChecks && (
                                         <>
-                                            {location}
-                                            {assignedUser && (
-                                                <span className="ml-2 font-normal text-muted-foreground">({assignedUser.displayName.split(' ')[0]} {assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''})</span>
-                                            )}
-                                            {!assignedUser && canManageChecks && <PlusCircle className="ml-2 h-4 w-4" />}
+                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenManageChecksDialog(dayIso)}>
+                                                <Pencil className="h-4 w-4" />
+                                                <span className="sr-only">Edit check locations</span>
+                                            </Button>
                                         </>
-                                    );
+                                    )}
+                                    {dailyExtraLocations.map(location => {
+                                        const assignedUserId = dailyCheckAssignments[dayIso]?.[location];
+                                        const assignedUser = users.find(u => u.userId === assignedUserId);
+                                        
+                                        const pillContent = (
+                                            <>
+                                                {location}
+                                                {assignedUser && (
+                                                    <span className="ml-2 font-normal text-muted-foreground">({assignedUser.displayName.split(' ')[0]} {assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''})</span>
+                                                )}
+                                                {!assignedUser && canManageChecks && <PlusCircle className="ml-2 h-4 w-4" />}
+                                            </>
+                                        );
 
-                                    return canManageChecks ? (
-                                        <Popover key={location}>
-                                            <PopoverTrigger asChild>
-                                                <Button 
-                                                    variant={assignedUser ? "secondary" : "outline"} 
-                                                    size="sm" 
-                                                    className="rounded-full h-8"
-                                                >
-                                                   {pillContent}
-                                                </Button>
-                                            </PopoverTrigger>
-                                             <PopoverContent className="w-56 p-0">
-                                                <div className="grid gap-1">
-                                                    <div className="p-2 border-b">
-                                                        <p className="text-sm font-medium text-center">Assign User to {location}</p>
-                                                    </div>
-                                                    <div className="flex flex-col gap-1 max-h-48 overflow-y-auto p-1">
-                                                        {dailyCheckUsers.length > 0 ? dailyCheckUsers.map(user => (
-                                                            <Button
-                                                                key={user.userId}
-                                                                variant="ghost"
-                                                                className="justify-start h-8"
-                                                                onClick={() => handleAssignCheck(dayIso, location, user.userId)}
-                                                            >
-                                                                <Avatar className="h-6 w-6 mr-2">
-                                                                    <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
-                                                                    <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                                                                </Avatar>
-                                                                <span className="text-sm">{user.displayName}</span>
-                                                            </Button>
-                                                        )) : (
-                                                            <p className="text-sm text-muted-foreground text-center p-2">No users with "ES Daily Checks" role.</p>
+                                        return canManageChecks ? (
+                                            <Popover key={location}>
+                                                <PopoverTrigger asChild>
+                                                    <Button 
+                                                        variant={assignedUser ? "secondary" : "outline"} 
+                                                        size="sm" 
+                                                        className="rounded-full h-8"
+                                                    >
+                                                    {pillContent}
+                                                    </Button>
+                                                </PopoverTrigger>
+                                                <PopoverContent className="w-56 p-0">
+                                                    <div className="grid gap-1">
+                                                        <div className="p-2 border-b">
+                                                            <p className="text-sm font-medium text-center">Assign User to {location}</p>
+                                                        </div>
+                                                        <div className="flex flex-col gap-1 max-h-48 overflow-y-auto p-1">
+                                                            {dailyCheckUsers.length > 0 ? dailyCheckUsers.map(user => (
+                                                                <Button
+                                                                    key={user.userId}
+                                                                    variant="ghost"
+                                                                    className="justify-start h-8"
+                                                                    onClick={() => handleAssignCheck(dayIso, location, user.userId)}
+                                                                >
+                                                                    <Avatar className="h-6 w-6 mr-2">
+                                                                        <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
+                                                                        <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                                                    </Avatar>
+                                                                    <span className="text-sm">{user.displayName}</span>
+                                                                </Button>
+                                                            )) : (
+                                                                <p className="text-sm text-muted-foreground text-center p-2">No users with "ES Daily Checks" role.</p>
+                                                            )}
+                                                        </div>
+                                                        {assignedUser && (
+                                                            <div className="p-1 border-t">
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    className="w-full text-destructive hover:text-destructive"
+                                                                    onClick={() => handleAssignCheck(dayIso, location, null)}
+                                                                >
+                                                                    Unassign
+                                                                </Button>
+                                                            </div>
                                                         )}
                                                     </div>
-                                                    {assignedUser && (
-                                                        <div className="p-1 border-t">
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                className="w-full text-destructive hover:text-destructive"
-                                                                onClick={() => handleAssignCheck(dayIso, location, null)}
-                                                            >
-                                                                Unassign
-                                                            </Button>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </PopoverContent>
-                                        </Popover>
-                                    ) : (
-                                        <Button
-                                            key={location}
-                                            variant={assignedUser ? "secondary" : "outline"}
-                                            size="sm"
-                                            className="rounded-full h-8"
-                                            disabled
-                                        >
-                                            {pillContent}
+                                                </PopoverContent>
+                                            </Popover>
+                                        ) : (
+                                            <Button
+                                                key={location}
+                                                variant={assignedUser ? "secondary" : "outline"}
+                                                size="sm"
+                                                className="rounded-full h-8"
+                                                disabled
+                                            >
+                                                {pillContent}
+                                            </Button>
+                                        )
+                                    })}
+                                </div>
+                                <div className="flex flex-wrap items-center gap-2">
+                                    {usersOnPto.map(userId => {
+                                        const user = users.find(u => u.userId === userId);
+                                        return user ? (
+                                            <Badge key={userId} variant="secondary" className="rounded-full h-8">
+                                                {user.displayName}
+                                            </Badge>
+                                        ) : null;
+                                    })}
+                                    {canManagePto && (
+                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenPtoDialog(dayIso)}>
+                                            <Pencil className="h-4 w-4" />
+                                            <span className="sr-only">Edit users on PTO</span>
                                         </Button>
-                                    )
-                                })}
+                                    )}
+                                </div>
                             </div>
                             <div 
                                 className="overflow-x-auto" 
@@ -577,6 +641,45 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
                             setEditingDayIso(null);
                         }}>Cancel</Button>
                         <Button onClick={handleSaveChanges}>Save Changes</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+            <Dialog open={isPtoDialogOpen} onOpenChange={(isOpen) => {
+                 if (!isOpen) {
+                    setEditingPtoDayIso(null);
+                 }
+             }}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Manage PTO</DialogTitle>
+                        <DialogDescription>
+                            Select users on PTO for {editingPtoDayDate ? format(editingPtoDayDate, 'MMMM d, yyyy') : 'the selected day'}.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-2 max-h-60 overflow-y-auto p-1">
+                        {users.map(user => (
+                            <div key={user.userId} className="flex items-center space-x-2 p-1">
+                                <Checkbox
+                                    id={`pto-user-${user.userId}`}
+                                    checked={tempPtoUsers.includes(user.userId)}
+                                    onCheckedChange={(checked) => handlePtoUserSelectionChange(user.userId, !!checked)}
+                                />
+                                <Label htmlFor={`pto-user-${user.userId}`} className="font-normal flex items-center gap-2 cursor-pointer">
+                                    <Avatar className="h-6 w-6">
+                                        <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
+                                        <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                    </Avatar>
+                                    {user.displayName}
+                                </Label>
+                            </div>
+                        ))}
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => {
+                            setIsPtoDialogOpen(false);
+                            setEditingPtoDayIso(null);
+                        }}>Cancel</Button>
+                        <Button onClick={handleSavePto}>Save Changes</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
