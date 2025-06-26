@@ -50,7 +50,7 @@ export function UserManagement() {
 
     const assignableRoles = viewAsUser.roles?.includes('Admin')
         ? allRoles
-        : viewAsUser.roles || [];
+        : (viewAsUser.roles || []).filter(role => allRoles.includes(role));
 
     const privilegedRoles = ['Admin', 'Service Delivery Manager'];
 
@@ -73,9 +73,9 @@ export function UserManagement() {
         });
     };
 
-    const handleSavePhone = () => {
+    const handleSavePhone = async () => {
         if (!editingContactUser) return;
-        updateUser(editingContactUser.userId, { phone });
+        await updateUser(editingContactUser.userId, { phone });
         setEditingContactUser(null);
     };
 
@@ -84,9 +84,9 @@ export function UserManagement() {
         setTempDirectReports(user.directReports || []);
     };
 
-    const handleSaveReportingLine = () => {
+    const handleSaveReportingLine = async () => {
         if (!editingReportingLine) return;
-        updateUser(editingReportingLine.userId, { directReports: tempDirectReports });
+        await updateUser(editingReportingLine.userId, { directReports: tempDirectReports });
         setEditingReportingLine(null);
     };
 
@@ -128,7 +128,7 @@ export function UserManagement() {
 
         const requires2fa = [...changedRoles].some(role => privilegedRoles.includes(role));
 
-        const saveAction = () => {
+        const saveAction = async () => {
             let finalRoles = [...tempRoles];
             const dependencies: Record<string, string[]> = {
                 'Service Delivery Manager': ['Production Management', 'Studio Production Users', 'Event Users', 'Post-Production', 'Production', 'Studio Productions', 'Events', 'Manage Checks'],
@@ -157,7 +157,7 @@ export function UserManagement() {
             }
             
             const uniqueRoles = [...new Set(finalRoles)];
-            updateUser(userToEditRoles.userId, { roles: uniqueRoles });
+            await updateUser(userToEditRoles.userId, { roles: uniqueRoles });
             toast({ title: "Success", description: `${userToEditRoles.displayName}'s roles have been updated.` });
             closeRolesDialog();
         };
@@ -349,11 +349,15 @@ export function UserManagement() {
                                                                 </Button>
                                                             )}
                                                         </div>
-                                                        <div className="flex flex-wrap gap-2">
-                                                            {(user.roles && user.roles.length > 0) ? user.roles.map(role => (
-                                                                <Badge key={role} variant="secondary">{role}</Badge>
-                                                            )) : <p className="text-sm text-muted-foreground">No roles assigned.</p>}
-                                                        </div>
+                                                        {(canEditUser(viewAsUser, user) || viewAsUser.userId === user.userId) ? (
+                                                            <div className="flex flex-wrap gap-2">
+                                                                {(user.roles && user.roles.length > 0) ? user.roles.map(role => (
+                                                                    <Badge key={role} variant="secondary">{role}</Badge>
+                                                                )) : <p className="text-sm text-muted-foreground">No roles assigned.</p>}
+                                                            </div>
+                                                        ) : (
+                                                            <p className="text-sm text-muted-foreground">You do not have permission to view roles.</p>
+                                                        )}
                                                      </div>
                                                 </div>
                                             </TableCell>
