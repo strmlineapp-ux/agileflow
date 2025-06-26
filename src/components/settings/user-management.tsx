@@ -42,7 +42,7 @@ export function UserManagement() {
     const [newRole, setNewRole] = useState('');
     const [allRoles, setAllRoles] = useState([
         'Video Director', 'D.o.P.', 'Camera', 'Audio', 
-        'ES Operator', 'TD', '1st AD', 'Content Op', 'Edit Events'
+        'ES Operator', 'TD', '1st AD', 'Content Op', 'Edit Events', 'ES Daily Checks'
     ]);
     const [isDeleteRole2faDialogOpen, setIsDeleteRole2faDialogOpen] = useState(false);
     const [roleToDelete, setRoleToDelete] = useState<string | null>(null);
