@@ -5,16 +5,18 @@ import { Button } from '@/components/ui/button';
 import { MonthView } from '@/components/calendar/month-view';
 import { WeekView } from '@/components/calendar/week-view';
 import { DayView } from '@/components/calendar/day-view';
+import { ProductionScheduleView } from '@/components/calendar/production-schedule-view';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays, startOfWeek, getWeek } from 'date-fns';
 
 export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [view, setView] = useState<'month' | 'week' | 'day'>('day');
+  const [view, setView] = useState<'month' | 'week' | 'day' | 'production-schedule'>('day');
   const monthViewContainerRef = useRef<HTMLDivElement>(null);
   const dayViewContainerRef = useRef<HTMLDivElement>(null);
   const weekViewContainerRef = useRef<HTMLDivElement>(null);
+  const productionScheduleViewContainerRef = useRef<HTMLDivElement>(null);
 
   const handlePrev = () => {
     switch (view) {
@@ -25,6 +27,7 @@ export default function CalendarPage() {
         setCurrentDate(subWeeks(currentDate, 1));
         break;
       case 'day':
+      case 'production-schedule':
         setCurrentDate(subDays(currentDate, 1));
         break;
     }
@@ -39,6 +42,7 @@ export default function CalendarPage() {
         setCurrentDate(addWeeks(currentDate, 1));
         break;
       case 'day':
+      case 'production-schedule':
         setCurrentDate(addDays(currentDate, 1));
         break;
     }
@@ -49,7 +53,7 @@ export default function CalendarPage() {
   };
   
   const getTitle = () => {
-    if (view === 'day') return <>{format(currentDate, 'MMMM d, yyyy')}</>;
+    if (view === 'day' || view === 'production-schedule') return <>{format(currentDate, 'MMMM d, yyyy')}</>;
     if (view === 'week') {
       const weekNumber = getWeek(currentDate, { weekStartsOn: 1 });
       const start = startOfWeek(currentDate, { weekStartsOn: 1 });
@@ -92,6 +96,7 @@ export default function CalendarPage() {
             <TabsTrigger value="month">Month</TabsTrigger>
             <TabsTrigger value="week">Week</TabsTrigger>
             <TabsTrigger value="day">Day</TabsTrigger>
+            <TabsTrigger value="production-schedule">Production Schedule</TabsTrigger>
         </TabsList>
       </div>
       <div className="flex-1 relative">
@@ -103,6 +108,9 @@ export default function CalendarPage() {
         </TabsContent>
         <TabsContent value="day" ref={dayViewContainerRef} className="absolute inset-0 overflow-auto">
             <DayView date={currentDate} containerRef={dayViewContainerRef} />
+        </TabsContent>
+        <TabsContent value="production-schedule" ref={productionScheduleViewContainerRef} className="absolute inset-0 overflow-auto">
+            <ProductionScheduleView date={currentDate} containerRef={productionScheduleViewContainerRef} />
         </TabsContent>
       </div>
     </Tabs>
