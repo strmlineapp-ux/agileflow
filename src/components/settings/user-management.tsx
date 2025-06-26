@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, ChevronRight, Pencil, Lock } from 'lucide-react';
+import { ChevronDown, ChevronRight, Pencil, Lock, X } from 'lucide-react';
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -36,11 +36,14 @@ export function UserManagement() {
     const [editingPermissionState, setEditingPermissionState] = useState<{ user: User; permission: string } | null>(null);
     const [twoFactorCode, setTwoFactorCode] = useState('');
     const { toast } = useToast();
-
-    const allSkills = [
+    
+    const [isRolesDialogOpen, setIsRolesDialogOpen] = useState(false);
+    const [tempRoles, setTempRoles] = useState<string[]>([]);
+    const [newRole, setNewRole] = useState('');
+    const [allRoles, setAllRoles] = useState([
         'Video Director', 'D.o.P.', 'Camera', 'Audio', 
         'ES Operator', 'TD', '1st AD', 'Content Op', 'Edit Events'
-    ];
+    ]);
 
     const allPermissions = [
         "Events", "Event Users", "Studio Productions", "Studio Production Users",
@@ -95,7 +98,7 @@ export function UserManagement() {
         return false;
     };
     
-    const canEditSkills = (editor: User, target: User): boolean => {
+    const canEditRoles = (editor: User, target: User): boolean => {
         if (isPrivilegedUser(editor)) {
             return true;
         }
@@ -147,16 +150,16 @@ export function UserManagement() {
         }));
     };
 
-    const handleSkillChange = (userId: string, skill: string, checked: boolean) => {
+    const handleRoleChange = (userId: string, role: string, checked: boolean) => {
         setUsers(users.map(user => {
             if (user.userId === userId) {
-                const skills = user.skills || [];
+                const roles = user.roles || [];
                 if (checked) {
-                    if (!skills.includes(skill)) {
-                        return { ...user, skills: [...skills, skill] };
+                    if (!roles.includes(role)) {
+                        return { ...user, roles: [...roles, role] };
                     }
                 } else {
-                    return { ...user, skills: skills.filter(s => s !== skill) };
+                    return { ...user, roles: roles.filter(s => s !== role) };
                 }
             }
             return user;
@@ -237,6 +240,22 @@ export function UserManagement() {
     const viewerIsManager = isManager(viewAsUser);
     const viewerIsPrivileged = isPrivilegedUser(viewAsUser);
 
+    const handleAddRole = () => {
+        if (newRole && !tempRoles.includes(newRole.trim())) {
+            setTempRoles([...tempRoles, newRole.trim()]);
+            setNewRole('');
+        }
+    };
+
+    const handleRemoveRole = (roleToRemove: string) => {
+        setTempRoles(tempRoles.filter(role => role !== roleToRemove));
+    };
+
+    const handleSaveRoles = () => {
+        setAllRoles(tempRoles);
+        setIsRolesDialogOpen(false);
+    };
+
     return (
         <>
             <Card>
@@ -256,7 +275,7 @@ export function UserManagement() {
                         </TableHeader>
                         <TableBody>
                             {users.map(user => {
-                                const canViewerEditThisUserSkills = canEditSkills(viewAsUser, user);
+                                const canViewerEditThisUserRoles = canEditRoles(viewAsUser, user);
                                 return (
                                 <Fragment key={user.userId}>
                                     <TableRow>
@@ -334,7 +353,7 @@ export function UserManagement() {
                                                     
                                                     {(viewerIsManager || user.userId === viewAsUser.userId) && (
                                                         <div>
-                                                            <p className="font-medium text-sm mb-2">Permissions</p>
+                                                            <p className="font-medium text-sm mb-2">Create/ Edit</p>
                                                             <div className="grid grid-cols-2 gap-2">
                                                                 {allPermissions.map(permission => {
                                                                     const canViewAdminPermission = viewerIsPrivileged || user.userId === viewAsUser.userId;
@@ -413,31 +432,42 @@ export function UserManagement() {
 
                                                     {(viewerIsManager || user.userId === viewAsUser.userId) && (
                                                       <div>
-                                                          <p className="font-medium text-sm mb-2">Skills</p>
+                                                            <div className="flex items-center gap-2 mb-2">
+                                                                <p className="font-medium text-sm">Roles</p>
+                                                                {viewerIsManager && (
+                                                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => {
+                                                                        setTempRoles([...allRoles]);
+                                                                        setIsRolesDialogOpen(true);
+                                                                    }}>
+                                                                        <Pencil className="h-4 w-4" />
+                                                                        <span className="sr-only">Edit roles</span>
+                                                                    </Button>
+                                                                )}
+                                                            </div>
                                                           <div className="grid grid-cols-2 gap-2">
-                                                              {canViewerEditThisUserSkills
-                                                                  ? allSkills.map(skill => (
-                                                                      <div key={skill} className="flex items-center space-x-2">
+                                                              {canViewerEditThisUserRoles
+                                                                  ? allRoles.map(role => (
+                                                                      <div key={role} className="flex items-center space-x-2">
                                                                           <Checkbox
-                                                                              id={`${user.userId}-${skill}`}
-                                                                              checked={user.skills?.includes(skill)}
-                                                                              onCheckedChange={(checked) => handleSkillChange(user.userId, skill, !!checked)}
+                                                                              id={`${user.userId}-${role}`}
+                                                                              checked={user.roles?.includes(role)}
+                                                                              onCheckedChange={(checked) => handleRoleChange(user.userId, role, !!checked)}
                                                                           />
-                                                                          <Label htmlFor={`${user.userId}-${skill}`} className="text-sm font-normal">{skill}</Label>
+                                                                          <Label htmlFor={`${user.userId}-${role}`} className="text-sm font-normal">{role}</Label>
                                                                       </div>
                                                                   ))
-                                                                  : user.skills && user.skills.length > 0
-                                                                      ? user.skills.map(skill => (
-                                                                          <div key={skill} className="flex items-center space-x-2">
+                                                                  : user.roles && user.roles.length > 0
+                                                                      ? user.roles.map(role => (
+                                                                          <div key={role} className="flex items-center space-x-2">
                                                                               <Checkbox
-                                                                                  id={`${user.userId}-${skill}`}
+                                                                                  id={`${user.userId}-${role}`}
                                                                                   checked={true}
                                                                                   disabled={true}
                                                                               />
-                                                                              <Label htmlFor={`${user.userId}-${skill}`} className="text-sm font-normal">{skill}</Label>
+                                                                              <Label htmlFor={`${user.userId}-${role}`} className="text-sm font-normal">{role}</Label>
                                                                           </div>
                                                                       ))
-                                                                      : <p className="text-sm text-muted-foreground col-span-2">No skills assigned.</p>
+                                                                      : <p className="text-sm text-muted-foreground col-span-2">No roles assigned.</p>
                                                               }
                                                           </div>
                                                       </div>
@@ -543,6 +573,43 @@ export function UserManagement() {
                              setTwoFactorCode('');
                          }}>Cancel</Button>
                         <Button onClick={handleVerifyAndChangePermission}>Verify & Change</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={isRolesDialogOpen} onOpenChange={setIsRolesDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Manage Roles</DialogTitle>
+                        <DialogDescription>
+                            Add or remove roles available for assignment. Changes will affect all users.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <div className="space-y-2 max-h-60 overflow-y-auto p-1">
+                            {tempRoles.map(role => (
+                                <div key={role} className="flex items-center justify-between bg-muted/50 p-2 rounded-md">
+                                    <span className="text-sm">{role}</span>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleRemoveRole(role)}>
+                                        <X className="h-4 w-4" />
+                                        <span className="sr-only">Remove {role}</span>
+                                    </Button>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="flex gap-2">
+                            <Input
+                                placeholder="New role name"
+                                value={newRole}
+                                onChange={(e) => setNewRole(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleAddRole()}
+                            />
+                            <Button onClick={handleAddRole}>Add</Button>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsRolesDialogOpen(false)}>Cancel</Button>
+                        <Button onClick={handleSaveRoles}>Save Changes</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

@@ -9,7 +9,7 @@ export interface User {
   location?: string;
   phone?: string;
   title?: string;
-  skills?: string[];
+  roles?: string[];
   permissions?: string[];
   directReports?: string[];
 }
