@@ -21,11 +21,11 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/context/user-context';
-import { mockUsers } from '@/lib/mock-data';
+import { mockUsers as initialUsers } from '@/lib/mock-data';
 
 export function UserManagement() {
     const { realUser, viewAsUser } = useUser();
-    const [users, setUsers] = useState<User[]>(mockUsers);
+    const [users, setUsers] = useState<User[]>(initialUsers);
     const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
     const [editingUser, setEditingUser] = useState<User | null>(null);
     const [phone, setPhone] = useState('');
@@ -37,9 +37,6 @@ export function UserManagement() {
     const [twoFactorCode, setTwoFactorCode] = useState('');
     const { toast } = useToast();
 
-    const canSeePermissions = viewAsUser.permissions?.includes('Admin') || viewAsUser.permissions?.includes('Service Delivery Manager');
-    const canEditReportingLine = viewAsUser.permissions?.includes('Admin') || viewAsUser.permissions?.includes('Service Delivery Manager');
-
     const allSkills = [
         'Video Director', 'D.o.P.', 'Camera', 'Audio', 
         'ES Operator', 'TD', '1st AD', 'Content Op', 'Edit Events'
@@ -50,17 +47,46 @@ export function UserManagement() {
         "Production", "Production Management", "Service Delivery Manager", "Admin"
     ];
 
+    const canSeePermissionsSection = (viewedUser: User): boolean => {
+        const isPrivileged = viewAsUser.permissions?.includes('Admin') || viewAsUser.permissions?.includes('Service Delivery Manager');
+        return isPrivileged || viewAsUser.userId === viewedUser.userId;
+    };
+    
+    const canSeeAllPermissions = viewAsUser.permissions?.includes('Admin') || viewAsUser.permissions?.includes('Service Delivery Manager');
+
+    const canEditPermissions = (editor: User, target: User, permission: string): boolean => {
+        const isEditorAdminOrSdm = editor.permissions?.includes('Admin') || editor.permissions?.includes('Service Delivery Manager');
+        if (isEditorAdminOrSdm) return true;
+
+        const isTargetAdminOrSdm = target.permissions?.includes('Admin') || target.permissions?.includes('Service Delivery Manager');
+        if (isTargetAdminOrSdm) return false;
+
+        if (permission === 'Production' && editor.permissions?.includes('Production Management')) return true;
+        if (permission === 'Studio Productions' && editor.permissions?.includes('Studio Production Users')) return true;
+        if (permission === 'Events' && editor.permissions?.includes('Event Users')) return true;
+
+        return false;
+    };
+
+    const canEditReportingLine = viewAsUser.permissions?.includes('Admin') || viewAsUser.permissions?.includes('Service Delivery Manager');
+
     const handlePermissionChange = (userId: string, permission: string, checked: boolean) => {
         setUsers(users.map(user => {
             if (user.userId === userId) {
-                const permissions = user.permissions || [];
+                let newPermissions = user.permissions ? [...user.permissions] : [];
+                
                 if (checked) {
-                    if (!permissions.includes(permission)) {
-                        return { ...user, permissions: [...permissions, permission] };
+                    if (!newPermissions.includes(permission)) {
+                        newPermissions.push(permission);
+                    }
+                    if (permission === 'Production Management' && !newPermissions.includes('Production')) {
+                        newPermissions.push('Production');
                     }
                 } else {
-                    return { ...user, permissions: permissions.filter(p => p !== permission) };
+                    newPermissions = newPermissions.filter(p => p !== permission);
                 }
+                
+                return { ...user, permissions: newPermissions };
             }
             return user;
         }));
@@ -194,7 +220,6 @@ export function UserManagement() {
                                         <TableCell>{user.title || 'N/A'}</TableCell>
                                         <TableCell>{user.location || 'N/A'}</TableCell>
                                         <TableCell className="text-right">
-                                            {/* This space is intentionally left blank. Edit button is in the expanded view. */}
                                         </TableCell>
                                     </TableRow>
                                     {expandedRows.has(user.userId) && (
@@ -244,25 +269,28 @@ export function UserManagement() {
                                                         </div>
                                                     </div>
                                                     
-                                                    {(canSeePermissions || viewAsUser.userId === user.userId) && (
+                                                    {canSeePermissionsSection(user) && (
                                                         <div>
                                                             <p className="font-medium text-sm mb-2">Permissions</p>
                                                             <div className="grid grid-cols-2 gap-2">
                                                                 {allPermissions.map(permission => {
-                                                                    if (!canSeePermissions && permission !== 'Admin') {
+                                                                    if (!canSeeAllPermissions && permission !== 'Admin') {
                                                                         return null;
                                                                     }
                                                                     
-                                                                    const isCheckboxDisabled = permission === 'Admin' || !canSeePermissions;
+                                                                    const hasProductionManagement = user.permissions?.includes('Production Management');
+                                                                    const isProductionLocked = permission === 'Production' && hasProductionManagement;
+                                                                    
+                                                                    const isCheckboxDisabled = permission === 'Admin' || isProductionLocked || !canEditPermissions(viewAsUser, user, permission);
 
                                                                     return (
                                                                         <div key={permission} className="flex items-center space-x-2">
                                                                             <Checkbox
                                                                                 id={`${user.userId}-${permission}`}
-                                                                                checked={user.permissions?.includes(permission)}
+                                                                                checked={user.permissions?.includes(permission) || isProductionLocked}
                                                                                 disabled={isCheckboxDisabled}
                                                                                 onCheckedChange={(checked) => {
-                                                                                    if (permission !== 'Admin' && canSeePermissions) {
+                                                                                    if (permission !== 'Admin' && canEditPermissions(viewAsUser, user, permission)) {
                                                                                         handlePermissionChange(user.userId, permission, !!checked);
                                                                                     }
                                                                                 }}
@@ -271,7 +299,7 @@ export function UserManagement() {
                                                                                 htmlFor={`${user.userId}-${permission}`}
                                                                                 className="text-sm font-normal flex items-center gap-1 cursor-pointer"
                                                                                 onClick={() => {
-                                                                                    if (permission === 'Admin' && canSeePermissions) {
+                                                                                    if (permission === 'Admin' && canEditPermissions(viewAsUser, user, permission)) {
                                                                                         setEditingAdminForUser(user);
                                                                                         setIs2faDialogOpen(true);
                                                                                     }
