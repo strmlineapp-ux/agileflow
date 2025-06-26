@@ -332,7 +332,7 @@ export function UserManagement() {
                                                                     const permissionIsEnabled = user.permissions?.includes(permission);
                                                                     const canEdit = canEditPermissions(viewAsUser, user, permission);
 
-                                                                    if (!viewerIsManager && !permissionIsEnabled && !canEdit) {
+                                                                    if (!viewerIsManager && !permissionIsEnabled && !canEdit && permission !== 'Admin') {
                                                                         return null;
                                                                     }
                                                                     
