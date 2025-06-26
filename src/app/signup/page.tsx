@@ -10,8 +10,8 @@ export default function SignUpPage() {
         <Card className="shadow-2xl">
           <CardHeader className="items-center text-center">
             <Logo className="mb-4" />
-            <CardTitle className="font-headline text-3xl">Create an Account</CardTitle>
-            <CardDescription>Get started with AgileFlow today</CardDescription>
+            <CardTitle className="font-headline text-3xl">Request Access</CardTitle>
+            <CardDescription>Enter your email to request access to AgileFlow.</CardDescription>
           </CardHeader>
           <CardContent>
             <SignUpForm />
