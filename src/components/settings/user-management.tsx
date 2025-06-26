@@ -48,6 +48,10 @@ export function UserManagement() {
     const [twoFactorCode, setTwoFactorCode] = useState('');
     const { toast } = useToast();
 
+    const assignableRoles = viewAsUser.roles?.includes('Admin')
+        ? allRoles
+        : viewAsUser.roles || [];
+
     const privilegedRoles = ['Admin', 'Service Delivery Manager'];
 
     const canEditUser = (editor: User, target: User): boolean => {
@@ -432,7 +436,7 @@ export function UserManagement() {
                                         <SelectValue placeholder="Select a role to add" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {allRoles.filter(r => !tempRoles.includes(r)).map(role => (
+                                        {assignableRoles.filter(r => !tempRoles.includes(r)).map(role => (
                                             <SelectItem key={role} value={role}>{role}</SelectItem>
                                         ))}
                                     </SelectContent>
