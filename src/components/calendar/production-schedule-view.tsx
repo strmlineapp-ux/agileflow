@@ -19,6 +19,7 @@ import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { UserStatusBadge } from '@/components/user-status-badge';
+import { Separator } from '@/components/ui/separator';
 
 
 const isHoliday = (day: Date) => {
@@ -76,6 +77,9 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
     const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
     const [editingStatusDayIso, setEditingStatusDayIso] = useState<string | null>(null);
     const [tempStatusAssignments, setTempStatusAssignments] = useState<UserStatusAssignment[]>([]);
+
+    const [selectedUserIdToAdd, setSelectedUserIdToAdd] = useState('');
+    const [selectedStatusToAdd, setSelectedStatusToAdd] = useState<UserStatus | null>(null);
     
     const canManageChecks = viewAsUser.roles?.includes('Manage Checks');
     const managerialPermissions = ["Admin", "Service Delivery Manager", "Production Management", "Studio Production Users", "Event Users"];
@@ -286,31 +290,18 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
         setIsStatusDialogOpen(true);
     };
 
-    const handleUserStatusChange = (userId: string, newStatus: string) => {
-        setTempStatusAssignments(prev => {
-            const existingIndex = prev.findIndex(a => a.userId === userId);
-            
-            if (newStatus === 'WORKING') {
-                // If status is "WORKING", remove the user from assignments
-                if (existingIndex > -1) {
-                    return prev.filter(a => a.userId !== userId);
-                }
-                return prev;
-            } else {
-                // If status is something else, add or update
-                const newAssignment: UserStatusAssignment = { userId, status: newStatus as UserStatus };
-                if (existingIndex > -1) {
-                    const updated = [...prev];
-                    updated[existingIndex] = newAssignment;
-                    return updated;
-                } else {
-                    return [...prev, newAssignment];
-                }
-            }
-        });
+    const handleAddStatusAssignment = () => {
+        if (selectedUserIdToAdd && selectedStatusToAdd) {
+            setTempStatusAssignments(prev => [...prev, { userId: selectedUserIdToAdd, status: selectedStatusToAdd }]);
+            setSelectedUserIdToAdd('');
+            setSelectedStatusToAdd(null);
+        }
     };
     
-
+    const handleRemoveStatusAssignment = (userId: string) => {
+        setTempStatusAssignments(prev => prev.filter(a => a.userId !== userId));
+    };
+    
     const handleSaveStatus = () => {
         if (!editingStatusDayIso) return;
         setUserStatusAssignments(prev => ({
@@ -668,42 +659,77 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
                     setEditingStatusDayIso(null);
                  }
              }}>
-                <DialogContent className="max-w-2xl">
+                <DialogContent className="max-w-xl">
                     <DialogHeader>
                         <DialogTitle>Manage User Status</DialogTitle>
                         <DialogDescription>
-                            Assign a status to users for {editingStatusDayDate ? format(editingStatusDayDate, 'MMMM d, yyyy') : 'the selected day'}.
+                            Assign an absence status to users for {editingStatusDayDate ? format(editingStatusDayDate, 'MMMM d, yyyy') : 'the selected day'}.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-2 max-h-[60vh] overflow-y-auto p-1 pr-4">
-                        {users.map(user => {
-                            const currentAssignment = tempStatusAssignments.find(a => a.userId === user.userId);
-                            return (
-                                <div key={user.userId} className="flex items-center justify-between gap-4 p-1">
-                                    <Label htmlFor={`status-user-${user.userId}`} className="font-normal flex items-center gap-2 cursor-pointer">
-                                        <Avatar className="h-8 w-8">
-                                            <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
-                                            <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                                        </Avatar>
-                                        {user.displayName}
-                                    </Label>
-                                    <Select
-                                        value={currentAssignment?.status || 'WORKING'}
-                                        onValueChange={(value) => handleUserStatusChange(user.userId, value)}
-                                    >
-                                        <SelectTrigger className="w-[180px]">
-                                            <SelectValue placeholder="Select status" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="WORKING">Working</SelectItem>
-                                            {ALL_USER_STATUSES.map(status => (
-                                                <SelectItem key={status} value={status}>{status}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            );
-                        })}
+                    <div className="space-y-4 py-2">
+                        <div className="space-y-2 pr-2">
+                            <h4 className="font-medium text-sm">Current Absences</h4>
+                            <div className="space-y-2 max-h-48 overflow-y-auto p-1">
+                                {tempStatusAssignments.length > 0 ? (
+                                    tempStatusAssignments.map(({ userId, status }) => {
+                                        const user = users.find(u => u.userId === userId);
+                                        if (!user) return null;
+                                        return (
+                                            <div key={userId} className="flex items-center justify-between gap-4 p-2 bg-muted/50 rounded-md">
+                                                <div className="flex items-center gap-2">
+                                                    <Avatar className="h-8 w-8">
+                                                        <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
+                                                        <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                                    </Avatar>
+                                                    <span className="font-medium">{user.displayName}</span>
+                                                    <UserStatusBadge status={status}>{status}</UserStatusBadge>
+                                                </div>
+                                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleRemoveStatusAssignment(userId)}>
+                                                    <X className="h-4 w-4" />
+                                                    <span className="sr-only">Remove status</span>
+                                                </Button>
+                                            </div>
+                                        );
+                                    })
+                                ) : (
+                                    <p className="text-sm text-muted-foreground text-center py-4">
+                                        No users have an absence status for this day.
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                        
+                        <Separator />
+
+                        <div className="space-y-2">
+                            <h4 className="font-medium text-sm">Add Absence</h4>
+                            <div className="flex items-center gap-2">
+                                <Select value={selectedUserIdToAdd} onValueChange={setSelectedUserIdToAdd}>
+                                    <SelectTrigger className="flex-1">
+                                        <SelectValue placeholder="Select User" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {users.filter(u => !tempStatusAssignments.some(a => a.userId === u.userId)).map(user => (
+                                            <SelectItem key={user.userId} value={user.userId}>{user.displayName}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <Select value={selectedStatusToAdd || ''} onValueChange={(value) => setSelectedStatusToAdd(value as UserStatus)}>
+                                    <SelectTrigger className="w-[180px]">
+                                        <SelectValue placeholder="Select Status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {ALL_USER_STATUSES.map(status => (
+                                            <SelectItem key={status} value={status}>{status}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <Button onClick={handleAddStatusAssignment} disabled={!selectedUserIdToAdd || !selectedStatusToAdd} size="icon">
+                                    <Plus className="h-4 w-4" />
+                                    <span className="sr-only">Add</span>
+                                </Button>
+                            </div>
+                        </div>
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => {
