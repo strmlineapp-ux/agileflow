@@ -7,6 +7,7 @@ import { type Event } from '@/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { mockEvents, mockHolidays } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 
 const isHoliday = (day: Date) => {
     return mockHolidays.some(holiday => isSameDay(day, holiday));
@@ -39,6 +40,8 @@ const getEventPosition = (event: Event) => {
 export function ProductionScheduleView({ date, containerRef }: { date: Date, containerRef: React.RefObject<HTMLDivElement> }) {
     const [now, setNow] = useState<Date | null>(null);
     const todayCardRef = useRef<HTMLDivElement>(null);
+    const [collapsedDays, setCollapsedDays] = useState<Set<string>>(new Set());
+    const [collapsedFixedGroups, setCollapsedFixedGroups] = useState<Set<string>>(new Set());
 
     useEffect(() => {
         const updateNow = () => setNow(new Date());
@@ -47,28 +50,8 @@ export function ProductionScheduleView({ date, containerRef }: { date: Date, con
         return () => clearInterval(timer);
     }, []);
 
-    useEffect(() => {
-        const weekDays = eachDayOfInterval({ start: startOfWeek(date, { weekStartsOn: 1 }), end: addDays(startOfWeek(date, { weekStartsOn: 1 }), 6) });
-        if (weekDays.some(isToday) && containerRef.current && todayCardRef.current) {
-            const container = containerRef.current;
-            const todayElement = todayCardRef.current;
-            const scrollTop = todayElement.offsetTop - 20;
-            container.scrollTo({
-                top: scrollTop,
-                behavior: 'smooth',
-            });
-        }
-    }, [date, containerRef]);
-
-
     const weekStart = startOfWeek(date, { weekStartsOn: 1 });
     const weekDays = eachDayOfInterval({ start: weekStart, end: addDays(weekStart, 6) });
-    const hours = Array.from({ length: 24 }, (_, i) => i);
-    
-    const calculateCurrentTimePosition = () => {
-        if (!now) return 0;
-        return (now.getHours() + now.getMinutes() / 60) * HOUR_WIDTH_PX;
-    }
 
     const weeklyScheduleData = useMemo(() => {
         return weekDays.map(day => {
@@ -81,32 +64,90 @@ export function ProductionScheduleView({ date, containerRef }: { date: Date, con
                 acc[locationKey].push(event);
                 return acc;
             }, {} as Record<string, Event[]>);
-            const locations = (() => {
-                const eventLocations = Object.keys(groupedEvents)
-                    .filter(loc => !fixedLocations.includes(loc))
-                    .sort((a, b) => a === 'No Location' ? 1 : b === 'No Location' ? -1 : a.localeCompare(b));
-                return [...fixedLocations, ...eventLocations];
-            })();
-            return { day, groupedEvents, locations };
+            
+            const isWeekend = isSaturday(day) || isSunday(day);
+            const fixedLocationsHaveEvents = fixedLocations.some(loc => (groupedEvents[loc] || []).length > 0);
+            
+            const otherLocations = Object.keys(groupedEvents)
+                .filter(loc => !fixedLocations.includes(loc))
+                .sort((a,b) => a === 'No Location' ? 1 : b === 'No Location' ? -1 : a.localeCompare(b));
+                
+            return { day, groupedEvents, isWeekend, fixedLocationsHaveEvents, otherLocations };
         });
-    }, [date]); // Dependency on `date` ensures this recalculates when the week changes.
+    }, [date]);
 
+    useEffect(() => {
+        const initialCollapsedDays = new Set<string>();
+        const initialCollapsedFixedGroups = new Set<string>();
+
+        weeklyScheduleData.forEach(({ day, isWeekend, fixedLocationsHaveEvents }) => {
+            if (isWeekend) {
+                initialCollapsedDays.add(day.toISOString());
+            }
+            if (!fixedLocationsHaveEvents) {
+                initialCollapsedFixedGroups.add(day.toISOString());
+            }
+        });
+        setCollapsedDays(initialCollapsedDays);
+        setCollapsedFixedGroups(initialCollapsedFixedGroups);
+    }, [weeklyScheduleData]);
+    
+    useEffect(() => {
+        if (weekDays.some(isToday) && containerRef.current && todayCardRef.current) {
+            const container = containerRef.current;
+            const todayElement = todayCardRef.current;
+            const scrollTop = todayElement.offsetTop - 20;
+            container.scrollTo({
+                top: scrollTop,
+                behavior: 'smooth',
+            });
+        }
+    }, [date, containerRef, weeklyScheduleData]); // depend on weeklyScheduleData to run after collapsed states are set
+
+    const toggleDayCollapse = (dayIso: string) => {
+        setCollapsedDays(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(dayIso)) newSet.delete(dayIso);
+            else newSet.add(dayIso);
+            return newSet;
+        });
+    };
+
+    const toggleFixedGroupCollapse = (dayIso: string) => {
+        setCollapsedFixedGroups(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(dayIso)) newSet.delete(dayIso);
+            else newSet.add(dayIso);
+            return newSet;
+        });
+    };
+    
+    const hours = Array.from({ length: 24 }, (_, i) => i);
+    
+    const calculateCurrentTimePosition = () => {
+        if (!now) return 0;
+        return (now.getHours() + now.getMinutes() / 60) * HOUR_WIDTH_PX;
+    }
 
     return (
         <div className="space-y-4">
-            {weeklyScheduleData.map(({ day, groupedEvents, locations }) => {
+            {weeklyScheduleData.map(({ day, groupedEvents, otherLocations }) => {
+                const dayIso = day.toISOString();
+                const isDayCollapsed = collapsedDays.has(dayIso);
+                const isFixedGroupCollapsed = collapsedFixedGroups.has(dayIso);
                 const isDayToday = isToday(day);
                 const isWeekend = isSaturday(day) || isSunday(day);
                 const isDayHoliday = isHoliday(day);
 
                 return (
-                    <div key={day.toISOString()} ref={isDayToday ? todayCardRef : null}>
+                    <div key={dayIso} ref={isDayToday ? todayCardRef : null}>
                         <Card className="overflow-hidden">
                             <div className="overflow-x-auto">
                                 <div style={{ width: `${LOCATION_LABEL_WIDTH_PX + (24 * HOUR_WIDTH_PX)}px`}}>
                                     <CardHeader className="p-0 border-b sticky top-0 bg-card z-20 flex flex-row">
-                                        <div className="w-[160px] shrink-0 border-r p-2 flex items-center font-semibold text-sm sticky left-0 bg-card z-30">
-                                           {format(day, 'EEE, MMMM d, yyyy').toUpperCase()}
+                                        <div className="w-[160px] shrink-0 border-r p-2 flex items-center font-semibold text-sm sticky left-0 bg-card z-30 cursor-pointer gap-2" onClick={() => toggleDayCollapse(dayIso)}>
+                                           {isDayCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                                           <span>{format(day, 'EEE, MMMM d, yyyy').toUpperCase()}</span>
                                         </div>
                                         {hours.map(hour => (
                                             <div key={hour} className="w-[120px] shrink-0 text-left p-2 border-r">
@@ -114,47 +155,86 @@ export function ProductionScheduleView({ date, containerRef }: { date: Date, con
                                             </div>
                                         ))}
                                     </CardHeader>
-                                    <CardContent className={cn("p-0 relative", { "bg-muted/20": isWeekend || isDayHoliday })}>
-                                        {locations.map((location, index) => {
-                                            const eventsInRow = groupedEvents[location] || [];
-                                            return (
-                                                <div key={location} className={cn("flex", { "border-b": index < locations.length - 1 })}>
-                                                    <div className="w-[160px] shrink-0 p-2 border-r flex items-center justify-start bg-card sticky left-0 z-30">
-                                                        <p className="font-medium text-sm truncate">{location}</p>
-                                                    </div>
-                                                    <div className="relative flex-1 h-20">
-                                                        {hours.slice(0, 23).map(hour => (
-                                                            <div key={`line-${hour}`} className="absolute top-0 bottom-0 border-r" style={{ left: `${(hour + 1) * HOUR_WIDTH_PX}px` }}></div>
-                                                        ))}
-                                                        {eventsInRow.map(event => {
-                                                            const { left, width } = getEventPosition(event);
-                                                            return (
-                                                                <div 
-                                                                    key={event.eventId} 
-                                                                    className="absolute h-[calc(100%-1rem)] top-1/2 -translate-y-1/2 p-2 bg-primary/90 text-primary-foreground rounded-lg shadow-md cursor-pointer hover:bg-primary z-10"
-                                                                    style={{ left: `${left + 2}px`, width: `${width}px` }}
-                                                                >
-                                                                    <p className="font-semibold text-sm truncate">{event.title}</p>
-                                                                    <p className="text-xs opacity-90 truncate">{format(event.startTime, 'HH:mm')} - {format(event.endTime, 'HH:mm')}</p>
-                                                                </div>
-                                                            )
-                                                        })}
-                                                    </div>
+                                    {!isDayCollapsed && (
+                                        <CardContent className={cn("p-0 relative", { "bg-muted/20": isWeekend || isDayHoliday })}>
+                                            {/* Fixed Locations Section */}
+                                            <div className="flex border-b">
+                                                <div className="w-[160px] shrink-0 p-2 border-r flex items-center justify-start bg-card sticky left-0 z-30 font-semibold cursor-pointer gap-1"
+                                                    onClick={() => toggleFixedGroupCollapse(dayIso)}
+                                                >
+                                                    {isFixedGroupCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                                                    <p className="truncate text-sm">Fixed Locations</p>
                                                 </div>
-                                            )
-                                        })}
-                                        
-                                        {isDayToday && now && (
-                                            <div 
-                                                className="absolute top-0 bottom-0 z-20 pointer-events-none"
-                                                style={{ left: `${LOCATION_LABEL_WIDTH_PX + calculateCurrentTimePosition()}px` }}
-                                            >
-                                                <div className="relative w-0.5 h-full bg-primary">
-                                                    <div className="absolute -top-1.5 -left-[5px] h-3 w-3 rounded-full bg-primary border-2 border-background"></div>
+                                                <div className="relative flex-1 h-12">
+                                                    {hours.slice(0, 23).map(hour => (
+                                                        <div key={`line-fixed-trigger-${hour}`} className="absolute top-0 bottom-0 border-r" style={{ left: `${(hour + 1) * HOUR_WIDTH_PX}px` }}></div>
+                                                    ))}
                                                 </div>
                                             </div>
-                                        )}
-                                    </CardContent>
+
+                                            {!isFixedGroupCollapsed && fixedLocations.map((location, index) => {
+                                                const eventsInRow = groupedEvents[location] || [];
+                                                return (
+                                                    <div key={location} className={cn("flex", { "border-b": index < fixedLocations.length - 1 })}>
+                                                        <div className="w-[160px] shrink-0 p-2 border-r flex items-center justify-start bg-card sticky left-0 z-30">
+                                                            <p className="font-medium text-sm truncate">{location}</p>
+                                                        </div>
+                                                        <div className="relative flex-1 h-20">
+                                                            {hours.slice(0, 23).map(hour => (
+                                                                <div key={`line-fixed-${location}-${hour}`} className="absolute top-0 bottom-0 border-r" style={{ left: `${(hour + 1) * HOUR_WIDTH_PX}px` }}></div>
+                                                            ))}
+                                                            {eventsInRow.map(event => {
+                                                                const { left, width } = getEventPosition(event);
+                                                                return (
+                                                                    <div key={event.eventId} className="absolute h-[calc(100%-1rem)] top-1/2 -translate-y-1/2 p-2 bg-primary/90 text-primary-foreground rounded-lg shadow-md cursor-pointer hover:bg-primary z-10" style={{ left: `${left + 2}px`, width: `${width}px` }}>
+                                                                        <p className="font-semibold text-sm truncate">{event.title}</p>
+                                                                        <p className="text-xs opacity-90 truncate">{format(event.startTime, 'HH:mm')} - {format(event.endTime, 'HH:mm')}</p>
+                                                                    </div>
+                                                                )
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                )
+                                            })}
+
+                                            {/* Other Locations */}
+                                            {otherLocations.map((location, index) => {
+                                                const eventsInRow = groupedEvents[location] || [];
+                                                return (
+                                                    <div key={location} className={cn("flex", { "border-b": index < otherLocations.length - 1 })}>
+                                                        <div className="w-[160px] shrink-0 p-2 border-r flex items-center justify-start bg-card sticky left-0 z-30">
+                                                            <p className="font-medium text-sm truncate">{location}</p>
+                                                        </div>
+                                                        <div className="relative flex-1 h-20">
+                                                            {hours.slice(0, 23).map(hour => (
+                                                                <div key={`line-other-${location}-${hour}`} className="absolute top-0 bottom-0 border-r" style={{ left: `${(hour + 1) * HOUR_WIDTH_PX}px` }}></div>
+                                                            ))}
+                                                            {eventsInRow.map(event => {
+                                                                const { left, width } = getEventPosition(event);
+                                                                return (
+                                                                    <div key={event.eventId} className="absolute h-[calc(100%-1rem)] top-1/2 -translate-y-1/2 p-2 bg-primary/90 text-primary-foreground rounded-lg shadow-md cursor-pointer hover:bg-primary z-10" style={{ left: `${left + 2}px`, width: `${width}px` }}>
+                                                                        <p className="font-semibold text-sm truncate">{event.title}</p>
+                                                                        <p className="text-xs opacity-90 truncate">{format(event.startTime, 'HH:mm')} - {format(event.endTime, 'HH:mm')}</p>
+                                                                    </div>
+                                                                )
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                )
+                                            })}
+                                            
+                                            {isDayToday && now && (
+                                                <div 
+                                                    className="absolute top-0 bottom-0 z-20 pointer-events-none"
+                                                    style={{ left: `${LOCATION_LABEL_WIDTH_PX + calculateCurrentTimePosition()}px` }}
+                                                >
+                                                    <div className="relative w-0.5 h-full bg-primary">
+                                                        <div className="absolute -top-1.5 -left-[5px] h-3 w-3 rounded-full bg-primary border-2 border-background"></div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </CardContent>
+                                    )}
                                 </div>
                             </div>
                         </Card>

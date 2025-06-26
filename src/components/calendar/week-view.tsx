@@ -46,8 +46,7 @@ export function WeekView({ date, containerRef }: { date: Date, containerRef: Rea
         return mockEvents.filter(event => format(event.startTime, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd'));
     }
     
-    const hasWeekendEvents = useMemo(() => weekDays.slice(5, 7).some(day => getEventsForDay(day).length > 0), [weekDays, date]);
-    const [showWeekends, setShowWeekends] = useState(hasWeekendEvents);
+    const [showWeekends, setShowWeekends] = useState(false);
     
     const displayedDays = showWeekends ? weekDays : weekDays.slice(0, 5);
 

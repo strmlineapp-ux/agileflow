@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useMemo, useState, useRef } from 'react';
@@ -6,6 +7,7 @@ import { type Event } from '@/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { mockEvents, mockHolidays } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 
 const isHoliday = (day: Date) => {
     return mockHolidays.some(holiday => isSameDay(day, holiday));
@@ -13,6 +15,16 @@ const isHoliday = (day: Date) => {
 
 const HOUR_WIDTH_PX = 120;
 const LOCATION_LABEL_WIDTH_PX = 160;
+
+const fixedLocations = [
+    "Auditorium", 
+    "ACR", 
+    "Event Space 1 (S2)", 
+    "Event Space 2 (S2)", 
+    "Event Space 3 (R7)", 
+    "Event Space 4 (R7)", 
+    "Studio"
+];
 
 export function DayView({ date, containerRef }: { date: Date, containerRef: React.RefObject<HTMLDivElement> }) {
     const [now, setNow] = useState<Date | null>(null);
@@ -53,7 +65,18 @@ export function DayView({ date, containerRef }: { date: Date, containerRef: Reac
         }, {} as Record<string, Event[]>);
     }, [dayEvents]);
 
-    const locations = useMemo(() => Object.keys(groupedEvents).sort((a,b) => a === 'No Location' ? 1 : b === 'No Location' ? -1 : a.localeCompare(b)), [groupedEvents]);
+    const otherLocations = useMemo(() => Object.keys(groupedEvents)
+        .filter(loc => !fixedLocations.includes(loc))
+        .sort((a,b) => a === 'No Location' ? 1 : b === 'No Location' ? -1 : a.localeCompare(b)), [groupedEvents]);
+    
+    const fixedLocationsHaveEvents = useMemo(() => fixedLocations.some(loc => (groupedEvents[loc] || []).length > 0), [groupedEvents]);
+    
+    const [fixedLocationsCollapsed, setFixedLocationsCollapsed] = useState(!fixedLocationsHaveEvents);
+
+    useEffect(() => {
+        setFixedLocationsCollapsed(!fixedLocationsHaveEvents);
+    }, [fixedLocationsHaveEvents]);
+
 
     const getEventPosition = (event: Event) => {
         const startHour = event.startTime.getHours();
@@ -75,7 +98,38 @@ export function DayView({ date, containerRef }: { date: Date, containerRef: Reac
         return (now.getHours() + now.getMinutes() / 60) * HOUR_WIDTH_PX;
     }
     
-    if (locations.length === 0) {
+    const renderLocationRow = (location: string, isLast: boolean) => {
+        const eventsInRow = groupedEvents[location] || [];
+        return (
+            <div key={location} className={cn("flex", { "border-b": !isLast })}>
+                <div className="w-[160px] shrink-0 p-2 border-r flex items-center justify-start bg-card sticky left-0 z-30">
+                    <p className="font-medium text-sm truncate">{location}</p>
+                </div>
+                <div className="relative flex-1 h-20">
+                    {/* Vertical Grid lines for this row */}
+                    {hours.slice(0, 23).map(hour => (
+                        <div key={`line-${hour}`} className="absolute top-0 bottom-0 border-r" style={{ left: `${(hour + 1) * HOUR_WIDTH_PX}px` }}></div>
+                    ))}
+                    {/* Events for this row */}
+                    {eventsInRow.map(event => {
+                        const { left, width } = getEventPosition(event);
+                        return (
+                            <div 
+                                key={event.eventId} 
+                                className="absolute h-[calc(100%-1rem)] top-1/2 -translate-y-1/2 p-2 bg-primary/90 text-primary-foreground rounded-lg shadow-md cursor-pointer hover:bg-primary z-10"
+                                style={{ left: `${left + 2}px`, width: `${width}px` }}
+                            >
+                                <p className="font-semibold text-sm truncate">{event.title}</p>
+                                <p className="text-xs opacity-90 truncate">{format(event.startTime, 'HH:mm')} - {format(event.endTime, 'HH:mm')}</p>
+                            </div>
+                        )
+                    })}
+                </div>
+            </div>
+        );
+    };
+
+    if (Object.keys(groupedEvents).length === 0) {
         return (
              <Card>
                 <div style={{ width: `${LOCATION_LABEL_WIDTH_PX + (24 * HOUR_WIDTH_PX)}px`}}>
@@ -107,38 +161,25 @@ export function DayView({ date, containerRef }: { date: Date, containerRef: Reac
                     ))}
                 </CardHeader>
                 <CardContent className={cn("p-0 relative", { "bg-muted/20": isWeekend || isDayHoliday })}>
-                    {locations.map((location, index) => {
-                        const eventsInRow = groupedEvents[location];
-                        return (
-                            <div key={location} className={cn("flex", { "border-b": index < locations.length - 1 })}>
-                                <div className="w-[160px] shrink-0 p-2 border-r flex items-center justify-start bg-card sticky left-0 z-30">
-                                    <p className="font-medium text-sm truncate">{location}</p>
-                                </div>
-                                <div className="relative flex-1 h-20">
-                                    {/* Vertical Grid lines for this row */}
-                                    {hours.slice(0, 23).map(hour => (
-                                        <div key={`line-${hour}`} className="absolute top-0 bottom-0 border-r" style={{ left: `${(hour + 1) * HOUR_WIDTH_PX}px` }}></div>
-                                    ))}
-                                    {/* Events for this row */}
-                                    {eventsInRow.map(event => {
-                                        const { left, width } = getEventPosition(event);
-                                        return (
-                                            <div 
-                                                key={event.eventId} 
-                                                className="absolute h-[calc(100%-1rem)] top-1/2 -translate-y-1/2 p-2 bg-primary/90 text-primary-foreground rounded-lg shadow-md cursor-pointer hover:bg-primary z-10"
-                                                style={{ left: `${left + 2}px`, width: `${width}px` }}
-                                            >
-                                                <p className="font-semibold text-sm truncate">{event.title}</p>
-                                                <p className="text-xs opacity-90 truncate">{format(event.startTime, 'HH:mm')} - {format(event.endTime, 'HH:mm')}</p>
-                                            </div>
-                                        )
-                                    })}
-                                </div>
-                            </div>
-                        )
-                    })}
+                    <div className={cn("flex border-b")}>
+                        <div 
+                            className="w-[160px] shrink-0 p-2 border-r flex items-center justify-start bg-card sticky left-0 z-30 font-semibold cursor-pointer gap-1"
+                            onClick={() => setFixedLocationsCollapsed(prev => !prev)}
+                        >
+                            {fixedLocationsCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                            <p className="truncate text-sm">Fixed Locations</p>
+                        </div>
+                        <div className="relative flex-1 h-12">
+                             {hours.slice(0, 23).map(hour => (
+                                <div key={`line-fixed-trigger-${hour}`} className="absolute top-0 bottom-0 border-r" style={{ left: `${(hour + 1) * HOUR_WIDTH_PX}px` }}></div>
+                            ))}
+                        </div>
+                    </div>
                     
-                    {/* Current Time Marker */}
+                    {!fixedLocationsCollapsed && fixedLocations.map((location, index) => renderLocationRow(location, index === fixedLocations.length - 1 && otherLocations.length === 0))}
+                    
+                    {otherLocations.map((location, index) => renderLocationRow(location, index === otherLocations.length - 1))}
+                    
                     {isViewingToday && now && (
                         <div 
                             ref={nowMarkerRef}
