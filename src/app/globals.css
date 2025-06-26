@@ -130,7 +130,7 @@
 
 @layer components {
   /* Firebase theme overrides */
-  .firebase button.bg-primary {
+  .firebase .bg-primary {
     border-width: 2px;
     border-style: solid;
     border-color: transparent;
@@ -139,12 +139,12 @@
     transition: border-color 0.2s ease-in-out;
   }
 
-  .firebase button.bg-primary:hover,
-  .firebase button.bg-primary:focus-visible {
+  .firebase .bg-primary:hover,
+  .firebase .bg-primary:focus-visible {
     border-image: linear-gradient(to right, hsl(48, 96%, 53%), hsl(25, 95%, 53%), hsl(330, 85%, 60%), hsl(260, 85%, 65%)) 1;
   }
 
-  .firebase button.bg-primary:focus-visible {
+  .firebase .bg-primary:focus-visible {
     outline: none;
   }
 }
