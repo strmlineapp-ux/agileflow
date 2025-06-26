@@ -1,5 +1,5 @@
 
-import { type Event, type User, type Task } from '@/types';
+import { type Event, type User, type Task, type Notification } from '@/types';
 
 export const mockUsers: User[] = [
     { userId: '1', displayName: 'Alice Johnson', email: 'alice@example.com', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Product Manager', location: 'New York, USA', phone: '123-456-7890', roles: ['Video Director', 'TD', 'Edit Events', 'Manage Checks'], permissions: ['Admin', 'Event Users', 'Events', 'Studio Productions'], directReports: ['2', '3'] },
@@ -84,36 +84,36 @@ export const mockEvents: Event[] = [
     },
 ];
 
-export const mockNotifications = [
+export const mockNotifications: Notification[] = [
   {
     id: '1',
+    type: 'standard',
     user: mockUsers[1],
-    action: 'assigned you to a new task:',
-    subject: 'Develop authentication API',
+    content: 'assigned you to a new task: Develop authentication API',
     time: new Date(new Date().setHours(new Date().getHours() - 1)),
     read: false,
   },
   {
     id: '2',
+    type: 'standard',
     user: mockUsers[0],
-    action: 'mentioned you in a comment on',
-    subject: 'Project Kickoff',
+    content: 'mentioned you in a comment on Project Kickoff',
     time: new Date(new Date().setDate(new Date().getDate() - 1)),
     read: false,
   },
   {
     id: '3',
+    type: 'standard',
     user: mockUsers[2],
-    action: 'completed the task:',
-    subject: 'Fix login page CSS bug',
+    content: 'completed the task: Fix login page CSS bug',
     time: new Date(new Date().setDate(new Date().getDate() - 2)),
     read: true,
   },
   {
     id: '4',
+    type: 'standard',
     user: { displayName: 'System', avatarUrl: 'https://placehold.co/40x40.png', userId: 'system', email: 'system', googleCalendarLinked: false },
-    action: 'has a new update:',
-    subject: 'New features are now available in the Calendar view.',
+    content: 'New features are now available in the Calendar view.',
     time: new Date(new Date().setDate(new Date().getDate() - 3)),
     read: true,
   }

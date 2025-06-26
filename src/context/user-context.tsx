@@ -2,8 +2,8 @@
 'use client';
 
 import React, { createContext, useContext, useState, useMemo } from 'react';
-import { type User } from '@/types';
-import { mockUsers as initialUsers, mockRoles as initialRoles } from '@/lib/mock-data';
+import { type User, type Notification } from '@/types';
+import { mockUsers as initialUsers, mockRoles as initialRoles, mockNotifications as initialNotifications } from '@/lib/mock-data';
 
 interface UserContextType {
   realUser: User;
@@ -15,6 +15,8 @@ interface UserContextType {
   setAllRoles: React.Dispatch<React.SetStateAction<string[]>>;
   extraCheckLocations: Record<string, string[]>;
   setExtraCheckLocations: React.Dispatch<React.SetStateAction<Record<string, string[]>>>;
+  notifications: Notification[];
+  setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>;
 }
 
 const UserContext = createContext<UserContextType | null>(null);
@@ -26,6 +28,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [users, setUsers] = useState<User[]>(initialUsers);
   const [allRoles, setAllRoles] = useState<string[]>(initialRoles);
   const [extraCheckLocations, setExtraCheckLocations] = useState<Record<string, string[]>>({});
+  const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
 
 
   const realUser = useMemo(() => users.find(u => u.userId === REAL_USER_ID)!, [users]);
@@ -46,6 +49,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setAllRoles,
     extraCheckLocations,
     setExtraCheckLocations,
+    notifications,
+    setNotifications,
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

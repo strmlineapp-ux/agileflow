@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -10,13 +11,12 @@ import {
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/icons/logo';
 import { useUser } from '@/context/user-context';
-import { mockNotifications } from '@/lib/mock-data';
 import { Badge } from '@/components/ui/badge';
 
 export function Header() {
-  const { realUser, viewAsUser } = useUser();
+  const { realUser, viewAsUser, notifications } = useUser();
   const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
-  const unreadCount = mockNotifications.filter((n) => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-card px-4 sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 sm:py-4">

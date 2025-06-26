@@ -1,9 +1,13 @@
+
+'use client';
+
 import { NotificationList } from '@/components/notifications/notification-list';
 import { Badge } from '@/components/ui/badge';
-import { mockNotifications } from '@/lib/mock-data';
+import { useUser } from '@/context/user-context';
 
 export default function NotificationsPage() {
-  const unreadCount = mockNotifications.filter((n) => !n.read).length;
+  const { notifications } = useUser();
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
     <div className="flex flex-col gap-6">

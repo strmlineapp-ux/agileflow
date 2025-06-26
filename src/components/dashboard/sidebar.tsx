@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -9,7 +10,6 @@ import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal } from '../ui/dropdown-menu';
 import { useUser } from '@/context/user-context';
-import { mockNotifications } from '@/lib/mock-data';
 
 const navItems = [
   { href: '/dashboard/calendar', icon: Calendar, label: 'Calendar' },
@@ -21,10 +21,10 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { realUser, viewAsUser, setViewAsUser, users } = useUser();
+  const { realUser, viewAsUser, setViewAsUser, users, notifications } = useUser();
   const isAdmin = realUser.permissions?.includes('Admin');
   const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
-  const unreadCount = mockNotifications.filter((n) => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
 
   return (

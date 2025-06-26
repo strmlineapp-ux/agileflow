@@ -1,3 +1,4 @@
+
 export interface User {
   userId: string;
   email: string;
@@ -40,4 +41,18 @@ export interface Event {
   createdAt: Date;
   lastUpdated: Date;
   syncToGoogleCalendar?: boolean;
+}
+
+export interface Notification {
+  id: string;
+  type: 'access_request' | 'standard';
+  status?: 'pending' | 'approved' | 'rejected'; // only for access_requests
+  user: Pick<User, 'userId' | 'displayName' | 'avatarUrl'>; // The user who *caused* the notification
+  content: string;
+  time: Date;
+  read: boolean;
+  data?: { // payload for access_requests
+    email: string;
+    displayName: string;
+  };
 }
