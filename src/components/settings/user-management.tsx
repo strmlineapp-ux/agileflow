@@ -77,6 +77,12 @@ export function UserManagement() {
             }
         }
 
+        if (editor.permissions?.includes('Event Users')) {
+            if (permission === 'Events') {
+                return true;
+            }
+        }
+
         return false;
     };
 
@@ -307,8 +313,9 @@ export function UserManagement() {
                                                             <div className="grid grid-cols-2 gap-2">
                                                                 {allPermissions.map(permission => {
                                                                     const permissionIsEnabled = user.permissions?.includes(permission);
+                                                                    const canEdit = canEditPermissions(viewAsUser, user, permission);
 
-                                                                    if (!canEditPermissions(viewAsUser, user, permission) && !permissionIsEnabled) {
+                                                                    if (!canEdit && !permissionIsEnabled) {
                                                                         return null;
                                                                     }
                                                                     
@@ -336,7 +343,7 @@ export function UserManagement() {
                                                                                              isStudioProductionUsersLocked ||
                                                                                              isEventUsersLocked ||
                                                                                              isPostProductionLocked ||
-                                                                                             !canEditPermissions(viewAsUser, user, permission);
+                                                                                             !canEdit;
 
                                                                     const isChecked = permissionIsEnabled || isProductionLocked || isStudioProductionsLocked || isEventsLocked || isProductionManagementLocked || isStudioProductionUsersLocked || isEventUsersLocked || isPostProductionLocked;
 
@@ -347,7 +354,7 @@ export function UserManagement() {
                                                                                 checked={isChecked}
                                                                                 disabled={isCheckboxDisabled}
                                                                                 onCheckedChange={(checked) => {
-                                                                                    if (!isPrivilegedPermission && canEditPermissions(viewAsUser, user, permission)) {
+                                                                                    if (!isPrivilegedPermission && canEdit) {
                                                                                         handlePermissionChange(user.userId, permission, !!checked);
                                                                                     }
                                                                                 }}
@@ -356,7 +363,7 @@ export function UserManagement() {
                                                                                 htmlFor={`${user.userId}-${permission}`}
                                                                                 className="text-sm font-normal flex items-center gap-1 cursor-pointer"
                                                                                 onClick={() => {
-                                                                                    if (isPrivilegedPermission && canEditPermissions(viewAsUser, user, permission)) {
+                                                                                    if (isPrivilegedPermission && canEdit) {
                                                                                         const isAdminPermission = permission === 'Admin';
                                                                                         const isSdmNotByAdmin = permission === 'Service Delivery Manager' && !viewAsUser.permissions?.includes('Admin');
                                                                                         
