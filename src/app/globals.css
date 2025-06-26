@@ -79,6 +79,32 @@
     --ring: 220 90% 55%;
     --lunch-break-opacity: 0.25;
   }
+
+  .firebase {
+    --background: 220 13% 98%;
+    --foreground: 220 9% 25%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 9% 25%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 9% 25%;
+    --primary: 38 92% 56%; /* Amber */
+    --primary-foreground: 220 9% 20%;
+    --secondary: 220 13% 94%;
+    --secondary-foreground: 220 9% 35%;
+    --muted: 220 13% 96%;
+    --muted-foreground: 220 8% 55%;
+    --accent: 221 83% 53%; /* Blue */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --warning: 38 92% 56%;
+    --warning-foreground: 220 9% 20%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 221 83% 53%;
+    --radius: 0.5rem;
+    --lunch-break-opacity: 0.08;
+  }
 }
 
 @layer base {

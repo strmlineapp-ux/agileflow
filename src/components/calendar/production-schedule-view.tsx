@@ -90,7 +90,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
     const [selectedStatusToAdd, setSelectedStatusToAdd] = useState<UserStatus | null>(null);
     
     const canManageChecks = viewAsUser.roles?.includes('Manage Checks');
-    const managerialRoles = ["Admin", "Service Delivery Manager", "Production Management", "Studio Production Users", "Event Users"];
+    const managerialRoles = ["Admin", "Service Delivery Manager", "Production Team Admin", "Studio Production Team Admin", "Live Event Team Admin"];
     const canManageStatus = viewAsUser.roles?.some(p => managerialRoles.includes(p));
 
     const dailyCheckUsers = useMemo(() => {

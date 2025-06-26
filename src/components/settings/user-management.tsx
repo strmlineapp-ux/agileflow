@@ -131,10 +131,10 @@ export function UserManagement() {
         const saveAction = async () => {
             let finalRoles = [...tempRoles];
             const dependencies: Record<string, string[]> = {
-                'Service Delivery Manager': ['Production Management', 'Studio Production Users', 'Event Users', 'Post-Production', 'Production', 'Studio Productions', 'Events', 'Manage Checks'],
-                'Production Management': ['Post-Production', 'Production', 'Studio Productions', 'Events', 'Manage Checks'],
-                'Studio Production Users': ['Post-Production', 'Studio Productions', 'Manage Checks'],
-                'Event Users': ['Events', 'Manage Checks']
+                'Service Delivery Manager': ['Production Team Admin', 'Studio Production Team Admin', 'Live Event Team Admin', 'Post-Production', 'Production', 'Studio Productions', 'Live Events', 'Manage Checks'],
+                'Production Team Admin': ['Post-Production', 'Production', 'Studio Productions', 'Live Events', 'Manage Checks'],
+                'Studio Production Team Admin': ['Post-Production', 'Studio Productions', 'Manage Checks'],
+                'Live Event Team Admin': ['Live Events', 'Manage Checks']
             };
 
             let changed = true;
@@ -235,8 +235,8 @@ export function UserManagement() {
                                                 </div>
                                             </div>
                                         </TableCell>
-                                        <TableCell>{user.title || 'N/A'}</TableCell>
-                                        <TableCell>{user.location || 'N/A'}</TableCell>
+                                        <TableCell>{user.title}</TableCell>
+                                        <TableCell>{user.location}</TableCell>
                                         <TableCell className="text-right">
                                             {user.userId === realUser.userId && (
                                                 <Popover>
@@ -268,6 +268,7 @@ export function UserManagement() {
                                                                             <SelectItem value="light">Light</SelectItem>
                                                                             <SelectItem value="dark">Dark</SelectItem>
                                                                             <SelectItem value="high-visibility">High Visibility</SelectItem>
+                                                                            <SelectItem value="firebase">Firebase</SelectItem>
                                                                         </SelectContent>
                                                                     </Select>
                                                                 </div>
@@ -316,7 +317,7 @@ export function UserManagement() {
                                                                         </Button>
                                                                     )}
                                                                 </div>
-                                                                <p className="text-sm">{user.phone || 'Not provided'}</p>
+                                                                <p className="text-sm">{user.phone}</p>
                                                             </div>
                                                             <div>
                                                                 <div className="flex items-center gap-2 mb-1">
@@ -328,20 +329,16 @@ export function UserManagement() {
                                                                         </Button>
                                                                     )}
                                                                 </div>
-                                                                {(user.directReports && user.directReports.length > 0) ? (
-                                                                    user.directReports.map(reportId => {
-                                                                        const reportUser = users.find(u => u.userId === reportId);
-                                                                        return <div key={reportId} className="text-sm">{reportUser?.displayName || 'Unknown User'}</div>;
-                                                                    })
-                                                                ) : (
-                                                                    <p className="text-sm">No direct reports.</p>
-                                                                )}
+                                                                {user.directReports?.map(reportId => {
+                                                                    const reportUser = users.find(u => u.userId === reportId);
+                                                                    return reportUser ? <div key={reportId} className="text-sm">{reportUser.displayName}</div> : null;
+                                                                })}
                                                             </div>
                                                         </div>
                                                     </div>
                                                      <div>
                                                         <div className="flex items-center gap-2 mb-2">
-                                                            <p className="font-medium text-sm">Roles</p>
+                                                            <p className="font-medium text-sm">Roles/ Permissions</p>
                                                             {canEditUser(viewAsUser, user) && (
                                                                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleOpenRolesDialog(user)}>
                                                                     <Pencil className="h-4 w-4" />
@@ -349,14 +346,12 @@ export function UserManagement() {
                                                                 </Button>
                                                             )}
                                                         </div>
-                                                        {(canEditUser(viewAsUser, user) || viewAsUser.userId === user.userId) ? (
+                                                        {(canEditUser(viewAsUser, user) || viewAsUser.userId === user.userId) && (
                                                             <div className="flex flex-wrap gap-2">
-                                                                {(user.roles && user.roles.length > 0) ? user.roles.map(role => (
+                                                                {user.roles?.map(role => (
                                                                     <Badge key={role} variant="secondary">{role}</Badge>
-                                                                )) : <p className="text-sm text-muted-foreground">No roles assigned.</p>}
+                                                                ))}
                                                             </div>
-                                                        ) : (
-                                                            <p className="text-sm text-muted-foreground">You do not have permission to view roles.</p>
                                                         )}
                                                      </div>
                                                 </div>

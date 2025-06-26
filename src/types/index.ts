@@ -12,7 +12,7 @@ export interface User {
   title?: string;
   roles?: string[];
   directReports?: string[];
-  theme?: 'light' | 'dark' | 'high-visibility';
+  theme?: 'light' | 'dark' | 'high-visibility' | 'firebase';
   defaultCalendarView?: 'month' | 'week' | 'day' | 'production-schedule';
 }
 

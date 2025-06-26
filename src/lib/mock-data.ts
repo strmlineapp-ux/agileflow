@@ -2,26 +2,26 @@
 import { type Event, type User, type Task, type Notification, type CalendarEventLabel } from '@/types';
 
 const allAssignableRoles: string[] = [
-    'Admin',
-    'Service Delivery Manager',
-    'Production Management',
-    'Studio Production Users',
-    'Event Users',
-    'Production',
-    'Studio Productions',
-    'Post-Production',
-    'Events',
-    'Video Director',
-    'D.o.P.',
-    'Camera',
-    'Audio',
-    'ES Operator',
-    'TD',
     '1st AD',
+    'Admin',
+    'Audio',
+    'Camera',
     'Content Op',
-    'Edit Events',
+    'D.o.P.',
     'ES Daily Checks',
-    'Manage Checks'
+    'ES Operator',
+    'Edit Events',
+    'Live Event Team Admin',
+    'Live Events',
+    'Manage Checks',
+    'Post-Production',
+    'Production',
+    'Production Team Admin',
+    'Service Delivery Manager',
+    'Studio Production Team Admin',
+    'Studio Productions',
+    'TD',
+    'Video Director'
 ].sort();
 
 
@@ -35,7 +35,7 @@ export const mockUsers: User[] = [
         title: 'Product Manager', 
         location: 'New York, USA', 
         phone: '123-456-7890', 
-        roles: ['Admin', 'Event Users', 'Events', 'Studio Productions', 'Video Director', 'TD', 'Edit Events', 'Manage Checks'], 
+        roles: ['Admin', 'Live Event Team Admin', 'Live Events', 'Studio Productions', 'Video Director', 'TD', 'Edit Events', 'Manage Checks'], 
         directReports: ['2', '3'], 
         theme: 'light', 
         defaultCalendarView: 'production-schedule' 
@@ -48,7 +48,7 @@ export const mockUsers: User[] = [
         avatarUrl: 'https://placehold.co/40x40.png', 
         title: 'Lead Engineer', 
         location: 'San Francisco, USA', 
-        roles: ['Service Delivery Manager', 'Production Management', 'Studio Production Users', 'Event Users', 'Production', 'Studio Productions', 'Events', 'Post-Production', 'Camera', 'Audio', 'Manage Checks'], 
+        roles: ['Service Delivery Manager', 'Production Team Admin', 'Studio Production Team Admin', 'Live Event Team Admin', 'Production', 'Studio Productions', 'Live Events', 'Post-Production', 'Camera', 'Audio', 'Manage Checks'], 
         directReports: ['4'], 
         theme: 'light', 
         defaultCalendarView: 'week' 
@@ -61,7 +61,7 @@ export const mockUsers: User[] = [
         avatarUrl: 'https://placehold.co/40x40.png', 
         title: 'Software Engineer', 
         location: 'Austin, USA', 
-        roles: ["Production Management", "Production", "Events", "D.o.P.", "Manage Checks"], 
+        roles: ["Production Team Admin", "Production", "Live Events", "D.o.P.", "Manage Checks"], 
         directReports: ['4'], 
         theme: 'light', 
         defaultCalendarView: 'month' 
@@ -75,7 +75,7 @@ export const mockUsers: User[] = [
         title: 'UX Designer', 
         location: 'Chicago, USA', 
         phone: '098-765-4321', 
-        roles: ['Event Users', 'Events', 'Content Op', 'ES Operator', '1st AD', 'Edit Events', 'ES Daily Checks'], 
+        roles: ['Live Event Team Admin', 'Live Events', 'Content Op', 'ES Operator', '1st AD', 'Edit Events', 'ES Daily Checks'], 
         directReports: [], 
         theme: 'light', 
         defaultCalendarView: 'day' 
@@ -102,7 +102,7 @@ export const mockUsers: User[] = [
         title: 'Studio Technician', 
         location: 'Los Angeles, USA', 
         phone: '555-555-5555', 
-        roles: ['Studio Production Users', 'Studio Productions', 'Audio', 'Camera', 'ES Daily Checks'], 
+        roles: ['Studio Production Team Admin', 'Studio Productions', 'Audio', 'Camera', 'ES Daily Checks'], 
         directReports: [], 
         theme: 'light', 
         defaultCalendarView: 'production-schedule' 

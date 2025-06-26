@@ -60,7 +60,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const root = window.document.documentElement;
-    root.classList.remove('light', 'dark', 'high-visibility');
+    root.classList.remove('light', 'dark', 'high-visibility', 'firebase');
     if (realUser.theme) {
       root.classList.add(realUser.theme);
     } else {
