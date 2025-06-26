@@ -485,7 +485,19 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
                                         ))}
                                     </CardHeader>
                                     {!isDayCollapsed && (
-                                        <CardContent className={cn("p-0 relative", { "bg-muted/20": isWeekend || isDayHoliday })}>
+                                        <CardContent className="p-0 relative">
+                                            {/* Working Hours Backgrounds */}
+                                            {isWeekend || isDayHoliday ? (
+                                                <div className="absolute inset-0 bg-amber-400/10 z-0" style={{ left: `${LOCATION_LABEL_WIDTH_PX}px` }} title="Overtime" />
+                                            ) : (
+                                                <>
+                                                    <div className="absolute inset-y-0 bg-amber-400/10 z-0" style={{ left: `${LOCATION_LABEL_WIDTH_PX}px`, width: `${8 * hourWidth}px` }} title="Overtime" />
+                                                    <div className="absolute inset-y-0 bg-primary/5 z-0" style={{ left: `${LOCATION_LABEL_WIDTH_PX + 8 * hourWidth}px`, width: `${1 * hourWidth}px` }} title="Extended Working Hours" />
+                                                    <div className="absolute inset-y-0 bg-primary/5 z-0" style={{ left: `${LOCATION_LABEL_WIDTH_PX + 18 * hourWidth}px`, width: `${2 * hourWidth}px` }} title="Extended Working Hours" />
+                                                    <div className="absolute inset-y-0 bg-amber-400/10 z-0" style={{ left: `${LOCATION_LABEL_WIDTH_PX + 20 * hourWidth}px`, width: `${4 * hourWidth}px` }} title="Overtime" />
+                                                </>
+                                            )}
+                                            
                                             {allDayLocations.map((location, index) => renderLocationRow(
                                                 dayIso,
                                                 location,
@@ -562,5 +574,3 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
         </div>
     );
 }
-
-    

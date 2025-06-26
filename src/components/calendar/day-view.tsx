@@ -230,7 +230,19 @@ export function DayView({ date, containerRef, zoomLevel, axisView }: { date: Dat
                             </div>
                         ))}
                     </CardHeader>
-                    <CardContent className={cn("p-0 relative", { "bg-muted/20": isWeekend || isDayHoliday })}>
+                    <CardContent className="p-0 relative">
+                         {/* Working Hours Backgrounds */}
+                        {isWeekend || isDayHoliday ? (
+                            <div className="absolute inset-0 bg-amber-400/10 z-0" style={{ left: `${LOCATION_LABEL_WIDTH_PX}px` }} title="Overtime" />
+                        ) : (
+                            <>
+                                <div className="absolute inset-y-0 bg-amber-400/10 z-0" style={{ left: `${LOCATION_LABEL_WIDTH_PX}px`, width: `${8 * hourWidth}px` }} title="Overtime" />
+                                <div className="absolute inset-y-0 bg-primary/5 z-0" style={{ left: `${LOCATION_LABEL_WIDTH_PX + 8 * hourWidth}px`, width: `${1 * hourWidth}px` }} title="Extended Working Hours" />
+                                <div className="absolute inset-y-0 bg-primary/5 z-0" style={{ left: `${LOCATION_LABEL_WIDTH_PX + 18 * hourWidth}px`, width: `${2 * hourWidth}px` }} title="Extended Working Hours" />
+                                <div className="absolute inset-y-0 bg-amber-400/10 z-0" style={{ left: `${LOCATION_LABEL_WIDTH_PX + 20 * hourWidth}px`, width: `${4 * hourWidth}px` }} title="Overtime" />
+                            </>
+                        )}
+                        
                         {allLocations.map((location, index) => renderLocationRow(location, index === allLocations.length - 1, index))}
                         
                         {isViewingToday && now && (
@@ -265,13 +277,24 @@ export function DayView({ date, containerRef, zoomLevel, axisView }: { date: Dat
                         </div>
 
                         {/* Day column */}
-                        <div className={cn("relative", { "bg-muted/50": isWeekend || isDayHoliday })}>
+                        <div className="relative">
+                             {/* Working Hours Backgrounds */}
+                            {isWeekend || isDayHoliday ? (
+                                <div className="absolute inset-0 bg-amber-400/10 z-0" title="Overtime" />
+                            ) : (
+                                <>
+                                    <div className="absolute inset-x-0 top-0 bg-amber-400/10 z-0" style={{ height: `${8 * hourHeight}px` }} title="Overtime" />
+                                    <div className="absolute inset-x-0 bg-primary/5 z-0" style={{ top: `${8 * hourHeight}px`, height: `${1 * hourHeight}px` }} title="Extended Working Hours" />
+                                    <div className="absolute inset-x-0 bg-primary/5 z-0" style={{ top: `${18 * hourHeight}px`, height: `${2 * hourHeight}px` }} title="Extended Working Hours" />
+                                    <div className="absolute inset-x-0 bottom-0 bg-amber-400/10 z-0" style={{ height: `${4 * hourHeight}px` }} title="Overtime" />
+                                </>
+                            )}
                             {/* Grid lines */}
                             {hours.map(hour => (
                                 <div key={hour} className="border-b" style={{ height: `${hourHeight}px` }}></div>
                             ))}
                             {/* Events */}
-                            <div className="absolute inset-0">
+                            <div className="absolute inset-0 z-10">
                                 {dayEvents.map(event => {
                                     const { top, height } = getEventPositionReversed(event);
                                     return (
