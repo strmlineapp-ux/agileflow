@@ -56,15 +56,6 @@ export function UserManagement() {
         if (viewAsUser.userId === viewedUser.userId) return true;
         return false;
     };
-    
-    const canSeeAllPermissions = (viewedUser: User) => {
-      if (isPrivilegedUser(viewedUser)) return true;
-      return false;
-    }
-
-    const canSeeOwnAdminPermission = (user: User, permission: string) => {
-        return user.userId === viewAsUser.userId && permission === 'Admin';
-    }
 
     const canEditPermissions = (editor: User, target: User, permission: string): boolean => {
         if (isPrivilegedUser(editor)) return true;
@@ -303,7 +294,10 @@ export function UserManagement() {
                                                             <p className="font-medium text-sm mb-2">Permissions</p>
                                                             <div className="grid grid-cols-2 gap-2">
                                                                 {allPermissions.map(permission => {
-                                                                    if (!canSeeAllPermissions(viewAsUser) && !canSeeOwnAdminPermission(user, permission)) {
+                                                                    const viewerIsPrivileged = isPrivilegedUser(viewAsUser);
+                                                                    const permissionIsEnabled = user.permissions?.includes(permission);
+
+                                                                    if (!viewerIsPrivileged && !permissionIsEnabled) {
                                                                         return null;
                                                                     }
                                                                     
@@ -333,11 +327,13 @@ export function UserManagement() {
                                                                                              isPostProductionLocked ||
                                                                                              !canEditPermissions(viewAsUser, user, permission);
 
+                                                                    const isChecked = permissionIsEnabled || isProductionLocked || isStudioProductionsLocked || isEventsLocked || isProductionManagementLocked || isStudioProductionUsersLocked || isEventUsersLocked || isPostProductionLocked;
+
                                                                     return (
                                                                         <div key={permission} className="flex items-center space-x-2">
                                                                             <Checkbox
                                                                                 id={`${user.userId}-${permission}`}
-                                                                                checked={user.permissions?.includes(permission) || isProductionLocked || isStudioProductionsLocked || isEventsLocked || isProductionManagementLocked || isStudioProductionUsersLocked || isEventUsersLocked || isPostProductionLocked}
+                                                                                checked={isChecked}
                                                                                 disabled={isCheckboxDisabled}
                                                                                 onCheckedChange={(checked) => {
                                                                                     if (!isPrivilegedPermission && canEditPermissions(viewAsUser, user, permission)) {
@@ -496,4 +492,3 @@ export function UserManagement() {
         </>
     )
 }
-
