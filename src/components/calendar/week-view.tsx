@@ -30,7 +30,7 @@ export function WeekView({ date, containerRef, zoomLevel }: { date: Date, contai
     const [hourHeight, setHourHeight] = useState(DEFAULT_HOUR_HEIGHT_PX);
     const [showWeekends, setShowWeekends] = useState(false);
     
-    const weekStart = startOfWeek(date, { weekStartsOn: 1 });
+    const weekStart = useMemo(() => startOfWeek(date, { weekStartsOn: 1 }), [date]);
     const weekDays = useMemo(() => eachDayOfInterval({ start: weekStart, end: addDays(weekStart, 6) }), [weekStart]);
     const isCurrentWeek = useMemo(() => weekDays.some(isToday), [weekDays]);
 

@@ -298,8 +298,8 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
         return () => clearInterval(timer);
     }, []);
 
-    const weekStart = startOfWeek(date, { weekStartsOn: 1 });
-    const weekDays = eachDayOfInterval({ start: weekStart, end: addDays(weekStart, 6) });
+    const weekStart = useMemo(() => startOfWeek(date, { weekStartsOn: 1 }), [date]);
+    const weekDays = useMemo(() => eachDayOfInterval({ start: weekStart, end: addDays(weekStart, 6) }), [weekStart]);
     const isCurrentWeek = useMemo(() => weekDays.some(d => isToday(d)), [weekDays]);
 
     const weeklyScheduleData = useMemo(() => {
@@ -329,7 +329,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
             
             return { day, groupedEvents, isWeekend: isSaturday(day) || isSunday(day), allDayLocations };
         });
-    }, [date, weekDays]);
+    }, [weekDays]);
 
     useEffect(() => {
         const initialCollapsedDays = new Set<string>();
