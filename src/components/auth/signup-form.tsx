@@ -57,20 +57,18 @@ export function SignUpForm() {
     const subject = "New User Sign-up Request for AgileFlow";
     const body = `Hello,
 
-A new user has requested access to AgileFlow.
+A new user with the email address ${emailToRequest} has requested access to AgileFlow.
 
-Email: ${emailToRequest}
-
-To approve this user, please add their email to the authorized user list in the AgileFlow system.
+To approve this request, please reply to this email with the word "Approved" on the first line.
 
 Thank you,
-AgileFlow Notifier`;
+The AgileFlow Team`;
 
     const mailtoLink = `mailto:${recipient}?subject=${encodeURIComponent(
       subject
     )}&body=${encodeURIComponent(body)}`;
 
-    window.open(mailtoLink);
+    window.open(mailtoLink, '_self');
 
     setIsConfirming(false);
     setIsLoading(false);
