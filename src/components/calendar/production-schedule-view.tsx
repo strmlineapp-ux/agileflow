@@ -57,6 +57,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
     const [collapsedLocations, setCollapsedLocations] = useState<Record<string, Set<string>>>({});
     const [dailyCheckAssignments, setDailyCheckAssignments] = useState<Record<string, Record<string, string | null>>>({});
     const { users, viewAsUser, extraCheckLocations, setExtraCheckLocations } = useUser();
+    const defaultCheckLocations = useMemo(() => ["Training Room", "Locke", "Apgar"], []);
 
     const [isManageChecksDialogOpen, setIsManageChecksDialogOpen] = useState(false);
     const [editingDayIso, setEditingDayIso] = useState<string | null>(null);
@@ -229,7 +230,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
     
     const handleOpenManageChecksDialog = (dayIso: string) => {
         setEditingDayIso(dayIso);
-        setTempCheckLocations(extraCheckLocations[dayIso] || []);
+        setTempCheckLocations(extraCheckLocations[dayIso] ?? defaultCheckLocations);
         setIsManageChecksDialogOpen(true);
     };
 
@@ -374,7 +375,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
                 const isDayToday = isToday(day);
                 const isWeekend = isSaturday(day) || isSunday(day);
                 const isDayHoliday = isHoliday(day);
-                const dailyExtraLocations = extraCheckLocations[dayIso] || [];
+                const dailyExtraLocations = extraCheckLocations[dayIso] ?? defaultCheckLocations;
 
                 return (
                     <div key={dayIso} ref={isDayToday ? todayCardRef : null}>
