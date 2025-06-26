@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Calendar, ListChecks, PanelLeft, Settings, LayoutDashboard, ArrowLeftRight } from 'lucide-react';
+import { Calendar, ListChecks, PanelLeft, Settings, LayoutDashboard, ArrowLeftRight, Bell } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -44,6 +44,10 @@ export function Header() {
             <Link href="/dashboard/tasks" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
               <ListChecks className="h-5 w-5" />
               Tasks
+            </Link>
+            <Link href="/dashboard/notifications" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
+              <Bell className="h-5 w-5" />
+              Notifications
             </Link>
             <Link href="/dashboard/settings" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
               <Settings className="h-5 w-5" />

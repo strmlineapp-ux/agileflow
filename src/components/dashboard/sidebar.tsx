@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Calendar, ListChecks, Settings, LogOut, LayoutDashboard, UserCheck } from 'lucide-react';
+import { Calendar, ListChecks, Settings, LogOut, LayoutDashboard, UserCheck, Bell } from 'lucide-react';
 import Logo from '@/components/icons/logo';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
@@ -14,6 +14,7 @@ const navItems = [
   { href: '/dashboard/calendar', icon: Calendar, label: 'Calendar' },
   { href: '/dashboard', icon: LayoutDashboard, label: 'Overview' },
   { href: '/dashboard/tasks', icon: ListChecks, label: 'Tasks' },
+  { href: '/dashboard/notifications', icon: Bell, label: 'Notifications' },
   { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
 ];
 
@@ -50,7 +51,7 @@ export function Sidebar() {
                   href={item.href}
                   className={cn(
                     'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
-                    (pathname === item.href || (item.href === '/dashboard' && pathname.startsWith('/dashboard/calendar'))) && 'bg-accent text-accent-foreground'
+                    pathname === item.href && 'bg-accent text-accent-foreground'
                   )}
                 >
                   <item.icon className="h-5 w-5" />
