@@ -81,27 +81,27 @@
   }
 
   .firebase {
-    --background: 220 12% 8%;
+    --background: 220 12% 6%;
     --foreground: 210 16% 92%;
-    --card: 220 12% 12%;
+    --card: 220 12% 10%;
     --card-foreground: 210 16% 92%;
-    --popover: 220 12% 12%;
+    --popover: 220 12% 10%;
     --popover-foreground: 210 16% 92%;
-    --primary: 38 92% 56%; /* Amber */
-    --primary-foreground: 38 92% 15%;
+    --primary: 25 95% 53%; /* Fiery Orange */
+    --primary-foreground: 25 95% 10%;
     --secondary: 220 12% 15%;
     --secondary-foreground: 210 16% 92%;
-    --muted: 220 12% 18%;
-    --muted-foreground: 220 8% 50%;
-    --accent: 260 85% 65%; /* Purple */
+    --muted: 220 12% 20%;
+    --muted-foreground: 220 8% 60%;
+    --accent: 260 85% 65%; /* Vibrant Purple */
     --accent-foreground: 260 85% 98%;
-    --destructive: 0 63% 55%;
+    --destructive: 0 75% 55%; /* More vibrant red */
     --destructive-foreground: 0 0% 100%;
     --warning: 38 92% 56%;
     --warning-foreground: 38 92% 15%;
-    --border: 220 12% 20%;
-    --input: 220 12% 20%;
-    --ring: 38 92% 56%;
+    --border: 220 12% 15%;
+    --input: 220 12% 15%;
+    --ring: 260 85% 65%; /* Purple focus ring */
     --radius: 0.5rem;
     --lunch-break-opacity: 0.1;
   }
