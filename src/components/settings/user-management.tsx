@@ -73,7 +73,7 @@ export function UserManagement() {
         if (targetIsManager) return false;
 
         if (editor.permissions?.includes('Production Management')) {
-            const editableByProdManager = ["Production", "Studio Productions", "Post-Production", "Events"];
+            const editableByProdManager = ["Production", "Studio Productions", "Post-Production"];
             if (editableByProdManager.includes(permission)) {
                 return true;
             }
@@ -322,11 +322,9 @@ export function UserManagement() {
                                                             <p className="font-medium text-sm mb-2">Permissions</p>
                                                             <div className="grid grid-cols-2 gap-2">
                                                                 {allPermissions.map(permission => {
-                                                                    if (permission === 'Admin') {
-                                                                        const canViewAdminPermission = viewerIsPrivileged || user.userId === viewAsUser.userId;
-                                                                        if (!canViewAdminPermission) {
-                                                                            return null;
-                                                                        }
+                                                                    const canViewAdminPermission = viewerIsPrivileged || user.userId === viewAsUser.userId;
+                                                                    if (permission === 'Admin' && !canViewAdminPermission) {
+                                                                        return null;
                                                                     }
 
                                                                     const permissionIsEnabled = user.permissions?.includes(permission);
@@ -398,21 +396,23 @@ export function UserManagement() {
                                                         </div>
                                                     )}
 
-                                                    <div>
-                                                        <p className="font-medium text-sm mb-2">Skills</p>
-                                                        <div className="grid grid-cols-2 gap-2">
-                                                            {allSkills.map(skill => (
-                                                                <div key={skill} className="flex items-center space-x-2">
-                                                                    <Checkbox
-                                                                        id={`${user.userId}-${skill}`}
-                                                                        checked={user.skills?.includes(skill)}
-                                                                        onCheckedChange={(checked) => handleSkillChange(user.userId, skill, !!checked)}
-                                                                    />
-                                                                    <Label htmlFor={`${user.userId}-${skill}`} className="text-sm font-normal">{skill}</Label>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
+                                                    {(viewerIsManager || user.userId === viewAsUser.userId) && (
+                                                      <div>
+                                                          <p className="font-medium text-sm mb-2">Skills</p>
+                                                          <div className="grid grid-cols-2 gap-2">
+                                                              {allSkills.map(skill => (
+                                                                  <div key={skill} className="flex items-center space-x-2">
+                                                                      <Checkbox
+                                                                          id={`${user.userId}-${skill}`}
+                                                                          checked={user.skills?.includes(skill)}
+                                                                          onCheckedChange={(checked) => handleSkillChange(user.userId, skill, !!checked)}
+                                                                      />
+                                                                      <Label htmlFor={`${user.userId}-${skill}`} className="text-sm font-normal">{skill}</Label>
+                                                                  </div>
+                                                              ))}
+                                                          </div>
+                                                      </div>
+                                                    )}
                                                 </div>
                                             </TableCell>
                                         </TableRow>
