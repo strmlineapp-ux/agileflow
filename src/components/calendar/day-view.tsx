@@ -14,6 +14,7 @@ const isHoliday = (day: Date) => {
 }
 
 const DEFAULT_HOUR_WIDTH_PX = 120;
+const DEFAULT_HOUR_HEIGHT_PX = 60;
 const LOCATION_LABEL_WIDTH_PX = 160;
 
 const labelColors: Record<CalendarEventLabel, string> = {
@@ -37,79 +38,71 @@ export function DayView({ date, containerRef, zoomLevel, axisView }: { date: Dat
     const nowMarkerRef = useRef<HTMLDivElement>(null);
     const [collapsedLocations, setCollapsedLocations] = useState<Set<string>>(new Set());
     const [hourWidth, setHourWidth] = useState(DEFAULT_HOUR_WIDTH_PX);
-    const [hourHeight, setHourHeight] = useState(60);
+    const [hourHeight, setHourHeight] = useState(DEFAULT_HOUR_HEIGHT_PX);
+
+    const isViewingToday = useMemo(() => isSameDay(date, new Date()), [date]);
+
+    const dayEvents = useMemo(() => mockEvents.filter(event => format(event.startTime, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')), [date]);
 
     useEffect(() => {
-        const updateNow = () => setNow(new Date());
-        updateNow();
-        const timer = setInterval(updateNow, 60 * 1000); // Update every minute
-        return () => clearInterval(timer);
-    }, []);
-
-    useEffect(() => {
-        if (!containerRef.current) return;
-        const container = containerRef.current;
-    
-        if (zoomLevel === 'fit') {
-            if (axisView === 'standard') {
-                const availableWidth = container.offsetWidth;
-                // Fit 8am to 8pm (12 hours) in the view
-                const newHourWidth = (availableWidth - LOCATION_LABEL_WIDTH_PX) / 12; 
-                setHourWidth(newHourWidth);
-                const scrollLeft = 8 * newHourWidth; // Scroll to 8am
-                container.scrollTo({ left: scrollLeft, behavior: 'smooth' });
-            } else { // reversed axis
-                const availableHeight = container.offsetHeight;
-                const newHourHeight = availableHeight / 12; // 12 hours from 8am to 8pm
-                setHourHeight(newHourHeight);
-                container.scrollTo({ top: 8 * newHourHeight, behavior: 'smooth' });
-            }
-        } else { // zoomLevel === 'normal'
-            if (axisView === 'standard') {
-                setHourWidth(DEFAULT_HOUR_WIDTH_PX);
-                if (isSameDay(date, new Date()) && now) {
-                    // Scroll to current time
-                    const scrollLeft = (now.getHours() -1) * DEFAULT_HOUR_WIDTH_PX;
-                     container.scrollTo({ left: scrollLeft, behavior: 'smooth' });
-                } else {
-                    // Scroll to 7am by default
-                    container.scrollTo({ left: 7 * DEFAULT_HOUR_WIDTH_PX, behavior: 'smooth' });
-                }
-            } else { // reversed axis
-                setHourHeight(60);
-                if (isSameDay(date, new Date()) && now) {
-                    const scrollTop = (now.getHours() - 1) * 60;
-                    container.scrollTo({ top: scrollTop, behavior: 'smooth' });
-                }
-            }
+        if (isViewingToday) {
+            const timer = setInterval(() => setNow(new Date()), 60 * 1000);
+            setNow(new Date());
+            return () => clearInterval(timer);
+        } else {
+            setNow(null);
         }
-      }, [zoomLevel, containerRef, date, now, axisView]);
+    }, [isViewingToday]);
 
-
+    // Handle scroll and zoom adjustments
     useEffect(() => {
-        if (isSameDay(date, new Date()) && containerRef.current && nowMarkerRef.current && zoomLevel === 'normal') {
+        const container = containerRef.current;
+        if (!container) return;
+
+        const isFit = zoomLevel === 'fit';
+        const isStandard = axisView === 'standard';
+
+        if (isStandard) {
+            const newHourWidth = isFit ? (container.offsetWidth - LOCATION_LABEL_WIDTH_PX) / 12 : DEFAULT_HOUR_WIDTH_PX;
+            setHourWidth(newHourWidth);
+            
+            let scrollLeft = 7 * newHourWidth; // Default scroll to 7am
+            if (isFit) {
+                scrollLeft = 8 * newHourWidth; // Fit view scrolls to 8am
+            } else if (now && isViewingToday) {
+                scrollLeft = (now.getHours() - 1) * newHourWidth; // Normal view on today scrolls to current time
+            }
+            container.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+
+        } else { // Reversed axis
+            const newHourHeight = isFit ? container.offsetHeight / 12 : DEFAULT_HOUR_HEIGHT_PX;
+            setHourHeight(newHourHeight);
+
+            let scrollTop = 0;
+            if (isFit) {
+                scrollTop = 8 * newHourHeight;
+            } else if (now && isViewingToday) {
+                scrollTop = (now.getHours() - 1) * newHourHeight;
+            }
+            container.scrollTo({ top: scrollTop, behavior: 'smooth' });
+        }
+    }, [zoomLevel, axisView, containerRef, now, isViewingToday, date]);
+
+    // Center view on "Now" marker
+    useEffect(() => {
+        if (isViewingToday && containerRef.current && nowMarkerRef.current && zoomLevel === 'normal') {
             const container = containerRef.current;
             const marker = nowMarkerRef.current;
             if (axisView === 'standard') {
-                const scrollLeft = marker.offsetLeft - (container.offsetWidth / 2);
-                container.scrollTo({
-                    left: scrollLeft,
-                    behavior: 'smooth',
-                });
+                container.scrollTo({ left: marker.offsetLeft - (container.offsetWidth / 2), behavior: 'smooth' });
             } else {
-                const scrollTop = marker.offsetTop - (container.offsetHeight / 2);
-                container.scrollTo({
-                    top: scrollTop,
-                    behavior: 'smooth',
-                });
+                container.scrollTo({ top: marker.offsetTop - (container.offsetHeight / 2), behavior: 'smooth' });
             }
         }
-    }, [date, now, containerRef, zoomLevel, axisView]);
+    }, [now, isViewingToday, containerRef, zoomLevel, axisView]);
 
 
     const hours = Array.from({ length: 24 }, (_, i) => i);
-
-    const dayEvents = useMemo(() => mockEvents.filter(event => format(event.startTime, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')), [date]);
 
     const groupedEvents = useMemo(() => {
         return dayEvents.reduce((acc, event) => {
@@ -168,7 +161,6 @@ export function DayView({ date, containerRef, zoomLevel, axisView }: { date: Dat
 
     const isWeekend = isSaturday(date) || isSunday(date);
     const isDayHoliday = isHoliday(date);
-    const isViewingToday = isSameDay(date, new Date());
     
     const calculateCurrentTimePosition = () => {
         if (!now) return 0;
@@ -217,40 +209,24 @@ export function DayView({ date, containerRef, zoomLevel, axisView }: { date: Dat
         );
     };
 
-    const renderStandardView = () => {
-        if (Object.keys(groupedEvents).length === 0) {
-            return (
-                 <Card>
-                    <div style={{ width: `${LOCATION_LABEL_WIDTH_PX + (24 * hourWidth)}px`}}>
-                         <CardHeader className="p-0 border-b sticky top-0 bg-card z-20 flex flex-row">
-                            <div className="w-[160px] shrink-0 border-r p-2 flex items-center font-medium text-sm sticky left-0 bg-card z-30">Location</div>
-                            {hours.map(hour => (
-                                <div key={hour} className="shrink-0 text-left p-2 border-r" style={{ width: `${hourWidth}px` }}>
-                                    <span className="text-xs text-muted-foreground">{format(addHours(startOfDay(date), hour), 'HH:mm')}</span>
-                                </div>
-                            ))}
-                        </CardHeader>
-                        <div className="flex items-center justify-center h-40 text-muted-foreground">
-                            No events scheduled for this day.
+    const renderStandardView = () => (
+        <Card>
+            <div style={{ width: `${LOCATION_LABEL_WIDTH_PX + (24 * hourWidth)}px`}}>
+                <CardHeader className="p-0 border-b sticky top-0 bg-card z-20 flex flex-row">
+                    <div className="w-[160px] shrink-0 border-r p-2 flex items-center font-medium text-sm sticky left-0 bg-card z-30">Location</div>
+                    {hours.map(hour => (
+                        <div key={hour} className="shrink-0 text-left p-2 border-r" style={{ width: `${hourWidth}px` }}>
+                            <span className="text-xs text-muted-foreground">{format(addHours(startOfDay(date), hour), 'HH:mm')}</span>
                         </div>
+                    ))}
+                </CardHeader>
+                {allLocations.length === 0 ? (
+                     <div className="flex items-center justify-center h-40 text-muted-foreground">
+                        No events scheduled for this day.
                     </div>
-                </Card>
-            )
-        }
-
-        return (
-            <Card>
-                <div style={{ width: `${LOCATION_LABEL_WIDTH_PX + (24 * hourWidth)}px`}}>
-                    <CardHeader className="p-0 border-b sticky top-0 bg-card z-20 flex flex-row">
-                        <div className="w-[160px] shrink-0 border-r p-2 flex items-center font-medium text-sm sticky left-0 bg-card z-30">Location</div>
-                        {hours.map(hour => (
-                            <div key={hour} className="shrink-0 text-left p-2 border-r" style={{ width: `${hourWidth}px` }}>
-                                <span className="text-xs text-muted-foreground">{format(addHours(startOfDay(date), hour), 'HH:mm')}</span>
-                            </div>
-                        ))}
-                    </CardHeader>
+                ) : (
                     <CardContent className="p-0 relative">
-                         {/* Working Hours Backgrounds */}
+                        {/* Working Hours Backgrounds */}
                         {isWeekend || isDayHoliday ? (
                             <div className="absolute inset-0 bg-secondary/50 z-0" style={{ left: `${LOCATION_LABEL_WIDTH_PX}px` }} title="Overtime" />
                         ) : (
@@ -285,52 +261,57 @@ export function DayView({ date, containerRef, zoomLevel, axisView }: { date: Dat
                             </div>
                         )}
                     </CardContent>
-                </div>
-            </Card>
-        );
-    }
+                )}
+            </div>
+        </Card>
+    );
     
-    const renderReversedView = () => {
-         return (
-            <Card>
-                <CardContent className="p-0 relative">
-                    <div className="grid grid-cols-[auto,1fr] min-h-full">
-                        {/* Timeline */}
-                        <div className="w-20 border-r">
-                            {hours.map(hour => (
-                                <div key={hour} className="relative text-right pr-2 border-b" style={{ height: `${hourHeight}px` }}>
-                                    <span className="text-xs text-muted-foreground relative -top-2">{format(addHours(startOfDay(date), hour), 'HH:00')}</span>
-                                </div>
-                            ))}
-                        </div>
+    const renderReversedView = () => (
+        <Card>
+            <CardContent className="p-0 relative">
+                <div className="grid grid-cols-[auto,1fr] min-h-full">
+                    {/* Timeline */}
+                    <div className="w-20 border-r">
+                        {hours.map(hour => (
+                            <div key={hour} className="relative text-right pr-2 border-b" style={{ height: `${hourHeight}px` }}>
+                                <span className="text-xs text-muted-foreground relative -top-2">{format(addHours(startOfDay(date), hour), 'HH:00')}</span>
+                            </div>
+                        ))}
+                    </div>
 
-                        {/* Day column */}
-                        <div className="relative">
-                             {/* Working Hours Backgrounds */}
-                            {isWeekend || isDayHoliday ? (
-                                <div className="absolute inset-0 bg-secondary/50 z-0" title="Overtime" />
-                            ) : (
-                                <>
-                                    <div className="absolute inset-x-0 top-0 bg-secondary/50 z-0" style={{ height: `${8 * hourHeight}px` }} title="Overtime" />
-                                    <div className="absolute inset-x-0 bg-muted z-0" style={{ top: `${8 * hourHeight}px`, height: `${1 * hourHeight}px` }} title="Extended Working Hours" />
-                                    <div className="absolute inset-x-0 bg-muted z-0" style={{ top: `${18 * hourHeight}px`, height: `${2 * hourHeight}px` }} title="Extended Working Hours" />
-                                    <div className="absolute inset-x-0 bottom-0 bg-secondary/50 z-0" style={{ top: `${20 * hourHeight}px`, bottom: '0px' }} title="Overtime" />
-                                </>
-                            )}
-                             {/* Lunch Break Cue */}
-                            <div
-                                className="absolute inset-x-0 lunch-break-pattern z-0 pointer-events-none"
-                                style={{
-                                    top: `${12 * hourHeight}px`,
-                                    height: `${2.5 * hourHeight}px`
-                                }}
-                                title="Lunch Break"
-                            />
-                            {/* Grid lines */}
-                            {hours.map(hour => (
-                                <div key={hour} className="border-b" style={{ height: `${hourHeight}px` }}></div>
-                            ))}
-                            {/* Events */}
+                    {/* Day column */}
+                    <div className="relative">
+                            {/* Working Hours Backgrounds */}
+                        {isWeekend || isDayHoliday ? (
+                            <div className="absolute inset-0 bg-secondary/50 z-0" title="Overtime" />
+                        ) : (
+                            <>
+                                <div className="absolute inset-x-0 top-0 bg-secondary/50 z-0" style={{ height: `${8 * hourHeight}px` }} title="Overtime" />
+                                <div className="absolute inset-x-0 bg-muted z-0" style={{ top: `${8 * hourHeight}px`, height: `${1 * hourHeight}px` }} title="Extended Working Hours" />
+                                <div className="absolute inset-x-0 bg-muted z-0" style={{ top: `${18 * hourHeight}px`, height: `${2 * hourHeight}px` }} title="Extended Working Hours" />
+                                <div className="absolute inset-x-0 bottom-0 bg-secondary/50 z-0" style={{ top: `${20 * hourHeight}px`, bottom: '0px' }} title="Overtime" />
+                            </>
+                        )}
+                            {/* Lunch Break Cue */}
+                        <div
+                            className="absolute inset-x-0 lunch-break-pattern z-0 pointer-events-none"
+                            style={{
+                                top: `${12 * hourHeight}px`,
+                                height: `${2.5 * hourHeight}px`
+                            }}
+                            title="Lunch Break"
+                        />
+                        {/* Grid lines */}
+                        {hours.map(hour => (
+                            <div key={hour} className="border-b" style={{ height: `${hourHeight}px` }}></div>
+                        ))}
+
+                        {/* Events or No Events Message */}
+                        {dayEvents.length === 0 ? (
+                             <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
+                                No events scheduled for this day.
+                            </div>
+                        ) : (
                             <div className="absolute inset-0 z-10">
                                 {dayEvents.map(event => {
                                     const { top, height } = getEventPositionReversed(event);
@@ -360,12 +341,12 @@ export function DayView({ date, containerRef, zoomLevel, axisView }: { date: Dat
                                     </div>
                                 )}
                             </div>
-                        </div>
+                        )}
                     </div>
-                </CardContent>
-            </Card>
-        );
-    }
+                </div>
+            </CardContent>
+        </Card>
+    );
 
     return axisView === 'reversed' ? renderReversedView() : renderStandardView();
 }

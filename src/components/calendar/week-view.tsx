@@ -1,5 +1,5 @@
 
-"use client";
+'use client';
 
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { format, startOfWeek, addDays, eachDayOfInterval, startOfDay, addHours, isToday, isSaturday, isSunday, isSameDay } from 'date-fns';
@@ -22,61 +22,60 @@ const labelColors: Record<CalendarEventLabel, string> = {
     'Sound Recording': 'bg-green-600/80 hover:bg-green-700/80 text-white',
 };
 
+const DEFAULT_HOUR_HEIGHT_PX = 60;
+
 export function WeekView({ date, containerRef, zoomLevel }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit' }) {
     const [now, setNow] = useState<Date | null>(null);
     const nowMarkerRef = useRef<HTMLDivElement>(null);
-    const [hourHeight, setHourHeight] = useState(60);
-
-    useEffect(() => {
-        const updateNow = () => setNow(new Date());
-        updateNow();
-        const timer = setInterval(updateNow, 60 * 1000); // Update every minute
-        return () => clearInterval(timer);
-    }, []);
-
-    const weekStart = startOfWeek(date, { weekStartsOn: 1 });
-    const weekDays = eachDayOfInterval({ start: weekStart, end: addDays(weekStart, 6) });
-
-    useEffect(() => {
-        if (!containerRef.current) return;
-        const container = containerRef.current;
+    const [hourHeight, setHourHeight] = useState(DEFAULT_HOUR_HEIGHT_PX);
+    const [showWeekends, setShowWeekends] = useState(false);
     
-        if (zoomLevel === 'fit') {
-            const availableHeight = container.offsetHeight;
-            // Fit 8am to 8pm (12 hours) in the view
-            const newHourHeight = availableHeight / 12;
-            setHourHeight(newHourHeight);
-            // Scroll to 8am
-            container.scrollTo({ top: 8 * newHourHeight, behavior: 'smooth' });
-        } else { // zoomLevel === 'normal'
-            setHourHeight(60);
-             if (weekDays.some(isToday) && now) {
-                // Scroll to current time
-                const scrollTop = (now.getHours() -1) * 60;
-                 container.scrollTo({ top: scrollTop, behavior: 'smooth' });
-            }
-        }
-      }, [zoomLevel, containerRef, date, now, weekDays]);
+    const weekStart = startOfWeek(date, { weekStartsOn: 1 });
+    const weekDays = useMemo(() => eachDayOfInterval({ start: weekStart, end: addDays(weekStart, 6) }), [weekStart]);
+    const isCurrentWeek = useMemo(() => weekDays.some(isToday), [weekDays]);
 
     useEffect(() => {
-        if (weekDays.some(isToday) && containerRef.current && nowMarkerRef.current && zoomLevel === 'normal') {
+        if (isCurrentWeek) {
+            const timer = setInterval(() => setNow(new Date()), 60 * 1000);
+            setNow(new Date());
+            return () => clearInterval(timer);
+        } else {
+            setNow(null);
+        }
+    }, [isCurrentWeek]);
+
+    useEffect(() => {
+        const container = containerRef.current;
+        if (!container) return;
+    
+        const isFit = zoomLevel === 'fit';
+        const newHourHeight = isFit ? container.offsetHeight / 12 : DEFAULT_HOUR_HEIGHT_PX;
+        setHourHeight(newHourHeight);
+        
+        let scrollTop = 0;
+        if (isFit) {
+            scrollTop = 8 * newHourHeight; // Fit view scrolls to 8am
+        } else if (now && isCurrentWeek) {
+            scrollTop = (now.getHours() - 1) * newHourHeight; // Normal view on current week scrolls to current time
+        }
+        container.scrollTo({ top: scrollTop, behavior: 'smooth' });
+
+    }, [zoomLevel, containerRef, now, isCurrentWeek]);
+
+    // Center view on "Now" marker
+    useEffect(() => {
+        if (isCurrentWeek && containerRef.current && nowMarkerRef.current && zoomLevel === 'normal') {
             const container = containerRef.current;
             const marker = nowMarkerRef.current;
-            const scrollTop = marker.offsetTop - (container.offsetHeight / 2);
-            container.scrollTo({
-                top: scrollTop,
-                behavior: 'smooth',
-            });
+            container.scrollTo({ top: marker.offsetTop - (container.offsetHeight / 2), behavior: 'smooth' });
         }
-    }, [date, now, containerRef, zoomLevel, weekDays]);
+    }, [now, containerRef, isCurrentWeek, zoomLevel]);
 
     const hours = Array.from({ length: 24 }, (_, i) => i);
 
     const getEventsForDay = (day: Date) => {
         return mockEvents.filter(event => format(event.startTime, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd'));
     }
-    
-    const [showWeekends, setShowWeekends] = useState(false);
     
     const displayedDays = showWeekends ? weekDays : weekDays.slice(0, 5);
 

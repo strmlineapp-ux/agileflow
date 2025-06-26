@@ -317,7 +317,7 @@ export function UserManagement() {
                                                                         </Button>
                                                                     )}
                                                                 </div>
-                                                                <p className="text-sm">{user.phone}</p>
+                                                                {user.phone && <p className="text-sm">{user.phone}</p>}
                                                             </div>
                                                             <div>
                                                                 <div className="flex items-center gap-2 mb-1">
@@ -407,7 +407,7 @@ export function UserManagement() {
             <Dialog open={isRolesDialogOpen} onOpenChange={(isOpen) => !isOpen && closeRolesDialog()}>
                 <DialogContent className="max-w-lg">
                     <DialogHeader>
-                        <DialogTitle>Edit Roles for {userToEditRoles?.displayName}</DialogTitle>
+                        <DialogTitle>Edit Roles/Permissions for {userToEditRoles?.displayName}</DialogTitle>
                         <DialogDescription>Add or remove roles for this user.</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-2">
