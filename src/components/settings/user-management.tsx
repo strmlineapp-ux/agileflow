@@ -57,6 +57,10 @@ export function UserManagement() {
       return isPrivileged;
     }
 
+    const canSeeOwnAdminPermission = (user: User, permission: string) => {
+        return user.userId === viewAsUser.userId && permission === 'Admin';
+    }
+
     const canEditPermissions = (editor: User, target: User, permission: string): boolean => {
         const isEditorAdminOrSdm = editor.permissions?.includes('Admin') || editor.permissions?.includes('Service Delivery Manager');
         if (isEditorAdminOrSdm) return true;
@@ -84,6 +88,9 @@ export function UserManagement() {
                     }
                     if (permission === 'Production Management' && !newPermissions.includes('Production')) {
                         newPermissions.push('Production');
+                    }
+                    if (permission === 'Studio Production Users' && !newPermissions.includes('Studio Productions')) {
+                        newPermissions.push('Studio Productions');
                     }
                 } else {
                     newPermissions = newPermissions.filter(p => p !== permission);
@@ -277,20 +284,23 @@ export function UserManagement() {
                                                             <p className="font-medium text-sm mb-2">Permissions</p>
                                                             <div className="grid grid-cols-2 gap-2">
                                                                 {allPermissions.map(permission => {
-                                                                    if (!canSeeAllPermissions(viewAsUser) && permission !== 'Admin') {
+                                                                    if (!canSeeAllPermissions(viewAsUser) && !canSeeOwnAdminPermission(user, permission)) {
                                                                         return null;
                                                                     }
                                                                     
                                                                     const hasProductionManagement = user.permissions?.includes('Production Management');
                                                                     const isProductionLocked = permission === 'Production' && hasProductionManagement;
+
+                                                                    const hasStudioProductionUsers = user.permissions?.includes('Studio Production Users');
+                                                                    const isStudioProductionsLocked = permission === 'Studio Productions' && hasStudioProductionUsers;
                                                                     
-                                                                    const isCheckboxDisabled = permission === 'Admin' || isProductionLocked || !canEditPermissions(viewAsUser, user, permission);
+                                                                    const isCheckboxDisabled = permission === 'Admin' || isProductionLocked || isStudioProductionsLocked || !canEditPermissions(viewAsUser, user, permission);
 
                                                                     return (
                                                                         <div key={permission} className="flex items-center space-x-2">
                                                                             <Checkbox
                                                                                 id={`${user.userId}-${permission}`}
-                                                                                checked={user.permissions?.includes(permission) || isProductionLocked}
+                                                                                checked={user.permissions?.includes(permission) || isProductionLocked || isStudioProductionsLocked}
                                                                                 disabled={isCheckboxDisabled}
                                                                                 onCheckedChange={(checked) => {
                                                                                     if (permission !== 'Admin' && canEditPermissions(viewAsUser, user, permission)) {
