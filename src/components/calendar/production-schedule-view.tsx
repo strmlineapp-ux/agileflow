@@ -387,10 +387,6 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
                                 {canManageChecks && (
                                      <>
                                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenManageChecksDialog(dayIso)}>
-                                            <Plus className="h-4 w-4" />
-                                            <span className="sr-only">Add new check location</span>
-                                        </Button>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenManageChecksDialog(dayIso)}>
                                             <Pencil className="h-4 w-4" />
                                             <span className="sr-only">Edit check locations</span>
                                         </Button>
@@ -566,3 +562,5 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
         </div>
     );
 }
+
+    
