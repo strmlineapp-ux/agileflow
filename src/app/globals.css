@@ -130,12 +130,21 @@
 
 @layer components {
   /* Firebase theme overrides */
-  .firebase .bg-primary {
-    background: linear-gradient(to right, hsl(var(--primary)), hsl(var(--accent)));
+  .firebase button.bg-primary {
+    border-width: 2px;
+    border-style: solid;
+    border-color: transparent;
+    background-color: hsl(var(--primary));
+    background-clip: padding-box;
+    transition: border-color 0.2s ease-in-out;
   }
-  /* This targets the hover state of the default button variant */
-  .firebase .hover\:bg-primary\/90:hover {
-    background: linear-gradient(to right, hsl(var(--primary)), hsl(var(--accent)));
-    opacity: 0.9;
+
+  .firebase button.bg-primary:hover,
+  .firebase button.bg-primary:focus-visible {
+    border-image: linear-gradient(to right, hsl(48, 96%, 53%), hsl(25, 95%, 53%), hsl(330, 85%, 60%), hsl(260, 85%, 65%)) 1;
+  }
+
+  .firebase button.bg-primary:focus-visible {
+    outline: none;
   }
 }
