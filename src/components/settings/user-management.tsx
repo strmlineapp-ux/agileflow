@@ -88,14 +88,27 @@ export function UserManagement() {
                     if (!newPermissions.includes(permission)) {
                         newPermissions.push(permission);
                     }
-                    if (permission === 'Production Management' && !newPermissions.includes('Production')) {
-                        newPermissions.push('Production');
-                    }
-                    if (permission === 'Studio Production Users' && !newPermissions.includes('Studio Productions')) {
-                        newPermissions.push('Studio Productions');
-                    }
-                    if (permission === 'Event Users' && !newPermissions.includes('Events')) {
-                        newPermissions.push('Events');
+                    
+                    const dependencies: Record<string, string[]> = {
+                        'Service Delivery Manager': ['Production Management', 'Studio Production Users', 'Event Users'],
+                        'Production Management': ['Production'],
+                        'Studio Production Users': ['Studio Productions'],
+                        'Event Users': ['Events']
+                    };
+
+                    let changed = true;
+                    while(changed) {
+                        changed = false;
+                        for (const parent in dependencies) {
+                            if (newPermissions.includes(parent)) {
+                                dependencies[parent as keyof typeof dependencies].forEach(child => {
+                                    if (!newPermissions.includes(child)) {
+                                        newPermissions.push(child);
+                                        changed = true;
+                                    }
+                                });
+                            }
+                        }
                     }
                 } else {
                     newPermissions = newPermissions.filter(p => p !== permission);
@@ -294,6 +307,11 @@ export function UserManagement() {
                                                                         return null;
                                                                     }
                                                                     
+                                                                    const hasServiceDeliveryManager = user.permissions?.includes('Service Delivery Manager');
+                                                                    const isProductionManagementLocked = permission === 'Production Management' && hasServiceDeliveryManager;
+                                                                    const isStudioProductionUsersLocked = permission === 'Studio Production Users' && hasServiceDeliveryManager;
+                                                                    const isEventUsersLocked = permission === 'Event Users' && hasServiceDeliveryManager;
+
                                                                     const hasProductionManagement = user.permissions?.includes('Production Management');
                                                                     const isProductionLocked = permission === 'Production' && hasProductionManagement;
 
@@ -304,13 +322,20 @@ export function UserManagement() {
                                                                     const isEventsLocked = permission === 'Events' && hasEventUsers;
                                                                     
                                                                     const isPrivilegedPermission = permission === 'Admin' || permission === 'Service Delivery Manager';
-                                                                    const isCheckboxDisabled = isPrivilegedPermission || isProductionLocked || isStudioProductionsLocked || isEventsLocked || !canEditPermissions(viewAsUser, user, permission);
+                                                                    const isCheckboxDisabled = isPrivilegedPermission || 
+                                                                                             isProductionLocked || 
+                                                                                             isStudioProductionsLocked || 
+                                                                                             isEventsLocked ||
+                                                                                             isProductionManagementLocked ||
+                                                                                             isStudioProductionUsersLocked ||
+                                                                                             isEventUsersLocked ||
+                                                                                             !canEditPermissions(viewAsUser, user, permission);
 
                                                                     return (
                                                                         <div key={permission} className="flex items-center space-x-2">
                                                                             <Checkbox
                                                                                 id={`${user.userId}-${permission}`}
-                                                                                checked={user.permissions?.includes(permission) || isProductionLocked || isStudioProductionsLocked || isEventsLocked}
+                                                                                checked={user.permissions?.includes(permission) || isProductionLocked || isStudioProductionsLocked || isEventsLocked || isProductionManagementLocked || isStudioProductionUsersLocked || isEventUsersLocked}
                                                                                 disabled={isCheckboxDisabled}
                                                                                 onCheckedChange={(checked) => {
                                                                                     if (!isPrivilegedPermission && canEditPermissions(viewAsUser, user, permission)) {
@@ -439,7 +464,7 @@ export function UserManagement() {
                     <DialogHeader>
                         <DialogTitle>Two-Factor Authentication</DialogTitle>
                         <DialogDescription>
-                            Changing privileged permissions requires secondary authentication. Enter the code from your Google Authenticator app.
+                            Changing the {editingPermissionState?.permission} permission requires secondary authentication. Enter the code from your Google Authenticator app.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
