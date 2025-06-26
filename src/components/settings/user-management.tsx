@@ -98,7 +98,7 @@ export function UserManagement() {
                     
                     const dependencies: Record<string, string[]> = {
                         'Service Delivery Manager': ['Production Management', 'Studio Production Users', 'Event Users', 'Post-Production'],
-                        'Production Management': ['Production'],
+                        'Production Management': ['Post-Production', 'Studio Productions', 'Events'],
                         'Studio Production Users': ['Studio Productions'],
                         'Event Users': ['Events']
                     };
@@ -326,7 +326,9 @@ export function UserManagement() {
                                                                     const isPostProductionLocked = permission === 'Post-Production' && hasServiceDeliveryManager;
 
                                                                     const hasProductionManagement = user.permissions?.includes('Production Management');
-                                                                    const isProductionLocked = permission === 'Production' && hasProductionManagement;
+                                                                    const isPostProductionLockedByProdMgmt = permission === 'Post-Production' && hasProductionManagement;
+                                                                    const isStudioProductionsLockedByProdMgmt = permission === 'Studio Productions' && hasProductionManagement;
+                                                                    const isEventsLockedByProdMgmt = permission === 'Events' && hasProductionManagement;
 
                                                                     const hasStudioProductionUsers = user.permissions?.includes('Studio Production Users');
                                                                     const isStudioProductionsLocked = permission === 'Studio Productions' && hasStudioProductionUsers;
@@ -336,16 +338,27 @@ export function UserManagement() {
                                                                     
                                                                     const isPrivilegedPermission = permission === 'Admin' || permission === 'Service Delivery Manager';
                                                                     const isCheckboxDisabled = isPrivilegedPermission || 
-                                                                                             isProductionLocked || 
                                                                                              isStudioProductionsLocked || 
                                                                                              isEventsLocked ||
                                                                                              isProductionManagementLocked ||
                                                                                              isStudioProductionUsersLocked ||
                                                                                              isEventUsersLocked ||
                                                                                              isPostProductionLocked ||
+                                                                                             isPostProductionLockedByProdMgmt ||
+                                                                                             isStudioProductionsLockedByProdMgmt ||
+                                                                                             isEventsLockedByProdMgmt ||
                                                                                              !canEdit;
 
-                                                                    const isChecked = permissionIsEnabled || isProductionLocked || isStudioProductionsLocked || isEventsLocked || isProductionManagementLocked || isStudioProductionUsersLocked || isEventUsersLocked || isPostProductionLocked;
+                                                                    const isChecked = permissionIsEnabled || 
+                                                                                             isStudioProductionsLocked || 
+                                                                                             isEventsLocked || 
+                                                                                             isProductionManagementLocked || 
+                                                                                             isStudioProductionUsersLocked || 
+                                                                                             isEventUsersLocked || 
+                                                                                             isPostProductionLocked ||
+                                                                                             isPostProductionLockedByProdMgmt ||
+                                                                                             isStudioProductionsLockedByProdMgmt ||
+                                                                                             isEventsLockedByProdMgmt;
 
                                                                     return (
                                                                         <div key={permission} className="flex items-center space-x-2">
