@@ -41,7 +41,7 @@ export function ProductionScheduleView({ date, containerRef }: { date: Date, con
     const [now, setNow] = useState<Date | null>(null);
     const todayCardRef = useRef<HTMLDivElement>(null);
     const [collapsedDays, setCollapsedDays] = useState<Set<string>>(new Set());
-    const [collapsedFixedGroups, setCollapsedFixedGroups] = useState<Set<string>>(new Set());
+    const [collapsedLocations, setCollapsedLocations] = useState<Record<string, Set<string>>>({});
 
     useEffect(() => {
         const updateNow = () => setNow(new Date());
@@ -66,30 +66,34 @@ export function ProductionScheduleView({ date, containerRef }: { date: Date, con
             }, {} as Record<string, Event[]>);
             
             const isWeekend = isSaturday(day) || isSunday(day);
-            const fixedLocationsHaveEvents = fixedLocations.some(loc => (groupedEvents[loc] || []).length > 0);
-            
             const otherLocations = Object.keys(groupedEvents)
                 .filter(loc => !fixedLocations.includes(loc))
                 .sort((a,b) => a === 'No Location' ? 1 : b === 'No Location' ? -1 : a.localeCompare(b));
                 
-            return { day, groupedEvents, isWeekend, fixedLocationsHaveEvents, otherLocations };
+            return { day, groupedEvents, isWeekend, otherLocations };
         });
     }, [date]);
 
     useEffect(() => {
         const initialCollapsedDays = new Set<string>();
-        const initialCollapsedFixedGroups = new Set<string>();
+        const initialCollapsedLocations: Record<string, Set<string>> = {};
 
-        weeklyScheduleData.forEach(({ day, isWeekend, fixedLocationsHaveEvents }) => {
+        weeklyScheduleData.forEach(({ day, isWeekend, groupedEvents }) => {
+            const dayIso = day.toISOString();
             if (isWeekend) {
-                initialCollapsedDays.add(day.toISOString());
+                initialCollapsedDays.add(dayIso);
             }
-            if (!fixedLocationsHaveEvents) {
-                initialCollapsedFixedGroups.add(day.toISOString());
-            }
+
+            const locationsToCollapse = new Set<string>();
+            fixedLocations.forEach(loc => {
+                if (!groupedEvents[loc] || groupedEvents[loc].length === 0) {
+                    locationsToCollapse.add(loc);
+                }
+            });
+            initialCollapsedLocations[dayIso] = locationsToCollapse;
         });
         setCollapsedDays(initialCollapsedDays);
-        setCollapsedFixedGroups(initialCollapsedFixedGroups);
+        setCollapsedLocations(initialCollapsedLocations);
     }, [weeklyScheduleData]);
     
     useEffect(() => {
@@ -113,12 +117,15 @@ export function ProductionScheduleView({ date, containerRef }: { date: Date, con
         });
     };
 
-    const toggleFixedGroupCollapse = (dayIso: string) => {
-        setCollapsedFixedGroups(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(dayIso)) newSet.delete(dayIso);
-            else newSet.add(dayIso);
-            return newSet;
+    const toggleLocationCollapse = (dayIso: string, location: string) => {
+        setCollapsedLocations(prev => {
+            const daySet = new Set(prev[dayIso] || []);
+            if (daySet.has(location)) {
+                daySet.delete(location);
+            } else {
+                daySet.add(location);
+            }
+            return { ...prev, [dayIso]: daySet };
         });
     };
     
@@ -129,12 +136,44 @@ export function ProductionScheduleView({ date, containerRef }: { date: Date, con
         return (now.getHours() + now.getMinutes() / 60) * HOUR_WIDTH_PX;
     }
 
+    const renderLocationRow = (dayIso: string, location: string, eventsInRow: Event[], isLast: boolean, isFixed: boolean) => {
+        const isLocationCollapsed = isFixed && collapsedLocations[dayIso]?.has(location);
+        
+        return (
+            <div key={location} className={cn("flex", { "border-b": !isLast })}>
+                <div 
+                    className={cn(
+                        "w-[160px] shrink-0 p-2 border-r flex items-center justify-start bg-card sticky left-0 z-30 gap-1",
+                        isFixed && "cursor-pointer"
+                    )}
+                    onClick={() => isFixed && toggleLocationCollapse(dayIso, location)}
+                >
+                     {isFixed && (isLocationCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />)}
+                    <p className="font-medium text-sm truncate">{location}</p>
+                </div>
+                <div className={cn("relative flex-1", isLocationCollapsed ? "h-10" : "h-20")}>
+                    {hours.slice(0, 23).map(hour => (
+                        <div key={`line-${location}-${hour}`} className="absolute top-0 bottom-0 border-r" style={{ left: `${(hour + 1) * HOUR_WIDTH_PX}px` }}></div>
+                    ))}
+                    {!isLocationCollapsed && eventsInRow.map(event => {
+                        const { left, width } = getEventPosition(event);
+                        return (
+                            <div key={event.eventId} className="absolute h-[calc(100%-1rem)] top-1/2 -translate-y-1/2 p-2 bg-primary/90 text-primary-foreground rounded-lg shadow-md cursor-pointer hover:bg-primary z-10" style={{ left: `${left + 2}px`, width: `${width}px` }}>
+                                <p className="font-semibold text-sm truncate">{event.title}</p>
+                                <p className="text-xs opacity-90 truncate">{format(event.startTime, 'HH:mm')} - {format(event.endTime, 'HH:mm')}</p>
+                            </div>
+                        )
+                    })}
+                </div>
+            </div>
+        );
+    };
+
     return (
         <div className="space-y-4">
             {weeklyScheduleData.map(({ day, groupedEvents, otherLocations }) => {
                 const dayIso = day.toISOString();
                 const isDayCollapsed = collapsedDays.has(dayIso);
-                const isFixedGroupCollapsed = collapsedFixedGroups.has(dayIso);
                 const isDayToday = isToday(day);
                 const isWeekend = isSaturday(day) || isSunday(day);
                 const isDayHoliday = isHoliday(day);
@@ -158,70 +197,22 @@ export function ProductionScheduleView({ date, containerRef }: { date: Date, con
                                     {!isDayCollapsed && (
                                         <CardContent className={cn("p-0 relative", { "bg-muted/20": isWeekend || isDayHoliday })}>
                                             {/* Fixed Locations Section */}
-                                            <div className="flex border-b">
-                                                <div className="w-[160px] shrink-0 p-2 border-r flex items-center justify-start bg-card sticky left-0 z-30 font-semibold cursor-pointer gap-1"
-                                                    onClick={() => toggleFixedGroupCollapse(dayIso)}
-                                                >
-                                                    {isFixedGroupCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                                                    <p className="truncate text-sm">Fixed Locations</p>
-                                                </div>
-                                                <div className="relative flex-1 h-12">
-                                                    {hours.slice(0, 23).map(hour => (
-                                                        <div key={`line-fixed-trigger-${hour}`} className="absolute top-0 bottom-0 border-r" style={{ left: `${(hour + 1) * HOUR_WIDTH_PX}px` }}></div>
-                                                    ))}
-                                                </div>
-                                            </div>
-
-                                            {!isFixedGroupCollapsed && fixedLocations.map((location, index) => {
-                                                const eventsInRow = groupedEvents[location] || [];
-                                                return (
-                                                    <div key={location} className={cn("flex", { "border-b": index < fixedLocations.length - 1 })}>
-                                                        <div className="w-[160px] shrink-0 p-2 border-r flex items-center justify-start bg-card sticky left-0 z-30">
-                                                            <p className="font-medium text-sm truncate">{location}</p>
-                                                        </div>
-                                                        <div className="relative flex-1 h-20">
-                                                            {hours.slice(0, 23).map(hour => (
-                                                                <div key={`line-fixed-${location}-${hour}`} className="absolute top-0 bottom-0 border-r" style={{ left: `${(hour + 1) * HOUR_WIDTH_PX}px` }}></div>
-                                                            ))}
-                                                            {eventsInRow.map(event => {
-                                                                const { left, width } = getEventPosition(event);
-                                                                return (
-                                                                    <div key={event.eventId} className="absolute h-[calc(100%-1rem)] top-1/2 -translate-y-1/2 p-2 bg-primary/90 text-primary-foreground rounded-lg shadow-md cursor-pointer hover:bg-primary z-10" style={{ left: `${left + 2}px`, width: `${width}px` }}>
-                                                                        <p className="font-semibold text-sm truncate">{event.title}</p>
-                                                                        <p className="text-xs opacity-90 truncate">{format(event.startTime, 'HH:mm')} - {format(event.endTime, 'HH:mm')}</p>
-                                                                    </div>
-                                                                )
-                                                            })}
-                                                        </div>
-                                                    </div>
-                                                )
-                                            })}
+                                            {fixedLocations.map((location, index) => renderLocationRow(
+                                                dayIso,
+                                                location,
+                                                groupedEvents[location] || [],
+                                                index === fixedLocations.length - 1 && otherLocations.length === 0,
+                                                true
+                                            ))}
 
                                             {/* Other Locations */}
-                                            {otherLocations.map((location, index) => {
-                                                const eventsInRow = groupedEvents[location] || [];
-                                                return (
-                                                    <div key={location} className={cn("flex", { "border-b": index < otherLocations.length - 1 })}>
-                                                        <div className="w-[160px] shrink-0 p-2 border-r flex items-center justify-start bg-card sticky left-0 z-30">
-                                                            <p className="font-medium text-sm truncate">{location}</p>
-                                                        </div>
-                                                        <div className="relative flex-1 h-20">
-                                                            {hours.slice(0, 23).map(hour => (
-                                                                <div key={`line-other-${location}-${hour}`} className="absolute top-0 bottom-0 border-r" style={{ left: `${(hour + 1) * HOUR_WIDTH_PX}px` }}></div>
-                                                            ))}
-                                                            {eventsInRow.map(event => {
-                                                                const { left, width } = getEventPosition(event);
-                                                                return (
-                                                                    <div key={event.eventId} className="absolute h-[calc(100%-1rem)] top-1/2 -translate-y-1/2 p-2 bg-primary/90 text-primary-foreground rounded-lg shadow-md cursor-pointer hover:bg-primary z-10" style={{ left: `${left + 2}px`, width: `${width}px` }}>
-                                                                        <p className="font-semibold text-sm truncate">{event.title}</p>
-                                                                        <p className="text-xs opacity-90 truncate">{format(event.startTime, 'HH:mm')} - {format(event.endTime, 'HH:mm')}</p>
-                                                                    </div>
-                                                                )
-                                                            })}
-                                                        </div>
-                                                    </div>
-                                                )
-                                            })}
+                                            {otherLocations.map((location, index) => renderLocationRow(
+                                                dayIso,
+                                                location,
+                                                groupedEvents[location] || [],
+                                                index === otherLocations.length - 1,
+                                                false
+                                            ))}
                                             
                                             {isDayToday && now && (
                                                 <div 

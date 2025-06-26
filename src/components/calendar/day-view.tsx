@@ -29,6 +29,7 @@ const fixedLocations = [
 export function DayView({ date, containerRef }: { date: Date, containerRef: React.RefObject<HTMLDivElement> }) {
     const [now, setNow] = useState<Date | null>(null);
     const nowMarkerRef = useRef<HTMLDivElement>(null);
+    const [collapsedLocations, setCollapsedLocations] = useState<Set<string>>(new Set());
 
     useEffect(() => {
         const updateNow = () => setNow(new Date());
@@ -69,13 +70,24 @@ export function DayView({ date, containerRef }: { date: Date, containerRef: Reac
         .filter(loc => !fixedLocations.includes(loc))
         .sort((a,b) => a === 'No Location' ? 1 : b === 'No Location' ? -1 : a.localeCompare(b)), [groupedEvents]);
     
-    const fixedLocationsHaveEvents = useMemo(() => fixedLocations.some(loc => (groupedEvents[loc] || []).length > 0), [groupedEvents]);
-    
-    const [fixedLocationsCollapsed, setFixedLocationsCollapsed] = useState(!fixedLocationsHaveEvents);
-
     useEffect(() => {
-        setFixedLocationsCollapsed(!fixedLocationsHaveEvents);
-    }, [fixedLocationsHaveEvents]);
+        const locationsToCollapse = new Set<string>();
+        fixedLocations.forEach(loc => {
+            if (!groupedEvents[loc] || groupedEvents[loc].length === 0) {
+                locationsToCollapse.add(loc);
+            }
+        });
+        setCollapsedLocations(locationsToCollapse);
+    }, [groupedEvents]);
+
+    const toggleLocationCollapse = (location: string) => {
+        setCollapsedLocations(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(location)) newSet.delete(location);
+            else newSet.add(location);
+            return newSet;
+        });
+    };
 
 
     const getEventPosition = (event: Event) => {
@@ -98,20 +110,28 @@ export function DayView({ date, containerRef }: { date: Date, containerRef: Reac
         return (now.getHours() + now.getMinutes() / 60) * HOUR_WIDTH_PX;
     }
     
-    const renderLocationRow = (location: string, isLast: boolean) => {
+    const renderLocationRow = (location: string, isLast: boolean, isFixed: boolean) => {
         const eventsInRow = groupedEvents[location] || [];
+        const isCollapsed = isFixed && collapsedLocations.has(location);
         return (
             <div key={location} className={cn("flex", { "border-b": !isLast })}>
-                <div className="w-[160px] shrink-0 p-2 border-r flex items-center justify-start bg-card sticky left-0 z-30">
+                <div 
+                    className={cn(
+                        "w-[160px] shrink-0 p-2 border-r flex items-center justify-start bg-card sticky left-0 z-30 gap-1",
+                        isFixed && "cursor-pointer"
+                    )}
+                    onClick={() => isFixed && toggleLocationCollapse(location)}
+                >
+                    {isFixed && (isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />)}
                     <p className="font-medium text-sm truncate">{location}</p>
                 </div>
-                <div className="relative flex-1 h-20">
+                <div className={cn("relative flex-1", isCollapsed ? "h-10" : "h-20")}>
                     {/* Vertical Grid lines for this row */}
                     {hours.slice(0, 23).map(hour => (
                         <div key={`line-${hour}`} className="absolute top-0 bottom-0 border-r" style={{ left: `${(hour + 1) * HOUR_WIDTH_PX}px` }}></div>
                     ))}
                     {/* Events for this row */}
-                    {eventsInRow.map(event => {
+                    {!isCollapsed && eventsInRow.map(event => {
                         const { left, width } = getEventPosition(event);
                         return (
                             <div 
@@ -161,24 +181,9 @@ export function DayView({ date, containerRef }: { date: Date, containerRef: Reac
                     ))}
                 </CardHeader>
                 <CardContent className={cn("p-0 relative", { "bg-muted/20": isWeekend || isDayHoliday })}>
-                    <div className={cn("flex border-b")}>
-                        <div 
-                            className="w-[160px] shrink-0 p-2 border-r flex items-center justify-start bg-card sticky left-0 z-30 font-semibold cursor-pointer gap-1"
-                            onClick={() => setFixedLocationsCollapsed(prev => !prev)}
-                        >
-                            {fixedLocationsCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                            <p className="truncate text-sm">Fixed Locations</p>
-                        </div>
-                        <div className="relative flex-1 h-12">
-                             {hours.slice(0, 23).map(hour => (
-                                <div key={`line-fixed-trigger-${hour}`} className="absolute top-0 bottom-0 border-r" style={{ left: `${(hour + 1) * HOUR_WIDTH_PX}px` }}></div>
-                            ))}
-                        </div>
-                    </div>
+                    {fixedLocations.map((location, index) => renderLocationRow(location, index === fixedLocations.length - 1 && otherLocations.length === 0, true))}
                     
-                    {!fixedLocationsCollapsed && fixedLocations.map((location, index) => renderLocationRow(location, index === fixedLocations.length - 1 && otherLocations.length === 0))}
-                    
-                    {otherLocations.map((location, index) => renderLocationRow(location, index === otherLocations.length - 1))}
+                    {otherLocations.map((location, index) => renderLocationRow(location, index === otherLocations.length - 1, false))}
                     
                     {isViewingToday && now && (
                         <div 
