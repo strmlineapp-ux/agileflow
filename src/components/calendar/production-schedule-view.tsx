@@ -14,6 +14,16 @@ const isHoliday = (day: Date) => {
 const HOUR_WIDTH_PX = 120;
 const LOCATION_LABEL_WIDTH_PX = 160;
 
+const fixedLocations = [
+    "Auditorium", 
+    "ACR", 
+    "Event Space 1 (S2)", 
+    "Event Space 2 (S2)", 
+    "Event Space 3 (R7)", 
+    "Event Space 4 (R7)", 
+    "Studio"
+];
+
 export function ProductionScheduleView({ date, containerRef }: { date: Date, containerRef: React.RefObject<HTMLDivElement> }) {
     const [now, setNow] = useState<Date | null>(null);
     const nowMarkerRef = useRef<HTMLDivElement>(null);
@@ -53,7 +63,13 @@ export function ProductionScheduleView({ date, containerRef }: { date: Date, con
         }, {} as Record<string, Event[]>);
     }, [dayEvents]);
 
-    const locations = useMemo(() => Object.keys(groupedEvents).sort((a,b) => a === 'No Location' ? 1 : b === 'No Location' ? -1 : a.localeCompare(b)), [groupedEvents]);
+    const locations = useMemo(() => {
+        const eventLocations = Object.keys(groupedEvents)
+            .filter(loc => !fixedLocations.includes(loc))
+            .sort((a, b) => a === 'No Location' ? 1 : b === 'No Location' ? -1 : a.localeCompare(b));
+
+        return [...fixedLocations, ...eventLocations];
+    }, [groupedEvents]);
 
     const getEventPosition = (event: Event) => {
         const startHour = event.startTime.getHours();
@@ -74,32 +90,14 @@ export function ProductionScheduleView({ date, containerRef }: { date: Date, con
         if (!now) return 0;
         return (now.getHours() + now.getMinutes() / 60) * HOUR_WIDTH_PX;
     }
-    
-    if (locations.length === 0) {
-        return (
-             <Card>
-                <div style={{ width: `${LOCATION_LABEL_WIDTH_PX + (24 * HOUR_WIDTH_PX)}px`}}>
-                     <CardHeader className="p-0 border-b sticky top-0 bg-card z-20 flex flex-row">
-                        <div className="w-[160px] shrink-0 border-r p-2 flex items-center font-medium text-sm sticky left-0 bg-card z-20">Location</div>
-                        {hours.map(hour => (
-                            <div key={hour} className="w-[120px] shrink-0 text-left p-2 border-r">
-                                <span className="text-xs text-muted-foreground">{format(addHours(startOfDay(date), hour), 'HH:mm')}</span>
-                            </div>
-                        ))}
-                    </CardHeader>
-                    <div className="flex items-center justify-center h-40 text-muted-foreground">
-                        No events scheduled for this day.
-                    </div>
-                </div>
-            </Card>
-        )
-    }
 
     return (
         <Card>
             <div style={{ width: `${LOCATION_LABEL_WIDTH_PX + (24 * HOUR_WIDTH_PX)}px`}}>
                 <CardHeader className="p-0 border-b sticky top-0 bg-card z-20 flex flex-row">
-                    <div className="w-[160px] shrink-0 border-r p-2 flex items-center font-medium text-sm sticky left-0 bg-card z-20">Location</div>
+                    <div className="w-[160px] shrink-0 border-r p-2 flex items-center font-semibold text-sm sticky left-0 bg-card z-20">
+                       {format(date, 'EEE, MMMM d, yyyy').toUpperCase()}
+                    </div>
                     {hours.map(hour => (
                         <div key={hour} className="w-[120px] shrink-0 text-left p-2 border-r">
                             <span className="text-xs text-muted-foreground">{format(addHours(startOfDay(date), hour), 'HH:mm')}</span>
@@ -108,7 +106,7 @@ export function ProductionScheduleView({ date, containerRef }: { date: Date, con
                 </CardHeader>
                 <CardContent className={cn("p-0 relative", { "bg-muted/20": isWeekend || isDayHoliday })}>
                     {locations.map((location, index) => {
-                        const eventsInRow = groupedEvents[location];
+                        const eventsInRow = groupedEvents[location] || [];
                         return (
                             <div key={location} className={cn("flex", { "border-b": index < locations.length - 1 })}>
                                 <div className="w-[160px] shrink-0 p-2 border-r flex items-center justify-start bg-card sticky left-0 z-20">
