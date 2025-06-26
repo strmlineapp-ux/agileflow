@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from "react";
@@ -21,7 +20,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/context/user-context";
 
 const formSchema = z.object({
-  fullName: z.string().min(1, { message: "Full name is required." }),
   email: z.string().email({ message: "Please enter a valid email." }),
 });
 
@@ -34,7 +32,6 @@ export function SignUpForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      fullName: "",
       email: "",
     },
   });
@@ -47,16 +44,16 @@ export function SignUpForm() {
       type: 'access_request' as const,
       status: 'pending' as const,
       user: { // This is the user requesting access
-        displayName: values.fullName,
+        displayName: values.email,
         avatarUrl: `https://placehold.co/40x40.png`,
         userId: ''
       },
-      content: `${values.fullName} has requested access.`,
+      content: `${values.email} has requested access.`,
       time: new Date(),
       read: false,
       data: {
         email: values.email,
-        displayName: values.fullName,
+        displayName: values.email,
       },
     };
 
@@ -76,19 +73,6 @@ export function SignUpForm() {
     <div className="grid gap-6">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <FormField
-            control={form.control}
-            name="fullName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Full Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="John Doe" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
           <FormField
             control={form.control}
             name="email"
