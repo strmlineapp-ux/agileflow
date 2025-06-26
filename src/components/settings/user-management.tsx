@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, ChevronRight, Pencil, Lock, X } from 'lucide-react';
+import { ChevronDown, ChevronRight, Pencil, Lock, X, Palette } from 'lucide-react';
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -325,6 +325,12 @@ export function UserManagement() {
                                         <TableCell>{user.title || 'N/A'}</TableCell>
                                         <TableCell>{user.location || 'N/A'}</TableCell>
                                         <TableCell className="text-right">
+                                            {user.userId === realUser.userId && (
+                                                <Button variant="ghost" size="icon">
+                                                    <Palette className="h-4 w-4" />
+                                                    <span className="sr-only">Change theme</span>
+                                                </Button>
+                                            )}
                                         </TableCell>
                                     </TableRow>
                                     {expandedRows.has(user.userId) && (
