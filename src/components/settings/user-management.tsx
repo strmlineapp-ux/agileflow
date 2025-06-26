@@ -94,6 +94,17 @@ export function UserManagement() {
 
         return false;
     };
+    
+    const canEditSkills = (editor: User, target: User): boolean => {
+        if (isPrivilegedUser(editor)) {
+            return true;
+        }
+        if (isManager(editor) && editor.directReports?.includes(target.userId)) {
+            return true;
+        }
+        return false;
+    };
+
 
     const handlePermissionChange = (userId: string, permission: string, checked: boolean) => {
         setUsers(users.map(user => {
@@ -244,7 +255,9 @@ export function UserManagement() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {users.map(user => (
+                            {users.map(user => {
+                                const canViewerEditThisUserSkills = canEditSkills(viewAsUser, user);
+                                return (
                                 <Fragment key={user.userId}>
                                     <TableRow>
                                         <TableCell>
@@ -402,7 +415,7 @@ export function UserManagement() {
                                                       <div>
                                                           <p className="font-medium text-sm mb-2">Skills</p>
                                                           <div className="grid grid-cols-2 gap-2">
-                                                              {viewerIsManager
+                                                              {canViewerEditThisUserSkills
                                                                   ? allSkills.map(skill => (
                                                                       <div key={skill} className="flex items-center space-x-2">
                                                                           <Checkbox
@@ -434,7 +447,7 @@ export function UserManagement() {
                                         </TableRow>
                                     )}
                                 </Fragment>
-                            ))}
+                            )})}
                         </TableBody>
                     </Table>
                 </CardContent>
