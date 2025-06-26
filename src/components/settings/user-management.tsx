@@ -244,11 +244,14 @@ export function UserManagement() {
                                                         </div>
                                                     </div>
                                                     
-                                                    {canSeePermissions && (
-                                                        <div>
-                                                            <p className="font-medium text-sm mb-2">Permissions</p>
-                                                            <div className="grid grid-cols-2 gap-2">
-                                                                {allPermissions.map(permission => (
+                                                    <div>
+                                                        <p className="font-medium text-sm mb-2">Permissions</p>
+                                                        <div className="grid grid-cols-2 gap-2">
+                                                            {allPermissions.map(permission => {
+                                                                if (permission !== 'Admin' && !canSeePermissions) {
+                                                                    return null;
+                                                                }
+                                                                return (
                                                                     <div key={permission} className="flex items-center space-x-2">
                                                                         <Checkbox
                                                                             id={`${user.userId}-${permission}`}
@@ -274,10 +277,10 @@ export function UserManagement() {
                                                                             {permission === 'Admin' && <Lock className="h-3 w-3 text-muted-foreground" />}
                                                                         </Label>
                                                                     </div>
-                                                                ))}
-                                                            </div>
+                                                                );
+                                                            })}
                                                         </div>
-                                                    )}
+                                                    </div>
 
                                                     <div>
                                                         <p className="font-medium text-sm mb-2">Skills</p>
