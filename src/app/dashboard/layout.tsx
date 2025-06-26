@@ -4,7 +4,6 @@ import { Sidebar } from '@/components/dashboard/sidebar';
 import { Header } from '@/components/dashboard/header';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { UserProvider } from '@/context/user-context';
 
 export default function DashboardLayout({
   children,
@@ -15,7 +14,6 @@ export default function DashboardLayout({
   const isCalendarPage = pathname.startsWith('/dashboard/calendar');
 
   return (
-    <UserProvider>
       <div className="flex min-h-screen w-full bg-muted/40">
         <Sidebar />
         <div className="flex flex-1 flex-col sm:pl-14">
@@ -30,6 +28,5 @@ export default function DashboardLayout({
           </main>
         </div>
       </div>
-    </UserProvider>
   );
 }
