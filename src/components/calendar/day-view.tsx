@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useMemo, useState, useRef } from 'react';
@@ -15,16 +14,6 @@ const isHoliday = (day: Date) => {
 
 const HOUR_WIDTH_PX = 120;
 const LOCATION_LABEL_WIDTH_PX = 160;
-
-const fixedLocations = [
-    "Auditorium", 
-    "ACR", 
-    "Event Space 1 (S2)", 
-    "Event Space 2 (S2)", 
-    "Event Space 3 (R7)", 
-    "Event Space 4 (R7)", 
-    "Studio"
-];
 
 export function DayView({ date, containerRef }: { date: Date, containerRef: React.RefObject<HTMLDivElement> }) {
     const [now, setNow] = useState<Date | null>(null);
@@ -66,19 +55,18 @@ export function DayView({ date, containerRef }: { date: Date, containerRef: Reac
         }, {} as Record<string, Event[]>);
     }, [dayEvents]);
 
-    const otherLocations = useMemo(() => Object.keys(groupedEvents)
-        .filter(loc => !fixedLocations.includes(loc))
+    const allLocations = useMemo(() => Object.keys(groupedEvents)
         .sort((a,b) => a === 'No Location' ? 1 : b === 'No Location' ? -1 : a.localeCompare(b)), [groupedEvents]);
     
     useEffect(() => {
         const locationsToCollapse = new Set<string>();
-        fixedLocations.forEach(loc => {
+        allLocations.forEach(loc => {
             if (!groupedEvents[loc] || groupedEvents[loc].length === 0) {
                 locationsToCollapse.add(loc);
             }
         });
         setCollapsedLocations(locationsToCollapse);
-    }, [groupedEvents]);
+    }, [groupedEvents, allLocations]);
 
     const toggleLocationCollapse = (location: string) => {
         setCollapsedLocations(prev => {
@@ -88,7 +76,6 @@ export function DayView({ date, containerRef }: { date: Date, containerRef: Reac
             return newSet;
         });
     };
-
 
     const getEventPosition = (event: Event) => {
         const startHour = event.startTime.getHours();
@@ -110,19 +97,16 @@ export function DayView({ date, containerRef }: { date: Date, containerRef: Reac
         return (now.getHours() + now.getMinutes() / 60) * HOUR_WIDTH_PX;
     }
     
-    const renderLocationRow = (location: string, isLast: boolean, isFixed: boolean) => {
+    const renderLocationRow = (location: string, isLast: boolean) => {
         const eventsInRow = groupedEvents[location] || [];
-        const isCollapsed = isFixed && collapsedLocations.has(location);
+        const isCollapsed = collapsedLocations.has(location);
         return (
             <div key={location} className={cn("flex", { "border-b": !isLast })}>
                 <div 
-                    className={cn(
-                        "w-[160px] shrink-0 p-2 border-r flex items-center justify-start bg-card sticky left-0 z-30 gap-1",
-                        isFixed && "cursor-pointer"
-                    )}
-                    onClick={() => isFixed && toggleLocationCollapse(location)}
+                    className="w-[160px] shrink-0 p-2 border-r flex items-center justify-start bg-card sticky left-0 z-30 gap-1 cursor-pointer"
+                    onClick={() => toggleLocationCollapse(location)}
                 >
-                    {isFixed && (isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />)}
+                    {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     <p className="font-medium text-sm truncate">{location}</p>
                 </div>
                 <div className={cn("relative flex-1", isCollapsed ? "h-10" : "h-20")}>
@@ -181,9 +165,7 @@ export function DayView({ date, containerRef }: { date: Date, containerRef: Reac
                     ))}
                 </CardHeader>
                 <CardContent className={cn("p-0 relative", { "bg-muted/20": isWeekend || isDayHoliday })}>
-                    {fixedLocations.map((location, index) => renderLocationRow(location, index === fixedLocations.length - 1 && otherLocations.length === 0, true))}
-                    
-                    {otherLocations.map((location, index) => renderLocationRow(location, index === otherLocations.length - 1, false))}
+                    {allLocations.map((location, index) => renderLocationRow(location, index === allLocations.length - 1))}
                     
                     {isViewingToday && now && (
                         <div 

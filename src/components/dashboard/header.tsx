@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Calendar, ListChecks, PanelLeft, Settings, LogOut, LayoutDashboard, UserCheck, ArrowLeftRight } from 'lucide-react';
+import { Calendar, ListChecks, PanelLeft, Settings, LayoutDashboard, ArrowLeftRight } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -9,13 +9,10 @@ import {
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/icons/logo';
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuPortal, DropdownMenuSubContent } from '../ui/dropdown-menu';
 import { useUser } from '@/context/user-context';
 
 export function Header() {
-  const { realUser, viewAsUser, setViewAsUser, users } = useUser();
-  const isAdmin = realUser.permissions?.includes('Admin');
+  const { realUser, viewAsUser } = useUser();
   const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
 
   return (
@@ -62,59 +59,6 @@ export function Header() {
       <div className="relative ml-auto flex-1 md:grow-0">
         {/* Placeholder for future search bar */}
       </div>
-
-       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                <Avatar className="h-9 w-9">
-                    <AvatarImage src={viewAsUser.avatarUrl} alt={viewAsUser.displayName} data-ai-hint="user avatar" />
-                    <AvatarFallback>{viewAsUser.displayName.slice(0,2).toUpperCase()}</AvatarFallback>
-                </Avatar>
-            </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuItem asChild>
-                <Link href="/dashboard/settings">
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
-                </Link>
-            </DropdownMenuItem>
-            
-            {isAdmin && (
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger>
-                  <UserCheck className="mr-2 h-4 w-4" />
-                  <span>View as</span>
-                </DropdownMenuSubTrigger>
-                <DropdownMenuPortal>
-                  <DropdownMenuSubContent>
-                    {isViewingAsSomeoneElse && (
-                      <>
-                        <DropdownMenuItem onSelect={() => setViewAsUser(realUser.userId)}>
-                          Return to your view ({realUser.displayName})
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                      </>
-                    )}
-                    {users.filter(u => u.userId !== realUser.userId).map(user => (
-                      <DropdownMenuItem key={user.userId} onSelect={() => setViewAsUser(user.userId)}>
-                        {user.displayName}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuSubContent>
-                </DropdownMenuPortal>
-              </DropdownMenuSub>
-            )}
-
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-                <Link href="/login">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Logout</span>
-                </Link>
-            </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
     </header>
   );
 }

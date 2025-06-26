@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useMemo, useState, useRef } from 'react';
@@ -78,14 +77,15 @@ export function ProductionScheduleView({ date, containerRef }: { date: Date, con
         const initialCollapsedDays = new Set<string>();
         const initialCollapsedLocations: Record<string, Set<string>> = {};
 
-        weeklyScheduleData.forEach(({ day, isWeekend, groupedEvents }) => {
+        weeklyScheduleData.forEach(({ day, isWeekend, groupedEvents, otherLocations }) => {
             const dayIso = day.toISOString();
             if (isWeekend) {
                 initialCollapsedDays.add(dayIso);
             }
 
             const locationsToCollapse = new Set<string>();
-            fixedLocations.forEach(loc => {
+            const allDayLocations = [...fixedLocations, ...otherLocations];
+            allDayLocations.forEach(loc => {
                 if (!groupedEvents[loc] || groupedEvents[loc].length === 0) {
                     locationsToCollapse.add(loc);
                 }
@@ -136,19 +136,16 @@ export function ProductionScheduleView({ date, containerRef }: { date: Date, con
         return (now.getHours() + now.getMinutes() / 60) * HOUR_WIDTH_PX;
     }
 
-    const renderLocationRow = (dayIso: string, location: string, eventsInRow: Event[], isLast: boolean, isFixed: boolean) => {
-        const isLocationCollapsed = isFixed && collapsedLocations[dayIso]?.has(location);
+    const renderLocationRow = (dayIso: string, location: string, eventsInRow: Event[], isLast: boolean) => {
+        const isLocationCollapsed = collapsedLocations[dayIso]?.has(location);
         
         return (
             <div key={location} className={cn("flex", { "border-b": !isLast })}>
                 <div 
-                    className={cn(
-                        "w-[160px] shrink-0 p-2 border-r flex items-center justify-start bg-card sticky left-0 z-30 gap-1",
-                        isFixed && "cursor-pointer"
-                    )}
-                    onClick={() => isFixed && toggleLocationCollapse(dayIso, location)}
+                    className="w-[160px] shrink-0 p-2 border-r flex items-center justify-start bg-card sticky left-0 z-30 gap-1 cursor-pointer"
+                    onClick={() => toggleLocationCollapse(dayIso, location)}
                 >
-                     {isFixed && (isLocationCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />)}
+                     {isLocationCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     <p className="font-medium text-sm truncate">{location}</p>
                 </div>
                 <div className={cn("relative flex-1", isLocationCollapsed ? "h-10" : "h-20")}>
@@ -201,8 +198,7 @@ export function ProductionScheduleView({ date, containerRef }: { date: Date, con
                                                 dayIso,
                                                 location,
                                                 groupedEvents[location] || [],
-                                                index === fixedLocations.length - 1 && otherLocations.length === 0,
-                                                true
+                                                index === fixedLocations.length - 1 && otherLocations.length === 0
                                             ))}
 
                                             {/* Other Locations */}
@@ -210,8 +206,7 @@ export function ProductionScheduleView({ date, containerRef }: { date: Date, con
                                                 dayIso,
                                                 location,
                                                 groupedEvents[location] || [],
-                                                index === otherLocations.length - 1,
-                                                false
+                                                index === otherLocations.length - 1
                                             ))}
                                             
                                             {isDayToday && now && (
