@@ -402,16 +402,30 @@ export function UserManagement() {
                                                       <div>
                                                           <p className="font-medium text-sm mb-2">Skills</p>
                                                           <div className="grid grid-cols-2 gap-2">
-                                                              {allSkills.map(skill => (
-                                                                  <div key={skill} className="flex items-center space-x-2">
-                                                                      <Checkbox
-                                                                          id={`${user.userId}-${skill}`}
-                                                                          checked={user.skills?.includes(skill)}
-                                                                          onCheckedChange={(checked) => handleSkillChange(user.userId, skill, !!checked)}
-                                                                      />
-                                                                      <Label htmlFor={`${user.userId}-${skill}`} className="text-sm font-normal">{skill}</Label>
-                                                                  </div>
-                                                              ))}
+                                                              {viewerIsManager
+                                                                  ? allSkills.map(skill => (
+                                                                      <div key={skill} className="flex items-center space-x-2">
+                                                                          <Checkbox
+                                                                              id={`${user.userId}-${skill}`}
+                                                                              checked={user.skills?.includes(skill)}
+                                                                              onCheckedChange={(checked) => handleSkillChange(user.userId, skill, !!checked)}
+                                                                          />
+                                                                          <Label htmlFor={`${user.userId}-${skill}`} className="text-sm font-normal">{skill}</Label>
+                                                                      </div>
+                                                                  ))
+                                                                  : user.skills && user.skills.length > 0
+                                                                      ? user.skills.map(skill => (
+                                                                          <div key={skill} className="flex items-center space-x-2">
+                                                                              <Checkbox
+                                                                                  id={`${user.userId}-${skill}`}
+                                                                                  checked={true}
+                                                                                  disabled={true}
+                                                                              />
+                                                                              <Label htmlFor={`${user.userId}-${skill}`} className="text-sm font-normal">{skill}</Label>
+                                                                          </div>
+                                                                      ))
+                                                                      : <p className="text-sm text-muted-foreground col-span-2">No skills assigned.</p>
+                                                              }
                                                           </div>
                                                       </div>
                                                     )}
