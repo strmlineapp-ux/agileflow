@@ -68,8 +68,8 @@
       -45deg,
       transparent,
       transparent 5px,
-      hsl(var(--border) / 0.25) 5px,
-      hsl(var(--border) / 0.25) 10px
+      hsl(var(--border) / 0.125) 5px,
+      hsl(var(--border) / 0.125) 10px
     );
   }
 }
