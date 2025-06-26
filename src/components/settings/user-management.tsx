@@ -44,7 +44,7 @@ export function UserManagement() {
 
     const allPermissions = [
         "Events", "Event Users", "Studio Productions", "Studio Production Users",
-        "Production", "Production Management", "Service Delivery Manager", "Admin"
+        "Production", "Production Management", "Post-Production", "Service Delivery Manager", "Admin"
     ];
 
     const canSeePermissionsSection = (viewedUser: User): boolean => {
@@ -52,7 +52,10 @@ export function UserManagement() {
         return isPrivileged || viewAsUser.userId === viewedUser.userId;
     };
     
-    const canSeeAllPermissions = viewAsUser.permissions?.includes('Admin') || viewAsUser.permissions?.includes('Service Delivery Manager');
+    const canSeeAllPermissions = (viewedUser: User) => {
+      const isPrivileged = viewedUser.permissions?.includes('Admin') || viewedUser.permissions?.includes('Service Delivery Manager');
+      return isPrivileged;
+    }
 
     const canEditPermissions = (editor: User, target: User, permission: string): boolean => {
         const isEditorAdminOrSdm = editor.permissions?.includes('Admin') || editor.permissions?.includes('Service Delivery Manager');
@@ -274,7 +277,7 @@ export function UserManagement() {
                                                             <p className="font-medium text-sm mb-2">Permissions</p>
                                                             <div className="grid grid-cols-2 gap-2">
                                                                 {allPermissions.map(permission => {
-                                                                    if (!canSeeAllPermissions && permission !== 'Admin') {
+                                                                    if (!canSeeAllPermissions(viewAsUser) && permission !== 'Admin') {
                                                                         return null;
                                                                     }
                                                                     
