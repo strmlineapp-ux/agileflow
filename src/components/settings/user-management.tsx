@@ -92,6 +92,9 @@ export function UserManagement() {
                     if (permission === 'Studio Production Users' && !newPermissions.includes('Studio Productions')) {
                         newPermissions.push('Studio Productions');
                     }
+                    if (permission === 'Event Users' && !newPermissions.includes('Events')) {
+                        newPermissions.push('Events');
+                    }
                 } else {
                     newPermissions = newPermissions.filter(p => p !== permission);
                 }
@@ -294,13 +297,16 @@ export function UserManagement() {
                                                                     const hasStudioProductionUsers = user.permissions?.includes('Studio Production Users');
                                                                     const isStudioProductionsLocked = permission === 'Studio Productions' && hasStudioProductionUsers;
                                                                     
-                                                                    const isCheckboxDisabled = permission === 'Admin' || isProductionLocked || isStudioProductionsLocked || !canEditPermissions(viewAsUser, user, permission);
+                                                                    const hasEventUsers = user.permissions?.includes('Event Users');
+                                                                    const isEventsLocked = permission === 'Events' && hasEventUsers;
+                                                                    
+                                                                    const isCheckboxDisabled = permission === 'Admin' || isProductionLocked || isStudioProductionsLocked || isEventsLocked || !canEditPermissions(viewAsUser, user, permission);
 
                                                                     return (
                                                                         <div key={permission} className="flex items-center space-x-2">
                                                                             <Checkbox
                                                                                 id={`${user.userId}-${permission}`}
-                                                                                checked={user.permissions?.includes(permission) || isProductionLocked || isStudioProductionsLocked}
+                                                                                checked={user.permissions?.includes(permission) || isProductionLocked || isStudioProductionsLocked || isEventsLocked}
                                                                                 disabled={isCheckboxDisabled}
                                                                                 onCheckedChange={(checked) => {
                                                                                     if (permission !== 'Admin' && canEditPermissions(viewAsUser, user, permission)) {
