@@ -47,14 +47,16 @@ export function UserManagement() {
         "Production", "Production Management", "Post-Production", "Service Delivery Manager", "Admin"
     ];
 
+    const isPrivilegedUser = (user: User) => {
+        return user.permissions?.includes('Admin') || user.permissions?.includes('Service Delivery Manager');
+    }
+
     const canSeePermissionsSection = (viewedUser: User): boolean => {
-        const isPrivileged = viewAsUser.permissions?.includes('Admin') || viewAsUser.permissions?.includes('Service Delivery Manager');
-        return isPrivileged || viewAsUser.userId === viewedUser.userId;
+        return isPrivilegedUser(viewAsUser) || viewAsUser.userId === viewedUser.userId;
     };
     
     const canSeeAllPermissions = (viewedUser: User) => {
-      const isPrivileged = viewedUser.permissions?.includes('Admin') || viewedUser.permissions?.includes('Service Delivery Manager');
-      return isPrivileged;
+      return isPrivilegedUser(viewedUser);
     }
 
     const canSeeOwnAdminPermission = (user: User, permission: string) => {
@@ -62,11 +64,8 @@ export function UserManagement() {
     }
 
     const canEditPermissions = (editor: User, target: User, permission: string): boolean => {
-        const isEditorAdminOrSdm = editor.permissions?.includes('Admin') || editor.permissions?.includes('Service Delivery Manager');
-        if (isEditorAdminOrSdm) return true;
-
-        const isTargetAdminOrSdm = target.permissions?.includes('Admin') || target.permissions?.includes('Service Delivery Manager');
-        if (isTargetAdminOrSdm) return false;
+        if (isPrivilegedUser(editor)) return true;
+        if (isPrivilegedUser(target)) return false;
 
         if (permission === 'Production' && editor.permissions?.includes('Production Management')) return true;
         if (permission === 'Studio Productions' && editor.permissions?.includes('Studio Production Users')) return true;
@@ -75,7 +74,7 @@ export function UserManagement() {
         return false;
     };
 
-    const canEditReportingLine = viewAsUser.permissions?.includes('Admin') || viewAsUser.permissions?.includes('Service Delivery Manager');
+    const canEditReportingLine = isPrivilegedUser(viewAsUser);
 
     const handlePermissionChange = (userId: string, permission: string, checked: boolean) => {
         setUsers(users.map(user => {
