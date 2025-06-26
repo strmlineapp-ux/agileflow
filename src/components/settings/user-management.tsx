@@ -33,7 +33,7 @@ export function UserManagement() {
     const [tempDirectReports, setTempDirectReports] = useState<string[]>([]);
 
     const [is2faDialogOpen, setIs2faDialogOpen] = useState(false);
-    const [editingAdminForUser, setEditingAdminForUser] = useState<User | null>(null);
+    const [editingPermissionState, setEditingPermissionState] = useState<{ user: User; permission: string } | null>(null);
     const [twoFactorCode, setTwoFactorCode] = useState('');
     const { toast } = useToast();
 
@@ -52,11 +52,14 @@ export function UserManagement() {
     }
 
     const canSeePermissionsSection = (viewedUser: User): boolean => {
-        return isPrivilegedUser(viewAsUser) || viewAsUser.userId === viewedUser.userId;
+        if (isPrivilegedUser(viewAsUser)) return true;
+        if (viewAsUser.userId === viewedUser.userId) return true;
+        return false;
     };
     
     const canSeeAllPermissions = (viewedUser: User) => {
-      return isPrivilegedUser(viewedUser);
+      if (isPrivilegedUser(viewedUser)) return true;
+      return false;
     }
 
     const canSeeOwnAdminPermission = (user: User, permission: string) => {
@@ -169,16 +172,17 @@ export function UserManagement() {
         });
     };
 
-    const handleVerifyAndChangeAdmin = () => {
-        if (!editingAdminForUser) return;
+    const handleVerifyAndChangePermission = () => {
+        if (!editingPermissionState) return;
 
-        if (twoFactorCode === '123456') { 
-            const isCurrentlyAdmin = editingAdminForUser.permissions?.includes('Admin');
-            handlePermissionChange(editingAdminForUser.userId, 'Admin', !isCurrentlyAdmin);
+        if (twoFactorCode === '123456') {
+            const { user, permission } = editingPermissionState;
+            const isCurrentlyEnabled = user.permissions?.includes(permission);
+            handlePermissionChange(user.userId, permission, !isCurrentlyEnabled);
             
-            toast({ title: "Success", description: "Admin permission updated successfully." });
+            toast({ title: "Success", description: `${permission} permission updated successfully.` });
             setIs2faDialogOpen(false);
-            setEditingAdminForUser(null);
+            setEditingPermissionState(null);
             setTwoFactorCode('');
         } else {
             toast({
@@ -299,7 +303,8 @@ export function UserManagement() {
                                                                     const hasEventUsers = user.permissions?.includes('Event Users');
                                                                     const isEventsLocked = permission === 'Events' && hasEventUsers;
                                                                     
-                                                                    const isCheckboxDisabled = permission === 'Admin' || isProductionLocked || isStudioProductionsLocked || isEventsLocked || !canEditPermissions(viewAsUser, user, permission);
+                                                                    const isPrivilegedPermission = permission === 'Admin' || permission === 'Service Delivery Manager';
+                                                                    const isCheckboxDisabled = isPrivilegedPermission || isProductionLocked || isStudioProductionsLocked || isEventsLocked || !canEditPermissions(viewAsUser, user, permission);
 
                                                                     return (
                                                                         <div key={permission} className="flex items-center space-x-2">
@@ -308,7 +313,7 @@ export function UserManagement() {
                                                                                 checked={user.permissions?.includes(permission) || isProductionLocked || isStudioProductionsLocked || isEventsLocked}
                                                                                 disabled={isCheckboxDisabled}
                                                                                 onCheckedChange={(checked) => {
-                                                                                    if (permission !== 'Admin' && canEditPermissions(viewAsUser, user, permission)) {
+                                                                                    if (!isPrivilegedPermission && canEditPermissions(viewAsUser, user, permission)) {
                                                                                         handlePermissionChange(user.userId, permission, !!checked);
                                                                                     }
                                                                                 }}
@@ -317,14 +322,14 @@ export function UserManagement() {
                                                                                 htmlFor={`${user.userId}-${permission}`}
                                                                                 className="text-sm font-normal flex items-center gap-1 cursor-pointer"
                                                                                 onClick={() => {
-                                                                                    if (permission === 'Admin' && canEditPermissions(viewAsUser, user, permission)) {
-                                                                                        setEditingAdminForUser(user);
+                                                                                    if (isPrivilegedPermission && canEditPermissions(viewAsUser, user, permission)) {
+                                                                                        setEditingPermissionState({ user, permission });
                                                                                         setIs2faDialogOpen(true);
                                                                                     }
                                                                                 }}
                                                                             >
                                                                                 {permission}
-                                                                                {permission === 'Admin' && <Lock className="h-3 w-3 text-muted-foreground" />}
+                                                                                {isPrivilegedPermission && <Lock className="h-3 w-3 text-muted-foreground" />}
                                                                             </Label>
                                                                         </div>
                                                                     );
@@ -414,12 +419,18 @@ export function UserManagement() {
                 </DialogContent>
             </Dialog>
 
-            <Dialog open={is2faDialogOpen} onOpenChange={setIs2faDialogOpen}>
+            <Dialog open={is2faDialogOpen} onOpenChange={(isOpen) => {
+                if (!isOpen) {
+                    setIs2faDialogOpen(false);
+                    setEditingPermissionState(null);
+                    setTwoFactorCode('');
+                }
+            }}>
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle>Two-Factor Authentication</DialogTitle>
                         <DialogDescription>
-                            Changing admin permissions requires secondary authentication. Enter the code from your Google Authenticator app.
+                            Changing privileged permissions requires secondary authentication. Enter the code from your Google Authenticator app.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
@@ -439,10 +450,10 @@ export function UserManagement() {
                     <DialogFooter>
                          <Button variant="outline" onClick={() => {
                              setIs2faDialogOpen(false);
-                             setEditingAdminForUser(null);
+                             setEditingPermissionState(null);
                              setTwoFactorCode('');
                          }}>Cancel</Button>
-                        <Button onClick={handleVerifyAndChangeAdmin}>Verify & Change</Button>
+                        <Button onClick={handleVerifyAndChangePermission}>Verify & Change</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
