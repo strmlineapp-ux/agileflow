@@ -6,7 +6,7 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isToday, i
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { Badge } from '../ui/badge';
-import { type Event } from '@/types';
+import { type Event, type CalendarEventLabel } from '@/types';
 import { mockEvents, mockHolidays } from '@/lib/mock-data';
 import { Button } from '../ui/button';
 import { ChevronsLeft, ChevronsRight } from 'lucide-react';
@@ -14,6 +14,14 @@ import { ChevronsLeft, ChevronsRight } from 'lucide-react';
 const isHoliday = (day: Date) => {
     return mockHolidays.some(holiday => isSameDay(day, holiday));
 }
+
+const labelColors: Record<CalendarEventLabel, string> = {
+    'Event': 'bg-blue-600 hover:bg-blue-700',
+    'Rehearsal': 'bg-purple-600 hover:bg-purple-700',
+    'Shoot': 'bg-red-600 hover:bg-red-700',
+    'Mock Shoot': 'bg-orange-500 hover:bg-orange-600',
+    'Sound Recording': 'bg-green-600 hover:bg-green-700',
+};
 
 export function MonthView({ date, containerRef }: { date: Date; containerRef: React.RefObject<HTMLDivElement> }) {
     const todayRef = useRef<HTMLDivElement>(null);
@@ -80,7 +88,7 @@ export function MonthView({ date, containerRef }: { date: Date; containerRef: Re
                 </span>
                 <div className="mt-1 space-y-1 overflow-y-auto">
                     {dayEvents.map(event => (
-                        <Badge key={event.eventId} variant="secondary" className="block w-full text-left truncate cursor-pointer bg-accent/50 hover:bg-accent/80">
+                        <Badge key={event.eventId} className={cn("block w-full text-left truncate cursor-pointer text-white border-transparent", labelColors[event.label])}>
                             {event.title}
                         </Badge>
                     ))}

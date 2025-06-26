@@ -3,7 +3,7 @@
 
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { format, addHours, startOfDay, isSaturday, isSunday, isSameDay, isToday, startOfWeek, eachDayOfInterval, addDays } from 'date-fns';
-import { type Event, type User, type UserStatus, type UserStatusAssignment } from '@/types';
+import { type Event, type User, type UserStatus, type UserStatusAssignment, type CalendarEventLabel } from '@/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { mockEvents, mockHolidays } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
@@ -38,6 +38,14 @@ const fixedLocations = [
     "Event Space 4 (R7)", 
     "Studio"
 ];
+
+const labelColors: Record<CalendarEventLabel, string> = {
+    'Event': 'bg-blue-600/90 hover:bg-blue-700/90 text-white',
+    'Rehearsal': 'bg-purple-600/90 hover:bg-purple-700/90 text-white',
+    'Shoot': 'bg-red-600/90 hover:bg-red-700/90 text-white',
+    'Mock Shoot': 'bg-orange-500/90 hover:bg-orange-600/90 text-white',
+    'Sound Recording': 'bg-green-600/90 hover:bg-green-700/90 text-white',
+};
 
 const getEventPosition = (event: Event, hourWidth: number) => {
     const startHour = event.startTime.getHours();
@@ -414,7 +422,14 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
                     {!isLocationCollapsed && eventsInRow.map(event => {
                         const { left, width } = getEventPosition(event, hourWidth);
                         return (
-                            <div key={event.eventId} className="absolute h-[calc(100%-1rem)] top-1/2 -translate-y-1/2 p-2 bg-primary/90 text-primary-foreground rounded-lg shadow-md cursor-pointer hover:bg-primary z-10" style={{ left: `${left + 2}px`, width: `${width}px` }}>
+                            <div 
+                                key={event.eventId} 
+                                className={cn(
+                                    "absolute h-[calc(100%-1rem)] top-1/2 -translate-y-1/2 p-2 rounded-lg shadow-md cursor-pointer z-10",
+                                    labelColors[event.label]
+                                )} 
+                                style={{ left: `${left + 2}px`, width: `${width}px` }}
+                            >
                                 <p className="font-semibold text-sm truncate">{event.title}</p>
                                 <p className="text-xs opacity-90 truncate">{format(event.startTime, 'HH:mm')} - {format(event.endTime, 'HH:mm')}</p>
                             </div>

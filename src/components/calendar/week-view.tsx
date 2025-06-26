@@ -3,7 +3,7 @@
 
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { format, startOfWeek, addDays, eachDayOfInterval, startOfDay, addHours, isToday, isSaturday, isSunday, isSameDay } from 'date-fns';
-import { type Event } from '@/types';
+import { type Event, type CalendarEventLabel } from '@/types';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { mockEvents, mockHolidays } from '@/lib/mock-data';
@@ -13,6 +13,14 @@ import { ChevronsLeft, ChevronsRight } from 'lucide-react';
 const isHoliday = (day: Date) => {
     return mockHolidays.some(holiday => isSameDay(day, holiday));
 }
+
+const labelColors: Record<CalendarEventLabel, string> = {
+    'Event': 'bg-blue-600/80 hover:bg-blue-700/80 text-white',
+    'Rehearsal': 'bg-purple-600/80 hover:bg-purple-700/80 text-white',
+    'Shoot': 'bg-red-600/80 hover:bg-red-700/80 text-white',
+    'Mock Shoot': 'bg-orange-500/80 hover:bg-orange-600/80 text-white',
+    'Sound Recording': 'bg-green-600/80 hover:bg-green-700/80 text-white',
+};
 
 export function WeekView({ date, containerRef, zoomLevel }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit' }) {
     const [now, setNow] = useState<Date | null>(null);
@@ -171,7 +179,10 @@ export function WeekView({ date, containerRef, zoomLevel }: { date: Date, contai
                                         return (
                                             <div 
                                                 key={event.eventId} 
-                                                className="absolute left-1 right-1 p-1 bg-primary/80 text-primary-foreground rounded-md shadow-sm cursor-pointer hover:bg-primary"
+                                                className={cn(
+                                                    "absolute left-1 right-1 p-1 rounded-md shadow-sm cursor-pointer",
+                                                    labelColors[event.label]
+                                                )}
                                                 style={{ top: `${top}px`, height: `${height}px` }}
                                             >
                                                 <p className="font-semibold text-xs truncate">{event.title}</p>

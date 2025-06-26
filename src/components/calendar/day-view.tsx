@@ -3,7 +3,7 @@
 
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { format, addHours, startOfDay, isSaturday, isSunday, isSameDay, isToday } from 'date-fns';
-import { type Event } from '@/types';
+import { type Event, type CalendarEventLabel } from '@/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { mockEvents, mockHolidays } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
@@ -15,6 +15,22 @@ const isHoliday = (day: Date) => {
 
 const DEFAULT_HOUR_WIDTH_PX = 120;
 const LOCATION_LABEL_WIDTH_PX = 160;
+
+const labelColors: Record<CalendarEventLabel, string> = {
+    'Event': 'bg-blue-600/90 hover:bg-blue-700/90 text-white',
+    'Rehearsal': 'bg-purple-600/90 hover:bg-purple-700/90 text-white',
+    'Shoot': 'bg-red-600/90 hover:bg-red-700/90 text-white',
+    'Mock Shoot': 'bg-orange-500/90 hover:bg-orange-600/90 text-white',
+    'Sound Recording': 'bg-green-600/90 hover:bg-green-700/90 text-white',
+};
+
+const labelColorsReversed: Record<CalendarEventLabel, string> = {
+    'Event': 'bg-blue-600/80 hover:bg-blue-700/80 text-white',
+    'Rehearsal': 'bg-purple-600/80 hover:bg-purple-700/80 text-white',
+    'Shoot': 'bg-red-600/80 hover:bg-red-700/80 text-white',
+    'Mock Shoot': 'bg-orange-500/80 hover:bg-orange-600/80 text-white',
+    'Sound Recording': 'bg-green-600/80 hover:bg-green-700/80 text-white',
+};
 
 export function DayView({ date, containerRef, zoomLevel, axisView }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', axisView: 'standard' | 'reversed' }) {
     const [now, setNow] = useState<Date | null>(null);
@@ -185,7 +201,10 @@ export function DayView({ date, containerRef, zoomLevel, axisView }: { date: Dat
                         return (
                             <div 
                                 key={event.eventId} 
-                                className="absolute h-[calc(100%-1rem)] top-1/2 -translate-y-1/2 p-2 bg-primary/90 text-primary-foreground rounded-lg shadow-md cursor-pointer hover:bg-primary z-10"
+                                className={cn(
+                                    "absolute h-[calc(100%-1rem)] top-1/2 -translate-y-1/2 p-2 rounded-lg shadow-md cursor-pointer z-10",
+                                    labelColors[event.label]
+                                )}
                                 style={{ left: `${left + 2}px`, width: `${width}px` }}
                             >
                                 <p className="font-semibold text-sm truncate">{event.title}</p>
@@ -318,7 +337,10 @@ export function DayView({ date, containerRef, zoomLevel, axisView }: { date: Dat
                                     return (
                                         <div 
                                             key={event.eventId} 
-                                            className="absolute left-1 right-1 p-1 bg-primary/80 text-primary-foreground rounded-md shadow-sm cursor-pointer hover:bg-primary"
+                                            className={cn(
+                                                "absolute left-1 right-1 p-1 rounded-md shadow-sm cursor-pointer",
+                                                labelColorsReversed[event.label]
+                                            )}
                                             style={{ top: `${top}px`, height: `${height}px` }}
                                         >
                                             <p className="font-semibold text-xs truncate">{event.title}</p>

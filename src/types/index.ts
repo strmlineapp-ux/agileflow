@@ -30,9 +30,12 @@ export interface Task {
   lastUpdated: Date;
 }
 
+export type CalendarEventLabel = 'Event' | 'Rehearsal' | 'Shoot' | 'Mock Shoot' | 'Sound Recording';
+
 export interface Event {
   eventId: string;
   title: string;
+  label: CalendarEventLabel;
   description?: string;
   startTime: Date;
   endTime: Date;

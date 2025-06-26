@@ -1,5 +1,5 @@
 
-import { type Event, type User, type Task, type Notification } from '@/types';
+import { type Event, type User, type Task, type Notification, type CalendarEventLabel } from '@/types';
 
 export const mockUsers: User[] = [
     { userId: '1', displayName: 'Alice Johnson', email: 'alice@example.com', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Product Manager', location: 'New York, USA', phone: '123-456-7890', roles: ['Video Director', 'TD', 'Edit Events', 'Manage Checks'], permissions: ['Admin', 'Event Users', 'Events', 'Studio Productions'], directReports: ['2', '3'], theme: 'light', defaultCalendarView: 'production-schedule' },
@@ -30,6 +30,7 @@ export const mockEvents: Event[] = [
     { 
         eventId: '1', 
         title: 'Team Sync', 
+        label: 'Event',
         startTime: new Date(new Date().setHours(10, 0, 0, 0)), 
         endTime: new Date(new Date().setHours(11, 0, 0, 0)), 
         attendees: [], 
@@ -41,6 +42,7 @@ export const mockEvents: Event[] = [
     { 
         eventId: '2', 
         title: 'Design Review', 
+        label: 'Event',
         startTime: new Date(new Date().setHours(14, 0, 0, 0)), 
         endTime: new Date(new Date().setHours(15, 30, 0, 0)), 
         attendees: [], 
@@ -52,6 +54,7 @@ export const mockEvents: Event[] = [
     { 
         eventId: '3', 
         title: 'Project Kickoff', 
+        label: 'Rehearsal',
         startTime: new Date(new Date(new Date().setDate(new Date().getDate() + 1)).setHours(9, 0, 0, 0)), 
         endTime: new Date(new Date(new Date().setDate(new Date().getDate() + 1)).setHours(10, 0, 0, 0)), 
         attendees: [], 
@@ -63,6 +66,7 @@ export const mockEvents: Event[] = [
     { 
         eventId: '4', 
         title: '1-on-1 with Bob', 
+        label: 'Shoot',
         startTime: new Date(new Date(new Date().setDate(new Date().getDate() - 1)).setHours(16, 0, 0, 0)), 
         endTime: new Date(new Date(new Date().setDate(new Date().getDate() - 1)).setHours(16, 30, 0, 0)), 
         attendees: [], 
@@ -74,6 +78,7 @@ export const mockEvents: Event[] = [
      { 
         eventId: '5', 
         title: 'All-hands meeting', 
+        label: 'Sound Recording',
         startTime: new Date(new Date().getFullYear(), new Date().getMonth(), 15, 11, 0, 0),
         endTime: new Date(new Date().getFullYear(), new Date().getMonth(), 15, 12, 0, 0),
         attendees: [], 
