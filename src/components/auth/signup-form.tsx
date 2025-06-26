@@ -70,7 +70,7 @@ AgileFlow Notifier`;
       subject
     )}&body=${encodeURIComponent(body)}`;
 
-    window.location.href = mailtoLink;
+    window.open(mailtoLink);
 
     setIsConfirming(false);
     setIsLoading(false);
