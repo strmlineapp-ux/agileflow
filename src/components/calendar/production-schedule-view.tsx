@@ -488,13 +488,13 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
                                         <CardContent className="p-0 relative">
                                             {/* Working Hours Backgrounds */}
                                             {isWeekend || isDayHoliday ? (
-                                                <div className="absolute inset-0 bg-slate-200 dark:bg-slate-800 z-0" style={{ left: `${LOCATION_LABEL_WIDTH_PX}px` }} title="Overtime" />
+                                                <div className="absolute inset-0 bg-neutral-200 dark:bg-neutral-800 z-0" style={{ left: `${LOCATION_LABEL_WIDTH_PX}px` }} title="Overtime" />
                                             ) : (
                                                 <>
-                                                    <div className="absolute inset-y-0 bg-slate-200 dark:bg-slate-800 z-0" style={{ left: `${LOCATION_LABEL_WIDTH_PX}px`, width: `${8 * hourWidth}px` }} title="Overtime" />
-                                                    <div className="absolute inset-y-0 bg-slate-100 dark:bg-slate-800/50 z-0" style={{ left: `${LOCATION_LABEL_WIDTH_PX + 8 * hourWidth}px`, width: `${1 * hourWidth}px` }} title="Extended Working Hours" />
-                                                    <div className="absolute inset-y-0 bg-slate-100 dark:bg-slate-800/50 z-0" style={{ left: `${LOCATION_LABEL_WIDTH_PX + 18 * hourWidth}px`, width: `${2 * hourWidth}px` }} title="Extended Working Hours" />
-                                                    <div className="absolute inset-y-0 bg-slate-200 dark:bg-slate-800 z-0" style={{ left: `${LOCATION_LABEL_WIDTH_PX + 20 * hourWidth}px`, width: `${4 * hourWidth}px` }} title="Overtime" />
+                                                    <div className="absolute inset-y-0 bg-neutral-200 dark:bg-neutral-800 z-0" style={{ left: `${LOCATION_LABEL_WIDTH_PX}px`, width: `${8 * hourWidth}px` }} title="Overtime" />
+                                                    <div className="absolute inset-y-0 bg-neutral-100 dark:bg-neutral-900 z-0" style={{ left: `${LOCATION_LABEL_WIDTH_PX + 8 * hourWidth}px`, width: `${1 * hourWidth}px` }} title="Extended Working Hours" />
+                                                    <div className="absolute inset-y-0 bg-neutral-100 dark:bg-neutral-900 z-0" style={{ left: `${LOCATION_LABEL_WIDTH_PX + 18 * hourWidth}px`, width: `${2 * hourWidth}px` }} title="Extended Working Hours" />
+                                                    <div className="absolute inset-y-0 bg-neutral-200 dark:bg-neutral-800 z-0" style={{ left: `${LOCATION_LABEL_WIDTH_PX + 20 * hourWidth}px`, width: `${4 * hourWidth}px` }} title="Overtime" />
                                                 </>
                                             )}
                                             
