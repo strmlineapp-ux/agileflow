@@ -233,15 +233,24 @@ export function DayView({ date, containerRef, zoomLevel, axisView }: { date: Dat
                     <CardContent className="p-0 relative">
                          {/* Working Hours Backgrounds */}
                         {isWeekend || isDayHoliday ? (
-                            <div className="absolute inset-0 bg-secondary z-0" style={{ left: `${LOCATION_LABEL_WIDTH_PX}px` }} title="Overtime" />
+                            <div className="absolute inset-0 bg-secondary/50 z-0" style={{ left: `${LOCATION_LABEL_WIDTH_PX}px` }} title="Overtime" />
                         ) : (
                             <>
-                                <div className="absolute inset-y-0 bg-secondary z-0" style={{ left: `${LOCATION_LABEL_WIDTH_PX}px`, width: `${8 * hourWidth}px` }} title="Overtime" />
+                                <div className="absolute inset-y-0 bg-secondary/50 z-0" style={{ left: `${LOCATION_LABEL_WIDTH_PX}px`, width: `${8 * hourWidth}px` }} title="Overtime" />
                                 <div className="absolute inset-y-0 bg-muted z-0" style={{ left: `${LOCATION_LABEL_WIDTH_PX + 8 * hourWidth}px`, width: `${1 * hourWidth}px` }} title="Extended Working Hours" />
                                 <div className="absolute inset-y-0 bg-muted z-0" style={{ left: `${LOCATION_LABEL_WIDTH_PX + 18 * hourWidth}px`, width: `${2 * hourWidth}px` }} title="Extended Working Hours" />
-                                <div className="absolute inset-y-0 bg-secondary z-0" style={{ left: `${LOCATION_LABEL_WIDTH_PX + 20 * hourWidth}px`, width: `${4 * hourWidth}px` }} title="Overtime" />
+                                <div className="absolute inset-y-0 bg-secondary/50 z-0" style={{ left: `${LOCATION_LABEL_WIDTH_PX + 20 * hourWidth}px`, width: `${4 * hourWidth}px` }} title="Overtime" />
                             </>
                         )}
+                        {/* Lunch Break Cue */}
+                        <div
+                            className="absolute inset-y-0 lunch-break-pattern z-0 pointer-events-none"
+                            style={{
+                                left: `${LOCATION_LABEL_WIDTH_PX + 12 * hourWidth}px`,
+                                width: `${2.5 * hourWidth}px`
+                            }}
+                            title="Lunch Break"
+                        />
                         
                         {allLocations.map((location, index) => renderLocationRow(location, index === allLocations.length - 1, index))}
                         
@@ -280,15 +289,24 @@ export function DayView({ date, containerRef, zoomLevel, axisView }: { date: Dat
                         <div className="relative">
                              {/* Working Hours Backgrounds */}
                             {isWeekend || isDayHoliday ? (
-                                <div className="absolute inset-0 bg-secondary z-0" title="Overtime" />
+                                <div className="absolute inset-0 bg-secondary/50 z-0" title="Overtime" />
                             ) : (
                                 <>
-                                    <div className="absolute inset-x-0 top-0 bg-secondary z-0" style={{ height: `${8 * hourHeight}px` }} title="Overtime" />
+                                    <div className="absolute inset-x-0 top-0 bg-secondary/50 z-0" style={{ height: `${8 * hourHeight}px` }} title="Overtime" />
                                     <div className="absolute inset-x-0 bg-muted z-0" style={{ top: `${8 * hourHeight}px`, height: `${1 * hourHeight}px` }} title="Extended Working Hours" />
                                     <div className="absolute inset-x-0 bg-muted z-0" style={{ top: `${18 * hourHeight}px`, height: `${2 * hourHeight}px` }} title="Extended Working Hours" />
-                                    <div className="absolute inset-x-0 bottom-0 bg-secondary z-0" style={{ top: `${20 * hourHeight}px`, bottom: '0px' }} title="Overtime" />
+                                    <div className="absolute inset-x-0 bottom-0 bg-secondary/50 z-0" style={{ top: `${20 * hourHeight}px`, bottom: '0px' }} title="Overtime" />
                                 </>
                             )}
+                             {/* Lunch Break Cue */}
+                            <div
+                                className="absolute inset-x-0 lunch-break-pattern z-0 pointer-events-none"
+                                style={{
+                                    top: `${12 * hourHeight}px`,
+                                    height: `${2.5 * hourHeight}px`
+                                }}
+                                title="Lunch Break"
+                            />
                             {/* Grid lines */}
                             {hours.map(hour => (
                                 <div key={hour} className="border-b" style={{ height: `${hourHeight}px` }}></div>

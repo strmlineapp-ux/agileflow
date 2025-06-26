@@ -488,15 +488,24 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
                                         <CardContent className="p-0 relative">
                                             {/* Working Hours Backgrounds */}
                                             {isWeekend || isDayHoliday ? (
-                                                <div className="absolute inset-0 bg-secondary z-0" style={{ left: `${LOCATION_LABEL_WIDTH_PX}px` }} title="Overtime" />
+                                                <div className="absolute inset-0 bg-secondary/50 z-0" style={{ left: `${LOCATION_LABEL_WIDTH_PX}px` }} title="Overtime" />
                                             ) : (
                                                 <>
-                                                    <div className="absolute inset-y-0 bg-secondary z-0" style={{ left: `${LOCATION_LABEL_WIDTH_PX}px`, width: `${8 * hourWidth}px` }} title="Overtime" />
+                                                    <div className="absolute inset-y-0 bg-secondary/50 z-0" style={{ left: `${LOCATION_LABEL_WIDTH_PX}px`, width: `${8 * hourWidth}px` }} title="Overtime" />
                                                     <div className="absolute inset-y-0 bg-muted z-0" style={{ left: `${LOCATION_LABEL_WIDTH_PX + 8 * hourWidth}px`, width: `${1 * hourWidth}px` }} title="Extended Working Hours" />
                                                     <div className="absolute inset-y-0 bg-muted z-0" style={{ left: `${LOCATION_LABEL_WIDTH_PX + 18 * hourWidth}px`, width: `${2 * hourWidth}px` }} title="Extended Working Hours" />
-                                                    <div className="absolute inset-y-0 bg-secondary z-0" style={{ left: `${LOCATION_LABEL_WIDTH_PX + 20 * hourWidth}px`, width: `${4 * hourWidth}px` }} title="Overtime" />
+                                                    <div className="absolute inset-y-0 bg-secondary/50 z-0" style={{ left: `${LOCATION_LABEL_WIDTH_PX + 20 * hourWidth}px`, width: `${4 * hourWidth}px` }} title="Overtime" />
                                                 </>
                                             )}
+                                            {/* Lunch Break Cue */}
+                                            <div
+                                                className="absolute inset-y-0 lunch-break-pattern z-0 pointer-events-none"
+                                                style={{
+                                                    left: `${LOCATION_LABEL_WIDTH_PX + 12 * hourWidth}px`,
+                                                    width: `${2.5 * hourWidth}px`
+                                                }}
+                                                title="Lunch Break"
+                                            />
                                             
                                             {allDayLocations.map((location, index) => renderLocationRow(
                                                 dayIso,
