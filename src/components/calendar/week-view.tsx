@@ -14,9 +14,10 @@ const isHoliday = (day: Date) => {
     return mockHolidays.some(holiday => isSameDay(day, holiday));
 }
 
-export function WeekView({ date, containerRef }: { date: Date, containerRef: React.RefObject<HTMLDivElement> }) {
+export function WeekView({ date, containerRef, zoomLevel }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit' }) {
     const [now, setNow] = useState<Date | null>(null);
     const nowMarkerRef = useRef<HTMLDivElement>(null);
+    const [hourHeight, setHourHeight] = useState(60);
 
     useEffect(() => {
         const updateNow = () => setNow(new Date());
@@ -26,8 +27,29 @@ export function WeekView({ date, containerRef }: { date: Date, containerRef: Rea
     }, []);
 
     useEffect(() => {
+        if (!containerRef.current) return;
+        const container = containerRef.current;
+    
+        if (zoomLevel === 'fit') {
+            const availableHeight = container.offsetHeight;
+            // Fit 8am to 8pm (12 hours) in the view
+            const newHourHeight = availableHeight / 12;
+            setHourHeight(newHourHeight);
+            // Scroll to 8am
+            container.scrollTo({ top: 8 * newHourHeight, behavior: 'smooth' });
+        } else { // zoomLevel === 'normal'
+            setHourHeight(60);
+             if (weekDays.some(isToday) && now) {
+                // Scroll to current time
+                const scrollTop = (now.getHours() -1) * 60;
+                 container.scrollTo({ top: scrollTop, behavior: 'smooth' });
+            }
+        }
+      }, [zoomLevel, containerRef, date, now]);
+
+    useEffect(() => {
         const weekDays = eachDayOfInterval({ start: startOfWeek(date, { weekStartsOn: 1 }), end: addDays(startOfWeek(date, { weekStartsOn: 1 }), 6) });
-        if (weekDays.some(isToday) && containerRef.current && nowMarkerRef.current) {
+        if (weekDays.some(isToday) && containerRef.current && nowMarkerRef.current && zoomLevel === 'normal') {
             const container = containerRef.current;
             const marker = nowMarkerRef.current;
             const scrollTop = marker.offsetTop - (container.offsetHeight / 2);
@@ -36,7 +58,7 @@ export function WeekView({ date, containerRef }: { date: Date, containerRef: Rea
                 behavior: 'smooth',
             });
         }
-    }, [date, now, containerRef]);
+    }, [date, now, containerRef, zoomLevel]);
 
     const weekStart = startOfWeek(date, { weekStartsOn: 1 });
     const weekDays = eachDayOfInterval({ start: weekStart, end: addDays(weekStart, 6) });
@@ -56,14 +78,14 @@ export function WeekView({ date, containerRef }: { date: Date, containerRef: Rea
         const endHour = event.endTime.getHours();
         const endMinute = event.endTime.getMinutes();
 
-        const top = (startHour + startMinute / 60) * 60; // 60px per hour
-        const height = Math.max(((endHour + endMinute / 60) - (startHour + startMinute / 60)) * 60, 30);
+        const top = (startHour + startMinute / 60) * hourHeight; 
+        const height = Math.max(((endHour + endMinute / 60) - (startHour + startMinute / 60)) * hourHeight, 30);
         return { top, height };
     }
     
     const calculateCurrentTimePosition = () => {
         if (!now) return 0;
-        return (now.getHours() + now.getMinutes() / 60) * 60;
+        return (now.getHours() + now.getMinutes() / 60) * hourHeight;
     }
 
     const gridColsClass = showWeekends ? 'grid-cols-[auto,1fr,1fr,1fr,1fr,1fr,1fr,1fr]' : 'grid-cols-[auto,1fr,1fr,1fr,1fr,1fr]';
@@ -106,7 +128,7 @@ export function WeekView({ date, containerRef }: { date: Date, containerRef: Rea
                     {/* Timeline */}
                     <div className="w-20 border-r">
                         {hours.map(hour => (
-                            <div key={hour} className="h-[60px] relative text-right pr-2">
+                            <div key={hour} className="relative text-right pr-2" style={{ height: `${hourHeight}px` }}>
                                 <span className="text-xs text-muted-foreground relative -top-2">{format(addHours(startOfDay(date), hour), 'HH:00')}</span>
                             </div>
                         ))}
@@ -120,7 +142,7 @@ export function WeekView({ date, containerRef }: { date: Date, containerRef: Rea
                             <div key={day.toString()} className={cn("relative border-l", { "bg-muted/50": isWeekend || isDayHoliday })}>
                                 {/* Grid lines */}
                                 {hours.map(hour => (
-                                    <div key={hour} className="h-[60px] border-b"></div>
+                                    <div key={hour} className="border-b" style={{ height: `${hourHeight}px` }}></div>
                                 ))}
                                 {/* Events */}
                                 <div className="absolute inset-0">

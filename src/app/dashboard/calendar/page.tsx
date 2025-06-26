@@ -52,7 +52,7 @@ export default function CalendarPage() {
 
   const goToToday = () => {
     setCurrentDate(new Date());
-    if (view === 'production-schedule') {
+    if (view === 'production-schedule' || view === 'day' || view === 'week') {
       setZoomLevel('normal');
     }
   };
@@ -99,7 +99,7 @@ export default function CalendarPage() {
             <h1 className="font-headline text-2xl font-semibold ml-4 flex items-baseline gap-3">{getTitle()}</h1>
         </div>
         <div className="flex items-center gap-2">
-            {view === 'production-schedule' && (
+            {(view === 'production-schedule' || view === 'day' || view === 'week') && (
                 <Button variant="outline" size="icon" onClick={() => setZoomLevel(zoomLevel === 'normal' ? 'fit' : 'normal')}>
                     {zoomLevel === 'normal' ? <Shrink className="h-4 w-4" /> : <Expand className="h-4 w-4" />}
                     <span className="sr-only">{zoomLevel === 'normal' ? 'Fit to view' : 'Reset view'}</span>
@@ -118,10 +118,10 @@ export default function CalendarPage() {
             <MonthView date={currentDate} containerRef={monthViewContainerRef} />
         </TabsContent>
         <TabsContent value="week" ref={weekViewContainerRef} className="absolute inset-0 overflow-y-auto">
-            <WeekView date={currentDate} containerRef={weekViewContainerRef} />
+            <WeekView date={currentDate} containerRef={weekViewContainerRef} zoomLevel={zoomLevel} />
         </TabsContent>
         <TabsContent value="day" ref={dayViewContainerRef} className="absolute inset-0 overflow-auto">
-            <DayView date={currentDate} containerRef={dayViewContainerRef} />
+            <DayView date={currentDate} containerRef={dayViewContainerRef} zoomLevel={zoomLevel} />
         </TabsContent>
         <TabsContent value="production-schedule" ref={productionScheduleViewContainerRef} className="absolute inset-0 overflow-auto">
             <ProductionScheduleView date={currentDate} containerRef={productionScheduleViewContainerRef} zoomLevel={zoomLevel} />

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useMemo, useState, useRef } from 'react';
@@ -12,13 +13,14 @@ const isHoliday = (day: Date) => {
     return mockHolidays.some(holiday => isSameDay(day, holiday));
 }
 
-const HOUR_WIDTH_PX = 120;
+const DEFAULT_HOUR_WIDTH_PX = 120;
 const LOCATION_LABEL_WIDTH_PX = 160;
 
-export function DayView({ date, containerRef }: { date: Date, containerRef: React.RefObject<HTMLDivElement> }) {
+export function DayView({ date, containerRef, zoomLevel }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit' }) {
     const [now, setNow] = useState<Date | null>(null);
     const nowMarkerRef = useRef<HTMLDivElement>(null);
     const [collapsedLocations, setCollapsedLocations] = useState<Set<string>>(new Set());
+    const [hourWidth, setHourWidth] = useState(DEFAULT_HOUR_WIDTH_PX);
 
     useEffect(() => {
         const updateNow = () => setNow(new Date());
@@ -28,7 +30,32 @@ export function DayView({ date, containerRef }: { date: Date, containerRef: Reac
     }, []);
 
     useEffect(() => {
-        if (isSameDay(date, new Date()) && containerRef.current && nowMarkerRef.current) {
+        if (!containerRef.current) return;
+        const container = containerRef.current;
+    
+        if (zoomLevel === 'fit') {
+            const availableWidth = container.offsetWidth;
+            // Fit 8am to 8pm (12 hours) in the view
+            const newHourWidth = (availableWidth - LOCATION_LABEL_WIDTH_PX) / 12; 
+            setHourWidth(newHourWidth);
+            const scrollLeft = 8 * newHourWidth; // Scroll to 8am
+            container.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+        } else { // zoomLevel === 'normal'
+            setHourWidth(DEFAULT_HOUR_WIDTH_PX);
+            if (isSameDay(date, new Date()) && now) {
+                // Scroll to current time
+                const scrollLeft = (now.getHours() -1) * DEFAULT_HOUR_WIDTH_PX;
+                 container.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+            } else {
+                // Scroll to 7am by default
+                container.scrollTo({ left: 7 * DEFAULT_HOUR_WIDTH_PX, behavior: 'smooth' });
+            }
+        }
+      }, [zoomLevel, containerRef, date, now]);
+
+
+    useEffect(() => {
+        if (isSameDay(date, new Date()) && containerRef.current && nowMarkerRef.current && zoomLevel === 'normal') {
             const container = containerRef.current;
             const marker = nowMarkerRef.current;
             const scrollLeft = marker.offsetLeft - (container.offsetWidth / 2);
@@ -37,7 +64,7 @@ export function DayView({ date, containerRef }: { date: Date, containerRef: Reac
                 behavior: 'smooth',
             });
         }
-    }, [date, now, containerRef]);
+    }, [date, now, containerRef, zoomLevel]);
 
 
     const hours = Array.from({ length: 24 }, (_, i) => i);
@@ -83,8 +110,8 @@ export function DayView({ date, containerRef }: { date: Date, containerRef: Reac
         const endHour = event.endTime.getHours();
         const endMinute = event.endTime.getMinutes();
 
-        const left = (startHour + startMinute / 60) * HOUR_WIDTH_PX;
-        const width = Math.max(((endHour + endMinute / 60) - (startHour + startMinute / 60)) * HOUR_WIDTH_PX - 4, 20);
+        const left = (startHour + startMinute / 60) * hourWidth;
+        const width = Math.max(((endHour + endMinute / 60) - (startHour + startMinute / 60)) * hourWidth - 4, 20);
         return { left, width };
     }
 
@@ -94,7 +121,7 @@ export function DayView({ date, containerRef }: { date: Date, containerRef: Reac
     
     const calculateCurrentTimePosition = () => {
         if (!now) return 0;
-        return (now.getHours() + now.getMinutes() / 60) * HOUR_WIDTH_PX;
+        return (now.getHours() + now.getMinutes() / 60) * hourWidth;
     }
     
     const renderLocationRow = (location: string, isLast: boolean) => {
@@ -112,7 +139,7 @@ export function DayView({ date, containerRef }: { date: Date, containerRef: Reac
                 <div className={cn("relative flex-1", isCollapsed ? "h-10" : "h-20")}>
                     {/* Vertical Grid lines for this row */}
                     {hours.slice(0, 23).map(hour => (
-                        <div key={`line-${hour}`} className="absolute top-0 bottom-0 border-r" style={{ left: `${(hour + 1) * HOUR_WIDTH_PX}px` }}></div>
+                        <div key={`line-${hour}`} className="absolute top-0 bottom-0 border-r" style={{ left: `${(hour + 1) * hourWidth}px` }}></div>
                     ))}
                     {/* Events for this row */}
                     {!isCollapsed && eventsInRow.map(event => {
@@ -136,11 +163,11 @@ export function DayView({ date, containerRef }: { date: Date, containerRef: Reac
     if (Object.keys(groupedEvents).length === 0) {
         return (
              <Card>
-                <div style={{ width: `${LOCATION_LABEL_WIDTH_PX + (24 * HOUR_WIDTH_PX)}px`}}>
+                <div style={{ width: `${LOCATION_LABEL_WIDTH_PX + (24 * hourWidth)}px`}}>
                      <CardHeader className="p-0 border-b sticky top-0 bg-card z-20 flex flex-row">
                         <div className="w-[160px] shrink-0 border-r p-2 flex items-center font-medium text-sm sticky left-0 bg-card z-30">Location</div>
                         {hours.map(hour => (
-                            <div key={hour} className="w-[120px] shrink-0 text-left p-2 border-r">
+                            <div key={hour} className="shrink-0 text-left p-2 border-r" style={{ width: `${hourWidth}px` }}>
                                 <span className="text-xs text-muted-foreground">{format(addHours(startOfDay(date), hour), 'HH:mm')}</span>
                             </div>
                         ))}
@@ -155,11 +182,11 @@ export function DayView({ date, containerRef }: { date: Date, containerRef: Reac
 
     return (
         <Card>
-            <div style={{ width: `${LOCATION_LABEL_WIDTH_PX + (24 * HOUR_WIDTH_PX)}px`}}>
+            <div style={{ width: `${LOCATION_LABEL_WIDTH_PX + (24 * hourWidth)}px`}}>
                 <CardHeader className="p-0 border-b sticky top-0 bg-card z-20 flex flex-row">
                     <div className="w-[160px] shrink-0 border-r p-2 flex items-center font-medium text-sm sticky left-0 bg-card z-30">Location</div>
                     {hours.map(hour => (
-                        <div key={hour} className="w-[120px] shrink-0 text-left p-2 border-r">
+                        <div key={hour} className="shrink-0 text-left p-2 border-r" style={{ width: `${hourWidth}px` }}>
                             <span className="text-xs text-muted-foreground">{format(addHours(startOfDay(date), hour), 'HH:mm')}</span>
                         </div>
                     ))}

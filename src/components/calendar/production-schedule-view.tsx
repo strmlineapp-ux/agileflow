@@ -300,6 +300,8 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
         );
     };
 
+    const extraCheckLocations = ["Training Room", "Locke", "Apgar"];
+
     return (
         <div className="space-y-4">
             {weeklyScheduleData.map(({ day, groupedEvents, allDayLocations }) => {
@@ -312,6 +314,67 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
                 return (
                     <div key={dayIso} ref={isDayToday ? todayCardRef : null}>
                         <Card className="overflow-hidden">
+                             <div className="p-2 border-b bg-card flex flex-wrap items-center gap-2">
+                                {extraCheckLocations.map(location => {
+                                    const assignedUserId = dailyCheckAssignments[dayIso]?.[location];
+                                    const assignedUser = users.find(u => u.userId === assignedUserId);
+                                    return (
+                                        <Popover key={location}>
+                                            <PopoverTrigger asChild>
+                                                <Button 
+                                                    variant={assignedUser ? "secondary" : "outline"} 
+                                                    size="sm" 
+                                                    className="rounded-full h-8"
+                                                >
+                                                    {location}
+                                                    {assignedUser ? (
+                                                        <span className="ml-2 font-normal text-muted-foreground">({assignedUser.displayName.split(' ')[0]} {assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''})</span>
+                                                    ) : (
+                                                        <PlusCircle className="ml-2 h-4 w-4" />
+                                                    )}
+                                                </Button>
+                                            </PopoverTrigger>
+                                             <PopoverContent className="w-56 p-0">
+                                                <div className="grid gap-1">
+                                                    <div className="p-2 border-b">
+                                                        <p className="text-sm font-medium text-center">Assign User to {location}</p>
+                                                    </div>
+                                                    <div className="flex flex-col gap-1 max-h-48 overflow-y-auto p-1">
+                                                        {dailyCheckUsers.length > 0 ? dailyCheckUsers.map(user => (
+                                                            <Button
+                                                                key={user.userId}
+                                                                variant="ghost"
+                                                                className="justify-start h-8"
+                                                                onClick={() => handleAssignCheck(dayIso, location, user.userId)}
+                                                            >
+                                                                <Avatar className="h-6 w-6 mr-2">
+                                                                    <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
+                                                                    <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                                                </Avatar>
+                                                                <span className="text-sm">{user.displayName}</span>
+                                                            </Button>
+                                                        )) : (
+                                                            <p className="text-sm text-muted-foreground text-center p-2">No users with "ES Daily Checks" role.</p>
+                                                        )}
+                                                    </div>
+                                                    {assignedUser && (
+                                                        <div className="p-1 border-t">
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                className="w-full text-destructive hover:text-destructive"
+                                                                onClick={() => handleAssignCheck(dayIso, location, null)}
+                                                            >
+                                                                Unassign
+                                                            </Button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </PopoverContent>
+                                        </Popover>
+                                    )
+                                })}
+                            </div>
                             <div 
                                 className="overflow-x-auto" 
                                 ref={el => dayScrollerRefs.current.set(dayIso, el)}
