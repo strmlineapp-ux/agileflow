@@ -358,7 +358,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
             const todayElement = todayCardRef.current;
             container.scrollTo({ top: todayElement.offsetTop - 20, behavior: 'smooth' });
 
-            if (nowMarkerRef.current && zoomLevel === 'normal') {
+            if (nowMarkerRef.current && zoomLevel === 'normal' && now) {
                 const todayIso = weekDays.find(isToday)!.toISOString();
                 const scroller = dayScrollerRefs.current.get(todayIso);
                 if (scroller) {
@@ -367,7 +367,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
                 }
             }
         }
-    }, [date, containerRef, isCurrentWeek, now, zoomLevel, weekDays]);
+    }, [date, containerRef, isCurrentWeek, zoomLevel, weekDays, now]);
 
     // Zoom handling
     useEffect(() => {
@@ -378,14 +378,12 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
         const newHourWidth = isFit ? (firstScroller.offsetWidth - LOCATION_LABEL_WIDTH_PX) / 12 : DEFAULT_HOUR_WIDTH_PX;
         setHourWidth(newHourWidth);
 
-        const scrollLeft = isFit ? 8 * newHourWidth : (new Date().getHours() - 1) * newHourWidth;
-
         dayScrollerRefs.current.forEach((scroller, dayIso) => {
             let targetScroll = 7 * newHourWidth; // Default for normal zoom
             if (isFit) {
                 targetScroll = 8 * newHourWidth;
-            } else if (isToday(new Date(dayIso))) {
-                targetScroll = (now?.getHours() ?? 8 - 1) * newHourWidth;
+            } else if (isToday(new Date(dayIso)) && now) {
+                targetScroll = (now.getHours() - 1) * newHourWidth;
             }
             scroller?.scrollTo({ left: targetScroll, behavior: 'smooth' });
         });
@@ -474,7 +472,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
                 <PopoverContent className="w-56 p-0">
                     <div className="p-2 border-b"><p className="text-sm font-medium text-center">Assign User</p></div>
                     <div className="flex flex-col gap-1 max-h-48 overflow-y-auto p-1">
-                        {dailyCheckUsers.length > 0 ? dailyCheckUsers.map(user => (
+                        {dailyCheckUsers.length > 0 ? dailyCheckUsers.filter(user => user.userId !== assignedUserId).map(user => (
                             <Button key={user.userId} variant="ghost" className="justify-start h-8" onClick={() => handleAssignCheck(dayIso, location, user.userId)}>
                                 <Avatar className="h-6 w-6 mr-2"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
                                 <span className="text-sm">{user.displayName}</span>
@@ -537,7 +535,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
                                                 <PopoverContent className="w-56 p-0">
                                                     <div className="p-2 border-b"><p className="text-sm font-medium text-center">Assign User to {location}</p></div>
                                                     <div className="flex flex-col gap-1 max-h-48 overflow-y-auto p-1">
-                                                        {dailyCheckUsers.length > 0 ? dailyCheckUsers.map(user => (
+                                                        {dailyCheckUsers.length > 0 ? dailyCheckUsers.filter(user => user.userId !== assignedUserId).map(user => (
                                                             <Button key={user.userId} variant="ghost" className="justify-start h-8" onClick={() => handleAssignCheck(dayIso, location, user.userId)}>
                                                                 <Avatar className="h-6 w-6 mr-2"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
                                                                 <span className="text-sm">{user.displayName}</span>
