@@ -244,43 +244,48 @@ export function UserManagement() {
                                                         </div>
                                                     </div>
                                                     
-                                                    <div>
-                                                        <p className="font-medium text-sm mb-2">Permissions</p>
-                                                        <div className="grid grid-cols-2 gap-2">
-                                                            {allPermissions.map(permission => {
-                                                                if (permission !== 'Admin' && !canSeePermissions) {
-                                                                    return null;
-                                                                }
-                                                                return (
-                                                                    <div key={permission} className="flex items-center space-x-2">
-                                                                        <Checkbox
-                                                                            id={`${user.userId}-${permission}`}
-                                                                            checked={user.permissions?.includes(permission)}
-                                                                            disabled={permission === 'Admin'}
-                                                                            onCheckedChange={(checked) => {
-                                                                                if (permission !== 'Admin') {
-                                                                                    handlePermissionChange(user.userId, permission, !!checked);
-                                                                                }
-                                                                            }}
-                                                                        />
-                                                                        <Label
-                                                                            htmlFor={`${user.userId}-${permission}`}
-                                                                            className="text-sm font-normal flex items-center gap-1 cursor-pointer"
-                                                                            onClick={() => {
-                                                                                if (permission === 'Admin') {
-                                                                                    setEditingAdminForUser(user);
-                                                                                    setIs2faDialogOpen(true);
-                                                                                }
-                                                                            }}
-                                                                        >
-                                                                            {permission}
-                                                                            {permission === 'Admin' && <Lock className="h-3 w-3 text-muted-foreground" />}
-                                                                        </Label>
-                                                                    </div>
-                                                                );
-                                                            })}
+                                                    {(canSeePermissions || viewAsUser.userId === user.userId) && (
+                                                        <div>
+                                                            <p className="font-medium text-sm mb-2">Permissions</p>
+                                                            <div className="grid grid-cols-2 gap-2">
+                                                                {allPermissions.map(permission => {
+                                                                    if (!canSeePermissions && permission !== 'Admin') {
+                                                                        return null;
+                                                                    }
+                                                                    
+                                                                    const isCheckboxDisabled = permission === 'Admin' || !canSeePermissions;
+
+                                                                    return (
+                                                                        <div key={permission} className="flex items-center space-x-2">
+                                                                            <Checkbox
+                                                                                id={`${user.userId}-${permission}`}
+                                                                                checked={user.permissions?.includes(permission)}
+                                                                                disabled={isCheckboxDisabled}
+                                                                                onCheckedChange={(checked) => {
+                                                                                    if (permission !== 'Admin' && canSeePermissions) {
+                                                                                        handlePermissionChange(user.userId, permission, !!checked);
+                                                                                    }
+                                                                                }}
+                                                                            />
+                                                                            <Label
+                                                                                htmlFor={`${user.userId}-${permission}`}
+                                                                                className="text-sm font-normal flex items-center gap-1 cursor-pointer"
+                                                                                onClick={() => {
+                                                                                    if (permission === 'Admin' && canSeePermissions) {
+                                                                                        setEditingAdminForUser(user);
+                                                                                        setIs2faDialogOpen(true);
+                                                                                    }
+                                                                                }}
+                                                                            >
+                                                                                {permission}
+                                                                                {permission === 'Admin' && <Lock className="h-3 w-3 text-muted-foreground" />}
+                                                                            </Label>
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
                                                         </div>
-                                                    </div>
+                                                    )}
 
                                                     <div>
                                                         <p className="font-medium text-sm mb-2">Skills</p>
