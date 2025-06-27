@@ -1,29 +1,21 @@
 
-import { type Event, type User, type Task, type Notification, type CalendarEventLabel } from '@/types';
+import { type Event, type User, type Task, type Notification, type CalendarEventLabel, type RoleCategories } from '@/types';
 
-const allAssignableRoles: string[] = [
-    '1st AD',
-    'Admin',
-    'Audio',
-    'Camera',
-    'Content Op',
-    'D.o.P.',
-    'ES Daily Checks',
-    'ES Operator',
-    'Edit Events',
-    'Live Event Team Admin',
-    'Live Events',
-    'Manage Checks',
-    'Post-Production',
-    'Production',
-    'Production Team Admin',
-    'Service Delivery Manager',
-    'Studio Production Team Admin',
-    'Studio Productions',
-    'TD',
-    'Video Director'
-].sort();
-
+export const initialRoleCategories: RoleCategories = {
+    "Studio Productions": [
+      'Edit Events', 'Post-Production', 'Studio Productions', 'Studio Productions Team Admin', 'Video Director'
+    ],
+    "Production": [
+      'Production', 'Production Team Admin'
+    ],
+    "Live Events": [
+      'TD', 'Manage Checks', 'Live Events', 'Live Events Team Admin', 'ES Operator', 'ES Daily Checks', 'Content Op', 'Camera', 'Audio', '1st AD'
+    ],
+    "System": [ // Not managed by teams
+        'Admin',
+        'Service Delivery Manager'
+    ]
+};
 
 export const mockUsers: User[] = [
     { 
@@ -108,8 +100,6 @@ export const mockUsers: User[] = [
         defaultCalendarView: 'production-schedule' 
     },
 ];
-
-export const mockRoles: string[] = allAssignableRoles;
 
 export const mockTasks: Task[] = [
   { taskId: '1', title: 'Design new dashboard layout', assignedTo: [mockUsers[0]], dueDate: new Date(), priority: 'P1', status: 'in_progress', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },

@@ -14,7 +14,7 @@ import { PlusCircle, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 export function TeamRoleManagement({ teamTitle }: { teamTitle: string }) {
-  const { allRoles, updateAllRoles } = useUser();
+  const { roleCategories, updateRoleCategories, allRoles } = useUser();
   const { toast } = useToast();
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -24,6 +24,8 @@ export function TeamRoleManagement({ teamTitle }: { teamTitle: string }) {
   const [roleToEdit, setRoleToEdit] = useState<string | null>(null);
   const [roleToDelete, setRoleToDelete] = useState<string | null>(null);
   const [newRoleName, setNewRoleName] = useState('');
+
+  const rolesForThisTeam = roleCategories[teamTitle] || [];
 
   const openAddDialog = () => {
     setNewRoleName('');
@@ -42,31 +44,36 @@ export function TeamRoleManagement({ teamTitle }: { teamTitle: string }) {
   };
 
   const handleAddRole = () => {
-    if (newRoleName && !allRoles.includes(newRoleName.trim())) {
-      const updatedRoles = [...allRoles, newRoleName.trim()].sort();
-      updateAllRoles(updatedRoles);
-      toast({ title: "Role Added", description: `"${newRoleName.trim()}" has been added.` });
+    const trimmedName = newRoleName.trim();
+    if (trimmedName && !allRoles.includes(trimmedName)) {
+      const updatedTeamRoles = [...rolesForThisTeam, trimmedName].sort();
+      const updatedCategories = { ...roleCategories, [teamTitle]: updatedTeamRoles };
+      updateRoleCategories(updatedCategories);
+      toast({ title: "Role Added", description: `"${trimmedName}" has been added to ${teamTitle}.` });
       setIsAddDialogOpen(false);
     } else {
-      toast({ variant: 'destructive', title: "Error", description: `Role "${newRoleName.trim()}" already exists or is invalid.` });
+      toast({ variant: 'destructive', title: "Error", description: `Role "${trimmedName}" already exists or is invalid.` });
     }
   };
 
   const handleEditRole = () => {
-    if (newRoleName.trim() && roleToEdit && !allRoles.includes(newRoleName.trim())) {
-      const updatedRoles = allRoles.map(r => r === roleToEdit ? newRoleName.trim() : r).sort();
-      updateAllRoles(updatedRoles);
-      toast({ title: "Role Updated", description: `"${roleToEdit}" has been changed to "${newRoleName.trim()}".` });
+    const trimmedName = newRoleName.trim();
+    if (trimmedName && roleToEdit && !allRoles.includes(trimmedName)) {
+      const updatedTeamRoles = rolesForThisTeam.map(r => (r === roleToEdit ? trimmedName : r)).sort();
+      const updatedCategories = { ...roleCategories, [teamTitle]: updatedTeamRoles };
+      updateRoleCategories(updatedCategories);
+      toast({ title: "Role Updated", description: `"${roleToEdit}" has been changed to "${trimmedName}".` });
       setIsEditDialogOpen(false);
     } else {
-        toast({ variant: 'destructive', title: "Error", description: `Role "${newRoleName.trim()}" already exists or is invalid.` });
+        toast({ variant: 'destructive', title: "Error", description: `Role "${trimmedName}" already exists or is invalid.` });
     }
   };
 
   const handleDeleteRole = () => {
     if (!roleToDelete) return;
-    const updatedRoles = allRoles.filter(r => r !== roleToDelete);
-    updateAllRoles(updatedRoles);
+    const updatedTeamRoles = rolesForThisTeam.filter(r => r !== roleToDelete);
+    const updatedCategories = { ...roleCategories, [teamTitle]: updatedTeamRoles };
+    updateRoleCategories(updatedCategories);
     toast({ title: "Role Deleted", description: `"${roleToDelete}" has been deleted.` });
     setIsDeleteDialogOpen(false);
   };
@@ -83,9 +90,9 @@ export function TeamRoleManagement({ teamTitle }: { teamTitle: string }) {
         </div>
         <Card>
             <CardHeader>
-            <CardTitle>Manage Roles</CardTitle>
+            <CardTitle>Manage Roles for {teamTitle}</CardTitle>
             <CardDescription>
-                Add, edit, or delete roles available for assignment. Changes will affect all users.
+                Add, edit, or delete roles available for assignment to this team.
             </CardDescription>
             </CardHeader>
             <CardContent className="p-0">
@@ -97,7 +104,7 @@ export function TeamRoleManagement({ teamTitle }: { teamTitle: string }) {
                 </TableRow>
                 </TableHeader>
                 <TableBody>
-                {allRoles.map(role => (
+                {rolesForThisTeam.map(role => (
                     <TableRow key={role}>
                     <TableCell className="font-medium">{role}</TableCell>
                     <TableCell className="text-right">
@@ -128,7 +135,7 @@ export function TeamRoleManagement({ teamTitle }: { teamTitle: string }) {
       
       {/* Dialogs */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent><DialogHeader><DialogTitle>Add New Role</DialogTitle></DialogHeader>
+        <DialogContent><DialogHeader><DialogTitle>Add New Role to {teamTitle}</DialogTitle></DialogHeader>
           <div className="grid gap-4 py-4">
             <Label htmlFor="new-role-name">Role Name</Label>
             <Input id="new-role-name" value={newRoleName} onChange={(e) => setNewRoleName(e.target.value)} />

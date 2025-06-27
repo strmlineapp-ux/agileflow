@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Calendar, ListChecks, PanelLeft, Settings, LayoutDashboard, ArrowLeftRight, Bell, Clapperboard, Ticket, Theater } from 'lucide-react';
+import { Calendar, ListChecks, PanelLeft, Settings, LayoutDashboard, ArrowLeftRight, Bell, Clapperboard, Megaphone, Projector } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -60,13 +60,13 @@ export function Header() {
             )}
             {canViewLive && (
               <Link href="/dashboard/teams/live-events" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
-                <Ticket className="h-5 w-5" />
+                <Projector className="h-5 w-5" />
                 Live Events
               </Link>
             )}
             {canViewProd && (
               <Link href="/dashboard/teams/productions" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
-                <Theater className="h-5 w-5" />
+                <Megaphone className="h-5 w-5" />
                 Productions
               </Link>
             )}

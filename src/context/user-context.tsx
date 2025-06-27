@@ -2,8 +2,8 @@
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect } from 'react';
-import { type User, type Notification, type UserStatusAssignment } from '@/types';
-import { mockUsers as initialUsers, mockRoles as initialRoles, mockNotifications as initialNotifications } from '@/lib/mock-data';
+import { type User, type Notification, type UserStatusAssignment, type RoleCategories } from '@/types';
+import { mockUsers as initialUsers, initialRoleCategories } from '@/lib/mock-data';
 
 interface UserContextType {
   realUser: User;
@@ -11,6 +11,8 @@ interface UserContextType {
   setViewAsUser: (userId: string) => void;
   users: User[];
   allRoles: string[];
+  roleCategories: RoleCategories;
+  updateRoleCategories: (newCategories: RoleCategories) => Promise<void>;
   extraCheckLocations: Record<string, string[]>;
   setExtraCheckLocations: React.Dispatch<React.SetStateAction<Record<string, string[]>>>;
   notifications: Notification[];
@@ -19,7 +21,6 @@ interface UserContextType {
   setUserStatusAssignments: React.Dispatch<React.SetStateAction<Record<string, UserStatusAssignment[]>>>;
   addUser: (newUser: User) => Promise<void>;
   updateUser: (userId: string, userData: Partial<User>) => Promise<void>;
-  updateAllRoles: (roles: string[]) => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | null>(null);
@@ -29,11 +30,16 @@ const REAL_USER_ID = '1'; // Alice is the admin
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [viewAsUserId, setViewAsUserId] = useState<string>(REAL_USER_ID);
   const [users, setUsers] = useState<User[]>(initialUsers);
-  const [allRoles, setAllRoles] = useState<string[]>(initialRoles);
+  const [roleCategories, setRoleCategories] = useState<RoleCategories>(initialRoleCategories);
   const [extraCheckLocations, setExtraCheckLocations] = useState<Record<string, string[]>>({});
-  const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [userStatusAssignments, setUserStatusAssignments] = useState<Record<string, UserStatusAssignment[]>>({});
 
+  const allRoles = useMemo(() => {
+    // Exclude system roles from the list of assignable roles
+    const { System, ...assignableCategories } = roleCategories;
+    return Object.values(assignableCategories).flat().sort();
+  }, [roleCategories]);
 
   const realUser = useMemo(() => users.find(u => u.userId === REAL_USER_ID)!, [users]);
   const viewAsUser = useMemo(() => users.find(u => u.userId === viewAsUserId) || users.find(u => u.userId === REAL_USER_ID)!, [users, viewAsUserId]);
@@ -52,11 +58,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setUsers(currentUsers => [...currentUsers, newUser]);
   }
 
-  const updateAllRoles = async (roles: string[]) => {
-    // In a real app, this would be an API call to your backend
-    console.log('Updating all roles:', roles);
-    setAllRoles(roles);
-  }
+  const updateRoleCategories = async (newCategories: RoleCategories) => {
+    console.log('Updating role categories:', newCategories);
+    setRoleCategories(newCategories);
+  };
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -79,6 +84,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setViewAsUser: setViewAsUserId,
     users,
     allRoles,
+    roleCategories,
+    updateRoleCategories,
     extraCheckLocations,
     setExtraCheckLocations,
     notifications,
@@ -87,7 +94,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setUserStatusAssignments,
     addUser,
     updateUser,
-    updateAllRoles,
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

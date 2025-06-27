@@ -1,4 +1,5 @@
 
+
 export interface User {
   userId: string;
   email: string;
@@ -67,3 +68,7 @@ export interface Notification {
     displayName: string;
   };
 }
+
+export type RoleCategories = {
+  [category: string]: string[];
+};
