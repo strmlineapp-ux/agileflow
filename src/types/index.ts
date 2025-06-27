@@ -3,6 +3,7 @@
 
 
 
+
 export interface User {
   userId: string;
   email: string;
@@ -19,6 +20,7 @@ export interface User {
   theme?: 'light' | 'dark' | 'high-visibility' | 'firebase';
   defaultCalendarView?: 'month' | 'week' | 'day' | 'production-schedule';
   easyBooking?: boolean;
+  timeFormat?: '12h' | '24h';
 }
 
 export interface Task {

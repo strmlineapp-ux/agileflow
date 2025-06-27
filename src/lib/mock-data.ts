@@ -52,6 +52,7 @@ export const mockUsers: User[] = [
         theme: 'dark', 
         defaultCalendarView: 'production-schedule',
         easyBooking: true,
+        timeFormat: '24h',
     },
     { 
         userId: '2', 
@@ -66,6 +67,7 @@ export const mockUsers: User[] = [
         theme: 'light', 
         defaultCalendarView: 'week',
         easyBooking: false,
+        timeFormat: '12h',
     },
     { 
         userId: '3', 
@@ -80,6 +82,7 @@ export const mockUsers: User[] = [
         theme: 'light', 
         defaultCalendarView: 'month',
         easyBooking: true,
+        timeFormat: '12h',
     },
     { 
         userId: '4', 
@@ -95,6 +98,7 @@ export const mockUsers: User[] = [
         theme: 'light', 
         defaultCalendarView: 'day',
         easyBooking: false,
+        timeFormat: '12h',
     },
     { 
         userId: '5', 
@@ -109,6 +113,7 @@ export const mockUsers: User[] = [
         theme: 'light', 
         defaultCalendarView: 'production-schedule',
         easyBooking: false,
+        timeFormat: '12h',
     },
     { 
         userId: '6', 
@@ -124,6 +129,7 @@ export const mockUsers: User[] = [
         theme: 'light', 
         defaultCalendarView: 'production-schedule',
         easyBooking: true,
+        timeFormat: '24h',
     },
 ];
 

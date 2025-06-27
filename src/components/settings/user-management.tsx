@@ -332,6 +332,21 @@ export function UserManagement() {
                                                                         <p className="text-xs text-muted-foreground ml-2">Click empty slots to create events.</p>
                                                                     </div>
                                                                 </div>
+                                                                 <div className="grid grid-cols-3 items-center gap-4">
+                                                                    <Label htmlFor="time-format">Time Format</Label>
+                                                                    <Select
+                                                                        value={realUser.timeFormat || '12h'}
+                                                                        onValueChange={(value) => updateUser(realUser.userId, { timeFormat: value as any })}
+                                                                    >
+                                                                        <SelectTrigger id="time-format" className="col-span-2 h-8">
+                                                                            <SelectValue placeholder="Select format" />
+                                                                        </SelectTrigger>
+                                                                        <SelectContent>
+                                                                            <SelectItem value="12h">12-Hour</SelectItem>
+                                                                            <SelectItem value="24h">24-Hour</SelectItem>
+                                                                        </SelectContent>
+                                                                    </Select>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </PopoverContent>

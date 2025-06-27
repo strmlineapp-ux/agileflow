@@ -276,6 +276,9 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
     const managerialRoles = ["Admin", "Service Delivery Manager", "Production Team Admin", "Studio Production Team Admin", "Live Event Team Admin"];
     const canManageStatus = viewAsUser.roles?.some(p => managerialRoles.includes(p));
 
+    const timeFormatTimeline = viewAsUser.timeFormat === '24h' ? 'HH:mm' : 'h a';
+    const timeFormatEvent = viewAsUser.timeFormat === '24h' ? 'HH:mm' : 'h:mm a';
+
     const dailyCheckUsers = useMemo(() => {
         return users.filter(user => user.roles?.includes('ES Daily Checks'));
     }, [users]);
@@ -510,7 +513,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
                         return (
                             <div key={event.eventId} className={cn("absolute h-[calc(100%-1rem)] top-1/2 -translate-y-1/2 p-2 rounded-lg shadow-md cursor-pointer z-10")} style={{ left: `${left + 2}px`, width: `${width}px`, backgroundColor: colors?.bg, color: colors?.text }}>
                                 <p className="font-semibold text-sm truncate">{event.title}</p>
-                                <p className="text-xs opacity-90 truncate">{format(event.startTime, 'HH:mm')} - {format(event.endTime, 'HH:mm')}</p>
+                                <p className="text-xs opacity-90 truncate">{format(event.startTime, timeFormatEvent)} - {format(event.endTime, timeFormatEvent)}</p>
                             </div>
                         )
                     })}
@@ -572,7 +575,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
                                            {isDayCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                                            <span className={cn({ "text-primary": isDayToday })}>{format(day, 'EEE, MMMM d, yyyy').toUpperCase()}</span>
                                         </div>
-                                        {hours.map(hour => <div key={hour} className="shrink-0 text-left p-2 border-r" style={{ width: `${hourWidth}px`}}><span className="text-xs text-muted-foreground">{format(addHours(startOfDay(day), hour), 'HH:mm')}</span></div>)}
+                                        {hours.map(hour => <div key={hour} className="shrink-0 text-left p-2 border-r" style={{ width: `${hourWidth}px`}}><span className="text-xs text-muted-foreground">{format(addHours(startOfDay(day), hour), timeFormatTimeline)}</span></div>)}
                                     </CardHeader>
                                     {!isDayCollapsed && (
                                         <CardContent className="p-0 relative">

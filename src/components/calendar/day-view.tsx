@@ -46,6 +46,9 @@ export function DayView({ date, containerRef, zoomLevel, axisView, onEasyBooking
     const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars);
     const isViewingToday = useMemo(() => isSameDay(date, new Date()), [date]);
 
+    const timeFormatTimeline = viewAsUser.timeFormat === '24h' ? 'HH:mm' : 'h a';
+    const timeFormatEvent = viewAsUser.timeFormat === '24h' ? 'HH:mm' : 'h:mm a';
+
     const dayEvents = useMemo(() => events.filter(event => format(event.startTime, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')), [date, events]);
     
     const calendarColorMap = useMemo(() => {
@@ -242,7 +245,7 @@ export function DayView({ date, containerRef, zoomLevel, axisView, onEasyBooking
                                 style={{ left: `${left + 2}px`, width: `${width}px`, backgroundColor: colors?.bg, color: colors?.text }}
                             >
                                 <p className="font-semibold text-sm truncate">{event.title}</p>
-                                <p className="text-xs opacity-90 truncate">{format(event.startTime, 'HH:mm')} - {format(event.endTime, 'HH:mm')}</p>
+                                <p className="text-xs opacity-90 truncate">{format(event.startTime, timeFormatEvent)} - {format(event.endTime, timeFormatEvent)}</p>
                             </div>
                         )
                     })}
@@ -258,7 +261,7 @@ export function DayView({ date, containerRef, zoomLevel, axisView, onEasyBooking
                     <div className="w-[160px] shrink-0 border-r p-2 flex items-center font-medium text-sm sticky left-0 bg-card z-30">Location</div>
                     {hours.map(hour => (
                         <div key={hour} className="shrink-0 text-left p-2 border-r" style={{ width: `${hourWidth}px` }}>
-                            <span className="text-xs text-muted-foreground">{format(addHours(startOfDay(date), hour), 'HH:mm')}</span>
+                            <span className="text-xs text-muted-foreground">{format(addHours(startOfDay(date), hour), timeFormatTimeline)}</span>
                         </div>
                     ))}
                 </CardHeader>
@@ -305,7 +308,7 @@ export function DayView({ date, containerRef, zoomLevel, axisView, onEasyBooking
                     <div className="w-20 border-r">
                         {hours.map(hour => (
                             <div key={hour} className="relative text-right pr-2 border-b" style={{ height: `${hourHeight}px` }}>
-                                <span className="text-xs text-muted-foreground relative -top-2">{format(addHours(startOfDay(date), hour), 'HH:00')}</span>
+                                <span className="text-xs text-muted-foreground relative -top-2">{format(addHours(startOfDay(date), hour), viewAsUser.timeFormat === '24h' ? 'HH:00' : 'h a')}</span>
                             </div>
                         ))}
                     </div>
@@ -345,7 +348,7 @@ export function DayView({ date, containerRef, zoomLevel, axisView, onEasyBooking
                                             style={{ top: `${top}px`, height: `${height}px`, backgroundColor: colors?.bg, color: colors?.text }}
                                         >
                                             <p className="font-semibold text-xs truncate">{event.title}</p>
-                                            <p className="text-[10px] opacity-90 truncate">{format(event.startTime, 'HH:mm')} - {format(event.endTime, 'HH:mm')}</p>
+                                            <p className="text-[10px] opacity-90 truncate">{format(event.startTime, timeFormatEvent)} - {format(event.endTime, timeFormatEvent)}</p>
                                         </div>
                                     )
                                 })}

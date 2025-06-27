@@ -48,6 +48,9 @@ export function WeekView({ date, containerRef, zoomLevel, onEasyBooking }: { dat
     const weekDays = useMemo(() => eachDayOfInterval({ start: weekStart, end: addDays(weekStart, 6) }), [weekStart]);
     const isCurrentWeek = useMemo(() => weekDays.some(isToday), [weekDays]);
 
+    const timeFormatTimeline = viewAsUser.timeFormat === '24h' ? 'HH:00' : 'h a';
+    const timeFormatEvent = viewAsUser.timeFormat === '24h' ? 'HH:mm' : 'h:mm a';
+
     const calendarColorMap = useMemo(() => {
         const map: Record<string, { bg: string, text: string }> = {};
         calendars.forEach(cal => {
@@ -172,7 +175,7 @@ export function WeekView({ date, containerRef, zoomLevel, onEasyBooking }: { dat
                     <div className="w-20 border-r">
                         {hours.map((hour, index) => (
                             <div key={hour} className={cn("relative text-right pr-2 border-b", {"bg-muted/10": index % 2 !== 0})} style={{ height: `${hourHeight}px` }}>
-                                <span className="text-xs text-muted-foreground relative -top-2">{format(addHours(startOfDay(date), hour), 'HH:00')}</span>
+                                <span className="text-xs text-muted-foreground relative -top-2">{format(addHours(startOfDay(date), hour), timeFormatTimeline)}</span>
                             </div>
                         ))}
                     </div>
@@ -212,7 +215,7 @@ export function WeekView({ date, containerRef, zoomLevel, onEasyBooking }: { dat
                                                 style={{ top: `${top}px`, height: `${height}px`, backgroundColor: colors?.bg, color: colors?.text }}
                                             >
                                                 <p className="font-semibold text-xs truncate">{event.title}</p>
-                                                <p className="text-[10px] opacity-90 truncate">{format(event.startTime, 'HH:mm')} - {format(event.endTime, 'HH:mm')}</p>
+                                                <p className="text-[10px] opacity-90 truncate">{format(event.startTime, timeFormatEvent)} - {format(event.endTime, timeFormatEvent)}</p>
                                             </div>
                                         )
                                     })}

@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, Paperclip, File as FileIcon, Video, X } from 'lucide-react';
+import { Calendar as CalendarIcon, Paperclip, File as FileIcon, Video, X, Users } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,7 @@ import { useUser } from '@/context/user-context';
 import { canManageEventOnCalendar } from '@/lib/permissions';
 import { useToast } from '@/hooks/use-toast';
 import { type CalendarId, type User, type SharedCalendar, type Task, type Attachment, type AttachmentType } from '@/types';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,6 +29,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PriorityBadge } from './priority-badge';
+import { Separator } from '@/components/ui/separator';
 
 const GoogleDriveIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg viewBox="0 0 16 16" fill="currentColor" {...props}><path d="M9.19,4.5l-3.2,0l-1.7,2.9l3.2,5.7l4.9,0l1.7,-2.9l-4.9,-5.7Z" fill="#0f9d58"></path><path d="M5.99,4.5l-3.2,5.7l1.7,2.9l3.2,-5.7l-1.7,-2.9Z" fill="#ffc107"></path><path d="M10.89,7.4l-3.2,0l-1.7,-2.9l4.9,0l0,0Z" fill="#1976d2"></path></svg>
@@ -55,6 +57,13 @@ const attachmentIcons: Record<AttachmentType, React.ReactNode> = {
   local: <FileIcon className="h-4 w-4" />,
 };
 
+const UserSummarySchema = z.object({
+  userId: z.string(),
+  displayName: z.string(),
+  email: z.string(),
+  avatarUrl: z.string().optional(),
+});
+
 const formSchema = z.object({
   title: z.string().min(2, { message: 'Title must be at least 2 characters.' }),
   calendarId: z.string().nonempty({ message: 'Please select a calendar.' }),
@@ -65,6 +74,7 @@ const formSchema = z.object({
   location: z.string().optional(),
   description: z.string().optional(),
   attachments: z.array(z.any()).optional(),
+  attendees: z.array(UserSummarySchema).optional(),
 });
 
 type NewEventFormProps = {
@@ -101,10 +111,12 @@ const titlePlaceholders: Record<CalendarId, string> = {
 const priorities: Task['priority'][] = ['P0', 'P1', 'P2', 'P3', 'P4'];
 
 export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
-  const { viewAsUser, calendars, addEvent, locations } = useUser();
+  const { viewAsUser, users, calendars, addEvent, locations } = useUser();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = React.useState(false);
   const [attachments, setAttachments] = React.useState<Attachment[]>([]);
+  const [guestSearch, setGuestSearch] = React.useState('');
+  const [isGuestPopoverOpen, setIsGuestPopoverOpen] = React.useState(false);
 
   const availableCalendars = React.useMemo(() => {
     return calendars.filter(cal => canManageEventOnCalendar(viewAsUser, cal.id));
@@ -126,8 +138,20 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
       location: '',
       description: '',
       attachments: [],
+      attendees: [],
     },
   });
+
+  const selectedAttendees = form.watch('attendees') || [];
+  
+  const filteredGuests = React.useMemo(() => {
+    if (!guestSearch) return users;
+    return users.filter(user => 
+        user.displayName.toLowerCase().includes(guestSearch.toLowerCase()) || 
+        user.email.toLowerCase().includes(guestSearch.toLowerCase())
+    );
+  }, [users, guestSearch]);
+
 
   React.useEffect(() => {
     if (initialData) {
@@ -138,6 +162,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
             location: '',
             description: '',
             attachments: [],
+            attendees: [],
             date: initialData.date,
             startTime: initialData.startTime,
             endTime: initialData.endTime,
@@ -154,6 +179,17 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
         title: 'Attachment Added',
         description: `${name} has been attached to the event.`,
     });
+  };
+
+  const handleToggleGuest = (guest: User) => {
+    const currentAttendees = form.getValues('attendees') || [];
+    const isAttending = currentAttendees.some(att => att.userId === guest.userId);
+
+    if (isAttending) {
+        form.setValue('attendees', currentAttendees.filter(att => att.userId !== guest.userId));
+    } else {
+        form.setValue('attendees', [...currentAttendees, guest]);
+    }
   };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -183,7 +219,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
         description: values.description,
         priority: values.priority,
         attachments: attachments,
-        attendees: [], // Attendee selection can be added later
+        attendees: values.attendees || [],
       });
 
       toast({
@@ -319,7 +355,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                     render={({ field }) => (
                         <FormItem>
                            <FormControl>
-                             <Input type="time" {...field} className="w-[110px]" />
+                             <Input type="time" {...field} className="w-[110px]" step="900" />
                            </FormControl>
                            <FormMessage />
                         </FormItem>
@@ -331,7 +367,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                     render={({ field }) => (
                         <FormItem>
                              <FormControl>
-                                <Input type="time" {...field} className="w-[110px]" />
+                                <Input type="time" {...field} className="w-[110px]" step="900" />
                              </FormControl>
                              <FormMessage />
                         </FormItem>
@@ -360,6 +396,78 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                     </FormItem>
                 )}
             />
+
+            <FormField
+              control={form.control}
+              name="attendees"
+              render={() => (
+                <FormItem>
+                    <div className="space-y-2">
+                        {selectedAttendees.length > 0 && (
+                            <div className="flex flex-wrap gap-2">
+                                {selectedAttendees.map(user => (
+                                     <div key={user.userId} className="flex items-center gap-2 p-1 pr-2 bg-muted rounded-full">
+                                        <Avatar className="h-6 w-6">
+                                            <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
+                                            <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                        </Avatar>
+                                        <span className="text-sm font-medium">{user.displayName}</span>
+                                        <button type="button" onClick={() => handleToggleGuest(user)} className="rounded-full hover:bg-muted-foreground/20">
+                                            <X className="h-4 w-4" />
+                                        </button>
+                                     </div>
+                                ))}
+                            </div>
+                        )}
+
+                        <Popover open={isGuestPopoverOpen} onOpenChange={setIsGuestPopoverOpen}>
+                            <PopoverTrigger asChild>
+                                <Button variant="outline" className="w-full justify-start font-normal">
+                                    <Users className="mr-2 h-4 w-4" />
+                                    Add guests
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[480px] p-0" align="start">
+                                <div className="p-2">
+                                    <Input
+                                        placeholder="Search by name or email..."
+                                        value={guestSearch}
+                                        onChange={e => setGuestSearch(e.target.value)}
+                                        className="w-full"
+                                    />
+                                </div>
+                                <Separator />
+                                <div className="max-h-60 overflow-y-auto p-1">
+                                    {filteredGuests.map(guest => (
+                                        <div
+                                            key={guest.userId}
+                                            onClick={() => handleToggleGuest(guest)}
+                                            className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer"
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                className="h-4 w-4"
+                                                checked={selectedAttendees.some(att => att.userId === guest.userId)}
+                                                readOnly
+                                            />
+                                            <Avatar className="h-8 w-8">
+                                                <AvatarImage src={guest.avatarUrl} alt={guest.displayName} data-ai-hint="user avatar" />
+                                                <AvatarFallback>{guest.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                            </Avatar>
+                                            <div>
+                                                <p className="font-medium text-sm">{guest.displayName}</p>
+                                                <p className="text-xs text-muted-foreground">{guest.email}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </PopoverContent>
+                        </Popover>
+                    </div>
+                </FormItem>
+              )}
+            />
+
              <FormField
                 control={form.control}
                 name="description"
