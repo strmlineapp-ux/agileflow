@@ -6,45 +6,45 @@
 @layer base {
   :root,
   .light {
-    --background: 234 38% 82%;
-    --foreground: 234 38% 24%;
-    --card: 234 38% 79%;
-    --card-foreground: 234 38% 24%;
-    --popover: 234 38% 79%;
-    --popover-foreground: 234 38% 24%;
-    --primary: 234 38% 70%;
-    --primary-foreground: 234 38% 10%;
-    --secondary: 234 22% 55%;
-    --secondary-foreground: 234 22% 95%;
-    --muted: 234 22% 75%;
-    --muted-foreground: 234 22% 45%;
-    --accent: 234 38% 75%;
-    --accent-foreground: 234 38% 10%;
+    --background: 0 0% 98%;
+    --foreground: 0 0% 20%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 20%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 20%;
+    --primary: 210 40% 55%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 0 0% 95%;
+    --secondary-foreground: 0 0% 20%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 210 40% 20%;
     --destructive: 0 35% 65%;
     --destructive-foreground: 0 0% 10%;
     --warning: 40 38% 70%;
     --warning-foreground: 40 48% 10%;
-    --border: 234 22% 70%;
-    --input: 234 22% 70%;
-    --ring: 234 38% 70%;
+    --border: 0 0% 89%;
+    --input: 0 0% 89%;
+    --ring: 210 40% 55%;
     --radius: 0.5rem;
     --lunch-break-opacity: 0.15;
   }
 
   .dark {
     --background: 0 0% 8%;
-    --foreground: 0 0% 67%; /* Adjusted from 82% for ~20% opacity drop */
+    --foreground: 0 0% 67%;
     --card: 0 0% 12%;
     --card-foreground: 0 0% 67%;
     --popover: 0 0% 12%;
     --popover-foreground: 0 0% 67%;
-    --primary: 28 54% 55%; /* Saturation reduced by 25% */
+    --primary: 28 54% 55%;
     --primary-foreground: 28 70% 10%;
     --secondary: 0 0% 18%;
     --secondary-foreground: 0 0% 67%;
     --muted: 0 0% 18%;
-    --muted-foreground: 0 0% 47%; /* Adjusted from 57% */
-    --accent: 43 55% 71%; /* Saturation reduced by 25% */
+    --muted-foreground: 0 0% 47%;
+    --accent: 43 55% 71%;
     --accent-foreground: 43 70% 10%;
     --destructive: 0 26% 38%;
     --destructive-foreground: 0 0% 98%;
@@ -83,26 +83,26 @@
 
   .firebase {
     --background: 0 0% 8%;
-    --foreground: 0 0% 67%; /* Adjusted from 82% for ~20% opacity drop */
+    --foreground: 0 0% 67%;
     --card: 0 0% 12%;
     --card-foreground: 0 0% 67%;
     --popover: 0 0% 12%;
     --popover-foreground: 0 0% 67%;
-    --primary: 284 61% 49%; /* Purple */
+    --primary: 284 61% 49%;
     --primary-foreground: 284 61% 95%;
-    --secondary: 28 96% 55%; /* Orange */
+    --secondary: 28 96% 55%;
     --secondary-foreground: 28 96% 10%;
     --muted: 0 0% 18%;
-    --muted-foreground: 0 0% 47%; /* Adjusted from 57% */
-    --accent: 43 97% 73%; /* Yellow */
+    --muted-foreground: 0 0% 47%;
+    --accent: 43 97% 73%;
     --accent-foreground: 43 97% 15%;
     --destructive: 0 75% 55%;
     --destructive-foreground: 0 0% 100%;
-    --warning: 43 97% 73%; /* Yellow */
+    --warning: 43 97% 73%;
     --warning-foreground: 43 97% 15%;
     --border: 0 0% 18%;
     --input: 0 0% 20%;
-    --ring: 28 96% 55%; /* Orange */
+    --ring: 28 96% 55%;
     --radius: 0.5rem;
     --lunch-break-opacity: 0.1;
   }
