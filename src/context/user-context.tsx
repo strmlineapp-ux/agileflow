@@ -32,6 +32,8 @@ interface UserContextType {
   events: Event[];
   addEvent: (newEventData: Omit<Event, 'eventId' | 'createdBy' | 'createdAt' | 'lastUpdated'>) => Promise<void>;
   locations: BookableLocation[];
+  pinnedLocations: string[];
+  setPinnedLocations: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
 const UserContext = createContext<UserContextType | null>(null);
@@ -48,6 +50,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [calendars, setCalendars] = useState<SharedCalendar[]>(mockCalendars);
   const [events, setEvents] = useState<Event[]>(initialEvents);
   const [locations] = useState<BookableLocation[]>(mockLocations);
+  const [pinnedLocations, setPinnedLocations] = useState<string[]>(['Auditorium', 'Studio', 'Event Space 1 (S2)']);
   const { toast } = useToast();
 
   const allRoles = useMemo(() => {
@@ -179,6 +182,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     events,
     addEvent,
     locations,
+    pinnedLocations,
+    setPinnedLocations,
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

@@ -1,6 +1,7 @@
 
 
 
+
 export interface User {
   userId: string;
   email: string;
@@ -57,8 +58,8 @@ export interface Event {
   attendees: User[];
   location?: string;
   associatedTaskId?: string;
-  priority?: 'P0' | 'P1' | 'P2' | 'P3' | 'P4';
-  attachments?: Attachment[];
+  priority: 'P0' | 'P1' | 'P2' | 'P3' | 'P4';
+  attachments: Attachment[];
   createdBy: string; // userId
   createdAt: Date;
   lastUpdated: Date;

@@ -1,5 +1,6 @@
 
 import { CalendarManagement } from '@/components/service-delivery/calendar-management';
+import { PinnedLocationManagement } from '@/components/settings/pinned-location-management';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function ServiceDeliveryPage() {
@@ -9,13 +10,13 @@ export default function ServiceDeliveryPage() {
       <Tabs defaultValue="calendars">
         <TabsList>
             <TabsTrigger value="calendars">Calendar Management</TabsTrigger>
-            <TabsTrigger value="locations" disabled>Location Management</TabsTrigger>
+            <TabsTrigger value="locations">Location Management</TabsTrigger>
         </TabsList>
         <TabsContent value="calendars" className="mt-4">
             <CalendarManagement />
         </TabsContent>
         <TabsContent value="locations" className="mt-4">
-            {/* Location management component will go here */}
+            <PinnedLocationManagement teamTitle="Service Delivery" />
         </TabsContent>
       </Tabs>
     </div>

@@ -27,12 +27,12 @@ export function Sidebar() {
     { href: '/dashboard/calendar', icon: Calendar, label: 'Calendar', visible: true },
     { href: '/dashboard', icon: LayoutDashboard, label: 'Overview', visible: true },
     { href: '/dashboard/tasks', icon: ListChecks, label: 'Tasks', visible: true },
+    { href: '/dashboard/service-delivery', icon: Briefcase, label: 'Service Delivery', visible: isSdm },
     { href: '/dashboard/teams/studio', icon: Clapperboard, label: 'Studio Productions', visible: canViewStudio },
     { href: '/dashboard/teams/live-events', icon: Video, label: 'Live Events', visible: canViewLive },
     { href: '/dashboard/teams/productions', icon: Megaphone, label: 'Productions', visible: canViewProd },
     { href: '/dashboard/notifications', icon: Bell, label: 'Notifications', visible: true },
     { href: '/dashboard/settings', icon: Settings, label: 'Settings', visible: true },
-    { href: '/dashboard/service-delivery', icon: Briefcase, label: 'Service Delivery', visible: isSdm },
   ];
 
 
