@@ -17,6 +17,7 @@ interface UserContextType {
   allSystemRoles: string[];
   allTeamRoles: string[];
   teams: Team[];
+  pinnedLocations: string[];
   addTeam: (teamData: Omit<Team, 'id'>) => Promise<void>;
   updateTeam: (teamId: string, teamData: Partial<Omit<Team, 'id'>>) => Promise<void>;
   deleteTeam: (teamId: string) => Promise<void>;
@@ -69,6 +70,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const realUser = useMemo(() => users.find(u => u.userId === REAL_USER_ID)!, [users]);
   const viewAsUser = useMemo(() => users.find(u => u.userId === viewAsUserId) || users.find(u => u.userId === REAL_USER_ID)!, [users, viewAsUserId]);
+
+  const pinnedLocations = useMemo(() => {
+    const userTeams = teams.filter(team => team.members.includes(viewAsUser.userId));
+    const allPinned = userTeams.flatMap(team => team.pinnedLocations);
+    return [...new Set(allPinned)].sort();
+  }, [teams, viewAsUser.userId]);
 
   const updateUser = async (userId: string, userData: Partial<User>) => {
     console.log(`Updating user ${userId}:`, userData);
@@ -200,6 +207,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     allSystemRoles,
     allTeamRoles,
     teams,
+    pinnedLocations,
     addTeam,
     updateTeam,
     deleteTeam,
