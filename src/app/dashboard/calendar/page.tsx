@@ -16,7 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { NewEventForm } from '@/components/calendar/new-event-form';
 
 export default function CalendarPage() {
-  const { realUser, viewAsUser } = useUser();
+  const { realUser, viewAsUser, calendars } = useUser();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'month' | 'week' | 'day' | 'production-schedule'>(realUser.defaultCalendarView || 'day');
   const [zoomLevel, setZoomLevel] = useState<'normal' | 'fit'>('normal');
@@ -28,7 +28,7 @@ export default function CalendarPage() {
   const weekViewContainerRef = useRef<HTMLDivElement>(null);
   const productionScheduleViewContainerRef = useRef<HTMLDivElement>(null);
   
-  const userCanCreateEvent = canCreateAnyEvent(viewAsUser);
+  const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars);
 
   const handlePrev = () => {
     switch (view) {

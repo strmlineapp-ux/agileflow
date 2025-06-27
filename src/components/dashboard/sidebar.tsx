@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Calendar, ListChecks, Settings, LogOut, LayoutDashboard, UserCheck, Bell, Clapperboard, Megaphone, Video } from 'lucide-react';
+import { Calendar, ListChecks, Settings, LogOut, LayoutDashboard, UserCheck, Bell, Clapperboard, Megaphone, Video, Briefcase } from 'lucide-react';
 import Logo from '@/components/icons/logo';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
@@ -15,6 +15,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const { realUser, viewAsUser, setViewAsUser, users, notifications } = useUser();
   const isAdmin = realUser.roles?.includes('Admin');
+  const isSdm = viewAsUser.roles?.includes('Service Delivery Manager');
   const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -31,6 +32,7 @@ export function Sidebar() {
     { href: '/dashboard/teams/productions', icon: Megaphone, label: 'Productions', visible: canViewProd },
     { href: '/dashboard/notifications', icon: Bell, label: 'Notifications', visible: true },
     { href: '/dashboard/settings', icon: Settings, label: 'Settings', visible: true },
+    { href: '/dashboard/service-delivery', icon: Briefcase, label: 'Service Delivery', visible: isSdm },
   ];
 
 

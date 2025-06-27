@@ -15,13 +15,10 @@ const isHoliday = (day: Date) => {
 }
 
 const getContrastColor = (hsl: string): string => {
-    // Add a guard for undefined input
     if (!hsl) {
         return 'hsl(var(--card-foreground))';
     }
-    // Fix: HSL color values in mock data are space-separated, not comma-separated.
     const parts = hsl.split(' ');
-    // Ensure we have enough parts to parse lightness
     if (parts.length < 3) {
         return 'hsl(var(--card-foreground))'; 
     }
@@ -38,7 +35,7 @@ const DEFAULT_HOUR_HEIGHT_PX = 60;
 const LOCATION_LABEL_WIDTH_PX = 160;
 
 export function DayView({ date, containerRef, zoomLevel, axisView }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', axisView: 'standard' | 'reversed' }) {
-    const { events, calendars } = useUser();
+    const { events, calendars, locations } = useUser();
     const [now, setNow] = useState<Date | null>(null);
     const nowMarkerRef = useRef<HTMLDivElement>(null);
     const [collapsedLocations, setCollapsedLocations] = useState<Set<string>>(new Set());
@@ -128,8 +125,13 @@ export function DayView({ date, containerRef, zoomLevel, axisView }: { date: Dat
         }, {} as Record<string, Event[]>);
     }, [dayEvents]);
 
-    const allLocations = useMemo(() => Object.keys(groupedEvents)
-        .sort((a,b) => a === 'No Location' ? 1 : b === 'No Location' ? -1 : a.localeCompare(b)), [groupedEvents]);
+    const allLocations = useMemo(() => {
+        const eventLocations = Object.keys(groupedEvents);
+        const masterLocationNames = locations.map(l => l.name);
+        // Combine master list with any other locations that might be on events but not in the master list
+        const combined = [...new Set([...masterLocationNames, ...eventLocations])];
+        return combined.sort((a,b) => a === 'No Location' ? 1 : b === 'No Location' ? -1 : a.localeCompare(b));
+    }, [groupedEvents, locations]);
     
     useEffect(() => {
         const locationsToCollapse = new Set<string>();
@@ -233,7 +235,7 @@ export function DayView({ date, containerRef, zoomLevel, axisView }: { date: Dat
                         </div>
                     ))}
                 </CardHeader>
-                {allLocations.length === 0 ? (
+                {allLocations.length === 0 && dayEvents.length === 0 ? (
                      <div className="flex items-center justify-center h-40 text-muted-foreground">
                         No events scheduled for this day.
                     </div>

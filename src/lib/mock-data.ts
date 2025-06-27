@@ -1,11 +1,24 @@
 
-import { type Event, type User, type Task, type Notification, type RoleCategories, type SharedCalendar, type CalendarId } from '@/types';
+import { type Event, type User, type Task, type Notification, type RoleCategories, type SharedCalendar, type CalendarId, type BookableLocation } from '@/types';
 
 export const mockCalendars: SharedCalendar[] = [
     { id: 'studio-productions', name: 'Studio Productions', color: 'hsl(48 96% 53%)' }, // Yellow
     { id: 'live-events', name: 'Live Events', color: 'hsl(210 70% 50%)' }, // Blue
     { id: 'business', name: 'Business', color: 'hsl(220 9% 46%)' }, // Grey
     { id: 'post-production', name: 'Post-Production', color: 'hsl(24 95% 53%)' }, // Orange
+];
+
+export const mockLocations: BookableLocation[] = [
+    { id: 'auditorium', name: 'Auditorium' },
+    { id: 'acr', name: 'ACR' },
+    { id: 'event-space-1', name: 'Event Space 1 (S2)' },
+    { id: 'event-space-2', name: 'Event Space 2 (S2)' },
+    { id: 'event-space-3', name: 'Event Space 3 (R7)' },
+    { id: 'event-space-4', name: 'Event Space 4 (R7)' },
+    { id: 'studio', name: 'Studio' },
+    { id: 'training-room', name: 'Training Room' },
+    { id: 'locke', name: 'Locke' },
+    { id: 'apgar', name: 'Apgar' },
 ];
 
 export const initialRoleCategories: RoleCategories = {
@@ -34,7 +47,7 @@ export const mockUsers: User[] = [
         title: 'Product Manager', 
         location: 'New York, USA', 
         phone: '123-456-7890', 
-        roles: ['Admin', 'Live Event Team Admin', 'Live Events', 'Studio Productions', 'Video Director', 'TD', 'Edit Events', 'Manage Checks'], 
+        roles: ['Admin', 'Service Delivery Manager', 'Live Event Team Admin', 'Live Events', 'Studio Productions', 'Video Director', 'TD', 'Edit Events', 'Manage Checks'], 
         directReports: ['2', '3'], 
         theme: 'dark', 
         defaultCalendarView: 'production-schedule' 

@@ -1,7 +1,8 @@
+
 'use client';
 
 import Link from 'next/link';
-import { Calendar, ListChecks, PanelLeft, Settings, LayoutDashboard, ArrowLeftRight, Bell, Clapperboard, Megaphone, Video } from 'lucide-react';
+import { Calendar, ListChecks, PanelLeft, Settings, LayoutDashboard, ArrowLeftRight, Bell, Clapperboard, Megaphone, Video, Briefcase } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -20,6 +21,7 @@ export function Header() {
   const canViewStudio = viewAsUser.roles?.includes('Studio Productions Team Admin') || viewAsUser.roles?.includes('Service Delivery Manager') || viewAsUser.roles?.includes('Admin');
   const canViewLive = viewAsUser.roles?.includes('Live Event Team Admin') || viewAsUser.roles?.includes('Service Delivery Manager') || viewAsUser.roles?.includes('Admin');
   const canViewProd = viewAsUser.roles?.includes('Production Team Admin') || viewAsUser.roles?.includes('Service Delivery Manager') || viewAsUser.roles?.includes('Admin');
+  const isSdm = viewAsUser.roles?.includes('Service Delivery Manager');
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-card px-4 sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 sm:py-4">
@@ -84,6 +86,12 @@ export function Header() {
               <Settings className="h-5 w-5" />
               Settings
             </Link>
+             {isSdm && (
+                <Link href="/dashboard/service-delivery" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
+                    <Briefcase className="h-5 w-5" />
+                    Service Delivery
+                </Link>
+            )}
           </nav>
         </SheetContent>
       </Sheet>

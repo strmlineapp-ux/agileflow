@@ -2,8 +2,8 @@
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect } from 'react';
-import { type User, type Notification, type UserStatusAssignment, type RoleCategories, type SharedCalendar, type Event } from '@/types';
-import { mockUsers as initialUsers, initialRoleCategories, mockCalendars, mockEvents as initialEvents } from '@/lib/mock-data';
+import { type User, type Notification, type UserStatusAssignment, type RoleCategories, type SharedCalendar, type Event, type BookableLocation } from '@/types';
+import { mockUsers as initialUsers, initialRoleCategories, mockCalendars, mockEvents as initialEvents, mockLocations } from '@/lib/mock-data';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
@@ -26,8 +26,12 @@ interface UserContextType {
   updateUser: (userId: string, userData: Partial<User>) => Promise<void>;
   linkGoogleCalendar: (userId: string) => Promise<void>;
   calendars: SharedCalendar[];
+  addCalendar: (newCalendar: Omit<SharedCalendar, 'id'>) => Promise<void>;
+  updateCalendar: (calendarId: string, calendarData: Partial<SharedCalendar>) => Promise<void>;
+  deleteCalendar: (calendarId: string) => Promise<void>;
   events: Event[];
   addEvent: (newEventData: Omit<Event, 'eventId' | 'createdBy' | 'createdAt' | 'lastUpdated'>) => Promise<void>;
+  locations: BookableLocation[];
 }
 
 const UserContext = createContext<UserContextType | null>(null);
@@ -43,6 +47,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [userStatusAssignments, setUserStatusAssignments] = useState<Record<string, UserStatusAssignment[]>>({});
   const [calendars, setCalendars] = useState<SharedCalendar[]>(mockCalendars);
   const [events, setEvents] = useState<Event[]>(initialEvents);
+  const [locations] = useState<BookableLocation[]>(mockLocations);
   const { toast } = useToast();
 
   const allRoles = useMemo(() => {
@@ -72,6 +77,36 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     console.log('Updating role categories:', newCategories);
     setRoleCategories(newCategories);
   };
+
+  const addCalendar = async (newCalendarData: Omit<SharedCalendar, 'id'>) => {
+    const newCalendar: SharedCalendar = {
+      ...newCalendarData,
+      id: newCalendarData.name.toLowerCase().replace(/\s+/g, '-'),
+    };
+    console.log('Adding new calendar:', newCalendar);
+    setCalendars(current => [...current, newCalendar]);
+  };
+
+  const updateCalendar = async (calendarId: string, calendarData: Partial<SharedCalendar>) => {
+    console.log(`Updating calendar ${calendarId}:`, calendarData);
+    setCalendars(current =>
+      current.map(c => (c.id === calendarId ? { ...c, ...calendarData } : c))
+    );
+  };
+
+  const deleteCalendar = async (calendarId: string) => {
+    console.log('Deleting calendar:', calendarId);
+    if (calendars.length <= 1) {
+      toast({
+        variant: 'destructive',
+        title: 'Cannot Delete Calendar',
+        description: 'You cannot delete the last remaining calendar.',
+      });
+      return;
+    }
+    setCalendars(current => current.filter(c => c.id !== calendarId));
+  };
+
 
   const addEvent = async (newEventData: Omit<Event, 'eventId' | 'createdBy' | 'createdAt' | 'lastUpdated'>) => {
     console.log("Adding new event:", newEventData);
@@ -138,8 +173,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     updateUser,
     linkGoogleCalendar,
     calendars,
+    addCalendar,
+    updateCalendar,
+    deleteCalendar,
     events,
     addEvent,
+    locations,
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

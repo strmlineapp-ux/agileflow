@@ -1,5 +1,6 @@
 
 
+
 export interface User {
   userId: string;
   email: string;
@@ -30,7 +31,7 @@ export interface Task {
   lastUpdated: Date;
 }
 
-export type CalendarId = 'studio-productions' | 'live-events' | 'business' | 'post-production';
+export type CalendarId = string;
 
 export interface SharedCalendar {
   id: CalendarId;
@@ -88,3 +89,8 @@ export interface Notification {
 export type RoleCategories = {
   [category: string]: string[];
 };
+
+export interface BookableLocation {
+  id: string;
+  name: string;
+}

@@ -25,13 +25,10 @@ const isHoliday = (day: Date) => {
 }
 
 const getContrastColor = (hsl: string): string => {
-    // Add a guard for undefined input
     if (!hsl) {
         return 'hsl(var(--card-foreground))';
     }
-    // Fix: HSL color values in mock data are space-separated, not comma-separated.
     const parts = hsl.split(' ');
-    // Ensure we have enough parts to parse lightness
     if (parts.length < 3) {
         return 'hsl(var(--card-foreground))'; 
     }
@@ -45,16 +42,6 @@ const getContrastColor = (hsl: string): string => {
 
 const DEFAULT_HOUR_WIDTH_PX = 120;
 const LOCATION_LABEL_WIDTH_PX = 160;
-
-const fixedLocations = [
-    "Auditorium", 
-    "ACR", 
-    "Event Space 1 (S2)", 
-    "Event Space 2 (S2)", 
-    "Event Space 3 (R7)", 
-    "Event Space 4 (R7)", 
-    "Studio"
-];
 
 const getEventPosition = (event: Event, hourWidth: number) => {
     const startHour = event.startTime.getHours();
@@ -262,7 +249,7 @@ const ManageStatusDialog = ({ isOpen, onOpenChange, day, initialAssignments, use
 
 
 export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit' }) {
-    const { users, viewAsUser, events, calendars, extraCheckLocations, setExtraCheckLocations, userStatusAssignments, setUserStatusAssignments } = useUser();
+    const { users, viewAsUser, events, calendars, locations, extraCheckLocations, setExtraCheckLocations, userStatusAssignments, setUserStatusAssignments } = useUser();
 
     const [now, setNow] = useState<Date | null>(null);
     const [hourWidth, setHourWidth] = useState(DEFAULT_HOUR_WIDTH_PX);
@@ -276,6 +263,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
     const [dailyCheckAssignments, setDailyCheckAssignments] = useState<Record<string, Record<string, string | null>>>({});
 
     const defaultCheckLocations = useMemo(() => ["Training Room", "Locke", "Apgar"], []);
+    const fixedMasterLocations = useMemo(() => locations.map(l => l.name), [locations]);
 
     const [isManageChecksDialogOpen, setIsManageChecksDialogOpen] = useState(false);
     const [editingDayIso, setEditingDayIso] = useState<string | null>(null);
@@ -323,21 +311,12 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
         return weekDays.map(day => {
             const dayEvents = events.filter(event => format(event.startTime, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd'));
             
-            const allLocationsWithEvents = Object.keys(dayEvents.reduce((acc, event) => {
-                const locationKey = event.location || 'No Location';
-                if (!acc[locationKey]) acc[locationKey] = [];
-                acc[locationKey].push(event)
+            const eventLocations = Object.keys(dayEvents.reduce((acc, event) => {
+                if (event.location) acc[event.location] = true;
                 return acc;
-            }, {} as Record<string, Event[]>));
+            }, {} as Record<string, boolean>));
 
-            const allDayLocations = [...new Set([...fixedLocations, ...allLocationsWithEvents])].sort((a,b) => {
-                const aIsFixed = fixedLocations.includes(a);
-                const bIsFixed = fixedLocations.includes(b);
-                if (aIsFixed && !bIsFixed) return -1;
-                if (!aIsFixed && bIsFixed) return 1;
-                if(aIsFixed && bIsFixed) return fixedLocations.indexOf(a) - fixedLocations.indexOf(b);
-                return a.localeCompare(b);
-            });
+            const allDayLocations = [...new Set([...fixedMasterLocations, ...eventLocations])].sort();
 
             const groupedEvents = allDayLocations.reduce((acc, locationKey) => {
                 acc[locationKey] = dayEvents.filter(e => e.location === locationKey);
@@ -346,7 +325,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
             
             return { day, groupedEvents, isWeekend: isSaturday(day) || isSunday(day), allDayLocations };
         });
-    }, [weekDays, events]);
+    }, [weekDays, events, fixedMasterLocations]);
 
     useEffect(() => {
         const initialCollapsedDays = new Set<string>();
@@ -470,7 +449,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
         const dayData = weeklyScheduleData.find(d => d.day.toISOString() === editingStatusDayIso);
         return {
             day: dayData?.day ?? null,
-            initialAssignments: userStatusAssignments[editingStatusDayIso] || []
+            initialAssignments: userStatusAssignments[editingDayIso] || []
         };
     }, [editingStatusDayIso, weeklyScheduleData, userStatusAssignments]);
 
@@ -508,7 +487,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
                         {isLocationCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                         <p className="font-medium text-sm truncate">{location}</p>
                     </div>
-                     {fixedLocations.includes(location) && location !== 'Studio' && (canManageChecks ? assignmentControl : assignedUser && <div className="h-6 text-xs px-1.5 flex items-center justify-center text-muted-foreground">{`${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}`}</div>)}
+                     {fixedMasterLocations.includes(location) && location !== 'Studio' && (canManageChecks ? assignmentControl : assignedUser && <div className="h-6 text-xs px-1.5 flex items-center justify-center text-muted-foreground">{`${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}`}</div>)}
                 </div>
                 <div className={cn("relative flex-1", isLocationCollapsed ? "h-10" : "h-20")}>
                     {hours.slice(0, 23).map(hour => <div key={`line-${location}-${hour}`} className="absolute top-0 bottom-0 border-r" style={{ left: `${(hour + 1) * hourWidth}px` }}></div>)}
@@ -534,7 +513,6 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
                 const isDayCollapsed = collapsedDays.has(dayIso);
                 const isDayToday = isToday(day);
                 const isWeekend = isSaturday(day) || isSunday(day);
-                const isDayHoliday = isHoliday(day);
                 const dailyExtraLocations = extraCheckLocations[dayIso] ?? (isWeekend ? [] : defaultCheckLocations);
                 const dayStatusAssignments = userStatusAssignments[dayIso] || [];
 

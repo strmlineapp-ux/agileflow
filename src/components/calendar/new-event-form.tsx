@@ -26,6 +26,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PriorityBadge } from './priority-badge';
 
 const GoogleDriveIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -99,7 +100,7 @@ const titlePlaceholders: Record<CalendarId, string> = {
 const priorities: Task['priority'][] = ['P0', 'P1', 'P2', 'P3', 'P4'];
 
 export function NewEventForm({ onFinished }: NewEventFormProps) {
-  const { viewAsUser, calendars, addEvent } = useUser();
+  const { viewAsUser, calendars, addEvent, locations } = useUser();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = React.useState(false);
   const [attachments, setAttachments] = React.useState<Attachment[]>([]);
@@ -264,40 +265,39 @@ export function NewEventForm({ onFinished }: NewEventFormProps) {
                 )}
             />
             
-            <FormField
-                control={form.control}
-                name="date"
-                render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                    <FormLabel>Date</FormLabel>
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <FormControl>
-                                <Button
-                                variant={'outline'}
-                                className={cn('pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}
-                                >
-                                {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                </Button>
-                            </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                                mode="single"
-                                selected={field.value}
-                                onSelect={field.onChange}
-                                disabled={(date) => date < new Date('1900-01-01')}
-                                initialFocus
-                            />
-                        </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                    </FormItem>
-                )}
-            />
-            
             <div className="flex gap-4">
+                <FormField
+                    control={form.control}
+                    name="date"
+                    render={({ field }) => (
+                        <FormItem className="flex flex-col flex-1">
+                        <FormLabel>Date</FormLabel>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <FormControl>
+                                    <Button
+                                    variant={'outline'}
+                                    className={cn('pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}
+                                    >
+                                    {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
+                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                    </Button>
+                                </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                    mode="single"
+                                    selected={field.value}
+                                    onSelect={field.onChange}
+                                    disabled={(date) => date < new Date('1900-01-01')}
+                                    initialFocus
+                                />
+                            </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
                  <FormField
                     control={form.control}
                     name="startTime"
@@ -327,8 +327,19 @@ export function NewEventForm({ onFinished }: NewEventFormProps) {
                 name="location"
                 render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Location (Optional)</FormLabel>
-                        <FormControl><Input placeholder="e.g. Conference Room 1" {...field} /></FormControl>
+                        <FormLabel>Location</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select a location" />
+                                </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                {locations.map(loc => (
+                                    <SelectItem key={loc.id} value={loc.name}>{loc.name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                         <FormMessage />
                     </FormItem>
                 )}
