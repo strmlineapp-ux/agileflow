@@ -28,7 +28,8 @@ import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 
 export function UserManagement() {
-    const { realUser, viewAsUser, users, allRoles, updateUser, linkGoogleCalendar } = useUser();
+    const { realUser, viewAsUser, users, allSystemRoles, allTeamRoles, updateUser, linkGoogleCalendar } = useUser();
+    const allRoles = [...allSystemRoles, ...allTeamRoles].sort();
     const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
     
     // State for editing user contact
@@ -534,5 +535,3 @@ export function UserManagement() {
         </>
     )
 }
-
-    
