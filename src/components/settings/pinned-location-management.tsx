@@ -9,27 +9,33 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { X, PlusCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { type Team } from '@/types';
 
-export function PinnedLocationManagement({ teamTitle }: { teamTitle: string }) {
-  const { viewAsUser, locations, pinnedLocations, setPinnedLocations } = useUser();
+export function PinnedLocationManagement({ team }: { team: Team }) {
+  const { viewAsUser, locations, updateTeam } = useUser();
   const { toast } = useToast();
   const [locationToAdd, setLocationToAdd] = useState('');
 
+  const pinnedLocations = team.pinnedLocations || [];
+
   // A user with 'Production Team Admin' can ONLY manage this on the 'Production' page.
-  // The 'Service Delivery' page is for SDMs, who should have full control.
   const isProdAdmin = viewAsUser.roles?.includes('Production Team Admin');
-  const canManage = teamTitle === 'Service Delivery' || !isProdAdmin || teamTitle === 'Production';
+  const canManage = !isProdAdmin || team.name === 'Production';
+
+  const handleUpdatePinnedLocations = (newPinnedLocations: string[]) => {
+      updateTeam(team.id, { pinnedLocations: newPinnedLocations.sort() });
+  };
 
   const handleAddLocation = () => {
     if (locationToAdd && !pinnedLocations.includes(locationToAdd)) {
-      setPinnedLocations([...pinnedLocations, locationToAdd].sort());
+      handleUpdatePinnedLocations([...pinnedLocations, locationToAdd]);
       setLocationToAdd('');
-      toast({ title: 'Location Pinned', description: `"${locationToAdd}" has been pinned to the schedule.` });
+      toast({ title: 'Location Pinned', description: `"${locationToAdd}" has been pinned for the ${team.name} team.` });
     }
   };
 
   const handleRemoveLocation = (locationToRemove: string) => {
-    setPinnedLocations(pinnedLocations.filter(loc => loc !== locationToRemove));
+    handleUpdatePinnedLocations(pinnedLocations.filter(loc => loc !== locationToRemove));
     toast({ title: 'Location Unpinned', description: `"${locationToRemove}" has been unpinned.` });
   };
   
@@ -40,7 +46,7 @@ export function PinnedLocationManagement({ teamTitle }: { teamTitle: string }) {
       <CardHeader>
         <CardTitle>Pinned Schedule Locations</CardTitle>
         <CardDescription>
-          Select which locations are permanently pinned as rows on the Production Schedule view timeline.
+          Select which locations are permanently pinned as rows on the Production Schedule view timeline for the {team.name} team.
           {!canManage && isProdAdmin && (
             <span className="block mt-1 text-sm text-yellow-600">You can only manage pinned locations from the 'Production' team page.</span>
           )}

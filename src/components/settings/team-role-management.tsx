@@ -12,9 +12,10 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { PlusCircle, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { type Team } from '@/types';
 
-export function TeamRoleManagement({ teamTitle }: { teamTitle: string }) {
-  const { roleCategories, updateRoleCategories, allRoles } = useUser();
+export function TeamRoleManagement({ team }: { team: Team }) {
+  const { allTeamRoles, updateTeam } = useUser();
   const { toast } = useToast();
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -25,7 +26,7 @@ export function TeamRoleManagement({ teamTitle }: { teamTitle: string }) {
   const [roleToDelete, setRoleToDelete] = useState<string | null>(null);
   const [newRoleName, setNewRoleName] = useState('');
 
-  const rolesForThisTeam = roleCategories[teamTitle] || [];
+  const rolesForThisTeam = team.roles || [];
 
   const openAddDialog = () => {
     setNewRoleName('');
@@ -43,13 +44,16 @@ export function TeamRoleManagement({ teamTitle }: { teamTitle: string }) {
     setIsDeleteDialogOpen(true);
   };
 
+  const handleUpdateTeamRoles = (newRoles: string[]) => {
+      updateTeam(team.id, { roles: newRoles.sort() });
+  };
+
   const handleAddRole = () => {
     const trimmedName = newRoleName.trim();
-    if (trimmedName && !allRoles.includes(trimmedName)) {
-      const updatedTeamRoles = [...rolesForThisTeam, trimmedName].sort();
-      const updatedCategories = { ...roleCategories, [teamTitle]: updatedTeamRoles };
-      updateRoleCategories(updatedCategories);
-      toast({ title: "Role Added", description: `"${trimmedName}" has been added to ${teamTitle}.` });
+    if (trimmedName && !allTeamRoles.includes(trimmedName)) {
+      const updatedTeamRoles = [...rolesForThisTeam, trimmedName];
+      handleUpdateTeamRoles(updatedTeamRoles);
+      toast({ title: "Role Added", description: `"${trimmedName}" has been added to ${team.name}.` });
       setIsAddDialogOpen(false);
     } else {
       toast({ variant: 'destructive', title: "Error", description: `Role "${trimmedName}" already exists or is invalid.` });
@@ -58,10 +62,9 @@ export function TeamRoleManagement({ teamTitle }: { teamTitle: string }) {
 
   const handleEditRole = () => {
     const trimmedName = newRoleName.trim();
-    if (trimmedName && roleToEdit && !allRoles.includes(trimmedName)) {
-      const updatedTeamRoles = rolesForThisTeam.map(r => (r === roleToEdit ? trimmedName : r)).sort();
-      const updatedCategories = { ...roleCategories, [teamTitle]: updatedTeamRoles };
-      updateRoleCategories(updatedCategories);
+    if (trimmedName && roleToEdit && (!allTeamRoles.includes(trimmedName) || trimmedName === roleToEdit)) {
+      const updatedTeamRoles = rolesForThisTeam.map(r => (r === roleToEdit ? trimmedName : r));
+      handleUpdateTeamRoles(updatedTeamRoles);
       toast({ title: "Role Updated", description: `"${roleToEdit}" has been changed to "${trimmedName}".` });
       setIsEditDialogOpen(false);
     } else {
@@ -72,8 +75,7 @@ export function TeamRoleManagement({ teamTitle }: { teamTitle: string }) {
   const handleDeleteRole = () => {
     if (!roleToDelete) return;
     const updatedTeamRoles = rolesForThisTeam.filter(r => r !== roleToDelete);
-    const updatedCategories = { ...roleCategories, [teamTitle]: updatedTeamRoles };
-    updateRoleCategories(updatedCategories);
+    handleUpdateTeamRoles(updatedTeamRoles);
     toast({ title: "Role Deleted", description: `"${roleToDelete}" has been deleted.` });
     setIsDeleteDialogOpen(false);
   };
@@ -84,7 +86,7 @@ export function TeamRoleManagement({ teamTitle }: { teamTitle: string }) {
         <CardHeader>
           <div className="flex items-start justify-between">
             <div>
-              <CardTitle>Manage Roles for {teamTitle}</CardTitle>
+              <CardTitle>Manage Roles for {team.name}</CardTitle>
               <CardDescription>
                   Add, edit, or delete roles available for assignment to this team.
               </CardDescription>
@@ -119,7 +121,7 @@ export function TeamRoleManagement({ teamTitle }: { teamTitle: string }) {
       
       {/* Dialogs */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent><DialogHeader><DialogTitle>Add New Role to {teamTitle}</DialogTitle></DialogHeader>
+        <DialogContent><DialogHeader><DialogTitle>Add New Role to {team.name}</DialogTitle></DialogHeader>
           <div className="grid gap-4 py-4">
             <Label htmlFor="new-role-name">Role Name</Label>
             <Input id="new-role-name" value={newRoleName} onChange={(e) => setNewRoleName(e.target.value)} />
@@ -149,7 +151,7 @@ export function TeamRoleManagement({ teamTitle }: { teamTitle: string }) {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the "{roleToDelete}" role and remove it from all users who have it.
+              This action cannot be undone. This will permanently delete the "{roleToDelete}" role and remove it from all users who have it assigned within this team.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

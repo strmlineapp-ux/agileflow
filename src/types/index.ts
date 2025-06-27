@@ -1,6 +1,8 @@
 
+import { type IconName } from '@/components/icons/dynamic-icon';
+
 export interface Attendee {
-  userId: string; // For internal users, this is their ID. For external, could be their email.
+  userId?: string; // Optional: for internal users, this is their ID.
   email: string;
   displayName: string;
   avatarUrl?: string;
@@ -10,19 +12,27 @@ export interface User {
   userId: string;
   email: string;
   displayName: string;
-  teamId?: string;
   googleCalendarLinked: boolean;
   googleCalendarId?: string;
   avatarUrl?: string;
   location?: string;
   phone?: string;
   title?: string;
-  roles?: string[];
+  roles?: string[]; // System-level roles like 'Admin', 'Service Delivery Manager'
   directReports?: string[];
   theme?: 'light' | 'dark' | 'high-visibility' | 'firebase';
   defaultCalendarView?: 'month' | 'week' | 'day' | 'production-schedule';
   easyBooking?: boolean;
   timeFormat?: '12h' | '24h';
+}
+
+export interface Team {
+  id: string;
+  name: string;
+  icon: IconName;
+  members: string[]; // array of userIds
+  roles: string[]; // team-specific roles
+  pinnedLocations: string[]; // array of location names
 }
 
 export interface Task {
@@ -92,10 +102,6 @@ export interface Notification {
     displayName: string;
   };
 }
-
-export type RoleCategories = {
-  [category: string]: string[];
-};
 
 export interface BookableLocation {
   id: string;

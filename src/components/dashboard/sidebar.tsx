@@ -3,38 +3,47 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Calendar, ListChecks, Settings, LogOut, LayoutDashboard, UserCheck, Bell, Clapperboard, Megaphone, Video, Briefcase } from 'lucide-react';
+import { Calendar, ListChecks, Settings, LogOut, LayoutDashboard, UserCheck, Bell, Briefcase } from 'lucide-react';
 import Logo from '@/components/icons/logo';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal } from '../ui/dropdown-menu';
 import { useUser } from '@/context/user-context';
+import { DynamicIcon, type IconName } from '../icons/dynamic-icon';
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { realUser, viewAsUser, setViewAsUser, users, notifications } = useUser();
+  const { realUser, viewAsUser, setViewAsUser, users, teams, notifications } = useUser();
   const isAdmin = realUser.roles?.includes('Admin');
-  const isSdm = viewAsUser.roles?.includes('Service Delivery Manager');
+  const isSdm = viewAsUser.roles?.includes('Service Delivery Manager') || viewAsUser.roles?.includes('Admin');
   const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const canViewStudio = viewAsUser.roles?.includes('Studio Productions Team Admin') || viewAsUser.roles?.includes('Service Delivery Manager') || viewAsUser.roles?.includes('Admin');
-  const canViewLive = viewAsUser.roles?.includes('Live Event Team Admin') || viewAsUser.roles?.includes('Service Delivery Manager') || viewAsUser.roles?.includes('Admin');
-  const canViewProd = viewAsUser.roles?.includes('Production Team Admin') || viewAsUser.roles?.includes('Service Delivery Manager') || viewAsUser.roles?.includes('Admin');
+  const userTeams = teams.filter(team => 
+    team.members.includes(viewAsUser.userId) || isSdm
+  );
 
   const navItems = [
     { href: '/dashboard/calendar', icon: Calendar, label: 'Calendar', visible: true },
     { href: '/dashboard', icon: LayoutDashboard, label: 'Overview', visible: true },
     { href: '/dashboard/tasks', icon: ListChecks, label: 'Tasks', visible: true },
     { href: '/dashboard/service-delivery', icon: Briefcase, label: 'Service Delivery', visible: isSdm },
-    { href: '/dashboard/teams/studio', icon: Clapperboard, label: 'Studio Productions', visible: canViewStudio },
-    { href: '/dashboard/teams/live-events', icon: Video, label: 'Live Events', visible: canViewLive },
-    { href: '/dashboard/teams/productions', icon: Megaphone, label: 'Productions', visible: canViewProd },
+  ];
+
+  const teamNavItems = userTeams.map(team => ({
+    href: `/dashboard/teams/${team.id}`,
+    icon: (props: any) => <DynamicIcon name={team.icon as IconName} {...props} />,
+    label: team.name,
+    visible: true,
+  }));
+
+  const bottomNavItems = [
     { href: '/dashboard/notifications', icon: Bell, label: 'Notifications', visible: true },
     { href: '/dashboard/settings', icon: Settings, label: 'Settings', visible: true },
   ];
 
+  const allNavItems = [...navItems, ...teamNavItems, ...bottomNavItems];
 
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-14 flex-col border-r bg-card sm:flex">
@@ -55,7 +64,7 @@ export function Sidebar() {
           <span className="sr-only">AgileFlow</span>
         </Link>
         <TooltipProvider>
-          {navItems.map((item) => (
+          {allNavItems.map((item) => (
            item.visible && (
             <Tooltip key={item.href}>
               <TooltipTrigger asChild>

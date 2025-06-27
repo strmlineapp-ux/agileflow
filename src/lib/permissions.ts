@@ -1,41 +1,22 @@
-import { type User, type CalendarId } from '@/types';
 
-// Role-to-calendar mapping for management permissions on the initial set of calendars
-const calendarPermissions: Record<string, CalendarId[]> = {
-    'Service Delivery Manager': ['studio-productions', 'live-events', 'business', 'post-production'],
-    'Production': ['studio-productions', 'live-events', 'business', 'post-production'],
-    'Live Events': ['live-events', 'business'],
-    'Studio Productions': ['live-events', 'business'],
-    'Post-Production': ['post-production'],
-};
-
-const initialCalendarIds = ['studio-productions', 'live-events', 'business', 'post-production'];
+import { type User, type CalendarId, type Team } from '@/types';
 
 /**
  * Checks if a user has permission to manage events (create, edit, delete) on a specific calendar.
+ * This is now simplified as SDMs and Admins have broad access, and other permissions
+ * will be handled by team-specific roles in the future.
  * @param user The user object.
- * @param calendarId The ID of the calendar to check.
  * @returns `true` if the user has permission, `false` otherwise.
  */
 export const canManageEventOnCalendar = (user: User, calendarId: CalendarId): boolean => {
-    // Admin role has universal access
-    if (user.roles?.includes('Admin')) {
+    // Admin and SDM roles have universal access to manage all calendars
+    if (user.roles?.includes('Admin') || user.roles?.includes('Service Delivery Manager')) {
         return true;
     }
-
-    // For any custom calendars not in the initial set, only Admins (handled above) and SDMs have access.
-    if (!initialCalendarIds.includes(calendarId)) {
-        return user.roles?.includes('Service Delivery Manager') ?? false;
-    }
     
-    // For initial calendars, check role-based permissions
-    const roles = user.roles || [];
-    for (const role of roles) {
-        if (calendarPermissions[role]?.includes(calendarId)) {
-            return true;
-        }
-    }
-    return false;
+    // For now, we allow any user to create events on any calendar if they don't have special roles.
+    // This can be refined later with team-based calendar permissions.
+    return true;
 };
 
 /**
@@ -46,11 +27,29 @@ export const canManageEventOnCalendar = (user: User, calendarId: CalendarId): bo
  * @returns `true` if the user has any event creation permissions, `false` otherwise.
  */
 export const canCreateAnyEvent = (user: User, allCalendars: {id: string}[]): boolean => {
-    // Admin role has universal access
-    if (user.roles?.includes('Admin')) {
-        return true;
+    // In this simplified model, if you can create on one, you can create on any.
+    // So we just need to check if there's at least one calendar.
+    if (allCalendars.length > 0) {
+        return canManageEventOnCalendar(user, allCalendars[0].id);
     }
+    return false;
+};
+
+
+/**
+ * Gets all roles for a user, combining system roles and roles from their teams.
+ * @param user The user object.
+ * @param teams The list of all teams.
+ * @returns A unique array of all roles the user has.
+ */
+export const getAllUserRoles = (user: User, teams: Team[]): string[] => {
+    const allRoles = new Set<string>(user.roles || []);
     
-    // Check if user has permission on any of the available calendars
-    return allCalendars.some(calendar => canManageEventOnCalendar(user, calendar.id));
+    teams.forEach(team => {
+        if (team.members.includes(user.userId)) {
+            team.roles.forEach(role => allRoles.add(role));
+        }
+    });
+
+    return Array.from(allRoles);
 };

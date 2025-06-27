@@ -1,5 +1,6 @@
 
-import { type Event, type User, type Task, type Notification, type RoleCategories, type SharedCalendar, type CalendarId, type BookableLocation, type Attendee } from '@/types';
+import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team } from '@/types';
+import { iconNames } from '@/components/icons/dynamic-icon';
 
 export const mockCalendars: SharedCalendar[] = [
     { id: 'studio-productions', name: 'Studio Productions', color: 'hsl(48 96% 53%)' }, // Yellow
@@ -21,22 +22,6 @@ export const mockLocations: BookableLocation[] = [
     { id: 'apgar', name: 'Apgar' },
 ];
 
-export const initialRoleCategories: RoleCategories = {
-    "Studio Productions": [
-      'Edit Events', 'Post-Production', 'Studio Productions', 'Studio Productions Team Admin', 'Video Director'
-    ],
-    "Production": [
-      'Production', 'Production Team Admin'
-    ],
-    "Live Events": [
-      'TD', 'Manage Checks', 'Live Events', 'Live Events Team Admin', 'ES Operator', 'ES Daily Checks', 'Content Op', 'Camera', 'Audio', '1st AD'
-    ],
-    "System": [ // Not managed by teams
-        'Admin',
-        'Service Delivery Manager'
-    ]
-};
-
 export const mockUsers: User[] = [
     { 
         userId: '1', 
@@ -47,7 +32,7 @@ export const mockUsers: User[] = [
         title: 'Product Manager', 
         location: 'New York, USA', 
         phone: '123-456-7890', 
-        roles: ['Admin', 'Service Delivery Manager', 'Live Event Team Admin', 'Live Events', 'Studio Productions', 'Video Director', 'TD', 'Edit Events', 'Manage Checks'], 
+        roles: ['Admin', 'Service Delivery Manager'], 
         directReports: ['2', '3'], 
         theme: 'dark', 
         defaultCalendarView: 'production-schedule',
@@ -62,7 +47,7 @@ export const mockUsers: User[] = [
         avatarUrl: 'https://placehold.co/40x40.png', 
         title: 'Lead Engineer', 
         location: 'San Francisco, USA', 
-        roles: ['Service Delivery Manager', 'Production Team Admin', 'Studio Production Team Admin', 'Live Event Team Admin', 'Production', 'Studio Productions', 'Live Events', 'Post-Production', 'Camera', 'Audio', 'Manage Checks'], 
+        roles: ['Service Delivery Manager'], 
         directReports: ['4'], 
         theme: 'light', 
         defaultCalendarView: 'week',
@@ -77,7 +62,7 @@ export const mockUsers: User[] = [
         avatarUrl: 'https://placehold.co/40x40.png', 
         title: 'Software Engineer', 
         location: 'Austin, USA', 
-        roles: ["Production Team Admin", "Production", "Live Events", "Manage Checks"], 
+        roles: [], 
         directReports: ['4'], 
         theme: 'light', 
         defaultCalendarView: 'month',
@@ -93,7 +78,7 @@ export const mockUsers: User[] = [
         title: 'UX Designer', 
         location: 'Chicago, USA', 
         phone: '098-765-4321', 
-        roles: ['Live Event Team Admin', 'Live Events', 'Content Op', 'ES Operator', '1st AD', 'Edit Events', 'ES Daily Checks'], 
+        roles: [], 
         directReports: [], 
         theme: 'light', 
         defaultCalendarView: 'day',
@@ -108,7 +93,7 @@ export const mockUsers: User[] = [
         avatarUrl: 'https://placehold.co/40x40.png', 
         title: 'Junior Developer', 
         location: 'Remote', 
-        roles: ['Production', 'Camera', 'Post-Production'], 
+        roles: [], 
         directReports: [], 
         theme: 'light', 
         defaultCalendarView: 'production-schedule',
@@ -124,7 +109,7 @@ export const mockUsers: User[] = [
         title: 'Studio Technician', 
         location: 'Los Angeles, USA', 
         phone: '555-555-5555', 
-        roles: ['Studio Production Team Admin', 'Studio Productions', 'Audio', 'Camera', 'ES Daily Checks'], 
+        roles: [], 
         directReports: [], 
         theme: 'light', 
         defaultCalendarView: 'production-schedule',
@@ -132,6 +117,34 @@ export const mockUsers: User[] = [
         timeFormat: '24h',
     },
 ];
+
+export const mockTeams: Team[] = [
+    {
+        id: 'studio-productions',
+        name: 'Studio Productions',
+        icon: 'Clapperboard',
+        members: ['1', '2', '6'],
+        roles: ['Post-Production', 'Studio Productions Team Admin', 'Video Director', 'Edit Events'],
+        pinnedLocations: ['Studio', 'ACR', 'Training Room']
+    },
+    {
+        id: 'live-events',
+        name: 'Live Events',
+        icon: 'Video',
+        members: ['1', '2', '3', '4'],
+        roles: ['TD', 'Manage Checks', 'ES Operator', 'ES Daily Checks', 'Content Op', 'Camera', 'Audio', '1st AD', 'Live Event Team Admin'],
+        pinnedLocations: ['Auditorium', 'Event Space 1 (S2)', 'Event Space 2 (S2)']
+    },
+    {
+        id: 'productions',
+        name: 'Productions',
+        icon: 'Megaphone',
+        members: ['2', '3', '5'],
+        roles: ['Production Team Admin'],
+        pinnedLocations: []
+    }
+];
+
 
 const userToAttendee = (user: User): Attendee => ({
     userId: user.userId,
