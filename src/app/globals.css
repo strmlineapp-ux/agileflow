@@ -6,26 +6,26 @@
 @layer base {
   :root,
   .light {
-    --background: 0 0% 56%;
-    --foreground: 0 0% 95%;
-    --card: 0 0% 60%;
-    --card-foreground: 0 0% 95%;
-    --popover: 0 0% 60%;
-    --popover-foreground: 0 0% 95%;
+    --background: 234 38% 82%;
+    --foreground: 234 38% 24%;
+    --card: 234 38% 79%;
+    --card-foreground: 234 38% 24%;
+    --popover: 234 38% 79%;
+    --popover-foreground: 234 38% 24%;
     --primary: 234 38% 70%;
     --primary-foreground: 234 38% 10%;
     --secondary: 234 22% 55%;
     --secondary-foreground: 234 22% 95%;
-    --muted: 0 0% 54%;
-    --muted-foreground: 0 0% 85%;
+    --muted: 234 22% 75%;
+    --muted-foreground: 234 22% 45%;
     --accent: 234 38% 75%;
     --accent-foreground: 234 38% 10%;
     --destructive: 0 35% 65%;
     --destructive-foreground: 0 0% 10%;
     --warning: 40 38% 70%;
     --warning-foreground: 40 48% 10%;
-    --border: 0 0% 51%;
-    --input: 0 0% 51%;
+    --border: 234 22% 70%;
+    --input: 234 22% 70%;
     --ring: 234 38% 70%;
     --radius: 0.5rem;
     --lunch-break-opacity: 0.15;
@@ -146,7 +146,7 @@
   .light .bg-primary:hover,
   .light .bg-primary:focus-visible {
     border-color: transparent;
-    background: linear-gradient(57deg, hsl(var(--primary)), hsl(var(--accent))) border-box;
+    background: linear-gradient(-83deg, hsl(var(--primary)), hsl(var(--accent))) border-box;
   }
   .light .bg-primary:focus-visible {
     outline: 2px solid hsl(var(--ring));
@@ -157,7 +157,7 @@
   .dark .bg-primary:hover,
   .dark .bg-primary:focus-visible {
     border-color: transparent;
-    background: linear-gradient(57deg, hsl(var(--primary)), hsl(var(--accent))) border-box;
+    background: linear-gradient(-83deg, hsl(var(--primary)), hsl(var(--accent))) border-box;
   }
   .dark .bg-primary:focus-visible {
     outline: 2px solid hsl(var(--ring));
@@ -168,7 +168,7 @@
   .firebase .bg-primary:hover,
   .firebase .bg-primary:focus-visible {
     border-color: transparent;
-    background: linear-gradient(57deg, hsl(43, 97%, 73%), hsl(28, 96%, 55%), hsl(337, 67%, 50%), hsl(284, 61%, 49%), hsl(79, 91%, 213%)) border-box;
+    background: linear-gradient(-83deg, hsl(43, 97%, 73%), hsl(28, 96%, 55%), hsl(337, 67%, 50%), hsl(284, 61%, 49%), hsl(79, 91%, 213%)) border-box;
   }
   .firebase .bg-primary:focus-visible {
     outline: 2px solid hsl(var(--ring));
