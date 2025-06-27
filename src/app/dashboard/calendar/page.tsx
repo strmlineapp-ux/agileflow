@@ -139,7 +139,7 @@ export default function CalendarPage() {
                     New Event
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-96 p-4" align="end">
+                <PopoverContent className="w-[500px] p-4" align="end">
                   <NewEventForm onFinished={closePopover} initialData={initialEventData} />
                 </PopoverContent>
               </Popover>

@@ -114,18 +114,6 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
     return getDefaultCalendarId(viewAsUser, availableCalendars);
   }, [viewAsUser, availableCalendars]);
 
-  const timeOptions = React.useMemo(() => {
-    const options = [];
-    for (let h = 0; h < 24; h++) {
-        for (let m = 0; m < 60; m += 15) {
-            const hour = h.toString().padStart(2, '0');
-            const minute = m.toString().padStart(2, '0');
-            options.push(`${hour}:${minute}`);
-        }
-    }
-    return options;
-  }, []);
-
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -285,7 +273,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                             <Input 
                                 placeholder={titlePlaceholders[selectedCalendarId as CalendarId] || 'e.g. Team Standup'} 
                                 {...field} 
-                                className="pl-20"
+                                className="pl-24"
                             />
                             </FormControl>
                         </div>
@@ -330,17 +318,10 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                     name="startTime"
                     render={({ field }) => (
                         <FormItem>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                                <FormControl>
-                                    <SelectTrigger className="w-[110px]">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                    {timeOptions.map(time => <SelectItem key={`start-${time}`} value={time}>{time}</SelectItem>)}
-                                </SelectContent>
-                            </Select>
-                            <FormMessage />
+                           <FormControl>
+                             <Input type="time" {...field} className="w-[110px]" step="900" />
+                           </FormControl>
+                           <FormMessage />
                         </FormItem>
                     )}
                 />
@@ -349,16 +330,9 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                     name="endTime"
                     render={({ field }) => (
                         <FormItem>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                                <FormControl>
-                                    <SelectTrigger className="w-[110px]">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                    {timeOptions.map(time => <SelectItem key={`end-${time}`} value={time}>{time}</SelectItem>)}
-                                </SelectContent>
-                            </Select>
+                             <FormControl>
+                               <Input type="time" {...field} className="w-[110px]" step="900" />
+                             </FormControl>
                              <FormMessage />
                         </FormItem>
                     )}
