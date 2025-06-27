@@ -100,6 +100,10 @@ const titlePlaceholders: Record<CalendarId, string> = {
 
 const priorities: Task['priority'][] = ['P0', 'P1', 'P2', 'P3', 'P4'];
 
+const hours = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
+const minutes = ['00', '15', '30', '45'];
+
+
 export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
   const { viewAsUser, calendars, addEvent, locations } = useUser();
   const { toast } = useToast();
@@ -321,7 +325,41 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                     render={({ field }) => (
                         <FormItem className="flex-1">
                             <FormLabel>Start Time</FormLabel>
-                            <FormControl><Input type="time" step="900" {...field} /></FormControl>
+                            <div className="flex items-center gap-2">
+                                <Select
+                                    value={field.value.split(':')[0]}
+                                    onValueChange={(hour) => {
+                                        const minute = field.value.split(':')[1] || '00';
+                                        field.onChange(`${hour}:${minute}`);
+                                    }}
+                                >
+                                    <FormControl>
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        {hours.map(h => <SelectItem key={`start-hour-${h}`} value={h}>{h}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                                <span className="text-muted-foreground">:</span>
+                                <Select
+                                    value={field.value.split(':')[1]}
+                                    onValueChange={(minute) => {
+                                        const hour = field.value.split(':')[0] || '09';
+                                        field.onChange(`${hour}:${minute}`);
+                                    }}
+                                >
+                                    <FormControl>
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        {minutes.map(m => <SelectItem key={`start-min-${m}`} value={m}>{m}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                            </div>
                             <FormMessage />
                         </FormItem>
                     )}
@@ -332,7 +370,41 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                     render={({ field }) => (
                         <FormItem className="flex-1">
                             <FormLabel>End Time</FormLabel>
-                            <FormControl><Input type="time" step="900" {...field} /></FormControl>
+                            <div className="flex items-center gap-2">
+                                <Select
+                                    value={field.value.split(':')[0]}
+                                    onValueChange={(hour) => {
+                                        const minute = field.value.split(':')[1] || '00';
+                                        field.onChange(`${hour}:${minute}`);
+                                    }}
+                                >
+                                    <FormControl>
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        {hours.map(h => <SelectItem key={`end-hour-${h}`} value={h}>{h}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                                 <span className="text-muted-foreground">:</span>
+                                <Select
+                                    value={field.value.split(':')[1]}
+                                    onValueChange={(minute) => {
+                                        const hour = field.value.split(':')[0] || '10';
+                                        field.onChange(`${hour}:${minute}`);
+                                    }}
+                                >
+                                    <FormControl>
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        {minutes.map(m => <SelectItem key={`end-min-${m}`} value={m}>{m}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                            </div>
                             <FormMessage />
                         </FormItem>
                     )}
