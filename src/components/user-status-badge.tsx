@@ -4,6 +4,7 @@
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { type UserStatus } from '@/types';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 type StatusConfig = {
   base: string;
@@ -56,15 +57,24 @@ export function UserStatusBadge({ status, children }: { status: UserStatus, chil
   }
 
   return (
-    <Badge
-      variant="outline"
-      className={cn(
-        'rounded-full h-8 font-medium',
-        config.base,
-        styleClass
-      )}
-    >
-      <span className="truncate">{children}</span>
-    </Badge>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Badge
+            variant="outline"
+            className={cn(
+              'rounded-full h-8 font-medium',
+              config.base,
+              styleClass
+            )}
+          >
+            <span className="truncate">{children}</span>
+          </Badge>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>{status}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
