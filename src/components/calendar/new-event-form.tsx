@@ -69,6 +69,7 @@ const formSchema = z.object({
 
 type NewEventFormProps = {
   onFinished?: () => void;
+  initialData?: { date: Date; startTime: string; endTime: string; } | null;
 };
 
 const getDefaultCalendarId = (user: User, availableCalendars: SharedCalendar[]): CalendarId => {
@@ -99,7 +100,7 @@ const titlePlaceholders: Record<CalendarId, string> = {
 
 const priorities: Task['priority'][] = ['P0', 'P1', 'P2', 'P3', 'P4'];
 
-export function NewEventForm({ onFinished }: NewEventFormProps) {
+export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
   const { viewAsUser, calendars, addEvent, locations } = useUser();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = React.useState(false);
@@ -127,6 +128,22 @@ export function NewEventForm({ onFinished }: NewEventFormProps) {
       attachments: [],
     },
   });
+
+  React.useEffect(() => {
+    if (initialData) {
+        form.reset({
+            calendarId: defaultCalendarId,
+            priority: 'P3',
+            title: '',
+            location: '',
+            description: '',
+            attachments: [],
+            date: initialData.date,
+            startTime: initialData.startTime,
+            endTime: initialData.endTime,
+        });
+    }
+  }, [initialData, form, defaultCalendarId]);
 
   const selectedCalendarId = form.watch('calendarId');
   const selectedCalendar = calendars.find(c => c.id === selectedCalendarId) || availableCalendars[0];

@@ -10,6 +10,7 @@ import { mockHolidays } from '@/lib/mock-data';
 import { Button } from '../ui/button';
 import { ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { useUser } from '@/context/user-context';
+import { canCreateAnyEvent } from '@/lib/permissions';
 
 const isHoliday = (day: Date) => {
     return mockHolidays.some(holiday => isSameDay(day, holiday));
@@ -35,13 +36,14 @@ const getContrastColor = (hsl: string): string => {
 
 const DEFAULT_HOUR_HEIGHT_PX = 60;
 
-export function WeekView({ date, containerRef, zoomLevel }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit' }) {
-    const { events, calendars } = useUser();
+export function WeekView({ date, containerRef, zoomLevel, onEasyBooking }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', onEasyBooking: (date: Date) => void }) {
+    const { viewAsUser, events, calendars } = useUser();
     const [now, setNow] = useState<Date | null>(null);
     const nowMarkerRef = useRef<HTMLDivElement>(null);
     const [hourHeight, setHourHeight] = useState(DEFAULT_HOUR_HEIGHT_PX);
     const [showWeekends, setShowWeekends] = useState(false);
     
+    const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars);
     const weekStart = useMemo(() => startOfWeek(date, { weekStartsOn: 1 }), [date]);
     const weekDays = useMemo(() => eachDayOfInterval({ start: weekStart, end: addDays(weekStart, 6) }), [weekStart]);
     const isCurrentWeek = useMemo(() => weekDays.some(isToday), [weekDays]);
@@ -53,6 +55,20 @@ export function WeekView({ date, containerRef, zoomLevel }: { date: Date, contai
         });
         return map;
     }, [calendars]);
+
+    const handleEasyBookingClick = (e: React.MouseEvent<HTMLDivElement>, day: Date) => {
+        if (!viewAsUser.easyBooking || !userCanCreateEvent) return;
+
+        const rect = e.currentTarget.getBoundingClientRect();
+        const y = e.clientY - rect.top;
+        const clickedHour = y / hourHeight;
+        const hour = Math.floor(clickedHour);
+        const minutes = Math.floor((clickedHour % 1) * 60);
+
+        const startTime = new Date(day);
+        startTime.setHours(hour, minutes, 0, 0);
+        onEasyBooking(startTime);
+    };
 
     useEffect(() => {
         if (isCurrentWeek) {
@@ -163,10 +179,12 @@ export function WeekView({ date, containerRef, zoomLevel }: { date: Date, contai
 
                     {/* Day columns */}
                     {displayedDays.map((day, index) => {
-                        const isWeekend = isSaturday(day) || isSunday(day);
-                        const isDayHoliday = isHoliday(day);
                         return (
-                            <div key={day.toString()} className={cn("relative border-l", { "bg-muted/10": index % 2 !== 0 })}>
+                            <div 
+                                key={day.toString()} 
+                                className={cn("relative border-l", { "bg-muted/10": index % 2 !== 0 })}
+                                onClick={(e) => handleEasyBookingClick(e, day)}
+                            >
                                 {/* Lunch Break Cue */}
                                 <div
                                     className="absolute inset-x-0 lunch-break-pattern z-0 pointer-events-none"

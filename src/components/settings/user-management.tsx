@@ -25,6 +25,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export function UserManagement() {
     const { realUser, viewAsUser, users, allRoles, updateUser, linkGoogleCalendar } = useUser();
@@ -319,6 +320,17 @@ export function UserManagement() {
                                                                             <SelectItem value="production-schedule">Production Schedule</SelectItem>
                                                                         </SelectContent>
                                                                     </Select>
+                                                                </div>
+                                                                 <div className="grid grid-cols-3 items-center gap-4">
+                                                                    <Label htmlFor="easy-booking">Easy Booking</Label>
+                                                                    <div className="col-span-2 flex items-center">
+                                                                        <Checkbox
+                                                                            id="easy-booking"
+                                                                            checked={realUser.easyBooking}
+                                                                            onCheckedChange={(checked) => updateUser(realUser.userId, { easyBooking: !!checked })}
+                                                                        />
+                                                                        <p className="text-xs text-muted-foreground ml-2">Click empty slots to create events.</p>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>

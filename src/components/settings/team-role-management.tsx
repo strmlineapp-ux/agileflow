@@ -1,17 +1,17 @@
+
 "use client";
 
 import { useState } from 'react';
 import { useUser } from '@/context/user-context';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { PlusCircle, X } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 export function TeamRoleManagement({ teamTitle }: { teamTitle: string }) {
   const { roleCategories, updateRoleCategories, allRoles } = useUser();
@@ -80,58 +80,42 @@ export function TeamRoleManagement({ teamTitle }: { teamTitle: string }) {
 
   return (
     <>
-      <div className="flex flex-col gap-6">
-        <div className="flex items-center justify-between">
-            <h1 className="font-headline text-3xl font-semibold">{teamTitle} Roles</h1>
-            <Button onClick={openAddDialog}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            New Role
+      <Card>
+        <CardHeader>
+          <div className="flex items-start justify-between">
+            <div>
+              <CardTitle>Manage Roles for {teamTitle}</CardTitle>
+              <CardDescription>
+                  Add, edit, or delete roles available for assignment to this team.
+              </CardDescription>
+            </div>
+            <Button variant="ghost" size="icon" onClick={openAddDialog}>
+              <PlusCircle className="h-5 w-5" />
+              <span className="sr-only">Add New Role</span>
             </Button>
-        </div>
-        <Card>
-            <CardHeader>
-            <CardTitle>Manage Roles for {teamTitle}</CardTitle>
-            <CardDescription>
-                Add, edit, or delete roles available for assignment to this team.
-            </CardDescription>
-            </CardHeader>
-            <CardContent className="p-0">
-            <Table>
-                <TableHeader>
-                <TableRow>
-                    <TableHead>Role Name</TableHead>
-                    <TableHead className="w-[100px] text-right">Actions</TableHead>
-                </TableRow>
-                </TableHeader>
-                <TableBody>
-                {rolesForThisTeam.map(role => (
-                    <TableRow key={role}>
-                    <TableCell className="font-medium">{role}</TableCell>
-                    <TableCell className="text-right">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                                <MoreHorizontal className="h-4 w-4" />
-                                <span className="sr-only">Role Actions</span>
-                            </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => openEditDialog(role)}>
-                                <Pencil className="mr-2 h-4 w-4" /> Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10" onClick={() => openDeleteDialog(role)}>
-                                <Trash2 className="mr-2 h-4 w-4" /> Delete
-                            </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </TableCell>
-                    </TableRow>
-                ))}
-                </TableBody>
-            </Table>
-            </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-2">
+            {rolesForThisTeam.length > 0 ? rolesForThisTeam.map(role => (
+              <Badge key={role} variant="secondary" className="group text-base py-1 pl-3 pr-1">
+                <span className="font-medium cursor-pointer" onClick={() => openEditDialog(role)}>{role}</span>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="ml-1 h-5 w-5 hover:bg-destructive/20 rounded-full" 
+                  onClick={() => openDeleteDialog(role)}
+                >
+                  <X className="h-3 w-3" />
+                  <span className="sr-only">Delete {role}</span>
+                </Button>
+              </Badge>
+            )) : (
+              <p className="text-sm text-muted-foreground w-full text-center">No custom roles defined for this team.</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
       
       {/* Dialogs */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>

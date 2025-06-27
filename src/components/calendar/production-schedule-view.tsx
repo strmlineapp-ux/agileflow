@@ -19,6 +19,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { UserStatusBadge } from '@/components/user-status-badge';
 import { Separator } from '@/components/ui/separator';
+import { canCreateAnyEvent } from '@/lib/permissions';
 
 const isHoliday = (day: Date) => {
     return mockHolidays.some(holiday => isSameDay(day, holiday));
@@ -248,7 +249,7 @@ const ManageStatusDialog = ({ isOpen, onOpenChange, day, initialAssignments, use
 };
 
 
-export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit' }) {
+export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBooking }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', onEasyBooking: (date: Date) => void }) {
     const { users, viewAsUser, events, calendars, pinnedLocations, extraCheckLocations, setExtraCheckLocations, userStatusAssignments, setUserStatusAssignments } = useUser();
 
     const [now, setNow] = useState<Date | null>(null);
@@ -270,6 +271,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
     const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
     const [editingStatusDayIso, setEditingStatusDayIso] = useState<string | null>(null);
     
+    const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars);
     const canManageChecks = viewAsUser.roles?.includes('Manage Checks');
     const managerialRoles = ["Admin", "Service Delivery Manager", "Production Team Admin", "Studio Production Team Admin", "Live Event Team Admin"];
     const canManageStatus = viewAsUser.roles?.some(p => managerialRoles.includes(p));
@@ -294,6 +296,20 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
                 [location]: userId
             }
         }));
+    };
+
+    const handleEasyBookingClick = (e: React.MouseEvent<HTMLDivElement>, day: Date) => {
+        if (!viewAsUser.easyBooking || !userCanCreateEvent) return;
+
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const clickedHour = x / hourWidth;
+        const hour = Math.floor(clickedHour);
+        const minutes = Math.floor((clickedHour % 1) * 60);
+
+        const startTime = new Date(day);
+        startTime.setHours(hour, minutes, 0, 0);
+        onEasyBooking(startTime);
     };
 
     useEffect(() => {
@@ -446,7 +462,8 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
         };
     }, [editingStatusDayIso, weeklyScheduleData, userStatusAssignments]);
 
-    const renderLocationRow = (dayIso: string, location: string, eventsInRow: Event[], isLast: boolean, index: number) => {
+    const renderLocationRow = (day: Date, location: string, eventsInRow: Event[], isLast: boolean, index: number) => {
+        const dayIso = day.toISOString();
         const isLocationCollapsed = collapsedLocations[dayIso]?.has(location);
         const assignedUserId = dailyCheckAssignments[dayIso]?.[location];
         const assignedUser = users.find(u => u.userId === assignedUserId);
@@ -482,7 +499,10 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
                     </div>
                      {pinnedLocations.includes(location) && location !== 'Studio' && (canManageChecks ? assignmentControl : assignedUser && <div className="h-6 text-xs px-1.5 flex items-center justify-center text-muted-foreground">{`${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}`}</div>)}
                 </div>
-                <div className={cn("relative flex-1", isLocationCollapsed ? "h-10" : "h-20")}>
+                <div 
+                    className={cn("relative flex-1", isLocationCollapsed ? "h-10" : "h-20")}
+                    onClick={(e) => handleEasyBookingClick(e, day)}
+                >
                     {hours.slice(0, 23).map(hour => <div key={`line-${location}-${hour}`} className="absolute top-0 bottom-0 border-r" style={{ left: `${(hour + 1) * hourWidth}px` }}></div>)}
                     {!isLocationCollapsed && eventsInRow.map(event => {
                         const { left, width } = getEventPosition(event, hourWidth);
@@ -557,7 +577,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
                                     {!isDayCollapsed && (
                                         <CardContent className="p-0 relative">
                                             <div className="absolute inset-y-0 lunch-break-pattern z-0 pointer-events-none" style={{ left: `${LOCATION_LABEL_WIDTH_PX + 12 * hourWidth}px`, width: `${2.5 * hourWidth}px` }} title="Lunch Break" />
-                                            {allDayLocations.map((location, index) => renderLocationRow(dayIso, location, groupedEvents[location] || [], index === allDayLocations.length - 1, index))}
+                                            {allDayLocations.map((location, index) => renderLocationRow(day, location, groupedEvents[location] || [], index === allDayLocations.length - 1, index))}
                                             {isDayToday && now && <div ref={nowMarkerRef} className="absolute top-0 bottom-0 z-20 pointer-events-none" style={{ left: `${LOCATION_LABEL_WIDTH_PX + calculateCurrentTimePosition()}px` }}><div className="relative w-0.5 h-full bg-primary"><div className="absolute -top-1.5 -left-[5px] h-3 w-3 rounded-full bg-primary border-2 border-background"></div></div></div>}
                                         </CardContent>
                                     )}

@@ -22,6 +22,7 @@ export default function CalendarPage() {
   const [zoomLevel, setZoomLevel] = useState<'normal' | 'fit'>('normal');
   const [dayViewAxis, setDayViewAxis] = useState<'standard' | 'reversed'>('standard');
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [initialEventData, setInitialEventData] = useState<any>(null);
   
   const monthViewContainerRef = useRef<HTMLDivElement>(null);
   const dayViewContainerRef = useRef<HTMLDivElement>(null);
@@ -66,6 +67,19 @@ export default function CalendarPage() {
       setZoomLevel('normal');
     }
   };
+
+  const handleEasyBooking = (startTime: Date) => {
+    if (!viewAsUser.easyBooking || !userCanCreateEvent) return;
+
+    const endTime = new Date(startTime.getTime() + 60 * 60 * 1000); // Default to 1 hour
+
+    setInitialEventData({
+        date: startTime,
+        startTime: format(startTime, 'HH:mm'),
+        endTime: format(endTime, 'HH:mm'),
+    });
+    setIsPopoverOpen(true);
+  };
   
   const getTitle = () => {
     if (view === 'month') {
@@ -98,6 +112,11 @@ export default function CalendarPage() {
     );
   };
 
+  const closePopover = () => {
+    setIsPopoverOpen(false);
+    setInitialEventData(null);
+  };
+
   return (
     <Tabs defaultValue={realUser.defaultCalendarView || 'day'} value={view} onValueChange={(v) => setView(v as any)} className="flex h-full flex-col">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 shrink-0">
@@ -113,7 +132,7 @@ export default function CalendarPage() {
         </div>
         <div className="flex items-center gap-2">
             {userCanCreateEvent && (
-              <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+              <Popover open={isPopoverOpen} onOpenChange={(isOpen) => !isOpen ? closePopover() : setIsPopoverOpen(true)}>
                 <PopoverTrigger asChild>
                   <Button>
                     <Plus className="mr-2 h-4 w-4" />
@@ -121,7 +140,7 @@ export default function CalendarPage() {
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-96 p-4" align="end">
-                  <NewEventForm onFinished={() => setIsPopoverOpen(false)} />
+                  <NewEventForm onFinished={closePopover} initialData={initialEventData} />
                 </PopoverContent>
               </Popover>
             )}
@@ -150,13 +169,13 @@ export default function CalendarPage() {
             <MonthView date={currentDate} containerRef={monthViewContainerRef} />
         </TabsContent>
         <TabsContent value="week" ref={weekViewContainerRef} className="absolute inset-0 overflow-y-auto">
-            <WeekView date={currentDate} containerRef={weekViewContainerRef} zoomLevel={zoomLevel} />
+            <WeekView date={currentDate} containerRef={weekViewContainerRef} zoomLevel={zoomLevel} onEasyBooking={handleEasyBooking} />
         </TabsContent>
         <TabsContent value="day" ref={dayViewContainerRef} className="absolute inset-0 overflow-auto">
-            <DayView date={currentDate} containerRef={dayViewContainerRef} zoomLevel={zoomLevel} axisView={dayViewAxis} />
+            <DayView date={currentDate} containerRef={dayViewContainerRef} zoomLevel={zoomLevel} axisView={dayViewAxis} onEasyBooking={handleEasyBooking} />
         </TabsContent>
         <TabsContent value="production-schedule" ref={productionScheduleViewContainerRef} className="absolute inset-0 overflow-auto">
-            <ProductionScheduleView date={currentDate} containerRef={productionScheduleViewContainerRef} zoomLevel={zoomLevel} />
+            <ProductionScheduleView date={currentDate} containerRef={productionScheduleViewContainerRef} zoomLevel={zoomLevel} onEasyBooking={handleEasyBooking} />
         </TabsContent>
       </div>
     </Tabs>

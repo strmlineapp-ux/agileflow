@@ -2,6 +2,7 @@
 
 
 
+
 export interface User {
   userId: string;
   email: string;
@@ -17,6 +18,7 @@ export interface User {
   directReports?: string[];
   theme?: 'light' | 'dark' | 'high-visibility' | 'firebase';
   defaultCalendarView?: 'month' | 'week' | 'day' | 'production-schedule';
+  easyBooking?: boolean;
 }
 
 export interface Task {
@@ -77,7 +79,7 @@ export interface Notification {
   id: string;
   type: 'access_request' | 'standard';
   status?: 'pending' | 'approved' | 'rejected'; // only for access_requests
-  user: Pick<User, 'userId' | 'displayName' | 'avatarUrl'>; // The user who *caused* the notification
+  user: Pick<User, 'userId' | 'displayName' | 'avatarUrl' | 'easyBooking'>; // The user who *caused* the notification
   content: string;
   time: Date;
   read: boolean;

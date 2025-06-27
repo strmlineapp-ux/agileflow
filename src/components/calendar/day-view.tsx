@@ -9,6 +9,7 @@ import { mockHolidays } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useUser } from '@/context/user-context';
+import { canCreateAnyEvent } from '@/lib/permissions';
 
 const isHoliday = (day: Date) => {
     return mockHolidays.some(holiday => isSameDay(day, holiday));
@@ -34,14 +35,15 @@ const DEFAULT_HOUR_WIDTH_PX = 120;
 const DEFAULT_HOUR_HEIGHT_PX = 60;
 const LOCATION_LABEL_WIDTH_PX = 160;
 
-export function DayView({ date, containerRef, zoomLevel, axisView }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', axisView: 'standard' | 'reversed' }) {
-    const { events, calendars, locations } = useUser();
+export function DayView({ date, containerRef, zoomLevel, axisView, onEasyBooking }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', axisView: 'standard' | 'reversed', onEasyBooking: (date: Date) => void }) {
+    const { viewAsUser, events, calendars, locations } = useUser();
     const [now, setNow] = useState<Date | null>(null);
     const nowMarkerRef = useRef<HTMLDivElement>(null);
     const [collapsedLocations, setCollapsedLocations] = useState<Set<string>>(new Set());
     const [hourWidth, setHourWidth] = useState(DEFAULT_HOUR_WIDTH_PX);
     const [hourHeight, setHourHeight] = useState(DEFAULT_HOUR_HEIGHT_PX);
 
+    const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars);
     const isViewingToday = useMemo(() => isSameDay(date, new Date()), [date]);
 
     const dayEvents = useMemo(() => events.filter(event => format(event.startTime, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')), [date, events]);
@@ -152,6 +154,34 @@ export function DayView({ date, containerRef, zoomLevel, axisView }: { date: Dat
         });
     };
 
+    const handleEasyBookingClick = (e: React.MouseEvent<HTMLDivElement>, type: 'standard' | 'reversed', day?: Date) => {
+        if (!viewAsUser.easyBooking || !userCanCreateEvent) return;
+
+        const rect = e.currentTarget.getBoundingClientRect();
+        const targetDate = day || date;
+
+        if (type === 'standard') {
+            const x = e.clientX - rect.left;
+            const clickedHour = x / hourWidth;
+            const hour = Math.floor(clickedHour);
+            const minutes = Math.floor((clickedHour % 1) * 60);
+
+            const startTime = new Date(targetDate);
+            startTime.setHours(hour, minutes, 0, 0);
+            onEasyBooking(startTime);
+        } else {
+            const y = e.clientY - rect.top;
+            const clickedHour = y / hourHeight;
+            const hour = Math.floor(clickedHour);
+            const minutes = Math.floor((clickedHour % 1) * 60);
+
+            const startTime = new Date(targetDate);
+            startTime.setHours(hour, minutes, 0, 0);
+            onEasyBooking(startTime);
+        }
+    };
+
+
     const getEventPositionStandard = (event: Event) => {
         const startHour = event.startTime.getHours();
         const startMinute = event.startTime.getMinutes();
@@ -173,9 +203,6 @@ export function DayView({ date, containerRef, zoomLevel, axisView }: { date: Dat
         const height = Math.max(((endHour + endMinute / 60) - (startHour + startMinute / 60)) * hourHeight, 30);
         return { top, height };
     }
-
-    const isWeekend = isSaturday(date) || isSunday(date);
-    const isDayHoliday = isHoliday(date);
     
     const calculateCurrentTimePosition = () => {
         if (!now) return 0;
@@ -197,7 +224,7 @@ export function DayView({ date, containerRef, zoomLevel, axisView }: { date: Dat
                     {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     <p className="font-medium text-sm truncate">{location}</p>
                 </div>
-                <div className={cn("relative flex-1", isCollapsed ? "h-10" : "h-20")}>
+                <div className={cn("relative flex-1", isCollapsed ? "h-10" : "h-20")} onClick={(e) => handleEasyBookingClick(e, 'standard')}>
                     {/* Vertical Grid lines for this row */}
                     {hours.slice(0, 23).map(hour => (
                         <div key={`line-${hour}`} className="absolute top-0 bottom-0 border-r" style={{ left: `${(hour + 1) * hourWidth}px` }}></div>
@@ -284,7 +311,7 @@ export function DayView({ date, containerRef, zoomLevel, axisView }: { date: Dat
                     </div>
 
                     {/* Day column */}
-                    <div className="relative">
+                    <div className="relative" onClick={(e) => handleEasyBookingClick(e, 'reversed')}>
                         {/* Lunch Break Cue */}
                         <div
                             className="absolute inset-x-0 lunch-break-pattern z-0 pointer-events-none"

@@ -50,7 +50,8 @@ export const mockUsers: User[] = [
         roles: ['Admin', 'Service Delivery Manager', 'Live Event Team Admin', 'Live Events', 'Studio Productions', 'Video Director', 'TD', 'Edit Events', 'Manage Checks'], 
         directReports: ['2', '3'], 
         theme: 'dark', 
-        defaultCalendarView: 'production-schedule' 
+        defaultCalendarView: 'production-schedule',
+        easyBooking: true,
     },
     { 
         userId: '2', 
@@ -63,7 +64,8 @@ export const mockUsers: User[] = [
         roles: ['Service Delivery Manager', 'Production Team Admin', 'Studio Production Team Admin', 'Live Event Team Admin', 'Production', 'Studio Productions', 'Live Events', 'Post-Production', 'Camera', 'Audio', 'Manage Checks'], 
         directReports: ['4'], 
         theme: 'light', 
-        defaultCalendarView: 'week' 
+        defaultCalendarView: 'week',
+        easyBooking: false,
     },
     { 
         userId: '3', 
@@ -76,7 +78,8 @@ export const mockUsers: User[] = [
         roles: ["Production Team Admin", "Production", "Live Events", "Manage Checks"], 
         directReports: ['4'], 
         theme: 'light', 
-        defaultCalendarView: 'month' 
+        defaultCalendarView: 'month',
+        easyBooking: true,
     },
     { 
         userId: '4', 
@@ -90,7 +93,8 @@ export const mockUsers: User[] = [
         roles: ['Live Event Team Admin', 'Live Events', 'Content Op', 'ES Operator', '1st AD', 'Edit Events', 'ES Daily Checks'], 
         directReports: [], 
         theme: 'light', 
-        defaultCalendarView: 'day' 
+        defaultCalendarView: 'day',
+        easyBooking: false,
     },
     { 
         userId: '5', 
@@ -103,7 +107,8 @@ export const mockUsers: User[] = [
         roles: ['Production', 'Camera', 'Post-Production'], 
         directReports: [], 
         theme: 'light', 
-        defaultCalendarView: 'production-schedule' 
+        defaultCalendarView: 'production-schedule',
+        easyBooking: false,
     },
     { 
         userId: '6', 
@@ -117,7 +122,8 @@ export const mockUsers: User[] = [
         roles: ['Studio Production Team Admin', 'Studio Productions', 'Audio', 'Camera', 'ES Daily Checks'], 
         directReports: [], 
         theme: 'light', 
-        defaultCalendarView: 'production-schedule' 
+        defaultCalendarView: 'production-schedule',
+        easyBooking: true,
     },
 ];
 
@@ -408,7 +414,7 @@ export const mockNotifications: Notification[] = [
   {
     id: '4',
     type: 'standard',
-    user: { displayName: 'System', avatarUrl: 'https://placehold.co/40x40.png', userId: 'system', email: 'system', googleCalendarLinked: false },
+    user: { displayName: 'System', avatarUrl: 'https://placehold.co/40x40.png', userId: 'system', email: 'system', googleCalendarLinked: false, easyBooking: false },
     content: 'New features are now available in the Calendar view.',
     time: new Date(new Date().setDate(new Date().getDate() - 3)),
     read: true,
