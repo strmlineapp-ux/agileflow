@@ -35,7 +35,7 @@ export function Sidebar() {
 
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-20 hidden w-14 flex-col border-r bg-card sm:flex">
+    <aside className="fixed inset-y-0 left-0 z-40 hidden w-14 flex-col border-r bg-card sm:flex">
       <nav className="flex flex-col items-center gap-4 px-2 py-4">
         <Link href="/dashboard/calendar" className="group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base">
           <svg

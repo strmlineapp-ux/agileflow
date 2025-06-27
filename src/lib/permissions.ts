@@ -2,11 +2,10 @@ import { type User, type CalendarId } from '@/types';
 
 // Role-to-calendar mapping for management permissions
 const calendarPermissions: Record<string, CalendarId[]> = {
-    'Admin': ['studio-productions', 'live-events', 'business', 'post-production'],
     'Service Delivery Manager': ['studio-productions', 'live-events', 'business', 'post-production'],
     'Production': ['studio-productions', 'live-events', 'business', 'post-production'],
     'Live Events': ['live-events', 'business'],
-    'Studio Productions': ['studio-productions', 'live-events', 'business'],
+    'Studio Productions': ['live-events', 'business'],
     'Post-Production': ['post-production'],
 };
 
@@ -17,6 +16,11 @@ const calendarPermissions: Record<string, CalendarId[]> = {
  * @returns `true` if the user has permission, `false` otherwise.
  */
 export const canManageEventOnCalendar = (user: User, calendarId: CalendarId): boolean => {
+    // Admin role has universal access
+    if (user.roles?.includes('Admin')) {
+        return true;
+    }
+    
     const roles = user.roles || [];
     for (const role of roles) {
         if (calendarPermissions[role]?.includes(calendarId)) {
@@ -33,6 +37,11 @@ export const canManageEventOnCalendar = (user: User, calendarId: CalendarId): bo
  * @returns `true` if the user has any event creation permissions, `false` otherwise.
  */
 export const canCreateAnyEvent = (user: User): boolean => {
+    // Admin role has universal access
+    if (user.roles?.includes('Admin')) {
+        return true;
+    }
+
     const roles = user.roles || [];
     const creatorRoles = Object.keys(calendarPermissions);
     return roles.some(role => creatorRoles.includes(role));
