@@ -197,20 +197,24 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <DialogContent className="sm:max-w-md">
                 <div className="grid gap-6 py-4">
-                    <div className="relative">
-                        <Input
-                            id="team-name"
-                            placeholder="Team Name"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            className="pr-12 text-lg font-semibold"
-                        />
+                    <div className="flex items-center gap-2">
+                        {team && (
+                             <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-9 w-9 text-muted-foreground hover:text-destructive"
+                                onClick={() => onDelete(team)}
+                            >
+                                <X className="h-5 w-5" />
+                                <span className="sr-only">Delete team</span>
+                            </Button>
+                        )}
                         <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                             <PopoverTrigger asChild>
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="absolute right-1 top-1/2 h-8 w-8 -translate-y-1/2"
+                                className="h-9 w-9"
                             >
                                 <DynamicIcon name={icon} className="h-5 w-5 text-muted-foreground" />
                             </Button>
@@ -233,84 +237,91 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
                                 </div>
                             </PopoverContent>
                         </Popover>
+                        
+                        <Input
+                            id="team-name"
+                            placeholder="Team Name"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            className="text-lg font-semibold flex-1"
+                        />
                     </div>
 
                     <div className="space-y-2">
                          <p className="text-sm text-muted-foreground">Click member pills to toggle manager status.</p>
-                        <div className="flex min-h-[40px] flex-wrap items-center gap-2 rounded-md border bg-muted/50 p-2">
-                            {members.length > 0 ? (
-                            members.map(userId => {
-                                const user = allUsers.find(u => u.userId === userId);
-                                if (!user) return null;
-                                const isManager = managers.includes(userId);
-                                return (
-                                <Badge 
-                                    key={user.userId} 
-                                    variant={isManager ? 'default' : 'secondary'}
-                                    className="gap-1.5 p-1 pl-2 cursor-pointer"
-                                    onClick={() => handleManagerToggle(userId)}
-                                >
-                                    <Avatar className="h-5 w-5">
-                                        <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
-                                        <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                                    </Avatar>
-                                    <span className="font-medium">{user.displayName}</span>
-                                </Badge>
-                                );
-                            })
-                            ) : (
-                            <p className="w-full text-center text-sm text-muted-foreground">No members yet.</p>
-                            )}
-                        </div>
-                        <Popover open={isMemberPopoverOpen} onOpenChange={setIsMemberPopoverOpen}>
-                            <PopoverTrigger asChild>
-                            <Button variant="outline" className="w-full justify-center">
-                                <PlusCircle className="mr-2 h-4 w-4" />
-                                Add/Remove Members
-                            </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-[300px] p-0" align="start">
-                            <div className="p-2">
-                                <Input
-                                placeholder="Search users..."
-                                value={memberSearch}
-                                onChange={(e) => setMemberSearch(e.target.value)}
-                                />
-                            </div>
-                            <ScrollArea className="h-48">
-                                <div className="p-1">
-                                {filteredUsers.map(user => (
-                                    <div
-                                        key={user.userId}
-                                        onClick={() => handleMemberToggleInPopover(user.userId, !members.includes(user.userId))}
-                                        className="flex cursor-pointer items-center gap-2 rounded-md p-2 hover:bg-accent"
+                        <div className="flex items-start gap-2 rounded-md border bg-muted/50 p-2">
+                           
+                            <Popover open={isMemberPopoverOpen} onOpenChange={setIsMemberPopoverOpen}>
+                                <PopoverTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 mt-1">
+                                        <PlusCircle className="h-5 w-5" />
+                                        <span className="sr-only">Add or remove members</span>
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-[300px] p-0" align="start">
+                                    <div className="p-2">
+                                        <Input
+                                        placeholder="Search users..."
+                                        value={memberSearch}
+                                        onChange={(e) => setMemberSearch(e.target.value)}
+                                        />
+                                    </div>
+                                    <ScrollArea className="h-48">
+                                        <div className="p-1">
+                                        {filteredUsers.map(user => (
+                                            <div
+                                                key={user.userId}
+                                                onClick={() => handleMemberToggleInPopover(user.userId, !members.includes(user.userId))}
+                                                className="flex cursor-pointer items-center gap-2 rounded-md p-2 hover:bg-accent"
+                                            >
+                                            <Checkbox
+                                                checked={members.includes(user.userId)}
+                                                readOnly
+                                            />
+                                            <Avatar className="h-8 w-8">
+                                                <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
+                                                <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                            </Avatar>
+                                            <div>
+                                                <p className="text-sm font-medium">{user.displayName}</p>
+                                                <p className="text-xs text-muted-foreground">{user.email}</p>
+                                            </div>
+                                            </div>
+                                        ))}
+                                        </div>
+                                    </ScrollArea>
+                                </PopoverContent>
+                            </Popover>
+
+                            <div className="flex min-h-[40px] flex-wrap items-center gap-2 flex-1">
+                                {members.length > 0 ? (
+                                members.map(userId => {
+                                    const user = allUsers.find(u => u.userId === userId);
+                                    if (!user) return null;
+                                    const isManager = managers.includes(userId);
+                                    return (
+                                    <Badge 
+                                        key={user.userId} 
+                                        variant={isManager ? 'default' : 'secondary'}
+                                        className="gap-1.5 p-1 pl-2 cursor-pointer"
+                                        onClick={() => handleManagerToggle(userId)}
                                     >
-                                    <Checkbox
-                                        checked={members.includes(user.userId)}
-                                        readOnly
-                                    />
-                                    <Avatar className="h-8 w-8">
-                                        <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
-                                        <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                        <p className="text-sm font-medium">{user.displayName}</p>
-                                        <p className="text-xs text-muted-foreground">{user.email}</p>
-                                    </div>
-                                    </div>
-                                ))}
-                                </div>
-                            </ScrollArea>
-                            </PopoverContent>
-                        </Popover>
+                                        <Avatar className="h-5 w-5">
+                                            <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
+                                            <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                        </Avatar>
+                                        <span className="font-medium">{user.displayName}</span>
+                                    </Badge>
+                                    );
+                                })
+                                ) : (
+                                <p className="w-full text-center text-sm text-muted-foreground">No members yet. Click '+' to add.</p>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
                  <DialogFooter>
-                    {team && (
-                        <Button variant="destructive" className="mr-auto" onClick={() => onDelete(team)}>
-                            Delete Team
-                        </Button>
-                    )}
                     <Button variant="outline" onClick={onClose}>Cancel</Button>
                     <Button onClick={handleSave}>Save</Button>
                 </DialogFooter>
