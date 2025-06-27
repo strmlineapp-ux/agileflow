@@ -328,7 +328,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
     const weeklyScheduleData = useMemo(() => {
         return weekDays.map(day => {
             const dayEvents = events.filter(event => format(event.startTime, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd'));
-            const allDayLocations = pinnedLocations;
+            const allDayLocations = pinnedLocations || [];
 
             const groupedEvents = allDayLocations.reduce((acc, locationKey) => {
                 acc[locationKey] = dayEvents.filter(e => e.location === locationKey);
