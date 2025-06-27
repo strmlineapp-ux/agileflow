@@ -19,7 +19,6 @@ import { useUser } from '@/context/user-context';
 import { canManageEventOnCalendar } from '@/lib/permissions';
 import { useToast } from '@/hooks/use-toast';
 import { type CalendarId, type User, type SharedCalendar } from '@/types';
-import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,15 +38,6 @@ const formSchema = z.object({
 
 type NewEventFormProps = {
   onFinished?: () => void;
-};
-
-const getContrastColor = (hsl: string): string => {
-    if (!hsl) return 'hsl(var(--card-foreground))';
-    const parts = hsl.split(' ');
-    if (parts.length < 3) return 'hsl(var(--card-foreground))'; 
-    const lightness = parseInt(parts[2].replace('%', ''));
-    if (isNaN(lightness)) return 'hsl(var(--card-foreground))';
-    return lightness > 55 ? 'hsl(var(--card-foreground))' : 'hsl(var(--primary-foreground))';
 };
 
 const getDefaultCalendarId = (user: User, availableCalendars: SharedCalendar[]): CalendarId => {
@@ -105,18 +95,6 @@ export function NewEventForm({ onFinished }: NewEventFormProps) {
   const selectedCalendarId = form.watch('calendarId');
   const selectedCalendar = calendars.find(c => c.id === selectedCalendarId) || availableCalendars[0];
 
-  const calendarBadge = selectedCalendar ? (
-    <Badge
-        style={{
-            backgroundColor: selectedCalendar.color,
-            color: getContrastColor(selectedCalendar.color),
-        }}
-        className="cursor-pointer border-transparent"
-    >
-        {selectedCalendar.name}
-    </Badge>
-  ) : null;
-
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     const [startHour, startMinute] = values.startTime.split(':').map(Number);
@@ -172,34 +150,49 @@ export function NewEventForm({ onFinished }: NewEventFormProps) {
                 name="title"
                 render={({ field }) => (
                     <FormItem>
-                        <div className="flex justify-between items-baseline">
-                          <FormLabel>Title</FormLabel>
-                          {availableCalendars.length > 1 ? (
-                              <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                      {calendarBadge}
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                      {availableCalendars.map(cal => (
-                                          <DropdownMenuItem
-                                              key={cal.id}
-                                              onSelect={() => form.setValue('calendarId', cal.id, { shouldValidate: true })}
-                                          >
-                                              {cal.name}
-                                          </DropdownMenuItem>
-                                      ))}
-                                  </DropdownMenuContent>
-                              </DropdownMenu>
-                          ) : (
-                              calendarBadge
-                          )}
+                         <div className="relative">
+                            {availableCalendars.length > 1 ? (
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <button
+                                            type="button"
+                                            className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 rounded-full border cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                            style={{ backgroundColor: selectedCalendar.color }}
+                                            aria-label="Select calendar"
+                                        />
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="start">
+                                        {availableCalendars.map(cal => (
+                                            <DropdownMenuItem
+                                                key={cal.id}
+                                                onSelect={() => form.setValue('calendarId', cal.id, { shouldValidate: true })}
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <div
+                                                        className="h-3 w-3 rounded-full border"
+                                                        style={{ backgroundColor: cal.color }}
+                                                    />
+                                                    <span>{cal.name}</span>
+                                                </div>
+                                            </DropdownMenuItem>
+                                        ))}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            ) : (
+                                <div
+                                    className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 rounded-full border"
+                                    style={{ backgroundColor: selectedCalendar.color }}
+                                    aria-label={`Calendar: ${selectedCalendar.name}`}
+                                />
+                            )}
+                            <FormControl>
+                            <Input 
+                                placeholder={titlePlaceholders[selectedCalendarId as CalendarId] || 'e.g. Team Standup'} 
+                                {...field} 
+                                className="pl-10"
+                            />
+                            </FormControl>
                         </div>
-                        <FormControl>
-                          <Input 
-                            placeholder={titlePlaceholders[selectedCalendarId as CalendarId] || 'e.g. Team Standup'} 
-                            {...field} 
-                          />
-                        </FormControl>
                         <FormMessage />
                     </FormItem>
                 )}
