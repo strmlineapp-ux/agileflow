@@ -144,6 +144,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(today).setHours(9, 30, 0, 0)), 
         attendees: [mockUsers[0], mockUsers[1], mockUsers[2]], 
         location: 'ACR',
+        priority: 'P2',
         createdBy: '1', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -156,6 +157,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(today).setHours(12, 0, 0, 0)), 
         attendees: [mockUsers[3], mockUsers[4]], 
         location: 'Event Space 1 (S2)',
+        priority: 'P1',
         createdBy: '1', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -168,6 +170,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(today).setHours(13, 0, 0, 0)), 
         attendees: [mockUsers[5]], 
         location: 'ACR',
+        priority: 'P3',
         createdBy: '2', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -180,6 +183,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(today).setHours(17, 30, 0, 0)), 
         attendees: [mockUsers[2], mockUsers[5]], 
         location: 'Studio',
+        priority: 'P0',
         createdBy: '1', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -193,6 +197,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(tomorrow).setHours(12, 30, 0, 0)),
         attendees: [mockUsers[1], mockUsers[4], mockUsers[5]], 
         location: 'Studio',
+        priority: 'P2',
         createdBy: '2', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -205,6 +210,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(tomorrow).setHours(16, 30, 0, 0)),
         attendees: [mockUsers[3]], 
         location: 'Event Space 3 (R7)',
+        priority: 'P3',
         createdBy: '3', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -218,6 +224,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(yesterday).setHours(17, 0, 0, 0)),
         attendees: mockUsers, 
         location: 'Event Space 4 (R7)',
+        priority: 'P4',
         createdBy: '1', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -230,6 +237,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(yesterday).setHours(11, 0, 0, 0)),
         attendees: [mockUsers[5]], 
         location: 'Studio',
+        priority: 'P3',
         createdBy: '2', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -243,6 +251,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(twoDaysLater).setHours(12, 0, 0, 0)),
         attendees: mockUsers, 
         location: 'Auditorium',
+        priority: 'P2',
         createdBy: '1', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -255,6 +264,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(twoDaysLater).setHours(18, 0, 0, 0)),
         attendees: [mockUsers[2], mockUsers[3], mockUsers[5]], 
         location: 'Event Space 2 (S2)',
+        priority: 'P1',
         createdBy: '1', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -267,6 +277,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(threeDaysLater).setHours(17, 0, 0, 0)),
         attendees: [mockUsers[1], mockUsers[5]], 
         location: 'ACR',
+        priority: 'P2',
         createdBy: '2', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -279,6 +290,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(fourDaysLater).setHours(18, 0, 0, 0)),
         attendees: [mockUsers[0], mockUsers[3]], 
         location: 'Auditorium',
+        priority: 'P1',
         createdBy: '1', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -292,6 +304,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(threeDaysAgo).setHours(13, 0, 0, 0)),
         attendees: [mockUsers[0], mockUsers[2]], 
         location: 'Off-site',
+        priority: 'P3',
         createdBy: '1', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -304,6 +317,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(fourDaysAgo).setHours(16, 0, 0, 0)),
         attendees: [mockUsers[4], mockUsers[5]], 
         location: 'Studio',
+        priority: 'P3',
         createdBy: '2', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -317,6 +331,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(weekendShootDate).setHours(16, 0, 0, 0)),
         attendees: [mockUsers[0], mockUsers[5]], 
         location: 'Studio',
+        priority: 'P1',
         createdBy: '1', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -329,6 +344,7 @@ export const mockEvents: Event[] = [
         startTime: new Date(new Date(twoDaysAgo).setHours(11, 0, 0, 0)),
         endTime: new Date(new Date(twoDaysAgo).setHours(12, 0, 0, 0)),
         attendees: [mockUsers[0], mockUsers[1]], 
+        priority: 'P3',
         createdBy: '1', 
         createdAt: new Date(), 
         lastUpdated: new Date() 

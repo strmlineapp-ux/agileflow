@@ -11,24 +11,26 @@ import { Calendar as CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
 import { useUser } from '@/context/user-context';
 import { canManageEventOnCalendar } from '@/lib/permissions';
 import { useToast } from '@/hooks/use-toast';
-import { type CalendarId, type User, type SharedCalendar } from '@/types';
+import { type CalendarId, type User, type SharedCalendar, type Task } from '@/types';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { PriorityBadge } from './priority-badge';
 
 const formSchema = z.object({
   title: z.string().min(2, { message: 'Title must be at least 2 characters.' }),
   calendarId: z.string().nonempty({ message: 'Please select a calendar.' }),
+  priority: z.enum(['P0', 'P1', 'P2', 'P3', 'P4']),
   date: z.date({ required_error: 'A date is required.' }),
   startTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, { message: 'Invalid time format (HH:mm).' }),
   endTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, { message: 'Invalid time format (HH:mm).' }),
@@ -66,6 +68,8 @@ const titlePlaceholders: Record<CalendarId, string> = {
   'post-production': 'New EDIT Machine Book',
 };
 
+const priorities: Task['priority'][] = ['P0', 'P1', 'P2', 'P3', 'P4'];
+
 export function NewEventForm({ onFinished }: NewEventFormProps) {
   const { viewAsUser, calendars, addEvent } = useUser();
   const { toast } = useToast();
@@ -84,6 +88,7 @@ export function NewEventForm({ onFinished }: NewEventFormProps) {
     defaultValues: {
       title: '',
       calendarId: defaultCalendarId,
+      priority: 'P3',
       date: new Date(),
       startTime: '09:00',
       endTime: '10:00',
@@ -120,6 +125,7 @@ export function NewEventForm({ onFinished }: NewEventFormProps) {
         endTime,
         location: values.location,
         description: values.description,
+        priority: values.priority,
         attendees: [], // Attendee selection can be added later
       });
 
@@ -151,45 +157,65 @@ export function NewEventForm({ onFinished }: NewEventFormProps) {
                 render={({ field }) => (
                     <FormItem>
                          <div className="relative">
-                            {availableCalendars.length > 1 ? (
+                            <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-2 h-full">
+                                {availableCalendars.length > 1 ? (
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <button
+                                                type="button"
+                                                className="flex items-center justify-center h-5 w-5 rounded-full border cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                                style={{ backgroundColor: selectedCalendar.color }}
+                                                aria-label="Select calendar"
+                                            />
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="start">
+                                            {availableCalendars.map(cal => (
+                                                <DropdownMenuItem
+                                                    key={cal.id}
+                                                    onSelect={() => form.setValue('calendarId', cal.id, { shouldValidate: true })}
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <div
+                                                            className="h-3 w-3 rounded-full border"
+                                                            style={{ backgroundColor: cal.color }}
+                                                        />
+                                                        <span>{cal.name}</span>
+                                                    </div>
+                                                </DropdownMenuItem>
+                                            ))}
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                ) : (
+                                    <div
+                                        className="h-5 w-5 rounded-full border"
+                                        style={{ backgroundColor: selectedCalendar.color }}
+                                        aria-label={`Calendar: ${selectedCalendar.name}`}
+                                    />
+                                )}
+
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <button
-                                            type="button"
-                                            className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 rounded-full border cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                            style={{ backgroundColor: selectedCalendar.color }}
-                                            aria-label="Select calendar"
-                                        />
+                                        <button type="button">
+                                            <PriorityBadge priority={form.watch('priority')} />
+                                        </button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="start">
-                                        {availableCalendars.map(cal => (
-                                            <DropdownMenuItem
-                                                key={cal.id}
-                                                onSelect={() => form.setValue('calendarId', cal.id, { shouldValidate: true })}
-                                            >
-                                                <div className="flex items-center gap-2">
-                                                    <div
-                                                        className="h-3 w-3 rounded-full border"
-                                                        style={{ backgroundColor: cal.color }}
-                                                    />
-                                                    <span>{cal.name}</span>
-                                                </div>
+                                        {priorities.map(p => (
+                                            <DropdownMenuItem key={p} onSelect={() => form.setValue('priority', p, { shouldValidate: true })}>
+                                                <PriorityBadge priority={p} />
+                                                <span className="ml-2 text-sm text-muted-foreground w-20">
+                                                {{ P0: 'Highest', P1: 'High', P2: 'Medium', P3: 'Low', P4: 'Lowest' }[p]}
+                                                </span>
                                             </DropdownMenuItem>
                                         ))}
                                     </DropdownMenuContent>
                                 </DropdownMenu>
-                            ) : (
-                                <div
-                                    className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 rounded-full border"
-                                    style={{ backgroundColor: selectedCalendar.color }}
-                                    aria-label={`Calendar: ${selectedCalendar.name}`}
-                                />
-                            )}
+                            </div>
                             <FormControl>
                             <Input 
                                 placeholder={titlePlaceholders[selectedCalendarId as CalendarId] || 'e.g. Team Standup'} 
                                 {...field} 
-                                className="pl-10"
+                                className="pl-24"
                             />
                             </FormControl>
                         </div>
