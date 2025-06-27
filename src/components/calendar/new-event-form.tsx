@@ -319,7 +319,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                     render={({ field }) => (
                         <FormItem>
                            <FormControl>
-                             <Input {...field} className="w-[110px]" />
+                             <Input type="time" {...field} className="w-[110px]" />
                            </FormControl>
                            <FormMessage />
                         </FormItem>
@@ -331,7 +331,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                     render={({ field }) => (
                         <FormItem>
                              <FormControl>
-                                <Input {...field} className="w-[110px]" />
+                                <Input type="time" {...field} className="w-[110px]" />
                              </FormControl>
                              <FormMessage />
                         </FormItem>
