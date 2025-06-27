@@ -1,8 +1,10 @@
 
-
-
-
-
+export interface Attendee {
+  userId: string; // For internal users, this is their ID. For external, could be their email.
+  email: string;
+  displayName: string;
+  avatarUrl?: string;
+}
 
 export interface User {
   userId: string;
@@ -59,7 +61,7 @@ export interface Event {
   description?: string;
   startTime: Date;
   endTime: Date;
-  attendees: User[];
+  attendees: Attendee[];
   location?: string;
   associatedTaskId?: string;
   priority: 'P0' | 'P1' | 'P2' | 'P3' | 'P4';

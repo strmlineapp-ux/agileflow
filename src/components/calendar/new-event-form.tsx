@@ -18,7 +18,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useUser } from '@/context/user-context';
 import { canManageEventOnCalendar } from '@/lib/permissions';
 import { useToast } from '@/hooks/use-toast';
-import { type CalendarId, type User, type SharedCalendar, type Task, type Attachment, type AttachmentType } from '@/types';
+import { type CalendarId, type User, type SharedCalendar, type Task, type Attachment, type AttachmentType, type Attendee } from '@/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -57,10 +57,10 @@ const attachmentIcons: Record<AttachmentType, React.ReactNode> = {
   local: <FileIcon className="h-4 w-4" />,
 };
 
-const UserSummarySchema = z.object({
+const AttendeeSchema = z.object({
   userId: z.string(),
   displayName: z.string(),
-  email: z.string(),
+  email: z.string().email(),
   avatarUrl: z.string().optional(),
 });
 
@@ -74,7 +74,7 @@ const formSchema = z.object({
   location: z.string().optional(),
   description: z.string().optional(),
   attachments: z.array(z.any()).optional(),
-  attendees: z.array(UserSummarySchema).optional(),
+  attendees: z.array(AttendeeSchema).optional(),
 });
 
 type NewEventFormProps = {
@@ -183,12 +183,18 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
 
   const handleToggleGuest = (guest: User) => {
     const currentAttendees = form.getValues('attendees') || [];
-    const isAttending = currentAttendees.some(att => att.userId === guest.userId);
+    const isAttending = currentAttendees.some(att => att.email === guest.email);
 
     if (isAttending) {
-        form.setValue('attendees', currentAttendees.filter(att => att.userId !== guest.userId));
+        form.setValue('attendees', currentAttendees.filter(att => att.email !== guest.email));
     } else {
-        form.setValue('attendees', [...currentAttendees, guest]);
+        const newAttendee: Attendee = {
+            userId: guest.userId,
+            displayName: guest.displayName,
+            email: guest.email,
+            avatarUrl: guest.avatarUrl,
+        };
+        form.setValue('attendees', [...currentAttendees, newAttendee]);
     }
   };
 
@@ -405,14 +411,14 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                     <div className="space-y-2">
                         {selectedAttendees.length > 0 && (
                             <div className="flex flex-wrap gap-2">
-                                {selectedAttendees.map(user => (
-                                     <div key={user.userId} className="flex items-center gap-2 p-1 pr-2 bg-muted rounded-full">
+                                {selectedAttendees.map(attendee => (
+                                     <div key={attendee.email} className="flex items-center gap-2 p-1 pr-2 bg-muted rounded-full">
                                         <Avatar className="h-6 w-6">
-                                            <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
-                                            <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                            <AvatarImage src={attendee.avatarUrl} alt={attendee.displayName} data-ai-hint="user avatar" />
+                                            <AvatarFallback>{attendee.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
                                         </Avatar>
-                                        <span className="text-sm font-medium">{user.displayName}</span>
-                                        <button type="button" onClick={() => handleToggleGuest(user)} className="rounded-full hover:bg-muted-foreground/20">
+                                        <span className="text-sm font-medium">{attendee.displayName}</span>
+                                        <button type="button" onClick={() => handleToggleGuest(attendee as User)} className="rounded-full hover:bg-muted-foreground/20">
                                             <X className="h-4 w-4" />
                                         </button>
                                      </div>
@@ -447,7 +453,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                                             <input
                                                 type="checkbox"
                                                 className="h-4 w-4"
-                                                checked={selectedAttendees.some(att => att.userId === guest.userId)}
+                                                checked={selectedAttendees.some(att => att.email === guest.email)}
                                                 readOnly
                                             />
                                             <Avatar className="h-8 w-8">
