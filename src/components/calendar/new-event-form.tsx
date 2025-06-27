@@ -11,7 +11,7 @@ import { Calendar as CalendarIcon, Paperclip, File as FileIcon, Video, X } from 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
@@ -100,10 +100,6 @@ const titlePlaceholders: Record<CalendarId, string> = {
 
 const priorities: Task['priority'][] = ['P0', 'P1', 'P2', 'P3', 'P4'];
 
-const hours = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
-const minutes = ['00', '15', '30', '45'];
-
-
 export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
   const { viewAsUser, calendars, addEvent, locations } = useUser();
   const { toast } = useToast();
@@ -117,6 +113,18 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
   const defaultCalendarId = React.useMemo(() => {
     return getDefaultCalendarId(viewAsUser, availableCalendars);
   }, [viewAsUser, availableCalendars]);
+
+  const timeOptions = React.useMemo(() => {
+    const options = [];
+    for (let h = 0; h < 24; h++) {
+        for (let m = 0; m < 60; m += 15) {
+            const hour = h.toString().padStart(2, '0');
+            const minute = m.toString().padStart(2, '0');
+            options.push(`${hour}:${minute}`);
+        }
+    }
+    return options;
+  }, []);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -286,80 +294,52 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                 )}
             />
             
-            <FormField
-                control={form.control}
-                name="date"
-                render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                    <FormLabel>Date</FormLabel>
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <FormControl>
-                                <Button
-                                variant={'outline'}
-                                className={cn('pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}
-                                >
-                                {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                </Button>
-                            </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                                mode="single"
-                                selected={field.value}
-                                onSelect={field.onChange}
-                                disabled={(date) => date < new Date('1900-01-01')}
-                                initialFocus
-                            />
-                        </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                    </FormItem>
-                )}
-            />
-            <div className="flex gap-4">
+            <div className="flex items-start gap-2">
+                <FormField
+                    control={form.control}
+                    name="date"
+                    render={({ field }) => (
+                        <FormItem className="flex-1">
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <FormControl>
+                                        <Button
+                                            variant={'outline'}
+                                            className={cn('w-full justify-start text-left font-normal', !field.value && 'text-muted-foreground')}
+                                        >
+                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            {field.value ? format(field.value, 'MMM d, yyyy') : <span>Pick a date</span>}
+                                        </Button>
+                                    </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar
+                                        mode="single"
+                                        selected={field.value}
+                                        onSelect={field.onChange}
+                                        initialFocus
+                                    />
+                                </PopoverContent>
+                            </Popover>
+                             <FormMessage />
+                        </FormItem>
+                    )}
+                />
                 <FormField
                     control={form.control}
                     name="startTime"
                     render={({ field }) => (
-                        <FormItem className="flex-1">
-                            <FormLabel>Start Time</FormLabel>
-                            <div className="flex items-center gap-2">
-                                <Select
-                                    value={field.value.split(':')[0]}
-                                    onValueChange={(hour) => {
-                                        const minute = field.value.split(':')[1] || '00';
-                                        field.onChange(`${hour}:${minute}`);
-                                    }}
-                                >
-                                    <FormControl>
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        {hours.map(h => <SelectItem key={`start-hour-${h}`} value={h}>{h}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                                <span className="text-muted-foreground">:</span>
-                                <Select
-                                    value={field.value.split(':')[1]}
-                                    onValueChange={(minute) => {
-                                        const hour = field.value.split(':')[0] || '09';
-                                        field.onChange(`${hour}:${minute}`);
-                                    }}
-                                >
-                                    <FormControl>
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        {minutes.map(m => <SelectItem key={`start-min-${m}`} value={m}>{m}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                        <FormItem>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl>
+                                    <SelectTrigger className="w-[110px]">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    {timeOptions.map(time => <SelectItem key={`start-${time}`} value={time}>{time}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
                             <FormMessage />
                         </FormItem>
                     )}
@@ -368,44 +348,18 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                     control={form.control}
                     name="endTime"
                     render={({ field }) => (
-                        <FormItem className="flex-1">
-                            <FormLabel>End Time</FormLabel>
-                            <div className="flex items-center gap-2">
-                                <Select
-                                    value={field.value.split(':')[0]}
-                                    onValueChange={(hour) => {
-                                        const minute = field.value.split(':')[1] || '00';
-                                        field.onChange(`${hour}:${minute}`);
-                                    }}
-                                >
-                                    <FormControl>
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        {hours.map(h => <SelectItem key={`end-hour-${h}`} value={h}>{h}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                                 <span className="text-muted-foreground">:</span>
-                                <Select
-                                    value={field.value.split(':')[1]}
-                                    onValueChange={(minute) => {
-                                        const hour = field.value.split(':')[0] || '10';
-                                        field.onChange(`${hour}:${minute}`);
-                                    }}
-                                >
-                                    <FormControl>
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        {minutes.map(m => <SelectItem key={`end-min-${m}`} value={m}>{m}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <FormMessage />
+                        <FormItem>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl>
+                                    <SelectTrigger className="w-[110px]">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    {timeOptions.map(time => <SelectItem key={`end-${time}`} value={time}>{time}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                             <FormMessage />
                         </FormItem>
                     )}
                 />
@@ -416,7 +370,6 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                 name="location"
                 render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Location</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                                 <SelectTrigger>
@@ -479,7 +432,6 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
-                            <FormLabel>Description (Optional)</FormLabel>
                         </div>
                         <FormControl><Textarea placeholder="Add more details..." {...field} /></FormControl>
                         <FormMessage />
