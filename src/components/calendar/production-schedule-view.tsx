@@ -3,9 +3,9 @@
 
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { format, addHours, startOfDay, isSaturday, isSunday, isSameDay, isToday, startOfWeek, eachDayOfInterval, addDays } from 'date-fns';
-import { type Event, type User, type UserStatus, type UserStatusAssignment, type CalendarEventLabel } from '@/types';
+import { type Event, type User, type UserStatus, type UserStatusAssignment } from '@/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { mockEvents, mockHolidays } from '@/lib/mock-data';
+import { mockHolidays } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 import { ChevronDown, ChevronRight, PlusCircle, Pencil, Plus, X } from 'lucide-react';
 import { Button } from '../ui/button';
@@ -24,6 +24,12 @@ const isHoliday = (day: Date) => {
     return mockHolidays.some(holiday => isSameDay(day, holiday));
 }
 
+const getContrastColor = (hsl: string): string => {
+    const lightness = parseInt(hsl.split(',')[2].replace('%', '').replace(')', ''));
+    return lightness > 55 ? 'hsl(var(--card-foreground))' : 'hsl(var(--primary-foreground))';
+}
+
+
 const DEFAULT_HOUR_WIDTH_PX = 120;
 const LOCATION_LABEL_WIDTH_PX = 160;
 
@@ -36,14 +42,6 @@ const fixedLocations = [
     "Event Space 4 (R7)", 
     "Studio"
 ];
-
-const labelColors: Record<CalendarEventLabel, string> = {
-    'Event': 'bg-blue-600/90 hover:bg-blue-700/90 text-white',
-    'Rehearsal': 'bg-purple-600/90 hover:bg-purple-700/90 text-white',
-    'Shoot': 'bg-red-600/90 hover:bg-red-700/90 text-white',
-    'Mock Shoot': 'bg-orange-500/90 hover:bg-orange-600/90 text-white',
-    'Sound Recording': 'bg-green-600/90 hover:bg-green-700/90 text-white',
-};
 
 const getEventPosition = (event: Event, hourWidth: number) => {
     const startHour = event.startTime.getHours();
@@ -251,6 +249,8 @@ const ManageStatusDialog = ({ isOpen, onOpenChange, day, initialAssignments, use
 
 
 export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit' }) {
+    const { users, viewAsUser, events, calendars, extraCheckLocations, setExtraCheckLocations, userStatusAssignments, setUserStatusAssignments } = useUser();
+
     const [now, setNow] = useState<Date | null>(null);
     const [hourWidth, setHourWidth] = useState(DEFAULT_HOUR_WIDTH_PX);
 
@@ -261,7 +261,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
     const [collapsedDays, setCollapsedDays] = useState<Set<string>>(new Set());
     const [collapsedLocations, setCollapsedLocations] = useState<Record<string, Set<string>>>({});
     const [dailyCheckAssignments, setDailyCheckAssignments] = useState<Record<string, Record<string, string | null>>>({});
-    const { users, viewAsUser, extraCheckLocations, setExtraCheckLocations, userStatusAssignments, setUserStatusAssignments } = useUser();
+
     const defaultCheckLocations = useMemo(() => ["Training Room", "Locke", "Apgar"], []);
 
     const [isManageChecksDialogOpen, setIsManageChecksDialogOpen] = useState(false);
@@ -277,6 +277,14 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
     const dailyCheckUsers = useMemo(() => {
         return users.filter(user => user.roles?.includes('ES Daily Checks'));
     }, [users]);
+    
+    const calendarColorMap = useMemo(() => {
+        const map: Record<string, { bg: string, text: string }> = {};
+        calendars.forEach(cal => {
+            map[cal.id] = { bg: cal.color, text: getContrastColor(cal.color) };
+        });
+        return map;
+    }, [calendars]);
 
     const handleAssignCheck = (dayIso: string, location: string, userId: string | null) => {
         setDailyCheckAssignments(prev => ({
@@ -300,7 +308,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
 
     const weeklyScheduleData = useMemo(() => {
         return weekDays.map(day => {
-            const dayEvents = mockEvents.filter(event => format(event.startTime, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd'));
+            const dayEvents = events.filter(event => format(event.startTime, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd'));
             
             const allLocationsWithEvents = Object.keys(dayEvents.reduce((acc, event) => {
                 const locationKey = event.location || 'No Location';
@@ -325,7 +333,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
             
             return { day, groupedEvents, isWeekend: isSaturday(day) || isSunday(day), allDayLocations };
         });
-    }, [weekDays]);
+    }, [weekDays, events]);
 
     useEffect(() => {
         const initialCollapsedDays = new Set<string>();
@@ -493,8 +501,9 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel }: { date
                     {hours.slice(0, 23).map(hour => <div key={`line-${location}-${hour}`} className="absolute top-0 bottom-0 border-r" style={{ left: `${(hour + 1) * hourWidth}px` }}></div>)}
                     {!isLocationCollapsed && eventsInRow.map(event => {
                         const { left, width } = getEventPosition(event, hourWidth);
+                        const colors = calendarColorMap[event.calendarId];
                         return (
-                            <div key={event.eventId} className={cn("absolute h-[calc(100%-1rem)] top-1/2 -translate-y-1/2 p-2 rounded-lg shadow-md cursor-pointer z-10", labelColors[event.label])} style={{ left: `${left + 2}px`, width: `${width}px` }}>
+                            <div key={event.eventId} className={cn("absolute h-[calc(100%-1rem)] top-1/2 -translate-y-1/2 p-2 rounded-lg shadow-md cursor-pointer z-10")} style={{ left: `${left + 2}px`, width: `${width}px`, backgroundColor: colors?.bg, color: colors?.text }}>
                                 <p className="font-semibold text-sm truncate">{event.title}</p>
                                 <p className="text-xs opacity-90 truncate">{format(event.startTime, 'HH:mm')} - {format(event.endTime, 'HH:mm')}</p>
                             </div>

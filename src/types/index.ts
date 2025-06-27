@@ -30,12 +30,18 @@ export interface Task {
   lastUpdated: Date;
 }
 
-export type CalendarEventLabel = 'Event' | 'Rehearsal' | 'Shoot' | 'Mock Shoot' | 'Sound Recording';
+export type CalendarId = 'studio-productions' | 'live-events' | 'business' | 'post-production';
+
+export interface SharedCalendar {
+  id: CalendarId;
+  name: string;
+  color: string;
+}
 
 export interface Event {
   eventId: string;
   title: string;
-  label: CalendarEventLabel;
+  calendarId: CalendarId;
   description?: string;
   startTime: Date;
   endTime: Date;

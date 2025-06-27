@@ -6,28 +6,36 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isToday, i
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { Badge } from '../ui/badge';
-import { type Event, type CalendarEventLabel } from '@/types';
-import { mockEvents, mockHolidays } from '@/lib/mock-data';
+import { mockHolidays } from '@/lib/mock-data';
 import { Button } from '../ui/button';
 import { ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { useUser } from '@/context/user-context';
 
 const isHoliday = (day: Date) => {
     return mockHolidays.some(holiday => isSameDay(day, holiday));
 }
 
-const labelColors: Record<CalendarEventLabel, string> = {
-    'Event': 'bg-blue-600 hover:bg-blue-700',
-    'Rehearsal': 'bg-purple-600 hover:bg-purple-700',
-    'Shoot': 'bg-red-600 hover:bg-red-700',
-    'Mock Shoot': 'bg-orange-500 hover:bg-orange-600',
-    'Sound Recording': 'bg-green-600 hover:bg-green-700',
-};
+const getContrastColor = (hsl: string): string => {
+    const lightness = parseInt(hsl.split(',')[2].replace('%', '').replace(')', ''));
+    return lightness > 55 ? 'hsl(var(--card-foreground))' : 'hsl(var(--primary-foreground))';
+}
+
 
 export function MonthView({ date, containerRef }: { date: Date; containerRef: React.RefObject<HTMLDivElement> }) {
     const todayRef = useRef<HTMLDivElement>(null);
+    const { events, calendars } = useUser();
+
     const firstDayOfMonth = startOfMonth(date);
     const lastDayOfMonth = endOfMonth(date);
     const daysInMonth = eachDayOfInterval({ start: firstDayOfMonth, end: lastDayOfMonth });
+    
+    const calendarColorMap = useMemo(() => {
+        const map: Record<string, { bg: string, text: string }> = {};
+        calendars.forEach(cal => {
+            map[cal.id] = { bg: cal.color, text: getContrastColor(cal.color) };
+        });
+        return map;
+    }, [calendars]);
 
     useEffect(() => {
         if (isSameMonth(date, new Date()) && todayRef.current && containerRef.current) {
@@ -44,13 +52,13 @@ export function MonthView({ date, containerRef }: { date: Date; containerRef: Re
     }, [date, containerRef]);
 
     const getEventsForDay = (day: Date) => {
-        return mockEvents.filter(event => format(event.startTime, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd'));
+        return events.filter(event => format(event.startTime, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd'));
     }
 
     const hasWeekendEvents = useMemo(() => daysInMonth.some(day => {
         const isWeekend = isSaturday(day) || isSunday(day);
         return isWeekend && getEventsForDay(day).length > 0;
-    }), [daysInMonth, date]);
+    }), [daysInMonth, date, events]);
 
     const [showWeekends, setShowWeekends] = useState(hasWeekendEvents);
 
@@ -87,11 +95,18 @@ export function MonthView({ date, containerRef }: { date: Date; containerRef: Re
                     {format(day, 'd')}
                 </span>
                 <div className="mt-1 space-y-1 overflow-y-auto">
-                    {dayEvents.map(event => (
-                        <Badge key={event.eventId} className={cn("block w-full text-left truncate cursor-pointer text-white border-transparent", labelColors[event.label])}>
-                            {event.title}
-                        </Badge>
-                    ))}
+                    {dayEvents.map(event => {
+                         const colors = calendarColorMap[event.calendarId];
+                         return (
+                             <Badge 
+                                 key={event.eventId} 
+                                 style={{ backgroundColor: colors?.bg, color: colors?.text }}
+                                 className={cn("block w-full text-left truncate cursor-pointer border-transparent")}
+                             >
+                                 {event.title}
+                             </Badge>
+                         )
+                    })}
                 </div>
             </div>
         )

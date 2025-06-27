@@ -2,8 +2,8 @@
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect } from 'react';
-import { type User, type Notification, type UserStatusAssignment, type RoleCategories } from '@/types';
-import { mockUsers as initialUsers, initialRoleCategories } from '@/lib/mock-data';
+import { type User, type Notification, type UserStatusAssignment, type RoleCategories, type SharedCalendar, type Event } from '@/types';
+import { mockUsers as initialUsers, initialRoleCategories, mockCalendars, mockEvents as initialEvents } from '@/lib/mock-data';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
@@ -25,6 +25,9 @@ interface UserContextType {
   addUser: (newUser: User) => Promise<void>;
   updateUser: (userId: string, userData: Partial<User>) => Promise<void>;
   linkGoogleCalendar: (userId: string) => Promise<void>;
+  calendars: SharedCalendar[];
+  events: Event[];
+  addEvent: (newEventData: Omit<Event, 'eventId' | 'createdBy' | 'createdAt' | 'lastUpdated'>) => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | null>(null);
@@ -38,6 +41,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [extraCheckLocations, setExtraCheckLocations] = useState<Record<string, string[]>>({});
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [userStatusAssignments, setUserStatusAssignments] = useState<Record<string, UserStatusAssignment[]>>({});
+  const [calendars, setCalendars] = useState<SharedCalendar[]>(mockCalendars);
+  const [events, setEvents] = useState<Event[]>(initialEvents);
   const { toast } = useToast();
 
   const allRoles = useMemo(() => {
@@ -66,6 +71,18 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const updateRoleCategories = async (newCategories: RoleCategories) => {
     console.log('Updating role categories:', newCategories);
     setRoleCategories(newCategories);
+  };
+
+  const addEvent = async (newEventData: Omit<Event, 'eventId' | 'createdBy' | 'createdAt' | 'lastUpdated'>) => {
+    console.log("Adding new event:", newEventData);
+    const event: Event = {
+      ...newEventData,
+      eventId: new Date().toISOString(),
+      createdBy: realUser.userId,
+      createdAt: new Date(),
+      lastUpdated: new Date(),
+    };
+    setEvents(currentEvents => [...currentEvents, event]);
   };
 
   const linkGoogleCalendar = async (userId: string) => {
@@ -120,6 +137,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     addUser,
     updateUser,
     linkGoogleCalendar,
+    calendars,
+    events,
+    addEvent,
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

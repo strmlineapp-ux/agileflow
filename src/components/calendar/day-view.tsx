@@ -3,37 +3,29 @@
 
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { format, addHours, startOfDay, isSaturday, isSunday, isSameDay, isToday } from 'date-fns';
-import { type Event, type CalendarEventLabel } from '@/types';
+import { type Event } from '@/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { mockEvents, mockHolidays } from '@/lib/mock-data';
+import { mockHolidays } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 import { ChevronDown, ChevronRight } from 'lucide-react';
+import { useUser } from '@/context/user-context';
 
 const isHoliday = (day: Date) => {
     return mockHolidays.some(holiday => isSameDay(day, holiday));
 }
 
+const getContrastColor = (hsl: string): string => {
+    const lightness = parseInt(hsl.split(',')[2].replace('%', '').replace(')', ''));
+    return lightness > 55 ? 'hsl(var(--card-foreground))' : 'hsl(var(--primary-foreground))';
+}
+
+
 const DEFAULT_HOUR_WIDTH_PX = 120;
 const DEFAULT_HOUR_HEIGHT_PX = 60;
 const LOCATION_LABEL_WIDTH_PX = 160;
 
-const labelColors: Record<CalendarEventLabel, string> = {
-    'Event': 'bg-blue-600/90 hover:bg-blue-700/90 text-white',
-    'Rehearsal': 'bg-purple-600/90 hover:bg-purple-700/90 text-white',
-    'Shoot': 'bg-red-600/90 hover:bg-red-700/90 text-white',
-    'Mock Shoot': 'bg-orange-500/90 hover:bg-orange-600/90 text-white',
-    'Sound Recording': 'bg-green-600/90 hover:bg-green-700/90 text-white',
-};
-
-const labelColorsReversed: Record<CalendarEventLabel, string> = {
-    'Event': 'bg-blue-600/80 hover:bg-blue-700/80 text-white',
-    'Rehearsal': 'bg-purple-600/80 hover:bg-purple-700/80 text-white',
-    'Shoot': 'bg-red-600/80 hover:bg-red-700/80 text-white',
-    'Mock Shoot': 'bg-orange-500/80 hover:bg-orange-600/80 text-white',
-    'Sound Recording': 'bg-green-600/80 hover:bg-green-700/80 text-white',
-};
-
 export function DayView({ date, containerRef, zoomLevel, axisView }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', axisView: 'standard' | 'reversed' }) {
+    const { events, calendars } = useUser();
     const [now, setNow] = useState<Date | null>(null);
     const nowMarkerRef = useRef<HTMLDivElement>(null);
     const [collapsedLocations, setCollapsedLocations] = useState<Set<string>>(new Set());
@@ -42,7 +34,15 @@ export function DayView({ date, containerRef, zoomLevel, axisView }: { date: Dat
 
     const isViewingToday = useMemo(() => isSameDay(date, new Date()), [date]);
 
-    const dayEvents = useMemo(() => mockEvents.filter(event => format(event.startTime, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')), [date]);
+    const dayEvents = useMemo(() => events.filter(event => format(event.startTime, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')), [date, events]);
+    
+    const calendarColorMap = useMemo(() => {
+        const map: Record<string, { bg: string, text: string }> = {};
+        calendars.forEach(cal => {
+            map[cal.id] = { bg: cal.color, text: getContrastColor(cal.color) };
+        });
+        return map;
+    }, [calendars]);
 
     useEffect(() => {
         if (isViewingToday) {
@@ -190,14 +190,14 @@ export function DayView({ date, containerRef, zoomLevel, axisView }: { date: Dat
                     {/* Events for this row */}
                     {!isCollapsed && eventsInRow.map(event => {
                         const { left, width } = getEventPositionStandard(event);
+                        const colors = calendarColorMap[event.calendarId];
                         return (
                             <div 
                                 key={event.eventId} 
                                 className={cn(
-                                    "absolute h-[calc(100%-1rem)] top-1/2 -translate-y-1/2 p-2 rounded-lg shadow-md cursor-pointer z-10",
-                                    labelColors[event.label]
+                                    "absolute h-[calc(100%-1rem)] top-1/2 -translate-y-1/2 p-2 rounded-lg shadow-md cursor-pointer z-10"
                                 )}
-                                style={{ left: `${left + 2}px`, width: `${width}px` }}
+                                style={{ left: `${left + 2}px`, width: `${width}px`, backgroundColor: colors?.bg, color: colors?.text }}
                             >
                                 <p className="font-semibold text-sm truncate">{event.title}</p>
                                 <p className="text-xs opacity-90 truncate">{format(event.startTime, 'HH:mm')} - {format(event.endTime, 'HH:mm')}</p>
@@ -293,14 +293,14 @@ export function DayView({ date, containerRef, zoomLevel, axisView }: { date: Dat
                             <div className="absolute inset-0 z-10">
                                 {dayEvents.map(event => {
                                     const { top, height } = getEventPositionReversed(event);
+                                    const colors = calendarColorMap[event.calendarId];
                                     return (
                                         <div 
                                             key={event.eventId} 
                                             className={cn(
-                                                "absolute left-1 right-1 p-1 rounded-md shadow-sm cursor-pointer",
-                                                labelColorsReversed[event.label]
+                                                "absolute left-1 right-1 p-1 rounded-md shadow-sm cursor-pointer"
                                             )}
-                                            style={{ top: `${top}px`, height: `${height}px` }}
+                                            style={{ top: `${top}px`, height: `${height}px`, backgroundColor: colors?.bg, color: colors?.text }}
                                         >
                                             <p className="font-semibold text-xs truncate">{event.title}</p>
                                             <p className="text-[10px] opacity-90 truncate">{format(event.startTime, 'HH:mm')} - {format(event.endTime, 'HH:mm')}</p>

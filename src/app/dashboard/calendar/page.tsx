@@ -7,21 +7,28 @@ import { MonthView } from '@/components/calendar/month-view';
 import { WeekView } from '@/components/calendar/week-view';
 import { DayView } from '@/components/calendar/day-view';
 import { ProductionScheduleView } from '@/components/calendar/production-schedule-view';
-import { ChevronLeft, ChevronRight, Shrink, Expand, ArrowRightLeft } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Shrink, Expand, ArrowRightLeft, Plus } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays, startOfWeek, getWeek } from 'date-fns';
 import { useUser } from '@/context/user-context';
+import { canCreateAnyEvent } from '@/lib/permissions';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { NewEventForm } from '@/components/calendar/new-event-form';
 
 export default function CalendarPage() {
-  const { realUser } = useUser();
+  const { realUser, viewAsUser } = useUser();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'month' | 'week' | 'day' | 'production-schedule'>(realUser.defaultCalendarView || 'day');
   const [zoomLevel, setZoomLevel] = useState<'normal' | 'fit'>('normal');
   const [dayViewAxis, setDayViewAxis] = useState<'standard' | 'reversed'>('standard');
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  
   const monthViewContainerRef = useRef<HTMLDivElement>(null);
   const dayViewContainerRef = useRef<HTMLDivElement>(null);
   const weekViewContainerRef = useRef<HTMLDivElement>(null);
   const productionScheduleViewContainerRef = useRef<HTMLDivElement>(null);
+  
+  const userCanCreateEvent = canCreateAnyEvent(viewAsUser);
 
   const handlePrev = () => {
     switch (view) {
@@ -105,6 +112,19 @@ export default function CalendarPage() {
             <h1 className="font-headline text-2xl font-semibold ml-4 flex items-baseline gap-3">{getTitle()}</h1>
         </div>
         <div className="flex items-center gap-2">
+            {userCanCreateEvent && (
+              <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button>
+                    <Plus className="mr-2 h-4 w-4" />
+                    New Event
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-96 p-4" align="end">
+                  <NewEventForm onFinished={() => setIsPopoverOpen(false)} />
+                </PopoverContent>
+              </Popover>
+            )}
             {(view === 'production-schedule' || view === 'day' || view === 'week') && (
                 <Button variant="outline" size="icon" onClick={() => setZoomLevel(zoomLevel === 'normal' ? 'fit' : 'normal')}>
                     {zoomLevel === 'normal' ? <Shrink className="h-4 w-4" /> : <Expand className="h-4 w-4" />}

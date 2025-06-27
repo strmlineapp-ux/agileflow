@@ -1,5 +1,12 @@
 
-import { type Event, type User, type Task, type Notification, type CalendarEventLabel, type RoleCategories } from '@/types';
+import { type Event, type User, type Task, type Notification, type RoleCategories, type SharedCalendar, type CalendarId } from '@/types';
+
+export const mockCalendars: SharedCalendar[] = [
+    { id: 'studio-productions', name: 'Studio Productions', color: 'hsl(48 96% 53%)' }, // Yellow
+    { id: 'live-events', name: 'Live Events', color: 'hsl(210 70% 50%)' }, // Blue
+    { id: 'business', name: 'Business', color: 'hsl(220 9% 46%)' }, // Grey
+    { id: 'post-production', name: 'Post-Production', color: 'hsl(24 95% 53%)' }, // Orange
+];
 
 export const initialRoleCategories: RoleCategories = {
     "Studio Productions": [
@@ -53,7 +60,7 @@ export const mockUsers: User[] = [
         avatarUrl: 'https://placehold.co/40x40.png', 
         title: 'Software Engineer', 
         location: 'Austin, USA', 
-        roles: ["Production Team Admin", "Production", "Live Events", "D.o.P.", "Manage Checks"], 
+        roles: ["Production Team Admin", "Production", "Live Events", "Manage Checks"], 
         directReports: ['4'], 
         theme: 'light', 
         defaultCalendarView: 'month' 
@@ -80,7 +87,7 @@ export const mockUsers: User[] = [
         avatarUrl: 'https://placehold.co/40x40.png', 
         title: 'Junior Developer', 
         location: 'Remote', 
-        roles: ['Production', 'Camera'], 
+        roles: ['Production', 'Camera', 'Post-Production'], 
         directReports: [], 
         theme: 'light', 
         defaultCalendarView: 'production-schedule' 
@@ -132,7 +139,7 @@ export const mockEvents: Event[] = [
     { 
         eventId: '1', 
         title: 'Morning Briefing', 
-        label: 'Event',
+        calendarId: 'business',
         startTime: new Date(new Date(today).setHours(9, 0, 0, 0)), 
         endTime: new Date(new Date(today).setHours(9, 30, 0, 0)), 
         attendees: [mockUsers[0], mockUsers[1], mockUsers[2]], 
@@ -144,7 +151,7 @@ export const mockEvents: Event[] = [
     { 
         eventId: '2', 
         title: 'Product Demo Rehearsal', 
-        label: 'Rehearsal',
+        calendarId: 'live-events',
         startTime: new Date(new Date(today).setHours(10, 0, 0, 0)), 
         endTime: new Date(new Date(today).setHours(12, 0, 0, 0)), 
         attendees: [mockUsers[3], mockUsers[4]], 
@@ -156,7 +163,7 @@ export const mockEvents: Event[] = [
     { 
         eventId: '15', 
         title: 'Voice Over Recording', 
-        label: 'Sound Recording',
+        calendarId: 'post-production',
         startTime: new Date(new Date(today).setHours(11, 0, 0, 0)), 
         endTime: new Date(new Date(today).setHours(13, 0, 0, 0)), 
         attendees: [mockUsers[5]], 
@@ -168,7 +175,7 @@ export const mockEvents: Event[] = [
     { 
         eventId: '3', 
         title: 'Client Photoshoot', 
-        label: 'Shoot',
+        calendarId: 'studio-productions',
         startTime: new Date(new Date(today).setHours(14, 0, 0, 0)), 
         endTime: new Date(new Date(today).setHours(17, 30, 0, 0)), 
         attendees: [mockUsers[2], mockUsers[5]], 
@@ -181,7 +188,7 @@ export const mockEvents: Event[] = [
     { 
         eventId: '4', 
         title: 'New Feature Test Shoot', 
-        label: 'Mock Shoot',
+        calendarId: 'studio-productions',
         startTime: new Date(new Date(tomorrow).setHours(10, 0, 0, 0)),
         endTime: new Date(new Date(tomorrow).setHours(12, 30, 0, 0)),
         attendees: [mockUsers[1], mockUsers[4], mockUsers[5]], 
@@ -193,7 +200,7 @@ export const mockEvents: Event[] = [
     { 
         eventId: '5', 
         title: 'UX Feedback Session', 
-        label: 'Event',
+        calendarId: 'business',
         startTime: new Date(new Date(tomorrow).setHours(15, 0, 0, 0)),
         endTime: new Date(new Date(tomorrow).setHours(16, 30, 0, 0)),
         attendees: [mockUsers[3]], 
@@ -206,7 +213,7 @@ export const mockEvents: Event[] = [
     { 
         eventId: '6', 
         title: 'Weekly Retrospective', 
-        label: 'Event',
+        calendarId: 'business',
         startTime: new Date(new Date(yesterday).setHours(16, 0, 0, 0)),
         endTime: new Date(new Date(yesterday).setHours(17, 0, 0, 0)),
         attendees: mockUsers, 
@@ -218,7 +225,7 @@ export const mockEvents: Event[] = [
     { 
         eventId: '16', 
         title: 'Equipment Maintenance', 
-        label: 'Event',
+        calendarId: 'studio-productions',
         startTime: new Date(new Date(yesterday).setHours(9, 0, 0, 0)),
         endTime: new Date(new Date(yesterday).setHours(11, 0, 0, 0)),
         attendees: [mockUsers[5]], 
@@ -231,7 +238,7 @@ export const mockEvents: Event[] = [
     { 
         eventId: '7', 
         title: 'Town Hall', 
-        label: 'Event',
+        calendarId: 'business',
         startTime: new Date(new Date(twoDaysLater).setHours(11, 0, 0, 0)),
         endTime: new Date(new Date(twoDaysLater).setHours(12, 0, 0, 0)),
         attendees: mockUsers, 
@@ -243,7 +250,7 @@ export const mockEvents: Event[] = [
     { 
         eventId: '8', 
         title: 'Marketing Video Shoot', 
-        label: 'Shoot',
+        calendarId: 'live-events',
         startTime: new Date(new Date(twoDaysLater).setHours(13, 0, 0, 0)),
         endTime: new Date(new Date(twoDaysLater).setHours(18, 0, 0, 0)),
         attendees: [mockUsers[2], mockUsers[3], mockUsers[5]], 
@@ -255,7 +262,7 @@ export const mockEvents: Event[] = [
     { 
         eventId: '9', 
         title: 'Audio Mixing', 
-        label: 'Sound Recording',
+        calendarId: 'post-production',
         startTime: new Date(new Date(threeDaysLater).setHours(10, 0, 0, 0)),
         endTime: new Date(new Date(threeDaysLater).setHours(17, 0, 0, 0)),
         attendees: [mockUsers[1], mockUsers[5]], 
@@ -267,7 +274,7 @@ export const mockEvents: Event[] = [
     { 
         eventId: '10', 
         title: 'Performance Rehearsal', 
-        label: 'Rehearsal',
+        calendarId: 'live-events',
         startTime: new Date(new Date(fourDaysLater).setHours(14, 0, 0, 0)),
         endTime: new Date(new Date(fourDaysLater).setHours(18, 0, 0, 0)),
         attendees: [mockUsers[0], mockUsers[3]], 
@@ -280,7 +287,7 @@ export const mockEvents: Event[] = [
     { 
         eventId: '11', 
         title: 'On-location Scout', 
-        label: 'Event',
+        calendarId: 'live-events',
         startTime: new Date(new Date(threeDaysAgo).setHours(9, 0, 0, 0)),
         endTime: new Date(new Date(threeDaysAgo).setHours(13, 0, 0, 0)),
         attendees: [mockUsers[0], mockUsers[2]], 
@@ -292,7 +299,7 @@ export const mockEvents: Event[] = [
     { 
         eventId: '12', 
         title: 'Green Screen Test', 
-        label: 'Mock Shoot',
+        calendarId: 'studio-productions',
         startTime: new Date(new Date(fourDaysAgo).setHours(14, 0, 0, 0)),
         endTime: new Date(new Date(fourDaysAgo).setHours(16, 0, 0, 0)),
         attendees: [mockUsers[4], mockUsers[5]], 
@@ -305,7 +312,7 @@ export const mockEvents: Event[] = [
     { 
         eventId: '13', 
         title: 'Special Weekend Shoot', 
-        label: 'Shoot',
+        calendarId: 'studio-productions',
         startTime: new Date(new Date(weekendShootDate).setHours(10, 0, 0, 0)),
         endTime: new Date(new Date(weekendShootDate).setHours(16, 0, 0, 0)),
         attendees: [mockUsers[0], mockUsers[5]], 
@@ -318,7 +325,7 @@ export const mockEvents: Event[] = [
     { 
         eventId: '14', 
         title: 'Remote Planning Call', 
-        label: 'Event',
+        calendarId: 'business',
         startTime: new Date(new Date(twoDaysAgo).setHours(11, 0, 0, 0)),
         endTime: new Date(new Date(twoDaysAgo).setHours(12, 0, 0, 0)),
         attendees: [mockUsers[0], mockUsers[1]], 

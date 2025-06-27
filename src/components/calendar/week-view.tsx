@@ -3,28 +3,27 @@
 
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { format, startOfWeek, addDays, eachDayOfInterval, startOfDay, addHours, isToday, isSaturday, isSunday, isSameDay } from 'date-fns';
-import { type Event, type CalendarEventLabel } from '@/types';
+import { type Event } from '@/types';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { mockEvents, mockHolidays } from '@/lib/mock-data';
+import { mockHolidays } from '@/lib/mock-data';
 import { Button } from '../ui/button';
 import { ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { useUser } from '@/context/user-context';
 
 const isHoliday = (day: Date) => {
     return mockHolidays.some(holiday => isSameDay(day, holiday));
 }
 
-const labelColors: Record<CalendarEventLabel, string> = {
-    'Event': 'bg-blue-600/80 hover:bg-blue-700/80 text-white',
-    'Rehearsal': 'bg-purple-600/80 hover:bg-purple-700/80 text-white',
-    'Shoot': 'bg-red-600/80 hover:bg-red-700/80 text-white',
-    'Mock Shoot': 'bg-orange-500/80 hover:bg-orange-600/80 text-white',
-    'Sound Recording': 'bg-green-600/80 hover:bg-green-700/80 text-white',
-};
+const getContrastColor = (hsl: string): string => {
+    const lightness = parseInt(hsl.split(',')[2].replace('%', '').replace(')', ''));
+    return lightness > 55 ? 'hsl(var(--card-foreground))' : 'hsl(var(--primary-foreground))';
+}
 
 const DEFAULT_HOUR_HEIGHT_PX = 60;
 
 export function WeekView({ date, containerRef, zoomLevel }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit' }) {
+    const { events, calendars } = useUser();
     const [now, setNow] = useState<Date | null>(null);
     const nowMarkerRef = useRef<HTMLDivElement>(null);
     const [hourHeight, setHourHeight] = useState(DEFAULT_HOUR_HEIGHT_PX);
@@ -33,6 +32,14 @@ export function WeekView({ date, containerRef, zoomLevel }: { date: Date, contai
     const weekStart = useMemo(() => startOfWeek(date, { weekStartsOn: 1 }), [date]);
     const weekDays = useMemo(() => eachDayOfInterval({ start: weekStart, end: addDays(weekStart, 6) }), [weekStart]);
     const isCurrentWeek = useMemo(() => weekDays.some(isToday), [weekDays]);
+
+    const calendarColorMap = useMemo(() => {
+        const map: Record<string, { bg: string, text: string }> = {};
+        calendars.forEach(cal => {
+            map[cal.id] = { bg: cal.color, text: getContrastColor(cal.color) };
+        });
+        return map;
+    }, [calendars]);
 
     useEffect(() => {
         if (isCurrentWeek) {
@@ -74,7 +81,7 @@ export function WeekView({ date, containerRef, zoomLevel }: { date: Date, contai
     const hours = Array.from({ length: 24 }, (_, i) => i);
 
     const getEventsForDay = (day: Date) => {
-        return mockEvents.filter(event => format(event.startTime, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd'));
+        return events.filter(event => format(event.startTime, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd'));
     }
     
     const displayedDays = showWeekends ? weekDays : weekDays.slice(0, 5);
@@ -164,14 +171,14 @@ export function WeekView({ date, containerRef, zoomLevel }: { date: Date, contai
                                 <div className="absolute inset-0 z-10">
                                     {getEventsForDay(day).map(event => {
                                         const { top, height } = getEventPosition(event);
+                                        const colors = calendarColorMap[event.calendarId];
                                         return (
                                             <div 
                                                 key={event.eventId} 
                                                 className={cn(
-                                                    "absolute left-1 right-1 p-1 rounded-md shadow-sm cursor-pointer",
-                                                    labelColors[event.label]
+                                                    "absolute left-1 right-1 p-1 rounded-md shadow-sm cursor-pointer"
                                                 )}
-                                                style={{ top: `${top}px`, height: `${height}px` }}
+                                                style={{ top: `${top}px`, height: `${height}px`, backgroundColor: colors?.bg, color: colors?.text }}
                                             >
                                                 <p className="font-semibold text-xs truncate">{event.title}</p>
                                                 <p className="text-[10px] opacity-90 truncate">{format(event.startTime, 'HH:mm')} - {format(event.endTime, 'HH:mm')}</p>
