@@ -1,19 +1,16 @@
 
 "use client";
 
-import { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useUser } from '@/context/user-context';
 import { type Team, type User } from '@/types';
-import { type IconName, iconNames } from '@/components/icons/dynamic-icon';
+import { type IconName, iconNames, DynamicIcon } from '@/components/icons/dynamic-icon';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
 } from '@/components/ui/dialog';
 import {
   AlertDialog,
@@ -26,12 +23,13 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, Pencil } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { PlusCircle, X } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 
 export function TeamManagement() {
   const { users, teams, addTeam, updateTeam, deleteTeam } = useUser();
@@ -80,11 +78,8 @@ export function TeamManagement() {
         <CardContent>
           <div className="flex flex-wrap gap-3">
               {teams.map(team => (
-                <Button key={team.id} variant="outline" className="h-auto" onClick={() => openEditDialog(team)}>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{team.name}</span>
-                      <Pencil className="h-3 w-3 text-muted-foreground" />
-                    </div>
+                <Button key={team.id} variant="outline" className="h-auto font-medium" onClick={() => openEditDialog(team)}>
+                    {team.name}
                 </Button>
               ))}
           </div>
@@ -141,6 +136,9 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
     const [name, setName] = useState(team?.name || '');
     const [icon, setIcon] = useState<IconName>(team?.icon as IconName || 'Users');
     const [members, setMembers] = useState<string[]>(team?.members || []);
+    const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
+    const [isMemberPopoverOpen, setIsMemberPopoverOpen] = useState(false);
+    const [memberSearch, setMemberSearch] = useState('');
     const { toast } = useToast();
 
     const handleMemberToggle = (userId: string, isChecked: boolean) => {
@@ -169,46 +167,124 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
         onClose();
     };
 
+    const filteredUsers = useMemo(() => {
+        if (!memberSearch) return allUsers;
+        return allUsers.filter(user =>
+            user.displayName.toLowerCase().includes(memberSearch.toLowerCase()) ||
+            user.email.toLowerCase().includes(memberSearch.toLowerCase())
+        );
+    }, [allUsers, memberSearch]);
+
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                    <DialogTitle>{team ? `Edit ${team.name}` : 'Create New Team'}</DialogTitle>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="team-name" className="text-right">Name</Label>
-                        <Input id="team-name" value={name} onChange={e => setName(e.target.value)} className="col-span-3" />
+                <div className="grid gap-6 py-4">
+                    <div className="relative">
+                        <Input
+                            id="team-name"
+                            placeholder="Team Name"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            className="pr-12 text-lg font-semibold"
+                        />
+                        <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
+                            <PopoverTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="absolute right-1 top-1/2 h-8 w-8 -translate-y-1/2"
+                            >
+                                <DynamicIcon name={icon} className="h-5 w-5 text-muted-foreground" />
+                            </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-2">
+                                <div className="grid grid-cols-5 gap-2">
+                                    {iconNames.map((iconName) => (
+                                    <Button
+                                        key={iconName}
+                                        variant={icon === iconName ? "default" : "outline"}
+                                        size="icon"
+                                        onClick={() => {
+                                        setIcon(iconName);
+                                        setIsIconPopoverOpen(false);
+                                        }}
+                                    >
+                                        <DynamicIcon name={iconName} />
+                                    </Button>
+                                    ))}
+                                </div>
+                            </PopoverContent>
+                        </Popover>
                     </div>
-                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="team-icon" className="text-right">Icon</Label>
-                        <Select value={icon} onValueChange={(val) => setIcon(val as IconName)}>
-                            <SelectTrigger id="team-icon" className="col-span-3">
-                                <SelectValue placeholder="Select an icon" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {iconNames.map(iconName => (
-                                    <SelectItem key={iconName} value={iconName}>{iconName}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                     <div className="grid grid-cols-4 items-start gap-4">
-                        <Label className="text-right pt-2">Members</Label>
-                        <ScrollArea className="h-48 col-span-3 rounded-md border p-2">
-                            <div className="space-y-2">
-                                {allUsers.map(user => (
-                                    <div key={user.userId} className="flex items-center gap-2">
-                                        <Checkbox 
-                                            id={`member-${user.userId}`} 
-                                            checked={members.includes(user.userId)}
-                                            onCheckedChange={(checked) => handleMemberToggle(user.userId, !!checked)}
-                                        />
-                                        <Label htmlFor={`member-${user.userId}`} className="font-normal">{user.displayName}</Label>
+
+                    <div className="space-y-2">
+                        <div className="flex min-h-[40px] flex-wrap items-center gap-2 rounded-md border bg-muted/50 p-2">
+                            {members.length > 0 ? (
+                            members.map(userId => {
+                                const user = allUsers.find(u => u.userId === userId);
+                                if (!user) return null;
+                                return (
+                                <Badge key={user.userId} variant="secondary" className="gap-1.5 p-1 pl-2">
+                                    <Avatar className="h-5 w-5">
+                                        <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
+                                        <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                    </Avatar>
+                                    <span className="font-medium">{user.displayName}</span>
+                                    <button
+                                    type="button"
+                                    className="rounded-full p-0.5 hover:bg-background/50"
+                                    onClick={() => handleMemberToggle(user.userId, false)}
+                                    >
+                                    <X className="h-3 w-3" />
+                                    </button>
+                                </Badge>
+                                );
+                            })
+                            ) : (
+                            <p className="w-full text-center text-sm text-muted-foreground">No members yet.</p>
+                            )}
+                        </div>
+                        <Popover open={isMemberPopoverOpen} onOpenChange={setIsMemberPopoverOpen}>
+                            <PopoverTrigger asChild>
+                            <Button variant="outline" className="w-full justify-center">
+                                <PlusCircle className="mr-2 h-4 w-4" />
+                                Add/Remove Members
+                            </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[300px] p-0" align="start">
+                            <div className="p-2">
+                                <Input
+                                placeholder="Search users..."
+                                value={memberSearch}
+                                onChange={(e) => setMemberSearch(e.target.value)}
+                                />
+                            </div>
+                            <ScrollArea className="h-48">
+                                <div className="p-1">
+                                {filteredUsers.map(user => (
+                                    <div
+                                        key={user.userId}
+                                        onClick={() => handleMemberToggle(user.userId, !members.includes(user.userId))}
+                                        className="flex cursor-pointer items-center gap-2 rounded-md p-2 hover:bg-accent"
+                                    >
+                                    <Checkbox
+                                        checked={members.includes(user.userId)}
+                                        readOnly
+                                    />
+                                    <Avatar className="h-8 w-8">
+                                        <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
+                                        <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                        <p className="text-sm font-medium">{user.displayName}</p>
+                                        <p className="text-xs text-muted-foreground">{user.email}</p>
+                                    </div>
                                     </div>
                                 ))}
-                            </div>
-                        </ScrollArea>
+                                </div>
+                            </ScrollArea>
+                            </PopoverContent>
+                        </Popover>
                     </div>
                 </div>
                  <DialogFooter>
@@ -224,4 +300,3 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
         </Dialog>
     );
 }
-
