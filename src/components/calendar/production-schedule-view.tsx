@@ -153,13 +153,13 @@ const ManageStatusDialog = ({ isOpen, onOpenChange, day, initialAssignments, use
         setTempStatusAssignments(initialAssignments);
     }, [initialAssignments]);
 
-    const handleAddStatusAssignment = () => {
+    useEffect(() => {
         if (selectedUserIdToAdd && selectedStatusToAdd) {
             setTempStatusAssignments(prev => [...prev, { userId: selectedUserIdToAdd, status: selectedStatusToAdd }]);
             setSelectedUserIdToAdd('');
             setSelectedStatusToAdd(null);
         }
-    };
+    }, [selectedUserIdToAdd, selectedStatusToAdd]);
     
     const handleRemoveStatusAssignment = (userId: string) => {
         setTempStatusAssignments(prev => prev.filter(a => a.userId !== userId));
@@ -237,10 +237,6 @@ const ManageStatusDialog = ({ isOpen, onOpenChange, day, initialAssignments, use
                                     ))}
                                 </SelectContent>
                             </Select>
-                            <Button onClick={handleAddStatusAssignment} disabled={!selectedUserIdToAdd || !selectedStatusToAdd} size="icon">
-                                <Plus className="h-4 w-4" />
-                                <span className="sr-only">Add</span>
-                            </Button>
                         </div>
                     </div>
                 </div>
