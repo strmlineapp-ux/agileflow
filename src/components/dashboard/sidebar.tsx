@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Calendar, ListChecks, Settings, LogOut, LayoutDashboard, UserCheck, Bell } from 'lucide-react';
+import { Calendar, ListChecks, Settings, LogOut, LayoutDashboard, UserCheck, Bell, Clapperboard, Ticket, Theater } from 'lucide-react';
 import Logo from '@/components/icons/logo';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
@@ -11,20 +11,27 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal } from '../ui/dropdown-menu';
 import { useUser } from '@/context/user-context';
 
-const navItems = [
-  { href: '/dashboard/calendar', icon: Calendar, label: 'Calendar' },
-  { href: '/dashboard', icon: LayoutDashboard, label: 'Overview' },
-  { href: '/dashboard/tasks', icon: ListChecks, label: 'Tasks' },
-  { href: '/dashboard/notifications', icon: Bell, label: 'Notifications' },
-  { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
-];
-
 export function Sidebar() {
   const pathname = usePathname();
   const { realUser, viewAsUser, setViewAsUser, users, notifications } = useUser();
   const isAdmin = realUser.roles?.includes('Admin');
   const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
   const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const canViewStudio = viewAsUser.roles?.includes('Studio Productions Team Admin') || viewAsUser.roles?.includes('Service Delivery Manager') || viewAsUser.roles?.includes('Admin');
+  const canViewLive = viewAsUser.roles?.includes('Live Event Team Admin') || viewAsUser.roles?.includes('Service Delivery Manager') || viewAsUser.roles?.includes('Admin');
+  const canViewProd = viewAsUser.roles?.includes('Production Team Admin') || viewAsUser.roles?.includes('Service Delivery Manager') || viewAsUser.roles?.includes('Admin');
+
+  const navItems = [
+    { href: '/dashboard/calendar', icon: Calendar, label: 'Calendar', visible: true },
+    { href: '/dashboard', icon: LayoutDashboard, label: 'Overview', visible: true },
+    { href: '/dashboard/tasks', icon: ListChecks, label: 'Tasks', visible: true },
+    { href: '/dashboard/teams/studio', icon: Clapperboard, label: 'Studio Productions', visible: canViewStudio },
+    { href: '/dashboard/teams/live-events', icon: Ticket, label: 'Live Events', visible: canViewLive },
+    { href: '/dashboard/teams/productions', icon: Theater, label: 'Productions', visible: canViewProd },
+    { href: '/dashboard/notifications', icon: Bell, label: 'Notifications', visible: true },
+    { href: '/dashboard/settings', icon: Settings, label: 'Settings', visible: true },
+  ];
 
 
   return (
@@ -47,13 +54,15 @@ export function Sidebar() {
         </Link>
         <TooltipProvider>
           {navItems.map((item) => (
+           item.visible && (
             <Tooltip key={item.href}>
               <TooltipTrigger asChild>
                 <Link
                   href={item.href}
                   className={cn(
                     'relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
-                    pathname === item.href && 'bg-accent text-accent-foreground'
+                    pathname.startsWith(item.href) && item.href !== '/dashboard' && 'bg-accent text-accent-foreground',
+                    pathname === '/dashboard' && item.href === '/dashboard' && 'bg-accent text-accent-foreground'
                   )}
                 >
                   <item.icon className="h-5 w-5" />
@@ -67,6 +76,7 @@ export function Sidebar() {
               </TooltipTrigger>
               <TooltipContent side="right">{item.label}</TooltipContent>
             </Tooltip>
+           )
           ))}
         </TooltipProvider>
       </nav>

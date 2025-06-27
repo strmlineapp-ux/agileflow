@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Calendar, ListChecks, PanelLeft, Settings, LayoutDashboard, ArrowLeftRight, Bell } from 'lucide-react';
+import { Calendar, ListChecks, PanelLeft, Settings, LayoutDashboard, ArrowLeftRight, Bell, Clapperboard, Ticket, Theater } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -17,6 +17,10 @@ export function Header() {
   const { realUser, viewAsUser, notifications } = useUser();
   const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
   const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const canViewStudio = viewAsUser.roles?.includes('Studio Productions Team Admin') || viewAsUser.roles?.includes('Service Delivery Manager') || viewAsUser.roles?.includes('Admin');
+  const canViewLive = viewAsUser.roles?.includes('Live Event Team Admin') || viewAsUser.roles?.includes('Service Delivery Manager') || viewAsUser.roles?.includes('Admin');
+  const canViewProd = viewAsUser.roles?.includes('Production Team Admin') || viewAsUser.roles?.includes('Service Delivery Manager') || viewAsUser.roles?.includes('Admin');
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-card px-4 sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 sm:py-4">
@@ -48,6 +52,24 @@ export function Header() {
               <ListChecks className="h-5 w-5" />
               Tasks
             </Link>
+             {canViewStudio && (
+              <Link href="/dashboard/teams/studio" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
+                <Clapperboard className="h-5 w-5" />
+                Studio Productions
+              </Link>
+            )}
+            {canViewLive && (
+              <Link href="/dashboard/teams/live-events" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
+                <Ticket className="h-5 w-5" />
+                Live Events
+              </Link>
+            )}
+            {canViewProd && (
+              <Link href="/dashboard/teams/productions" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
+                <Theater className="h-5 w-5" />
+                Productions
+              </Link>
+            )}
             <Link href="/dashboard/notifications" className="flex items-center justify-between gap-4 px-2.5 text-muted-foreground hover:text-foreground">
               <div className="flex items-center gap-4">
                 <Bell className="h-5 w-5" />

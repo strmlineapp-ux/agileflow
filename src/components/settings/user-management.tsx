@@ -317,7 +317,7 @@ export function UserManagement() {
                                                                         </Button>
                                                                     )}
                                                                 </div>
-                                                                {user.phone && <p className="text-sm">{user.phone}</p>}
+                                                                {user.phone ? <p className="text-sm">{user.phone}</p> : <p className="text-sm text-muted-foreground italic">Not provided</p>}
                                                             </div>
                                                             <div>
                                                                 <div className="flex items-center gap-2 mb-1">
@@ -329,10 +329,10 @@ export function UserManagement() {
                                                                         </Button>
                                                                     )}
                                                                 </div>
-                                                                {user.directReports?.map(reportId => {
+                                                                {user.directReports && user.directReports.length > 0 ? user.directReports?.map(reportId => {
                                                                     const reportUser = users.find(u => u.userId === reportId);
                                                                     return reportUser ? <div key={reportId} className="text-sm">{reportUser.displayName}</div> : null;
-                                                                })}
+                                                                }) : <p className="text-sm text-muted-foreground italic">No direct reports</p>}
                                                             </div>
                                                         </div>
                                                     </div>
@@ -347,11 +347,13 @@ export function UserManagement() {
                                                             )}
                                                         </div>
                                                         {(canEditUser(viewAsUser, user) || viewAsUser.userId === user.userId) && (
-                                                            <div className="flex flex-wrap gap-2">
-                                                                {user.roles?.map(role => (
-                                                                    <Badge key={role} variant="secondary">{role}</Badge>
-                                                                ))}
-                                                            </div>
+                                                          user.roles && user.roles.length > 0 ? (
+                                                              <div className="flex flex-wrap gap-2">
+                                                                  {user.roles?.map(role => (
+                                                                      <Badge key={role} variant="secondary">{role}</Badge>
+                                                                  ))}
+                                                              </div>
+                                                          ) : <p className="text-sm text-muted-foreground italic">No roles assigned</p>
                                                         )}
                                                      </div>
                                                 </div>
