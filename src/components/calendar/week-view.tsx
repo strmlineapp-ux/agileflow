@@ -146,18 +146,7 @@ export function WeekView({ date, containerRef, zoomLevel }: { date: Date, contai
                         const isWeekend = isSaturday(day) || isSunday(day);
                         const isDayHoliday = isHoliday(day);
                         return (
-                            <div key={day.toString()} className={cn("relative border-l", { "bg-muted/10": index % 2 !== 0 }, { "bg-muted/50": isWeekend || isDayHoliday })}>
-                                 {/* Working Hours Backgrounds */}
-                                {isWeekend || isDayHoliday ? (
-                                    <div className="absolute inset-0 bg-secondary/50 z-0" title="Overtime" />
-                                ) : (
-                                    <>
-                                        <div className="absolute inset-x-0 top-0 bg-secondary/50 z-0" style={{ height: `${8 * hourHeight}px` }} title="Overtime" />
-                                        <div className="absolute inset-x-0 bg-muted z-0" style={{ top: `${8 * hourHeight}px`, height: `${1 * hourHeight}px` }} title="Extended Working Hours" />
-                                        <div className="absolute inset-x-0 bg-muted z-0" style={{ top: `${18 * hourHeight}px`, height: `${2 * hourHeight}px` }} title="Extended Working Hours" />
-                                        <div className="absolute inset-x-0 bottom-0 bg-secondary/50 z-0" style={{ top: `${20 * hourHeight}px`, bottom: '0px' }} title="Overtime" />
-                                    </>
-                                )}
+                            <div key={day.toString()} className={cn("relative border-l", { "bg-muted/10": index % 2 !== 0 })}>
                                 {/* Lunch Break Cue */}
                                 <div
                                     className="absolute inset-x-0 lunch-break-pattern z-0 pointer-events-none"

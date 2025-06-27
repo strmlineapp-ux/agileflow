@@ -6,29 +6,29 @@
 @layer base {
   :root,
   .light {
-    --background: 0 0% 93%; /* 7% grey */
-    --foreground: 0 0% 38%; /* Adjusted from 24% for ~20% opacity drop */
-    --card: 0 0% 98%;
-    --card-foreground: 0 0% 38%;
-    --popover: 0 0% 98%;
-    --popover-foreground: 0 0% 38%;
-    --primary: 234 38% 40%; /* Saturation reduced by 25% */
-    --primary-foreground: 210 30% 98%;
-    --secondary: 234 22% 82%; /* Saturation reduced by 25% */
-    --secondary-foreground: 234 25% 25%;
-    --muted: 0 0% 90%;
-    --muted-foreground: 0 0% 59%; /* Adjusted from 49% */
-    --accent: 234 38% 50%; /* Saturation reduced by 25% */
-    --accent-foreground: 210 30% 98%;
-    --destructive: 0 35% 45%;
-    --destructive-foreground: 0 0% 98%;
-    --warning: 40 38% 41%;
-    --warning-foreground: 40 48% 5%;
-    --border: 0 0% 85%;
-    --input: 0 0% 85%;
-    --ring: 234 38% 40%;
+    --background: 0 0% 56%;
+    --foreground: 0 0% 95%;
+    --card: 0 0% 60%;
+    --card-foreground: 0 0% 95%;
+    --popover: 0 0% 60%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 234 38% 70%;
+    --primary-foreground: 234 38% 10%;
+    --secondary: 234 22% 55%;
+    --secondary-foreground: 234 22% 95%;
+    --muted: 0 0% 54%;
+    --muted-foreground: 0 0% 85%;
+    --accent: 234 38% 75%;
+    --accent-foreground: 234 38% 10%;
+    --destructive: 0 35% 65%;
+    --destructive-foreground: 0 0% 10%;
+    --warning: 40 38% 70%;
+    --warning-foreground: 40 48% 10%;
+    --border: 0 0% 51%;
+    --input: 0 0% 51%;
+    --ring: 234 38% 70%;
     --radius: 0.5rem;
-    --lunch-break-opacity: 0.08;
+    --lunch-break-opacity: 0.15;
   }
 
   .dark {
