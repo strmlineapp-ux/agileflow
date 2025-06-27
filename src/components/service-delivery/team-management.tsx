@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
 } from '@/components/ui/dialog';
 import {
   AlertDialog,
@@ -24,7 +23,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, X } from 'lucide-react';
+import { PlusCircle, Check, XCircle } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
@@ -196,7 +195,16 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <DialogContent className="sm:max-w-md">
-                <div className="grid gap-6 py-4">
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleSave}
+                    className="absolute right-12 top-4 rounded-sm p-1 h-auto w-auto opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                >
+                    <Check className="h-4 w-4" />
+                    <span className="sr-only">Save Changes</span>
+                </Button>
+                <div className="grid gap-6 pt-6">
                     <div className="flex items-center gap-2">
                         {team && (
                              <Button
@@ -205,7 +213,7 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
                                 className="h-9 w-9 text-muted-foreground hover:text-destructive"
                                 onClick={() => onDelete(team)}
                             >
-                                <X className="h-5 w-5" />
+                                <XCircle className="h-5 w-5" />
                                 <span className="sr-only">Delete team</span>
                             </Button>
                         )}
@@ -303,7 +311,7 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
                                     <Badge 
                                         key={user.userId} 
                                         variant={isManager ? 'default' : 'secondary'}
-                                        className="gap-1.5 p-1 pl-2 cursor-pointer"
+                                        className={cn("gap-1.5 p-1 pl-2 cursor-pointer", isManager && "shadow-md")}
                                         onClick={() => handleManagerToggle(userId)}
                                     >
                                         <Avatar className="h-5 w-5">
@@ -321,10 +329,6 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
                         </div>
                     </div>
                 </div>
-                 <DialogFooter>
-                    <Button variant="outline" onClick={onClose}>Cancel</Button>
-                    <Button onClick={handleSave}>Save</Button>
-                </DialogFooter>
             </DialogContent>
         </Dialog>
     );
