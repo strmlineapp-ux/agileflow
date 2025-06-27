@@ -208,7 +208,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
   return (
     <div>
         <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
                 control={form.control}
                 name="title"
@@ -273,7 +273,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                             <Input 
                                 placeholder={titlePlaceholders[selectedCalendarId as CalendarId] || 'e.g. Team Standup'} 
                                 {...field} 
-                                className="pl-24"
+                                className="pl-20"
                             />
                             </FormControl>
                         </div>
@@ -282,57 +282,57 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                 )}
             />
             
+            <FormField
+                control={form.control}
+                name="date"
+                render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                    <FormLabel>Date</FormLabel>
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <FormControl>
+                                <Button
+                                variant={'outline'}
+                                className={cn('pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}
+                                >
+                                {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                            </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                                mode="single"
+                                selected={field.value}
+                                onSelect={field.onChange}
+                                disabled={(date) => date < new Date('1900-01-01')}
+                                initialFocus
+                            />
+                        </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                    </FormItem>
+                )}
+            />
             <div className="flex gap-4">
                 <FormField
                     control={form.control}
-                    name="date"
-                    render={({ field }) => (
-                        <FormItem className="flex flex-col flex-1">
-                        <FormLabel>Date</FormLabel>
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <FormControl>
-                                    <Button
-                                    variant={'outline'}
-                                    className={cn('pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}
-                                    >
-                                    {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
-                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                    </Button>
-                                </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                                <Calendar
-                                    mode="single"
-                                    selected={field.value}
-                                    onSelect={field.onChange}
-                                    disabled={(date) => date < new Date('1900-01-01')}
-                                    initialFocus
-                                />
-                            </PopoverContent>
-                        </Popover>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                 <FormField
-                    control={form.control}
                     name="startTime"
                     render={({ field }) => (
-                        <FormItem>
+                        <FormItem className="flex-1">
                             <FormLabel>Start Time</FormLabel>
-                            <FormControl><Input type="time" {...field} /></FormControl>
+                            <FormControl><Input type="time" step="900" {...field} /></FormControl>
                             <FormMessage />
                         </FormItem>
                     )}
                 />
-                 <FormField
+                <FormField
                     control={form.control}
                     name="endTime"
                     render={({ field }) => (
-                        <FormItem>
+                        <FormItem className="flex-1">
                             <FormLabel>End Time</FormLabel>
-                            <FormControl><Input type="time" {...field} /></FormControl>
+                            <FormControl><Input type="time" step="900" {...field} /></FormControl>
                             <FormMessage />
                         </FormItem>
                     )}
