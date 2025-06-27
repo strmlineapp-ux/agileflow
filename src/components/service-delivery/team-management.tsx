@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import {
   AlertDialog,
@@ -195,28 +196,8 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <DialogContent className="sm:max-w-md">
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleSave}
-                    className="absolute right-12 top-4 rounded-sm p-1 h-auto w-auto opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                >
-                    <Check className="h-4 w-4" />
-                    <span className="sr-only">Save Changes</span>
-                </Button>
                 <div className="grid gap-6 pt-6">
                     <div className="flex items-center gap-2">
-                        {team && (
-                             <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-9 w-9 text-muted-foreground hover:text-destructive"
-                                onClick={() => onDelete(team)}
-                            >
-                                <XCircle className="h-5 w-5" />
-                                <span className="sr-only">Delete team</span>
-                            </Button>
-                        )}
                         <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                             <PopoverTrigger asChild>
                             <Button
@@ -329,6 +310,26 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
                         </div>
                     </div>
                 </div>
+
+                <DialogFooter className="sm:justify-between pt-6">
+                    <div>
+                        {team && (
+                             <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-9 w-9 text-muted-foreground hover:text-destructive"
+                                onClick={() => onDelete(team)}
+                            >
+                                <XCircle className="h-5 w-5" />
+                                <span className="sr-only">Delete team</span>
+                            </Button>
+                        )}
+                    </div>
+                    <Button size="icon" onClick={handleSave}>
+                        <Check className="h-4 w-4" />
+                        <span className="sr-only">Save Changes</span>
+                    </Button>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
     );
