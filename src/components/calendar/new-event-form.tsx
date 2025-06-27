@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, Plus } from 'lucide-react';
+import { Calendar as CalendarIcon } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -14,12 +14,18 @@ import { Calendar } from '@/components/ui/calendar';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useUser } from '@/context/user-context';
 import { canManageEventOnCalendar } from '@/lib/permissions';
 import { useToast } from '@/hooks/use-toast';
-import { type CalendarId } from '@/types';
+import { type CalendarId, type User, type SharedCalendar } from '@/types';
+import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const formSchema = z.object({
   title: z.string().min(2, { message: 'Title must be at least 2 characters.' }),
@@ -35,6 +41,41 @@ type NewEventFormProps = {
   onFinished?: () => void;
 };
 
+const getContrastColor = (hsl: string): string => {
+    if (!hsl) return 'hsl(var(--card-foreground))';
+    const parts = hsl.split(' ');
+    if (parts.length < 3) return 'hsl(var(--card-foreground))'; 
+    const lightness = parseInt(parts[2].replace('%', ''));
+    if (isNaN(lightness)) return 'hsl(var(--card-foreground))';
+    return lightness > 55 ? 'hsl(var(--card-foreground))' : 'hsl(var(--primary-foreground))';
+};
+
+const getDefaultCalendarId = (user: User, availableCalendars: SharedCalendar[]): CalendarId => {
+    const roles = new Set(user.roles || []);
+
+    if (roles.has('Service Delivery Manager')) return 'business';
+    if (roles.has('Live Events')) return 'live-events';
+    if (roles.has('Production')) return 'live-events';
+    if (roles.has('Studio Productions')) return 'studio-productions';
+    if (roles.has('Post-Production') && !roles.has('Studio Productions') && !roles.has('Live Events')) {
+        return 'post-production';
+    }
+    if (roles.has('Admin')) return 'business';
+    
+    if (availableCalendars.length > 0) {
+        return availableCalendars[0].id;
+    }
+
+    return 'business';
+};
+
+const titlePlaceholders: Record<CalendarId, string> = {
+  'business': 'New Event',
+  'live-events': 'New Live Event',
+  'studio-productions': 'New Production Studios Event',
+  'post-production': 'New EDIT Machine Book',
+};
+
 export function NewEventForm({ onFinished }: NewEventFormProps) {
   const { viewAsUser, calendars, addEvent } = useUser();
   const { toast } = useToast();
@@ -44,11 +85,15 @@ export function NewEventForm({ onFinished }: NewEventFormProps) {
     return calendars.filter(cal => canManageEventOnCalendar(viewAsUser, cal.id));
   }, [calendars, viewAsUser]);
 
+  const defaultCalendarId = React.useMemo(() => {
+    return getDefaultCalendarId(viewAsUser, availableCalendars);
+  }, [viewAsUser, availableCalendars]);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: '',
-      calendarId: availableCalendars.length > 0 ? availableCalendars[0].id : '',
+      calendarId: defaultCalendarId,
       date: new Date(),
       startTime: '09:00',
       endTime: '10:00',
@@ -56,6 +101,21 @@ export function NewEventForm({ onFinished }: NewEventFormProps) {
       description: '',
     },
   });
+
+  const selectedCalendarId = form.watch('calendarId');
+  const selectedCalendar = calendars.find(c => c.id === selectedCalendarId) || availableCalendars[0];
+
+  const calendarBadge = selectedCalendar ? (
+    <Badge
+        style={{
+            backgroundColor: selectedCalendar.color,
+            color: getContrastColor(selectedCalendar.color),
+        }}
+        className="cursor-pointer border-transparent"
+    >
+        {selectedCalendar.name}
+    </Badge>
+  ) : null;
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
@@ -105,7 +165,6 @@ export function NewEventForm({ onFinished }: NewEventFormProps) {
 
   return (
     <div>
-        <h4 className="font-medium text-lg mb-4">Create New Event</h4>
         <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
@@ -113,31 +172,34 @@ export function NewEventForm({ onFinished }: NewEventFormProps) {
                 name="title"
                 render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Title</FormLabel>
-                        <FormControl><Input placeholder="e.g. Team Standup" {...field} /></FormControl>
-                        <FormMessage />
-                    </FormItem>
-                )}
-            />
-
-            <FormField
-                control={form.control}
-                name="calendarId"
-                render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Calendar</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select a calendar" />
-                                </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                                {availableCalendars.map(cal => (
-                                    <SelectItem key={cal.id} value={cal.id}>{cal.name}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                        <div className="flex justify-between items-baseline">
+                          <FormLabel>Title</FormLabel>
+                          {availableCalendars.length > 1 ? (
+                              <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                      {calendarBadge}
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                      {availableCalendars.map(cal => (
+                                          <DropdownMenuItem
+                                              key={cal.id}
+                                              onSelect={() => form.setValue('calendarId', cal.id, { shouldValidate: true })}
+                                          >
+                                              {cal.name}
+                                          </DropdownMenuItem>
+                                      ))}
+                                  </DropdownMenuContent>
+                              </DropdownMenu>
+                          ) : (
+                              calendarBadge
+                          )}
+                        </div>
+                        <FormControl>
+                          <Input 
+                            placeholder={titlePlaceholders[selectedCalendarId as CalendarId] || 'e.g. Team Standup'} 
+                            {...field} 
+                          />
+                        </FormControl>
                         <FormMessage />
                     </FormItem>
                 )}
