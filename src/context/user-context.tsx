@@ -4,6 +4,9 @@
 import React, { createContext, useContext, useState, useMemo, useEffect } from 'react';
 import { type User, type Notification, type UserStatusAssignment, type RoleCategories } from '@/types';
 import { mockUsers as initialUsers, initialRoleCategories } from '@/lib/mock-data';
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
+import { useToast } from '@/hooks/use-toast';
 
 interface UserContextType {
   realUser: User;
@@ -21,6 +24,7 @@ interface UserContextType {
   setUserStatusAssignments: React.Dispatch<React.SetStateAction<Record<string, UserStatusAssignment[]>>>;
   addUser: (newUser: User) => Promise<void>;
   updateUser: (userId: string, userData: Partial<User>) => Promise<void>;
+  linkGoogleCalendar: (userId: string) => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | null>(null);
@@ -34,6 +38,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [extraCheckLocations, setExtraCheckLocations] = useState<Record<string, string[]>>({});
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [userStatusAssignments, setUserStatusAssignments] = useState<Record<string, UserStatusAssignment[]>>({});
+  const { toast } = useToast();
 
   const allRoles = useMemo(() => {
     // Exclude system roles from the list of assignable roles
@@ -61,6 +66,26 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const updateRoleCategories = async (newCategories: RoleCategories) => {
     console.log('Updating role categories:', newCategories);
     setRoleCategories(newCategories);
+  };
+
+  const linkGoogleCalendar = async (userId: string) => {
+    const provider = new GoogleAuthProvider();
+    provider.addScope('https://www.googleapis.com/auth/calendar.readonly');
+    try {
+      await signInWithPopup(auth, provider);
+      await updateUser(userId, { googleCalendarLinked: true });
+      toast({
+        title: "Success!",
+        description: "Your Google Calendar has been successfully connected.",
+      });
+    } catch (error) {
+      console.error("Error linking Google Calendar:", error);
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong.",
+        description: "There was a problem linking your Google Calendar. Please try again.",
+      });
+    }
   };
 
   useEffect(() => {
@@ -94,6 +119,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setUserStatusAssignments,
     addUser,
     updateUser,
+    linkGoogleCalendar,
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

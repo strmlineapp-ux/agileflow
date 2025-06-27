@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, ChevronRight, Pencil, Palette, X } from 'lucide-react';
+import { ChevronDown, ChevronRight, Pencil, Palette, X, Check } from 'lucide-react';
 import { Label } from "@/components/ui/label"
 import {
   Dialog,
@@ -25,7 +25,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { Badge } from '@/components/ui/badge';
 
 export function UserManagement() {
-    const { realUser, viewAsUser, users, allRoles, updateUser } = useUser();
+    const { realUser, viewAsUser, users, allRoles, updateUser, linkGoogleCalendar } = useUser();
     const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
     
     // State for editing user contact
@@ -75,6 +75,10 @@ export function UserManagement() {
 
     const handleSavePhone = async () => {
         if (!editingContactUser) return;
+        if (editingContactUser.userId !== realUser.userId) {
+            toast({ variant: 'destructive', title: 'Error', description: 'You can only edit your own phone number.' });
+            return;
+        }
         await updateUser(editingContactUser.userId, { phone });
         setEditingContactUser(null);
     };
@@ -333,6 +337,31 @@ export function UserManagement() {
                                                                     const reportUser = users.find(u => u.userId === reportId);
                                                                     return reportUser ? <div key={reportId} className="text-sm">{reportUser.displayName}</div> : null;
                                                                 }) : <p className="text-sm text-muted-foreground italic">No direct reports</p>}
+                                                            </div>
+                                                            <div className="mt-4">
+                                                                <p className="font-medium text-sm mb-2">Integrations</p>
+                                                                {user.userId === realUser.userId ? (
+                                                                    user.googleCalendarLinked ? (
+                                                                        <div className="flex items-center gap-2 text-sm text-green-600">
+                                                                            <Check className="h-5 w-5" />
+                                                                            <span>Google Calendar Connected</span>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <Button variant="outline" onClick={() => linkGoogleCalendar(user.userId)}>
+                                                                            <svg role="img" viewBox="0 0 24 24" className="mr-2 h-4 w-4">
+                                                                                <path
+                                                                                fill="currentColor"
+                                                                                d="M12.48 10.92v3.28h7.84c-.24 1.84-.85 3.18-1.73 4.1-1.02 1.02-2.3 1.84-4.32 1.84-3.6 0-6.5-2.95-6.5-6.5s2.9-6.5 6.5-6.5c1.95 0 3.45.82 4.25 1.58l2.5-2.5C18.43 1.18 15.7.01 12.48.01 7.1 0 2.98 3.98 2.98 9.5s4.12 9.5 9.5 9.5c5.13 0 9.04-3.47 9.04-9.25 0-.8-.08-1.32-.19-1.84h-8.9v.01Z"
+                                                                                ></path>
+                                                                            </svg>
+                                                                            Connect Google Calendar
+                                                                        </Button>
+                                                                    )
+                                                                ) : (
+                                                                    <p className="text-sm text-muted-foreground italic">
+                                                                        {user.googleCalendarLinked ? 'Calendar connected' : 'Calendar not connected'}
+                                                                    </p>
+                                                                )}
                                                             </div>
                                                         </div>
                                                     </div>
