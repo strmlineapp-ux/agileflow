@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -23,11 +24,11 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { TaskStatusBadge } from './task-status-badge';
-import { TaskPriorityIcon } from './task-priority-icon';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from '@/components/ui/badge';
 import { useUser } from '@/context/user-context';
 import { mockTasks } from '@/lib/mock-data';
+import { PriorityBadge } from '../calendar/priority-badge';
 
 
 const statusOrder: Task['status'][] = ['in_progress', 'awaiting_review', 'not_started', 'blocked', 'completed'];
@@ -81,7 +82,7 @@ export function TaskList({ limit }: { limit?: number }) {
                   <TaskStatusBadge status={task.status} />
                 </TableCell>
                 <TableCell>
-                  <TaskPriorityIcon priority={task.priority} />
+                  <PriorityBadge priority={task.priority} />
                 </TableCell>
                 <TableCell>{isToday(task.dueDate) ? 'Today' : format(task.dueDate, 'MMM dd, yyyy')}</TableCell>
                 <TableCell>
