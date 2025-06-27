@@ -38,6 +38,14 @@ export interface SharedCalendar {
   color: string;
 }
 
+export type AttachmentType = 'drive' | 'docs' | 'sheets' | 'slides' | 'forms' | 'meet' | 'local';
+
+export interface Attachment {
+  name: string;
+  type: AttachmentType;
+  url: string; // The link to the resource or a placeholder
+}
+
 export interface Event {
   eventId: string;
   title: string;
@@ -49,6 +57,7 @@ export interface Event {
   location?: string;
   associatedTaskId?: string;
   priority?: 'P0' | 'P1' | 'P2' | 'P3' | 'P4';
+  attachments?: Attachment[];
   createdBy: string; // userId
   createdAt: Date;
   lastUpdated: Date;

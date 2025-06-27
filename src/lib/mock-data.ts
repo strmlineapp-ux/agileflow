@@ -145,6 +145,7 @@ export const mockEvents: Event[] = [
         attendees: [mockUsers[0], mockUsers[1], mockUsers[2]], 
         location: 'ACR',
         priority: 'P2',
+        attachments: [],
         createdBy: '1', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -158,6 +159,7 @@ export const mockEvents: Event[] = [
         attendees: [mockUsers[3], mockUsers[4]], 
         location: 'Event Space 1 (S2)',
         priority: 'P1',
+        attachments: [],
         createdBy: '1', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -171,6 +173,7 @@ export const mockEvents: Event[] = [
         attendees: [mockUsers[5]], 
         location: 'ACR',
         priority: 'P3',
+        attachments: [],
         createdBy: '2', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -184,6 +187,7 @@ export const mockEvents: Event[] = [
         attendees: [mockUsers[2], mockUsers[5]], 
         location: 'Studio',
         priority: 'P0',
+        attachments: [],
         createdBy: '1', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -198,6 +202,7 @@ export const mockEvents: Event[] = [
         attendees: [mockUsers[1], mockUsers[4], mockUsers[5]], 
         location: 'Studio',
         priority: 'P2',
+        attachments: [],
         createdBy: '2', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -211,6 +216,7 @@ export const mockEvents: Event[] = [
         attendees: [mockUsers[3]], 
         location: 'Event Space 3 (R7)',
         priority: 'P3',
+        attachments: [],
         createdBy: '3', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -225,6 +231,7 @@ export const mockEvents: Event[] = [
         attendees: mockUsers, 
         location: 'Event Space 4 (R7)',
         priority: 'P4',
+        attachments: [],
         createdBy: '1', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -238,6 +245,7 @@ export const mockEvents: Event[] = [
         attendees: [mockUsers[5]], 
         location: 'Studio',
         priority: 'P3',
+        attachments: [],
         createdBy: '2', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -252,6 +260,7 @@ export const mockEvents: Event[] = [
         attendees: mockUsers, 
         location: 'Auditorium',
         priority: 'P2',
+        attachments: [],
         createdBy: '1', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -265,6 +274,7 @@ export const mockEvents: Event[] = [
         attendees: [mockUsers[2], mockUsers[3], mockUsers[5]], 
         location: 'Event Space 2 (S2)',
         priority: 'P1',
+        attachments: [],
         createdBy: '1', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -278,6 +288,7 @@ export const mockEvents: Event[] = [
         attendees: [mockUsers[1], mockUsers[5]], 
         location: 'ACR',
         priority: 'P2',
+        attachments: [],
         createdBy: '2', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -291,6 +302,7 @@ export const mockEvents: Event[] = [
         attendees: [mockUsers[0], mockUsers[3]], 
         location: 'Auditorium',
         priority: 'P1',
+        attachments: [],
         createdBy: '1', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -305,6 +317,7 @@ export const mockEvents: Event[] = [
         attendees: [mockUsers[0], mockUsers[2]], 
         location: 'Off-site',
         priority: 'P3',
+        attachments: [],
         createdBy: '1', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -318,6 +331,7 @@ export const mockEvents: Event[] = [
         attendees: [mockUsers[4], mockUsers[5]], 
         location: 'Studio',
         priority: 'P3',
+        attachments: [],
         createdBy: '2', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -332,6 +346,7 @@ export const mockEvents: Event[] = [
         attendees: [mockUsers[0], mockUsers[5]], 
         location: 'Studio',
         priority: 'P1',
+        attachments: [],
         createdBy: '1', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -345,6 +360,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(twoDaysAgo).setHours(12, 0, 0, 0)),
         attendees: [mockUsers[0], mockUsers[1]], 
         priority: 'P3',
+        attachments: [],
         createdBy: '1', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
