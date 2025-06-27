@@ -146,7 +146,7 @@
   .light .bg-primary:hover,
   .light .bg-primary:focus-visible {
     border-color: transparent;
-    background: linear-gradient(-83deg, hsl(var(--primary)), hsl(var(--accent))) border-box;
+    background: linear-gradient(-113deg, hsl(var(--primary)), hsl(var(--accent))) border-box;
   }
   .light .bg-primary:focus-visible {
     outline: 2px solid hsl(var(--ring));
@@ -157,7 +157,7 @@
   .dark .bg-primary:hover,
   .dark .bg-primary:focus-visible {
     border-color: transparent;
-    background: linear-gradient(-83deg, hsl(var(--primary)), hsl(var(--accent))) border-box;
+    background: linear-gradient(-113deg, hsl(var(--primary)), hsl(var(--accent))) border-box;
   }
   .dark .bg-primary:focus-visible {
     outline: 2px solid hsl(var(--ring));
@@ -168,7 +168,7 @@
   .firebase .bg-primary:hover,
   .firebase .bg-primary:focus-visible {
     border-color: transparent;
-    background: linear-gradient(-83deg, hsl(43, 97%, 73%), hsl(28, 96%, 55%), hsl(337, 67%, 50%), hsl(284, 61%, 49%), hsl(79, 91%, 213%)) border-box;
+    background: linear-gradient(-113deg, hsl(43, 97%, 73%), hsl(28, 96%, 55%), hsl(337, 67%, 50%), hsl(284, 61%, 49%), hsl(79, 91%, 213%)) border-box;
   }
   .firebase .bg-primary:focus-visible {
     outline: 2px solid hsl(var(--ring));
