@@ -15,7 +15,20 @@ const isHoliday = (day: Date) => {
 }
 
 const getContrastColor = (hsl: string): string => {
-    const lightness = parseInt(hsl.split(',')[2].replace('%', '').replace(')', ''));
+    // Add a guard for undefined input
+    if (!hsl) {
+        return 'hsl(var(--card-foreground))';
+    }
+    // Fix: HSL color values in mock data are space-separated, not comma-separated.
+    const parts = hsl.split(' ');
+    // Ensure we have enough parts to parse lightness
+    if (parts.length < 3) {
+        return 'hsl(var(--card-foreground))'; 
+    }
+    const lightness = parseInt(parts[2].replace('%', '').replace(')', ''));
+    if (isNaN(lightness)) {
+        return 'hsl(var(--card-foreground))';
+    }
     return lightness > 55 ? 'hsl(var(--card-foreground))' : 'hsl(var(--primary-foreground))';
 }
 
