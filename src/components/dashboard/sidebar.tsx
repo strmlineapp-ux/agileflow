@@ -21,7 +21,7 @@ export function Sidebar() {
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const userTeams = teams.filter(team => 
-    team.members.includes(viewAsUser.userId) || isSdm
+    isSdm || team.managers?.includes(viewAsUser.userId)
   );
 
   const navItems = [

@@ -22,7 +22,7 @@ export function Header() {
   const isSdm = viewAsUser.roles?.includes('Service Delivery Manager') || viewAsUser.roles?.includes('Admin');
 
   const userTeams = teams.filter(team => 
-    team.members.includes(viewAsUser.userId) || isSdm
+    isSdm || team.managers?.includes(viewAsUser.userId)
   );
 
   return (

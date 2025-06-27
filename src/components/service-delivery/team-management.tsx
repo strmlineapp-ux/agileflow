@@ -30,6 +30,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 export function TeamManagement() {
   const { users, teams, addTeam, updateTeam, deleteTeam } = useUser();
@@ -136,13 +137,29 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
     const [name, setName] = useState(team?.name || '');
     const [icon, setIcon] = useState<IconName>(team?.icon as IconName || 'Users');
     const [members, setMembers] = useState<string[]>(team?.members || []);
+    const [managers, setManagers] = useState<string[]>(team?.managers || []);
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
     const [isMemberPopoverOpen, setIsMemberPopoverOpen] = useState(false);
     const [memberSearch, setMemberSearch] = useState('');
     const { toast } = useToast();
 
-    const handleMemberToggle = (userId: string, isChecked: boolean) => {
-        setMembers(prev => isChecked ? [...prev, userId] : prev.filter(id => id !== userId));
+    const handleMemberToggleInPopover = (userId: string, isChecked: boolean) => {
+        setMembers(prev => {
+            const updatedMembers = isChecked ? [...prev, userId] : prev.filter(id => id !== userId);
+            // If a user is removed from members, also remove them from managers
+            if (!isChecked) {
+                setManagers(currentManagers => currentManagers.filter(id => id !== userId));
+            }
+            return updatedMembers;
+        });
+    };
+
+    const handleManagerToggle = (userId: string) => {
+        setManagers(prev => 
+            prev.includes(userId) 
+                ? prev.filter(id => id !== userId) 
+                : [...prev, userId]
+        );
     };
 
     const handleSave = () => {
@@ -152,13 +169,14 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
         }
 
         if (team) { // Editing
-            updateTeam(team.id, { name, icon, members });
+            updateTeam(team.id, { name, icon, members, managers });
             toast({ title: "Success", description: `Team "${name}" updated.` });
         } else { // Creating
             addTeam({
                 name,
                 icon,
                 members,
+                managers,
                 roles: [],
                 pinnedLocations: []
             });
@@ -218,25 +236,25 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
                     </div>
 
                     <div className="space-y-2">
+                         <p className="text-sm text-muted-foreground">Click member pills to toggle manager status.</p>
                         <div className="flex min-h-[40px] flex-wrap items-center gap-2 rounded-md border bg-muted/50 p-2">
                             {members.length > 0 ? (
                             members.map(userId => {
                                 const user = allUsers.find(u => u.userId === userId);
                                 if (!user) return null;
+                                const isManager = managers.includes(userId);
                                 return (
-                                <Badge key={user.userId} variant="secondary" className="gap-1.5 p-1 pl-2">
+                                <Badge 
+                                    key={user.userId} 
+                                    variant={isManager ? 'default' : 'secondary'}
+                                    className="gap-1.5 p-1 pl-2 cursor-pointer"
+                                    onClick={() => handleManagerToggle(userId)}
+                                >
                                     <Avatar className="h-5 w-5">
                                         <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
                                         <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
                                     </Avatar>
                                     <span className="font-medium">{user.displayName}</span>
-                                    <button
-                                    type="button"
-                                    className="rounded-full p-0.5 hover:bg-background/50"
-                                    onClick={() => handleMemberToggle(user.userId, false)}
-                                    >
-                                    <X className="h-3 w-3" />
-                                    </button>
                                 </Badge>
                                 );
                             })
@@ -264,7 +282,7 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
                                 {filteredUsers.map(user => (
                                     <div
                                         key={user.userId}
-                                        onClick={() => handleMemberToggle(user.userId, !members.includes(user.userId))}
+                                        onClick={() => handleMemberToggleInPopover(user.userId, !members.includes(user.userId))}
                                         className="flex cursor-pointer items-center gap-2 rounded-md p-2 hover:bg-accent"
                                     >
                                     <Checkbox

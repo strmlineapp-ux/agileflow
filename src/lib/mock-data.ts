@@ -124,6 +124,7 @@ export const mockTeams: Team[] = [
         name: 'Studio Productions',
         icon: 'Clapperboard',
         members: ['1', '2', '6'],
+        managers: ['1', '2'],
         roles: ['Post-Production', 'Studio Productions Team Admin', 'Video Director', 'Edit Events'],
         pinnedLocations: ['Studio', 'ACR', 'Training Room']
     },
@@ -132,6 +133,7 @@ export const mockTeams: Team[] = [
         name: 'Live Events',
         icon: 'Video',
         members: ['1', '2', '3', '4'],
+        managers: ['1', '2'],
         roles: ['TD', 'Manage Checks', 'ES Operator', 'ES Daily Checks', 'Content Op', 'Camera', 'Audio', '1st AD', 'Live Event Team Admin'],
         pinnedLocations: ['Auditorium', 'Event Space 1 (S2)', 'Event Space 2 (S2)']
     },
@@ -140,6 +142,7 @@ export const mockTeams: Team[] = [
         name: 'Productions',
         icon: 'Megaphone',
         members: ['2', '3', '5'],
+        managers: ['2'],
         roles: ['Production Team Admin'],
         pinnedLocations: []
     }

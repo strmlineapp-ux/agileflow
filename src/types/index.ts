@@ -31,6 +31,7 @@ export interface Team {
   name: string;
   icon: IconName;
   members: string[]; // array of userIds
+  managers?: string[]; // array of userIds who are managers for this team
   roles: string[]; // team-specific roles
   pinnedLocations: string[]; // array of location names
 }
