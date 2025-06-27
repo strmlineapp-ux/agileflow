@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Calendar, ListChecks, Settings, LogOut, LayoutDashboard, UserCheck, Bell, Clapperboard, Megaphone, Camera } from 'lucide-react';
+import { Calendar, ListChecks, Settings, LogOut, LayoutDashboard, UserCheck, Bell, Clapperboard, Megaphone, Video } from 'lucide-react';
 import Logo from '@/components/icons/logo';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
@@ -27,7 +27,7 @@ export function Sidebar() {
     { href: '/dashboard', icon: LayoutDashboard, label: 'Overview', visible: true },
     { href: '/dashboard/tasks', icon: ListChecks, label: 'Tasks', visible: true },
     { href: '/dashboard/teams/studio', icon: Clapperboard, label: 'Studio Productions', visible: canViewStudio },
-    { href: '/dashboard/teams/live-events', icon: Camera, label: 'Live Events', visible: canViewLive },
+    { href: '/dashboard/teams/live-events', icon: Video, label: 'Live Events', visible: canViewLive },
     { href: '/dashboard/teams/productions', icon: Megaphone, label: 'Productions', visible: canViewProd },
     { href: '/dashboard/notifications', icon: Bell, label: 'Notifications', visible: true },
     { href: '/dashboard/settings', icon: Settings, label: 'Settings', visible: true },
