@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon } from 'lucide-react';
+import { Calendar as CalendarIcon, Paperclip, File as FileIcon, Video, X } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -23,9 +23,26 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { PriorityBadge } from './priority-badge';
+
+const GoogleDriveIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 16 16" fill="currentColor" {...props}><path d="M9.19,4.5l-3.2,0l-1.7,2.9l3.2,5.7l4.9,0l1.7,-2.9l-4.9,-5.7Z" fill="#0f9d58"></path><path d="M5.99,4.5l-3.2,5.7l1.7,2.9l3.2,-5.7l-1.7,-2.9Z" fill="#ffc107"></path><path d="M10.89,7.4l-3.2,0l-1.7,-2.9l4.9,0l0,0Z" fill="#1976d2"></path></svg>
+);
+const GoogleDocsIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg viewBox="0 0 16 16" fill="currentColor" {...props}><path d="M13,2H3C2.4,2,2,2.4,2,3v10c0,0.6,0.4,1,1,1h10c0.6,0,1-0.4,1-1V3C14,2.4,13.6,2,13,2z" fill="#4285f4"></path><path d="M10,9H6V8h4V9z M11,7H6V6h5V7z M11,5H6V4h5V5z" fill="#ffffff"></path></svg>
+);
+const GoogleSheetsIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg viewBox="0 0 16 16" fill="currentColor" {...props}><path d="M13,2H3C2.4,2,2,2.4,2,3v10c0,0.6,0.4,1,1,1h10c0.6,0,1-0.4,1-1V3C14,2.4,13.6,2,13,2z" fill="#0f9d58"></path><path d="M7,11v-1H5v-1h2V8H5V7h2V6H4v6h3V11z M12,12H8v-1h1V8H8V7h4v1h-1v2h1V12z" fill="#ffffff"></path></svg>
+);
+const GoogleSlidesIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg viewBox="0 0 16 16" fill="currentColor" {...props}><path d="M13,2H3C2.4,2,2,2.4,2,3v10c0,0.6,0.4,1,1,1h10c0.6,0,1-0.4,1-1V3C14,2.4,13.6,2,13,2z" fill="#ffc107"></path><path d="M12,4H4v6h8V4z" fill="#ffffff"></path></svg>
+);
+const GoogleFormsIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg viewBox="0 0 16 16" fill="currentColor" {...props}><path d="M13,2H3C2.4,2,2,2.4,2,3v10c0,0.6,0.4,1,1,1h10c0.6,0,1-0.4,1-1V3C14,2.4,13.6,2,13,2z" fill="#7e57c2"></path><path d="M10,11H6v-1h4V11z M11,8H6V7h5V8z M8,5H6v1h2V5z" fill="#ffffff"></path></svg>
+);
 
 const formSchema = z.object({
   title: z.string().min(2, { message: 'Title must be at least 2 characters.' }),
@@ -36,6 +53,7 @@ const formSchema = z.object({
   endTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, { message: 'Invalid time format (HH:mm).' }),
   location: z.string().optional(),
   description: z.string().optional(),
+  attachments: z.array(z.any()).optional(),
 });
 
 type NewEventFormProps = {
@@ -70,10 +88,17 @@ const titlePlaceholders: Record<CalendarId, string> = {
 
 const priorities: Task['priority'][] = ['P0', 'P1', 'P2', 'P3', 'P4'];
 
+type Attachment = {
+  name: string;
+  type: 'drive' | 'docs' | 'sheets' | 'slides' | 'forms' | 'meet' | 'local';
+  icon: React.ReactNode;
+};
+
 export function NewEventForm({ onFinished }: NewEventFormProps) {
   const { viewAsUser, calendars, addEvent } = useUser();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = React.useState(false);
+  const [attachments, setAttachments] = React.useState<Attachment[]>([]);
 
   const availableCalendars = React.useMemo(() => {
     return calendars.filter(cal => canManageEventOnCalendar(viewAsUser, cal.id));
@@ -94,11 +119,20 @@ export function NewEventForm({ onFinished }: NewEventFormProps) {
       endTime: '10:00',
       location: '',
       description: '',
+      attachments: [],
     },
   });
 
   const selectedCalendarId = form.watch('calendarId');
   const selectedCalendar = calendars.find(c => c.id === selectedCalendarId) || availableCalendars[0];
+  
+  const handleAddAttachment = (type: Attachment['type'], name: string, icon: React.ReactNode) => {
+    setAttachments(prev => [...prev, { type, name, icon }]);
+    toast({
+        title: 'Attachment Added',
+        description: `${name} has been attached to the event.`,
+    });
+  };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
@@ -298,12 +332,78 @@ export function NewEventForm({ onFinished }: NewEventFormProps) {
                 name="description"
                 render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Description (Optional)</FormLabel>
+                        <div className="flex items-center gap-1">
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0">
+                                        <Paperclip className="h-4 w-4" />
+                                        <span className="sr-only">Attach file</span>
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="start">
+                                    <DropdownMenuItem onSelect={() => handleAddAttachment('local', 'design_brief.pdf', <FileIcon className="h-4 w-4" />)}>
+                                        <FileIcon className="mr-2 h-4 w-4" />
+                                        <span>Attach file</span>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onSelect={() => handleAddAttachment('drive', 'Project Assets', <GoogleDriveIcon className="mr-2 h-4 w-4" />)}>
+                                        <GoogleDriveIcon className="mr-2 h-4 w-4" />
+                                        <span>Google Drive</span>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={() => handleAddAttachment('docs', 'Meeting Notes', <GoogleDocsIcon className="mr-2 h-4 w-4" />)}>
+                                        <GoogleDocsIcon className="mr-2 h-4 w-4" />
+                                        <span>Google Docs</span>
+                                    </DropdownMenuItem>
+                                     <DropdownMenuItem onSelect={() => handleAddAttachment('sheets', 'Budget Tracker', <GoogleSheetsIcon className="mr-2 h-4 w-4" />)}>
+                                        <GoogleSheetsIcon className="mr-2 h-4 w-4" />
+                                        <span>Google Sheets</span>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={() => handleAddAttachment('slides', 'Presentation Deck', <GoogleSlidesIcon className="mr-2 h-4 w-4" />)}>
+                                        <GoogleSlidesIcon className="mr-2 h-4 w-4" />
+                                        <span>Google Slides</span>
+                                    </DropdownMenuItem>
+                                     <DropdownMenuItem onSelect={() => handleAddAttachment('forms', 'Feedback Form', <GoogleFormsIcon className="mr-2 h-4 w-4" />)}>
+                                        <GoogleFormsIcon className="mr-2 h-4 w-4" />
+                                        <span>Google Forms</span>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onSelect={() => handleAddAttachment('meet', 'Google Meet', <Video className="mr-2 h-4 w-4" />)}>
+                                        <Video className="mr-2 h-4 w-4" />
+                                        <span>Add Google Meet</span>
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                            <FormLabel>Description (Optional)</FormLabel>
+                        </div>
                         <FormControl><Textarea placeholder="Add more details..." {...field} /></FormControl>
                         <FormMessage />
                     </FormItem>
                 )}
             />
+
+            {attachments.length > 0 && (
+                <div className="space-y-2">
+                    {attachments.map((att, index) => (
+                        <div key={index} className="flex items-center justify-between gap-2 text-sm p-2 bg-muted/50 rounded-md">
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                                {att.icon}
+                                <span className="truncate">{att.name}</span>
+                            </div>
+                            <Button 
+                                type="button" 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-6 w-6 shrink-0" 
+                                onClick={() => setAttachments(prev => prev.filter((_, i) => i !== index))}
+                            >
+                                <X className="h-4 w-4" />
+                                <span className="sr-only">Remove attachment</span>
+                            </Button>
+                        </div>
+                    ))}
+                </div>
+            )}
+
 
             <Button type="submit" disabled={isLoading} className="w-full">
                 {isLoading ? 'Creating...' : 'Create Event'}
@@ -313,3 +413,5 @@ export function NewEventForm({ onFinished }: NewEventFormProps) {
     </div>
   );
 }
+
+    
