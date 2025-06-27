@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PriorityBadge } from './priority-badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const GoogleDriveIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg viewBox="0 0 16 16" fill="currentColor" {...props}><path d="M9.19,4.5l-3.2,0l-1.7,2.9l3.2,5.7l4.9,0l1.7,-2.9l-4.9,-5.7Z" fill="#0f9d58"></path><path d="M5.99,4.5l-3.2,5.7l1.7,2.9l3.2,-5.7l-1.7,-2.9Z" fill="#ffc107"></path><path d="M10.89,7.4l-3.2,0l-1.7,-2.9l4.9,0l0,0Z" fill="#1976d2"></path></svg>
@@ -99,6 +100,66 @@ const titlePlaceholders: Record<CalendarId, string> = {
 };
 
 const priorities: Task['priority'][] = ['P0', 'P1', 'P2', 'P3', 'P4'];
+
+const timeSlots = Array.from({ length: 24 * 4 }, (_, i) => {
+  const hours = Math.floor(i / 4);
+  const minutes = (i % 4) * 15;
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+});
+
+const TimePicker = ({ value, onChange }: { value: string; onChange: (value: string) => void; }) => {
+    const [isOpen, setIsOpen] = React.useState(false);
+    const listRef = React.useRef<HTMLDivElement>(null);
+
+    React.useEffect(() => {
+      if (isOpen && listRef.current) {
+        try {
+          const selectedValue = value.slice(0, 2) + ':' + (Math.round(parseInt(value.slice(3, 5)) / 15) * 15).toString().padStart(2, '0');
+          const selectedElement = listRef.current.querySelector<HTMLButtonElement>(`[data-time="${selectedValue}"]`);
+          if (selectedElement) {
+            selectedElement.scrollIntoView({ block: 'nearest' });
+          }
+        } catch (e) {
+            // ignore parsing errors for incomplete time strings
+        }
+      }
+    }, [isOpen, value]);
+
+    return (
+        <Popover open={isOpen} onOpenChange={setIsOpen}>
+            <PopoverTrigger asChild>
+                <Input
+                    type="text" // Use text to guarantee 24-hour format display
+                    value={value}
+                    onChange={(e) => onChange(e.target.value)}
+                    onFocus={() => setIsOpen(true)}
+                    className="w-[110px]"
+                />
+            </PopoverTrigger>
+            <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                <ScrollArea className="h-60">
+                    <div ref={listRef}>
+                        {timeSlots.map((slot) => (
+                            <Button
+                                key={slot}
+                                data-time={slot}
+                                variant={value === slot ? 'default' : 'ghost'}
+                                onClick={() => {
+                                    onChange(slot);
+                                    setIsOpen(false);
+                                }}
+                                className="w-full rounded-none justify-start"
+                            >
+                                {slot}
+                            </Button>
+                        ))}
+                    </div>
+                </ScrollArea>
+            </PopoverContent>
+        </Popover>
+    );
+};
+
 
 export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
   const { viewAsUser, calendars, addEvent, locations } = useUser();
@@ -319,7 +380,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                     render={({ field }) => (
                         <FormItem>
                            <FormControl>
-                             <Input type="time" {...field} className="w-[110px]" step="900" />
+                             <TimePicker value={field.value} onChange={field.onChange} />
                            </FormControl>
                            <FormMessage />
                         </FormItem>
@@ -331,7 +392,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                     render={({ field }) => (
                         <FormItem>
                              <FormControl>
-                               <Input type="time" {...field} className="w-[110px]" step="900" />
+                                <TimePicker value={field.value} onChange={field.onChange} />
                              </FormControl>
                              <FormMessage />
                         </FormItem>
