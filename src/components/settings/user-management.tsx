@@ -23,6 +23,8 @@ import { useUser } from '@/context/user-context';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
 
 export function UserManagement() {
     const { realUser, viewAsUser, users, allRoles, updateUser, linkGoogleCalendar } = useUser();
@@ -229,10 +231,35 @@ export function UserManagement() {
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex items-center gap-3">
-                                                <Avatar>
-                                                    <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar"/>
-                                                    <AvatarFallback>{user.displayName.slice(0,2).toUpperCase()}</AvatarFallback>
-                                                </Avatar>
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            {user.userId === realUser.userId && !user.googleCalendarLinked ? (
+                                                                <Button variant="ghost" className="relative h-10 w-10 p-0 rounded-full" onClick={() => linkGoogleCalendar(user.userId)}>
+                                                                    <Avatar className="h-10 w-10">
+                                                                        <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
+                                                                        <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                                                    </Avatar>
+                                                                    <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full bg-gray-400 ring-2 ring-card" />
+                                                                </Button>
+                                                            ) : (
+                                                                <div className="relative">
+                                                                    <Avatar>
+                                                                        <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
+                                                                        <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                                                    </Avatar>
+                                                                    <span className={cn(
+                                                                        "absolute bottom-0 right-0 block h-3 w-3 rounded-full ring-2 ring-card",
+                                                                        user.googleCalendarLinked ? "bg-green-500" : "bg-gray-400"
+                                                                    )} />
+                                                                </div>
+                                                            )}
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p>Google Calendar: {user.googleCalendarLinked ? 'Connected' : user.userId === realUser.userId ? 'Click to connect' : 'Not Connected'}</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
                                                 <div>
                                                     <p className="font-medium">{user.displayName}</p>
                                                     <p className="text-sm text-muted-foreground">{user.email}</p>
@@ -337,31 +364,6 @@ export function UserManagement() {
                                                                     const reportUser = users.find(u => u.userId === reportId);
                                                                     return reportUser ? <div key={reportId} className="text-sm">{reportUser.displayName}</div> : null;
                                                                 }) : <p className="text-sm text-muted-foreground italic">No direct reports</p>}
-                                                            </div>
-                                                            <div className="mt-4">
-                                                                <p className="font-medium text-sm mb-2">Integrations</p>
-                                                                {user.userId === realUser.userId ? (
-                                                                    user.googleCalendarLinked ? (
-                                                                        <div className="flex items-center gap-2 text-sm text-green-600">
-                                                                            <Check className="h-5 w-5" />
-                                                                            <span>Google Calendar Connected</span>
-                                                                        </div>
-                                                                    ) : (
-                                                                        <Button variant="outline" onClick={() => linkGoogleCalendar(user.userId)}>
-                                                                            <svg role="img" viewBox="0 0 24 24" className="mr-2 h-4 w-4">
-                                                                                <path
-                                                                                fill="currentColor"
-                                                                                d="M12.48 10.92v3.28h7.84c-.24 1.84-.85 3.18-1.73 4.1-1.02 1.02-2.3 1.84-4.32 1.84-3.6 0-6.5-2.95-6.5-6.5s2.9-6.5 6.5-6.5c1.95 0 3.45.82 4.25 1.58l2.5-2.5C18.43 1.18 15.7.01 12.48.01 7.1 0 2.98 3.98 2.98 9.5s4.12 9.5 9.5 9.5c5.13 0 9.04-3.47 9.04-9.25 0-.8-.08-1.32-.19-1.84h-8.9v.01Z"
-                                                                                ></path>
-                                                                            </svg>
-                                                                            Connect Google Calendar
-                                                                        </Button>
-                                                                    )
-                                                                ) : (
-                                                                    <p className="text-sm text-muted-foreground italic">
-                                                                        {user.googleCalendarLinked ? 'Calendar connected' : 'Calendar not connected'}
-                                                                    </p>
-                                                                )}
                                                             </div>
                                                         </div>
                                                     </div>
@@ -505,3 +507,5 @@ export function UserManagement() {
         </>
     )
 }
+
+    
