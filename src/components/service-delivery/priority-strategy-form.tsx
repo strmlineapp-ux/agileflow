@@ -164,7 +164,7 @@ export function PriorityStrategyForm({ isOpen, onClose, strategy }: PriorityStra
     if (strategyState.type !== 'scale') return;
     setStrategyState(prev => {
         if (prev.type !== 'scale') return prev;
-        const newInterval = { label: 'New Interval', from: 0, to: 10, color: '#cccccc' };
+        const newInterval = { label: 'New Interval', from: 0, to: 10, color: '#CCCCCC' };
         return { ...prev, intervals: [...prev.intervals, newInterval] };
     });
   }
@@ -206,23 +206,23 @@ export function PriorityStrategyForm({ isOpen, onClose, strategy }: PriorityStra
           </DialogHeader>
           <div className="grid gap-6 py-4 max-h-[70vh] overflow-y-auto pr-2">
             <div className="space-y-2">
-              <Label htmlFor="strategy-name">Strategy Name</Label>
               <Input 
                 id="strategy-name" 
                 value={strategyState.name}
                 onChange={e => setStrategyState(s => ({ ...s, name: e.target.value }))}
+                placeholder="Strategy Name"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="strategy-desc">Description</Label>
               <Textarea 
                 id="strategy-desc" 
                 value={strategyState.description}
                 onChange={e => setStrategyState(s => ({ ...s, description: e.target.value }))}
+                placeholder="Description"
               />
             </div>
             <div className="space-y-2">
-              <Label>Apply To</Label>
+              <p className="text-sm text-muted-foreground">Apply To</p>
               <div className="flex items-center gap-4">
                 {APPLICATIONS.map(app => (
                   <div key={app} className="flex items-center space-x-2">
@@ -242,7 +242,7 @@ export function PriorityStrategyForm({ isOpen, onClose, strategy }: PriorityStra
             <Separator />
             
             <div className="space-y-2">
-                <Label>Strategy Type</Label>
+                <p className="text-sm text-muted-foreground">Strategy Type</p>
                 <RadioGroup value={strategyState.type} onValueChange={(v) => handleStrategyTypeChange(v as any)} className="flex items-center gap-4">
                     <div className="flex items-center space-x-2"><RadioGroupItem value="tier" id="type-tier" /><Label htmlFor="type-tier">Tier</Label></div>
                     <div className="flex items-center space-x-2"><RadioGroupItem value="symbol" id="type-symbol" /><Label htmlFor="type-symbol">Symbol</Label></div>
@@ -253,7 +253,7 @@ export function PriorityStrategyForm({ isOpen, onClose, strategy }: PriorityStra
             {strategyState.type === 'tier' && (
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                        <Label>Priorities</Label>
+                        <p className="text-sm text-muted-foreground">Priorities</p>
                         <Button variant="outline" size="sm" onClick={() => handleOpenPriorityForm(null)}>
                             <GoogleSymbol name="add" className="mr-1" />
                             Add Priority
@@ -290,7 +290,6 @@ export function PriorityStrategyForm({ isOpen, onClose, strategy }: PriorityStra
                 <div className="space-y-4 rounded-md border p-4">
                     <div className="grid grid-cols-3 gap-4">
                         <div className="space-y-2">
-                          <Label htmlFor="symbol-char">Symbol</Label>
                           <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                               <PopoverTrigger asChild>
                                   <Button variant="outline" className="w-full justify-start">
@@ -328,11 +327,9 @@ export function PriorityStrategyForm({ isOpen, onClose, strategy }: PriorityStra
                           </Popover>
                         </div>
                          <div className="space-y-2">
-                            <Label htmlFor="symbol-max">Max Value</Label>
-                            <Input id="symbol-max" type="number" value={strategyState.max} onChange={e => setStrategyState(s => ({ ...s, type: 'symbol', max: Number(e.target.value) }))} min={1} />
+                            <Input id="symbol-max" type="number" value={strategyState.max} onChange={e => setStrategyState(s => ({ ...s, type: 'symbol', max: Number(e.target.value) }))} min={1} placeholder="Max Value" />
                         </div>
                          <div className="space-y-2">
-                            <Label>Color</Label>
                             <div className="relative h-9 w-full">
                                 <div
                                     className="absolute inset-0 h-full w-full rounded-md border"
@@ -356,18 +353,16 @@ export function PriorityStrategyForm({ isOpen, onClose, strategy }: PriorityStra
                 <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4 rounded-md border p-4">
                         <div className="space-y-2">
-                            <Label htmlFor="scale-min">Min Value</Label>
-                            <Input id="scale-min" type="number" value={strategyState.min} onChange={e => setStrategyState(s => ({ ...s, type: 'scale', min: Number(e.target.value) }))} />
+                            <Input id="scale-min" type="number" value={strategyState.min} onChange={e => setStrategyState(s => ({ ...s, type: 'scale', min: Number(e.target.value) }))} placeholder="Min Value" />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="scale-max">Max Value</Label>
-                            <Input id="scale-max" type="number" value={strategyState.max} onChange={e => setStrategyState(s => ({ ...s, type: 'scale', max: Number(e.target.value) }))} />
+                            <Input id="scale-max" type="number" value={strategyState.max} onChange={e => setStrategyState(s => ({ ...s, type: 'scale', max: Number(e.target.value) }))} placeholder="Max Value" />
                         </div>
                     </div>
                     
                     <div className="space-y-2">
                          <div className="flex items-center justify-between">
-                            <Label>Intervals</Label>
+                            <p className="text-sm text-muted-foreground">Intervals</p>
                             <Button variant="outline" size="sm" onClick={handleAddInterval}>
                                 <GoogleSymbol name="add" className="mr-1" />
                                 Add Interval

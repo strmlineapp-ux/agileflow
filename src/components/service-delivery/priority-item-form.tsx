@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { type Priority } from '@/types';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
@@ -49,16 +49,13 @@ export function PriorityItemForm({ isOpen, onClose, priority, onSave }: Priority
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="label">Label</Label>
-            <Input id="label" value={label} onChange={e => setLabel(e.target.value)} />
+            <Input id="label" value={label} onChange={e => setLabel(e.target.value)} placeholder="Priority Label" />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="description">Description (for tooltip)</Label>
-            <Textarea id="description" value={description} onChange={e => setDescription(e.target.value)} />
+            <Textarea id="description" value={description} onChange={e => setDescription(e.target.value)} placeholder="Description (for tooltip)" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Color</Label>
               <div className="relative h-9 w-full">
                   <div
                       className="absolute inset-0 h-full w-full rounded-md border"
@@ -75,7 +72,6 @@ export function PriorityItemForm({ isOpen, onClose, priority, onSave }: Priority
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Shape</Label>
               <RadioGroup value={shape} onValueChange={(v) => setShape(v as any)} className="flex items-center gap-4 pt-2">
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="rounded-md" id="shape-md" />

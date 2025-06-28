@@ -11,7 +11,7 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { Form, FormControl, FormField, FormItem, FormMessage, FormLabel } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
@@ -263,7 +263,6 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
   const renderPriorityInput = () => {
     if (!eventStrategy) return null;
 
-    const field = form.control.getFieldState('priority');
     const value = form.watch('priority');
 
     switch (eventStrategy.type) {
@@ -333,17 +332,18 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
             name="priority"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>
-                    Priority: <PriorityBadge priorityId={value} />
-                </FormLabel>
                 <FormControl>
-                    <Slider
+                   <div className="flex items-center gap-4">
+                     <Slider
                         defaultValue={[currentScaleValue]}
                         min={eventStrategy.min}
                         max={eventStrategy.max}
                         step={1}
                         onValueChange={(val) => field.onChange(`${eventStrategy.id}:${val[0]}`)}
+                        className="flex-1"
                     />
+                    <PriorityBadge priorityId={value} />
+                   </div>
                 </FormControl>
               </FormItem>
             )}

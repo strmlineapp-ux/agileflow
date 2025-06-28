@@ -16,7 +16,6 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { LocationCheckManagerManagement } from '../teams/location-check-manager-management';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
-import { Label } from '../ui/label';
 
 export function PinnedLocationManagement({ team }: { team: Team }) {
   const { viewAsUser, locations, updateTeam } = useUser();
@@ -210,13 +209,12 @@ export function PinnedLocationManagement({ team }: { team: Team }) {
                 Set a custom display name for <strong>{editingLocationName}</strong> for this team.
               </p>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="alias" className="text-right">Alias</Label>
               <Input 
                 id="alias" 
                 value={tempAlias} 
                 onChange={(e) => setTempAlias(e.target.value)} 
-                className="col-span-3"
-                placeholder="Leave blank to use default"
+                className="col-span-4"
+                placeholder="Leave blank to use default name"
               />
             </div>
           </div>

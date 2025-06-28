@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { type Team } from '@/types';
@@ -129,8 +128,7 @@ export function TeamRoleManagement({ team }: { team: Team }) {
           </div>
           <DialogHeader><DialogTitle>Add New Role to {team.name}</DialogTitle></DialogHeader>
           <div className="grid gap-4 py-4">
-            <Label htmlFor="new-role-name">Role Name</Label>
-            <Input id="new-role-name" value={newRoleName} onChange={(e) => setNewRoleName(e.target.value)} />
+            <Input id="new-role-name" value={newRoleName} onChange={(e) => setNewRoleName(e.target.value)} placeholder="Role Name" />
           </div>
         </DialogContent>
       </Dialog>
@@ -145,8 +143,7 @@ export function TeamRoleManagement({ team }: { team: Team }) {
           </div>
           <DialogHeader><DialogTitle>Edit Role</DialogTitle></DialogHeader>
           <div className="grid gap-4 py-4">
-            <Label htmlFor="edit-role-name">Role Name</Label>
-            <Input id="edit-role-name" value={newRoleName} onChange={(e) => setNewRoleName(e.target.value)} />
+            <Input id="edit-role-name" value={newRoleName} onChange={(e) => setNewRoleName(e.target.value)} placeholder="Role Name" />
           </div>
         </DialogContent>
       </Dialog>

@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Label } from "@/components/ui/label"
 import {
   Dialog,
   DialogContent,
@@ -136,69 +135,62 @@ export function UserManagement() {
                                                             <div className="space-y-2">
                                                                 <h4 className="font-medium leading-none">Preferences</h4>
                                                                 <p className="text-sm text-muted-foreground">
-                                                                    Set your color scheme and default calendar view.
+                                                                    Set your personal display and interaction settings.
                                                                 </p>
                                                             </div>
-                                                            <div className="grid gap-2">
-                                                                <div className="grid grid-cols-3 items-center gap-4">
-                                                                    <Label htmlFor="color-scheme">Colour Scheme</Label>
-                                                                    <Select
-                                                                        value={realUser.theme || 'light'}
-                                                                        onValueChange={(value) => updateUser(realUser.userId, { theme: value as any })}
+                                                            <div className="grid gap-4">
+                                                                <Select
+                                                                    value={realUser.theme || 'light'}
+                                                                    onValueChange={(value) => updateUser(realUser.userId, { theme: value as any })}
+                                                                >
+                                                                    <SelectTrigger id="color-scheme" className="w-full">
+                                                                        <SelectValue placeholder="Select Colour Scheme" />
+                                                                    </SelectTrigger>
+                                                                    <SelectContent>
+                                                                        <SelectItem value="light">Light</SelectItem>
+                                                                        <SelectItem value="dark">Dark</SelectItem>
+                                                                        <SelectItem value="high-visibility">High Visibility</SelectItem>
+                                                                        <SelectItem value="firebase">Firebase</SelectItem>
+                                                                    </SelectContent>
+                                                                </Select>
+                                                                <Select
+                                                                    value={realUser.defaultCalendarView || 'day'}
+                                                                    onValueChange={(value) => updateUser(realUser.userId, { defaultCalendarView: value as any })}
+                                                                >
+                                                                    <SelectTrigger id="calendar-view" className="w-full">
+                                                                        <SelectValue placeholder="Select Default View" />
+                                                                    </SelectTrigger>
+                                                                    <SelectContent>
+                                                                        <SelectItem value="month">Month</SelectItem>
+                                                                        <SelectItem value="week">Week</SelectItem>
+                                                                        <SelectItem value="day">Day</SelectItem>
+                                                                        <SelectItem value="production-schedule">Production Schedule</SelectItem>
+                                                                    </SelectContent>
+                                                                </Select>
+                                                                <Select
+                                                                    value={realUser.timeFormat || '12h'}
+                                                                    onValueChange={(value) => updateUser(realUser.userId, { timeFormat: value as any })}
+                                                                >
+                                                                    <SelectTrigger id="time-format" className="w-full">
+                                                                        <SelectValue placeholder="Select Time Format" />
+                                                                    </SelectTrigger>
+                                                                    <SelectContent>
+                                                                        <SelectItem value="12h">12-Hour</SelectItem>
+                                                                        <SelectItem value="24h">24-Hour</SelectItem>
+                                                                    </SelectContent>
+                                                                </Select>
+                                                                <div className="flex items-center space-x-2">
+                                                                    <Checkbox
+                                                                        id="easy-booking"
+                                                                        checked={realUser.easyBooking}
+                                                                        onCheckedChange={(checked) => updateUser(realUser.userId, { easyBooking: !!checked })}
+                                                                    />
+                                                                    <label
+                                                                        htmlFor="easy-booking"
+                                                                        className="text-sm font-normal text-muted-foreground cursor-pointer"
                                                                     >
-                                                                        <SelectTrigger id="color-scheme" className="col-span-2 h-8">
-                                                                            <SelectValue placeholder="Select scheme" />
-                                                                        </SelectTrigger>
-                                                                        <SelectContent>
-                                                                            <SelectItem value="light">Light</SelectItem>
-                                                                            <SelectItem value="dark">Dark</SelectItem>
-                                                                            <SelectItem value="high-visibility">High Visibility</SelectItem>
-                                                                            <SelectItem value="firebase">Firebase</SelectItem>
-                                                                        </SelectContent>
-                                                                    </Select>
-                                                                </div>
-                                                                <div className="grid grid-cols-3 items-center gap-4">
-                                                                    <Label htmlFor="calendar-view">Default View</Label>
-                                                                    <Select
-                                                                        value={realUser.defaultCalendarView || 'day'}
-                                                                        onValueChange={(value) => updateUser(realUser.userId, { defaultCalendarView: value as any })}
-                                                                    >
-                                                                        <SelectTrigger id="calendar-view" className="col-span-2 h-8">
-                                                                            <SelectValue placeholder="Select view" />
-                                                                        </SelectTrigger>
-                                                                        <SelectContent>
-                                                                            <SelectItem value="month">Month</SelectItem>
-                                                                            <SelectItem value="week">Week</SelectItem>
-                                                                            <SelectItem value="day">Day</SelectItem>
-                                                                            <SelectItem value="production-schedule">Production Schedule</SelectItem>
-                                                                        </SelectContent>
-                                                                    </Select>
-                                                                </div>
-                                                                 <div className="grid grid-cols-3 items-center gap-4">
-                                                                    <Label htmlFor="easy-booking">Easy Booking</Label>
-                                                                    <div className="col-span-2 flex items-center">
-                                                                        <Checkbox
-                                                                            id="easy-booking"
-                                                                            checked={realUser.easyBooking}
-                                                                            onCheckedChange={(checked) => updateUser(realUser.userId, { easyBooking: !!checked })}
-                                                                        />
-                                                                        <p className="text-xs text-muted-foreground ml-2">Click empty slots to create events.</p>
-                                                                    </div>
-                                                                </div>
-                                                                 <div className="grid grid-cols-3 items-center gap-4">
-                                                                    <Label htmlFor="time-format">Time Format</Label>
-                                                                    <Select
-                                                                        value={realUser.timeFormat || '12h'}
-                                                                        onValueChange={(value) => updateUser(realUser.userId, { timeFormat: value as any })}
-                                                                    >
-                                                                        <SelectTrigger id="time-format" className="col-span-2 h-8">
-                                                                            <SelectValue placeholder="Select format" />
-                                                                        </SelectTrigger>
-                                                                        <SelectContent>
-                                                                            <SelectItem value="12h">12-Hour</SelectItem>
-                                                                            <SelectItem value="24h">24-Hour</SelectItem>
-                                                                        </SelectContent>
-                                                                    </Select>
+                                                                        Click empty calendar slots to quickly create events.
+                                                                    </label>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -251,10 +243,7 @@ export function UserManagement() {
                         <DialogTitle>Edit contact number</DialogTitle>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="phone-number" className="text-right">Phone</Label>
-                            <Input id="phone-number" value={phone} onChange={(e) => setPhone(e.target.value)} className="col-span-3" placeholder="e.g. 123-456-7890" />
-                        </div>
+                        <Input id="phone-number" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="e.g. 123-456-7890" />
                     </div>
                 </DialogContent>
             </Dialog>

@@ -19,7 +19,6 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -332,19 +331,17 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
                     </div>
                      <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label htmlFor="manager-role-name">User Manager Label</Label>
                             <Input
                                 id="manager-role-name"
-                                placeholder="e.g., Leads"
+                                placeholder="User Manager Label (e.g. Leads)"
                                 value={managerRoleName}
                                 onChange={(e) => setManagerRoleName(e.target.value)}
                             />
                         </div>
                          <div className="space-y-2">
-                            <Label htmlFor="member-role-name">Team Member Label</Label>
                             <Input
                                 id="member-role-name"
-                                placeholder="e.g., Contributors"
+                                placeholder="Team Member Label (e.g. Crew)"
                                 value={memberRoleName}
                                 onChange={(e) => setMemberRoleName(e.target.value)}
                             />
@@ -352,7 +349,6 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
                     </div>
 
                     <div className="space-y-2">
-                        <Label>Members</Label>
                         <div className="flex items-start gap-2 rounded-md border bg-muted/50 p-2">
                            
                             <Popover open={isMemberPopoverOpen} onOpenChange={setIsMemberPopoverOpen}>

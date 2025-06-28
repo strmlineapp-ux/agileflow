@@ -8,7 +8,6 @@ import { type User, type PageConfig } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -240,10 +239,12 @@ export default function AdminPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="2fa-code" className="text-right">Code</Label>
-              <Input id="2fa-code" value={twoFactorCode} onChange={(e) => setTwoFactorCode(e.target.value)} className="col-span-3" placeholder="123456" />
-            </div>
+            <Input
+              id="2fa-code"
+              value={twoFactorCode}
+              onChange={(e) => setTwoFactorCode(e.target.value)}
+              placeholder="123456"
+            />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={close2faDialog}>Cancel</Button>
