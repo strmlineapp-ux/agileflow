@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { GoogleSymbol } from '../icons/google-symbol';
 
 export function Header() {
-  const { realUser, viewAsUser, teams, notifications, pageConfigs } from 'useUser';
+  const { realUser, viewAsUser, teams, notifications, pageConfigs } = useUser();
   const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
   const unreadCount = notifications.filter((n) => !n.read).length;
   
