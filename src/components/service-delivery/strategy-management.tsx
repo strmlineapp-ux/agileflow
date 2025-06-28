@@ -14,7 +14,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from '../ui/badge';
 import { PriorityBadge } from '../calendar/priority-badge';
 import { cn } from '@/lib/utils';
-import { Dialog, DialogContent, DialogHeader } from '../ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle as UIDialogTitle } from '../ui/dialog';
 import { Input } from '../ui/input';
 
 export function StrategyManagement() {
@@ -74,9 +74,9 @@ export function StrategyManagement() {
           <PriorityBadge key={num} priorityId={`${strategy.id}:${num}`} />
         ));
       case 'scale':
-         return strategy.intervals.slice(0, 3).map(interval => {
+         return strategy.intervals.slice(0, 3).map((interval, index) => {
             const midPoint = Math.floor((interval.from + interval.to) / 2);
-            return <PriorityBadge key={interval.label} priorityId={`${strategy.id}:${midPoint}`} />;
+            return <PriorityBadge key={index} priorityId={`${strategy.id}:${midPoint}`} />;
          });
       default:
         return null;
@@ -182,7 +182,7 @@ export function StrategyManagement() {
                 </Button>
             </div>
           <DialogHeader>
-            <DialogTitle>Edit Section Title</DialogTitle>
+            <UIDialogTitle>Edit Section Title</UIDialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
               <Input 
