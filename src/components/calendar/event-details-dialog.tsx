@@ -36,6 +36,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { UserStatusBadge } from '../user-status-badge';
 import { Tooltip, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { createMeetLink } from '@/ai/flows/create-meet-link-flow';
 
 
 // --- ICON COMPONENTS ---
@@ -203,6 +204,7 @@ const EventEditForm = ({ event, onFinished }: { event: Event, onFinished: () => 
     const { toast } = useToast();
     
     const [isLoading, setIsLoading] = React.useState(false);
+    const [isCreatingMeetLink, setIsCreatingMeetLink] = React.useState(false);
     const [guestSearch, setGuestSearch] = React.useState('');
     const [isGuestPopoverOpen, setIsGuestPopoverOpen] = React.useState(false);
     const [isLinkDialogOpen, setIsLinkDialogOpen] = React.useState(false);
@@ -319,12 +321,19 @@ const EventEditForm = ({ event, onFinished }: { event: Event, onFinished: () => 
     };
 
     const handleAddRequestedRole = (roleName: string) => {
-      if (roleAssignments.hasOwnProperty(roleName)) {
+      const currentAssignments = form.getValues('roleAssignments') || {};
+      if (currentAssignments.hasOwnProperty(roleName)) {
         toast({ variant: 'destructive', title: `Role "${roleName}" is already requested for this event.` });
         return;
       }
-      form.setValue(`roleAssignments.${roleName}`, null);
+      form.setValue('roleAssignments', { ...currentAssignments, [roleName]: null });
       setIsAddRolePopoverOpen(false);
+    };
+
+    const handleRemoveRequestedRole = (roleNameToRemove: string) => {
+      const currentAssignments = form.getValues('roleAssignments') || {};
+      delete currentAssignments[roleNameToRemove];
+      form.setValue('roleAssignments', { ...currentAssignments });
     };
     
     async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -547,7 +556,7 @@ const EventEditForm = ({ event, onFinished }: { event: Event, onFinished: () => 
                             </Popover>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                            {Object.entries(roleAssignments).map(([role, assignedUserId]) => {
+                           {Object.entries(roleAssignments).map(([role, assignedUserId]) => {
                                 const user = assignedUserId ? users.find(u => u.userId === assignedUserId) : null;
                                 const roleInfo = teamForSelectedCalendar.roles.find(r => r.name === role);
                                 
@@ -561,46 +570,52 @@ const EventEditForm = ({ event, onFinished }: { event: Event, onFinished: () => 
                                     .map(u => ({ ...u, absence: absencesForDay.find(a => a.userId === u.userId)!.status }));
 
                                 return (
-                                    <Popover key={role}>
-                                        <PopoverTrigger asChild>
-                                             <Badge 
-                                                variant={user ? 'default' : 'secondary'}
-                                                style={user && roleInfo ? { backgroundColor: roleInfo.color, color: getContrastColor(roleInfo.color) } : {}}
-                                                className={cn("text-sm p-1 pl-3 rounded-full cursor-pointer", user && roleInfo && "border-transparent")}
-                                             >
-                                                {role}
-                                                {user && <span className="font-normal mx-2 text-primary-foreground/80">/</span>}
-                                                {user && <span className="font-semibold">{user.displayName}</span>}
-                                                {user && (
-                                                    <button type="button" onClick={(e) => { e.stopPropagation(); form.setValue(`roleAssignments.${role}`, null) }} className="ml-1 h-4 w-4 rounded-full hover:bg-black/20 flex items-center justify-center">
-                                                        <GoogleSymbol name="close" className="text-xs" />
-                                                    </button>
-                                                )}
-                                            </Badge>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-[300px] p-0">
-                                             <ScrollArea className="max-h-60">
-                                                <div className="p-1">
-                                                {availableUsers.map(u => (
-                                                    <div key={u.userId} onClick={() => form.setValue(`roleAssignments.${role}`, u.userId)} className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer">
-                                                        <Avatar className="h-8 w-8"><AvatarImage src={u.avatarUrl} alt={u.displayName} data-ai-hint="user avatar" /><AvatarFallback>{u.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
-                                                        <p className="font-medium text-sm">{u.displayName}</p>
-                                                    </div>
-                                                ))}
-                                                {absentUsers.length > 0 && availableUsers.length > 0 && <Separator className="my-1" />}
-                                                {absentUsers.map(u => (
-                                                    <div key={u.userId} className="flex items-center justify-between gap-2 p-2 rounded-md opacity-50 cursor-not-allowed">
-                                                        <div className="flex items-center gap-2">
+                                    <Badge
+                                        key={role}
+                                        variant={user ? 'default' : 'secondary'}
+                                        style={user && roleInfo ? { backgroundColor: roleInfo.color, color: getContrastColor(roleInfo.color) } : {}}
+                                        className={cn("text-sm p-1 pl-3 rounded-full flex items-center gap-1", user && roleInfo && "border-transparent")}
+                                    >
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <span className="cursor-pointer">
+                                                    {role}
+                                                    {user && <span className="font-normal mx-2 text-primary-foreground/80">/</span>}
+                                                    {user && <span className="font-semibold">{user.displayName}</span>}
+                                                </span>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-[300px] p-0">
+                                                <ScrollArea className="max-h-60">
+                                                    <div className="p-1">
+                                                    {availableUsers.map(u => (
+                                                        <div key={u.userId} onClick={() => form.setValue(`roleAssignments.${role}`, u.userId)} className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer">
                                                             <Avatar className="h-8 w-8"><AvatarImage src={u.avatarUrl} alt={u.displayName} data-ai-hint="user avatar" /><AvatarFallback>{u.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
                                                             <p className="font-medium text-sm">{u.displayName}</p>
                                                         </div>
-                                                        <UserStatusBadge status={u.absence}>{u.absence}</UserStatusBadge>
+                                                    ))}
+                                                    {absentUsers.length > 0 && availableUsers.length > 0 && <Separator className="my-1" />}
+                                                    {absentUsers.map(u => (
+                                                        <div key={u.userId} className="flex items-center justify-between gap-2 p-2 rounded-md opacity-50 cursor-not-allowed">
+                                                            <div className="flex items-center gap-2">
+                                                                <Avatar className="h-8 w-8"><AvatarImage src={u.avatarUrl} alt={u.displayName} data-ai-hint="user avatar" /><AvatarFallback>{u.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
+                                                                <p className="font-medium text-sm">{u.displayName}</p>
+                                                            </div>
+                                                            <UserStatusBadge status={u.absence}>{u.absence}</UserStatusBadge>
+                                                        </div>
+                                                    ))}
                                                     </div>
-                                                ))}
-                                                </div>
-                                            </ScrollArea>
-                                        </PopoverContent>
-                                    </Popover>
+                                                </ScrollArea>
+                                            </PopoverContent>
+                                        </Popover>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleRemoveRequestedRole(role)}
+                                            className="h-4 w-4 rounded-full hover:bg-black/20 flex items-center justify-center"
+                                            aria-label={`Remove role ${role}`}
+                                        >
+                                            <GoogleSymbol name="cancel" className="text-xs" />
+                                        </button>
+                                    </Badge>
                                 );
                             })}
                         </div>
@@ -652,9 +667,28 @@ const EventEditForm = ({ event, onFinished }: { event: Event, onFinished: () => 
                         <span>Google Forms</span>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onSelect={() => handleAddAttachment('meet', 'Meet link')}>
+                       <DropdownMenuItem
+                        disabled={isCreatingMeetLink}
+                        onSelect={async () => {
+                          setIsCreatingMeetLink(true);
+                          try {
+                            const eventTitle = form.getValues('title') || 'New Event';
+                            const result = await createMeetLink({ title: eventTitle });
+                            handleAddAttachment('meet', 'Meet link', result.meetLink);
+                          } catch (error) {
+                            console.error('Failed to create Meet link:', error);
+                            toast({
+                              variant: 'destructive',
+                              title: 'Error',
+                              description: 'Could not generate a Meet link.',
+                            });
+                          } finally {
+                            setIsCreatingMeetLink(false);
+                          }
+                        }}
+                      >
                         <GoogleSymbol name="videocam" className="mr-2 text-lg" />
-                        <span>Meet link</span>
+                        <span>{isCreatingMeetLink ? 'Generating...' : 'Meet link'}</span>
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
