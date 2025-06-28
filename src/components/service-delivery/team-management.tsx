@@ -79,12 +79,14 @@ export function TeamManagement() {
                             <div className="flex items-start justify-between">
                                 <div className="flex items-center gap-3">
                                     <GoogleSymbol name={team.icon} className="text-3xl text-muted-foreground" />
-                                    <CardTitle className="text-xl">{team.name}</CardTitle>
+                                    <CardTitle className="text-xl flex items-center gap-2">
+                                        {team.name}
+                                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openEditDialog(team)}>
+                                            <GoogleSymbol name="edit" className="text-lg"/>
+                                            <span className="sr-only">Edit Team</span>
+                                        </Button>
+                                    </CardTitle>
                                 </div>
-                                <Button variant="ghost" size="icon" className="-mr-4 -mt-2" onClick={() => openEditDialog(team)}>
-                                    <GoogleSymbol name="edit" />
-                                    <span className="sr-only">Edit Team</span>
-                                </Button>
                             </div>
                         </CardHeader>
                         <CardContent className="flex-grow space-y-4">
