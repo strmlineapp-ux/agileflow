@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -16,6 +17,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { ScrollArea } from '../ui/scroll-area';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { cn } from '@/lib/utils';
+import { getContrastColor } from '@/lib/utils';
 
 export function TeamRoleManagement({ team }: { team: Team }) {
   const { updateTeam, teams, realUser, notifications, setNotifications } = useUser();
@@ -27,6 +29,7 @@ export function TeamRoleManagement({ team }: { team: Team }) {
   const [roleToDelete, setRoleToDelete] = useState<TeamRole | null>(null);
   const [newRoleName, setNewRoleName] = useState('');
   const [newRoleIcon, setNewRoleIcon] = useState('engineering');
+  const [newRoleColor, setNewRoleColor] = useState('#64748B');
 
   const [roleToAdd, setRoleToAdd] = useState('');
   const [conflictingTeams, setConflictingTeams] = useState<string[]>([]);
@@ -47,6 +50,7 @@ export function TeamRoleManagement({ team }: { team: Team }) {
   const openAddDialog = () => {
     setNewRoleName('');
     setNewRoleIcon('engineering');
+    setNewRoleColor('#64748B');
     setIsAddDialogOpen(true);
   };
 
@@ -84,7 +88,7 @@ export function TeamRoleManagement({ team }: { team: Team }) {
       setIsConflictDialogOpen(true);
       setIsAddDialogOpen(false); // Close the initial dialog
     } else {
-      const updatedTeamRoles = [...rolesForThisTeam, { name: trimmedName, icon: newRoleIcon }];
+      const updatedTeamRoles = [...rolesForThisTeam, { name: trimmedName, icon: newRoleIcon, color: newRoleColor }];
       handleUpdateTeamRoles(updatedTeamRoles);
       toast({ title: "Role Added", description: `"${trimmedName}" has been added to ${team.name}.` });
       setIsAddDialogOpen(false);
@@ -94,7 +98,7 @@ export function TeamRoleManagement({ team }: { team: Team }) {
   const handleConfirmAddDuplicateRole = () => {
     if (!roleToAdd) return;
 
-    const updatedTeamRoles = [...rolesForThisTeam, { name: roleToAdd, icon: newRoleIcon }];
+    const updatedTeamRoles = [...rolesForThisTeam, { name: roleToAdd, icon: newRoleIcon, color: newRoleColor }];
     handleUpdateTeamRoles(updatedTeamRoles);
     toast({ title: "Role Added", description: `"${roleToAdd}" has been added to ${team.name}.` });
 
@@ -140,7 +144,12 @@ export function TeamRoleManagement({ team }: { team: Team }) {
         <CardContent>
           <div className="flex flex-wrap items-center gap-2">
             {rolesForThisTeam.length > 0 ? rolesForThisTeam.map(role => (
-              <Badge key={role.name} variant="secondary" className="group text-base py-1 pl-1.5 pr-3 rounded-full">
+              <Badge 
+                key={role.name}
+                variant="secondary"
+                style={{ backgroundColor: role.color, color: getContrastColor(role.color) }}
+                className="group text-base py-1 pl-1.5 pr-3 rounded-full border-transparent"
+              >
                 <Popover open={activeIconPopover === role.name} onOpenChange={(isOpen) => setActiveIconPopover(isOpen ? role.name : null)}>
                   <PopoverTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-6 w-6 mr-1" aria-label={`Change icon for ${role.name}`}>
@@ -216,6 +225,20 @@ export function TeamRoleManagement({ team }: { team: Team }) {
                 onKeyDown={(e) => e.key === 'Enter' && handleAddRole()}
                 className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-9"
               />
+            </div>
+            <div className="relative h-9 w-full">
+                <div
+                    className="absolute inset-0 h-full w-full rounded-md border"
+                    style={{ backgroundColor: newRoleColor }}
+                />
+                <Input
+                    id="color"
+                    type="color"
+                    value={newRoleColor}
+                    onChange={(e) => setNewRoleColor(e.target.value)}
+                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"
+                    aria-label="Role color"
+                />
             </div>
           </div>
         </DialogContent>

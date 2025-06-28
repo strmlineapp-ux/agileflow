@@ -42,6 +42,7 @@ export interface EventTemplate {
 export interface TeamRole {
   name: string;
   icon: string;
+  color: string;
 }
 
 export interface Team {

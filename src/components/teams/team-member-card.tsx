@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import { getContrastColor } from '@/lib/utils';
 
 export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
   const { viewAsUser, updateUser } = useUser();
@@ -96,10 +97,16 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
                 (member.roles || []).filter(r => r !== 'Admin').map(roleName => {
                     const roleInfo = team.roles.find(r => r.name === roleName);
                     return (
-                        <Badge key={roleName} variant="secondary" className={cn(
-                            "rounded-full gap-1.5 pl-2",
-                            !roleInfo && "opacity-50"
-                        )}>
+                        <Badge 
+                            key={roleName} 
+                            style={roleInfo ? { backgroundColor: roleInfo.color, color: getContrastColor(roleInfo.color) } : {}}
+                            variant={roleInfo ? "default" : "secondary"}
+                            className={cn(
+                                "rounded-full gap-1.5 pl-2",
+                                !roleInfo && "opacity-50",
+                                roleInfo && "border-transparent"
+                            )}
+                        >
                             {roleInfo && <GoogleSymbol name={roleInfo.icon} className="text-sm" />}
                             <span>{roleName}</span>
                         </Badge>
@@ -133,7 +140,11 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
                         <Badge
                             key={role.name}
                             variant={isAssigned ? 'default' : 'secondary'}
-                            className={cn('gap-1.5 p-1 px-3 cursor-pointer rounded-full text-sm', isAssigned && 'shadow-md')}
+                            style={isAssigned ? { backgroundColor: role.color, color: getContrastColor(role.color) } : {}}
+                            className={cn(
+                                'gap-1.5 p-1 px-3 cursor-pointer rounded-full text-sm', 
+                                isAssigned && 'shadow-md border-transparent'
+                            )}
                             onClick={() => handleToggleRole(role.name)}
                         >
                             <GoogleSymbol name={role.icon} className="text-base" />

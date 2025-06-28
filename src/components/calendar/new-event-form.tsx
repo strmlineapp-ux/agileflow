@@ -8,7 +8,7 @@ import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { format, startOfDay } from 'date-fns';
 
-import { cn } from '@/lib/utils';
+import { cn, getContrastColor } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent } from '@/components/ui/card';
@@ -651,6 +651,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                         <div className="flex flex-wrap gap-2">
                             {Object.entries(roleAssignments).map(([role, { assignedUser, popoverOpen }]) => {
                                 const user = assignedUser ? users.find(u => u.userId === assignedUser) : null;
+                                const roleInfo = teamForSelectedCalendar.roles.find(r => r.name === role);
                                 
                                 const teamMemberUsers = teamForSelectedCalendar.members
                                     .map(memberId => users.find(u => u.userId === memberId))
@@ -666,7 +667,11 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                                 return (
                                     <Popover key={role} open={popoverOpen} onOpenChange={() => toggleRolePopover(role)}>
                                         <PopoverTrigger asChild>
-                                             <Badge variant={user ? 'default' : 'secondary'} className="text-sm p-1 pl-3 rounded-full cursor-pointer">
+                                             <Badge 
+                                                variant={user ? 'default' : 'secondary'}
+                                                style={user && roleInfo ? { backgroundColor: roleInfo.color, color: getContrastColor(roleInfo.color) } : {}}
+                                                className={cn("text-sm p-1 pl-3 rounded-full cursor-pointer", user && roleInfo && "border-transparent")}
+                                             >
                                                 {role}
                                                 {user && <span className="font-normal mx-2 text-primary-foreground/80">/</span>}
                                                 {user && <span className="font-semibold">{user.displayName}</span>}

@@ -257,7 +257,7 @@ const ProductionScheduleLocationRow = React.memo(({
                             key={event.eventId} 
                             data-event-id={event.eventId}
                             onClick={(e) => { e.stopPropagation(); onEventClick(event); }}
-                            className={cn("absolute top-1 p-2 rounded-lg shadow-md cursor-pointer z-10 flex flex-col")} 
+                            className={cn("absolute top-1 p-2 rounded-lg shadow-md cursor-pointer z-10 flex flex-col overflow-hidden")} 
                             style={{ left: `${left + 2}px`, width: `${width}px`, backgroundColor: colors?.bg, color: colors?.text }}
                         >
                             <div className="flex items-center gap-1 flex-wrap mb-1">
@@ -267,7 +267,7 @@ const ProductionScheduleLocationRow = React.memo(({
                                         <Tooltip>
                                             <TooltipTrigger asChild>
                                                 <Badge variant="outline" className="border-transparent bg-background/50 text-foreground/80 p-1 h-auto">
-                                                    <GoogleSymbol name={eventTemplate.icon} className="text-base" />
+                                                    <GoogleSymbol name={eventTemplate.icon} className="text-xs" />
                                                 </Badge>
                                             </TooltipTrigger>
                                             <TooltipContent>
@@ -287,6 +287,7 @@ const ProductionScheduleLocationRow = React.memo(({
                                         const teamForEvent = teams.find(t => t.id === event.calendarId);
                                         const roleInfo = teamForEvent?.roles.find(r => r.name === role);
                                         const roleIcon = roleInfo?.icon;
+                                        const roleColor = roleInfo?.color;
 
                                         return (
                                         <TooltipProvider key={role}>
@@ -298,7 +299,10 @@ const ProductionScheduleLocationRow = React.memo(({
                                                             <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
                                                         </Avatar>
                                                         {roleIcon && (
-                                                            <div className="absolute -bottom-1 -right-1 p-0.5 h-4 w-4 rounded-full bg-muted text-muted-foreground flex items-center justify-center border-2 border-background">
+                                                            <div 
+                                                                className="absolute -bottom-1 -right-1 p-0.5 h-4 w-4 rounded-full flex items-center justify-center border-2 border-background"
+                                                                style={{ backgroundColor: roleColor, color: getContrastColor(roleColor || '#ffffff') }}
+                                                            >
                                                                 <GoogleSymbol name={roleIcon} style={{fontSize: '10px'}} />
                                                             </div>
                                                         )}
