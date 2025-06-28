@@ -10,7 +10,7 @@ import { Button } from '../ui/button';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { useUser } from '@/context/user-context';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -74,6 +74,12 @@ const ManageStatusDialog = ({ isOpen, onOpenChange, day, initialAssignments, use
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-xl">
+                 <div className="absolute top-4 right-4">
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSaveChanges}>
+                        <GoogleSymbol name="check" className="text-xl" />
+                        <span className="sr-only">Save Changes</span>
+                    </Button>
+                </div>
                 <DialogHeader>
                     <DialogTitle>Manage User Status</DialogTitle>
                     <DialogDescription>
@@ -141,10 +147,6 @@ const ManageStatusDialog = ({ isOpen, onOpenChange, day, initialAssignments, use
                         </div>
                     </div>
                 </div>
-                <DialogFooter>
-                    <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-                    <Button onClick={handleSaveChanges}>Save Changes</Button>
-                </DialogFooter>
             </DialogContent>
         </Dialog>
     );
@@ -190,7 +192,6 @@ const ProductionScheduleLocationRow = React.memo(({
 
     const canManageThisLocation = useMemo(() => {
         if (viewAsUser.roles?.includes('Admin')) return true;
-        // User must be a Location Check Manager on a team that has this specific location pinned.
         return teams.some(team => 
             team.pinnedLocations.includes(location) && 
             team.locationCheckManagers?.includes(viewAsUser.userId)
@@ -198,7 +199,6 @@ const ProductionScheduleLocationRow = React.memo(({
     }, [viewAsUser, teams, location]);
 
     const dailyCheckUsers = useMemo(() => {
-        // Users can be assigned if they are members of ANY team that has this location pinned.
         const teamsWithLocation = teams.filter(t => t.pinnedLocations.includes(location));
         const userIds = new Set(teamsWithLocation.flatMap(t => t.members));
         return users.filter(u => userIds.has(u.userId));
@@ -223,7 +223,7 @@ const ProductionScheduleLocationRow = React.memo(({
                 </Button>
             </PopoverTrigger>
             <PopoverContent className="w-56 p-0">
-                <div className="p-2 border-b"><p className="text-sm font-medium text-center">{location}</p></div>
+                <div className="p-2 border-b"><p className="text-sm font-medium text-center">{alias || location}</p></div>
                 <div className="flex flex-col gap-1 max-h-48 overflow-y-auto p-1">
                     {dailyCheckUsers.length > 0 ? dailyCheckUsers.filter(user => user.userId !== assignedUserId).map(user => (
                         <Button key={user.userId} variant="ghost" className="justify-start h-8" onClick={() => handleAssignCheck(dayIso, location, user.userId)}>
@@ -247,7 +247,7 @@ const ProductionScheduleLocationRow = React.memo(({
                  {canManageThisLocation ? assignmentControl : assignedUser && <div className="h-6 text-xs px-1.5 flex items-center justify-center text-muted-foreground">{`${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}`}</div>}
             </div>
             <div 
-                className={cn("relative flex-1", isLocationCollapsed ? "h-10" : "h-20")}
+                className={cn("relative flex-1", isLocationCollapsed ? "h-10" : "min-h-[5rem] py-1")}
                 onClick={(e) => handleEasyBookingClick(e, day)}
             >
                 {Array.from({ length: 23 }).map((_, hour) => <div key={`line-${location}-${hour}`} className="absolute top-0 bottom-0 border-r" style={{ left: `${(hour + 1) * hourWidth}px` }}></div>)}
@@ -255,9 +255,9 @@ const ProductionScheduleLocationRow = React.memo(({
                     const { left, width } = getEventPosition(event);
                     const colors = calendarColorMap[event.calendarId];
                     return (
-                        <div key={event.eventId} className={cn("absolute h-[calc(100%-1rem)] top-1/2 -translate-y-1/2 p-2 rounded-lg shadow-md cursor-pointer z-10")} style={{ left: `${left + 2}px`, width: `${width}px`, backgroundColor: colors?.bg, color: colors?.text }}>
-                            <p className="font-semibold text-sm truncate">{event.title}</p>
-                            <p className="text-xs opacity-90 truncate">{format(event.startTime, timeFormatEvent)} - {format(event.endTime, timeFormatEvent)}</p>
+                        <div key={event.eventId} className={cn("absolute top-1 p-2 rounded-lg shadow-md cursor-pointer z-10")} style={{ left: `${left + 2}px`, width: `${width}px`, backgroundColor: colors?.bg, color: colors?.text }}>
+                            <p className="font-semibold text-sm">{event.title}</p>
+                            <p className="text-xs opacity-90">{format(event.startTime, timeFormatEvent)} - {format(event.endTime, timeFormatEvent)}</p>
                         </div>
                     )
                 })}
@@ -269,7 +269,7 @@ ProductionScheduleLocationRow.displayName = 'ProductionScheduleLocationRow';
 
 
 export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBooking }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', onEasyBooking: (date: Date) => void }) {
-    const { users, teams, viewAsUser, events, calendars, pinnedLocations, checkLocations, userStatusAssignments, setUserStatusAssignments } = useUser();
+    const { users, teams, viewAsUser, events, calendars, userStatusAssignments, setUserStatusAssignments } = useUser();
 
     const [now, setNow] = useState<Date | null>(null);
     const [hourWidth, setHourWidth] = useState(DEFAULT_HOUR_WIDTH_PX);
@@ -489,7 +489,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
                                         const assignedUserId = dailyCheckAssignments[dayIso]?.[location];
                                         const assignedUser = users.find(u => u.userId === assignedUserId);
                                         const canManageThisCheckLocation = viewAsUser.roles?.includes('Admin') || teams.some(t =>
-                                            t.checkLocations.includes(location) && t.locationCheckManagers?.includes(viewAsUser.userId)
+                                            t.checkLocations.includes(location) && t.locationCheckManagers.includes(viewAsUser.userId)
                                         );
 
                                         const pillContent = <>{locationAliasMap[location] || location}{assignedUser && <span className="ml-2 font-normal text-muted-foreground">({`${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}`})</span>}{!assignedUser && canManageThisCheckLocation && <GoogleSymbol name="add_circle" className="ml-2" />}</>;

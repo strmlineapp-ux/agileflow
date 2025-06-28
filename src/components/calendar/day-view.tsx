@@ -21,6 +21,7 @@ const getContrastColor = (hsl: string): string => {
 
 const DEFAULT_HOUR_WIDTH_PX = 120;
 const LOCATION_LABEL_WIDTH_PX = 160;
+const DEFAULT_HOUR_HEIGHT_PX = 60;
 
 const DayViewLocationRow = React.memo(({
     location,
@@ -70,7 +71,7 @@ const DayViewLocationRow = React.memo(({
                 {isCollapsed ? <GoogleSymbol name="chevron_right" className="text-lg" /> : <GoogleSymbol name="expand_more" className="text-lg" />}
                 <p className="font-medium text-sm truncate">{location}</p>
             </div>
-            <div className={cn("relative flex-1", isCollapsed ? "h-10" : "h-20")} onClick={(e) => handleEasyBookingClick(e, 'standard', day)}>
+            <div className={cn("relative flex-1", isCollapsed ? "h-10" : "min-h-[5rem] py-1")} onClick={(e) => handleEasyBookingClick(e, 'standard', day)}>
                 {Array.from({ length: 23 }).map((_, hour) => (
                     <div key={`line-${hour}`} className="absolute top-0 bottom-0 border-r" style={{ left: `${(hour + 1) * hourWidth}px` }}></div>
                 ))}
@@ -80,11 +81,11 @@ const DayViewLocationRow = React.memo(({
                     return (
                         <div 
                             key={event.eventId} 
-                            className="absolute h-[calc(100%-1rem)] top-1/2 -translate-y-1/2 p-2 rounded-lg shadow-md cursor-pointer z-10"
+                            className="absolute top-1 p-2 rounded-lg shadow-md cursor-pointer z-10"
                             style={{ left: `${left + 2}px`, width: `${width}px`, backgroundColor: colors?.bg, color: colors?.text }}
                         >
-                            <p className="font-semibold text-sm truncate">{event.title}</p>
-                            <p className="text-xs opacity-90 truncate">{format(event.startTime, timeFormatEvent)} - {format(event.endTime, timeFormatEvent)}</p>
+                            <p className="font-semibold text-sm">{event.title}</p>
+                            <p className="text-xs opacity-90">{format(event.startTime, timeFormatEvent)} - {format(event.endTime, timeFormatEvent)}</p>
                         </div>
                     )
                 })}
@@ -368,8 +369,8 @@ export function DayView({ date, containerRef, zoomLevel, axisView, onEasyBooking
                                             )}
                                             style={{ top: `${top}px`, height: `${height}px`, backgroundColor: colors?.bg, color: colors?.text }}
                                         >
-                                            <p className="font-semibold text-xs truncate">{event.title}</p>
-                                            <p className="text-[10px] opacity-90 truncate">{format(event.startTime, timeFormatEvent)} - {format(event.endTime, timeFormatEvent)}</p>
+                                            <p className="font-semibold text-xs">{event.title}</p>
+                                            <p className="text-[10px] opacity-90">{format(event.startTime, timeFormatEvent)} - {format(event.endTime, timeFormatEvent)}</p>
                                         </div>
                                     )
                                 })}

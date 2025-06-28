@@ -1,12 +1,11 @@
 
-
-"use client";
+'use client';
 
 import { useState } from 'react';
 import { useUser } from '@/context/user-context';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -103,15 +102,14 @@ export function TeamRoleManagement({ team }: { team: Team }) {
             {rolesForThisTeam.length > 0 ? rolesForThisTeam.map(role => (
               <Badge key={role} variant="secondary" className="group text-base py-1 pl-3 pr-1 rounded-full">
                 <span className="font-medium cursor-pointer" onClick={() => openEditDialog(role)}>{role}</span>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="ml-1 h-4 w-4 hover:bg-destructive/20 rounded-full" 
+                <button 
+                  type="button" 
+                  className="ml-1 h-4 w-4 hover:bg-destructive/20 rounded-full inline-flex items-center justify-center" 
                   onClick={() => openDeleteDialog(role)}
                 >
                   <GoogleSymbol name="cancel" className="text-sm" />
                   <span className="sr-only">Delete {role}</span>
-                </Button>
+                </button>
               </Badge>
             )) : (
               <p className="text-sm text-muted-foreground w-full text-center">No custom roles defined for this team.</p>
@@ -122,28 +120,34 @@ export function TeamRoleManagement({ team }: { team: Team }) {
       
       {/* Dialogs */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent><DialogHeader><DialogTitle>Add New Role to {team.name}</DialogTitle></DialogHeader>
+        <DialogContent>
+          <div className="absolute top-4 right-4">
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleAddRole}>
+                  <GoogleSymbol name="check" className="text-xl" />
+                  <span className="sr-only">Add Role</span>
+              </Button>
+          </div>
+          <DialogHeader><DialogTitle>Add New Role to {team.name}</DialogTitle></DialogHeader>
           <div className="grid gap-4 py-4">
             <Label htmlFor="new-role-name">Role Name</Label>
             <Input id="new-role-name" value={newRoleName} onChange={(e) => setNewRoleName(e.target.value)} />
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleAddRole}>Add Role</Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
       
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent><DialogHeader><DialogTitle>Edit Role</DialogTitle></DialogHeader>
+        <DialogContent>
+          <div className="absolute top-4 right-4">
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleEditRole}>
+                  <GoogleSymbol name="check" className="text-xl" />
+                  <span className="sr-only">Save Changes</span>
+              </Button>
+          </div>
+          <DialogHeader><DialogTitle>Edit Role</DialogTitle></DialogHeader>
           <div className="grid gap-4 py-4">
             <Label htmlFor="edit-role-name">Role Name</Label>
             <Input id="edit-role-name" value={newRoleName} onChange={(e) => setNewRoleName(e.target.value)} />
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleEditRole}>Save Changes</Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 

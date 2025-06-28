@@ -13,12 +13,12 @@ import { Badge } from '@/components/ui/badge';
 import { GoogleSymbol } from '../icons/google-symbol';
 
 export function Header() {
-  const { realUser, viewAsUser, teams, notifications, pageConfigs } = useUser();
+  const { realUser, viewAsUser, teams, notifications, pageConfigs } from 'useUser';
   const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
   const unreadCount = notifications.filter((n) => !n.read).length;
   
   const isAdmin = realUser.roles?.includes('Admin');
-  const isSdm = viewAsUser.roles?.includes('Service Delivery Manager') || viewAsUser.roles?.includes('Admin');
+  const isSdm = realUser.roles?.includes('Service Delivery Manager') || realUser.roles?.includes('Admin');
 
   const userTeams = teams.filter(team => 
     isSdm || team.managers?.includes(viewAsUser.userId)

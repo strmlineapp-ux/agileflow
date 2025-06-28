@@ -14,7 +14,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const { realUser, viewAsUser, setViewAsUser, users, teams, notifications, pageConfigs } = useUser();
   const isAdmin = realUser.roles?.includes('Admin');
-  const isSdm = viewAsUser.roles?.includes('Service Delivery Manager') || viewAsUser.roles?.includes('Admin');
+  const isSdm = realUser.roles?.includes('Service Delivery Manager') || realUser.roles?.includes('Admin');
   const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -26,10 +26,10 @@ export function Sidebar() {
   const sdmConfig = pageConfigs.find(p => p.id === 'service-delivery') || { name: 'Service Delivery', icon: 'business_center' };
 
   const navItems = [
+    { href: '/dashboard/admin', icon: adminConfig.icon, label: adminConfig.name, visible: isAdmin },
     { href: '/dashboard/calendar', icon: 'calendar_month', label: 'Calendar', visible: true },
     { href: '/dashboard', icon: 'dashboard', label: 'Overview', visible: true },
     { href: '/dashboard/tasks', icon: 'checklist', label: 'Tasks', visible: true },
-    { href: '/dashboard/admin', icon: adminConfig.icon, label: adminConfig.name, visible: isAdmin },
     { href: '/dashboard/service-delivery', icon: sdmConfig.icon, label: sdmConfig.name, visible: isSdm },
   ];
 
