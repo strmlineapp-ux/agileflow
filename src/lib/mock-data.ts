@@ -1,6 +1,5 @@
 
 import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team } from '@/types';
-import { iconNames } from '@/components/icons/dynamic-icon';
 
 export const mockCalendars: SharedCalendar[] = [
     { id: 'studio-productions', name: 'Studio Productions', color: 'hsl(48 96% 53%)' }, // Yellow
@@ -122,7 +121,7 @@ export const mockTeams: Team[] = [
     {
         id: 'studio-productions',
         name: 'Studio Productions',
-        icon: 'Clapperboard',
+        icon: 'movie',
         members: ['1', '2', '6'],
         managers: ['1', '2'],
         roles: ['Post-Production', 'Studio Productions Team Admin', 'Video Director', 'Edit Events'],
@@ -131,7 +130,7 @@ export const mockTeams: Team[] = [
     {
         id: 'live-events',
         name: 'Live Events',
-        icon: 'Video',
+        icon: 'videocam',
         members: ['1', '2', '3', '4'],
         managers: ['1', '2'],
         roles: ['TD', 'Manage Checks', 'ES Operator', 'ES Daily Checks', 'Content Op', 'Camera', 'Audio', '1st AD', 'Live Event Team Admin'],
@@ -140,7 +139,7 @@ export const mockTeams: Team[] = [
     {
         id: 'productions',
         name: 'Productions',
-        icon: 'Megaphone',
+        icon: 'campaign',
         members: ['2', '3', '5'],
         managers: ['2'],
         roles: ['Production Team Admin'],

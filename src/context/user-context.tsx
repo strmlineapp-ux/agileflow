@@ -7,7 +7,6 @@ import { mockUsers as initialUsers, mockCalendars, mockEvents as initialEvents, 
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
-import { type IconName } from '@/components/icons/dynamic-icon';
 
 interface UserContextType {
   realUser: User;
