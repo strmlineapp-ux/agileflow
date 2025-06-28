@@ -138,9 +138,9 @@ export function TeamRoleManagement({ team }: { team: Team }) {
             {children}
         </PopoverTrigger>
         <PopoverContent>
-            <DialogHeader>
-                <DialogTitle>Edit Role</DialogTitle>
-            </DialogHeader>
+            <div className="flex flex-col space-y-1.5 text-center sm:text-left">
+              <h3 className="text-lg font-semibold leading-none tracking-tight">Edit Role</h3>
+            </div>
              <div className="grid gap-4 py-4">
                 <div className="flex items-center gap-2 border rounded-md px-2 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
                     <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
@@ -270,7 +270,7 @@ export function TeamRoleManagement({ team }: { team: Team }) {
                 onKeyDown={(e) => e.key === 'Enter' && handleAddRole()}
                 className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-9"
               />
-               <div className="relative h-6 w-6 rounded-full shrink-0">
+              <div className="relative h-6 w-6 rounded-full shrink-0">
                   <div className="absolute inset-0 h-full w-full rounded-full border" style={{ backgroundColor: newRoleColor }} />
                   <Input type="color" value={newRoleColor} onChange={(e) => setNewRoleColor(e.target.value)} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" />
               </div>
@@ -319,3 +319,4 @@ export function TeamRoleManagement({ team }: { team: Team }) {
     </>
   );
 }
+
