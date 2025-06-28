@@ -91,18 +91,12 @@ const PageConfiguration = ({ pageConfig, onSave }: { pageConfig: PageConfig, onS
                     Customize the display name and icon for the App Manager page.
                 </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent>
                 <div className="flex items-center gap-2">
-                    <Label htmlFor="page-name" className="w-20">Name</Label>
-                    <Input id="page-name" value={tempName} onChange={(e) => setTempName(e.target.value)} />
-                </div>
-                 <div className="flex items-center gap-2">
-                    <Label htmlFor="page-icon" className="w-20">Icon</Label>
-                     <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
+                    <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                         <PopoverTrigger asChild>
-                            <Button variant="outline" className="flex-1 justify-start">
-                                <GoogleSymbol name={tempIcon} className="mr-2" />
-                                <span>{tempIcon}</span>
+                            <Button variant="outline" size="icon" className="shrink-0">
+                                <GoogleSymbol name={tempIcon} />
                             </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-80 p-0">
@@ -133,9 +127,11 @@ const PageConfiguration = ({ pageConfig, onSave }: { pageConfig: PageConfig, onS
                             </ScrollArea>
                         </PopoverContent>
                     </Popover>
-                </div>
-                <div className="flex justify-end">
-                    <Button onClick={handleSaveChanges}>Save Configuration</Button>
+                    <Input id="page-name" value={tempName} onChange={(e) => setTempName(e.target.value)} placeholder="Page Name" />
+                    <Button onClick={handleSaveChanges} size="icon">
+                        <GoogleSymbol name="check" />
+                        <span className="sr-only">Save Configuration</span>
+                    </Button>
                 </div>
             </CardContent>
         </Card>
