@@ -30,7 +30,6 @@ import { GoogleSymbol } from '../icons/google-symbol';
 import { Badge } from '../ui/badge';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { Separator } from '../ui/separator';
 
 export function CalendarManagement() {
   const { users, calendars, addCalendar, updateCalendar, deleteCalendar } = useUser();
@@ -86,7 +85,7 @@ export function CalendarManagement() {
     }
     if (currentCalendar) {
       // Editing existing calendar
-      await updateCalendar(currentCalendar.id, { name: calendarName, color: calendarColor, managers: calendarManagers });
+      await updateCalendar(currentCalendar.id, { name: calendarName, managers: calendarManagers });
       toast({ title: 'Success', description: 'Calendar updated successfully.' });
     } else {
       // Adding new calendar
@@ -103,6 +102,10 @@ export function CalendarManagement() {
     }
   };
 
+  const handleQuickColorChange = (calendarId: string, newColor: string) => {
+    updateCalendar(calendarId, { color: newColor });
+  };
+
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -113,7 +116,19 @@ export function CalendarManagement() {
               <CardHeader>
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="h-4 w-4 rounded-full border shrink-0" style={{ backgroundColor: calendar.color }} />
+                        <div className="relative h-4 w-4 rounded-full border shrink-0">
+                            <div
+                                className="h-full w-full rounded-full"
+                                style={{ backgroundColor: calendar.color }}
+                            />
+                            <Input
+                                type="color"
+                                value={calendar.color}
+                                onChange={(e) => handleQuickColorChange(calendar.id, e.target.value)}
+                                className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"
+                                aria-label={`Change color for ${calendar.name}`}
+                            />
+                        </div>
                         <CardTitle className="text-xl">{calendar.name}</CardTitle>
                     </div>
                     <Button variant="ghost" size="icon" className="-mr-4 -mt-2" onClick={() => openEditDialog(calendar)}>
@@ -173,25 +188,27 @@ export function CalendarManagement() {
           <DialogHeader>
             <DialogTitle>{currentCalendar ? 'Edit Calendar' : 'Add New Calendar'}</DialogTitle>
              <DialogDescription>
-                Set the calendar's display name, color, and managers.
+                {currentCalendar ? "Set the calendar's display name and managers." : "Set the calendar's display name, color, and managers."}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-6 pt-4">
             <div className="flex items-center gap-4">
-                <div className="relative h-9 w-9 shrink-0">
-                    <div
-                        className="h-full w-full rounded-full border"
-                        style={{ backgroundColor: calendarColor }}
-                    />
-                    <Input
-                        id="color"
-                        type="color"
-                        value={calendarColor}
-                        onChange={(e) => setCalendarColor(e.target.value)}
-                        className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"
-                        aria-label="Calendar color"
-                    />
-                </div>
+                {!currentCalendar && (
+                    <div className="relative h-9 w-9 shrink-0">
+                        <div
+                            className="h-full w-full rounded-full border"
+                            style={{ backgroundColor: calendarColor }}
+                        />
+                        <Input
+                            id="color"
+                            type="color"
+                            value={calendarColor}
+                            onChange={(e) => setCalendarColor(e.target.value)}
+                            className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"
+                            aria-label="Calendar color"
+                        />
+                    </div>
+                )}
                 <Input
                     id="name"
                     value={calendarName}
@@ -201,7 +218,7 @@ export function CalendarManagement() {
                 />
             </div>
             <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">Calendar Managers</p>
+                 <p className="text-sm text-muted-foreground">Calendar Managers</p>
                  <div className="flex flex-wrap gap-2 rounded-md border bg-muted/50 p-2 min-h-[56px]">
                   {users.map(user => {
                     const isManager = calendarManagers.includes(user.userId);
