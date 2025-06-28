@@ -1,4 +1,5 @@
 
+
 import type React from 'react';
 
 export interface AppSettings {
@@ -34,6 +35,7 @@ export interface User {
 export interface EventTemplate {
   id: string;
   name: string; // This is the "Tag"
+  icon: string;
   requestedRoles: string[]; // array of TeamRole names
 }
 

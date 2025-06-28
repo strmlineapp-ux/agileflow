@@ -15,6 +15,7 @@ import { GoogleSymbol } from '../icons/google-symbol';
 import { Badge } from '../ui/badge';
 import { Popover, PopoverTrigger, PopoverContent } from '../ui/popover';
 import { ScrollArea } from '../ui/scroll-area';
+import { googleSymbolNames } from '@/lib/google-symbols';
 
 function EventTemplateForm({ 
   team, 
@@ -29,11 +30,20 @@ function EventTemplateForm({
 }) {
   const { toast } = useToast();
   const [name, setName] = useState(template?.name || '');
+  const [icon, setIcon] = useState(template?.icon || 'label');
   const [requestedRoles, setRequestedRoles] = useState<string[]>(template?.requestedRoles || []);
+  
   const [isAddRolePopoverOpen, setIsAddRolePopoverOpen] = useState(false);
   const [roleSearch, setRoleSearch] = useState('');
-
+  
+  const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
+  const [iconSearch, setIconSearch] = useState('');
+  
   const availableRoles = team.roles.filter(role => !requestedRoles.includes(role.name) && role.name.toLowerCase().includes(roleSearch.toLowerCase()));
+
+  const filteredIcons = googleSymbolNames.filter(iconName =>
+    iconName.toLowerCase().includes(iconSearch.toLowerCase())
+  );
 
   const handleAddRole = (roleName: string) => {
     setRequestedRoles(prev => [...prev, roleName]);
@@ -50,7 +60,7 @@ function EventTemplateForm({
       toast({ variant: 'destructive', title: 'Error', description: 'Tag name cannot be empty.' });
       return;
     }
-    onSave({ name, requestedRoles });
+    onSave({ name, icon, requestedRoles });
     onClose();
   };
   
@@ -70,12 +80,49 @@ function EventTemplateForm({
       </DialogHeader>
       <div className="grid gap-4 py-4">
         <div className="space-y-2">
-            <Input 
-                id="template-name" 
-                value={name} 
-                onChange={(e) => setName(e.target.value)} 
-                placeholder="Template Tag Name" 
-            />
+            <div className="flex items-center gap-2 border rounded-md px-2 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+                <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
+                    <PopoverTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                            <GoogleSymbol name={icon} />
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80 p-0">
+                        <div className="p-2 border-b">
+                            <Input
+                                placeholder="Search icons..."
+                                value={iconSearch}
+                                onChange={(e) => setIconSearch(e.target.value)}
+                            />
+                        </div>
+                        <ScrollArea className="h-64">
+                            <div className="grid grid-cols-6 gap-1 p-2">
+                                {filteredIcons.slice(0, 300).map((iconName) => (
+                                    <Button
+                                        key={iconName}
+                                        variant={icon === iconName ? "default" : "ghost"}
+                                        size="icon"
+                                        onClick={() => {
+                                            setIcon(iconName);
+                                            setIsIconPopoverOpen(false);
+                                        }}
+                                        className="text-2xl"
+                                    >
+                                        <GoogleSymbol name={iconName} />
+                                    </Button>
+                                ))}
+                            </div>
+                        </ScrollArea>
+                    </PopoverContent>
+                </Popover>
+                <Input
+                    id="template-name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Template Tag Name"
+                    className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-9"
+                />
+            </div>
         </div>
         <div className="space-y-2">
             <p className="text-sm text-muted-foreground">Requested Roles</p>
@@ -194,8 +241,11 @@ export function EventTemplateManagement({ team }: { team: Team }) {
             >
                 <CardHeader>
                     <div className="flex items-start justify-between">
-                        <CardTitle className="flex items-center gap-2">
-                          <Badge className="text-base">{template.name}</Badge>
+                         <CardTitle>
+                            <Badge className="text-base py-1 px-3 gap-2">
+                                <GoogleSymbol name={template.icon} />
+                                {template.name}
+                            </Badge>
                         </CardTitle>
                         <Button 
                           variant="ghost" 

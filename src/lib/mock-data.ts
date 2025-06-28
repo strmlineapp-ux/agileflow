@@ -187,8 +187,8 @@ export const mockTeams: Team[] = [
         locationAliases: {},
         workstations: ['EDIT 1', 'EDIT 2', 'EDIT 3', 'EDIT 4', 'Pro Tools Machine'],
         eventTemplates: [
-            { id: 'template-1', name: 'Basic Studio Shoot', requestedRoles: ['Video Director', 'Edit Events'] },
-            { id: 'template-2', name: 'Voice Over Record', requestedRoles: ['Post-Production'] }
+            { id: 'template-1', name: 'Basic Studio Shoot', icon: 'theaters', requestedRoles: ['Video Director', 'Edit Events'] },
+            { id: 'template-2', name: 'Voice Over Record', icon: 'record_voice_over', requestedRoles: ['Post-Production'] }
         ]
     },
     {
@@ -213,8 +213,8 @@ export const mockTeams: Team[] = [
         locationAliases: {},
         workstations: [],
         eventTemplates: [
-            { id: 'template-3', name: 'Standard Live Event', requestedRoles: ['TD', 'ES Operator', 'Camera', 'Audio'] },
-            { id: 'template-4', name: 'Auditorium Presentation', requestedRoles: ['TD', 'Content Op'] }
+            { id: 'template-3', name: 'Standard Live Event', icon: 'podcasts', requestedRoles: ['TD', 'ES Operator', 'Camera', 'Audio'] },
+            { id: 'template-4', name: 'Auditorium Presentation', icon: 'slideshow', requestedRoles: ['TD', 'Content Op'] }
         ]
     },
     {

@@ -64,7 +64,7 @@ const attachmentIcons: Record<AttachmentType, React.ReactNode> = {
 };
 
 const AttendeeSchema = z.object({
-  userId: z.string(),
+  userId: z.string().optional(),
   displayName: z.string(),
   email: z.string().email(),
   avatarUrl: z.string().optional(),
@@ -170,6 +170,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
   const selectedCalendarId = form.watch('calendarId');
   const selectedTemplateId = form.watch('templateId');
   const eventDate = form.watch('date');
+  const selectedAttendees = form.watch('attendees') || [];
 
   const teamForSelectedCalendar = React.useMemo(() => {
     return teams.find(t => t.id === selectedCalendarId);
@@ -199,21 +200,16 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
     form.setValue('templateId', templateId);
     setIsTemplatePopoverOpen(false);
   };
-
-  const selectedAttendees = form.watch('attendees') || [];
-  
-  const assignedUserIds = React.useMemo(() => {
-    return new Set(Object.values(roleAssignments).map(assignment => assignment.assignedUser).filter(Boolean) as string[]);
-  }, [roleAssignments]);
   
   const filteredGuests = React.useMemo(() => {
-    const baseList = users.filter(user => !assignedUserIds.has(user.userId));
+    const selectedAttendeeIds = new Set(selectedAttendees.map(att => att.userId).filter(Boolean));
+    const baseList = users.filter(user => !selectedAttendeeIds.has(user.userId));
     if (!guestSearch) return baseList;
     return baseList.filter(user => 
         user.displayName.toLowerCase().includes(guestSearch.toLowerCase()) || 
         user.email.toLowerCase().includes(guestSearch.toLowerCase())
     );
-  }, [users, guestSearch, assignedUserIds]);
+  }, [users, guestSearch, selectedAttendees]);
 
 
   React.useEffect(() => {
@@ -440,7 +436,10 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                              <Popover open={isTemplatePopoverOpen} onOpenChange={setIsTemplatePopoverOpen}>
                                 <PopoverTrigger asChild>
                                     <Button variant="ghost" className="h-auto p-0">
-                                        <Badge variant={selectedTemplate ? 'default' : 'secondary'}>{selectedTemplate?.name || 'Tag'}</Badge>
+                                        <Badge variant={selectedTemplate ? 'default' : 'secondary'} className="gap-2">
+                                            {selectedTemplate && <GoogleSymbol name={selectedTemplate.icon} />}
+                                            {selectedTemplate?.name || 'Tag'}
+                                        </Badge>
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="p-1 w-auto" align="start">
@@ -453,8 +452,9 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                                     {eventTemplates.map(template => (
                                         <div key={template.id}
                                             onClick={() => handleTemplateChange(template.id)}
-                                            className="p-2 rounded-md hover:bg-accent cursor-pointer"
+                                            className="p-2 rounded-md hover:bg-accent cursor-pointer flex items-center gap-2"
                                         >
+                                            <GoogleSymbol name={template.icon} className="text-muted-foreground" />
                                             <Badge>{template.name}</Badge>
                                         </div>
                                     ))}
