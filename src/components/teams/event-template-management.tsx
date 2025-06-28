@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState } from 'react';
@@ -32,10 +33,10 @@ function EventTemplateForm({
   const [isAddRolePopoverOpen, setIsAddRolePopoverOpen] = useState(false);
   const [roleSearch, setRoleSearch] = useState('');
 
-  const availableRoles = team.roles.filter(role => !requestedRoles.includes(role) && role.toLowerCase().includes(roleSearch.toLowerCase()));
+  const availableRoles = team.roles.filter(role => !requestedRoles.includes(role.name) && role.name.toLowerCase().includes(roleSearch.toLowerCase()));
 
-  const handleAddRole = (role: string) => {
-    setRequestedRoles(prev => [...prev, role]);
+  const handleAddRole = (roleName: string) => {
+    setRequestedRoles(prev => [...prev, roleName]);
     setIsAddRolePopoverOpen(false);
     setRoleSearch('');
   };
@@ -109,11 +110,11 @@ function EventTemplateForm({
                     <ScrollArea className="h-40">
                         {availableRoles.length > 0 ? availableRoles.map(role => (
                             <div 
-                                key={role} 
+                                key={role.name} 
                                 className="p-2 hover:bg-accent cursor-pointer text-sm"
-                                onClick={() => handleAddRole(role)}
+                                onClick={() => handleAddRole(role.name)}
                             >
-                                {role}
+                                {role.name}
                             </div>
                         )) : (
                             <p className="p-4 text-center text-sm text-muted-foreground">No matching roles.</p>

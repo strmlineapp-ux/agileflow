@@ -68,7 +68,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const allTeamRoles = useMemo(() => {
     const allRoles = new Set<string>();
     teams.forEach(team => {
-        team.roles.forEach(role => allRoles.add(role));
+        team.roles.forEach(role => allRoles.add(role.name));
     });
     return Array.from(allRoles).sort();
   }, [teams]);

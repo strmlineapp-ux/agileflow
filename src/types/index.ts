@@ -23,7 +23,7 @@ export interface User {
   location?: string;
   phone?: string;
   title?: string;
-  roles?: string[]; // System-level roles like 'Admin'
+  roles?: string[]; // System-level roles like 'Admin' and names of TeamRoles
   directReports?: string[];
   theme?: 'light' | 'dark' | 'high-visibility' | 'firebase';
   defaultCalendarView?: 'month' | 'week' | 'day' | 'production-schedule';
@@ -34,7 +34,12 @@ export interface User {
 export interface EventTemplate {
   id: string;
   name: string; // This is the "Tag"
-  requestedRoles: string[];
+  requestedRoles: string[]; // array of TeamRole names
+}
+
+export interface TeamRole {
+  name: string;
+  icon: string;
 }
 
 export interface Team {
@@ -46,7 +51,7 @@ export interface Team {
   managerRoleName?: string;
   memberRoleName?: string;
   locationCheckManagers: string[]; // array of userIds who can manage check locations
-  roles: string[]; // team-specific roles
+  roles: TeamRole[]; // team-specific roles
   pinnedLocations: string[]; // array of location names
   checkLocations: string[]; // subset of pinnedLocations designated for daily checks
   locationAliases?: { [key:string]: string };

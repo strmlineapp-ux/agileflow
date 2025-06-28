@@ -18,7 +18,7 @@ const isHoliday = (day: Date) => {
 
 export function MonthView({ date, containerRef, onEventClick }: { date: Date; containerRef: React.RefObject<HTMLDivElement>; onEventClick: (event: Event) => void; }) {
     const todayRef = useRef<HTMLDivElement>(null);
-    const { events, calendars } = useUser();
+    const { events, calendars, getPriorityDisplay, getEventStrategy } = useUser();
 
     const firstDayOfMonth = startOfMonth(date);
     const lastDayOfMonth = endOfMonth(date);
@@ -31,6 +31,8 @@ export function MonthView({ date, containerRef, onEventClick }: { date: Date; co
         });
         return map;
     }, [calendars]);
+
+    const eventStrategy = getEventStrategy();
 
     useEffect(() => {
         if (isSameMonth(date, new Date()) && todayRef.current && containerRef.current) {
@@ -91,13 +93,20 @@ export function MonthView({ date, containerRef, onEventClick }: { date: Date; co
                 </span>
                 <div className="mt-1 space-y-1 overflow-y-auto">
                     {dayEvents.map(event => {
-                         const colors = calendarColorMap[event.calendarId];
+                         const calendarColors = calendarColorMap[event.calendarId];
+                         const priorityInfo = getPriorityDisplay(event.priority);
+                         const usePriorityColor = eventStrategy && eventStrategy.type !== 'symbol' && priorityInfo;
+                         
+                         const badgeStyle = usePriorityColor 
+                            ? { backgroundColor: priorityInfo.color, color: getContrastColor(priorityInfo.color) }
+                            : { backgroundColor: calendarColors?.bg, color: calendarColors?.text };
+
                          return (
                              <Badge 
                                  key={event.eventId} 
                                  data-event-id={event.eventId}
                                  onClick={() => onEventClick(event)}
-                                 style={{ backgroundColor: colors?.bg, color: colors?.text }}
+                                 style={badgeStyle}
                                  className={cn("block w-full text-left truncate cursor-pointer border-transparent")}
                              >
                                  {event.title}

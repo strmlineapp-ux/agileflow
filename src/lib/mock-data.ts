@@ -1,6 +1,6 @@
 
 
-import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team, type PriorityStrategy, type AppSettings } from '@/types';
+import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team, type PriorityStrategy, type AppSettings, type TeamRole } from '@/types';
 
 export const mockAppSettings: AppSettings = {
   displayName: 'Service Delivery',
@@ -174,7 +174,14 @@ export const mockTeams: Team[] = [
         managerRoleName: 'User Managers',
         memberRoleName: 'Team Members',
         locationCheckManagers: ['1'],
-        roles: ['Post-Production', 'Video Director', 'Edit Events', 'Camera', 'Audio', 'D.o.P.'],
+        roles: [
+            { name: 'Post-Production', icon: 'movie_filter' },
+            { name: 'Video Director', icon: 'videocam' },
+            { name: 'Edit Events', icon: 'edit_calendar' },
+            { name: 'Camera', icon: 'photo_camera' },
+            { name: 'Audio', icon: 'mic' },
+            { name: 'D.o.P.', icon: 'camera' },
+        ],
         pinnedLocations: ['Studio'],
         checkLocations: [],
         locationAliases: {},
@@ -193,7 +200,14 @@ export const mockTeams: Team[] = [
         managerRoleName: 'User Managers',
         memberRoleName: 'Team Members',
         locationCheckManagers: ['2'],
-        roles: ['TD', 'ES Operator', 'Content Op', 'Camera', 'Audio', '1st AD'],
+        roles: [
+            { name: 'TD', icon: 'engineering' },
+            { name: 'ES Operator', icon: 'slideshow' },
+            { name: 'Content Op', icon: 'article' },
+            { name: 'Camera', icon: 'photo_camera' },
+            { name: 'Audio', icon: 'mic' },
+            { name: '1st AD', icon: 'group' }
+        ],
         pinnedLocations: ['Auditorium', 'ACR', 'Event Space 1 (S2)', 'Event Space 2 (S2)', 'Event Space 3 (R7)', 'Event Space 4 (R7)', 'Training Room', 'Apgar', 'Locke'],
         checkLocations: ['Training Room', 'Apgar', 'Locke'],
         locationAliases: {},

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useUser } from '@/context/user-context';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,39 +10,60 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
-import { type Team, type Notification } from '@/types';
+import { type Team, type Notification, type TeamRole } from '@/types';
 import { GoogleSymbol } from '../icons/google-symbol';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { ScrollArea } from '../ui/scroll-area';
+import { googleSymbolNames } from '@/lib/google-symbols';
+import { cn } from '@/lib/utils';
 
 export function TeamRoleManagement({ team }: { team: Team }) {
-  const { allTeamRoles, updateTeam, users, teams, realUser, notifications, setNotifications } = useUser();
+  const { updateTeam, teams, realUser, notifications, setNotifications } = useUser();
   const { toast } = useToast();
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
-  const [roleToDelete, setRoleToDelete] = useState<string | null>(null);
+  const [roleToDelete, setRoleToDelete] = useState<TeamRole | null>(null);
   const [newRoleName, setNewRoleName] = useState('');
+  const [newRoleIcon, setNewRoleIcon] = useState('engineering');
 
-  // New state for conflict management
   const [roleToAdd, setRoleToAdd] = useState('');
   const [conflictingTeams, setConflictingTeams] = useState<string[]>([]);
   const [isConflictDialogOpen, setIsConflictDialogOpen] = useState(false);
 
+  const [iconSearch, setIconSearch] = useState('');
+  const [activeIconPopover, setActiveIconPopover] = useState<string | null>(null);
+
   const rolesForThisTeam = team.roles || [];
+
+  const filteredIcons = useMemo(() => {
+    if (!iconSearch) return googleSymbolNames;
+    return googleSymbolNames.filter(iconName =>
+        iconName.toLowerCase().includes(iconSearch.toLowerCase())
+    );
+  }, [iconSearch]);
 
   const openAddDialog = () => {
     setNewRoleName('');
+    setNewRoleIcon('engineering');
     setIsAddDialogOpen(true);
   };
 
-  const openDeleteDialog = (role: string) => {
+  const openDeleteDialog = (role: TeamRole) => {
     setRoleToDelete(role);
     setIsDeleteDialogOpen(true);
   };
 
-  const handleUpdateTeamRoles = (newRoles: string[]) => {
-      updateTeam(team.id, { roles: newRoles.sort() });
+  const handleUpdateTeamRoles = (newRoles: TeamRole[]) => {
+      updateTeam(team.id, { roles: newRoles.sort((a,b) => a.name.localeCompare(b.name)) });
   };
+  
+  const handleUpdateRoleIcon = (roleName: string, newIcon: string) => {
+    const updatedRoles = rolesForThisTeam.map(r => r.name === roleName ? { ...r, icon: newIcon } : r);
+    handleUpdateTeamRoles(updatedRoles);
+    setActiveIconPopover(null);
+  }
 
   const handleAddRole = () => {
     const trimmedName = newRoleName.trim();
@@ -50,12 +71,12 @@ export function TeamRoleManagement({ team }: { team: Team }) {
       toast({ variant: 'destructive', title: "Error", description: "Role name cannot be empty." });
       return;
     }
-    if (rolesForThisTeam.includes(trimmedName)) {
+    if (rolesForThisTeam.some(r => r.name === trimmedName)) {
       toast({ variant: 'destructive', title: "Error", description: `This team already has the role "${trimmedName}".` });
       return;
     }
 
-    const otherTeamsWithRole = teams.filter(t => t.id !== team.id && (t.roles || []).includes(trimmedName));
+    const otherTeamsWithRole = teams.filter(t => t.id !== team.id && t.roles.some(r => r.name === trimmedName));
 
     if (otherTeamsWithRole.length > 0) {
       setRoleToAdd(trimmedName);
@@ -63,8 +84,7 @@ export function TeamRoleManagement({ team }: { team: Team }) {
       setIsConflictDialogOpen(true);
       setIsAddDialogOpen(false); // Close the initial dialog
     } else {
-      // No conflict, add directly
-      const updatedTeamRoles = [...rolesForThisTeam, trimmedName];
+      const updatedTeamRoles = [...rolesForThisTeam, { name: trimmedName, icon: newRoleIcon }];
       handleUpdateTeamRoles(updatedTeamRoles);
       toast({ title: "Role Added", description: `"${trimmedName}" has been added to ${team.name}.` });
       setIsAddDialogOpen(false);
@@ -74,12 +94,10 @@ export function TeamRoleManagement({ team }: { team: Team }) {
   const handleConfirmAddDuplicateRole = () => {
     if (!roleToAdd) return;
 
-    // 1. Add the role
-    const updatedTeamRoles = [...rolesForThisTeam, roleToAdd];
+    const updatedTeamRoles = [...rolesForThisTeam, { name: roleToAdd, icon: newRoleIcon }];
     handleUpdateTeamRoles(updatedTeamRoles);
     toast({ title: "Role Added", description: `"${roleToAdd}" has been added to ${team.name}.` });
 
-    // 2. Create notification
     const allInvolvedTeams = [team, ...teams.filter(t => conflictingTeams.includes(t.name))];
     
     const newNotification: Notification = {
@@ -93,7 +111,6 @@ export function TeamRoleManagement({ team }: { team: Team }) {
     
     setNotifications([newNotification, ...notifications]);
 
-    // 3. Reset state
     setIsConflictDialogOpen(false);
     setRoleToAdd('');
     setConflictingTeams([]);
@@ -101,9 +118,9 @@ export function TeamRoleManagement({ team }: { team: Team }) {
 
   const handleDeleteRole = () => {
     if (!roleToDelete) return;
-    const updatedTeamRoles = rolesForThisTeam.filter(r => r !== roleToDelete);
+    const updatedTeamRoles = rolesForThisTeam.filter(r => r.name !== roleToDelete.name);
     handleUpdateTeamRoles(updatedTeamRoles);
-    toast({ title: "Role Deleted", description: `"${roleToDelete}" has been deleted.` });
+    toast({ title: "Role Deleted", description: `"${roleToDelete.name}" has been deleted.` });
     setIsDeleteDialogOpen(false);
   };
 
@@ -115,7 +132,7 @@ export function TeamRoleManagement({ team }: { team: Team }) {
             <div>
               <CardTitle>Manage Roles for {team.name}</CardTitle>
               <CardDescription>
-                  Add roles or click a role to remove it.
+                  Add roles or click a role to remove it. Click the icon to change it.
               </CardDescription>
             </div>
           </div>
@@ -123,14 +140,29 @@ export function TeamRoleManagement({ team }: { team: Team }) {
         <CardContent>
           <div className="flex flex-wrap items-center gap-2">
             {rolesForThisTeam.length > 0 ? rolesForThisTeam.map(role => (
-              <Badge 
-                key={role} 
-                variant="secondary" 
-                className="group text-base py-1 px-3 rounded-full cursor-pointer hover:bg-destructive/20 hover:text-destructive-foreground transition-colors"
-                onClick={() => openDeleteDialog(role)}
-                title={`Click to delete "${role}"`}
-              >
-                {role}
+              <Badge key={role.name} variant="secondary" className="group text-base py-1 pl-1.5 pr-3 rounded-full">
+                <Popover open={activeIconPopover === role.name} onOpenChange={(isOpen) => setActiveIconPopover(isOpen ? role.name : null)}>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-6 w-6 mr-1" aria-label={`Change icon for ${role.name}`}>
+                      <GoogleSymbol name={role.icon} />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80 p-0">
+                    <div className="p-2 border-b">
+                      <Input placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} />
+                    </div>
+                    <ScrollArea className="h-64">
+                      <div className="grid grid-cols-6 gap-1 p-2">
+                        {filteredIcons.slice(0, 300).map((iconName) => (
+                          <Button key={iconName} variant={role.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => handleUpdateRoleIcon(role.name, iconName)} className="text-2xl">
+                            <GoogleSymbol name={iconName} />
+                          </Button>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  </PopoverContent>
+                </Popover>
+                <span className="cursor-pointer" onClick={() => openDeleteDialog(role)}>{role.name}</span>
               </Badge>
             )) : (
               <p className="text-sm text-muted-foreground">No custom roles defined for this team.</p>
@@ -154,7 +186,37 @@ export function TeamRoleManagement({ team }: { team: Team }) {
           </div>
           <DialogHeader><DialogTitle>Add New Role to {team.name}</DialogTitle></DialogHeader>
           <div className="grid gap-4 py-4">
-            <Input id="new-role-name" value={newRoleName} onChange={(e) => setNewRoleName(e.target.value)} placeholder="Role Name" onKeyDown={(e) => e.key === 'Enter' && handleAddRole()} />
+            <div className="flex items-center gap-2 border rounded-md px-2 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                    <GoogleSymbol name={newRoleIcon} />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-0">
+                  <div className="p-2 border-b">
+                    <Input placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} />
+                  </div>
+                  <ScrollArea className="h-64">
+                    <div className="grid grid-cols-6 gap-1 p-2">
+                      {filteredIcons.slice(0, 300).map((iconName) => (
+                        <Button key={iconName} variant={newRoleIcon === iconName ? "default" : "ghost"} size="icon" onClick={() => setNewRoleIcon(iconName)} className="text-2xl">
+                          <GoogleSymbol name={iconName} />
+                        </Button>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </PopoverContent>
+              </Popover>
+              <Input 
+                id="new-role-name" 
+                value={newRoleName} 
+                onChange={(e) => setNewRoleName(e.target.value)} 
+                placeholder="Role Name" 
+                onKeyDown={(e) => e.key === 'Enter' && handleAddRole()}
+                className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-9"
+              />
+            </div>
           </div>
         </DialogContent>
       </Dialog>
@@ -164,7 +226,7 @@ export function TeamRoleManagement({ team }: { team: Team }) {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the "{roleToDelete}" role and remove it from all users who have it assigned within this team.
+              This action cannot be undone. This will permanently delete the "{roleToDelete?.name}" role and remove it from all users who have it assigned within this team.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

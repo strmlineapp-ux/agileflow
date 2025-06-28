@@ -21,6 +21,7 @@ import { canCreateAnyEvent } from '@/lib/permissions';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { Badge } from '../ui/badge';
 import { PriorityBadge } from './priority-badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
 const DEFAULT_HOUR_WIDTH_PX = 120;
 const LOCATION_LABEL_WIDTH_PX = 160;
@@ -266,15 +267,38 @@ const ProductionScheduleLocationRow = React.memo(({
                             <p className="font-semibold text-sm whitespace-normal leading-tight">{event.title}</p>
                             <p className="text-xs opacity-90">{format(event.startTime, timeFormatEvent)} - {format(event.endTime, timeFormatEvent)}</p>
                             {event.roleAssignments && Object.keys(event.roleAssignments).length > 0 && (
-                                <div className="flex flex-wrap gap-1 mt-1.5">
-                                    {Object.entries(event.roleAssignments).map(([role, userId]) => {
+                                <div className="flex flex-wrap -space-x-2 mt-1.5">
+                                    {Object.entries(event.roleAssignments).filter(([, userId]) => !!userId).map(([role, userId]) => {
                                         const user = users.find(u => u.userId === userId);
                                         if (!user) return null;
+                                        const teamForEvent = teams.find(t => t.id === event.calendarId);
+                                        const roleInfo = teamForEvent?.roles.find(r => r.name === role);
+                                        const roleIcon = roleInfo?.icon;
+
                                         return (
-                                            <Badge key={role} variant="secondary" className="text-xs p-1 px-1.5 rounded-sm">
-                                                <span className="font-normal opacity-70 mr-1">{role}:</span>
-                                                <span className="font-medium">{user.displayName.split(' ')[0]}</span>
-                                            </Badge>
+                                        <TooltipProvider key={role}>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <div className="relative">
+                                                        <Avatar className="h-6 w-6 border-2 border-background">
+                                                            <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
+                                                            <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                                        </Avatar>
+                                                        {roleIcon && (
+                                                            <div className="absolute -bottom-1 -right-1 p-0.5 h-4 w-4 rounded-full bg-muted text-muted-foreground flex items-center justify-center border-2 border-background">
+                                                                <GoogleSymbol name={roleIcon} style={{fontSize: '10px'}} />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    <p className="flex items-center gap-1">
+                                                    {roleIcon && <GoogleSymbol name={roleIcon} className="text-sm" />}
+                                                    <span>{role}: {user.displayName}</span>
+                                                    </p>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
                                         );
                                     })}
                                 </div>

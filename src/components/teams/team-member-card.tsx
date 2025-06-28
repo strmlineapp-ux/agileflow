@@ -29,8 +29,9 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
 
   const canManageRoles = viewAsUser.roles?.includes('Admin') || team.managers?.includes(viewAsUser.userId);
 
-  const memberTeamRoles = (member.roles || []).filter(role => team.roles.includes(role));
-  const otherTeamRolesForMember = (member.roles || []).filter(role => !team.roles.includes(role) && role !== 'Admin');
+  const teamRoleNames = team.roles.map(r => r.name);
+  const memberTeamRoles = (member.roles || []).filter(roleName => teamRoleNames.includes(roleName));
+  const otherTeamRolesForMember = (member.roles || []).filter(roleName => !teamRoleNames.includes(roleName) && roleName !== 'Admin');
 
 
   const handleOpenRolesDialog = () => {
@@ -55,8 +56,8 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
   };
   
   const handleSaveRoles = async () => {
-    const nonTeamRoles = (member.roles || []).filter(role => !team.roles.includes(role));
-    const newTeamRoles = tempRoles.filter(role => team.roles.includes(role));
+    const nonTeamRoles = (member.roles || []).filter(role => !teamRoleNames.includes(role));
+    const newTeamRoles = tempRoles.filter(role => teamRoleNames.includes(role));
 
     const finalRoles = [...new Set([...nonTeamRoles, ...newTeamRoles])];
 
@@ -92,14 +93,18 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
             </div>
             <div className="flex flex-wrap gap-1 min-h-[24px]">
               {(member.roles || []).filter(r => r !== 'Admin').length > 0 ? (
-                (member.roles || []).filter(r => r !== 'Admin').map(role => (
-                    <Badge key={role} variant="secondary" className={cn(
-                        "rounded-full",
-                        !team.roles.includes(role) && "opacity-50"
-                    )}>
-                        {role}
-                    </Badge>
-                ))
+                (member.roles || []).filter(r => r !== 'Admin').map(roleName => {
+                    const roleInfo = team.roles.find(r => r.name === roleName);
+                    return (
+                        <Badge key={roleName} variant="secondary" className={cn(
+                            "rounded-full gap-1.5 pl-2",
+                            !roleInfo && "opacity-50"
+                        )}>
+                            {roleInfo && <GoogleSymbol name={roleInfo.icon} className="text-sm" />}
+                            <span>{roleName}</span>
+                        </Badge>
+                    )
+                })
               ) : (
                 <p className="text-xs text-muted-foreground italic">No roles assigned.</p>
               )}
@@ -123,15 +128,16 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
             <div className="py-2">
                 <div className="flex flex-wrap gap-2 rounded-md border bg-muted/50 p-2 min-h-[56px]">
                     {team.roles.map(role => {
-                        const isAssigned = tempRoles.includes(role);
+                        const isAssigned = tempRoles.includes(role.name);
                         return (
                         <Badge
-                            key={role}
+                            key={role.name}
                             variant={isAssigned ? 'default' : 'secondary'}
                             className={cn('gap-1.5 p-1 px-3 cursor-pointer rounded-full text-sm', isAssigned && 'shadow-md')}
-                            onClick={() => handleToggleRole(role)}
+                            onClick={() => handleToggleRole(role.name)}
                         >
-                            {role}
+                            <GoogleSymbol name={role.icon} className="text-base" />
+                            {role.name}
                         </Badge>
                         );
                     })}
