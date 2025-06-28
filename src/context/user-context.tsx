@@ -2,7 +2,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect } from 'react';
-import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team } from '@/types';
+import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type PageConfig } from '@/types';
 import { mockUsers as initialUsers, mockCalendars, mockEvents as initialEvents, mockLocations as initialLocations, mockTeams } from '@/lib/mock-data';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
@@ -38,8 +38,8 @@ interface UserContextType {
   locations: BookableLocation[];
   addLocation: (locationName: string) => Promise<void>;
   deleteLocation: (locationId: string) => Promise<void>;
-  appManagerRoleName: string;
-  setAppManagerRoleName: React.Dispatch<React.SetStateAction<string>>;
+  pageConfigs: PageConfig[];
+  updatePageConfig: (pageId: string, pageData: Partial<PageConfig>) => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | null>(null);
@@ -47,6 +47,11 @@ const UserContext = createContext<UserContextType | null>(null);
 const REAL_USER_ID = '1'; // Alice is the admin
 
 const SYSTEM_ROLES = ['Admin', 'Service Delivery Manager'];
+
+const initialPageConfigs: PageConfig[] = [
+    { id: 'admin', name: 'Admin', icon: 'shield_person' },
+    { id: 'service-delivery', name: 'Service Delivery', icon: 'business_center' }
+];
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [viewAsUserId, setViewAsUserId] = useState<string>(REAL_USER_ID);
@@ -58,7 +63,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [calendars, setCalendars] = useState<SharedCalendar[]>(mockCalendars);
   const [events, setEvents] = useState<Event[]>(initialEvents);
   const [locations, setLocations] = useState<BookableLocation[]>(initialLocations);
-  const [appManagerRoleName, setAppManagerRoleName] = useState('Service Delivery Manager');
+  const [pageConfigs, setPageConfigs] = useState<PageConfig[]>(initialPageConfigs);
   const { toast } = useToast();
 
   const allSystemRoles = useMemo(() => SYSTEM_ROLES, []);
@@ -165,6 +170,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       setLocations(current => current.filter(loc => loc.id !== locationId));
   };
 
+  const updatePageConfig = async (pageId: string, pageData: Partial<PageConfig>) => {
+    setPageConfigs(currentConfigs => 
+      currentConfigs.map(p => (p.id === pageId ? { ...p, ...pageData } : p))
+    );
+  };
+
 
   const linkGoogleCalendar = async (userId: string) => {
     const provider = new GoogleAuthProvider();
@@ -231,8 +242,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     locations,
     addLocation,
     deleteLocation,
-    appManagerRoleName,
-    setAppManagerRoleName,
+    pageConfigs,
+    updatePageConfig,
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

@@ -1,4 +1,5 @@
 
+
 export interface Attendee {
   userId?: string; // Optional: for internal users, this is their ID.
   email: string;
@@ -32,6 +33,12 @@ export interface Team {
   managers?: string[]; // array of userIds who are managers for this team
   roles: string[]; // team-specific roles
   pinnedLocations: string[]; // array of location names
+}
+
+export interface PageConfig {
+  id: string;
+  name: string;
+  icon: string;
 }
 
 export interface Task {

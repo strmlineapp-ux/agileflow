@@ -13,7 +13,7 @@ import { GoogleSymbol } from '../icons/google-symbol';
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { realUser, viewAsUser, setViewAsUser, users, teams, notifications } = useUser();
+  const { realUser, viewAsUser, setViewAsUser, users, teams, notifications, pageConfigs } = useUser();
   const isAdmin = realUser.roles?.includes('Admin');
   const isSdm = viewAsUser.roles?.includes('Service Delivery Manager') || viewAsUser.roles?.includes('Admin');
   const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
@@ -23,12 +23,15 @@ export function Sidebar() {
     isSdm || team.managers?.includes(viewAsUser.userId)
   );
 
+  const adminConfig = pageConfigs.find(p => p.id === 'admin') || { name: 'Admin', icon: 'shield_person' };
+  const sdmConfig = pageConfigs.find(p => p.id === 'service-delivery') || { name: 'Service Delivery', icon: 'business_center' };
+
   const navItems = [
     { href: '/dashboard/calendar', icon: 'calendar_month', label: 'Calendar', visible: true },
     { href: '/dashboard', icon: 'dashboard', label: 'Overview', visible: true },
     { href: '/dashboard/tasks', icon: 'checklist', label: 'Tasks', visible: true },
-    { href: '/dashboard/service-delivery', icon: 'business_center', label: 'Service Delivery', visible: isSdm },
-    { href: '/dashboard/admin', icon: 'shield_person', label: 'Admin', visible: isAdmin },
+    { href: '/dashboard/service-delivery', icon: sdmConfig.icon, label: sdmConfig.name, visible: isSdm },
+    { href: '/dashboard/admin', icon: adminConfig.icon, label: adminConfig.name, visible: isAdmin },
   ];
 
   const teamNavItems = userTeams.map(team => ({

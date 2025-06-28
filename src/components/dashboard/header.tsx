@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { GoogleSymbol } from '../icons/google-symbol';
 
 export function Header() {
-  const { realUser, viewAsUser, teams, notifications } = useUser();
+  const { realUser, viewAsUser, teams, notifications, pageConfigs } = useUser();
   const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
   const unreadCount = notifications.filter((n) => !n.read).length;
   
@@ -24,6 +24,9 @@ export function Header() {
   const userTeams = teams.filter(team => 
     isSdm || team.managers?.includes(viewAsUser.userId)
   );
+
+  const adminConfig = pageConfigs.find(p => p.id === 'admin') || { name: 'Admin', icon: 'shield_person' };
+  const sdmConfig = pageConfigs.find(p => p.id === 'service-delivery') || { name: 'Service Delivery', icon: 'business_center' };
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-card px-4 sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 sm:py-4">
@@ -57,14 +60,14 @@ export function Header() {
             </Link>
              {isSdm && (
                 <Link href="/dashboard/service-delivery" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
-                    <GoogleSymbol name="business_center" className="text-2xl" />
-                    Service Delivery
+                    <GoogleSymbol name={sdmConfig.icon} className="text-2xl" />
+                    {sdmConfig.name}
                 </Link>
             )}
             {isAdmin && (
                 <Link href="/dashboard/admin" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
-                    <GoogleSymbol name="shield_person" className="text-2xl" />
-                    Admin
+                    <GoogleSymbol name={adminConfig.icon} className="text-2xl" />
+                    {adminConfig.name}
                 </Link>
             )}
             {userTeams.map(team => (

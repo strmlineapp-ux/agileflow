@@ -7,6 +7,7 @@ import { PinnedLocationManagement } from '@/components/settings/pinned-location-
 import { TeamRoleManagement } from '@/components/settings/team-role-management';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useEffect } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function TeamPage() {
   const { teamId } = useParams();
@@ -36,10 +37,20 @@ export default function TeamPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="flex flex-col gap-6">
       <h1 className="font-headline text-3xl font-semibold">{team.name} Team Management</h1>
-      <TeamRoleManagement team={team} />
-      <PinnedLocationManagement team={team} />
+      <Tabs defaultValue="roles" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="roles">Role Management</TabsTrigger>
+            <TabsTrigger value="locations">Pinned Locations</TabsTrigger>
+        </TabsList>
+        <TabsContent value="roles" className="mt-4">
+           <TeamRoleManagement team={team} />
+        </TabsContent>
+        <TabsContent value="locations" className="mt-4">
+            <PinnedLocationManagement team={team} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
