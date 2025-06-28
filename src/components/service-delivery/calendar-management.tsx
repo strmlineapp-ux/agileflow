@@ -5,7 +5,7 @@
 import { useState } from 'react';
 import { useUser } from '@/context/user-context';
 import { type SharedCalendar, type User } from '@/types';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -105,32 +105,51 @@ export function CalendarManagement() {
 
   return (
     <>
-      <Card>
-        <CardHeader>
-          <div className="flex items-start justify-between">
-            <div>
-              <CardTitle>Manage Shared Calendars</CardTitle>
-              <CardDescription>Add, edit, or delete shared calendars and assign managers.</CardDescription>
-            </div>
-            <Button variant="ghost" size="icon" onClick={openAddDialog}>
-                <GoogleSymbol name="add_circle" className="text-2xl" />
-                <span className="sr-only">Add New Calendar</span>
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-3">
-              {calendars.map(cal => (
-                <Button key={cal.id} variant="outline" className="h-auto" onClick={() => openEditDialog(cal)}>
-                    <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 rounded-full border" style={{ backgroundColor: cal.color }} />
-                      <span className="font-medium">{cal.name}</span>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {calendars.map(calendar => {
+          const calendarManagers = (calendar.managers || []).map(id => users.find(u => u.userId === id)).filter(Boolean) as User[];
+          return (
+            <Card key={calendar.id} className="flex flex-col">
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="h-4 w-4 rounded-full border shrink-0" style={{ backgroundColor: calendar.color }} />
+                        <CardTitle className="text-xl">{calendar.name}</CardTitle>
                     </div>
-                </Button>
-              ))}
+                    <Button variant="ghost" size="icon" className="-mr-4 -mt-2" onClick={() => openEditDialog(calendar)}>
+                        <GoogleSymbol name="edit" />
+                        <span className="sr-only">Edit Calendar</span>
+                    </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="flex-grow space-y-4">
+                  <div>
+                      <p className="text-sm font-medium text-muted-foreground mb-2">Managers</p>
+                      <div className="flex flex-wrap gap-2 min-h-[34px]">
+                      {calendarManagers.length > 0 ? (
+                          calendarManagers.map(user => (
+                              <Badge key={user.userId} variant="secondary" className="gap-1.5 p-1 pl-2 rounded-full">
+                                  <Avatar className="h-5 w-5"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
+                                  <span className="font-medium">{user.displayName}</span>
+                              </Badge>
+                          ))
+                      ) : <p className="text-sm text-muted-foreground italic px-2">No managers assigned.</p>}
+                      </div>
+                  </div>
+              </CardContent>
+            </Card>
+          )
+        })}
+        <button
+          onClick={openAddDialog}
+          className="flex items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 text-muted-foreground hover:border-primary hover:text-primary transition-colors min-h-[190px]"
+        >
+          <div className="flex flex-col items-center gap-2">
+            <GoogleSymbol name="add_circle" className="text-4xl" />
+            <span className="font-semibold">New Calendar</span>
           </div>
-        </CardContent>
-      </Card>
+        </button>
+      </div>
 
       <Dialog open={isAddOrEditDialogOpen} onOpenChange={setIsAddOrEditDialogOpen}>
         <DialogContent className="max-w-lg">

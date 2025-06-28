@@ -90,7 +90,7 @@ export function TeamManagement() {
                         </CardHeader>
                         <CardContent className="flex-grow space-y-4">
                             <div>
-                                <p className="text-sm font-medium text-muted-foreground mb-2">{team.managerRoleName || 'Managers'}</p>
+                                <p className="text-sm font-medium text-muted-foreground mb-2">{team.managerRoleName || 'User Managers'}</p>
                                 <div className="flex flex-wrap gap-2 min-h-[34px]">
                                 {teamManagers.length > 0 ? (
                                     teamManagers.map(user => (
@@ -103,7 +103,7 @@ export function TeamManagement() {
                                 </div>
                             </div>
                             <div>
-                                <p className="text-sm font-medium text-muted-foreground mb-2">{team.memberRoleName || 'Members'}</p>
+                                <p className="text-sm font-medium text-muted-foreground mb-2">{team.memberRoleName || 'Team Members'}</p>
                                  <div className="flex flex-wrap gap-2 min-h-[34px]">
                                 {teamMembers.length > 0 ? (
                                     teamMembers.map(user => (
@@ -332,7 +332,7 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
                     </div>
                      <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label htmlFor="manager-role-name">Manager Role Label</Label>
+                            <Label htmlFor="manager-role-name">User Manager Label</Label>
                             <Input
                                 id="manager-role-name"
                                 placeholder="e.g., Leads"
@@ -341,7 +341,7 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
                             />
                         </div>
                          <div className="space-y-2">
-                            <Label htmlFor="member-role-name">Member Role Label</Label>
+                            <Label htmlFor="member-role-name">Team Member Label</Label>
                             <Input
                                 id="member-role-name"
                                 placeholder="e.g., Contributors"
