@@ -115,6 +115,9 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
   const [guestSearch, setGuestSearch] = React.useState('');
   const [isGuestPopoverOpen, setIsGuestPopoverOpen] = React.useState(false);
 
+  const [isCalendarPopoverOpen, setIsCalendarPopoverOpen] = React.useState(false);
+  const [isPriorityPopoverOpen, setIsPriorityPopoverOpen] = React.useState(false);
+
   const availableCalendars = React.useMemo(() => {
     return calendars.filter(cal => canManageEventOnCalendar(viewAsUser, cal));
   }, [calendars, viewAsUser]);
@@ -262,8 +265,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
 
   return (
     <div>
-      <div className="flex items-center justify-between pb-4">
-        <h3 className="text-lg font-semibold">New Event</h3>
+      <div className="flex items-center justify-end pb-4">
         <div className="flex items-center">
           <Button variant="ghost" size="icon" onClick={onFinished} disabled={isLoading} aria-label="Discard event">
             <GoogleSymbol name="delete" />
@@ -275,99 +277,109 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
       </div>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <div className="flex items-center gap-2">
-            {availableCalendars.length > 1 && (
-              <FormField
-                control={form.control}
-                name="calendarId"
-                render={({ field }) => (
-                  <FormItem>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="h-auto p-1.5 flex items-center gap-1.5">
-                          <div className="h-4 w-4 rounded-sm shrink-0" style={{ backgroundColor: selectedCalendar?.color }} />
-                          <GoogleSymbol name="arrow_drop_down" className="text-base" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent>
-                        {availableCalendars.map(cal => (
-                          <DropdownMenuItem key={cal.id} onSelect={() => field.onChange(cal.id)}>
-                            <div className="flex items-center gap-2">
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 flex items-center pl-3 z-10 gap-1">
+              {availableCalendars.length > 1 && (
+                <FormField
+                  control={form.control}
+                  name="calendarId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <Popover open={isCalendarPopoverOpen} onOpenChange={setIsCalendarPopoverOpen}>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" className="h-auto p-1.5 flex items-center gap-1.5 rounded-full">
+                            <div className="h-4 w-4 rounded-full shrink-0" style={{ backgroundColor: selectedCalendar?.color }} />
+                            <GoogleSymbol name="arrow_drop_down" className="text-base" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-1" align="start">
+                          {availableCalendars.map(cal => (
+                            <div key={cal.id} 
+                                onClick={() => {
+                                    field.onChange(cal.id);
+                                    setIsCalendarPopoverOpen(false);
+                                }}
+                                className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer"
+                            >
                               <div className="h-3 w-3 rounded-full border" style={{ backgroundColor: cal.color }} />
                               <span>{cal.name}</span>
                             </div>
-                          </DropdownMenuItem>
-                        ))}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
+                          ))}
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
 
-            {eventStrategy && (
-              <FormField
-                control={form.control}
-                name="priority"
-                render={({ field }) => (
-                  <FormItem>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="h-auto p-0.5">
-                          <PriorityBadge priorityId={field.value} />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent>
-                        {eventStrategy.type === 'tier' &&
-                          eventStrategy.priorities.map(p => (
-                            <DropdownMenuItem key={p.id} onSelect={() => field.onChange(p.id)}>
-                              <div className="flex items-center gap-2">
+              {eventStrategy && (
+                <FormField
+                  control={form.control}
+                  name="priority"
+                  render={({ field }) => (
+                    <FormItem>
+                      <Popover open={isPriorityPopoverOpen} onOpenChange={setIsPriorityPopoverOpen}>
+                        <PopoverTrigger asChild>
+                           <Button variant="outline" className="h-auto p-1.5 rounded-full">
+                            <PriorityBadge priorityId={field.value} />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="p-1 w-auto" align="start">
+                          {eventStrategy.type === 'tier' &&
+                            eventStrategy.priorities.map(p => (
+                              <div key={p.id}
+                                onClick={() => { field.onChange(p.id); setIsPriorityPopoverOpen(false); }}
+                                className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer"
+                              >
                                 <PriorityBadge priorityId={p.id} />
                                 <span className="font-semibold">{p.label}</span>
                               </div>
-                            </DropdownMenuItem>
-                          ))}
-                        {eventStrategy.type === 'symbol' &&
-                          Array.from({ length: eventStrategy.max }, (_, i) => eventStrategy.max - i).map(num => (
-                            <DropdownMenuItem key={num} onSelect={() => field.onChange(`${eventStrategy.id}:${num}`)}>
-                              <div className="flex items-center" style={{ color: eventStrategy.color }}>
-                                {Array.from({ length: num }).map((_, i) => (
-                                  <GoogleSymbol key={i} name={eventStrategy.icon} className="text-base" />
-                                ))}
+                            ))}
+                          {eventStrategy.type === 'symbol' &&
+                            Array.from({ length: eventStrategy.max }, (_, i) => eventStrategy.max - i).map(num => (
+                              <div key={num}
+                                onClick={() => { field.onChange(`${eventStrategy.id}:${num}`); setIsPriorityPopoverOpen(false); }}
+                                className="flex items-center p-2 rounded-md hover:bg-accent cursor-pointer"
+                              >
+                                <div className="flex items-center" style={{ color: eventStrategy.color }}>
+                                  {Array.from({ length: num }).map((_, i) => (
+                                    <GoogleSymbol key={i} name={eventStrategy.icon} className="text-base" />
+                                  ))}
+                                </div>
                               </div>
-                            </DropdownMenuItem>
-                          ))}
-                        {eventStrategy.type === 'scale' && (
-                          <div className="p-2 w-48">
-                            <Slider
-                              defaultValue={[Number(field.value.split(':')[1] || 0)]}
-                              min={eventStrategy.min}
-                              max={eventStrategy.max}
-                              step={1}
-                              onValueChange={val => field.onChange(`${eventStrategy.id}:${val[0]}`)}
-                              className="flex-1"
-                            />
-                          </div>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
+                            ))}
+                          {eventStrategy.type === 'scale' && (
+                            <div className="p-4 w-48">
+                              <Slider
+                                defaultValue={[Number(field.value.split(':')[1] || 0)]}
+                                min={eventStrategy.min}
+                                max={eventStrategy.max}
+                                step={1}
+                                onValueChange={val => field.onChange(`${eventStrategy.id}:${val[0]}`)}
+                                className="flex-1"
+                              />
+                            </div>
+                          )}
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+            </div>
             
             <FormField
                 control={form.control}
                 name="title"
                 render={({ field }) => (
-                    <FormItem className="flex-1">
+                    <FormItem className="w-full">
                         <FormControl>
                             <Input 
                                 placeholder={titlePlaceholders[selectedCalendarId as CalendarId] || 'e.g. Team Standup'} 
                                 {...field} 
-                                className="text-lg font-semibold border-none focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-auto"
+                                className="text-lg font-semibold pl-32 h-12"
                             />
                         </FormControl>
                         <FormMessage />
