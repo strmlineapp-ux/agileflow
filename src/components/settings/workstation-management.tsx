@@ -5,38 +5,65 @@ import { useState } from 'react';
 import { useUser } from '@/context/user-context';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { type Team } from '@/types';
 import { GoogleSymbol } from '../icons/google-symbol';
+import { Badge } from '../ui/badge';
 
 export function WorkstationManagement({ team }: { team: Team }) {
   const { updateTeam } = useUser();
   const { toast } = useToast();
 
-  const [newWorkstationName, setNewWorkstationName] = useState('');
+  const [isAddOrEditDialogOpen, setIsAddOrEditDialogOpen] = useState(false);
+  const [workstationToEdit, setWorkstationToEdit] = useState<string | null>(null);
   const [workstationToDelete, setWorkstationToDelete] = useState<string | null>(null);
+  const [newWorkstationName, setNewWorkstationName] = useState('');
 
   const teamWorkstations = team.workstations || [];
 
   const handleUpdateTeamWorkstations = (newWorkstations: string[]) => {
-      updateTeam(team.id, { workstations: newWorkstations.sort() });
+    updateTeam(team.id, { workstations: newWorkstations.sort() });
   };
 
-  const handleAddWorkstation = () => {
+  const openAddDialog = () => {
+    setWorkstationToEdit(null);
+    setNewWorkstationName('');
+    setIsAddOrEditDialogOpen(true);
+  };
+
+  const openEditDialog = (workstation: string) => {
+    setWorkstationToEdit(workstation);
+    setNewWorkstationName(workstation);
+    setIsAddOrEditDialogOpen(true);
+  };
+
+  const handleSave = () => {
     const trimmedName = newWorkstationName.trim();
-    if (trimmedName && !teamWorkstations.includes(trimmedName)) {
+    if (!trimmedName) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Workstation name cannot be empty.' });
+      return;
+    }
+    if (teamWorkstations.includes(trimmedName) && trimmedName !== workstationToEdit) {
+      toast({ variant: 'destructive', title: 'Error', description: `Workstation "${trimmedName}" already exists.` });
+      return;
+    }
+
+    if (workstationToEdit) { // Editing existing
+      const updatedWorkstations = teamWorkstations.map(ws => ws === workstationToEdit ? trimmedName : ws);
+      handleUpdateTeamWorkstations(updatedWorkstations);
+      toast({ title: "Workstation Updated", description: `"${workstationToEdit}" has been changed to "${trimmedName}".` });
+    } else { // Adding new
       const updatedWorkstations = [...teamWorkstations, trimmedName];
       handleUpdateTeamWorkstations(updatedWorkstations);
-      toast({ title: "Workstation Added", description: `"${trimmedName}" has been added to ${team.name}.` });
-      setNewWorkstationName('');
-    } else {
-      toast({ variant: 'destructive', title: "Error", description: `Workstation "${trimmedName}" already exists or is invalid.` });
+      toast({ title: "Workstation Added", description: `"${trimmedName}" has been added.` });
     }
+    setIsAddOrEditDialogOpen(false);
   };
 
-  const handleDeleteWorkstation = () => {
+  const handleDelete = () => {
     if (!workstationToDelete) return;
     const updatedWorkstations = teamWorkstations.filter(r => r !== workstationToDelete);
     handleUpdateTeamWorkstations(updatedWorkstations);
@@ -52,52 +79,58 @@ export function WorkstationManagement({ team }: { team: Team }) {
             <div>
               <CardTitle>Manage Workstations</CardTitle>
               <CardDescription>
-                  Add or delete workstations and edit machines for this team. These will be available as bookable locations.
+                Add, edit, or delete workstations and edit machines for this team. These will be available as bookable locations.
               </CardDescription>
             </div>
+             <Button variant="ghost" size="icon" onClick={openAddDialog}>
+              <GoogleSymbol name="add_circle" className="text-2xl" />
+              <span className="sr-only">Add New Workstation</span>
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
-            <div className="space-y-4">
-                 <div className="space-y-2">
-                    <h4 className="font-medium text-sm">Existing Workstations</h4>
-                    <div className="flex flex-wrap gap-2 min-h-[40px] p-2 border rounded-md bg-muted/50">
-                        {teamWorkstations.length > 0 ? teamWorkstations.map(ws => (
-                        <div key={ws} className="flex items-center gap-1 p-1 px-2 text-sm bg-background border rounded-md">
-                            <span>{ws}</span>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-5 w-5 hover:bg-destructive/20"
-                                onClick={() => setWorkstationToDelete(ws)}
-                            >
-                                <GoogleSymbol name="close" className="text-sm" />
-                                <span className="sr-only">Delete {ws}</span>
-                            </Button>
-                        </div>
-                        )) : (
-                        <p className="text-sm text-muted-foreground w-full text-center">No workstations defined for this team.</p>
-                        )}
-                    </div>
-                </div>
-                 <div className="space-y-2">
-                    <h4 className="font-medium text-sm">Add New Workstation</h4>
-                    <div className="flex items-center gap-2">
-                        <Input
-                        placeholder="e.g., Edit Suite 1 or VFX-PC-05"
-                        value={newWorkstationName}
-                        onChange={(e) => setNewWorkstationName(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleAddWorkstation()}
-                        />
-                        <Button onClick={handleAddWorkstation} disabled={!newWorkstationName.trim()}>
-                        <GoogleSymbol name="add_circle" className="mr-2" />
-                        Add Workstation
-                        </Button>
-                    </div>
-                </div>
-            </div>
+          <div className="flex flex-wrap gap-2 min-h-[40px] p-2 border rounded-md bg-muted/50">
+            {teamWorkstations.length > 0 ? teamWorkstations.map(ws => (
+              <Badge key={ws} variant="secondary" className="group text-base py-1 pl-3 pr-1 rounded-full">
+                 <span className="font-medium cursor-pointer" onClick={() => openEditDialog(ws)}>{ws}</span>
+                 <button
+                    type="button"
+                    className="ml-1 h-4 w-4 hover:bg-destructive/20 rounded-full inline-flex items-center justify-center"
+                    onClick={() => setWorkstationToDelete(ws)}
+                  >
+                    <GoogleSymbol name="cancel" className="text-sm" />
+                    <span className="sr-only">Delete {ws}</span>
+                  </button>
+              </Badge>
+            )) : (
+              <p className="text-sm text-muted-foreground w-full text-center">No workstations defined for this team.</p>
+            )}
+          </div>
         </CardContent>
       </Card>
+
+      <Dialog open={isAddOrEditDialogOpen} onOpenChange={setIsAddOrEditDialogOpen}>
+        <DialogContent>
+           <div className="absolute top-4 right-4">
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSave}>
+                  <GoogleSymbol name="check" className="text-xl" />
+                  <span className="sr-only">Save</span>
+              </Button>
+          </div>
+          <DialogHeader>
+            <DialogTitle>{workstationToEdit ? 'Edit Workstation' : 'Add New Workstation'}</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <Input
+              id="workstation-name"
+              value={newWorkstationName}
+              onChange={(e) => setNewWorkstationName(e.target.value)}
+              placeholder="e.g., Edit Suite 1 or VFX-PC-05"
+              onKeyDown={(e) => e.key === 'Enter' && handleSave()}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={!!workstationToDelete} onOpenChange={(isOpen) => !isOpen && setWorkstationToDelete(null)}>
         <AlertDialogContent>
@@ -109,7 +142,7 @@ export function WorkstationManagement({ team }: { team: Team }) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteWorkstation} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Continue</AlertDialogAction>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Continue</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
