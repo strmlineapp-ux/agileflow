@@ -229,10 +229,10 @@ const ProductionScheduleLocationRow = React.memo(({
 
     return (
         <div className={cn("flex", { "border-b": !isLast }, {"bg-muted/10": index % 2 !== 0})}>
-            <div className="w-[160px] shrink-0 p-2 border-r flex items-center justify-between bg-card sticky left-0 z-30">
-                <div className="flex items-center gap-1 cursor-pointer flex-1 min-w-0" onClick={() => toggleLocationCollapse(dayIso, location)}>
-                    {isLocationCollapsed ? <GoogleSymbol name="chevron_right" /> : <GoogleSymbol name="expand_more" />}
-                    <p className="font-medium text-sm truncate" title={alias ? location : undefined}>{alias || location}</p>
+            <div className="w-[160px] shrink-0 p-2 border-r flex items-start justify-between bg-card sticky left-0 z-30">
+                <div className="flex items-start gap-1 cursor-pointer flex-1 min-w-0" onClick={() => toggleLocationCollapse(dayIso, location)}>
+                    {isLocationCollapsed ? <GoogleSymbol name="chevron_right" className="mt-1" /> : <GoogleSymbol name="expand_more" className="mt-1" />}
+                    <p className="font-medium text-sm" title={alias ? location : undefined}>{alias || location}</p>
                 </div>
                  {canManageThisLocation ? assignmentControl : assignedUser && <div className="h-6 text-xs px-1.5 flex items-center justify-center text-muted-foreground">{`${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}`}</div>}
             </div>

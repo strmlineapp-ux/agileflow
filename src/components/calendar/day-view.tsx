@@ -56,11 +56,11 @@ const DayViewLocationRow = React.memo(({
     return (
         <div className={cn("flex", { "border-b": !isLast }, { "bg-muted/10": index % 2 !== 0 })}>
             <div 
-                className="w-[160px] shrink-0 p-2 border-r flex items-center justify-start bg-card sticky left-0 z-30 gap-1 cursor-pointer"
+                className="w-[160px] shrink-0 p-2 border-r flex items-start justify-start bg-card sticky left-0 z-30 gap-1 cursor-pointer"
                 onClick={() => toggleLocationCollapse(location)}
             >
-                {isCollapsed ? <GoogleSymbol name="chevron_right" className="text-lg" /> : <GoogleSymbol name="expand_more" className="text-lg" />}
-                <p className="font-medium text-sm truncate">{location}</p>
+                {isCollapsed ? <GoogleSymbol name="chevron_right" className="text-lg mt-1" /> : <GoogleSymbol name="expand_more" className="text-lg mt-1" />}
+                <p className="font-medium text-sm">{location}</p>
             </div>
             <div className={cn("relative flex-1", isCollapsed ? "h-10" : "min-h-[5rem] py-1")} onClick={(e) => handleEasyBookingClick(e, 'standard', day)}>
                 {Array.from({ length: 23 }).map((_, hour) => (
