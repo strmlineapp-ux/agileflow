@@ -29,7 +29,9 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
 
   const canManageRoles = viewAsUser.roles?.includes('Admin') || team.managers?.includes(viewAsUser.userId);
 
-  const otherTeamRolesForMember = (member.roles || []).filter(role => !team.roles.includes(role));
+  const memberTeamRoles = (member.roles || []).filter(role => team.roles.includes(role));
+  const otherTeamRolesForMember = (member.roles || []).filter(role => !team.roles.includes(role) && role !== 'Admin');
+
 
   const handleOpenRolesDialog = () => {
     setTempRoles(member.roles || []);
@@ -89,8 +91,8 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
                 )}
             </div>
             <div className="flex flex-wrap gap-1 min-h-[24px]">
-              {(member.roles || []).length > 0 ? (
-                (member.roles || []).map(role => (
+              {(member.roles || []).filter(r => r !== 'Admin').length > 0 ? (
+                (member.roles || []).filter(r => r !== 'Admin').map(role => (
                     <Badge key={role} variant="secondary" className={cn(
                         "rounded-full",
                         !team.roles.includes(role) && "opacity-50"

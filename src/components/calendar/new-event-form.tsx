@@ -6,11 +6,12 @@ import * as React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { format } from 'date-fns';
+import { format, startOfDay } from 'date-fns';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
+import { Card, CardContent } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -18,7 +19,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useUser } from '@/context/user-context';
 import { canManageEventOnCalendar } from '@/lib/permissions';
 import { useToast } from '@/hooks/use-toast';
-import { type CalendarId, type User, type SharedCalendar, type Attachment, type AttachmentType, type Attendee } from '@/types';
+import { type CalendarId, type User, type SharedCalendar, type Attachment, type AttachmentType, type Attendee, type EventTemplate } from '@/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -32,6 +33,9 @@ import { PriorityBadge } from './priority-badge';
 import { Separator } from '@/components/ui/separator';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { Slider } from '../ui/slider';
+import { Badge } from '../ui/badge';
+import { ScrollArea } from '../ui/scroll-area';
+import { UserStatusBadge } from '../user-status-badge';
 
 const GoogleDriveIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg viewBox="0 0 16 16" fill="currentColor" {...props}><path d="M9.19,4.5l-3.2,0l-1.7,2.9l3.2,5.7l4.9,0l1.7,-2.9l-4.9,-5.7Z" fill="#0f9d58"></path><path d="M5.99,4.5l-3.2,5.7l1.7,2.9l3.2,-5.7l-1.7,-2.9Z" fill="#ffc107"></path><path d="M10.89,7.4l-3.2,0l-1.7,-2.9l4.9,0l0,0Z" fill="#1976d2"></path></svg>
@@ -70,6 +74,7 @@ const formSchema = z.object({
   title: z.string().min(2, { message: 'Title must be at least 2 characters.' }),
   calendarId: z.string().nonempty({ message: 'Please select a calendar.' }),
   priority: z.string().nonempty({ message: 'Please select a priority.' }),
+  templateId: z.string().optional(),
   date: z.date({ required_error: 'A date is required.' }),
   startTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, { message: 'Invalid time format (HH:mm).' }),
   endTime: z.string().regex(/^([01]\d|2[0-5]\d)$/, { message: 'Invalid time format (HH:mm).' }),
@@ -100,7 +105,7 @@ const getDefaultCalendarId = (user: User, availableCalendars: SharedCalendar[]):
 };
 
 export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
-  const { viewAsUser, users, calendars, addEvent, allBookableLocations, getEventStrategy } = useUser();
+  const { viewAsUser, users, calendars, teams, addEvent, allBookableLocations, getEventStrategy, userStatusAssignments } = useUser();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = React.useState(false);
   const [attachments, setAttachments] = React.useState<Attachment[]>([]);
@@ -109,6 +114,9 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
 
   const [isCalendarPopoverOpen, setIsCalendarPopoverOpen] = React.useState(false);
   const [isPriorityPopoverOpen, setIsPriorityPopoverOpen] = React.useState(false);
+  const [isTemplatePopoverOpen, setIsTemplatePopoverOpen] = React.useState(false);
+
+  const [roleAssignments, setRoleAssignments] = React.useState<Record<string, { assignedUser: string | null; popoverOpen: boolean }>>({});
 
   const availableCalendars = React.useMemo(() => {
     return calendars.filter(cal => canManageEventOnCalendar(viewAsUser, cal));
@@ -140,6 +148,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
       title: '',
       calendarId: defaultCalendarId || '',
       priority: getDefaultPriority(),
+      templateId: '',
       date: new Date(),
       startTime: '09:00',
       endTime: '10:00',
@@ -149,6 +158,39 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
       attendees: [],
     },
   });
+  
+  const selectedCalendarId = form.watch('calendarId');
+  const selectedTemplateId = form.watch('templateId');
+  const eventDate = form.watch('date');
+
+  const teamForSelectedCalendar = React.useMemo(() => {
+    return teams.find(t => t.id === selectedCalendarId);
+  }, [teams, selectedCalendarId]);
+
+  const eventTemplates = React.useMemo(() => {
+    return teamForSelectedCalendar?.eventTemplates || [];
+  }, [teamForSelectedCalendar]);
+  
+  const selectedTemplate = React.useMemo(() => {
+    return eventTemplates.find(t => t.id === selectedTemplateId);
+  }, [eventTemplates, selectedTemplateId]);
+
+  React.useEffect(() => {
+    if (selectedTemplate) {
+      const initialAssignments = selectedTemplate.requestedRoles.reduce((acc, role) => {
+        acc[role] = { assignedUser: null, popoverOpen: false };
+        return acc;
+      }, {} as typeof roleAssignments);
+      setRoleAssignments(initialAssignments);
+    } else {
+      setRoleAssignments({});
+    }
+  }, [selectedTemplate]);
+
+  const handleTemplateChange = (templateId: string) => {
+    form.setValue('templateId', templateId);
+    setIsTemplatePopoverOpen(false);
+  };
 
   const selectedAttendees = form.watch('attendees') || [];
   
@@ -171,6 +213,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
             description: '',
             attachments: [],
             attendees: [],
+            templateId: '',
             date: initialData.date,
             startTime: initialData.startTime,
             endTime: initialData.endTime,
@@ -178,7 +221,6 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
     }
   }, [initialData, form, defaultCalendarId, eventStrategy]);
 
-  const selectedCalendarId = form.watch('calendarId');
   const selectedCalendar = calendars.find(c => c.id === selectedCalendarId) || availableCalendars[0];
   
   const handleAddAttachment = (type: AttachmentType, name: string) => {
@@ -204,6 +246,26 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
         };
         form.setValue('attendees', [...currentAttendees, newAttendee]);
     }
+  };
+
+  const handleAssignUserToRole = (role: string, user: User) => {
+    setRoleAssignments(prev => ({ ...prev, [role]: { assignedUser: user.userId, popoverOpen: false }}));
+    // Also add to guest list if not already there
+    const currentAttendees = form.getValues('attendees') || [];
+    if (!currentAttendees.some(att => att.userId === user.userId)) {
+        handleToggleGuest(user);
+    }
+  };
+
+  const handleUnassignUserFromRole = (role: string) => {
+    setRoleAssignments(prev => ({ ...prev, [role]: { assignedUser: null, popoverOpen: false }}));
+  };
+
+  const toggleRolePopover = (role: string) => {
+    setRoleAssignments(prev => ({
+        ...prev,
+        [role]: { ...prev[role], popoverOpen: !prev[role].popoverOpen }
+    }));
   };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -234,6 +296,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
         priority: values.priority,
         attachments: attachments,
         attendees: values.attendees || [],
+        templateId: values.templateId,
       });
 
       toast({
@@ -254,6 +317,9 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
       setIsLoading(false);
     }
   }
+
+  const dayKey = startOfDay(eventDate).toISOString();
+  const absencesForDay = userStatusAssignments[dayKey] || [];
 
   return (
     <Form {...form}>
@@ -277,6 +343,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                           <div key={cal.id} 
                               onClick={() => {
                                   field.onChange(cal.id);
+                                  form.setValue('templateId', ''); // Reset template on calendar change
                                   setIsCalendarPopoverOpen(false);
                               }}
                               className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer"
@@ -348,6 +415,41 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                 )}
               />
             )}
+
+            {eventTemplates.length > 0 && (
+                <FormField
+                    control={form.control}
+                    name="templateId"
+                    render={() => (
+                        <FormItem>
+                             <Popover open={isTemplatePopoverOpen} onOpenChange={setIsTemplatePopoverOpen}>
+                                <PopoverTrigger asChild>
+                                    <Button variant="ghost" className="h-auto p-0">
+                                        <Badge variant={selectedTemplate ? 'default' : 'secondary'}>{selectedTemplate?.name || 'Tag'}</Badge>
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="p-1 w-auto" align="start">
+                                    <div
+                                        onClick={() => handleTemplateChange('')}
+                                        className="p-2 rounded-md hover:bg-accent cursor-pointer"
+                                    >
+                                        <span className="text-sm text-muted-foreground italic">No Template</span>
+                                    </div>
+                                    {eventTemplates.map(template => (
+                                        <div key={template.id}
+                                            onClick={() => handleTemplateChange(template.id)}
+                                            className="p-2 rounded-md hover:bg-accent cursor-pointer"
+                                        >
+                                            <Badge>{template.name}</Badge>
+                                        </div>
+                                    ))}
+                                </PopoverContent>
+                            </Popover>
+                        </FormItem>
+                    )}
+                />
+            )}
+
           </div>
 
           <div className="flex items-center">
@@ -523,6 +625,65 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
               </FormItem>
             )}
           />
+
+            {selectedTemplate && (
+                <Card>
+                    <CardContent className="p-2">
+                        <p className="text-sm text-muted-foreground mb-2 px-1">Requested Roles</p>
+                        <div className="flex flex-wrap gap-2">
+                            {Object.entries(roleAssignments).map(([role, { assignedUser, popoverOpen }]) => {
+                                const user = assignedUser ? users.find(u => u.userId === assignedUser) : null;
+                                const usersWithRole = users.filter(u => u.roles?.includes(role));
+                                
+                                const availableUsers = usersWithRole.filter(u => !absencesForDay.some(a => a.userId === u.userId));
+                                const absentUsers = usersWithRole
+                                    .filter(u => absencesForDay.some(a => a.userId === u.userId))
+                                    .map(u => ({ ...u, absence: absencesForDay.find(a => a.userId === u.userId)!.status }));
+
+                                return (
+                                    <Popover key={role} open={popoverOpen} onOpenChange={() => toggleRolePopover(role)}>
+                                        <PopoverTrigger asChild>
+                                             <Badge variant={user ? "default" : "secondary"} className="text-sm p-1 pl-3 rounded-full cursor-pointer">
+                                                {role}
+                                                {user && <span className="font-normal mx-2 text-primary-foreground/80">/</span>}
+                                                {user && <span className="font-semibold">{user.displayName}</span>}
+                                                {user && (
+                                                    <button type="button" onClick={(e) => { e.stopPropagation(); handleUnassignUserFromRole(role); }} className="ml-1 h-4 w-4 rounded-full hover:bg-black/20 flex items-center justify-center">
+                                                        <GoogleSymbol name="close" className="text-xs" />
+                                                    </button>
+                                                )}
+                                            </Badge>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-[300px] p-0">
+                                             <ScrollArea className="max-h-60">
+                                                <div className="p-1">
+                                                {availableUsers.map(u => (
+                                                    <div key={u.userId} onClick={() => handleAssignUserToRole(role, u)} className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer">
+                                                        <Avatar className="h-8 w-8"><AvatarImage src={u.avatarUrl} alt={u.displayName} data-ai-hint="user avatar" /><AvatarFallback>{u.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
+                                                        <p className="font-medium text-sm">{u.displayName}</p>
+                                                    </div>
+                                                ))}
+                                                {absentUsers.length > 0 && availableUsers.length > 0 && <Separator className="my-1" />}
+                                                {absentUsers.map(u => (
+                                                    <div key={u.userId} className="flex items-center justify-between gap-2 p-2 rounded-md opacity-50 cursor-not-allowed">
+                                                        <div className="flex items-center gap-2">
+                                                            <Avatar className="h-8 w-8"><AvatarImage src={u.avatarUrl} alt={u.displayName} data-ai-hint="user avatar" /><AvatarFallback>{u.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
+                                                            <p className="font-medium text-sm">{u.displayName}</p>
+                                                        </div>
+                                                        <UserStatusBadge status={u.absence}>{u.absence}</UserStatusBadge>
+                                                    </div>
+                                                ))}
+                                                </div>
+                                            </ScrollArea>
+                                        </PopoverContent>
+                                    </Popover>
+                                );
+                            })}
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
 
           <FormField
             control={form.control}

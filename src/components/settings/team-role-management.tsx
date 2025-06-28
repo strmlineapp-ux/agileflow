@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useUser } from '@/context/user-context';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -174,22 +174,28 @@ export function TeamRoleManagement({ team }: { team: Team }) {
         </AlertDialogContent>
       </AlertDialog>
       
-      <AlertDialog open={isConflictDialogOpen} onOpenChange={setIsConflictDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Role Already Exists</AlertDialogTitle>
-            <AlertDialogDescription>
+      <Dialog open={isConflictDialogOpen} onOpenChange={setIsConflictDialogOpen}>
+        <DialogContent>
+          <div className="absolute top-4 right-4 flex items-center gap-1">
+             <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setIsConflictDialogOpen(false)}>
+                <GoogleSymbol name="close" className="text-xl" />
+                <span className="sr-only">Cancel</span>
+            </Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleConfirmAddDuplicateRole}>
+                <GoogleSymbol name="check" className="text-xl" />
+                <span className="sr-only">Continue</span>
+            </Button>
+          </div>
+          <DialogHeader>
+            <DialogTitle>Role Already Exists</DialogTitle>
+            <DialogDescription>
               The role "{roleToAdd}" already exists in the following team(s): {conflictingTeams.join(', ')}.
               <br /><br />
-              Are you sure you want to add this role to the {team.name} team as well?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmAddDuplicateRole}>Continue</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+              Are you sure you want to add this role to the {team.name} team as well? A notification will be sent to the managers of all involved teams.
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

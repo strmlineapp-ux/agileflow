@@ -142,6 +142,7 @@ export interface Event {
   location?: string;
   associatedTaskId?: string;
   priority: string; // e.g., 'p-number:p2' or 'star-rating:4' or 'effort-scale:75'
+  templateId?: string;
   attachments: Attachment[];
   createdBy: string; // userId
   createdAt: Date;
