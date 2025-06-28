@@ -23,7 +23,7 @@ export const mockPriorityStrategies: PriorityStrategy[] = [
         description: 'A simple 5-star rating system.',
         applications: [],
         type: 'symbol',
-        symbol: '⭐',
+        icon: 'star',
         max: 5,
         color: '#FFC107'
     },

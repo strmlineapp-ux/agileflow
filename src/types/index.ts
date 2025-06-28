@@ -1,5 +1,7 @@
 
 
+import type React from 'react';
+
 export interface Attendee {
   userId?: string; // Optional: for internal users, this is their ID.
   email: string;
@@ -62,7 +64,7 @@ interface TierStrategyConfig {
 
 interface SymbolStrategyConfig {
     type: 'symbol';
-    symbol: string;
+    icon: string;
     max: number;
     color: string;
 }

@@ -1,7 +1,8 @@
 
+
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { type Priority, type PriorityStrategy, type PriorityStrategyApplication, PriorityStrategyType } from '@/types';
 import { useUser } from '@/context/user-context';
 import { useToast } from '@/hooks/use-toast';
@@ -16,6 +17,10 @@ import { PriorityBadge } from '../calendar/priority-badge';
 import { PriorityItemForm } from './priority-item-form';
 import { Separator } from '../ui/separator';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { ScrollArea } from '../ui/scroll-area';
+import { googleSymbolNames } from '@/lib/google-symbols';
+import { cn } from '@/lib/utils';
 
 type PriorityStrategyFormProps = {
   isOpen: boolean;
@@ -36,7 +41,20 @@ export function PriorityStrategyForm({ isOpen, onClose, strategy }: PriorityStra
   });
   const [isPriorityFormOpen, setIsPriorityFormOpen] = useState(false);
   const [editingPriority, setEditingPriority] = useState<{ priority: Omit<Priority, 'id'>, index: number } | null>(null);
+  
+  // States for icon picker
+  const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
+  const [iconSearch, setIconSearch] = useState('');
+
   const { toast } = useToast();
+  
+  const filteredIcons = useMemo(() => {
+    if (!iconSearch) return googleSymbolNames;
+    return googleSymbolNames.filter(iconName =>
+        iconName.toLowerCase().includes(iconSearch.toLowerCase())
+    );
+  }, [iconSearch]);
+
 
   useEffect(() => {
     if (strategy) {
@@ -134,7 +152,7 @@ export function PriorityStrategyForm({ isOpen, onClose, strategy }: PriorityStra
             case 'tier':
                 return { ...base, priorities: [] };
             case 'symbol':
-                return { ...base, symbol: '⭐', max: 5, color: '#FFC107' };
+                return { ...base, icon: 'star', max: 5, color: '#FFC107' };
             case 'scale':
                 return { ...base, min: 0, max: 100, intervals: [] };
             default:
@@ -273,8 +291,42 @@ export function PriorityStrategyForm({ isOpen, onClose, strategy }: PriorityStra
                 <div className="space-y-4 rounded-md border p-4">
                     <div className="grid grid-cols-3 gap-4">
                         <div className="space-y-2">
-                            <Label htmlFor="symbol-char">Symbol</Label>
-                            <Input id="symbol-char" value={strategyState.symbol} onChange={e => setStrategyState(s => ({ ...s, type: 'symbol', symbol: e.target.value }))} maxLength={2} />
+                          <Label htmlFor="symbol-char">Symbol</Label>
+                          <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
+                              <PopoverTrigger asChild>
+                                  <Button variant="outline" className="w-full justify-start">
+                                      <GoogleSymbol name={strategyState.icon} className="mr-2" />
+                                      {strategyState.icon}
+                                  </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-80 p-0">
+                                  <div className="p-2 border-b">
+                                      <Input
+                                          placeholder="Search icons..."
+                                          value={iconSearch}
+                                          onChange={(e) => setIconSearch(e.target.value)}
+                                      />
+                                  </div>
+                                  <ScrollArea className="h-64">
+                                      <div className="grid grid-cols-6 gap-1 p-2">
+                                          {filteredIcons.slice(0, 300).map((iconName) => (
+                                              <Button
+                                                  key={iconName}
+                                                  variant={strategyState.icon === iconName ? "default" : "ghost"}
+                                                  size="icon"
+                                                  onClick={() => {
+                                                      setStrategyState(s => ({ ...s, type: 'symbol', icon: iconName }))
+                                                      setIsIconPopoverOpen(false);
+                                                  }}
+                                                  className="text-2xl"
+                                              >
+                                                  <GoogleSymbol name={iconName} />
+                                              </Button>
+                                          ))}
+                                      </div>
+                                  </ScrollArea>
+                              </PopoverContent>
+                          </Popover>
                         </div>
                          <div className="space-y-2">
                             <Label htmlFor="symbol-max">Max Value</Label>

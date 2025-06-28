@@ -8,6 +8,7 @@ import { mockUsers as initialUsers, mockCalendars as initialCalendars, mockEvent
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
+import { GoogleSymbol } from '@/components/icons/google-symbol';
 
 interface UserContextType {
   realUser: User;
@@ -43,7 +44,7 @@ interface UserContextType {
   deletePriorityStrategy: (strategyId: string) => Promise<void>;
   getEventStrategy: () => PriorityStrategy | undefined;
   getTaskStrategy: () => PriorityStrategy | undefined;
-  getPriorityDisplay: (priorityId: string) => { label: string, description?: string, color: string, shape: 'rounded-md' | 'rounded-full' } | undefined;
+  getPriorityDisplay: (priorityId: string) => { label: React.ReactNode, description?: string, color: string, shape: 'rounded-md' | 'rounded-full' } | undefined;
 }
 
 const UserContext = createContext<UserContextType | null>(null);
@@ -196,7 +197,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const getEventStrategy = useCallback(() => getStrategyForApplication('events'), [getStrategyForApplication]);
   const getTaskStrategy = useCallback(() => getStrategyForApplication('tasks'), [getStrategyForApplication]);
   
-  const getPriorityDisplay = useCallback((priorityId: string): { label: string, description?: string, color: string, shape: 'rounded-md' | 'rounded-full' } | undefined => {
+  const getPriorityDisplay = useCallback((priorityId: string): { label: React.ReactNode, description?: string, color: string, shape: 'rounded-md' | 'rounded-full' } | undefined => {
     if (!priorityId || !priorityId.includes(':')) return undefined;
 
     const [strategyId, value] = priorityId.split(':');
@@ -210,8 +211,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         case 'symbol':
             const numValue = parseInt(value, 10);
             return {
-                label: Array(numValue).fill(strategy.symbol).join(''),
-                description: `${numValue} / ${strategy.max} ${strategy.symbol}`,
+                label: (
+                    <div className="flex items-center">
+                        {Array.from({ length: numValue }).map((_, i) => (
+                            <GoogleSymbol key={i} name={strategy.icon} className="text-base" />
+                        ))}
+                    </div>
+                ),
+                description: `${numValue} / ${strategy.max}`,
                 color: strategy.color,
                 shape: 'rounded-md'
             };

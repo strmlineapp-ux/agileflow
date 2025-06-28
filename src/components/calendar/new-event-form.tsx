@@ -311,7 +311,11 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                   <SelectContent>
                     {Array.from({ length: eventStrategy.max }, (_, i) => eventStrategy.max - i).map(num => (
                       <SelectItem key={num} value={`${eventStrategy.id}:${num}`}>
-                          {Array(num).fill(eventStrategy.symbol).join('')}
+                          <div className="flex items-center" style={{ color: eventStrategy.color }}>
+                            {Array.from({ length: num }).map((_, i) => (
+                                <GoogleSymbol key={i} name={eventStrategy.icon} className="text-base" />
+                            ))}
+                          </div>
                       </SelectItem>
                     ))}
                   </SelectContent>
