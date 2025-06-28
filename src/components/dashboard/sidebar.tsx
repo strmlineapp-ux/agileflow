@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import Link from 'next/link';
@@ -13,13 +14,15 @@ import { GoogleSymbol } from '../icons/google-symbol';
 export function Sidebar() {
   const pathname = usePathname();
   const { realUser, viewAsUser, setViewAsUser, users, teams, notifications, pageConfigs } = useUser();
-  const isAdmin = realUser.roles?.includes('Admin');
-  const isSdm = realUser.roles?.includes('Service Delivery Manager') || realUser.roles?.includes('Admin');
   const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
   const unreadCount = notifications.filter((n) => !n.read).length;
 
+  // Permissions should be based on the user being viewed as.
+  const isAdmin = viewAsUser.roles?.includes('Admin');
+  const isSdm = viewAsUser.roles?.includes('Service Delivery Manager');
+
   const userTeams = teams.filter(team => 
-    isSdm || team.managers?.includes(viewAsUser.userId)
+    isAdmin || isSdm || team.managers?.includes(viewAsUser.userId)
   );
 
   const adminConfig = pageConfigs.find(p => p.id === 'admin') || { name: 'Admin', icon: 'shield_person' };
@@ -44,7 +47,12 @@ export function Sidebar() {
     { href: '/dashboard/notifications', icon: 'notifications', label: 'Notifications', visible: true },
   ];
 
-  const allNavItems = [...navItems, ...teamNavItems, ...bottomNavItems];
+  // The realUser always sees the settings link, but it's at the bottom of their avatar menu
+  const allNavItems = [...navItems, ...teamNavItems, ...bottomNavItems].sort((a, b) => {
+    if (a.href === '/dashboard/admin') return -1;
+    if (b.href === '/dashboard/admin') return 1;
+    return 0;
+  });
 
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-14 flex-col border-r bg-card sm:flex">
@@ -117,7 +125,7 @@ export function Sidebar() {
                     </Link>
                 </DropdownMenuItem>
 
-                {isAdmin && (
+                {realUser.roles?.includes('Admin') && (
                   <DropdownMenuSub>
                     <DropdownMenuSubTrigger>
                       <GoogleSymbol name="how_to_reg" className="mr-2 text-lg" />

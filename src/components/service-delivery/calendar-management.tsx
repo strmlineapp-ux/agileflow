@@ -1,9 +1,10 @@
 
+
 'use client';
 
 import { useState } from 'react';
 import { useUser } from '@/context/user-context';
-import { type SharedCalendar } from '@/types';
+import { type SharedCalendar, type User } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,9 +27,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { GoogleSymbol } from '../icons/google-symbol';
+import { Badge } from '../ui/badge';
+import { cn } from '@/lib/utils';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { Separator } from '../ui/separator';
 
 export function CalendarManagement() {
-  const { calendars, addCalendar, updateCalendar, deleteCalendar } = useUser();
+  const { users, calendars, addCalendar, updateCalendar, deleteCalendar } = useUser();
   const { toast } = useToast();
 
   const [isAddOrEditDialogOpen, setIsAddOrEditDialogOpen] = useState(false);
@@ -37,11 +42,13 @@ export function CalendarManagement() {
   const [currentCalendar, setCurrentCalendar] = useState<SharedCalendar | null>(null);
   const [calendarName, setCalendarName] = useState('');
   const [calendarColor, setCalendarColor] = useState('');
+  const [calendarManagers, setCalendarManagers] = useState<string[]>([]);
 
   const openAddDialog = () => {
     setCurrentCalendar(null);
     setCalendarName('');
     setCalendarColor('#3692E9');
+    setCalendarManagers([]);
     setIsAddOrEditDialogOpen(true);
   };
 
@@ -49,6 +56,7 @@ export function CalendarManagement() {
     setCurrentCalendar(calendar);
     setCalendarName(calendar.name);
     setCalendarColor(calendar.color);
+    setCalendarManagers(calendar.managers || []);
     setIsAddOrEditDialogOpen(true);
   };
 
@@ -58,6 +66,18 @@ export function CalendarManagement() {
     setCurrentCalendar(calendar);
     setIsDeleteDialogOpen(true);
   };
+  
+  const handleToggleManager = (userId: string) => {
+      setCalendarManagers(prev => {
+          const newSet = new Set(prev);
+          if (newSet.has(userId)) {
+              newSet.delete(userId);
+          } else {
+              newSet.add(userId);
+          }
+          return Array.from(newSet);
+      });
+  };
 
   const handleSave = async () => {
     if (!calendarName) {
@@ -66,11 +86,11 @@ export function CalendarManagement() {
     }
     if (currentCalendar) {
       // Editing existing calendar
-      await updateCalendar(currentCalendar.id, { name: calendarName, color: calendarColor });
+      await updateCalendar(currentCalendar.id, { name: calendarName, color: calendarColor, managers: calendarManagers });
       toast({ title: 'Success', description: 'Calendar updated successfully.' });
     } else {
       // Adding new calendar
-      await addCalendar({ name: calendarName, color: calendarColor });
+      await addCalendar({ name: calendarName, color: calendarColor, managers: calendarManagers });
       toast({ title: 'Success', description: 'Calendar added successfully.' });
     }
     setIsAddOrEditDialogOpen(false);
@@ -90,10 +110,10 @@ export function CalendarManagement() {
           <div className="flex items-start justify-between">
             <div>
               <CardTitle>Manage Shared Calendars</CardTitle>
-              <CardDescription>Add, edit, or delete shared calendars available to all users.</CardDescription>
+              <CardDescription>Add, edit, or delete shared calendars and assign managers.</CardDescription>
             </div>
             <Button variant="ghost" size="icon" onClick={openAddDialog}>
-                <GoogleSymbol name="add_circle" />
+                <GoogleSymbol name="add_circle" className="text-2xl" />
                 <span className="sr-only">Add New Calendar</span>
             </Button>
           </div>
@@ -113,7 +133,7 @@ export function CalendarManagement() {
       </Card>
 
       <Dialog open={isAddOrEditDialogOpen} onOpenChange={setIsAddOrEditDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <div className="absolute top-4 right-4 flex items-center gap-1">
             {currentCalendar && calendars.length > 1 && (
               <Button
@@ -142,6 +162,30 @@ export function CalendarManagement() {
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="color" className="text-right">Color</Label>
               <Input id="color" type="color" value={calendarColor} onChange={(e) => setCalendarColor(e.target.value)} className="col-span-3 p-1" />
+            </div>
+            <Separator />
+             <div className="space-y-2">
+                <Label>Calendar Managers</Label>
+                 <div className="flex flex-wrap gap-2 rounded-md border bg-muted/50 p-2 min-h-[56px]">
+                  {users.map(user => {
+                    const isManager = calendarManagers.includes(user.userId);
+                    return (
+                      <Badge
+                        key={user.userId}
+                        variant={isManager ? 'default' : 'secondary'}
+                        className={cn('gap-1.5 p-1 pl-2 cursor-pointer rounded-full', isManager && 'shadow-md')}
+                        onClick={() => handleToggleManager(user.userId)}
+                      >
+                        <Avatar className="h-5 w-5">
+                          <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
+                          <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                        <span className="font-medium">{user.displayName}</span>
+                      </Badge>
+                    );
+                  })}
+                </div>
+                 <p className="text-xs text-muted-foreground text-right pr-2 mt-2">Click user pills to toggle their manager status for this calendar.</p>
             </div>
           </div>
         </DialogContent>

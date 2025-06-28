@@ -1,25 +1,13 @@
 
 
-import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team } from '@/types';
+import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team, type Priority } from '@/types';
 
-export const mockCalendars: SharedCalendar[] = [
-    { id: 'studio-productions', name: 'Studio Productions', color: 'hsl(48 96% 53%)' }, // Yellow
-    { id: 'live-events', name: 'Live Events', color: 'hsl(210 70% 50%)' }, // Blue
-    { id: 'business', name: 'Business', color: 'hsl(220 9% 46%)' }, // Grey
-    { id: 'post-production', name: 'Post-Production', color: 'hsl(24 95% 53%)' }, // Orange
-];
-
-export const mockLocations: BookableLocation[] = [
-    { id: 'auditorium', name: 'Auditorium' },
-    { id: 'acr', name: 'ACR' },
-    { id: 'event-space-1', name: 'Event Space 1 (S2)' },
-    { id: 'event-space-2', name: 'Event Space 2 (S2)' },
-    { id: 'event-space-3', name: 'Event Space 3 (R7)' },
-    { id: 'event-space-4', name: 'Event Space 4 (R7)' },
-    { id: 'studio', name: 'Studio' },
-    { id: 'training-room', name: 'Training Room' },
-    { id: 'locke', name: 'Locke' },
-    { id: 'apgar', name: 'Apgar' },
+export const mockPriorities: Priority[] = [
+    { id: 'p0', label: 'P0', description: 'Highest priority - immediate action required.', color: 'hsl(0 100% 50%)', shape: 'rounded-md' },
+    { id: 'p1', label: 'P1', description: 'High priority - requires attention soon.', color: 'hsl(30 95% 54%)', shape: 'rounded-md' },
+    { id: 'p2', label: 'P2', description: 'Medium priority - standard work.', color: 'hsl(48 96% 53%)', shape: 'rounded-md' },
+    { id: 'p3', label: 'P3', description: 'Low priority - can be deferred.', color: 'hsl(120 73% 40%)', shape: 'rounded-full' },
+    { id: 'p4', label: 'P4', description: 'Lowest priority - to be done when time permits.', color: 'hsl(220 9% 46%)', shape: 'rounded-full' },
 ];
 
 export const mockUsers: User[] = [
@@ -118,6 +106,26 @@ export const mockUsers: User[] = [
     },
 ];
 
+export const mockCalendars: SharedCalendar[] = [
+    { id: 'studio-productions', name: 'Studio Productions', color: 'hsl(48 96% 53%)', managers: ['1', '6'] }, // Yellow
+    { id: 'live-events', name: 'Live Events', color: 'hsl(210 70% 50%)', managers: ['1', '2', '3'] }, // Blue
+    { id: 'business', name: 'Business', color: 'hsl(220 9% 46%)', managers: ['1', '2'] }, // Grey
+    { id: 'post-production', name: 'Post-Production', color: 'hsl(24 95% 53%)', managers: ['1', '2', '5'] }, // Orange
+];
+
+export const mockLocations: BookableLocation[] = [
+    { id: 'auditorium', name: 'Auditorium' },
+    { id: 'acr', name: 'ACR' },
+    { id: 'event-space-1', name: 'Event Space 1 (S2)' },
+    { id: 'event-space-2', name: 'Event Space 2 (S2)' },
+    { id: 'event-space-3', name: 'Event Space 3 (R7)' },
+    { id: 'event-space-4', name: 'Event Space 4 (R7)' },
+    { id: 'studio', name: 'Studio' },
+    { id: 'training-room', name: 'Training Room' },
+    { id: 'locke', name: 'Locke' },
+    { id: 'apgar', name: 'Apgar' },
+];
+
 export const mockTeams: Team[] = [
     {
         id: 'studio-productions',
@@ -166,13 +174,13 @@ const userToAttendee = (user: User): Attendee => ({
 });
 
 export const mockTasks: Task[] = [
-  { taskId: '1', title: 'Design new dashboard layout', assignedTo: [mockUsers[0]], dueDate: new Date(), priority: 'P1', status: 'in_progress', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
-  { taskId: '2', title: 'Develop authentication API', assignedTo: [mockUsers[1], mockUsers[2]], dueDate: new Date(new Date().setDate(new Date().getDate() + 1)), priority: 'P0', status: 'awaiting_review', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
-  { taskId: '3', title: 'Write documentation for components', assignedTo: [mockUsers[2]], dueDate: new Date(new Date().setDate(new Date().getDate() + 7)), priority: 'P2', status: 'not_started', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
-  { taskId: '4', title: 'Fix login page CSS bug', assignedTo: [mockUsers[1]], dueDate: new Date(new Date().setDate(new Date().getDate() - 2)), priority: 'P3', status: 'completed', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
-  { taskId: '5', title: 'Setup CI/CD pipeline', assignedTo: [mockUsers[0], mockUsers[1]], dueDate: new Date(new Date().setDate(new Date().getDate() + 2)), priority: 'P1', status: 'blocked', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
-  { taskId: '6', title: 'User testing for new features', assignedTo: [mockUsers[2]], dueDate: new Date(), priority: 'P2', status: 'in_progress', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
-  { taskId: '7', title: 'Update project dependencies', assignedTo: [mockUsers[1]], dueDate: new Date(new Date().setDate(new Date().getDate() + 10)), priority: 'P4', status: 'not_started', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
+  { taskId: '1', title: 'Design new dashboard layout', assignedTo: [mockUsers[0]], dueDate: new Date(), priority: 'p1', status: 'in_progress', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
+  { taskId: '2', title: 'Develop authentication API', assignedTo: [mockUsers[1], mockUsers[2]], dueDate: new Date(new Date().setDate(new Date().getDate() + 1)), priority: 'p0', status: 'awaiting_review', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
+  { taskId: '3', title: 'Write documentation for components', assignedTo: [mockUsers[2]], dueDate: new Date(new Date().setDate(new Date().getDate() + 7)), priority: 'p2', status: 'not_started', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
+  { taskId: '4', title: 'Fix login page CSS bug', assignedTo: [mockUsers[1]], dueDate: new Date(new Date().setDate(new Date().getDate() - 2)), priority: 'p3', status: 'completed', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
+  { taskId: '5', title: 'Setup CI/CD pipeline', assignedTo: [mockUsers[0], mockUsers[1]], dueDate: new Date(new Date().setDate(new Date().getDate() + 2)), priority: 'p1', status: 'blocked', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
+  { taskId: '6', title: 'User testing for new features', assignedTo: [mockUsers[2]], dueDate: new Date(), priority: 'p2', status: 'in_progress', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
+  { taskId: '7', title: 'Update project dependencies', assignedTo: [mockUsers[1]], dueDate: new Date(new Date().setDate(new Date().getDate() + 10)), priority: 'p4', status: 'not_started', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
 ];
 
 const today = new Date();
@@ -201,7 +209,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(today).setHours(9, 30, 0, 0)), 
         attendees: [mockUsers[0], mockUsers[1], mockUsers[2]].map(userToAttendee), 
         location: 'ACR',
-        priority: 'P2',
+        priority: 'p2',
         attachments: [],
         createdBy: '1', 
         createdAt: new Date(), 
@@ -215,7 +223,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(today).setHours(12, 0, 0, 0)), 
         attendees: [mockUsers[3], mockUsers[4]].map(userToAttendee), 
         location: 'Event Space 1 (S2)',
-        priority: 'P1',
+        priority: 'p1',
         attachments: [],
         createdBy: '1', 
         createdAt: new Date(), 
@@ -229,7 +237,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(today).setHours(13, 0, 0, 0)), 
         attendees: [mockUsers[5]].map(userToAttendee), 
         location: 'ACR',
-        priority: 'P3',
+        priority: 'p3',
         attachments: [],
         createdBy: '2', 
         createdAt: new Date(), 
@@ -243,7 +251,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(today).setHours(17, 30, 0, 0)), 
         attendees: [mockUsers[2], mockUsers[5]].map(userToAttendee), 
         location: 'Studio',
-        priority: 'P0',
+        priority: 'p0',
         attachments: [],
         createdBy: '1', 
         createdAt: new Date(), 
@@ -258,7 +266,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(tomorrow).setHours(12, 30, 0, 0)),
         attendees: [mockUsers[1], mockUsers[4], mockUsers[5]].map(userToAttendee), 
         location: 'Studio',
-        priority: 'P2',
+        priority: 'p2',
         attachments: [],
         createdBy: '2', 
         createdAt: new Date(), 
@@ -272,7 +280,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(tomorrow).setHours(16, 30, 0, 0)),
         attendees: [mockUsers[3]].map(userToAttendee), 
         location: 'Event Space 3 (R7)',
-        priority: 'P3',
+        priority: 'p3',
         attachments: [],
         createdBy: '3', 
         createdAt: new Date(), 
@@ -287,7 +295,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(yesterday).setHours(17, 0, 0, 0)),
         attendees: mockUsers.map(userToAttendee), 
         location: 'Event Space 4 (R7)',
-        priority: 'P4',
+        priority: 'p4',
         attachments: [],
         createdBy: '1', 
         createdAt: new Date(), 
@@ -301,7 +309,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(yesterday).setHours(11, 0, 0, 0)),
         attendees: [mockUsers[5]].map(userToAttendee), 
         location: 'Studio',
-        priority: 'P3',
+        priority: 'p3',
         attachments: [],
         createdBy: '2', 
         createdAt: new Date(), 
@@ -316,7 +324,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(twoDaysLater).setHours(12, 0, 0, 0)),
         attendees: mockUsers.map(userToAttendee), 
         location: 'Auditorium',
-        priority: 'P2',
+        priority: 'p2',
         attachments: [],
         createdBy: '1', 
         createdAt: new Date(), 
@@ -330,7 +338,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(twoDaysLater).setHours(18, 0, 0, 0)),
         attendees: [mockUsers[2], mockUsers[3], mockUsers[5]].map(userToAttendee), 
         location: 'Event Space 2 (S2)',
-        priority: 'P1',
+        priority: 'p1',
         attachments: [],
         createdBy: '1', 
         createdAt: new Date(), 
@@ -344,7 +352,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(threeDaysLater).setHours(17, 0, 0, 0)),
         attendees: [mockUsers[1], mockUsers[5]].map(userToAttendee), 
         location: 'ACR',
-        priority: 'P2',
+        priority: 'p2',
         attachments: [],
         createdBy: '2', 
         createdAt: new Date(), 
@@ -358,7 +366,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(fourDaysLater).setHours(18, 0, 0, 0)),
         attendees: [mockUsers[0], mockUsers[3]].map(userToAttendee), 
         location: 'Auditorium',
-        priority: 'P1',
+        priority: 'p1',
         attachments: [],
         createdBy: '1', 
         createdAt: new Date(), 
@@ -373,7 +381,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(threeDaysAgo).setHours(13, 0, 0, 0)),
         attendees: [mockUsers[0], mockUsers[2]].map(userToAttendee), 
         location: 'Off-site',
-        priority: 'P3',
+        priority: 'p3',
         attachments: [],
         createdBy: '1', 
         createdAt: new Date(), 
@@ -387,7 +395,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(fourDaysAgo).setHours(16, 0, 0, 0)),
         attendees: [mockUsers[4], mockUsers[5]].map(userToAttendee), 
         location: 'Studio',
-        priority: 'P3',
+        priority: 'p3',
         attachments: [],
         createdBy: '2', 
         createdAt: new Date(), 
@@ -402,7 +410,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(weekendShootDate).setHours(16, 0, 0, 0)),
         attendees: [mockUsers[0], mockUsers[5]].map(userToAttendee), 
         location: 'Studio',
-        priority: 'P1',
+        priority: 'p1',
         attachments: [],
         createdBy: '1', 
         createdAt: new Date(), 
@@ -416,7 +424,7 @@ export const mockEvents: Event[] = [
         startTime: new Date(new Date(twoDaysAgo).setHours(11, 0, 0, 0)),
         endTime: new Date(new Date(twoDaysAgo).setHours(12, 0, 0, 0)),
         attendees: [mockUsers[0], mockUsers[1]].map(userToAttendee), 
-        priority: 'P3',
+        priority: 'p3',
         attachments: [],
         createdBy: '1', 
         createdAt: new Date(), 

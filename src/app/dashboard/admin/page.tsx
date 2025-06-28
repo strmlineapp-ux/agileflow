@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -139,9 +140,9 @@ const PageConfiguration = ({ pageConfig, onSave }: { pageConfig: PageConfig, onS
 
 export default function AdminPage() {
   const { toast } = useToast();
-  const { realUser, users, pageConfigs, updatePageConfig, updateUser } = useUser();
+  const { viewAsUser, users, pageConfigs, updatePageConfig, updateUser } = useUser();
   
-  const isAdmin = useMemo(() => realUser.roles?.includes('Admin'), [realUser.roles]);
+  const isAdmin = useMemo(() => viewAsUser.roles?.includes('Admin'), [viewAsUser.roles]);
   const sdmConfig = useMemo(() => pageConfigs.find(p => p.id === 'service-delivery'), [pageConfigs]);
 
   // 2FA Dialog State
@@ -149,23 +150,16 @@ export default function AdminPage() {
   const [on2faSuccess, setOn2faSuccess] = useState<(() => void) | null>(null);
   const [twoFactorCode, setTwoFactorCode] = useState('');
 
-  // This is a protected page. If the user is not an admin, show an access denied message.
-  // This is safer than a useEffect-based redirect which can violate the rules of hooks.
-  if (!isAdmin) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full gap-2 text-center">
-        <GoogleSymbol name="lock" className="text-6xl text-muted-foreground" />
-        <h1 className="text-2xl font-bold">Access Denied</h1>
-        <p className="text-muted-foreground">You do not have permission to view the Admin Panel.</p>
-      </div>
-    );
+  // This check must happen after all hooks are called.
+  if (!isAdmin || !sdmConfig) {
+    // This is now a safe return because nav is filtered.
+    // This case handles loading states or direct URL access attempts.
+    return null;
   }
 
   const handleSavePageConfig = (data: Partial<PageConfig>) => {
-    if(sdmConfig) {
-        updatePageConfig(sdmConfig.id, data);
-        toast({ title: 'Success', description: 'App Manager page configuration has been updated.' });
-    }
+    updatePageConfig(sdmConfig.id, data);
+    toast({ title: 'Success', description: 'App Manager page configuration has been updated.' });
   };
 
   const handleRoleToggle = (user: User, roleName: string) => {
@@ -204,11 +198,6 @@ export default function AdminPage() {
     setTwoFactorCode('');
     setOn2faSuccess(null);
   };
-  
-  // The sdmConfig should always exist, but this check makes it safe.
-  if (!sdmConfig) {
-    return null; // Or a loading skeleton
-  }
 
   return (
     <>

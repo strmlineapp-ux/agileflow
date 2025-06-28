@@ -1,30 +1,47 @@
 
+
 import { Badge } from '@/components/ui/badge';
-import { type Task } from '@/types';
+import { type Priority } from '@/types';
 import { cn } from '@/lib/utils';
+import { useUser } from '@/context/user-context';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
-type PriorityConfig = {
-  label: string;
-  className: string;
-};
+export function PriorityBadge({ priorityId, className }: { priorityId: Priority['id']; className?: string }) {
+  const { priorities } = useUser();
+  const priority = priorities.find(p => p.id === priorityId);
 
-const priorityConfig: Record<Task['priority'], PriorityConfig> = {
-  P0: { label: 'P0', className: 'bg-red-600 text-white hover:bg-red-600/90 border-transparent' },
-  P1: { label: 'P1', className: 'bg-orange-500 text-white hover:bg-orange-500/90 border-transparent' },
-  P2: { label: 'P2', className: 'bg-yellow-400 text-yellow-950 hover:bg-yellow-400/90 border-transparent' },
-  P3: { label: 'P3', className: 'bg-green-600 text-white hover:bg-green-600/90 border-transparent' },
-  P4: { label: 'P4', className: 'bg-gray-500 text-white hover:bg-gray-500/80 border-transparent' },
-};
+  if (!priority) {
+    return <Badge className={cn('bg-muted text-muted-foreground', className)}>Unknown</Badge>;
+  }
 
-export function PriorityBadge({ priority, className }: { priority: Task['priority']; className?: string }) {
-  const config = priorityConfig[priority];
-
-  return (
+  const badge = (
     <Badge
       variant="default"
-      className={cn('border-transparent rounded-md px-2 py-0.5 leading-none', config.className, className)}
+      style={{ backgroundColor: priority.color, color: 'white' }}
+      className={cn(
+        'border-transparent',
+        priority.shape === 'rounded-full' ? 'rounded-full' : 'rounded-md',
+        className
+      )}
     >
-      {config.label}
+      {priority.label}
     </Badge>
   );
+
+  if (priority.description) {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            {badge}
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{priority.description}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+
+  return badge;
 }

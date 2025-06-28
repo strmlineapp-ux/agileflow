@@ -10,7 +10,7 @@ export interface Attendee {
 export interface User {
   userId: string;
   email: string;
-  displayName: string;
+  displayName:string;
   googleCalendarLinked: boolean;
   googleCalendarId?: string;
   avatarUrl?: string;
@@ -44,13 +44,21 @@ export interface PageConfig {
   icon: string;
 }
 
+export interface Priority {
+  id: string;
+  label: string;
+  description?: string;
+  color: string;
+  shape: 'rounded-md' | 'rounded-full';
+}
+
 export interface Task {
   taskId: string;
   title: string;
   description?: string;
   assignedTo: User[];
   dueDate: Date;
-  priority: 'P0' | 'P1' | 'P2' | 'P3' | 'P4';
+  priority: Priority['id'];
   status: 'not_started' | 'in_progress' | 'awaiting_review' | 'completed' | 'blocked';
   createdBy: string; // userId
   createdAt: Date;
@@ -63,6 +71,7 @@ export interface SharedCalendar {
   id: CalendarId;
   name: string;
   color: string;
+  managers?: string[]; // array of userIds who can manage this calendar
 }
 
 export type AttachmentType = 'drive' | 'docs' | 'sheets' | 'slides' | 'forms' | 'meet' | 'local';
@@ -83,7 +92,7 @@ export interface Event {
   attendees: Attendee[];
   location?: string;
   associatedTaskId?: string;
-  priority: 'P0' | 'P1' | 'P2' | 'P3' | 'P4';
+  priority: Priority['id'];
   attachments: Attachment[];
   createdBy: string; // userId
   createdAt: Date;

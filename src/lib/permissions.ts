@@ -1,22 +1,25 @@
 
-import { type User, type CalendarId, type Team } from '@/types';
+
+import { type User, type CalendarId, type SharedCalendar, type Team } from '@/types';
 
 /**
  * Checks if a user has permission to manage events (create, edit, delete) on a specific calendar.
- * This is now simplified as SDMs and Admins have broad access, and other permissions
- * will be handled by team-specific roles in the future.
  * @param user The user object.
+ * @param calendar The calendar object.
  * @returns `true` if the user has permission, `false` otherwise.
  */
-export const canManageEventOnCalendar = (user: User, calendarId: CalendarId): boolean => {
+export const canManageEventOnCalendar = (user: User, calendar: SharedCalendar): boolean => {
     // Admin and SDM roles have universal access to manage all calendars
     if (user.roles?.includes('Admin') || user.roles?.includes('Service Delivery Manager')) {
         return true;
     }
+
+    // Check if the user is a designated manager for this specific calendar
+    if (calendar.managers?.includes(user.userId)) {
+        return true;
+    }
     
-    // For now, we allow any user to create events on any calendar if they don't have special roles.
-    // This can be refined later with team-based calendar permissions.
-    return true;
+    return false;
 };
 
 /**
@@ -26,13 +29,14 @@ export const canManageEventOnCalendar = (user: User, calendarId: CalendarId): bo
  * @param allCalendars All available calendars in the system.
  * @returns `true` if the user has any event creation permissions, `false` otherwise.
  */
-export const canCreateAnyEvent = (user: User, allCalendars: {id: string}[]): boolean => {
-    // In this simplified model, if you can create on one, you can create on any.
-    // So we just need to check if there's at least one calendar.
-    if (allCalendars.length > 0) {
-        return canManageEventOnCalendar(user, allCalendars[0].id);
+export const canCreateAnyEvent = (user: User, allCalendars: SharedCalendar[]): boolean => {
+    // If Admin or SDM, they can always create events as long as there's a calendar.
+    if (user.roles?.includes('Admin') || user.roles?.includes('Service Delivery Manager')) {
+        return allCalendars.length > 0;
     }
-    return false;
+
+    // Check if the user is a manager of AT LEAST ONE calendar.
+    return allCalendars.some(calendar => calendar.managers?.includes(user.userId));
 };
 
 

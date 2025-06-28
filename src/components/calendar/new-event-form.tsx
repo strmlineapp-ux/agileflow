@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -17,7 +18,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useUser } from '@/context/user-context';
 import { canManageEventOnCalendar } from '@/lib/permissions';
 import { useToast } from '@/hooks/use-toast';
-import { type CalendarId, type User, type SharedCalendar, type Task, type Attachment, type AttachmentType, type Attendee } from '@/types';
+import { type CalendarId, type User, type SharedCalendar, type Attachment, type AttachmentType, type Attendee } from '@/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -67,7 +68,7 @@ const AttendeeSchema = z.object({
 const formSchema = z.object({
   title: z.string().min(2, { message: 'Title must be at least 2 characters.' }),
   calendarId: z.string().nonempty({ message: 'Please select a calendar.' }),
-  priority: z.enum(['P0', 'P1', 'P2', 'P3', 'P4']),
+  priority: z.string().nonempty({ message: 'Please select a priority.' }),
   date: z.date({ required_error: 'A date is required.' }),
   startTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, { message: 'Invalid time format (HH:mm).' }),
   endTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, { message: 'Invalid time format (HH:mm).' }),
@@ -82,24 +83,21 @@ type NewEventFormProps = {
   initialData?: { date: Date; startTime: string; endTime: string; } | null;
 };
 
-const getDefaultCalendarId = (user: User, availableCalendars: SharedCalendar[]): CalendarId => {
-    const roles = new Set(user.roles || []);
-
-    if (roles.has('Service Delivery Manager')) return 'business';
-    if (roles.has('Live Events')) return 'live-events';
-    if (roles.has('Production')) return 'live-events';
-    if (roles.has('Studio Productions')) return 'studio-productions';
-    if (roles.has('Post-Production') && !roles.has('Studio Productions') && !roles.has('Live Events')) {
-        return 'post-production';
-    }
-    if (roles.has('Admin')) return 'business';
+const getDefaultCalendarId = (user: User, availableCalendars: SharedCalendar[]): CalendarId | undefined => {
+    if (availableCalendars.length === 0) return undefined;
     
-    if (availableCalendars.length > 0) {
+    // Find the first calendar the user is a manager of
+    const managedCalendar = availableCalendars.find(cal => cal.managers?.includes(user.userId));
+    if (managedCalendar) return managedCalendar.id;
+    
+    // If Admin/SDM, they can manage all, so pick the first one
+    if (user.roles?.includes('Admin') || user.roles?.includes('Service Delivery Manager')) {
         return availableCalendars[0].id;
     }
 
-    return 'business';
+    return undefined;
 };
+
 
 const titlePlaceholders: Record<CalendarId, string> = {
   'business': 'New Event',
@@ -108,10 +106,8 @@ const titlePlaceholders: Record<CalendarId, string> = {
   'post-production': 'New EDIT Machine Book',
 };
 
-const priorities: Task['priority'][] = ['P0', 'P1', 'P2', 'P3', 'P4'];
-
 export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
-  const { viewAsUser, users, calendars, addEvent, locations } = useUser();
+  const { viewAsUser, users, calendars, addEvent, locations, priorities } = useUser();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = React.useState(false);
   const [attachments, setAttachments] = React.useState<Attachment[]>([]);
@@ -119,7 +115,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
   const [isGuestPopoverOpen, setIsGuestPopoverOpen] = React.useState(false);
 
   const availableCalendars = React.useMemo(() => {
-    return calendars.filter(cal => canManageEventOnCalendar(viewAsUser, cal.id));
+    return calendars.filter(cal => canManageEventOnCalendar(viewAsUser, cal));
   }, [calendars, viewAsUser]);
 
   const defaultCalendarId = React.useMemo(() => {
@@ -130,8 +126,8 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: '',
-      calendarId: defaultCalendarId,
-      priority: 'P3',
+      calendarId: defaultCalendarId || '',
+      priority: priorities.find(p => p.label === 'P3')?.id || priorities[0]?.id || '',
       date: new Date(),
       startTime: '09:00',
       endTime: '10:00',
@@ -157,7 +153,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
     if (initialData) {
         form.reset({
             calendarId: defaultCalendarId,
-            priority: 'P3',
+            priority: priorities.find(p => p.label === 'P3')?.id || priorities[0]?.id,
             title: '',
             location: '',
             description: '',
@@ -168,7 +164,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
             endTime: initialData.endTime,
         });
     }
-  }, [initialData, form, defaultCalendarId]);
+  }, [initialData, form, defaultCalendarId, priorities]);
 
   const selectedCalendarId = form.watch('calendarId');
   const selectedCalendar = calendars.find(c => c.id === selectedCalendarId) || availableCalendars[0];
@@ -296,15 +292,15 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <button type="button">
-                                            <PriorityBadge priority={form.watch('priority')} />
+                                            <PriorityBadge priorityId={form.watch('priority')} />
                                         </button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="start">
                                         {priorities.map(p => (
-                                            <DropdownMenuItem key={p} onSelect={() => form.setValue('priority', p, { shouldValidate: true })}>
-                                                <PriorityBadge priority={p} />
+                                            <DropdownMenuItem key={p.id} onSelect={() => form.setValue('priority', p.id, { shouldValidate: true })}>
+                                                <PriorityBadge priorityId={p.id} />
                                                 <span className="ml-2 text-sm text-muted-foreground w-20">
-                                                {{ P0: 'Highest', P1: 'High', P2: 'Medium', P3: 'Low', P4: 'Lowest' }[p]}
+                                                  {p.label}
                                                 </span>
                                             </DropdownMenuItem>
                                         ))}

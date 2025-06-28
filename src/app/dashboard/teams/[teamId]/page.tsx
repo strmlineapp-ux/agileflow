@@ -1,5 +1,6 @@
 
 
+
 'use client';
 
 import { useParams } from 'next/navigation';
@@ -9,7 +10,6 @@ import { TeamRoleManagement } from '@/components/settings/team-role-management';
 import { TeamMembersView } from '@/components/teams/team-members-view';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { GoogleSymbol } from '@/components/icons/google-symbol';
 
 export default function TeamPage() {
   const { teamId } = useParams();
@@ -18,7 +18,6 @@ export default function TeamPage() {
   const team = teams.find(t => t.id === teamId);
   const isSdm = viewAsUser.roles?.includes('Service Delivery Manager') || viewAsUser.roles?.includes('Admin');
   
-  // This check must happen after all hooks are called.
   if (!team) {
     // This can happen if the teamId is invalid or data is loading.
     return (
@@ -37,14 +36,9 @@ export default function TeamPage() {
   const isTeamManager = team.managers?.includes(viewAsUser.userId);
   const canViewPage = isSdm || isTeamManager;
 
+  // This check must happen after all hooks are called.
   if (!canViewPage) {
-     return (
-      <div className="flex flex-col items-center justify-center h-full gap-2 text-center">
-        <GoogleSymbol name="lock" className="text-6xl text-muted-foreground" />
-        <h1 className="text-2xl font-bold">Access Denied</h1>
-        <p className="text-muted-foreground">You do not have permission to manage this team.</p>
-      </div>
-    );
+     return null; // Navigation is filtered, so this prevents direct URL access.
   }
 
   return (

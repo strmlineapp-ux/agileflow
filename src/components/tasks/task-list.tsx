@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -82,7 +83,7 @@ export function TaskList({ limit }: { limit?: number }) {
                   <TaskStatusBadge status={task.status} />
                 </TableCell>
                 <TableCell>
-                  <PriorityBadge priority={task.priority} />
+                  <PriorityBadge priorityId={task.priority} />
                 </TableCell>
                 <TableCell>{isToday(task.dueDate) ? 'Today' : format(task.dueDate, 'MMM dd, yyyy')}</TableCell>
                 <TableCell>

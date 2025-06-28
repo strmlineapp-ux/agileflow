@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import Link from 'next/link';
@@ -17,11 +18,11 @@ export function Header() {
   const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
   const unreadCount = notifications.filter((n) => !n.read).length;
   
-  const isAdmin = realUser.roles?.includes('Admin');
-  const isSdm = realUser.roles?.includes('Service Delivery Manager') || realUser.roles?.includes('Admin');
+  const isAdmin = viewAsUser.roles?.includes('Admin');
+  const isSdm = viewAsUser.roles?.includes('Service Delivery Manager');
 
   const userTeams = teams.filter(team => 
-    isSdm || team.managers?.includes(viewAsUser.userId)
+    isAdmin || isSdm || team.managers?.includes(viewAsUser.userId)
   );
 
   const adminConfig = pageConfigs.find(p => p.id === 'admin') || { name: 'Admin', icon: 'shield_person' };

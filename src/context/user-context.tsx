@@ -3,8 +3,8 @@
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect } from 'react';
-import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type PageConfig } from '@/types';
-import { mockUsers as initialUsers, mockCalendars, mockEvents as initialEvents, mockLocations as initialLocations, mockTeams } from '@/lib/mock-data';
+import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type PageConfig, type Priority } from '@/types';
+import { mockUsers as initialUsers, mockCalendars as initialCalendars, mockEvents as initialEvents, mockLocations as initialLocations, mockTeams, mockPriorities as initialPriorities } from '@/lib/mock-data';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
@@ -16,8 +16,6 @@ interface UserContextType {
   users: User[];
   allTeamRoles: string[];
   teams: Team[];
-  pinnedLocations: string[];
-  checkLocations: string[];
   addTeam: (teamData: Omit<Team, 'id'>) => Promise<void>;
   updateTeam: (teamId: string, teamData: Partial<Omit<Team, 'id'>>) => Promise<void>;
   deleteTeam: (teamId: string) => Promise<void>;
@@ -39,6 +37,10 @@ interface UserContextType {
   deleteLocation: (locationId: string) => Promise<void>;
   pageConfigs: PageConfig[];
   updatePageConfig: (pageId: string, pageData: Partial<PageConfig>) => Promise<void>;
+  priorities: Priority[];
+  addPriority: (priorityData: Omit<Priority, 'id'>) => Promise<void>;
+  updatePriority: (priorityId: string, priorityData: Partial<Priority>) => Promise<void>;
+  deletePriority: (priorityId: string) => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | null>(null);
@@ -56,10 +58,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [teams, setTeams] = useState<Team[]>(mockTeams);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [userStatusAssignments, setUserStatusAssignments] = useState<Record<string, UserStatusAssignment[]>>({});
-  const [calendars, setCalendars] = useState<SharedCalendar[]>(mockCalendars);
+  const [calendars, setCalendars] = useState<SharedCalendar[]>(initialCalendars);
   const [events, setEvents] = useState<Event[]>(initialEvents);
   const [locations, setLocations] = useState<BookableLocation[]>(initialLocations);
   const [pageConfigs, setPageConfigs] = useState<PageConfig[]>(initialPageConfigs);
+  const [priorities, setPriorities] = useState<Priority[]>(initialPriorities);
   const { toast } = useToast();
 
   const allTeamRoles = useMemo(() => {
@@ -71,19 +74,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, [teams]);
 
   const realUser = useMemo(() => users.find(u => u.userId === REAL_USER_ID)!, [users]);
-  const viewAsUser = useMemo(() => users.find(u => u.userId === viewAsUserId) || users.find(u => u.userId === REAL_USER_ID)!, [users, viewAsUserId]);
+  const viewAsUser = useMemo(() => users.find(u => u.userId === viewAsUserId) || realUser, [users, viewAsUserId, realUser]);
   
-  const userTeams = useMemo(() => teams.filter(team => team.members.includes(viewAsUser.userId)), [teams, viewAsUser.userId]);
-
-  const pinnedLocations = useMemo(() => {
-    const allPinned = userTeams.flatMap(team => team.pinnedLocations);
-    return [...new Set(allPinned)].sort();
-  }, [userTeams]);
-
-  const checkLocations = useMemo(() => {
-    const allChecks = userTeams.flatMap(team => team.checkLocations || []);
-    return [...new Set(allChecks)];
-  }, [userTeams]);
+  if (!realUser) {
+    return null; // Should not happen in practice if REAL_USER_ID is always valid
+  }
 
   const updateUser = async (userId: string, userData: Partial<User>) => {
     console.log(`Updating user ${userId}:`, userData);
@@ -176,6 +171,22 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       currentConfigs.map(p => (p.id === pageId ? { ...p, ...pageData } : p))
     );
   };
+  
+  const addPriority = async (priorityData: Omit<Priority, 'id'>) => {
+      const newPriority: Priority = {
+          ...priorityData,
+          id: priorityData.label.toLowerCase().replace(/\s+/g, '-'),
+      };
+      setPriorities(current => [...current, newPriority]);
+  };
+
+  const updatePriority = async (priorityId: string, priorityData: Partial<Priority>) => {
+      setPriorities(current => current.map(p => p.id === priorityId ? { ...p, ...priorityData } as Priority : p));
+  };
+
+  const deletePriority = async (priorityId: string) => {
+      setPriorities(current => current.filter(p => p.id !== priorityId));
+  };
 
 
   const linkGoogleCalendar = async (userId: string) => {
@@ -201,12 +212,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const root = window.document.documentElement;
     root.classList.remove('light', 'dark', 'high-visibility', 'firebase');
-    if (realUser.theme) {
-      root.classList.add(realUser.theme);
+    if (viewAsUser.theme) {
+      root.classList.add(viewAsUser.theme);
     } else {
       root.classList.add('light'); // default
     }
-  }, [realUser.theme]);
+  }, [viewAsUser.theme]);
   
   const value = {
     realUser,
@@ -215,8 +226,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     users,
     allTeamRoles,
     teams,
-    pinnedLocations,
-    checkLocations,
     addTeam,
     updateTeam,
     deleteTeam,
@@ -238,6 +247,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     deleteLocation,
     pageConfigs,
     updatePageConfig,
+    priorities,
+    addPriority,
+    updatePriority,
+    deletePriority,
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
