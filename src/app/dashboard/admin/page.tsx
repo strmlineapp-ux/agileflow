@@ -19,6 +19,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { googleSymbolNames } from '@/lib/google-symbols';
+import { Skeleton } from '@/components/ui/skeleton';
 
 // Component to manage a list of users with a specific role via pills
 const UserRoleManager = ({
@@ -48,7 +49,7 @@ const UserRoleManager = ({
               <Badge
                 key={user.userId}
                 variant={hasRole ? 'default' : 'secondary'}
-                className={cn('gap-1.5 p-1 pl-2 cursor-pointer', hasRole && 'shadow-md')}
+                className={cn('gap-1.5 p-1 pl-2 cursor-pointer rounded-full', hasRole && 'shadow-md')}
                 onClick={() => onRoleToggle(user)}
               >
                 <Avatar className="h-5 w-5">
@@ -201,41 +202,46 @@ export default function AdminPage() {
     setTwoFactorCode('');
     setOn2faSuccess(null);
   };
-
-  if (!isAdmin || !sdmConfig) {
-    return null; // or a loading spinner
-  }
+  
+  const canRender = isAdmin && sdmConfig;
 
   return (
     <>
       <div className="flex flex-col gap-8">
         <h1 className="font-headline text-3xl font-semibold">Admin Panel</h1>
-
-        <Tabs defaultValue="admins" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="admins">Admin Management</TabsTrigger>
-                <TabsTrigger value="app-manager">App Manager</TabsTrigger>
-            </TabsList>
-            <TabsContent value="admins" className="mt-6">
-                <UserRoleManager
-                    title="Manage Admins"
-                    description="Assign or revoke Admin privileges. This action requires 2FA."
-                    allUsers={users}
-                    roleName="Admin"
-                    onRoleToggle={(user) => handleRoleToggle(user, 'Admin')}
-                />
-            </TabsContent>
-            <TabsContent value="app-manager" className="mt-6 space-y-6">
-                 <UserRoleManager
-                    title={`Manage ${sdmConfig.name}s`}
-                    description={`Assign or revoke ${sdmConfig.name} privileges. This action requires 2FA.`}
-                    allUsers={users}
-                    roleName="Service Delivery Manager"
-                    onRoleToggle={(user) => handleRoleToggle(user, 'Service Delivery Manager')}
-                    />
-                <PageConfiguration pageConfig={sdmConfig} onSave={handleSavePageConfig} />
-            </TabsContent>
-        </Tabs>
+        
+        {!canRender ? (
+          <div className="space-y-4">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-40 w-full" />
+          </div>
+        ) : (
+          <Tabs defaultValue="admins" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="admins">Admin Management</TabsTrigger>
+                  <TabsTrigger value="app-manager">App Manager</TabsTrigger>
+              </TabsList>
+              <TabsContent value="admins" className="mt-6">
+                  <UserRoleManager
+                      title="Manage Admins"
+                      description="Assign or revoke Admin privileges. This action requires 2FA."
+                      allUsers={users}
+                      roleName="Admin"
+                      onRoleToggle={(user) => handleRoleToggle(user, 'Admin')}
+                  />
+              </TabsContent>
+              <TabsContent value="app-manager" className="mt-6 space-y-6">
+                   <UserRoleManager
+                      title={`Manage ${sdmConfig.name}s`}
+                      description={`Assign or revoke ${sdmConfig.name} privileges. This action requires 2FA.`}
+                      allUsers={users}
+                      roleName="Service Delivery Manager"
+                      onRoleToggle={(user) => handleRoleToggle(user, 'Service Delivery Manager')}
+                      />
+                  <PageConfiguration pageConfig={sdmConfig} onSave={handleSavePageConfig} />
+              </TabsContent>
+          </Tabs>
+        )}
       </div>
 
       <Dialog open={is2faDialogOpen} onOpenChange={(isOpen) => !isOpen && close2faDialog()}>
