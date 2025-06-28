@@ -4,9 +4,9 @@
 import React, { useState, useMemo } from 'react';
 import { useUser } from '@/context/user-context';
 import { type Team, type User } from '@/types';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,6 +18,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -57,92 +58,42 @@ export function TeamManagement() {
       setEditingTeam(null);
   }
 
+  const handleDelete = () => {
+    if (!editingTeam) return;
+    deleteTeam(editingTeam.id);
+    toast({ title: 'Success', description: `Team "${editingTeam.name}" has been deleted.` });
+    setIsDeleteDialogOpen(false);
+    closeForm(); // Also close form dialog if it was open
+  };
+
   return (
     <>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-            <h2 className="text-2xl font-semibold tracking-tight">Manage Teams</h2>
-            <p className="text-muted-foreground">
-                Add, edit, or delete teams and their members.
-            </p>
-        </div>
-      </div>
-
-       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {teams.map(team => {
-            const members = users.filter(u => team.members.includes(u.userId));
-            const managers = users.filter(u => team.managers?.includes(u.userId));
-
-            return (
-              <Card 
-                key={team.id} 
-                className="flex flex-col"
-              >
-                  <CardHeader>
-                      <div className="flex items-start justify-between">
-                           <CardTitle className="flex items-center gap-2">
-                              <GoogleSymbol name={team.icon} />
-                              {team.name}
-                          </CardTitle>
-                          <div className="flex -mr-4 -mt-2">
-                               <Button variant="ghost" size="icon" onClick={() => openEditDialog(team)}>
-                                  <GoogleSymbol name="edit" />
-                              </Button>
-                              <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => openDeleteDialog(team)}>
-                                  <GoogleSymbol name="delete" />
-                              </Button>
-                          </div>
-                      </div>
-                  </CardHeader>
-                  <CardContent className="flex-grow space-y-4">
-                      <div>
-                          <h4 className="text-sm font-medium mb-2">Managers</h4>
-                          <div className="flex items-center -space-x-2">
-                              {managers.slice(0, 5).map(manager => (
-                                  <Avatar key={manager.userId} className="h-8 w-8 border-2 border-card">
-                                      <AvatarImage src={manager.avatarUrl} alt={manager.displayName} data-ai-hint="user avatar" />
-                                      <AvatarFallback>{manager.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                                  </Avatar>
-                              ))}
-                              {managers.length > 5 && (
-                                  <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium border-2 border-card">
-                                      +{managers.length - 5}
-                                  </div>
-                              )}
-                              {managers.length === 0 && <p className="text-xs text-muted-foreground">No managers</p>}
-                          </div>
-                      </div>
-                      <div>
-                           <h4 className="text-sm font-medium mb-2">Members</h4>
-                          <div className="flex items-center -space-x-2">
-                               {members.slice(0, 5).map(member => (
-                                  <Avatar key={member.userId} className="h-8 w-8 border-2 border-card">
-                                      <AvatarImage src={member.avatarUrl} alt={member.displayName} data-ai-hint="user avatar" />
-                                      <AvatarFallback>{member.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                                  </Avatar>
-                              ))}
-                              {members.length > 5 && (
-                                  <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium border-2 border-card">
-                                      +{members.length - 5}
-                                  </div>
-                              )}
-                              {members.length === 0 && <p className="text-xs text-muted-foreground">No members</p>}
-                          </div>
-                      </div>
-                  </CardContent>
-              </Card>
-            )
-          })}
-          <button
-            onClick={openAddDialog}
-            className="flex items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 text-muted-foreground hover:border-primary hover:text-primary transition-colors min-h-[220px]"
-            >
-             <div className="flex flex-col items-center gap-2">
-                <GoogleSymbol name="add_circle" className="text-4xl" />
-                <span className="font-semibold">New Team</span>
+      <Card>
+        <CardHeader>
+          <div className="flex items-start justify-between">
+            <div>
+              <CardTitle>Manage Teams</CardTitle>
+              <CardDescription>Add, edit, or delete teams and their members.</CardDescription>
             </div>
-          </button>
-      </div>
+            <Button variant="ghost" size="icon" onClick={openAddDialog}>
+                <GoogleSymbol name="add_circle" className="text-2xl" />
+                <span className="sr-only">Add New Team</span>
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-3">
+              {teams.map(team => (
+                <Button key={team.id} variant="outline" className="h-auto" onClick={() => openEditDialog(team)}>
+                    <div className="flex items-center gap-2">
+                      <GoogleSymbol name={team.icon} />
+                      <span className="font-medium">{team.name}</span>
+                    </div>
+                </Button>
+              ))}
+          </div>
+        </CardContent>
+      </Card>
 
       {isFormOpen && (
           <TeamFormDialog 
@@ -166,11 +117,7 @@ export function TeamManagement() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => {
-                if(editingTeam) deleteTeam(editingTeam.id);
-                setIsDeleteDialogOpen(false);
-                closeForm();
-            }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Continue
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -236,7 +183,10 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
                 members,
                 managers,
                 roles: [],
-                pinnedLocations: []
+                pinnedLocations: [],
+                checkLocations: [],
+                locationAliases: {},
+                locationCheckManagers: [],
             });
              toast({ title: "Success", description: `Team "${name}" created.` });
         }
@@ -260,7 +210,7 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="max-w-md">
                  <div className="absolute top-4 right-4 flex items-center gap-1">
                     {team && (
                         <Button
@@ -283,8 +233,12 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
                         <span className="sr-only">Save Changes</span>
                     </Button>
                 </div>
+                <DialogHeader>
+                    <DialogTitle>{team ? 'Edit Team' : 'New Team'}</DialogTitle>
+                    <DialogDescription>Manage the team's name, icon, and members.</DialogDescription>
+                </DialogHeader>
 
-                <div className="grid gap-6 pt-6">
+                <div className="grid gap-6 pt-2">
                     <div className="flex items-center gap-2">
                         <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                             <PopoverTrigger asChild>
@@ -335,6 +289,7 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
                     </div>
 
                     <div className="space-y-2">
+                        <Label>Members</Label>
                         <div className="flex items-start gap-2 rounded-md border bg-muted/50 p-2">
                            
                             <Popover open={isMemberPopoverOpen} onOpenChange={setIsMemberPopoverOpen}>
