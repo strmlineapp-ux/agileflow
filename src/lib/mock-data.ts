@@ -172,7 +172,7 @@ export const mockTeams: Team[] = [
         pinnedLocations: ['Studio'],
         checkLocations: [],
         locationAliases: {},
-        workstations: ['Edit Suite 1', 'Edit Suite 2', 'Color Grading Suite'],
+        workstations: ['EDIT 1', 'EDIT 2', 'EDIT 3', 'EDIT 4', 'Pro Tools Machine'],
     },
     {
         id: 'live-events',
