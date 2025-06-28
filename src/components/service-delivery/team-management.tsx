@@ -28,6 +28,43 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { googleSymbolNames } from '@/lib/google-symbols';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+
+
+// Helper component for stacked avatars
+const AvatarStack = ({ userIds, allUsers, max = 5 }: { userIds: string[], allUsers: User[], max?: number }) => {
+    const usersToShow = userIds.map(id => allUsers.find(u => u.userId === id)).filter(Boolean) as User[];
+    const visibleUsers = usersToShow.slice(0, max);
+    const hiddenCount = Math.max(0, usersToShow.length - max);
+
+    return (
+        <TooltipProvider>
+            <div className="flex -space-x-2 overflow-hidden">
+                {visibleUsers.map(user => (
+                    <Tooltip key={user.userId}>
+                        <TooltipTrigger asChild>
+                            <Avatar className="h-8 w-8 border-2 border-card">
+                                <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
+                                <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                        </TooltipTrigger>
+                        <TooltipContent>{user.displayName}</TooltipContent>
+                    </Tooltip>
+                ))}
+                {hiddenCount > 0 && (
+                     <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Avatar className="h-8 w-8 border-2 border-card">
+                                <AvatarFallback>+{hiddenCount}</AvatarFallback>
+                            </Avatar>
+                        </TooltipTrigger>
+                        <TooltipContent>{hiddenCount} more member(s)</TooltipContent>
+                    </Tooltip>
+                )}
+            </div>
+        </TooltipProvider>
+    );
+};
 
 export function TeamManagement() {
   const { users, teams, addTeam, updateTeam, deleteTeam } = useUser();
@@ -68,32 +105,52 @@ export function TeamManagement() {
 
   return (
     <>
-      <Card>
-        <CardHeader>
-          <div className="flex items-start justify-between">
-            <div>
-              <CardTitle>Manage Teams</CardTitle>
-              <CardDescription>Add, edit, or delete teams and their members.</CardDescription>
-            </div>
-            <Button variant="ghost" size="icon" onClick={openAddDialog}>
-                <GoogleSymbol name="add_circle" className="text-2xl" />
-                <span className="sr-only">Add New Team</span>
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-3">
-              {teams.map(team => (
-                <Button key={team.id} variant="outline" className="h-auto" onClick={() => openEditDialog(team)}>
-                    <div className="flex items-center gap-2">
-                      <GoogleSymbol name={team.icon} />
-                      <span className="font-medium">{team.name}</span>
-                    </div>
-                </Button>
-              ))}
-          </div>
-        </CardContent>
-      </Card>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {teams.map(team => {
+                const teamManagers = team.managers || [];
+                const teamMembers = team.members.filter(m => !teamManagers.includes(m));
+
+                return (
+                    <Card key={team.id} className="flex flex-col">
+                        <CardHeader>
+                            <div className="flex items-start justify-between">
+                                <div className="flex items-center gap-3">
+                                    <GoogleSymbol name={team.icon} className="text-3xl text-muted-foreground" />
+                                    <CardTitle className="text-xl">{team.name}</CardTitle>
+                                </div>
+                                <Button variant="ghost" size="icon" className="-mr-4 -mt-2" onClick={() => openEditDialog(team)}>
+                                    <GoogleSymbol name="edit" />
+                                    <span className="sr-only">Edit Team</span>
+                                </Button>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="flex-grow space-y-4">
+                            <div>
+                                <p className="text-sm font-medium text-muted-foreground mb-2">Managers</p>
+                                {teamManagers.length > 0 ? (
+                                    <AvatarStack userIds={teamManagers} allUsers={users} />
+                                ) : <p className="text-sm text-muted-foreground italic">No managers assigned.</p>}
+                            </div>
+                            <div>
+                                <p className="text-sm font-medium text-muted-foreground mb-2">Members</p>
+                                {teamMembers.length > 0 ? (
+                                    <AvatarStack userIds={teamMembers} allUsers={users} />
+                                ) : <p className="text-sm text-muted-foreground italic">No other members.</p>}
+                            </div>
+                        </CardContent>
+                    </Card>
+                );
+            })}
+            <button
+                onClick={openAddDialog}
+                className="flex items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 text-muted-foreground hover:border-primary hover:text-primary transition-colors min-h-[190px]"
+                >
+                <div className="flex flex-col items-center gap-2">
+                    <GoogleSymbol name="add_circle" className="text-4xl" />
+                    <span className="font-semibold">New Team</span>
+                </div>
+            </button>
+        </div>
 
       {isFormOpen && (
           <TeamFormDialog 
