@@ -285,6 +285,13 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
       return;
     }
 
+    const finalRoleAssignments: Record<string, string | null> = {};
+    if (selectedTemplate) {
+      Object.entries(roleAssignments).forEach(([role, assignment]) => {
+        finalRoleAssignments[role] = assignment.assignedUser;
+      });
+    }
+
     try {
       await addEvent({
         title: values.title,
@@ -297,6 +304,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
         attachments: attachments,
         attendees: values.attendees || [],
         templateId: values.templateId,
+        roleAssignments: finalRoleAssignments,
       });
 
       toast({
@@ -643,7 +651,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                                 return (
                                     <Popover key={role} open={popoverOpen} onOpenChange={() => toggleRolePopover(role)}>
                                         <PopoverTrigger asChild>
-                                             <Badge variant={user ? "default" : "secondary"} className="text-sm p-1 pl-3 rounded-full cursor-pointer">
+                                             <Badge variant={user ? 'default' : 'secondary'} className="text-sm p-1 pl-3 rounded-full cursor-pointer">
                                                 {role}
                                                 {user && <span className="font-normal mx-2 text-primary-foreground/80">/</span>}
                                                 {user && <span className="font-semibold">{user.displayName}</span>}

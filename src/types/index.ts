@@ -1,5 +1,3 @@
-
-
 import type React from 'react';
 
 export interface AppSettings {
@@ -143,6 +141,7 @@ export interface Event {
   associatedTaskId?: string;
   priority: string; // e.g., 'p-number:p2' or 'star-rating:4' or 'effort-scale:75'
   templateId?: string;
+  roleAssignments?: Record<string, string | null>;
   attachments: Attachment[];
   createdBy: string; // userId
   createdAt: Date;

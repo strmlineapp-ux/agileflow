@@ -267,6 +267,7 @@ export const mockEvents: Event[] = [
         location: 'ACR',
         priority: 'p-number:p2',
         attachments: [],
+        roleAssignments: {},
         createdBy: '1', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -281,6 +282,7 @@ export const mockEvents: Event[] = [
         location: 'Event Space 1 (S2)',
         priority: 'p-number:p1',
         attachments: [],
+        roleAssignments: {},
         createdBy: '1', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -295,6 +297,7 @@ export const mockEvents: Event[] = [
         location: 'ACR',
         priority: 'p-number:p3',
         attachments: [],
+        roleAssignments: {},
         createdBy: '2', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -309,6 +312,7 @@ export const mockEvents: Event[] = [
         location: 'Studio',
         priority: 'p-number:p0',
         attachments: [],
+        roleAssignments: {},
         createdBy: '1', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -324,6 +328,7 @@ export const mockEvents: Event[] = [
         location: 'Studio',
         priority: 'p-number:p2',
         attachments: [],
+        roleAssignments: {},
         createdBy: '2', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -338,6 +343,7 @@ export const mockEvents: Event[] = [
         location: 'Event Space 3 (R7)',
         priority: 'p-number:p3',
         attachments: [],
+        roleAssignments: {},
         createdBy: '3', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -353,6 +359,7 @@ export const mockEvents: Event[] = [
         location: 'Event Space 4 (R7)',
         priority: 'p-number:p4',
         attachments: [],
+        roleAssignments: {},
         createdBy: '1', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -367,6 +374,7 @@ export const mockEvents: Event[] = [
         location: 'Studio',
         priority: 'p-number:p3',
         attachments: [],
+        roleAssignments: {},
         createdBy: '2', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -382,6 +390,7 @@ export const mockEvents: Event[] = [
         location: 'Auditorium',
         priority: 'p-number:p2',
         attachments: [],
+        roleAssignments: {},
         createdBy: '1', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -396,6 +405,7 @@ export const mockEvents: Event[] = [
         location: 'Event Space 2 (S2)',
         priority: 'p-number:p1',
         attachments: [],
+        roleAssignments: {},
         createdBy: '1', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -410,6 +420,7 @@ export const mockEvents: Event[] = [
         location: 'ACR',
         priority: 'p-number:p2',
         attachments: [],
+        roleAssignments: {},
         createdBy: '2', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -424,6 +435,7 @@ export const mockEvents: Event[] = [
         location: 'Auditorium',
         priority: 'p-number:p1',
         attachments: [],
+        roleAssignments: {},
         createdBy: '1', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -439,6 +451,7 @@ export const mockEvents: Event[] = [
         location: 'Off-site',
         priority: 'p-number:p3',
         attachments: [],
+        roleAssignments: {},
         createdBy: '1', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -453,6 +466,7 @@ export const mockEvents: Event[] = [
         location: 'Studio',
         priority: 'p-number:p3',
         attachments: [],
+        roleAssignments: {},
         createdBy: '2', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -468,6 +482,7 @@ export const mockEvents: Event[] = [
         location: 'Studio',
         priority: 'p-number:p1',
         attachments: [],
+        roleAssignments: {},
         createdBy: '1', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
@@ -482,6 +497,7 @@ export const mockEvents: Event[] = [
         attendees: [mockUsers[0], mockUsers[1]].map(userToAttendee), 
         priority: 'p-number:p3',
         attachments: [],
+        roleAssignments: {},
         createdBy: '1', 
         createdAt: new Date(), 
         lastUpdated: new Date() 
