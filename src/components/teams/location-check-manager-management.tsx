@@ -11,7 +11,7 @@ import { GoogleSymbol } from '@/components/icons/google-symbol';
 
 export function LocationCheckManagerManagement({ team }: { team: Team }) {
   const { users, updateTeam } = useUser();
-  const teamMembers = users.filter(u => team.members.includes(u.userId));
+  const assignableUsers = users; // Any user can be a location check manager
   const locationCheckManagers = new Set(team.locationCheckManagers || []);
 
   const handleToggleManager = (userId: string) => {
@@ -29,12 +29,12 @@ export function LocationCheckManagerManagement({ team }: { team: Team }) {
       <CardHeader>
         <CardTitle>Location Check Managers</CardTitle>
         <CardDescription>
-          Assign users from this team who can manage daily check assignments on the Production Schedule.
+          Assign users who can manage daily check assignments on the Production Schedule for this team's locations.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="flex flex-wrap gap-2 rounded-md border bg-muted/50 p-2 min-h-[56px]">
-          {teamMembers.map(user => {
+          {assignableUsers.map(user => {
             const isManager = locationCheckManagers.has(user.userId);
             return (
               <Badge

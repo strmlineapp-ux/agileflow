@@ -101,7 +101,7 @@ export function TeamRoleManagement({ team }: { team: Team }) {
         <CardContent>
           <div className="flex flex-wrap gap-2">
             {rolesForThisTeam.length > 0 ? rolesForThisTeam.map(role => (
-              <Badge key={role} variant="secondary" className="group text-base py-1 pl-3 pr-1">
+              <Badge key={role} variant="secondary" className="group text-base py-1 pl-3 pr-1 rounded-full">
                 <span className="font-medium cursor-pointer" onClick={() => openEditDialog(role)}>{role}</span>
                 <Button 
                   variant="ghost" 
@@ -109,7 +109,7 @@ export function TeamRoleManagement({ team }: { team: Team }) {
                   className="ml-1 h-4 w-4 hover:bg-destructive/20 rounded-full" 
                   onClick={() => openDeleteDialog(role)}
                 >
-                  <GoogleSymbol name="close" className="text-sm" />
+                  <GoogleSymbol name="cancel" className="text-sm" />
                   <span className="sr-only">Delete {role}</span>
                 </Button>
               </Badge>

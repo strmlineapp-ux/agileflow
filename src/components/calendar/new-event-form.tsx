@@ -419,7 +419,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                                         </Avatar>
                                         <span className="text-sm font-medium">{attendee.displayName}</span>
                                         <button type="button" onClick={() => handleToggleGuest(attendee as User)} className="h-4 w-4 rounded-full hover:bg-muted-foreground/20 flex items-center justify-center">
-                                            <GoogleSymbol name="close" className="text-sm" />
+                                            <GoogleSymbol name="cancel" className="text-sm" />
                                         </button>
                                      </div>
                                 ))}
@@ -542,7 +542,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                                 className="h-4 w-4 shrink-0" 
                                 onClick={() => setAttachments(prev => prev.filter((_, i) => i !== index))}
                             >
-                                <GoogleSymbol name="close" className="text-sm" />
+                                <GoogleSymbol name="cancel" className="text-sm" />
                                 <span className="sr-only">Remove attachment</span>
                             </Button>
                         </div>

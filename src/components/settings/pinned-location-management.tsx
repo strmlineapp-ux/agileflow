@@ -141,7 +141,7 @@ export function PinnedLocationManagement({ team }: { team: Team }) {
                       className="mr-1 h-4 w-4 hover:bg-destructive/20 rounded-full inline-flex items-center justify-center"
                       aria-label={`Unpin ${name}`}
                     >
-                      <GoogleSymbol name="close" className="text-sm" />
+                      <GoogleSymbol name="cancel" className="text-sm" />
                     </button>
 
                     <button

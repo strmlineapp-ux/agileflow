@@ -1,6 +1,7 @@
 
 
 
+
 'use client';
 
 import React, { useEffect, useMemo, useState, useRef } from 'react';
@@ -101,7 +102,7 @@ const ManageStatusDialog = ({ isOpen, onOpenChange, day, initialAssignments, use
                                                 <UserStatusBadge status={status}>{status}</UserStatusBadge>
                                             </div>
                                             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleRemoveStatusAssignment(userId)}>
-                                                <GoogleSymbol name="close" />
+                                                <GoogleSymbol name="cancel" className="text-sm" />
                                                 <span className="sr-only">Remove status</span>
                                             </Button>
                                         </div>
@@ -347,9 +348,11 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
             // A flat list of all unique check locations from all teams.
             const allCheckLocationsForDay = [...new Set(teamsWithPinnedLocationsForDay.flatMap(t => t.checkLocations || []))];
             
-            // A flat list of all unique pinned locations, EXCLUDING those that are check locations.
-            const allDayLocations = [...new Set(teamsWithPinnedLocationsForDay.flatMap(t => t.pinnedLocations))]
-                .sort();
+            // A flat list of all unique pinned locations
+            const allPinnedLocations = [...new Set(teamsWithPinnedLocationsForDay.flatMap(t => t.pinnedLocations))].sort();
+
+            // Pinned locations that are NOT check locations, these are for the grid.
+            const gridLocations = allPinnedLocations.filter(loc => !allCheckLocationsForDay.includes(loc));
             
             const locationAliasMap: Record<string, string> = {};
             teams.forEach(team => {
@@ -364,12 +367,12 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
             });
             
             // Group events by their canonical location name for row rendering.
-            const groupedEvents = allDayLocations.reduce((acc, locationKey) => {
+            const groupedEvents = gridLocations.reduce((acc, locationKey) => {
                 acc[locationKey] = dayEvents.filter(e => e.location === locationKey);
                 return acc;
             }, {} as Record<string, Event[]>);
             
-            return { day, dayIso, groupedEvents, isWeekend: isSaturday(day) || isSunday(day), allDayLocations, allCheckLocationsForDay, locationAliasMap };
+            return { day, dayIso, groupedEvents, isWeekend: isSaturday(day) || isSunday(day), gridLocations, allCheckLocationsForDay, locationAliasMap };
         });
     }, [weekDays, events, teams]);
 
@@ -377,11 +380,11 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
         const initialCollapsedDays = new Set<string>();
         const initialCollapsedLocations: Record<string, Set<string>> = {};
 
-        weeklyScheduleData.forEach(({ dayIso, isWeekend, groupedEvents, allDayLocations }) => {
+        weeklyScheduleData.forEach(({ dayIso, isWeekend, groupedEvents, gridLocations }) => {
             if (isWeekend) initialCollapsedDays.add(dayIso);
 
             const locationsToCollapse = new Set<string>();
-            (allDayLocations || []).forEach(loc => {
+            (gridLocations || []).forEach(loc => {
                 if (!groupedEvents[loc] || groupedEvents[loc].length === 0) {
                     locationsToCollapse.add(loc);
                 }
@@ -479,7 +482,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
 
     return (
         <div className="space-y-4">
-            {weeklyScheduleData.map(({ day, dayIso, groupedEvents, allDayLocations, allCheckLocationsForDay, locationAliasMap }) => {
+            {weeklyScheduleData.map(({ day, dayIso, groupedEvents, gridLocations, allCheckLocationsForDay, locationAliasMap }) => {
                 const isDayCollapsed = collapsedDays.has(dayIso);
                 const isDayToday = isToday(day);
                 const dayStatusAssignments = userStatusAssignments[dayIso] || [];
@@ -500,7 +503,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
 
                                         const pillContent = <>{locationAliasMap[location] || location}{assignedUser && <span className="ml-2 font-normal text-muted-foreground">({`${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}`})</span>}{!assignedUser && canManageThisCheckLocation && <GoogleSymbol name="add_circle" className="ml-2" />}</>;
                                         
-                                        const dailyCheckUsers = users.filter(user => teams.some(t => t.checkLocations.includes(location) && t.members.includes(user.userId)));
+                                        const dailyCheckUsers = users.filter(user => teams.some(t => t.checkLocations.includes(location) && team.locationCheckManagers.includes(viewAsUser.userId) && t.members.includes(user.userId) ));
 
 
                                         return canManageThisCheckLocation ? (
@@ -541,14 +544,14 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
                                     {!isDayCollapsed && (
                                         <CardContent className="p-0 relative">
                                             <div className="absolute inset-y-0 lunch-break-pattern z-0 pointer-events-none" style={{ left: `${LOCATION_LABEL_WIDTH_PX + 12 * hourWidth}px`, width: `${2.5 * hourWidth}px` }} title="Lunch Break" />
-                                            {allDayLocations.map((location, index) => (
+                                            {gridLocations.map((location, index) => (
                                                 <ProductionScheduleLocationRow
                                                     key={location}
                                                     day={day}
                                                     location={location}
                                                     alias={locationAliasMap[location]}
                                                     eventsInRow={groupedEvents[location] || []}
-                                                    isLast={index === allDayLocations.length - 1}
+                                                    isLast={index === gridLocations.length - 1}
                                                     index={index}
                                                     hourWidth={hourWidth}
                                                     calendarColorMap={calendarColorMap}

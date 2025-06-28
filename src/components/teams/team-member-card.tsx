@@ -17,7 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 
 export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
   const { viewAsUser, updateUser } = useUser();
@@ -25,7 +25,6 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
   
   const [isRolesDialogOpen, setIsRolesDialogOpen] = useState(false);
   const [tempRoles, setTempRoles] = useState<string[]>([]);
-  const [roleToAdd, setRoleToAdd] = useState('');
 
   const canManageRoles = viewAsUser.roles?.includes('Admin') || team.managers?.includes(viewAsUser.userId);
 
@@ -38,22 +37,21 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
 
   const closeRolesDialog = () => {
     setIsRolesDialogOpen(false);
-    setRoleToAdd('');
   };
-
-  const handleAddRoleToTemp = () => {
-    if (roleToAdd && !tempRoles.includes(roleToAdd)) {
-        setTempRoles(prev => [...prev, roleToAdd]);
-        setRoleToAdd('');
-    }
-  };
-
-  const handleRemoveRoleFromTemp = (roleToRemove: string) => {
-    setTempRoles(prev => prev.filter(role => role !== roleToRemove));
+  
+  const handleToggleRole = (roleToToggle: string) => {
+    setTempRoles(prev => {
+        const newRoles = new Set(prev);
+        if (newRoles.has(roleToToggle)) {
+            newRoles.delete(roleToToggle);
+        } else {
+            newRoles.add(roleToToggle);
+        }
+        return Array.from(newRoles);
+    });
   };
   
   const handleSaveRoles = async () => {
-    // We only modify the roles that are part of this team's role list.
     const nonTeamRoles = (member.roles || []).filter(role => !team.roles.includes(role));
     const newTeamRoles = tempRoles.filter(role => team.roles.includes(role));
 
@@ -112,39 +110,25 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
                 <DialogTitle>Edit Roles for {member.displayName}</DialogTitle>
                 <DialogDescription>Assign or remove roles specific to the {team.name} team.</DialogDescription>
             </DialogHeader>
-             <div className="space-y-4 py-2">
-                <div className="space-y-2">
-                    <h4 className="font-medium text-sm">Assigned Roles</h4>
-                    <div className="p-1 max-h-48 overflow-y-auto space-y-2">
-                        {tempRoles.filter(r => team.roles.includes(r)).length > 0 ? (
-                            tempRoles.filter(r => team.roles.includes(r)).map(role => (
-                                <div key={role} className="flex items-center justify-between bg-muted/50 p-2 rounded-md">
-                                    <span className="text-sm">{role}</span>
-                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleRemoveRoleFromTemp(role)}>
-                                        <GoogleSymbol name="close" />
-                                        <span className="sr-only">Remove {role}</span>
-                                    </Button>
-                                </div>
-                            ))
-                        ) : <p className="text-sm text-muted-foreground text-center py-4">No team roles assigned.</p>}
-                    </div>
+            <div className="py-2">
+                <div className="flex flex-wrap gap-2 rounded-md border bg-muted/50 p-2 min-h-[56px]">
+                    {team.roles.map(role => {
+                        const isAssigned = tempRoles.includes(role);
+                        return (
+                        <Badge
+                            key={role}
+                            variant={isAssigned ? 'default' : 'secondary'}
+                            className={cn('gap-1.5 p-1 px-3 cursor-pointer rounded-full text-sm', isAssigned && 'shadow-md')}
+                            onClick={() => handleToggleRole(role)}
+                        >
+                            {role}
+                        </Badge>
+                        );
+                    })}
                 </div>
-                    <div className="space-y-2">
-                    <h4 className="font-medium text-sm">Add Role</h4>
-                    <div className="flex items-center gap-2">
-                        <Select value={roleToAdd} onValueChange={setRoleToAdd}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select a role to add" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {team.roles.filter(r => !tempRoles.includes(r)).map(role => (
-                                    <SelectItem key={role} value={role}>{role}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <Button onClick={handleAddRoleToTemp} disabled={!roleToAdd}>Add</Button>
-                    </div>
-                    </div>
+                 <p className="text-xs text-muted-foreground text-right pr-2 mt-2">
+                    Click a pill to toggle the role.
+                </p>
             </div>
         </DialogContent>
       </Dialog>
