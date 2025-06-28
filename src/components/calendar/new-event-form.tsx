@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import * as React from 'react';
@@ -19,7 +18,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useUser } from '@/context/user-context';
 import { canManageEventOnCalendar } from '@/lib/permissions';
 import { useToast } from '@/hooks/use-toast';
-import { type CalendarId, type User, type SharedCalendar, type Attachment, type AttachmentType, type Attendee, type EventTemplate } from '@/types';
+import { type User, type SharedCalendar, type Attachment, type AttachmentType, type Attendee } from '@/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -28,6 +27,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogContent } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PriorityBadge } from './priority-badge';
 import { Separator } from '@/components/ui/separator';
@@ -37,6 +37,8 @@ import { Badge } from '../ui/badge';
 import { ScrollArea } from '../ui/scroll-area';
 import { UserStatusBadge } from '../user-status-badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 
 const GoogleDriveIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg viewBox="0 0 16 16" fill="currentColor" {...props}><path d="M9.19,4.5l-3.2,0l-1.7,2.9l3.2,5.7l4.9,0l1.7,-2.9l-4.9,-5.7Z" fill="#0f9d58"></path><path d="M5.99,4.5l-3.2,5.7l1.7,2.9l3.2,-5.7l-1.7,-2.9Z" fill="#ffc107"></path><path d="M10.89,7.4l-3.2,0l-1.7,-2.9l4.9,0l0,0Z" fill="#1976d2"></path></svg>
@@ -62,6 +64,7 @@ const attachmentIcons: Record<AttachmentType, React.ReactNode> = {
   forms: <GoogleFormsIcon className="h-4 w-4" />,
   meet: <GoogleSymbol name="videocam" className="text-lg" />,
   local: <GoogleSymbol name="description" className="text-lg" />,
+  link: <GoogleSymbol name="link" className="text-lg" />,
 };
 
 const AttendeeSchema = z.object({
@@ -98,18 +101,13 @@ type NewEventFormProps = {
   initialData?: { date: Date; startTime: string; endTime: string; location?: string; } | null;
 };
 
-const getDefaultCalendarId = (user: User, availableCalendars: SharedCalendar[]): CalendarId | undefined => {
+const getDefaultCalendarId = (user: User, availableCalendars: SharedCalendar[]): string | undefined => {
     if (availableCalendars.length === 0) return undefined;
-    
-    // Find the first calendar the user is a manager of
     const managedCalendar = availableCalendars.find(cal => cal.managers?.includes(user.userId));
     if (managedCalendar) return managedCalendar.id;
-    
-    // If Admin/SDM, they can manage all, so pick the first one
     if (user.roles?.includes('Admin') || user.roles?.includes('Service Delivery Manager')) {
         return availableCalendars[0].id;
     }
-
     return undefined;
 };
 
@@ -119,6 +117,11 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
   const [isLoading, setIsLoading] = React.useState(false);
   const [guestSearch, setGuestSearch] = React.useState('');
   const [isGuestPopoverOpen, setIsGuestPopoverOpen] = React.useState(false);
+  const [isLinkDialogOpen, setIsLinkDialogOpen] = React.useState(false);
+  const [linkName, setLinkName] = React.useState('');
+  const [linkUrl, setLinkUrl] = React.useState('');
+  const [isCustomRolePopoverOpen, setIsCustomRolePopoverOpen] = React.useState(false);
+  const [customRoleName, setCustomRoleName] = React.useState('');
 
   const [isCalendarPopoverOpen, setIsCalendarPopoverOpen] = React.useState(false);
   const [isPriorityPopoverOpen, setIsPriorityPopoverOpen] = React.useState(false);
@@ -142,10 +145,10 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
       return eventStrategy.priorities[0]?.id || '';
     }
     if (eventStrategy.type === 'symbol') {
-      return `${eventStrategy.id}:${Math.floor(strategy.max / 2)}`;
+      return `${eventStrategy.id}:${Math.floor(eventStrategy.max / 2)}`;
     }
     if (eventStrategy.type === 'scale') {
-      return `${eventStrategy.id}:${Math.floor((strategy.max - strategy.min) / 2)}`;
+      return `${eventStrategy.id}:${Math.floor((eventStrategy.max - eventStrategy.min) / 2)}`;
     }
     return '';
   }, [eventStrategy]);
@@ -213,29 +216,30 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
     setIsTemplatePopoverOpen(false);
   };
   
-  const assignedRoleUserIds = new Set(Object.values(roleAssignments).map(a => a.assignedUser).filter(Boolean));
+  const assignedUserIds = new Set(Object.values(roleAssignments).map(a => a.assignedUser).filter(Boolean));
 
   const filteredGuests = React.useMemo(() => {
-    const selectedAttendeeIds = new Set(selectedAttendees.map(att => att.userId).filter(Boolean));
-    const baseList = users.filter(user => !selectedAttendeeIds.has(user.userId) && !assignedRoleUserIds.has(user.userId));
-    
-    if (!guestSearch) return baseList;
-    return baseList.filter(user => 
-        user.displayName.toLowerCase().includes(guestSearch.toLowerCase()) || 
-        user.email.toLowerCase().includes(guestSearch.toLowerCase())
-    );
-  }, [users, guestSearch, selectedAttendees, assignedRoleUserIds]);
+    const selectedAttendeeEmails = new Set(selectedAttendees.map(att => att.email));
+    return users.filter(user => !selectedAttendeeEmails.has(user.email) && !assignedUserIds.has(user.userId));
+  }, [users, selectedAttendees, assignedUserIds]);
 
   const selectedCalendar = calendars.find(c => c.id === selectedCalendarId) || availableCalendars[0];
   
-  const handleAddAttachment = (type: AttachmentType, name: string) => {
+  const handleAddAttachment = (type: AttachmentType, name: string, url: string = '#') => {
     const currentAttachments = form.getValues('attachments') || [];
-    form.setValue('attachments', [...currentAttachments, { type, name, url: '#' }]);
-    toast({
-        title: 'Attachment Added',
-        description: `${name} has been attached to the event.`,
-    });
+    form.setValue('attachments', [...currentAttachments, { type, name, url }]);
   };
+  
+  const handleAddLink = () => {
+    if (!linkUrl.trim() || !linkName.trim()) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Both URL and display name are required.' });
+        return;
+    }
+    handleAddAttachment('link', linkName.trim(), linkUrl.trim());
+    setIsLinkDialogOpen(false);
+    setLinkName('');
+    setLinkUrl('');
+  }
 
   const handleRemoveAttachment = (indexToRemove: number) => {
     const currentAttachments = form.getValues('attachments') || [];
@@ -259,6 +263,27 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
     }
   };
 
+  const handleAddGuestsByRole = (roleName: string) => {
+      if (!teamForSelectedCalendar) return;
+      const currentAttendees = form.getValues('attendees') || [];
+      const currentAttendeeEmails = new Set(currentAttendees.map(att => att.email));
+      
+      const usersInRole = teamForSelectedCalendar.members
+          .map(memberId => users.find(u => u.userId === memberId))
+          .filter((u): u is User => !!u && u.roles?.includes(roleName));
+
+      const newAttendees = usersInRole
+          .filter(u => !currentAttendeeEmails.has(u.email) && !assignedUserIds.has(u.userId))
+          .map(u => ({ userId: u.userId, displayName: u.displayName, email: u.email, avatarUrl: u.avatarUrl }));
+
+      if (newAttendees.length > 0) {
+          form.setValue('attendees', [...currentAttendees, ...newAttendees]);
+          toast({ title: 'Guests Added', description: `${newAttendees.length} user(s) with role "${roleName}" added.` });
+      } else {
+          toast({ title: 'No New Guests', description: `All users with role "${roleName}" are already invited or assigned.`, variant: 'default' });
+      }
+  };
+
   const handleAssignUserToRole = (role: string, user: User) => {
     setRoleAssignments(prev => ({ ...prev, [role]: { assignedUser: user.userId, popoverOpen: false }}));
   };
@@ -274,6 +299,21 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
     }));
   };
 
+  const handleAddCustomRole = () => {
+    const name = customRoleName.trim();
+    if (!name) {
+        toast({ variant: 'destructive', title: "Role name cannot be empty." });
+        return;
+    }
+    if (roleAssignments.hasOwnProperty(name)) {
+        toast({ variant: 'destructive', title: `Role "${name}" already exists for this event.` });
+        return;
+    }
+    setRoleAssignments(prev => ({ ...prev, [name]: { assignedUser: null, popoverOpen: false } }));
+    setCustomRoleName('');
+    setIsCustomRolePopoverOpen(false);
+  };
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     const [startHour, startMinute] = values.startTime.split(':').map(Number);
@@ -286,16 +326,14 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
     endTime.setHours(endHour, endMinute, 0, 0);
 
     const finalRoleAssignments: Record<string, string | null> = {};
-    if (selectedTemplate) {
-      Object.entries(roleAssignments).forEach(([role, assignment]) => {
-        finalRoleAssignments[role] = assignment.assignedUser;
-      });
-    }
+    Object.entries(roleAssignments).forEach(([role, assignment]) => {
+      finalRoleAssignments[role] = assignment.assignedUser;
+    });
 
     try {
       await addEvent({
         title: values.title,
-        calendarId: values.calendarId as CalendarId,
+        calendarId: values.calendarId,
         startTime,
         endTime,
         location: values.location,
@@ -325,10 +363,11 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
     }
   }
 
-  const dayKey = startOfDay(eventDate).toISOString();
-  const absencesForDay = userStatusAssignments[dayKey] || [];
+  const dayKey = eventDate ? startOfDay(eventDate).toISOString() : null;
+  const absencesForDay = dayKey ? (userStatusAssignments[dayKey] || []) : [];
 
   return (
+    <>
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <div className="flex items-center justify-between pb-4">
@@ -350,7 +389,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                           <div key={cal.id} 
                               onClick={() => {
                                   field.onChange(cal.id);
-                                  form.setValue('templateId', ''); // Reset template on calendar change
+                                  form.setValue('templateId', '');
                                   setIsCalendarPopoverOpen(false);
                               }}
                               className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer"
@@ -567,85 +606,83 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="attendees"
-            render={() => (
-              <FormItem>
-                <Card>
-                  <CardContent className="p-2">
+            <Card>
+                <CardContent className="p-2">
                     <div className="flex items-start gap-2">
-                      <Popover open={isGuestPopoverOpen} onOpenChange={setIsGuestPopoverOpen}>
+                    <Popover open={isGuestPopoverOpen} onOpenChange={setIsGuestPopoverOpen}>
                         <PopoverTrigger asChild>
-                           <Button variant="ghost" size="icon" className="shrink-0">
+                            <Button variant="ghost" size="icon" className="shrink-0">
                             <GoogleSymbol name="group_add" className="text-xl" />
-                          </Button>
+                            </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-[480px] p-0" align="start">
-                          <div className="p-2">
-                            <Input
-                              placeholder="Search by name or email..."
-                              value={guestSearch}
-                              onChange={e => setGuestSearch(e.target.value)}
-                              className="w-full"
-                            />
-                          </div>
-                          <Separator />
-                          <div className="max-h-60 overflow-y-auto p-1">
-                            {filteredGuests.map(guest => (
-                              <div
-                                key={guest.userId}
-                                onClick={() => handleToggleGuest(guest)}
-                                className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer"
-                              >
-                                <input
-                                  type="checkbox"
-                                  className="h-4 w-4"
-                                  checked={selectedAttendees.some(att => att.email === guest.email)}
-                                  readOnly
-                                />
-                                <Avatar className="h-8 w-8">
-                                  <AvatarImage src={guest.avatarUrl} alt={guest.displayName} data-ai-hint="user avatar" />
-                                  <AvatarFallback>{guest.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                                </Avatar>
-                                <div>
-                                  <p className="font-medium text-sm">{guest.displayName}</p>
-                                  <p className="text-xs text-muted-foreground">{guest.email}</p>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
+                            <Tabs defaultValue="by-name">
+                                <TabsList className="grid w-full grid-cols-2">
+                                    <TabsTrigger value="by-name">By Name or Email</TabsTrigger>
+                                    <TabsTrigger value="by-role">By Role</TabsTrigger>
+                                </TabsList>
+                                <TabsContent value="by-name" className="p-0">
+                                    <div className="p-2">
+                                        <Input placeholder="Search by name or email..." value={guestSearch} onChange={e => setGuestSearch(e.target.value)} className="w-full" />
+                                    </div>
+                                    <Separator />
+                                    <ScrollArea className="max-h-60">
+                                    <div className="p-1">
+                                    {filteredGuests.filter(g => g.displayName.toLowerCase().includes(guestSearch.toLowerCase()) || g.email.toLowerCase().includes(guestSearch.toLowerCase())).map(guest => (
+                                        <div key={guest.userId} onClick={() => handleToggleGuest(guest)} className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer">
+                                            <Avatar className="h-8 w-8"><AvatarImage src={guest.avatarUrl} alt={guest.displayName} data-ai-hint="user avatar" /><AvatarFallback>{guest.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
+                                            <div><p className="font-medium text-sm">{guest.displayName}</p><p className="text-xs text-muted-foreground">{guest.email}</p></div>
+                                        </div>
+                                    ))}
+                                    </div>
+                                    </ScrollArea>
+                                </TabsContent>
+                                <TabsContent value="by-role" className="p-2">
+                                    <ScrollArea className="max-h-[280px]">
+                                        <div className="flex flex-wrap gap-2 p-2">
+                                            {(teamForSelectedCalendar?.roles || []).map(role => (
+                                                <Badge key={role.name} onClick={() => handleAddGuestsByRole(role.name)} className="cursor-pointer">{role.name}</Badge>
+                                            ))}
+                                        </div>
+                                    </ScrollArea>
+                                </TabsContent>
+                            </Tabs>
                         </PopoverContent>
-                      </Popover>
-                      <div className="flex flex-wrap gap-1 items-center min-h-[40px]">
+                    </Popover>
+                    <div className="flex flex-wrap gap-1 items-center min-h-[40px] flex-1">
                         {selectedAttendees.length > 0 ? (
-                           selectedAttendees.map(attendee => (
+                            selectedAttendees.map(attendee => (
                             <div key={attendee.email} className="flex items-center gap-2 p-1 pr-2 bg-muted rounded-full">
-                              <Avatar className="h-6 w-6">
-                                <AvatarImage src={attendee.avatarUrl} alt={attendee.displayName} data-ai-hint="user avatar" />
-                                <AvatarFallback>{attendee.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                              </Avatar>
-                              <span className="text-sm font-medium">{attendee.displayName}</span>
-                              <button type="button" onClick={() => handleToggleGuest(attendee as User)} className="h-4 w-4 rounded-full hover:bg-muted-foreground/20 flex items-center justify-center">
-                                <GoogleSymbol name="cancel" className="text-sm" />
-                              </button>
+                                <Avatar className="h-6 w-6"><AvatarImage src={attendee.avatarUrl} alt={attendee.displayName} data-ai-hint="user avatar" /><AvatarFallback>{attendee.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
+                                <span className="text-sm font-medium">{attendee.displayName}</span>
+                                <button type="button" onClick={() => handleToggleGuest(attendee as User)} className="h-4 w-4 rounded-full hover:bg-muted-foreground/20 flex items-center justify-center"><GoogleSymbol name="cancel" className="text-sm" /></button>
                             </div>
-                          ))
+                            ))
                         ) : (
-                          <p className="text-sm text-muted-foreground">Add guests...</p>
+                            <p className="text-sm text-muted-foreground">Add guests...</p>
                         )}
-                      </div>
                     </div>
-                  </CardContent>
-                </Card>
-              </FormItem>
-            )}
-          />
+                    </div>
+                </CardContent>
+            </Card>
 
-            {selectedTemplate && teamForSelectedCalendar && (
+            {teamForSelectedCalendar && (
                 <Card>
                     <CardContent className="p-2">
-                        <p className="text-sm text-muted-foreground mb-2 px-1">Requested Roles</p>
+                        <div className="flex items-center justify-between mb-2 px-1">
+                            <p className="text-sm text-muted-foreground">Requested Roles</p>
+                            <Popover open={isCustomRolePopoverOpen} onOpenChange={setIsCustomRolePopoverOpen}>
+                                <PopoverTrigger asChild>
+                                    <Button type="button" variant="ghost" size="icon" className="h-6 w-6"><GoogleSymbol name="add_circle" className="text-lg" /></Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-60 p-2">
+                                    <div className="flex gap-2">
+                                        <Input placeholder="Custom role name" value={customRoleName} onChange={(e) => setCustomRoleName(e.target.value)} />
+                                        <Button size="icon" onClick={handleAddCustomRole}><GoogleSymbol name="add" /></Button>
+                                    </div>
+                                </PopoverContent>
+                            </Popover>
+                        </div>
                         <div className="flex flex-wrap gap-2">
                             {Object.entries(roleAssignments).map(([role, { assignedUser, popoverOpen }]) => {
                                 const user = assignedUser ? users.find(u => u.userId === assignedUser) : null;
@@ -655,10 +692,11 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                                     .map(memberId => users.find(u => u.userId === memberId))
                                     .filter((u): u is User => !!u);
                                     
-                                const usersWithRole = teamMemberUsers.filter(u => u.roles?.includes(role));
+                                const availableUsers = teamMemberUsers
+                                    .filter(u => !absencesForDay.some(a => a.userId === u.userId))
+                                    .filter(u => !Object.values(roleAssignments).some(val => val.assignedUser === u.userId));
                                 
-                                const availableUsers = usersWithRole.filter(u => !absencesForDay.some(a => a.userId === u.userId));
-                                const absentUsers = usersWithRole
+                                const absentUsers = teamMemberUsers
                                     .filter(u => absencesForDay.some(a => a.userId === u.userId))
                                     .map(u => ({ ...u, absence: absencesForDay.find(a => a.userId === u.userId)!.status }));
 
@@ -729,6 +767,10 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                         <GoogleSymbol name="description" className="mr-2 text-lg" />
                         <span>Attach file</span>
                       </DropdownMenuItem>
+                       <DropdownMenuItem onSelect={() => { setIsLinkDialogOpen(true); }}>
+                        <GoogleSymbol name="link" className="mr-2 text-lg" />
+                        <span>Add Link</span>
+                      </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onSelect={() => handleAddAttachment('drive', 'Project Assets')}>
                         <GoogleDriveIcon className="mr-2 h-4 w-4" />
@@ -751,9 +793,9 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                         <span>Google Forms</span>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onSelect={() => handleAddAttachment('meet', 'Google Meet')}>
+                      <DropdownMenuItem onSelect={() => handleAddAttachment('meet', 'Meet link')}>
                         <GoogleSymbol name="videocam" className="mr-2 text-lg" />
-                        <span>Add Google Meet</span>
+                        <span>Meet link</span>
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -789,7 +831,20 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
         </div>
       </form>
     </Form>
+
+    <Dialog open={isLinkDialogOpen} onOpenChange={setIsLinkDialogOpen}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>Add Link</DialogTitle>
+                <DialogDescription>Paste a URL and give it a display name.</DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+                <Input placeholder="URL (e.g., https://example.com)" value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} />
+                <Input placeholder="Display Name (e.g., Project Website)" value={linkName} onChange={(e) => setLinkName(e.target.value)} />
+            </div>
+            <Button onClick={handleAddLink}>Add Link</Button>
+        </DialogContent>
+    </Dialog>
+    </>
   );
 }
-
-    

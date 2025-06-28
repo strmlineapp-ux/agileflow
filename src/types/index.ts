@@ -132,7 +132,7 @@ export interface SharedCalendar {
   roleAssignmentsLabel?: string;
 }
 
-export type AttachmentType = 'drive' | 'docs' | 'sheets' | 'slides' | 'forms' | 'meet' | 'local';
+export type AttachmentType = 'drive' | 'docs' | 'sheets' | 'slides' | 'forms' | 'meet' | 'local' | 'link';
 
 export interface Attachment {
   name: string;
