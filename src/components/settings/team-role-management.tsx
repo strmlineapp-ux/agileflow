@@ -10,11 +10,11 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
-import { type Team } from '@/types';
+import { type Team, type Notification } from '@/types';
 import { GoogleSymbol } from '../icons/google-symbol';
 
 export function TeamRoleManagement({ team }: { team: Team }) {
-  const { allTeamRoles, updateTeam } = useUser();
+  const { allTeamRoles, updateTeam, users, teams, realUser, notifications, setNotifications } = useUser();
   const { toast } = useToast();
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -24,6 +24,11 @@ export function TeamRoleManagement({ team }: { team: Team }) {
   const [roleToEdit, setRoleToEdit] = useState<string | null>(null);
   const [roleToDelete, setRoleToDelete] = useState<string | null>(null);
   const [newRoleName, setNewRoleName] = useState('');
+
+  // New state for conflict management
+  const [roleToAdd, setRoleToAdd] = useState('');
+  const [conflictingTeams, setConflictingTeams] = useState<string[]>([]);
+  const [isConflictDialogOpen, setIsConflictDialogOpen] = useState(false);
 
   const rolesForThisTeam = team.roles || [];
 
@@ -49,14 +54,57 @@ export function TeamRoleManagement({ team }: { team: Team }) {
 
   const handleAddRole = () => {
     const trimmedName = newRoleName.trim();
-    if (trimmedName && !allTeamRoles.includes(trimmedName)) {
+    if (!trimmedName) {
+      toast({ variant: 'destructive', title: "Error", description: "Role name cannot be empty." });
+      return;
+    }
+    if (rolesForThisTeam.includes(trimmedName)) {
+      toast({ variant: 'destructive', title: "Error", description: `This team already has the role "${trimmedName}".` });
+      return;
+    }
+
+    const otherTeamsWithRole = teams.filter(t => t.id !== team.id && (t.roles || []).includes(trimmedName));
+
+    if (otherTeamsWithRole.length > 0) {
+      setRoleToAdd(trimmedName);
+      setConflictingTeams(otherTeamsWithRole.map(t => t.name));
+      setIsConflictDialogOpen(true);
+      setIsAddDialogOpen(false); // Close the initial dialog
+    } else {
+      // No conflict, add directly
       const updatedTeamRoles = [...rolesForThisTeam, trimmedName];
       handleUpdateTeamRoles(updatedTeamRoles);
       toast({ title: "Role Added", description: `"${trimmedName}" has been added to ${team.name}.` });
       setIsAddDialogOpen(false);
-    } else {
-      toast({ variant: 'destructive', title: "Error", description: `Role "${trimmedName}" already exists or is invalid.` });
     }
+  };
+  
+  const handleConfirmAddDuplicateRole = () => {
+    if (!roleToAdd) return;
+
+    // 1. Add the role
+    const updatedTeamRoles = [...rolesForThisTeam, roleToAdd];
+    handleUpdateTeamRoles(updatedTeamRoles);
+    toast({ title: "Role Added", description: `"${roleToAdd}" has been added to ${team.name}.` });
+
+    // 2. Create notification
+    const allInvolvedTeams = [team, ...teams.filter(t => conflictingTeams.includes(t.name))];
+    
+    const newNotification: Notification = {
+      id: new Date().toISOString(),
+      type: 'standard',
+      user: realUser,
+      content: `has added the role "${roleToAdd}", which is now used by teams: ${allInvolvedTeams.map(t => t.name).join(', ')}.`,
+      time: new Date(),
+      read: false,
+    };
+    
+    setNotifications([newNotification, ...notifications]);
+
+    // 3. Reset state
+    setIsConflictDialogOpen(false);
+    setRoleToAdd('');
+    setConflictingTeams([]);
   };
 
   const handleEditRole = () => {
@@ -128,7 +176,7 @@ export function TeamRoleManagement({ team }: { team: Team }) {
           </div>
           <DialogHeader><DialogTitle>Add New Role to {team.name}</DialogTitle></DialogHeader>
           <div className="grid gap-4 py-4">
-            <Input id="new-role-name" value={newRoleName} onChange={(e) => setNewRoleName(e.target.value)} placeholder="Role Name" />
+            <Input id="new-role-name" value={newRoleName} onChange={(e) => setNewRoleName(e.target.value)} placeholder="Role Name" onKeyDown={(e) => e.key === 'Enter' && handleAddRole()} />
           </div>
         </DialogContent>
       </Dialog>
@@ -143,7 +191,7 @@ export function TeamRoleManagement({ team }: { team: Team }) {
           </div>
           <DialogHeader><DialogTitle>Edit Role</DialogTitle></DialogHeader>
           <div className="grid gap-4 py-4">
-            <Input id="edit-role-name" value={newRoleName} onChange={(e) => setNewRoleName(e.target.value)} placeholder="Role Name" />
+            <Input id="edit-role-name" value={newRoleName} onChange={(e) => setNewRoleName(e.target.value)} placeholder="Role Name" onKeyDown={(e) => e.key === 'Enter' && handleEditRole()} />
           </div>
         </DialogContent>
       </Dialog>
@@ -159,6 +207,23 @@ export function TeamRoleManagement({ team }: { team: Team }) {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteRole} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Continue</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      <AlertDialog open={isConflictDialogOpen} onOpenChange={setIsConflictDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Role Already Exists</AlertDialogTitle>
+            <AlertDialogDescription>
+              The role "{roleToAdd}" already exists in the following team(s): {conflictingTeams.join(', ')}.
+              <br /><br />
+              Are you sure you want to add this role to the {team.name} team as well?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmAddDuplicateRole}>Continue</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
