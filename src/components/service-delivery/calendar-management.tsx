@@ -26,7 +26,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle } from 'lucide-react';
+import { GoogleSymbol } from '../icons/google-symbol';
 
 export function CalendarManagement() {
   const { calendars, addCalendar, updateCalendar, deleteCalendar } = useUser();
@@ -92,7 +92,7 @@ export function CalendarManagement() {
               <CardDescription>Add, edit, or delete shared calendars available to all users.</CardDescription>
             </div>
             <Button variant="ghost" size="icon" onClick={openAddDialog}>
-                <PlusCircle className="h-5 w-5" />
+                <GoogleSymbol name="add_circle" />
                 <span className="sr-only">Add New Calendar</span>
             </Button>
           </div>
