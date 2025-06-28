@@ -18,6 +18,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
 export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
   const { viewAsUser, updateUser } = useUser();
@@ -28,7 +29,7 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
 
   const canManageRoles = viewAsUser.roles?.includes('Admin') || team.managers?.includes(viewAsUser.userId);
 
-  const teamSpecificRoles = (member.roles || []).filter(role => team.roles.includes(role));
+  const otherTeamRolesForMember = (member.roles || []).filter(role => !team.roles.includes(role));
 
   const handleOpenRolesDialog = () => {
     setTempRoles(member.roles || []);
@@ -88,10 +89,17 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
                 )}
             </div>
             <div className="flex flex-wrap gap-1 min-h-[24px]">
-              {teamSpecificRoles.length > 0 ? (
-                teamSpecificRoles.map(role => <Badge key={role} variant="secondary" className="rounded-full">{role}</Badge>)
+              {(member.roles || []).length > 0 ? (
+                (member.roles || []).map(role => (
+                    <Badge key={role} variant="secondary" className={cn(
+                        "rounded-full",
+                        !team.roles.includes(role) && "opacity-50"
+                    )}>
+                        {role}
+                    </Badge>
+                ))
               ) : (
-                <p className="text-xs text-muted-foreground italic">No team roles assigned.</p>
+                <p className="text-xs text-muted-foreground italic">No roles assigned.</p>
               )}
             </div>
           </div>
@@ -125,6 +133,28 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
                         </Badge>
                         );
                     })}
+
+                    {team.roles.length > 0 && otherTeamRolesForMember.length > 0 && (
+                        <div className="w-full my-1 border-t"></div>
+                    )}
+
+                    {otherTeamRolesForMember.map(role => (
+                        <TooltipProvider key={role}>
+                            <Tooltip>
+                                <TooltipTrigger>
+                                     <Badge
+                                        variant={'outline'}
+                                        className={cn('gap-1.5 p-1 px-3 rounded-full text-sm opacity-50 cursor-not-allowed')}
+                                    >
+                                        {role}
+                                    </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>This role is managed by another team.</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    ))}
                 </div>
                  <p className="text-xs text-muted-foreground text-right pr-2 mt-2">
                     Click a pill to toggle the role.
