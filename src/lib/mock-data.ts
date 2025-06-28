@@ -174,6 +174,10 @@ export const mockTeams: Team[] = [
         checkLocations: [],
         locationAliases: {},
         workstations: ['EDIT 1', 'EDIT 2', 'EDIT 3', 'EDIT 4', 'Pro Tools Machine'],
+        eventTemplates: [
+            { id: 'template-1', name: 'Basic Studio Shoot', requestedRoles: ['Video Director', 'Edit Events'] },
+            { id: 'template-2', name: 'Voice Over Record', requestedRoles: ['Post-Production'] }
+        ]
     },
     {
         id: 'live-events',
@@ -189,6 +193,10 @@ export const mockTeams: Team[] = [
         checkLocations: ['Training Room', 'Apgar', 'Locke'],
         locationAliases: {},
         workstations: [],
+        eventTemplates: [
+            { id: 'template-3', name: 'Standard Live Event', requestedRoles: ['TD', 'ES Operator', 'Camera', 'Audio'] },
+            { id: 'template-4', name: 'Auditorium Presentation', requestedRoles: ['TD', 'Content Op'] }
+        ]
     },
     {
         id: 'productions',
@@ -204,6 +212,7 @@ export const mockTeams: Team[] = [
         checkLocations: [],
         locationAliases: {},
         workstations: [],
+        eventTemplates: [],
     }
 ];
 

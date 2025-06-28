@@ -27,6 +27,12 @@ export interface User {
   timeFormat?: '12h' | '24h';
 }
 
+export interface EventTemplate {
+  id: string;
+  name: string; // This is the "Tag"
+  requestedRoles: string[];
+}
+
 export interface Team {
   id: string;
   name: string;
@@ -41,6 +47,7 @@ export interface Team {
   checkLocations: string[]; // subset of pinnedLocations designated for daily checks
   locationAliases?: { [key:string]: string };
   workstations?: string[];
+  eventTemplates?: EventTemplate[];
 }
 
 export interface PageConfig {
