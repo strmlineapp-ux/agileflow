@@ -7,7 +7,6 @@ import { type Event, type User, type UserStatus, type UserStatusAssignment } fro
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { mockHolidays } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
-import { ChevronDown, ChevronRight, PlusCircle, Pencil, Plus, X } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { useUser } from '@/context/user-context';
@@ -20,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { UserStatusBadge } from '@/components/user-status-badge';
 import { Separator } from '@/components/ui/separator';
 import { canCreateAnyEvent } from '@/lib/permissions';
+import { GoogleSymbol } from '../icons/google-symbol';
 
 const isHoliday = (day: Date) => {
     return mockHolidays.some(holiday => isSameDay(day, holiday));
@@ -106,7 +106,7 @@ const ManageChecksDialog = ({ isOpen, onOpenChange, day, initialLocations, onSav
                             <div key={loc} className="flex items-center justify-between bg-muted/50 p-2 rounded-md">
                                 <span className="text-sm">{loc}</span>
                                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleRemoveLocation(loc)}>
-                                    <X className="h-4 w-4" />
+                                    <GoogleSymbol name="close" />
                                     <span className="sr-only">Remove {loc}</span>
                                 </Button>
                             </div>
@@ -197,7 +197,7 @@ const ManageStatusDialog = ({ isOpen, onOpenChange, day, initialAssignments, use
                                                 <UserStatusBadge status={status}>{status}</UserStatusBadge>
                                             </div>
                                             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleRemoveStatusAssignment(userId)}>
-                                                <X className="h-4 w-4" />
+                                                <GoogleSymbol name="close" />
                                                 <span className="sr-only">Remove status</span>
                                             </Button>
                                         </div>
@@ -348,7 +348,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
             if (isWeekend) initialCollapsedDays.add(dayIso);
 
             const locationsToCollapse = new Set<string>();
-            allDayLocations.forEach(loc => {
+            (allDayLocations || []).forEach(loc => {
                 if (!groupedEvents[loc] || groupedEvents[loc].length === 0) {
                     locationsToCollapse.add(loc);
                 }
@@ -475,7 +475,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
              <Popover>
                 <PopoverTrigger asChild>
                     <Button variant="ghost" size={assignedUser ? "sm" : "icon"} className={cn("h-6 text-xs", assignedUser ? "w-auto px-1.5" : "w-6 ml-1")}>
-                        {assignedUser ? `${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}` : <PlusCircle className="h-4 w-4" />}
+                        {assignedUser ? `${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}` : <GoogleSymbol name="add_circle" />}
                     </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-56 p-0">
@@ -497,7 +497,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
             <div key={location} className={cn("flex", { "border-b": !isLast }, {"bg-muted/10": index % 2 !== 0})}>
                 <div className="w-[160px] shrink-0 p-2 border-r flex items-center justify-between bg-card sticky left-0 z-30">
                     <div className="flex items-center gap-1 cursor-pointer flex-1 min-w-0" onClick={() => toggleLocationCollapse(dayIso, location)}>
-                        {isLocationCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                        {isLocationCollapsed ? <GoogleSymbol name="chevron_right" /> : <GoogleSymbol name="expand_more" />}
                         <p className="font-medium text-sm truncate">{location}</p>
                     </div>
                      {pinnedLocations.includes(location) && location !== 'Studio' && (canManageChecks ? assignmentControl : assignedUser && <div className="h-6 text-xs px-1.5 flex items-center justify-center text-muted-foreground">{`${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}`}</div>)}
@@ -537,11 +537,11 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
                         <Card className="overflow-hidden">
                              <div className="p-2 border-b bg-card flex flex-wrap items-center justify-between gap-4">
                                 <div className="flex flex-wrap items-center gap-2">
-                                    {canManageChecks && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenManageChecksDialog(dayIso)}><Pencil className="h-4 w-4" /><span className="sr-only">Edit check locations</span></Button>}
+                                    {canManageChecks && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenManageChecksDialog(dayIso)}><GoogleSymbol name="edit" /><span className="sr-only">Edit check locations</span></Button>}
                                     {dailyExtraLocations.map(location => {
                                         const assignedUserId = dailyCheckAssignments[dayIso]?.[location];
                                         const assignedUser = users.find(u => u.userId === assignedUserId);
-                                        const pillContent = <>{location}{assignedUser && <span className="ml-2 font-normal text-muted-foreground">({`${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}`})</span>}{!assignedUser && canManageChecks && <PlusCircle className="ml-2 h-4 w-4" />}</>;
+                                        const pillContent = <>{location}{assignedUser && <span className="ml-2 font-normal text-muted-foreground">({`${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}`})</span>}{!assignedUser && canManageChecks && <GoogleSymbol name="add_circle" className="ml-2" />}</>;
                                         return canManageChecks ? (
                                             <Popover key={location}><PopoverTrigger asChild><Button variant={assignedUser ? "secondary" : "outline"} size="sm" className="rounded-full h-8">{pillContent}</Button></PopoverTrigger>
                                                 <PopoverContent className="w-56 p-0">
@@ -565,14 +565,14 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
                                         const user = users.find(u => u.userId === userId);
                                         return user ? <UserStatusBadge key={userId} status={status}>{user.displayName}</UserStatusBadge> : null;
                                     })}
-                                    {canManageStatus && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenStatusDialog(dayIso)}><Pencil className="h-4 w-4" /><span className="sr-only">Edit user statuses</span></Button>}
+                                    {canManageStatus && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenStatusDialog(dayIso)}><GoogleSymbol name="edit" /><span className="sr-only">Edit user statuses</span></Button>}
                                 </div>
                             </div>
                             <div className="overflow-x-auto" ref={el => dayScrollerRefs.current.set(dayIso, el)}>
                                 <div style={{ width: `${LOCATION_LABEL_WIDTH_PX + (24 * hourWidth)}px`}}>
                                     <CardHeader className="p-0 border-b sticky top-0 bg-card z-20 flex flex-row">
                                         <div className="w-[160px] shrink-0 border-r p-2 flex items-center font-semibold text-sm sticky left-0 bg-card z-30 cursor-pointer gap-2" onClick={() => toggleDayCollapse(dayIso)}>
-                                           {isDayCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                                           {isDayCollapsed ? <GoogleSymbol name="chevron_right" /> : <GoogleSymbol name="expand_more" />}
                                            <span className={cn({ "text-primary": isDayToday })}>{format(day, 'EEE, MMMM d, yyyy').toUpperCase()}</span>
                                         </div>
                                         {hours.map(hour => <div key={hour} className="shrink-0 text-left p-2 border-r" style={{ width: `${hourWidth}px`}}><span className="text-xs text-muted-foreground">{format(addHours(startOfDay(day), hour), timeFormatTimeline)}</span></div>)}

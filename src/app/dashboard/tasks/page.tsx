@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { TaskList } from '@/components/tasks/task-list';
-import { PlusCircle } from 'lucide-react';
+import { GoogleSymbol } from '@/components/icons/google-symbol';
 
 export default function TasksPage() {
   return (
@@ -8,7 +8,7 @@ export default function TasksPage() {
       <div className="flex items-center justify-between">
         <h1 className="font-headline text-3xl font-semibold">Tasks</h1>
         <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
+          <GoogleSymbol name="add_circle" className="mr-2" />
           New Task
         </Button>
       </div>

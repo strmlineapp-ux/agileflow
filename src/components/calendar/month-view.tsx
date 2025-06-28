@@ -8,8 +8,8 @@ import { cn } from '@/lib/utils';
 import { Badge } from '../ui/badge';
 import { mockHolidays } from '@/lib/mock-data';
 import { Button } from '../ui/button';
-import { ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { useUser } from '@/context/user-context';
+import { GoogleSymbol } from '../icons/google-symbol';
 
 const isHoliday = (day: Date) => {
     return mockHolidays.some(holiday => isSameDay(day, holiday));
@@ -162,12 +162,12 @@ export function MonthView({ date, containerRef }: { date: Date; containerRef: Re
                         {day}
                          {!showWeekends && day === 'Fri' && (
                              <Button variant="ghost" size="icon" className="absolute right-0 top-1/2 -translate-y-1/2 h-full rounded-none" onClick={() => setShowWeekends(true)}>
-                                <ChevronsRight className="h-4 w-4" />
+                                <GoogleSymbol name="keyboard_double_arrow_right" />
                             </Button>
                         )}
                         {showWeekends && day === 'Sun' && (
                             <Button variant="ghost" size="icon" className="absolute left-0 top-1/2 -translate-y-1/2 h-full rounded-none" onClick={() => setShowWeekends(false)}>
-                                <ChevronsLeft className="h-4 w-4" />
+                                <GoogleSymbol name="keyboard_double_arrow_left" />
                             </Button>
                         )}
                     </div>

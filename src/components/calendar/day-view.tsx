@@ -7,9 +7,9 @@ import { type Event } from '@/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { mockHolidays } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
-import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useUser } from '@/context/user-context';
 import { canCreateAnyEvent } from '@/lib/permissions';
+import { GoogleSymbol } from '../icons/google-symbol';
 
 const isHoliday = (day: Date) => {
     return mockHolidays.some(holiday => isSameDay(day, holiday));
@@ -224,7 +224,7 @@ export function DayView({ date, containerRef, zoomLevel, axisView, onEasyBooking
                     className="w-[160px] shrink-0 p-2 border-r flex items-center justify-start bg-card sticky left-0 z-30 gap-1 cursor-pointer"
                     onClick={() => toggleLocationCollapse(location)}
                 >
-                    {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    {isCollapsed ? <GoogleSymbol name="chevron_right" className="text-lg" /> : <GoogleSymbol name="expand_more" className="text-lg" />}
                     <p className="font-medium text-sm truncate">{location}</p>
                 </div>
                 <div className={cn("relative flex-1", isCollapsed ? "h-10" : "h-20")} onClick={(e) => handleEasyBookingClick(e, 'standard')}>

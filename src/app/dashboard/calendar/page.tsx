@@ -7,13 +7,13 @@ import { MonthView } from '@/components/calendar/month-view';
 import { WeekView } from '@/components/calendar/week-view';
 import { DayView } from '@/components/calendar/day-view';
 import { ProductionScheduleView } from '@/components/calendar/production-schedule-view';
-import { ChevronLeft, ChevronRight, Shrink, Expand, ArrowRightLeft, Plus } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays, startOfWeek, getWeek } from 'date-fns';
 import { useUser } from '@/context/user-context';
 import { canCreateAnyEvent } from '@/lib/permissions';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { NewEventForm } from '@/components/calendar/new-event-form';
+import { GoogleSymbol } from '@/components/icons/google-symbol';
 
 export default function CalendarPage() {
   const { realUser, viewAsUser, calendars } = useUser();
@@ -123,10 +123,10 @@ export default function CalendarPage() {
         <div className="flex items-center gap-2">
             <Button variant="outline" onClick={goToToday}>Today</Button>
             <Button variant="outline" size="icon" onClick={handlePrev}>
-                <ChevronLeft className="h-4 w-4" />
+                <GoogleSymbol name="chevron_left" />
             </Button>
             <Button variant="outline" size="icon" onClick={handleNext}>
-                <ChevronRight className="h-4 w-4" />
+                <GoogleSymbol name="chevron_right" />
             </Button>
             <h1 className="font-headline text-2xl font-semibold ml-4 flex items-baseline gap-3">{getTitle()}</h1>
         </div>
@@ -135,7 +135,7 @@ export default function CalendarPage() {
               <Popover open={isPopoverOpen} onOpenChange={(isOpen) => !isOpen ? closePopover() : setIsPopoverOpen(true)}>
                 <PopoverTrigger asChild>
                   <Button>
-                    <Plus className="mr-2 h-4 w-4" />
+                    <GoogleSymbol name="add" className="mr-2" />
                     New Event
                   </Button>
                 </PopoverTrigger>
@@ -146,13 +146,13 @@ export default function CalendarPage() {
             )}
             {(view === 'production-schedule' || view === 'day' || view === 'week') && (
                 <Button variant="outline" size="icon" onClick={() => setZoomLevel(zoomLevel === 'normal' ? 'fit' : 'normal')}>
-                    {zoomLevel === 'normal' ? <Shrink className="h-4 w-4" /> : <Expand className="h-4 w-4" />}
+                    {zoomLevel === 'normal' ? <GoogleSymbol name="close_fullscreen" /> : <GoogleSymbol name="open_in_full" />}
                     <span className="sr-only">{zoomLevel === 'normal' ? 'Fit to view' : 'Reset view'}</span>
                 </Button>
             )}
              {view === 'day' && (
                 <Button variant="outline" size="icon" onClick={() => setDayViewAxis(dayViewAxis === 'standard' ? 'reversed' : 'standard')}>
-                    <ArrowRightLeft className="h-4 w-4" />
+                    <GoogleSymbol name="swap_horiz" />
                     <span className="sr-only">{dayViewAxis === 'standard' ? 'Switch to reversed axis view' : 'Switch to standard view'}</span>
                 </Button>
             )}

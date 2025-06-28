@@ -1,12 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ListChecks, Clock, CheckCircle, Users } from 'lucide-react';
 import { TaskList } from '@/components/tasks/task-list';
+import { GoogleSymbol } from '@/components/icons/google-symbol';
 
 const stats = [
-  { title: 'Active Tasks', value: '12', icon: ListChecks },
-  { title: 'Due this week', value: '5', icon: Clock },
-  { title: 'Completed', value: '28', icon: CheckCircle },
-  { title: 'Team Members', value: '8', icon: Users },
+  { title: 'Active Tasks', value: '12', icon: 'checklist' },
+  { title: 'Due this week', value: '5', icon: 'schedule' },
+  { title: 'Completed', value: '28', icon: 'check_circle' },
+  { title: 'Team Members', value: '8', icon: 'group' },
 ];
 
 export default function DashboardPage() {
@@ -18,7 +18,7 @@ export default function DashboardPage() {
           <Card key={stat.title}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-              <stat.icon className="h-4 w-4 text-muted-foreground" />
+              <GoogleSymbol name={stat.icon} className="text-muted-foreground text-2xl" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stat.value}</div>

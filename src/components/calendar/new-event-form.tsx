@@ -6,7 +6,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, Paperclip, File as FileIcon, Video, X, Users } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -30,6 +29,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PriorityBadge } from './priority-badge';
 import { Separator } from '@/components/ui/separator';
+import { GoogleSymbol } from '../icons/google-symbol';
 
 const GoogleDriveIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg viewBox="0 0 16 16" fill="currentColor" {...props}><path d="M9.19,4.5l-3.2,0l-1.7,2.9l3.2,5.7l4.9,0l1.7,-2.9l-4.9,-5.7Z" fill="#0f9d58"></path><path d="M5.99,4.5l-3.2,5.7l1.7,2.9l3.2,-5.7l-1.7,-2.9Z" fill="#ffc107"></path><path d="M10.89,7.4l-3.2,0l-1.7,-2.9l4.9,0l0,0Z" fill="#1976d2"></path></svg>
@@ -53,8 +53,8 @@ const attachmentIcons: Record<AttachmentType, React.ReactNode> = {
   sheets: <GoogleSheetsIcon className="h-4 w-4" />,
   slides: <GoogleSlidesIcon className="h-4 w-4" />,
   forms: <GoogleFormsIcon className="h-4 w-4" />,
-  meet: <Video className="h-4 w-4" />,
-  local: <FileIcon className="h-4 w-4" />,
+  meet: <GoogleSymbol name="videocam" className="text-lg" />,
+  local: <GoogleSymbol name="description" className="text-lg" />,
 };
 
 const AttendeeSchema = z.object({
@@ -337,7 +337,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                                             variant={'outline'}
                                             className={cn('w-full justify-start text-left font-normal', !field.value && 'text-muted-foreground')}
                                         >
-                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            <GoogleSymbol name="calendar_month" className="mr-2 text-lg" />
                                             {field.value ? format(field.value, 'MMM d, yyyy') : <span>Pick a date</span>}
                                         </Button>
                                     </FormControl>
@@ -419,7 +419,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                                         </Avatar>
                                         <span className="text-sm font-medium">{attendee.displayName}</span>
                                         <button type="button" onClick={() => handleToggleGuest(attendee as User)} className="rounded-full hover:bg-muted-foreground/20">
-                                            <X className="h-4 w-4" />
+                                            <GoogleSymbol name="close" className="text-base" />
                                         </button>
                                      </div>
                                 ))}
@@ -429,7 +429,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                         <Popover open={isGuestPopoverOpen} onOpenChange={setIsGuestPopoverOpen}>
                             <PopoverTrigger asChild>
                                 <Button variant="outline" className="w-full justify-start font-normal">
-                                    <Users className="mr-2 h-4 w-4" />
+                                    <GoogleSymbol name="group" className="mr-2 text-xl" />
                                     Add guests
                                 </Button>
                             </PopoverTrigger>
@@ -483,13 +483,13 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0">
-                                        <Paperclip className="h-4 w-4" />
+                                        <GoogleSymbol name="attachment" className="text-xl" />
                                         <span className="sr-only">Attach file</span>
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="start">
                                     <DropdownMenuItem onSelect={() => handleAddAttachment('local', 'design_brief.pdf')}>
-                                        <FileIcon className="mr-2 h-4 w-4" />
+                                        <GoogleSymbol name="description" className="mr-2 text-lg" />
                                         <span>Attach file</span>
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
@@ -515,7 +515,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem onSelect={() => handleAddAttachment('meet', 'Google Meet')}>
-                                        <Video className="mr-2 h-4 w-4" />
+                                        <GoogleSymbol name="videocam" className="mr-2 text-lg" />
                                         <span>Add Google Meet</span>
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
@@ -542,7 +542,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                                 className="h-6 w-6 shrink-0" 
                                 onClick={() => setAttachments(prev => prev.filter((_, i) => i !== index))}
                             >
-                                <X className="h-4 w-4" />
+                                <GoogleSymbol name="close" className="text-xl" />
                                 <span className="sr-only">Remove attachment</span>
                             </Button>
                         </div>

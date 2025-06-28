@@ -3,14 +3,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Calendar, ListChecks, Settings, LogOut, LayoutDashboard, UserCheck, Bell, Briefcase } from 'lucide-react';
 import Logo from '@/components/icons/logo';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal } from '../ui/dropdown-menu';
 import { useUser } from '@/context/user-context';
-import { DynamicIcon, type IconName } from '../icons/dynamic-icon';
+import { GoogleSymbol } from '../icons/google-symbol';
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -25,22 +24,22 @@ export function Sidebar() {
   );
 
   const navItems = [
-    { href: '/dashboard/calendar', icon: Calendar, label: 'Calendar', visible: true },
-    { href: '/dashboard', icon: LayoutDashboard, label: 'Overview', visible: true },
-    { href: '/dashboard/tasks', icon: ListChecks, label: 'Tasks', visible: true },
-    { href: '/dashboard/service-delivery', icon: Briefcase, label: 'Service Delivery', visible: isSdm },
+    { href: '/dashboard/calendar', icon: 'calendar_month', label: 'Calendar', visible: true },
+    { href: '/dashboard', icon: 'dashboard', label: 'Overview', visible: true },
+    { href: '/dashboard/tasks', icon: 'checklist', label: 'Tasks', visible: true },
+    { href: '/dashboard/service-delivery', icon: 'business_center', label: 'Service Delivery', visible: isSdm },
   ];
 
   const teamNavItems = userTeams.map(team => ({
     href: `/dashboard/teams/${team.id}`,
-    icon: (props: any) => <DynamicIcon name={team.icon as IconName} {...props} />,
+    icon: team.icon,
     label: team.name,
     visible: true,
   }));
 
   const bottomNavItems = [
-    { href: '/dashboard/notifications', icon: Bell, label: 'Notifications', visible: true },
-    { href: '/dashboard/settings', icon: Settings, label: 'Settings', visible: true },
+    { href: '/dashboard/notifications', icon: 'notifications', label: 'Notifications', visible: true },
+    { href: '/dashboard/settings', icon: 'settings', label: 'Settings', visible: true },
   ];
 
   const allNavItems = [...navItems, ...teamNavItems, ...bottomNavItems];
@@ -76,7 +75,7 @@ export function Sidebar() {
                     pathname === '/dashboard' && item.href === '/dashboard' && 'bg-accent text-accent-foreground'
                   )}
                 >
-                  <item.icon className="h-5 w-5" />
+                  <GoogleSymbol name={item.icon} className="text-2xl" />
                   {item.href === '/dashboard/notifications' && unreadCount > 0 && (
                     <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary p-0 text-xs text-primary-foreground">
                       {unreadCount}
@@ -111,7 +110,7 @@ export function Sidebar() {
             <DropdownMenuContent side="right" align="end" className="w-56">
                 <DropdownMenuItem asChild>
                     <Link href="/dashboard/settings">
-                        <Settings className="mr-2 h-4 w-4" />
+                        <GoogleSymbol name="settings" className="mr-2 text-lg" />
                         <span>Settings</span>
                     </Link>
                 </DropdownMenuItem>
@@ -119,7 +118,7 @@ export function Sidebar() {
                 {isAdmin && (
                   <DropdownMenuSub>
                     <DropdownMenuSubTrigger>
-                      <UserCheck className="mr-2 h-4 w-4" />
+                      <GoogleSymbol name="how_to_reg" className="mr-2 text-lg" />
                       <span>View as</span>
                     </DropdownMenuSubTrigger>
                     <DropdownMenuPortal>
@@ -145,7 +144,7 @@ export function Sidebar() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                     <Link href="/login">
-                        <LogOut className="mr-2 h-4 w-4" />
+                        <GoogleSymbol name="logout" className="mr-2 text-lg" />
                         <span>Logout</span>
                     </Link>
                 </DropdownMenuItem>

@@ -10,9 +10,9 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { type Team } from '@/types';
+import { GoogleSymbol } from '../icons/google-symbol';
 
 export function TeamRoleManagement({ team }: { team: Team }) {
   const { allTeamRoles, updateTeam } = useUser();
@@ -92,7 +92,7 @@ export function TeamRoleManagement({ team }: { team: Team }) {
               </CardDescription>
             </div>
             <Button variant="ghost" size="icon" onClick={openAddDialog}>
-              <PlusCircle className="h-5 w-5" />
+              <GoogleSymbol name="add_circle" className="text-2xl" />
               <span className="sr-only">Add New Role</span>
             </Button>
           </div>
@@ -108,7 +108,7 @@ export function TeamRoleManagement({ team }: { team: Team }) {
                   className="ml-1 h-5 w-5 hover:bg-destructive/20 rounded-full" 
                   onClick={() => openDeleteDialog(role)}
                 >
-                  <X className="h-3 w-3" />
+                  <GoogleSymbol name="close" className="text-sm" />
                   <span className="sr-only">Delete {role}</span>
                 </Button>
               </Badge>

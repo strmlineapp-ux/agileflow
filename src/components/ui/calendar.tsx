@@ -1,11 +1,11 @@
 "use client"
 
 import * as React from "react"
-import { ChevronLeft, ChevronRight } from "lucide-react"
 import { DayPicker } from "react-day-picker"
 
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
+import { GoogleSymbol } from "../icons/google-symbol"
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>
 
@@ -54,12 +54,8 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        IconLeft: ({ className, ...props }) => (
-          <ChevronLeft className={cn("h-4 w-4", className)} {...props} />
-        ),
-        IconRight: ({ className, ...props }) => (
-          <ChevronRight className={cn("h-4 w-4", className)} {...props} />
-        ),
+        IconLeft: ({ ...props }) => <GoogleSymbol name="chevron_left" {...props} />,
+        IconRight: ({ ...props }) => <GoogleSymbol name="chevron_right" {...props} />,
       }}
       {...props}
     />

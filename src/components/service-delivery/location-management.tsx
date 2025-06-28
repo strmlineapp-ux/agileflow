@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, X } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,6 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { GoogleSymbol } from '../icons/google-symbol';
 
 export function LocationManagement() {
   const { locations, addLocation, deleteLocation } = useUser();
@@ -65,7 +65,7 @@ export function LocationManagement() {
                         className="h-5 w-5 hover:bg-destructive/20"
                         onClick={() => setLocationToDelete(loc.id)}
                       >
-                        <X className="h-3 w-3" />
+                        <GoogleSymbol name="close" className="text-sm" />
                         <span className="sr-only">Delete {loc.name}</span>
                       </Button>
                     </div>
@@ -85,7 +85,7 @@ export function LocationManagement() {
                   onKeyDown={(e) => e.key === 'Enter' && handleAddLocation()}
                 />
                 <Button onClick={handleAddLocation} disabled={!newLocationName.trim()}>
-                  <PlusCircle className="mr-2 h-4 w-4" />
+                  <GoogleSymbol name="add_circle" className="mr-2" />
                   Add Location
                 </Button>
               </div>

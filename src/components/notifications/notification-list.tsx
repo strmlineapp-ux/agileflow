@@ -9,7 +9,7 @@ import { useUser } from '@/context/user-context';
 import { type User } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { Check, X } from 'lucide-react';
+import { GoogleSymbol } from '../icons/google-symbol';
 
 export function NotificationList() {
   const { toast } = useToast();
@@ -80,11 +80,11 @@ export function NotificationList() {
                       {notification.status === 'pending' && (
                         <>
                            <Button size="sm" onClick={() => handleApproval(notification.id, true)}>
-                             <Check className="mr-2 h-4 w-4" />
+                             <GoogleSymbol name="check" className="mr-2" />
                              Allow
                            </Button>
                            <Button size="sm" variant="destructive" onClick={() => handleApproval(notification.id, false)}>
-                             <X className="mr-2 h-4 w-4" />
+                             <GoogleSymbol name="close" className="mr-2" />
                              Reject
                            </Button>
                         </>

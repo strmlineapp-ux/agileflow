@@ -4,13 +4,9 @@
 import React, { useState, useMemo } from 'react';
 import { useUser } from '@/context/user-context';
 import { type Team, type User } from '@/types';
-import { type IconName, iconNames, DynamicIcon } from '@/components/icons/dynamic-icon';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,13 +19,14 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, Check, Trash2 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { GoogleSymbol } from '../icons/google-symbol';
+import { googleSymbolNames } from '@/lib/google-symbols';
 
 export function TeamManagement() {
   const { users, teams, addTeam, updateTeam, deleteTeam } = useUser();
@@ -70,7 +67,7 @@ export function TeamManagement() {
               <CardDescription>Add, edit, or delete teams and their members.</CardDescription>
             </div>
             <Button variant="ghost" size="icon" onClick={openAddDialog}>
-                <PlusCircle className="h-5 w-5" />
+                <GoogleSymbol name="add_circle" className="text-2xl" />
                 <span className="sr-only">Add New Team</span>
             </Button>
           </div>
@@ -134,12 +131,13 @@ type TeamFormDialogProps = {
 
 function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, onDeleteRequest }: TeamFormDialogProps) {
     const [name, setName] = useState(team?.name || '');
-    const [icon, setIcon] = useState<IconName>(team?.icon as IconName || 'Users');
+    const [icon, setIcon] = useState<string>(team?.icon || 'group');
     const [members, setMembers] = useState<string[]>(team?.members || []);
     const [managers, setManagers] = useState<string[]>(team?.managers || []);
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
     const [isMemberPopoverOpen, setIsMemberPopoverOpen] = useState(false);
     const [memberSearch, setMemberSearch] = useState('');
+    const [iconSearch, setIconSearch] = useState('');
     const { toast } = useToast();
 
     const handleMemberToggleInPopover = (userId: string, isChecked: boolean) => {
@@ -192,6 +190,13 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
         );
     }, [allUsers, memberSearch]);
 
+    const filteredIcons = useMemo(() => {
+        if (!iconSearch) return googleSymbolNames;
+        return googleSymbolNames.filter(iconName =>
+            iconName.toLowerCase().includes(iconSearch.toLowerCase())
+        );
+    }, [iconSearch]);
+
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <DialogContent className="sm:max-w-md">
@@ -203,7 +208,7 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
                             className="h-8 w-8 text-muted-foreground hover:text-destructive"
                             onClick={() => onDeleteRequest(team)}
                         >
-                            <Trash2 className="h-5 w-5" />
+                            <GoogleSymbol name="delete" className="text-xl" />
                             <span className="sr-only">Delete team</span>
                         </Button>
                     )}
@@ -213,7 +218,7 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
                         className="h-8 w-8" 
                         onClick={handleSave}
                     >
-                        <Check className="h-5 w-5" />
+                        <GoogleSymbol name="check" className="text-xl" />
                         <span className="sr-only">Save Changes</span>
                     </Button>
                 </div>
@@ -227,25 +232,35 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
                                 size="icon"
                                 className="h-9 w-9"
                             >
-                                <DynamicIcon name={icon} className="h-5 w-5 text-muted-foreground" />
+                                <GoogleSymbol name={icon} className="text-2xl text-muted-foreground" />
                             </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-2">
-                                <div className="grid grid-cols-5 gap-2">
-                                    {iconNames.map((iconName) => (
+                            <PopoverContent className="w-80 p-0">
+                                <div className="p-2 border-b">
+                                    <Input 
+                                        placeholder="Search icons..."
+                                        value={iconSearch}
+                                        onChange={(e) => setIconSearch(e.target.value)}
+                                    />
+                                </div>
+                                <ScrollArea className="h-64">
+                                <div className="grid grid-cols-6 gap-1 p-2">
+                                    {filteredIcons.slice(0, 300).map((iconName) => ( // limit to 300 for performance
                                     <Button
                                         key={iconName}
-                                        variant={icon === iconName ? "default" : "outline"}
+                                        variant={icon === iconName ? "default" : "ghost"}
                                         size="icon"
                                         onClick={() => {
                                         setIcon(iconName);
                                         setIsIconPopoverOpen(false);
                                         }}
+                                        className="text-2xl"
                                     >
-                                        <DynamicIcon name={iconName} />
+                                        <GoogleSymbol name={iconName} />
                                     </Button>
                                     ))}
                                 </div>
+                                </ScrollArea>
                             </PopoverContent>
                         </Popover>
                         
@@ -264,7 +279,7 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
                             <Popover open={isMemberPopoverOpen} onOpenChange={setIsMemberPopoverOpen}>
                                 <PopoverTrigger asChild>
                                     <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 mt-1">
-                                        <PlusCircle className="h-5 w-5" />
+                                        <GoogleSymbol name="add" className="text-2xl" />
                                         <span className="sr-only">Add or remove members</span>
                                     </Button>
                                 </PopoverTrigger>

@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, ChevronRight, Pencil, Palette, X, Check } from 'lucide-react';
 import { Label } from "@/components/ui/label"
 import {
   Dialog,
@@ -26,6 +25,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
+import { GoogleSymbol } from '../icons/google-symbol';
 
 export function UserManagement() {
     const { realUser, viewAsUser, users, allSystemRoles, allTeamRoles, updateUser, linkGoogleCalendar } = useUser();
@@ -227,7 +227,7 @@ export function UserManagement() {
                                     <TableRow>
                                         <TableCell>
                                             <Button variant="ghost" size="icon" onClick={() => toggleRow(user.userId)}>
-                                                {expandedRows.has(user.userId) ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                                                {expandedRows.has(user.userId) ? <GoogleSymbol name="expand_more" /> : <GoogleSymbol name="chevron_right" />}
                                                 <span className="sr-only">Toggle row</span>
                                             </Button>
                                         </TableCell>
@@ -275,7 +275,7 @@ export function UserManagement() {
                                                 <Popover>
                                                     <PopoverTrigger asChild>
                                                         <Button variant="ghost" size="icon">
-                                                            <Palette className="h-4 w-4" />
+                                                            <GoogleSymbol name="palette" />
                                                             <span className="sr-only">Change preferences</span>
                                                         </Button>
                                                     </PopoverTrigger>
@@ -371,7 +371,7 @@ export function UserManagement() {
                                                                             setEditingContactUser(user);
                                                                             setPhone(user.phone || '');
                                                                         }}>
-                                                                            <Pencil className="h-3 w-3" />
+                                                                            <GoogleSymbol name="edit" className="text-base" />
                                                                             <span className="sr-only">Edit phone number</span>
                                                                         </Button>
                                                                     )}
@@ -383,7 +383,7 @@ export function UserManagement() {
                                                                     <p className="text-xs text-muted-foreground">Reporting Line</p>
                                                                     {viewAsUser.roles?.includes('Admin') && (
                                                                         <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => handleEditReportingLine(user)}>
-                                                                            <Pencil className="h-3 w-3" />
+                                                                            <GoogleSymbol name="edit" className="text-base" />
                                                                             <span className="sr-only">Edit reporting line</span>
                                                                         </Button>
                                                                     )}
@@ -400,7 +400,7 @@ export function UserManagement() {
                                                             <p className="font-medium text-sm">Roles/ Permissions</p>
                                                             {canEditUser(viewAsUser, user) && (
                                                                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleOpenRolesDialog(user)}>
-                                                                    <Pencil className="h-4 w-4" />
+                                                                    <GoogleSymbol name="edit" />
                                                                     <span className="sr-only">Edit roles</span>
                                                                 </Button>
                                                             )}
@@ -480,7 +480,7 @@ export function UserManagement() {
                                         <div key={role} className="flex items-center justify-between bg-muted/50 p-2 rounded-md">
                                             <span className="text-sm">{role}</span>
                                             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleRemoveRoleFromTemp(role)}>
-                                                <X className="h-4 w-4" />
+                                                <GoogleSymbol name="close" />
                                                 <span className="sr-only">Remove {role}</span>
                                             </Button>
                                         </div>

@@ -3,7 +3,6 @@
 
 import * as React from 'react';
 import { format, isToday } from 'date-fns';
-import { MoreHorizontal, ArrowUpDown } from 'lucide-react';
 import { type Task } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -29,6 +28,7 @@ import { Badge } from '@/components/ui/badge';
 import { useUser } from '@/context/user-context';
 import { mockTasks } from '@/lib/mock-data';
 import { PriorityBadge } from '../calendar/priority-badge';
+import { GoogleSymbol } from '../icons/google-symbol';
 
 
 const statusOrder: Task['status'][] = ['in_progress', 'awaiting_review', 'not_started', 'blocked', 'completed'];
@@ -53,7 +53,7 @@ export function TaskList({ limit }: { limit?: number }) {
               <TableHead>
                 <Button variant="ghost" className="-ml-4">
                   Task
-                  <ArrowUpDown className="ml-2 h-4 w-4" />
+                  <GoogleSymbol name="swap_vert" className="ml-2" />
                 </Button>
               </TableHead>
               <TableHead>Assigned To</TableHead>
@@ -89,7 +89,7 @@ export function TaskList({ limit }: { limit?: number }) {
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button aria-haspopup="true" size="icon" variant="ghost">
-                        <MoreHorizontal className="h-4 w-4" />
+                        <GoogleSymbol name="more_horiz" />
                         <span className="sr-only">Toggle menu</span>
                       </Button>
                     </DropdownMenuTrigger>

@@ -1,6 +1,4 @@
 
-import { type IconName } from '@/components/icons/dynamic-icon';
-
 export interface Attendee {
   userId?: string; // Optional: for internal users, this is their ID.
   email: string;
@@ -29,7 +27,7 @@ export interface User {
 export interface Team {
   id: string;
   name: string;
-  icon: IconName;
+  icon: string;
   members: string[]; // array of userIds
   managers?: string[]; // array of userIds who are managers for this team
   roles: string[]; // team-specific roles

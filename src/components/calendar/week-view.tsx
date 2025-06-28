@@ -8,9 +8,9 @@ import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { mockHolidays } from '@/lib/mock-data';
 import { Button } from '../ui/button';
-import { ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { useUser } from '@/context/user-context';
 import { canCreateAnyEvent } from '@/lib/permissions';
+import { GoogleSymbol } from '../icons/google-symbol';
 
 const isHoliday = (day: Date) => {
     return mockHolidays.some(holiday => isSameDay(day, holiday));
@@ -156,12 +156,12 @@ export function WeekView({ date, containerRef, zoomLevel, onEasyBooking }: { dat
                                 </p>
                                 {!showWeekends && format(day, 'EEE') === 'Fri' && (
                                     <Button variant="ghost" size="icon" className="absolute right-0 top-1/2 -translate-y-1/2 h-full rounded-none" onClick={() => setShowWeekends(true)}>
-                                        <ChevronsRight className="h-4 w-4" />
+                                        <GoogleSymbol name="keyboard_double_arrow_right" />
                                     </Button>
                                 )}
                                 {showWeekends && format(day, 'EEE') === 'Sun' && (
                                     <Button variant="ghost" size="icon" className="absolute left-0 top-1/2 -translate-y-1/2 h-full rounded-none" onClick={() => setShowWeekends(false)}>
-                                        <ChevronsLeft className="h-4 w-4" />
+                                        <GoogleSymbol name="keyboard_double_arrow_left" />
                                     </Button>
                                 )}
                             </div>

@@ -2,7 +2,6 @@
 'use client';
 
 import Link from 'next/link';
-import { Calendar, ListChecks, PanelLeft, Settings, LayoutDashboard, ArrowLeftRight, Bell, Briefcase } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -12,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import Logo from '@/components/icons/logo';
 import { useUser } from '@/context/user-context';
 import { Badge } from '@/components/ui/badge';
-import { DynamicIcon, type IconName } from '@/components/icons/dynamic-icon';
+import { GoogleSymbol } from '../icons/google-symbol';
 
 export function Header() {
   const { realUser, viewAsUser, teams, notifications } = useUser();
@@ -29,14 +28,14 @@ export function Header() {
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-card px-4 sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 sm:py-4">
       {isViewingAsSomeoneElse && (
         <div className="flex items-center gap-2 text-sm font-semibold text-orange-600 bg-orange-100 dark:bg-orange-900/50 p-2 rounded-md absolute left-1/2 -translate-x-1/2">
-          <ArrowLeftRight className="h-4 w-4" />
+          <GoogleSymbol name="compare_arrows" />
           <span>Viewing as {viewAsUser.displayName}</span>
         </div>
       )}
       <Sheet>
         <SheetTrigger asChild>
           <Button size="icon" variant="outline" className="sm:hidden">
-            <PanelLeft className="h-5 w-5" />
+            <GoogleSymbol name="menu" />
             <span className="sr-only">Toggle Menu</span>
           </Button>
         </SheetTrigger>
@@ -44,32 +43,32 @@ export function Header() {
           <nav className="grid gap-6 text-lg font-medium">
             <Logo className="mb-4" />
             <Link href="/dashboard/calendar" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
-              <Calendar className="h-5 w-5" />
+              <GoogleSymbol name="calendar_month" className="text-2xl" />
               Calendar
             </Link>
             <Link href="/dashboard" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
-              <LayoutDashboard className="h-5 w-5" />
+              <GoogleSymbol name="dashboard" className="text-2xl" />
               Overview
             </Link>
             <Link href="/dashboard/tasks" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
-              <ListChecks className="h-5 w-5" />
+              <GoogleSymbol name="checklist" className="text-2xl" />
               Tasks
             </Link>
              {isSdm && (
                 <Link href="/dashboard/service-delivery" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
-                    <Briefcase className="h-5 w-5" />
+                    <GoogleSymbol name="business_center" className="text-2xl" />
                     Service Delivery
                 </Link>
             )}
             {userTeams.map(team => (
               <Link key={team.id} href={`/dashboard/teams/${team.id}`} className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
-                <DynamicIcon name={team.icon as IconName} className="h-5 w-5" />
+                <GoogleSymbol name={team.icon} className="text-2xl" />
                 {team.name}
               </Link>
             ))}
             <Link href="/dashboard/notifications" className="flex items-center justify-between gap-4 px-2.5 text-muted-foreground hover:text-foreground">
               <div className="flex items-center gap-4">
-                <Bell className="h-5 w-5" />
+                <GoogleSymbol name="notifications" className="text-2xl" />
                 Notifications
               </div>
               {unreadCount > 0 && (
@@ -79,7 +78,7 @@ export function Header() {
               )}
             </Link>
             <Link href="/dashboard/settings" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
-              <Settings className="h-5 w-5" />
+              <GoogleSymbol name="settings" className="text-2xl" />
               Settings
             </Link>
           </nav>

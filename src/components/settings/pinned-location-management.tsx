@@ -7,9 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { X, PlusCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { type Team } from '@/types';
+import { GoogleSymbol } from '../icons/google-symbol';
 
 export function PinnedLocationManagement({ team }: { team: Team }) {
   const { viewAsUser, locations, updateTeam } = useUser();
@@ -65,7 +65,7 @@ export function PinnedLocationManagement({ team }: { team: Team }) {
                     onClick={() => handleRemoveLocation(loc)}
                     disabled={!canManage}
                   >
-                    <X className="h-3 w-3" />
+                    <GoogleSymbol name="close" className="text-sm" />
                     <span className="sr-only">Unpin {loc}</span>
                   </Button>
                 </Badge>
@@ -87,7 +87,7 @@ export function PinnedLocationManagement({ team }: { team: Team }) {
                     </SelectContent>
                 </Select>
                 <Button onClick={handleAddLocation} disabled={!locationToAdd}>
-                    <PlusCircle className="mr-2 h-4 w-4" />
+                    <GoogleSymbol name="add_circle" className="mr-2" />
                     Pin Location
                 </Button>
             </div>
