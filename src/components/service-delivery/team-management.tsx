@@ -1,10 +1,10 @@
 
-"use client";
+'use client';
 
 import React, { useState, useMemo } from 'react';
 import { useUser } from '@/context/user-context';
 import { type Team, type User } from '@/types';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import {
@@ -59,29 +59,90 @@ export function TeamManagement() {
 
   return (
     <>
-      <Card>
-        <CardHeader>
-          <div className="flex items-start justify-between">
-            <div>
-              <CardTitle>Manage Teams</CardTitle>
-              <CardDescription>Add, edit, or delete teams and their members.</CardDescription>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+            <h2 className="text-2xl font-semibold tracking-tight">Manage Teams</h2>
+            <p className="text-muted-foreground">
+                Add, edit, or delete teams and their members.
+            </p>
+        </div>
+      </div>
+
+       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {teams.map(team => {
+            const members = users.filter(u => team.members.includes(u.userId));
+            const managers = users.filter(u => team.managers?.includes(u.userId));
+
+            return (
+              <Card 
+                key={team.id} 
+                className="flex flex-col"
+              >
+                  <CardHeader>
+                      <div className="flex items-start justify-between">
+                           <CardTitle className="flex items-center gap-2">
+                              <GoogleSymbol name={team.icon} />
+                              {team.name}
+                          </CardTitle>
+                          <div className="flex -mr-4 -mt-2">
+                               <Button variant="ghost" size="icon" onClick={() => openEditDialog(team)}>
+                                  <GoogleSymbol name="edit" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => openDeleteDialog(team)}>
+                                  <GoogleSymbol name="delete" />
+                              </Button>
+                          </div>
+                      </div>
+                  </CardHeader>
+                  <CardContent className="flex-grow space-y-4">
+                      <div>
+                          <h4 className="text-sm font-medium mb-2">Managers</h4>
+                          <div className="flex items-center -space-x-2">
+                              {managers.slice(0, 5).map(manager => (
+                                  <Avatar key={manager.userId} className="h-8 w-8 border-2 border-card">
+                                      <AvatarImage src={manager.avatarUrl} alt={manager.displayName} data-ai-hint="user avatar" />
+                                      <AvatarFallback>{manager.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                  </Avatar>
+                              ))}
+                              {managers.length > 5 && (
+                                  <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium border-2 border-card">
+                                      +{managers.length - 5}
+                                  </div>
+                              )}
+                              {managers.length === 0 && <p className="text-xs text-muted-foreground">No managers</p>}
+                          </div>
+                      </div>
+                      <div>
+                           <h4 className="text-sm font-medium mb-2">Members</h4>
+                          <div className="flex items-center -space-x-2">
+                               {members.slice(0, 5).map(member => (
+                                  <Avatar key={member.userId} className="h-8 w-8 border-2 border-card">
+                                      <AvatarImage src={member.avatarUrl} alt={member.displayName} data-ai-hint="user avatar" />
+                                      <AvatarFallback>{member.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                  </Avatar>
+                              ))}
+                              {members.length > 5 && (
+                                  <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium border-2 border-card">
+                                      +{members.length - 5}
+                                  </div>
+                              )}
+                              {members.length === 0 && <p className="text-xs text-muted-foreground">No members</p>}
+                          </div>
+                      </div>
+                  </CardContent>
+              </Card>
+            )
+          })}
+          <button
+            onClick={openAddDialog}
+            className="flex items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 text-muted-foreground hover:border-primary hover:text-primary transition-colors min-h-[220px]"
+            >
+             <div className="flex flex-col items-center gap-2">
+                <GoogleSymbol name="add_circle" className="text-4xl" />
+                <span className="font-semibold">New Team</span>
             </div>
-            <Button variant="ghost" size="icon" onClick={openAddDialog}>
-                <GoogleSymbol name="add_circle" className="text-2xl" />
-                <span className="sr-only">Add New Team</span>
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-3">
-              {teams.map(team => (
-                <Button key={team.id} variant="outline" className="h-auto font-medium" onClick={() => openEditDialog(team)}>
-                    {team.name}
-                </Button>
-              ))}
-          </div>
-        </CardContent>
-      </Card>
+          </button>
+      </div>
 
       {isFormOpen && (
           <TeamFormDialog 
@@ -279,7 +340,7 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
                             <Popover open={isMemberPopoverOpen} onOpenChange={setIsMemberPopoverOpen}>
                                 <PopoverTrigger asChild>
                                     <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 mt-1">
-                                        <GoogleSymbol name="add" className="text-2xl" />
+                                        <GoogleSymbol name="add_circle" className="text-2xl" />
                                         <span className="sr-only">Add or remove members</span>
                                     </Button>
                                 </PopoverTrigger>
