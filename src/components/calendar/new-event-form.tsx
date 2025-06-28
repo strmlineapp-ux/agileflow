@@ -571,67 +571,72 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
             name="attendees"
             render={() => (
               <FormItem>
-                <div className="space-y-2">
-                  {selectedAttendees.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {selectedAttendees.map(attendee => (
-                        <div key={attendee.email} className="flex items-center gap-2 p-1 pr-2 bg-muted rounded-full">
-                          <Avatar className="h-6 w-6">
-                            <AvatarImage src={attendee.avatarUrl} alt={attendee.displayName} data-ai-hint="user avatar" />
-                            <AvatarFallback>{attendee.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                          </Avatar>
-                          <span className="text-sm font-medium">{attendee.displayName}</span>
-                          <button type="button" onClick={() => handleToggleGuest(attendee as User)} className="h-4 w-4 rounded-full hover:bg-muted-foreground/20 flex items-center justify-center">
-                            <GoogleSymbol name="cancel" className="text-sm" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  <Popover open={isGuestPopoverOpen} onOpenChange={setIsGuestPopoverOpen}>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-full justify-start font-normal">
-                        <GoogleSymbol name="group" className="mr-2 text-xl" />
-                        Add guests
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[480px] p-0" align="start">
-                      <div className="p-2">
-                        <Input
-                          placeholder="Search by name or email..."
-                          value={guestSearch}
-                          onChange={e => setGuestSearch(e.target.value)}
-                          className="w-full"
-                        />
-                      </div>
-                      <Separator />
-                      <div className="max-h-60 overflow-y-auto p-1">
-                        {filteredGuests.map(guest => (
-                          <div
-                            key={guest.userId}
-                            onClick={() => handleToggleGuest(guest)}
-                            className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer"
-                          >
-                            <input
-                              type="checkbox"
-                              className="h-4 w-4"
-                              checked={selectedAttendees.some(att => att.email === guest.email)}
-                              readOnly
+                <Card>
+                  <CardContent className="p-2">
+                    <div className="flex items-start gap-2">
+                      <Popover open={isGuestPopoverOpen} onOpenChange={setIsGuestPopoverOpen}>
+                        <PopoverTrigger asChild>
+                           <Button variant="ghost" size="icon" className="shrink-0">
+                            <GoogleSymbol name="group_add" className="text-xl" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[480px] p-0" align="start">
+                          <div className="p-2">
+                            <Input
+                              placeholder="Search by name or email..."
+                              value={guestSearch}
+                              onChange={e => setGuestSearch(e.target.value)}
+                              className="w-full"
                             />
-                            <Avatar className="h-8 w-8">
-                              <AvatarImage src={guest.avatarUrl} alt={guest.displayName} data-ai-hint="user avatar" />
-                              <AvatarFallback>{guest.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <p className="font-medium text-sm">{guest.displayName}</p>
-                              <p className="text-xs text-muted-foreground">{guest.email}</p>
-                            </div>
                           </div>
-                        ))}
+                          <Separator />
+                          <div className="max-h-60 overflow-y-auto p-1">
+                            {filteredGuests.map(guest => (
+                              <div
+                                key={guest.userId}
+                                onClick={() => handleToggleGuest(guest)}
+                                className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer"
+                              >
+                                <input
+                                  type="checkbox"
+                                  className="h-4 w-4"
+                                  checked={selectedAttendees.some(att => att.email === guest.email)}
+                                  readOnly
+                                />
+                                <Avatar className="h-8 w-8">
+                                  <AvatarImage src={guest.avatarUrl} alt={guest.displayName} data-ai-hint="user avatar" />
+                                  <AvatarFallback>{guest.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                  <p className="font-medium text-sm">{guest.displayName}</p>
+                                  <p className="text-xs text-muted-foreground">{guest.email}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                      <div className="flex flex-wrap gap-1 items-center min-h-[40px]">
+                        {selectedAttendees.length > 0 ? (
+                           selectedAttendees.map(attendee => (
+                            <div key={attendee.email} className="flex items-center gap-2 p-1 pr-2 bg-muted rounded-full">
+                              <Avatar className="h-6 w-6">
+                                <AvatarImage src={attendee.avatarUrl} alt={attendee.displayName} data-ai-hint="user avatar" />
+                                <AvatarFallback>{attendee.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                              </Avatar>
+                              <span className="text-sm font-medium">{attendee.displayName}</span>
+                              <button type="button" onClick={() => handleToggleGuest(attendee as User)} className="h-4 w-4 rounded-full hover:bg-muted-foreground/20 flex items-center justify-center">
+                                <GoogleSymbol name="cancel" className="text-sm" />
+                              </button>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-sm text-muted-foreground">Add guests...</p>
+                        )}
                       </div>
-                    </PopoverContent>
-                  </Popover>
-                </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </FormItem>
             )}
           />
@@ -643,7 +648,9 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                         <div className="flex flex-wrap gap-2">
                             {Object.entries(roleAssignments).map(([role, { assignedUser, popoverOpen }]) => {
                                 const user = assignedUser ? users.find(u => u.userId === assignedUser) : null;
-                                const usersWithRole = users.filter(u => teamForSelectedCalendar.members.includes(u.userId) && u.roles?.includes(role));
+                                const usersWithRole = users.filter(u => 
+                                  teamForSelectedCalendar.members.includes(u.userId) && u.roles?.includes(role)
+                                );
                                 
                                 const availableUsers = usersWithRole.filter(u => !absencesForDay.some(a => a.userId === u.userId));
                                 const absentUsers = usersWithRole

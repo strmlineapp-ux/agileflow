@@ -96,7 +96,7 @@ export function CalendarManagement() {
       color: newCalendarColor,
       managers: [],
       defaultEventTitle: 'New Event',
-      managerRoleName: 'Shared Calendar Managers',
+      managerRoleName: 'Shared Calendar Coordinators',
       roleAssignmentsLabel: 'Role Assignments'
     });
     toast({ title: 'Success', description: 'Calendar added successfully.' });
@@ -193,7 +193,7 @@ export function CalendarManagement() {
               </CardHeader>
               <CardContent className="flex-grow space-y-4">
                   <div>
-                      <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-1 mb-1">
                         <p className="text-sm font-medium text-muted-foreground">Default Event Title</p>
                         <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => openEditDialog(calendar, 'defaultTitle')}>
                             <GoogleSymbol name="edit" className="text-base" />
@@ -203,8 +203,8 @@ export function CalendarManagement() {
                       <p className="text-sm italic">{calendar.defaultEventTitle || 'Not set'}</p>
                   </div>
                   <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm font-medium text-muted-foreground">{calendar.managerRoleName || 'Shared Calendar Managers'}</p>
+                    <div className="flex items-center gap-1 mb-2">
+                      <p className="text-sm font-medium text-muted-foreground">{calendar.managerRoleName || 'Shared Calendar Coordinators'}</p>
                        <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => openEditDialog(calendar, 'managerLabel')}>
                             <GoogleSymbol name="edit" className="text-base" />
                             <span className="sr-only">Edit manager label</span>
@@ -222,7 +222,7 @@ export function CalendarManagement() {
                       </div>
                   </div>
                    <div>
-                      <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-1 mb-1">
                         <p className="text-sm font-medium text-muted-foreground">Role Assignments Label</p>
                         <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => openEditDialog(calendar, 'roleLabel')}>
                             <GoogleSymbol name="edit" className="text-base" />

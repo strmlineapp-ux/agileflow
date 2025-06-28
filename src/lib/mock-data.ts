@@ -145,10 +145,10 @@ export const mockUsers: User[] = [
 ];
 
 export const mockCalendars: SharedCalendar[] = [
-    { id: 'studio-productions', name: 'Studio Productions', color: '#FBBF24', managers: ['1', '6'], defaultEventTitle: 'New Production Studios Event', managerRoleName: 'Shared Calendar Managers', roleAssignmentsLabel: 'Crew Assignments' },
-    { id: 'live-events', name: 'Live Events', color: '#3B82F6', managers: ['1', '2', '3'], defaultEventTitle: 'New Live Event', managerRoleName: 'Shared Calendar Managers', roleAssignmentsLabel: 'Role Assignments' },
-    { id: 'business', name: 'Business', color: '#64748B', managers: ['1', '2'], defaultEventTitle: 'New Event', managerRoleName: 'Shared Calendar Managers', roleAssignmentsLabel: 'Role Assignments' },
-    { id: 'post-production', name: 'Post-Production', color: '#F97316', managers: ['1', '2', '5'], defaultEventTitle: 'New Event Edit', managerRoleName: 'Shared Calendar Managers', roleAssignmentsLabel: 'Role Assignments' },
+    { id: 'studio-productions', name: 'Studio Productions', color: '#FBBF24', managers: ['1', '6'], defaultEventTitle: 'New Production Studios Event', managerRoleName: 'Shared Calendar Coordinators', roleAssignmentsLabel: 'Role Assignments' },
+    { id: 'live-events', name: 'Live Events', color: '#3B82F6', managers: ['1', '2', '3'], defaultEventTitle: 'New Live Event', managerRoleName: 'Shared Calendar Coordinators', roleAssignmentsLabel: 'Role Assignments' },
+    { id: 'business', name: 'Business', color: '#64748B', managers: ['1', '2'], defaultEventTitle: 'New Event', managerRoleName: 'Shared Calendar Coordinators', roleAssignmentsLabel: 'Role Assignments' },
+    { id: 'post-production', name: 'Post-Production', color: '#F97316', managers: ['1', '2', '5'], defaultEventTitle: 'New Event Edit', managerRoleName: 'Shared Calendar Coordinators', roleAssignmentsLabel: 'Role Assignments' },
 ];
 
 export const mockLocations: BookableLocation[] = [
