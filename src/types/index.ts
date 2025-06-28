@@ -19,7 +19,7 @@ export interface User {
   location?: string;
   phone?: string;
   title?: string;
-  roles?: string[]; // System-level roles like 'Admin', 'Service Delivery Manager'
+  roles?: string[]; // System-level roles like 'Admin'
   directReports?: string[];
   theme?: 'light' | 'dark' | 'high-visibility' | 'firebase';
   defaultCalendarView?: 'month' | 'week' | 'day' | 'production-schedule';
@@ -48,12 +48,6 @@ export interface Team {
   locationAliases?: { [key:string]: string };
   workstations?: string[];
   eventTemplates?: EventTemplate[];
-}
-
-export interface PageConfig {
-  id: string;
-  name: string;
-  icon: string;
 }
 
 export interface Priority {

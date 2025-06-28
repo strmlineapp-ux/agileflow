@@ -8,14 +8,17 @@ import { TeamManagement } from '@/components/service-delivery/team-management';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { StrategyManagement } from '@/components/service-delivery/strategy-management';
 
-export default function ServiceDeliveryPage() {
-  const { pageConfigs } = useUser();
-  const sdmConfig = pageConfigs.find(p => p.id === 'service-delivery');
-  const pageTitle = sdmConfig?.name || 'Service Delivery Management';
+export default function AppManagementPage() {
+  const { viewAsUser } = useUser();
+  const isAdmin = viewAsUser.roles?.includes('Admin');
+
+  if (!isAdmin) {
+    return null; // Navigation is filtered, so this prevents direct URL access.
+  }
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="font-headline text-3xl font-semibold">{pageTitle}</h1>
+      <h1 className="font-headline text-3xl font-semibold">App Management</h1>
       <Tabs defaultValue="calendars">
         <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="calendars">Calendar Management</TabsTrigger>

@@ -4,7 +4,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { useUser } from '@/context/user-context';
-import { type User, type PageConfig } from '@/types';
+import { type User } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,12 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { googleSymbolNames } from '@/lib/google-symbols';
 
 // Component to manage a list of users with a specific role via pills
 const UserRoleManager = ({
@@ -65,84 +60,11 @@ const UserRoleManager = ({
   );
 };
 
-const PageConfiguration = ({ pageConfig, onSave }: { pageConfig: PageConfig, onSave: (data: Partial<PageConfig>) => void }) => {
-    const [tempName, setTempName] = useState(pageConfig.name);
-    const [tempIcon, setTempIcon] = useState(pageConfig.icon);
-    const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
-    const [iconSearch, setIconSearch] = useState('');
-
-    const filteredIcons = useMemo(() => {
-        if (!iconSearch) return googleSymbolNames;
-        return googleSymbolNames.filter(iconName =>
-            iconName.toLowerCase().includes(iconSearch.toLowerCase())
-        );
-    }, [iconSearch]);
-
-    const handleSaveChanges = () => {
-        onSave({ name: tempName, icon: tempIcon });
-    };
-
-    return (
-         <Card>
-            <CardHeader>
-                <CardTitle>Page Configuration</CardTitle>
-                <CardDescription>
-                    Customize the display name and icon for the App Manager page.
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <div className="flex items-center gap-2">
-                    <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
-                        <PopoverTrigger asChild>
-                            <Button variant="outline" size="icon" className="shrink-0">
-                                <GoogleSymbol name={tempIcon} />
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-80 p-0">
-                            <div className="p-2 border-b">
-                                <Input
-                                    placeholder="Search icons..."
-                                    value={iconSearch}
-                                    onChange={(e) => setIconSearch(e.target.value)}
-                                />
-                            </div>
-                            <ScrollArea className="h-64">
-                            <div className="grid grid-cols-6 gap-1 p-2">
-                                {filteredIcons.slice(0, 300).map((iconName) => (
-                                <Button
-                                    key={iconName}
-                                    variant={tempIcon === iconName ? "default" : "ghost"}
-                                    size="icon"
-                                    onClick={() => {
-                                        setTempIcon(iconName);
-                                        setIsIconPopoverOpen(false);
-                                    }}
-                                    className="text-2xl"
-                                >
-                                    <GoogleSymbol name={iconName} />
-                                </Button>
-                                ))}
-                            </div>
-                            </ScrollArea>
-                        </PopoverContent>
-                    </Popover>
-                    <Input id="page-name" value={tempName} onChange={(e) => setTempName(e.target.value)} placeholder="Page Name" />
-                    <Button onClick={handleSaveChanges} size="icon">
-                        <GoogleSymbol name="check" />
-                        <span className="sr-only">Save Configuration</span>
-                    </Button>
-                </div>
-            </CardContent>
-        </Card>
-    )
-}
-
 export default function AdminPage() {
   const { toast } = useToast();
-  const { viewAsUser, users, pageConfigs, updatePageConfig, updateUser } = useUser();
+  const { viewAsUser, users, updateUser } = useUser();
   
   const isAdmin = useMemo(() => viewAsUser.roles?.includes('Admin'), [viewAsUser.roles]);
-  const sdmConfig = useMemo(() => pageConfigs.find(p => p.id === 'service-delivery'), [pageConfigs]);
 
   // 2FA Dialog State
   const [is2faDialogOpen, setIs2faDialogOpen] = useState(false);
@@ -150,20 +72,16 @@ export default function AdminPage() {
   const [twoFactorCode, setTwoFactorCode] = useState('');
 
   // This check must happen after all hooks are called.
-  if (!isAdmin || !sdmConfig) {
+  if (!isAdmin) {
     // This is now a safe return because nav is filtered.
     // This case handles loading states or direct URL access attempts.
     return null;
   }
 
-  const handleSavePageConfig = (data: Partial<PageConfig>) => {
-    updatePageConfig(sdmConfig.id, data);
-    toast({ title: 'Success', description: 'App Manager page configuration has been updated.' });
-  };
-
-  const handleRoleToggle = (user: User, roleName: string) => {
+  const handleRoleToggle = (user: User) => {
     const action = () => {
       const currentRoles = new Set(user.roles || []);
+      const roleName = 'Admin';
       if (currentRoles.has(roleName)) {
         currentRoles.delete(roleName);
       } else {
@@ -173,7 +91,7 @@ export default function AdminPage() {
       toast({ title: 'Success', description: `${user.displayName}'s roles have been updated.` });
     };
 
-    // Require 2FA for both 'Admin' and 'Service Delivery Manager' roles
+    // Require 2FA for 'Admin' role
     setOn2faSuccess(() => action);
     setIs2faDialogOpen(true);
   };
@@ -201,33 +119,15 @@ export default function AdminPage() {
   return (
     <>
       <div className="flex flex-col gap-8">
-        <h1 className="font-headline text-3xl font-semibold">Admin Panel</h1>
+        <h1 className="font-headline text-3xl font-semibold">Admin Management</h1>
         
-        <Tabs defaultValue="admins" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="admins">Admin Management</TabsTrigger>
-                <TabsTrigger value="app-manager">App Manager</TabsTrigger>
-            </TabsList>
-            <TabsContent value="admins" className="mt-6">
-                <UserRoleManager
-                    title="Manage Admins"
-                    description="Assign or revoke Admin privileges. This action requires 2FA."
-                    allUsers={users}
-                    roleName="Admin"
-                    onRoleToggle={(user) => handleRoleToggle(user, 'Admin')}
-                />
-            </TabsContent>
-            <TabsContent value="app-manager" className="mt-6 space-y-6">
-                  <UserRoleManager
-                    title={`Manage ${sdmConfig.name}s`}
-                    description={`Assign or revoke ${sdmConfig.name} privileges. This action requires 2FA.`}
-                    allUsers={users}
-                    roleName="Service Delivery Manager"
-                    onRoleToggle={(user) => handleRoleToggle(user, 'Service Delivery Manager')}
-                    />
-                <PageConfiguration pageConfig={sdmConfig} onSave={handleSavePageConfig} />
-            </TabsContent>
-        </Tabs>
+        <UserRoleManager
+            title="Manage Admins"
+            description="Assign or revoke Admin privileges. This action requires 2FA."
+            allUsers={users}
+            roleName="Admin"
+            onRoleToggle={handleRoleToggle}
+        />
       </div>
 
       <Dialog open={is2faDialogOpen} onOpenChange={(isOpen) => !isOpen && close2faDialog()}>

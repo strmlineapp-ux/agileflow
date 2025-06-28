@@ -3,7 +3,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
-import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type PageConfig, type Priority, type PriorityStrategy, type PriorityStrategyApplication } from '@/types';
+import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type Priority, type PriorityStrategy, type PriorityStrategyApplication } from '@/types';
 import { mockUsers as initialUsers, mockCalendars as initialCalendars, mockEvents as initialEvents, mockLocations as initialLocations, mockTeams, mockPriorityStrategies as initialPriorityStrategies } from '@/lib/mock-data';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
@@ -37,8 +37,6 @@ interface UserContextType {
   allBookableLocations: BookableLocation[];
   addLocation: (locationName: string) => Promise<void>;
   deleteLocation: (locationId: string) => Promise<void>;
-  pageConfigs: PageConfig[];
-  updatePageConfig: (pageId: string, pageData: Partial<PageConfig>) => Promise<void>;
   priorityStrategies: PriorityStrategy[];
   addPriorityStrategy: (strategyData: Omit<PriorityStrategy, 'id'>) => Promise<void>;
   updatePriorityStrategy: (strategyId: string, strategyData: Partial<Omit<PriorityStrategy, 'id'>>) => Promise<void>;
@@ -52,11 +50,6 @@ const UserContext = createContext<UserContextType | null>(null);
 
 const REAL_USER_ID = '1'; // Alice is the admin
 
-const initialPageConfigs: PageConfig[] = [
-    { id: 'admin', name: 'Admin', icon: 'shield_person' },
-    { id: 'service-delivery', name: 'Service Delivery', icon: 'business_center' }
-];
-
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [viewAsUserId, setViewAsUserId] = useState<string>(REAL_USER_ID);
   const [users, setUsers] = useState<User[]>(initialUsers);
@@ -66,7 +59,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [calendars, setCalendars] = useState<SharedCalendar[]>(initialCalendars);
   const [events, setEvents] = useState<Event[]>(initialEvents);
   const [locations, setLocations] = useState<BookableLocation[]>(initialLocations);
-  const [pageConfigs, setPageConfigs] = useState<PageConfig[]>(initialPageConfigs);
   const [priorityStrategies, setPriorityStrategies] = useState<PriorityStrategy[]>(initialPriorityStrategies);
   const { toast } = useToast();
 
@@ -186,12 +178,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const deleteLocation = async (locationId: string) => {
       setLocations(current => current.filter(loc => loc.id !== locationId));
-  };
-
-  const updatePageConfig = async (pageId: string, pageData: Partial<PageConfig>) => {
-    setPageConfigs(currentConfigs => 
-      currentConfigs.map(p => (p.id === pageId ? { ...p, ...pageData } : p))
-    );
   };
 
   const addPriorityStrategy = async (strategyData: Omit<PriorityStrategy, 'id'>) => {
@@ -316,8 +302,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     allBookableLocations,
     addLocation,
     deleteLocation,
-    pageConfigs,
-    updatePageConfig,
     priorityStrategies,
     addPriorityStrategy,
     updatePriorityStrategy,
