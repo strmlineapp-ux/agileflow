@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -333,8 +332,21 @@ export function PriorityStrategyForm({ isOpen, onClose, strategy }: PriorityStra
                             <Input id="symbol-max" type="number" value={strategyState.max} onChange={e => setStrategyState(s => ({ ...s, type: 'symbol', max: Number(e.target.value) }))} min={1} />
                         </div>
                          <div className="space-y-2">
-                            <Label htmlFor="symbol-color">Color</Label>
-                            <Input id="symbol-color" type="color" value={strategyState.color} onChange={e => setStrategyState(s => ({ ...s, type: 'symbol', color: e.target.value }))} className="p-1" />
+                            <Label>Color</Label>
+                            <div className="relative h-9 w-full">
+                                <div
+                                    className="absolute inset-0 h-full w-full rounded-md border"
+                                    style={{ backgroundColor: strategyState.color }}
+                                />
+                                <Input
+                                    id="symbol-color"
+                                    type="color"
+                                    value={strategyState.color}
+                                    onChange={(e) => setStrategyState(s => ({ ...s, type: 'symbol', color: e.target.value }))}
+                                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"
+                                    aria-label="Symbol color"
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -367,7 +379,19 @@ export function PriorityStrategyForm({ isOpen, onClose, strategy }: PriorityStra
                                    <Input placeholder="Label" value={interval.label} onChange={e => handleIntervalChange(index, 'label', e.target.value)} className="w-1/3" />
                                    <Input type="number" placeholder="From" value={interval.from} onChange={e => handleIntervalChange(index, 'from', Number(e.target.value))} />
                                    <Input type="number" placeholder="To" value={interval.to} onChange={e => handleIntervalChange(index, 'to', Number(e.target.value))} />
-                                   <Input type="color" value={interval.color} onChange={e => handleIntervalChange(index, 'color', e.target.value)} className="p-1 h-10 w-16" />
+                                   <div className="relative h-10 w-16 shrink-0">
+                                        <div
+                                            className="absolute inset-0 h-full w-full rounded-md border"
+                                            style={{ backgroundColor: interval.color }}
+                                        />
+                                        <Input
+                                            type="color"
+                                            value={interval.color}
+                                            onChange={(e) => handleIntervalChange(index, 'color', e.target.value)}
+                                            className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"
+                                            aria-label={`Color for ${interval.label}`}
+                                        />
+                                    </div>
                                    <Button variant="ghost" size="icon" onClick={() => handleDeleteInterval(index)}><GoogleSymbol name="delete" /></Button>
                                </div>
                            ))}

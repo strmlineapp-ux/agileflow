@@ -58,8 +58,21 @@ export function PriorityItemForm({ isOpen, onClose, priority, onSave }: Priority
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="color">Color</Label>
-              <Input id="color" type="color" value={color} onChange={e => setColor(e.target.value)} className="p-1" />
+              <Label>Color</Label>
+              <div className="relative h-9 w-full">
+                  <div
+                      className="absolute inset-0 h-full w-full rounded-md border"
+                      style={{ backgroundColor: color }}
+                  />
+                  <Input
+                      id="color"
+                      type="color"
+                      value={color}
+                      onChange={(e) => setColor(e.target.value)}
+                      className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"
+                      aria-label="Priority color"
+                  />
+              </div>
             </div>
             <div className="space-y-2">
               <Label>Shape</Label>
