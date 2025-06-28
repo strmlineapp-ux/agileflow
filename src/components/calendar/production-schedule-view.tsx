@@ -56,14 +56,14 @@ const ManageStatusDialog = ({ isOpen, onOpenChange, day, initialAssignments, use
         }
     }, [selectedUserIdToAdd, selectedStatusToAdd]);
     
-    const handleRemoveStatusAssignment = (userId: string) => {
+    const handleRemoveStatusAssignment = useCallback((userId: string) => {
         setTempStatusAssignments(prev => prev.filter(a => a.userId !== userId));
-    };
+    }, []);
 
-    const handleSaveChanges = () => {
+    const handleSaveChanges = useCallback(() => {
         onSave(tempStatusAssignments);
         onOpenChange(false);
-    };
+    }, [onSave, tempStatusAssignments, onOpenChange]);
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -315,7 +315,7 @@ const ProductionScheduleLocationRow = React.memo(({
 ProductionScheduleLocationRow.displayName = 'ProductionScheduleLocationRow';
 
 
-export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBooking, onEventClick }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', onEasyBooking: (data: { startTime: Date, location?: string }) => void, onEventClick: (event: Event) => void }) {
+export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLevel, onEasyBooking, onEventClick }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', onEasyBooking: (data: { startTime: Date, location?: string }) => void, onEventClick: (event: Event) => void }) => {
     const { users, teams, viewAsUser, events, calendars, userStatusAssignments, setUserStatusAssignments } = useUser();
 
     const [now, setNow] = useState<Date | null>(null);
@@ -348,7 +348,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
         return map;
     }, [calendars]);
 
-    const handleAssignCheck = (dayIso: string, location: string, userId: string | null) => {
+    const handleAssignCheck = useCallback((dayIso: string, location: string, userId: string | null) => {
         setDailyCheckAssignments(prev => ({
             ...prev,
             [dayIso]: {
@@ -356,7 +356,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
                 [location]: userId
             }
         }));
-    };
+    }, []);
 
     const handleEasyBookingClick = useCallback((e: React.MouseEvent<HTMLDivElement>, day: Date, location: string) => {
         if ((e.target as HTMLElement).closest('[data-event-id]')) {
@@ -470,6 +470,8 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
         const newHourWidth = isFit ? (firstScroller.offsetWidth - LOCATION_LABEL_WIDTH_PX) / 12 : DEFAULT_HOUR_WIDTH_PX;
         setHourWidth(newHourWidth);
 
+        if (initialScrollPerformed.current) return;
+
         dayScrollerRefs.current.forEach((scroller, dayIso) => {
             let targetScroll = 7 * newHourWidth; // Default for normal zoom
             if (isFit) {
@@ -477,27 +479,27 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
             } else if (isToday(new Date(dayIso)) && now && !initialScrollPerformed.current) {
                 targetScroll = (now.getHours() - 1) * newHourWidth;
             }
-            scroller?.scrollTo({ left: targetScroll, behavior: 'smooth' });
+            scroller?.scrollTo({ left: targetScroll, behavior: 'auto' });
         });
     }, [zoomLevel, now]);
 
-    const toggleDayCollapse = (dayIso: string) => {
+    const toggleDayCollapse = useCallback((dayIso: string) => {
         setCollapsedDays(prev => {
             const newSet = new Set(prev);
             if (newSet.has(dayIso)) newSet.delete(dayIso);
             else newSet.add(dayIso);
             return newSet;
         });
-    };
+    }, []);
 
-    const toggleLocationCollapse = (dayIso: string, location: string) => {
+    const toggleLocationCollapse = useCallback((dayIso: string, location: string) => {
         setCollapsedLocations(prev => {
             const daySet = new Set(prev[dayIso] || []);
             if (daySet.has(location)) daySet.delete(location);
             else daySet.add(location);
             return { ...prev, [dayIso]: daySet };
         });
-    };
+    }, []);
     
     const hours = Array.from({ length: 24 }, (_, i) => i);
     
@@ -506,17 +508,17 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
         return (now.getHours() + now.getMinutes() / 60) * hourWidth;
     }
     
-    const handleOpenStatusDialog = (dayIso: string) => {
+    const handleOpenStatusDialog = useCallback((dayIso: string) => {
         setEditingStatusDayIso(dayIso);
         setIsStatusDialogOpen(true);
-    };
+    }, []);
 
-    const handleSaveStatus = (newAssignments: UserStatusAssignment[]) => {
+    const handleSaveStatus = useCallback((newAssignments: UserStatusAssignment[]) => {
         if (!editingStatusDayIso) return;
         setUserStatusAssignments(prev => ({ ...prev, [editingStatusDayIso]: newAssignments }));
         toast({ title: "Success", description: "User statuses updated." });
         setEditingStatusDayIso(null);
-    };
+    }, [editingStatusDayIso, setUserStatusAssignments]);
 
     const editingStatusDayData = useMemo(() => {
         if (!editingStatusDayIso) return { day: null, initialAssignments: [] };
@@ -630,4 +632,5 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
             />
         </div>
     );
-}
+});
+ProductionScheduleView.displayName = 'ProductionScheduleView';

@@ -2,7 +2,7 @@
 
 "use client";
 
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isToday, isSameMonth, isSaturday, isSunday, isSameDay } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn, getContrastColor } from '@/lib/utils';
@@ -17,7 +17,7 @@ const isHoliday = (day: Date) => {
     return mockHolidays.some(holiday => isSameDay(day, holiday));
 }
 
-export function MonthView({ date, containerRef, onEventClick }: { date: Date; containerRef: React.RefObject<HTMLDivElement>; onEventClick: (event: Event) => void; }) {
+export const MonthView = React.memo(({ date, containerRef, onEventClick }: { date: Date; containerRef: React.RefObject<HTMLDivElement>; onEventClick: (event: Event) => void; }) => {
     const todayRef = useRef<HTMLDivElement>(null);
     const { events, calendars, getPriorityDisplay, getEventStrategy } = useUser();
 
@@ -49,16 +49,20 @@ export function MonthView({ date, containerRef, onEventClick }: { date: Date; co
         }
     }, [date, containerRef]);
 
-    const getEventsForDay = (day: Date) => {
+    const getEventsForDay = useCallback((day: Date) => {
         return events.filter(event => format(event.startTime, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd'));
-    }
+    }, [events]);
 
     const hasWeekendEvents = useMemo(() => daysInMonth.some(day => {
         const isWeekend = isSaturday(day) || isSunday(day);
         return isWeekend && getEventsForDay(day).length > 0;
-    }), [daysInMonth, date, events]);
+    }), [daysInMonth, getEventsForDay]);
 
     const [showWeekends, setShowWeekends] = useState(hasWeekendEvents);
+    
+    useEffect(() => {
+        setShowWeekends(hasWeekendEvents);
+    }, [hasWeekendEvents]);
 
     const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
     const displayedWeekdays = showWeekends ? weekdays : weekdays.slice(0, 5);
@@ -66,7 +70,7 @@ export function MonthView({ date, containerRef, onEventClick }: { date: Date; co
     
     const startingDayIndex = (getDay(firstDayOfMonth) + 6) % 7; 
 
-    const renderDayCell = (day: Date, key: React.Key, dayIndex: number) => {
+    const renderDayCell = useCallback((day: Date, key: React.Key, dayIndex: number) => {
         const dayEvents = getEventsForDay(day);
         const isWeekend = isSaturday(day) || isSunday(day);
         const isDayHoliday = isHoliday(day);
@@ -119,7 +123,7 @@ export function MonthView({ date, containerRef, onEventClick }: { date: Date; co
                 </div>
             </div>
         )
-    }
+    }, [getEventsForDay, onEventClick, calendarColorMap, getPriorityDisplay, eventStrategy, startingDayIndex]);
 
     let dayCells: React.ReactNode[] = [];
     if (showWeekends) {
@@ -176,4 +180,5 @@ export function MonthView({ date, containerRef, onEventClick }: { date: Date; co
             </CardContent>
         </Card>
     );
-}
+});
+MonthView.displayName = 'MonthView';

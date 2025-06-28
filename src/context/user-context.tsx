@@ -53,6 +53,9 @@ const UserContext = createContext<UserContextType | null>(null);
 
 const REAL_USER_ID = '1'; // Alice is the admin
 
+// Helper to simulate async operations
+const simulateApi = (delay = 50) => new Promise(res => setTimeout(res, delay));
+
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [viewAsUserId, setViewAsUserId] = useState<string>(REAL_USER_ID);
   const [users, setUsers] = useState<User[]>(initialUsers);
@@ -98,56 +101,55 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     return Array.from(uniqueNames.values()).sort((a,b) => a.name.localeCompare(b.name));
   }, [locations, teams]);
   
-  const updateUser = async (userId: string, userData: Partial<User>) => {
-    console.log(`Updating user ${userId}:`, userData);
+  const updateUser = useCallback(async (userId: string, userData: Partial<User>) => {
+    await simulateApi();
     setUsers(currentUsers =>
       currentUsers.map(u => (u.userId === userId ? { ...u, ...userData } : u))
     );
-  };
+  }, []);
 
-  const addUser = async (newUser: User) => {
-    console.log('Adding new user:', newUser);
+  const addUser = useCallback(async (newUser: User) => {
+    await simulateApi();
     setUsers(currentUsers => [...currentUsers, newUser]);
-  }
+  }, []);
 
-   const addTeam = async (teamData: Omit<Team, 'id'>) => {
+   const addTeam = useCallback(async (teamData: Omit<Team, 'id'>) => {
     const newTeam: Team = {
         ...teamData,
         id: teamData.name.toLowerCase().replace(/\s+/g, '-'),
     };
-    console.log("Adding new team:", newTeam);
+    await simulateApi();
     setTeams(current => [...current, newTeam]);
-  };
+  }, []);
 
-  const updateTeam = async (teamId: string, teamData: Partial<Omit<Team, 'id'>>) => {
-    console.log(`Updating team ${teamId}:`, teamData);
+  const updateTeam = useCallback(async (teamId: string, teamData: Partial<Omit<Team, 'id'>>) => {
+    await simulateApi();
     setTeams(current => current.map(t => t.id === teamId ? { ...t, ...teamData } as Team : t));
-  };
+  }, []);
 
-  const deleteTeam = async (teamId: string) => {
-    console.log("Deleting team:", teamId);
+  const deleteTeam = useCallback(async (teamId: string) => {
+    await simulateApi();
     setTeams(current => current.filter(t => t.id !== teamId));
-  };
+  }, []);
 
 
-  const addCalendar = async (newCalendarData: Omit<SharedCalendar, 'id'>) => {
+  const addCalendar = useCallback(async (newCalendarData: Omit<SharedCalendar, 'id'>) => {
     const newCalendar: SharedCalendar = {
       ...newCalendarData,
       id: newCalendarData.name.toLowerCase().replace(/\s+/g, '-'),
     };
-    console.log('Adding new calendar:', newCalendar);
+    await simulateApi();
     setCalendars(current => [...current, newCalendar]);
-  };
+  }, []);
 
-  const updateCalendar = async (calendarId: string, calendarData: Partial<SharedCalendar>) => {
-    console.log(`Updating calendar ${calendarId}:`, calendarData);
+  const updateCalendar = useCallback(async (calendarId: string, calendarData: Partial<SharedCalendar>) => {
+    await simulateApi();
     setCalendars(current =>
       current.map(c => (c.id === calendarId ? { ...c, ...calendarData } : c))
     );
-  };
+  }, []);
 
-  const deleteCalendar = async (calendarId: string) => {
-    console.log('Deleting calendar:', calendarId);
+  const deleteCalendar = useCallback(async (calendarId: string) => {
     if (calendars.length <= 1) {
       toast({
         variant: 'destructive',
@@ -156,12 +158,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       });
       return;
     }
+    await simulateApi();
     setCalendars(current => current.filter(c => c.id !== calendarId));
-  };
+  }, [calendars.length, toast]);
 
 
-  const addEvent = async (newEventData: Omit<Event, 'eventId' | 'createdBy' | 'createdAt' | 'lastUpdated'>) => {
-    console.log("Adding new event:", newEventData);
+  const addEvent = useCallback(async (newEventData: Omit<Event, 'eventId' | 'createdBy' | 'createdAt' | 'lastUpdated'>) => {
     const event: Event = {
       ...newEventData,
       eventId: new Date().toISOString(),
@@ -169,47 +171,53 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       createdAt: new Date(),
       lastUpdated: new Date(),
     };
+    await simulateApi();
     setEvents(currentEvents => [...currentEvents, event]);
-  };
+  }, [realUser.userId]);
 
-  const updateEvent = async (eventId: string, eventData: Partial<Omit<Event, 'eventId'>>) => {
-    console.log(`Updating event ${eventId}:`, eventData);
+  const updateEvent = useCallback(async (eventId: string, eventData: Partial<Omit<Event, 'eventId'>>) => {
+    await simulateApi();
     setEvents(currentEvents =>
       currentEvents.map(e =>
         e.eventId === eventId ? { ...e, ...eventData, lastUpdated: new Date() } as Event : e
       )
     );
-  };
+  }, []);
   
-  const addLocation = async (locationName: string) => {
+  const addLocation = useCallback(async (locationName: string) => {
       const newLocation: BookableLocation = {
           id: locationName.toLowerCase().replace(/\s+/g, '-'),
           name: locationName,
       };
+      await simulateApi();
       setLocations(current => [...current, newLocation]);
-  };
+  }, []);
 
-  const deleteLocation = async (locationId: string) => {
+  const deleteLocation = useCallback(async (locationId: string) => {
+      await simulateApi();
       setLocations(current => current.filter(loc => loc.id !== locationId));
-  };
+  }, []);
 
-  const addPriorityStrategy = async (strategyData: Omit<PriorityStrategy, 'id'>) => {
+  const addPriorityStrategy = useCallback(async (strategyData: Omit<PriorityStrategy, 'id'>) => {
     const newStrategy: PriorityStrategy = {
       ...strategyData,
       id: strategyData.name.toLowerCase().replace(/\s+/g, '-'),
     };
+    await simulateApi();
     setPriorityStrategies(current => [...current, newStrategy]);
-  };
+  }, []);
 
-  const updatePriorityStrategy = async (strategyId: string, strategyData: Partial<Omit<PriorityStrategy, 'id'>>) => {
+  const updatePriorityStrategy = useCallback(async (strategyId: string, strategyData: Partial<Omit<PriorityStrategy, 'id'>>) => {
+    await simulateApi();
     setPriorityStrategies(current =>
       current.map(s => (s.id === strategyId ? { ...s, ...strategyData } as PriorityStrategy : s))
     );
-  };
+  }, []);
 
-  const deletePriorityStrategy = async (strategyId: string) => {
+  const deletePriorityStrategy = useCallback(async (strategyId: string) => {
+    await simulateApi();
     setPriorityStrategies(current => current.filter(s => s.id !== strategyId));
-  };
+  }, []);
 
   const getStrategyForApplication = useCallback((application: PriorityStrategyApplication) => {
     return priorityStrategies.find(s => s.applications.includes(application));
@@ -257,15 +265,17 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   }, [priorityStrategies]);
 
-  const updateAppSettings = async (settings: Partial<AppSettings>) => {
+  const updateAppSettings = useCallback(async (settings: Partial<AppSettings>) => {
+    await simulateApi();
     setAppSettings(current => ({ ...current, ...settings }));
-  };
+  }, []);
 
-  const linkGoogleCalendar = async (userId: string) => {
+  const linkGoogleCalendar = useCallback(async (userId: string) => {
     const provider = new GoogleAuthProvider();
     provider.addScope('https://www.googleapis.com/auth/calendar.readonly');
     try {
       await signInWithPopup(auth, provider);
+      // In a real app, you would send the token to your backend to securely store it.
       await updateUser(userId, { googleCalendarLinked: true });
       toast({
         title: "Success!",
@@ -279,7 +289,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         description: "There was a problem linking your Google Calendar. Please try again.",
       });
     }
-  };
+  }, [updateUser, toast]);
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -291,7 +301,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   }, [viewAsUser.theme]);
   
-  const value = {
+  const value = useMemo(() => ({
     realUser,
     viewAsUser,
     setViewAsUser: setViewAsUserId,
@@ -328,7 +338,15 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     getPriorityDisplay,
     appSettings,
     updateAppSettings,
-  };
+  }), [
+    realUser, viewAsUser, users, allTeamRoles, teams, notifications, userStatusAssignments,
+    calendars, events, locations, allBookableLocations, priorityStrategies, appSettings,
+    addTeam, updateTeam, deleteTeam, setNotifications, setUserStatusAssignments, addUser,
+    updateUser, linkGoogleCalendar, addCalendar, updateCalendar, deleteCalendar,
+    addEvent, updateEvent, addLocation, deleteLocation, addPriorityStrategy,
+    updatePriorityStrategy, deletePriorityStrategy, getEventStrategy, getTaskStrategy,
+    getPriorityDisplay, updateAppSettings
+  ]);
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
 }

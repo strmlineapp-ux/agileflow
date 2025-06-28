@@ -144,7 +144,7 @@ const DayViewLocationRow = React.memo(({
 });
 DayViewLocationRow.displayName = 'DayViewLocationRow';
 
-export function DayView({ date, containerRef, zoomLevel, axisView, onEasyBooking, onEventClick }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', axisView: 'standard' | 'reversed', onEasyBooking: (data: { startTime: Date, location?: string }) => void, onEventClick: (event: Event) => void }) {
+export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, onEasyBooking, onEventClick }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', axisView: 'standard' | 'reversed', onEasyBooking: (data: { startTime: Date, location?: string }) => void, onEventClick: (event: Event) => void }) => {
     const { viewAsUser, events, calendars, users, teams } = useUser();
     const [now, setNow] = useState<Date | null>(null);
     const nowMarkerRef = useRef<HTMLDivElement>(null);
@@ -250,14 +250,14 @@ export function DayView({ date, containerRef, zoomLevel, axisView, onEasyBooking
         setCollapsedLocations(locationsToCollapse);
     }, [groupedEvents, allLocations]);
 
-    const toggleLocationCollapse = (location: string) => {
+    const toggleLocationCollapse = useCallback((location: string) => {
         setCollapsedLocations(prev => {
             const newSet = new Set(prev);
             if (newSet.has(location)) newSet.delete(location);
             else newSet.add(location);
             return newSet;
         });
-    };
+    }, []);
 
     const handleEasyBookingClick = useCallback((e: React.MouseEvent<HTMLDivElement>, type: 'standard' | 'reversed', day: Date, location?: string) => {
         if ((e.target as HTMLElement).closest('[data-event-id]')) {
@@ -492,4 +492,5 @@ export function DayView({ date, containerRef, zoomLevel, axisView, onEasyBooking
     );
 
     return axisView === 'reversed' ? renderReversedView() : renderStandardView();
-}
+});
+DayView.displayName = 'DayView';

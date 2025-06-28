@@ -2,7 +2,7 @@
 
 'use client';
 
-import React, { useEffect, useState, useMemo, useRef } from 'react';
+import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { format, startOfWeek, addDays, eachDayOfInterval, startOfDay, addHours, isToday, isSaturday, isSunday, isSameDay } from 'date-fns';
 import { type Event, type Team } from '@/types';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
@@ -23,7 +23,7 @@ const isHoliday = (day: Date) => {
 
 const DEFAULT_HOUR_HEIGHT_PX = 60;
 
-export function WeekView({ date, containerRef, zoomLevel, onEasyBooking, onEventClick }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', onEasyBooking: (data: { startTime: Date, location?: string }) => void, onEventClick: (event: Event) => void }) {
+export const WeekView = React.memo(({ date, containerRef, zoomLevel, onEasyBooking, onEventClick }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', onEasyBooking: (data: { startTime: Date, location?: string }) => void, onEventClick: (event: Event) => void }) => {
     const { viewAsUser, events, calendars, users, teams } = useUser();
     const [now, setNow] = useState<Date | null>(null);
     const nowMarkerRef = useRef<HTMLDivElement>(null);
@@ -47,7 +47,7 @@ export function WeekView({ date, containerRef, zoomLevel, onEasyBooking, onEvent
         return map;
     }, [calendars]);
 
-    const handleEasyBookingClick = (e: React.MouseEvent<HTMLDivElement>, day: Date) => {
+    const handleEasyBookingClick = useCallback((e: React.MouseEvent<HTMLDivElement>, day: Date) => {
         if ((e.target as HTMLElement).closest('[data-event-id]')) {
             return;
         }
@@ -63,7 +63,7 @@ export function WeekView({ date, containerRef, zoomLevel, onEasyBooking, onEvent
         const startTime = new Date(day);
         startTime.setHours(hour, minutes, 0, 0);
         onEasyBooking({ startTime });
-    };
+    }, [hourHeight, onEasyBooking, userCanCreateEvent, viewAsUser.easyBooking]);
 
     useEffect(() => {
         if (isCurrentWeek) {
@@ -101,9 +101,9 @@ export function WeekView({ date, containerRef, zoomLevel, onEasyBooking, onEvent
 
     const hours = Array.from({ length: 24 }, (_, i) => i);
 
-    const getEventsForDay = (day: Date) => {
+    const getEventsForDay = useCallback((day: Date) => {
         return events.filter(event => format(event.startTime, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd'));
-    }
+    }, [events]);
     
     const displayedDays = showWeekends ? weekDays : weekDays.slice(0, 5);
 
@@ -273,4 +273,5 @@ export function WeekView({ date, containerRef, zoomLevel, onEasyBooking, onEvent
             </CardContent>
         </Card>
     );
-}
+});
+WeekView.displayName = 'WeekView';
