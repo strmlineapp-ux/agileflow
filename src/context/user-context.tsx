@@ -14,17 +14,13 @@ interface UserContextType {
   viewAsUser: User;
   setViewAsUser: (userId: string) => void;
   users: User[];
-  allSystemRoles: string[];
   allTeamRoles: string[];
-  isLocationCheckManager: boolean;
   teams: Team[];
   pinnedLocations: string[];
   checkLocations: string[];
   addTeam: (teamData: Omit<Team, 'id'>) => Promise<void>;
   updateTeam: (teamId: string, teamData: Partial<Omit<Team, 'id'>>) => Promise<void>;
   deleteTeam: (teamId: string) => Promise<void>;
-  extraCheckLocations: Record<string, string[]>;
-  setExtraCheckLocations: React.Dispatch<React.SetStateAction<Record<string, string[]>>>;
   notifications: Notification[];
   setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>;
   userStatusAssignments: Record<string, UserStatusAssignment[]>;
@@ -49,8 +45,6 @@ const UserContext = createContext<UserContextType | null>(null);
 
 const REAL_USER_ID = '1'; // Alice is the admin
 
-const SYSTEM_ROLES = ['Admin', 'Service Delivery Manager'];
-
 const initialPageConfigs: PageConfig[] = [
     { id: 'admin', name: 'Admin', icon: 'shield_person' },
     { id: 'service-delivery', name: 'Service Delivery', icon: 'business_center' }
@@ -60,7 +54,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [viewAsUserId, setViewAsUserId] = useState<string>(REAL_USER_ID);
   const [users, setUsers] = useState<User[]>(initialUsers);
   const [teams, setTeams] = useState<Team[]>(mockTeams);
-  const [extraCheckLocations, setExtraCheckLocations] = useState<Record<string, string[]>>({});
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [userStatusAssignments, setUserStatusAssignments] = useState<Record<string, UserStatusAssignment[]>>({});
   const [calendars, setCalendars] = useState<SharedCalendar[]>(mockCalendars);
@@ -69,7 +62,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [pageConfigs, setPageConfigs] = useState<PageConfig[]>(initialPageConfigs);
   const { toast } = useToast();
 
-  const allSystemRoles = useMemo(() => SYSTEM_ROLES, []);
   const allTeamRoles = useMemo(() => {
     const allRoles = new Set<string>();
     teams.forEach(team => {
@@ -81,10 +73,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const realUser = useMemo(() => users.find(u => u.userId === REAL_USER_ID)!, [users]);
   const viewAsUser = useMemo(() => users.find(u => u.userId === viewAsUserId) || users.find(u => u.userId === REAL_USER_ID)!, [users, viewAsUserId]);
   
-  const isLocationCheckManager = useMemo(() => {
-    return teams.some(team => team.locationCheckManagers?.includes(viewAsUser.userId));
-  }, [teams, viewAsUser.userId]);
-
   const userTeams = useMemo(() => teams.filter(team => team.members.includes(viewAsUser.userId)), [teams, viewAsUser.userId]);
 
   const pinnedLocations = useMemo(() => {
@@ -225,17 +213,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     viewAsUser,
     setViewAsUser: setViewAsUserId,
     users,
-    allSystemRoles,
     allTeamRoles,
-    isLocationCheckManager,
     teams,
     pinnedLocations,
     checkLocations,
     addTeam,
     updateTeam,
     deleteTeam,
-    extraCheckLocations,
-    setExtraCheckLocations,
     notifications,
     setNotifications,
     userStatusAssignments,

@@ -6,14 +6,12 @@ import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { format, addHours, startOfDay, isSaturday, isSunday, isSameDay, isToday, startOfWeek, eachDayOfInterval, addDays } from 'date-fns';
 import { type Event, type User, type UserStatus, type UserStatusAssignment } from '@/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { mockHolidays } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 import { Button } from '../ui/button';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { useUser } from '@/context/user-context';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -22,39 +20,18 @@ import { Separator } from '@/components/ui/separator';
 import { canCreateAnyEvent } from '@/lib/permissions';
 import { GoogleSymbol } from '../icons/google-symbol';
 
-const isHoliday = (day: Date) => {
-    return mockHolidays.some(holiday => isSameDay(day, holiday));
-}
-
 const getContrastColor = (hsl: string): string => {
-    if (!hsl) {
-        return 'hsl(var(--card-foreground))';
-    }
+    if (!hsl) return 'hsl(var(--card-foreground))';
     const parts = hsl.split(' ');
-    if (parts.length < 3) {
-        return 'hsl(var(--card-foreground))'; 
-    }
+    if (parts.length < 3) return 'hsl(var(--card-foreground))'; 
     const lightness = parseInt(parts[2].replace('%', '').replace(')', ''));
-    if (isNaN(lightness)) {
-        return 'hsl(var(--card-foreground))';
-    }
+    if (isNaN(lightness)) return 'hsl(var(--card-foreground))';
     return lightness > 55 ? 'hsl(var(--card-foreground))' : 'hsl(var(--primary-foreground))';
 }
 
 
 const DEFAULT_HOUR_WIDTH_PX = 120;
 const LOCATION_LABEL_WIDTH_PX = 160;
-
-const getEventPosition = (event: Event, hourWidth: number) => {
-    const startHour = event.startTime.getHours();
-    const startMinute = event.startTime.getMinutes();
-    const endHour = event.endTime.getHours();
-    const endMinute = event.endTime.getMinutes();
-
-    const left = (startHour + startMinute / 60) * hourWidth;
-    const width = Math.max(((endHour + endMinute / 60) - (startHour + startMinute / 60)) * hourWidth - 4, 20);
-    return { left, width };
-}
 
 const ALL_USER_STATUSES: UserStatus[] = [
     'PTO', 'PTO (AM)', 'PTO (PM)', 'TOIL', 'TOIL (AM)', 'TOIL (PM)', 'Sick', 'Offsite', 'Training'
@@ -174,6 +151,120 @@ const ManageStatusDialog = ({ isOpen, onOpenChange, day, initialAssignments, use
     );
 };
 
+const ProductionScheduleLocationRow = React.memo(({
+    day,
+    location,
+    eventsInRow,
+    isLast,
+    index,
+    hourWidth,
+    calendarColorMap,
+    timeFormatEvent,
+    collapsedLocations,
+    dailyCheckAssignments,
+    toggleLocationCollapse,
+    handleAssignCheck,
+    handleEasyBookingClick,
+}: {
+    day: Date;
+    location: string;
+    eventsInRow: Event[];
+    isLast: boolean;
+    index: number;
+    hourWidth: number;
+    calendarColorMap: Record<string, { bg: string; text: string }>;
+    timeFormatEvent: string;
+    collapsedLocations: Record<string, Set<string>>;
+    dailyCheckAssignments: Record<string, Record<string, string | null>>;
+    toggleLocationCollapse: (dayIso: string, location: string) => void;
+    handleAssignCheck: (dayIso: string, location: string, userId: string | null) => void;
+    handleEasyBookingClick: (e: React.MouseEvent<HTMLDivElement>, day: Date) => void;
+}) => {
+    const { viewAsUser, users, teams } = useUser();
+    
+    const dayIso = day.toISOString();
+    const isLocationCollapsed = collapsedLocations[dayIso]?.has(location);
+    const assignedUserId = dailyCheckAssignments[dayIso]?.[location];
+    const assignedUser = users.find(u => u.userId === assignedUserId);
+
+    const canManageThisLocation = useMemo(() => {
+        if (viewAsUser.roles?.includes('Admin')) return true;
+        // Check if user is a LocationCheckManager for ANY team that has this location pinned.
+        return teams.some(team => 
+            team.pinnedLocations.includes(location) && 
+            team.locationCheckManagers?.includes(viewAsUser.userId)
+        );
+    }, [viewAsUser, teams, location]);
+
+    const dailyCheckUsers = useMemo(() => {
+        const teamsWithLocation = teams.filter(t => t.pinnedLocations.includes(location));
+        const userIds = new Set(teamsWithLocation.flatMap(t => t.members));
+        return users.filter(u => userIds.has(u.userId));
+    }, [teams, users, location]);
+    
+    const getEventPosition = (event: Event) => {
+        const startHour = event.startTime.getHours();
+        const startMinute = event.startTime.getMinutes();
+        const endHour = event.endTime.getHours();
+        const endMinute = event.endTime.getMinutes();
+
+        const left = (startHour + startMinute / 60) * hourWidth;
+        const width = Math.max(((endHour + endMinute / 60) - (startHour + startMinute / 60)) * hourWidth - 4, 20);
+        return { left, width };
+    };
+
+    const assignmentControl = (
+         <Popover>
+            <PopoverTrigger asChild>
+                <Button variant="ghost" size={assignedUser ? "sm" : "icon"} className={cn("h-6 text-xs", assignedUser ? "w-auto px-1.5" : "w-6 ml-1")}>
+                    {assignedUser ? `${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}` : <GoogleSymbol name="add_circle" />}
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-56 p-0">
+                <div className="p-2 border-b"><p className="text-sm font-medium text-center">Assign User</p></div>
+                <div className="flex flex-col gap-1 max-h-48 overflow-y-auto p-1">
+                    {dailyCheckUsers.length > 0 ? dailyCheckUsers.filter(user => user.userId !== assignedUserId).map(user => (
+                        <Button key={user.userId} variant="ghost" className="justify-start h-8" onClick={() => handleAssignCheck(dayIso, location, user.userId)}>
+                            <Avatar className="h-6 w-6 mr-2"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
+                            <span className="text-sm">{user.displayName}</span>
+                        </Button>
+                    )) : <p className="text-sm text-muted-foreground text-center p-2">No users to assign.</p>}
+                </div>
+                {assignedUser && <div className="p-1 border-t"><Button variant="outline" size="sm" className="w-full text-destructive hover:text-destructive" onClick={() => handleAssignCheck(dayIso, location, null)}>Unassign</Button></div>}
+            </PopoverContent>
+        </Popover>
+    );
+
+    return (
+        <div className={cn("flex", { "border-b": !isLast }, {"bg-muted/10": index % 2 !== 0})}>
+            <div className="w-[160px] shrink-0 p-2 border-r flex items-center justify-between bg-card sticky left-0 z-30">
+                <div className="flex items-center gap-1 cursor-pointer flex-1 min-w-0" onClick={() => toggleLocationCollapse(dayIso, location)}>
+                    {isLocationCollapsed ? <GoogleSymbol name="chevron_right" /> : <GoogleSymbol name="expand_more" />}
+                    <p className="font-medium text-sm truncate">{location}</p>
+                </div>
+                 {canManageThisLocation ? assignmentControl : assignedUser && <div className="h-6 text-xs px-1.5 flex items-center justify-center text-muted-foreground">{`${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}`}</div>}
+            </div>
+            <div 
+                className={cn("relative flex-1", isLocationCollapsed ? "h-10" : "h-20")}
+                onClick={(e) => handleEasyBookingClick(e, day)}
+            >
+                {Array.from({ length: 23 }).map((_, hour) => <div key={`line-${location}-${hour}`} className="absolute top-0 bottom-0 border-r" style={{ left: `${(hour + 1) * hourWidth}px` }}></div>)}
+                {!isLocationCollapsed && eventsInRow.map(event => {
+                    const { left, width } = getEventPosition(event);
+                    const colors = calendarColorMap[event.calendarId];
+                    return (
+                        <div key={event.eventId} className={cn("absolute h-[calc(100%-1rem)] top-1/2 -translate-y-1/2 p-2 rounded-lg shadow-md cursor-pointer z-10")} style={{ left: `${left + 2}px`, width: `${width}px`, backgroundColor: colors?.bg, color: colors?.text }}>
+                            <p className="font-semibold text-sm truncate">{event.title}</p>
+                            <p className="text-xs opacity-90 truncate">{format(event.startTime, timeFormatEvent)} - {format(event.endTime, timeFormatEvent)}</p>
+                        </div>
+                    )
+                })}
+            </div>
+        </div>
+    );
+});
+ProductionScheduleLocationRow.displayName = 'ProductionScheduleLocationRow';
+
 
 export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBooking }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', onEasyBooking: (date: Date) => void }) {
     const { users, teams, viewAsUser, events, calendars, pinnedLocations, checkLocations, userStatusAssignments, setUserStatusAssignments } = useUser();
@@ -244,23 +335,27 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
     const weeklyScheduleData = useMemo(() => {
         return weekDays.map(day => {
             const dayEvents = events.filter(event => format(event.startTime, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd'));
-            const allDayLocations = pinnedLocations || [];
+            const dayIso = day.toISOString();
 
+            const teamsWithPinnedLocationsForDay = teams.filter(team => team.pinnedLocations && team.pinnedLocations.length > 0);
+            const allDayLocations = [...new Set(teamsWithPinnedLocationsForDay.flatMap(t => t.pinnedLocations))].sort();
+            
+            const allCheckLocationsForDay = [...new Set(teamsWithPinnedLocationsForDay.flatMap(t => t.checkLocations || []))];
+            
             const groupedEvents = allDayLocations.reduce((acc, locationKey) => {
                 acc[locationKey] = dayEvents.filter(e => e.location === locationKey);
                 return acc;
             }, {} as Record<string, Event[]>);
             
-            return { day, groupedEvents, isWeekend: isSaturday(day) || isSunday(day), allDayLocations };
+            return { day, dayIso, groupedEvents, isWeekend: isSaturday(day) || isSunday(day), allDayLocations, allCheckLocationsForDay };
         });
-    }, [weekDays, events, pinnedLocations]);
+    }, [weekDays, events, teams]);
 
     useEffect(() => {
         const initialCollapsedDays = new Set<string>();
         const initialCollapsedLocations: Record<string, Set<string>> = {};
 
-        weeklyScheduleData.forEach(({ day, isWeekend, groupedEvents, allDayLocations }) => {
-            const dayIso = day.toISOString();
+        weeklyScheduleData.forEach(({ dayIso, isWeekend, groupedEvents, allDayLocations }) => {
             if (isWeekend) initialCollapsedDays.add(dayIso);
 
             const locationsToCollapse = new Set<string>();
@@ -359,95 +454,22 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
         };
     }, [editingStatusDayIso, weeklyScheduleData, userStatusAssignments]);
 
-    const renderLocationRow = (day: Date, location: string, eventsInRow: Event[], isLast: boolean, index: number) => {
-        const dayIso = day.toISOString();
-        const isLocationCollapsed = collapsedLocations[dayIso]?.has(location);
-        const assignedUserId = dailyCheckAssignments[dayIso]?.[location];
-        const assignedUser = users.find(u => u.userId === assignedUserId);
-        
-        // A user can manage checks for this location if they are an Admin or a LocationCheckManager for ANY team that has this location pinned.
-        const canManageThisLocation = viewAsUser.roles?.includes('Admin') || teams.some(t =>
-            t.pinnedLocations.includes(location) && t.locationCheckManagers?.includes(viewAsUser.userId)
-        );
-
-        const dailyCheckUsers = useMemo(() => {
-            // Get all teams that have this location pinned
-            const teamsWithLocation = teams.filter(t => t.pinnedLocations.includes(location));
-            // Get all unique members from those teams
-            const userIds = new Set(teamsWithLocation.flatMap(t => t.members));
-            return users.filter(u => userIds.has(u.userId));
-        }, [teams, users, location]);
-
-
-        const assignmentControl = (
-             <Popover>
-                <PopoverTrigger asChild>
-                    <Button variant="ghost" size={assignedUser ? "sm" : "icon"} className={cn("h-6 text-xs", assignedUser ? "w-auto px-1.5" : "w-6 ml-1")}>
-                        {assignedUser ? `${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}` : <GoogleSymbol name="add_circle" />}
-                    </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-56 p-0">
-                    <div className="p-2 border-b"><p className="text-sm font-medium text-center">Assign User</p></div>
-                    <div className="flex flex-col gap-1 max-h-48 overflow-y-auto p-1">
-                        {dailyCheckUsers.length > 0 ? dailyCheckUsers.filter(user => user.userId !== assignedUserId).map(user => (
-                            <Button key={user.userId} variant="ghost" className="justify-start h-8" onClick={() => handleAssignCheck(dayIso, location, user.userId)}>
-                                <Avatar className="h-6 w-6 mr-2"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
-                                <span className="text-sm">{user.displayName}</span>
-                            </Button>
-                        )) : <p className="text-sm text-muted-foreground text-center p-2">No users to assign.</p>}
-                    </div>
-                    {assignedUser && <div className="p-1 border-t"><Button variant="outline" size="sm" className="w-full text-destructive hover:text-destructive" onClick={() => handleAssignCheck(dayIso, location, null)}>Unassign</Button></div>}
-                </PopoverContent>
-            </Popover>
-        );
-
-        return (
-            <div key={location} className={cn("flex", { "border-b": !isLast }, {"bg-muted/10": index % 2 !== 0})}>
-                <div className="w-[160px] shrink-0 p-2 border-r flex items-center justify-between bg-card sticky left-0 z-30">
-                    <div className="flex items-center gap-1 cursor-pointer flex-1 min-w-0" onClick={() => toggleLocationCollapse(dayIso, location)}>
-                        {isLocationCollapsed ? <GoogleSymbol name="chevron_right" /> : <GoogleSymbol name="expand_more" />}
-                        <p className="font-medium text-sm truncate">{location}</p>
-                    </div>
-                     {canManageThisLocation ? assignmentControl : assignedUser && <div className="h-6 text-xs px-1.5 flex items-center justify-center text-muted-foreground">{`${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}`}</div>}
-                </div>
-                <div 
-                    className={cn("relative flex-1", isLocationCollapsed ? "h-10" : "h-20")}
-                    onClick={(e) => handleEasyBookingClick(e, day)}
-                >
-                    {hours.slice(0, 23).map(hour => <div key={`line-${location}-${hour}`} className="absolute top-0 bottom-0 border-r" style={{ left: `${(hour + 1) * hourWidth}px` }}></div>)}
-                    {!isLocationCollapsed && eventsInRow.map(event => {
-                        const { left, width } = getEventPosition(event, hourWidth);
-                        const colors = calendarColorMap[event.calendarId];
-                        return (
-                            <div key={event.eventId} className={cn("absolute h-[calc(100%-1rem)] top-1/2 -translate-y-1/2 p-2 rounded-lg shadow-md cursor-pointer z-10")} style={{ left: `${left + 2}px`, width: `${width}px`, backgroundColor: colors?.bg, color: colors?.text }}>
-                                <p className="font-semibold text-sm truncate">{event.title}</p>
-                                <p className="text-xs opacity-90 truncate">{format(event.startTime, timeFormatEvent)} - {format(event.endTime, timeFormatEvent)}</p>
-                            </div>
-                        )
-                    })}
-                </div>
-            </div>
-        );
-    };
 
     return (
         <div className="space-y-4">
-            {weeklyScheduleData.map(({ day, groupedEvents, allDayLocations }) => {
-                const dayIso = day.toISOString();
+            {weeklyScheduleData.map(({ day, dayIso, groupedEvents, allDayLocations, allCheckLocationsForDay }) => {
                 const isDayCollapsed = collapsedDays.has(dayIso);
                 const isDayToday = isToday(day);
                 const dayStatusAssignments = userStatusAssignments[dayIso] || [];
-                const dailyCheckLocations = checkLocations.filter(loc => allDayLocations.includes(loc));
                 
-                const canManageAnyCheck = viewAsUser.roles?.includes('Admin') || teams.some(t => t.locationCheckManagers?.includes(viewAsUser.userId));
-
+                const dailyCheckLocationsForPills = [...new Set(allCheckLocationsForDay)];
 
                 return (
                     <div key={dayIso} ref={isDayToday ? todayCardRef : null}>
                         <Card className="overflow-hidden">
                              <div className="p-2 border-b bg-card flex flex-wrap items-center justify-between gap-4">
                                 <div className="flex flex-wrap items-center gap-2">
-                                    {dailyCheckLocations.map(location => {
+                                    {dailyCheckLocationsForPills.map(location => {
                                         const assignedUserId = dailyCheckAssignments[dayIso]?.[location];
                                         const assignedUser = users.find(u => u.userId === assignedUserId);
                                         const canManageThisLocation = viewAsUser.roles?.includes('Admin') || teams.some(t =>
@@ -497,7 +519,24 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
                                     {!isDayCollapsed && (
                                         <CardContent className="p-0 relative">
                                             <div className="absolute inset-y-0 lunch-break-pattern z-0 pointer-events-none" style={{ left: `${LOCATION_LABEL_WIDTH_PX + 12 * hourWidth}px`, width: `${2.5 * hourWidth}px` }} title="Lunch Break" />
-                                            {allDayLocations.map((location, index) => renderLocationRow(day, location, groupedEvents[location] || [], index === allDayLocations.length - 1, index))}
+                                            {allDayLocations.map((location, index) => (
+                                                <ProductionScheduleLocationRow
+                                                    key={location}
+                                                    day={day}
+                                                    location={location}
+                                                    eventsInRow={groupedEvents[location] || []}
+                                                    isLast={index === allDayLocations.length - 1}
+                                                    index={index}
+                                                    hourWidth={hourWidth}
+                                                    calendarColorMap={calendarColorMap}
+                                                    timeFormatEvent={timeFormatEvent}
+                                                    collapsedLocations={collapsedLocations}
+                                                    dailyCheckAssignments={dailyCheckAssignments}
+                                                    toggleLocationCollapse={toggleLocationCollapse}
+                                                    handleAssignCheck={handleAssignCheck}
+                                                    handleEasyBookingClick={handleEasyBookingClick}
+                                                />
+                                            ))}
                                             {isDayToday && now && <div ref={nowMarkerRef} className="absolute top-0 bottom-0 z-20 pointer-events-none" style={{ left: `${LOCATION_LABEL_WIDTH_PX + calculateCurrentTimePosition()}px` }}><div className="relative w-0.5 h-full bg-primary"><div className="absolute -top-1.5 -left-[5px] h-3 w-3 rounded-full bg-primary border-2 border-background"></div></div></div>}
                                         </CardContent>
                                     )}

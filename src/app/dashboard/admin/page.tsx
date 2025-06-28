@@ -1,8 +1,7 @@
 
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useMemo } from 'react';
 import { useUser } from '@/context/user-context';
 import { type User, type PageConfig } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -19,7 +18,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { googleSymbolNames } from '@/lib/google-symbols';
-import { Skeleton } from '@/components/ui/skeleton';
 
 // Component to manage a list of users with a specific role via pills
 const UserRoleManager = ({
@@ -140,7 +138,6 @@ const PageConfiguration = ({ pageConfig, onSave }: { pageConfig: PageConfig, onS
 }
 
 export default function AdminPage() {
-  const router = useRouter();
   const { toast } = useToast();
   const { realUser, users, pageConfigs, updatePageConfig, updateUser } = useUser();
   
@@ -152,12 +149,17 @@ export default function AdminPage() {
   const [on2faSuccess, setOn2faSuccess] = useState<(() => void) | null>(null);
   const [twoFactorCode, setTwoFactorCode] = useState('');
 
-
-  useEffect(() => {
-    if (!isAdmin) {
-      router.push('/dashboard/calendar');
-    }
-  }, [isAdmin, router]);
+  // This is a protected page. If the user is not an admin, show an access denied message.
+  // This is safer than a useEffect-based redirect which can violate the rules of hooks.
+  if (!isAdmin) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full gap-2 text-center">
+        <GoogleSymbol name="lock" className="text-6xl text-muted-foreground" />
+        <h1 className="text-2xl font-bold">Access Denied</h1>
+        <p className="text-muted-foreground">You do not have permission to view the Admin Panel.</p>
+      </div>
+    );
+  }
 
   const handleSavePageConfig = (data: Partial<PageConfig>) => {
     if(sdmConfig) {
@@ -203,45 +205,41 @@ export default function AdminPage() {
     setOn2faSuccess(null);
   };
   
-  const canRender = isAdmin && sdmConfig;
+  // The sdmConfig should always exist, but this check makes it safe.
+  if (!sdmConfig) {
+    return null; // Or a loading skeleton
+  }
 
   return (
     <>
       <div className="flex flex-col gap-8">
         <h1 className="font-headline text-3xl font-semibold">Admin Panel</h1>
         
-        {!canRender ? (
-          <div className="space-y-4">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-40 w-full" />
-          </div>
-        ) : (
-          <Tabs defaultValue="admins" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="admins">Admin Management</TabsTrigger>
-                  <TabsTrigger value="app-manager">App Manager</TabsTrigger>
-              </TabsList>
-              <TabsContent value="admins" className="mt-6">
+        <Tabs defaultValue="admins" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="admins">Admin Management</TabsTrigger>
+                <TabsTrigger value="app-manager">App Manager</TabsTrigger>
+            </TabsList>
+            <TabsContent value="admins" className="mt-6">
+                <UserRoleManager
+                    title="Manage Admins"
+                    description="Assign or revoke Admin privileges. This action requires 2FA."
+                    allUsers={users}
+                    roleName="Admin"
+                    onRoleToggle={(user) => handleRoleToggle(user, 'Admin')}
+                />
+            </TabsContent>
+            <TabsContent value="app-manager" className="mt-6 space-y-6">
                   <UserRoleManager
-                      title="Manage Admins"
-                      description="Assign or revoke Admin privileges. This action requires 2FA."
-                      allUsers={users}
-                      roleName="Admin"
-                      onRoleToggle={(user) => handleRoleToggle(user, 'Admin')}
-                  />
-              </TabsContent>
-              <TabsContent value="app-manager" className="mt-6 space-y-6">
-                   <UserRoleManager
-                      title={`Manage ${sdmConfig.name}s`}
-                      description={`Assign or revoke ${sdmConfig.name} privileges. This action requires 2FA.`}
-                      allUsers={users}
-                      roleName="Service Delivery Manager"
-                      onRoleToggle={(user) => handleRoleToggle(user, 'Service Delivery Manager')}
-                      />
-                  <PageConfiguration pageConfig={sdmConfig} onSave={handleSavePageConfig} />
-              </TabsContent>
-          </Tabs>
-        )}
+                    title={`Manage ${sdmConfig.name}s`}
+                    description={`Assign or revoke ${sdmConfig.name} privileges. This action requires 2FA.`}
+                    allUsers={users}
+                    roleName="Service Delivery Manager"
+                    onRoleToggle={(user) => handleRoleToggle(user, 'Service Delivery Manager')}
+                    />
+                <PageConfiguration pageConfig={sdmConfig} onSave={handleSavePageConfig} />
+            </TabsContent>
+        </Tabs>
       </div>
 
       <Dialog open={is2faDialogOpen} onOpenChange={(isOpen) => !isOpen && close2faDialog()}>

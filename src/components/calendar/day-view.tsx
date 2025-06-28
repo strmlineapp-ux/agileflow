@@ -2,38 +2,97 @@
 'use client';
 
 import React, { useEffect, useMemo, useState, useRef } from 'react';
-import { format, addHours, startOfDay, isSaturday, isSunday, isSameDay, isToday } from 'date-fns';
-import { type Event } from '@/types';
+import { format, addHours, startOfDay, isSameDay, isToday } from 'date-fns';
+import { type Event, type User, type SharedCalendar, type BookableLocation } from '@/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { mockHolidays } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 import { useUser } from '@/context/user-context';
 import { canCreateAnyEvent } from '@/lib/permissions';
 import { GoogleSymbol } from '../icons/google-symbol';
 
-const isHoliday = (day: Date) => {
-    return mockHolidays.some(holiday => isSameDay(day, holiday));
-}
-
 const getContrastColor = (hsl: string): string => {
-    if (!hsl) {
-        return 'hsl(var(--card-foreground))';
-    }
+    if (!hsl) return 'hsl(var(--card-foreground))';
     const parts = hsl.split(' ');
-    if (parts.length < 3) {
-        return 'hsl(var(--card-foreground))'; 
-    }
+    if (parts.length < 3) return 'hsl(var(--card-foreground))'; 
     const lightness = parseInt(parts[2].replace('%', '').replace(')', ''));
-    if (isNaN(lightness)) {
-        return 'hsl(var(--card-foreground))';
-    }
+    if (isNaN(lightness)) return 'hsl(var(--card-foreground))';
     return lightness > 55 ? 'hsl(var(--card-foreground))' : 'hsl(var(--primary-foreground))';
 }
 
-
 const DEFAULT_HOUR_WIDTH_PX = 120;
-const DEFAULT_HOUR_HEIGHT_PX = 60;
 const LOCATION_LABEL_WIDTH_PX = 160;
+
+const DayViewLocationRow = React.memo(({
+    location,
+    isLast,
+    index,
+    hourWidth,
+    groupedEvents,
+    collapsedLocations,
+    calendarColorMap,
+    timeFormatEvent,
+    toggleLocationCollapse,
+    handleEasyBookingClick,
+    day,
+}: {
+    location: string;
+    isLast: boolean;
+    index: number;
+    hourWidth: number;
+    groupedEvents: Record<string, Event[]>;
+    collapsedLocations: Set<string>;
+    calendarColorMap: Record<string, { bg: string; text: string }>;
+    timeFormatEvent: string;
+    toggleLocationCollapse: (location: string) => void;
+    handleEasyBookingClick: (e: React.MouseEvent<HTMLDivElement>, type: 'standard' | 'reversed', day?: Date) => void;
+    day: Date;
+}) => {
+    const eventsInRow = groupedEvents[location] || [];
+    const isCollapsed = collapsedLocations.has(location);
+
+    const getEventPositionStandard = (event: Event) => {
+        const startHour = event.startTime.getHours();
+        const startMinute = event.startTime.getMinutes();
+        const endHour = event.endTime.getHours();
+        const endMinute = event.endTime.getMinutes();
+
+        const left = (startHour + startMinute / 60) * hourWidth;
+        const width = Math.max(((endHour + endMinute / 60) - (startHour + startMinute / 60)) * hourWidth - 4, 20);
+        return { left, width };
+    }
+
+    return (
+        <div className={cn("flex", { "border-b": !isLast }, { "bg-muted/10": index % 2 !== 0 })}>
+            <div 
+                className="w-[160px] shrink-0 p-2 border-r flex items-center justify-start bg-card sticky left-0 z-30 gap-1 cursor-pointer"
+                onClick={() => toggleLocationCollapse(location)}
+            >
+                {isCollapsed ? <GoogleSymbol name="chevron_right" className="text-lg" /> : <GoogleSymbol name="expand_more" className="text-lg" />}
+                <p className="font-medium text-sm truncate">{location}</p>
+            </div>
+            <div className={cn("relative flex-1", isCollapsed ? "h-10" : "h-20")} onClick={(e) => handleEasyBookingClick(e, 'standard', day)}>
+                {Array.from({ length: 23 }).map((_, hour) => (
+                    <div key={`line-${hour}`} className="absolute top-0 bottom-0 border-r" style={{ left: `${(hour + 1) * hourWidth}px` }}></div>
+                ))}
+                {!isCollapsed && eventsInRow.map(event => {
+                    const { left, width } = getEventPositionStandard(event);
+                    const colors = calendarColorMap[event.calendarId];
+                    return (
+                        <div 
+                            key={event.eventId} 
+                            className="absolute h-[calc(100%-1rem)] top-1/2 -translate-y-1/2 p-2 rounded-lg shadow-md cursor-pointer z-10"
+                            style={{ left: `${left + 2}px`, width: `${width}px`, backgroundColor: colors?.bg, color: colors?.text }}
+                        >
+                            <p className="font-semibold text-sm truncate">{event.title}</p>
+                            <p className="text-xs opacity-90 truncate">{format(event.startTime, timeFormatEvent)} - {format(event.endTime, timeFormatEvent)}</p>
+                        </div>
+                    )
+                })}
+            </div>
+        </div>
+    );
+});
+DayViewLocationRow.displayName = 'DayViewLocationRow';
 
 export function DayView({ date, containerRef, zoomLevel, axisView, onEasyBooking }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', axisView: 'standard' | 'reversed', onEasyBooking: (date: Date) => void }) {
     const { viewAsUser, events, calendars, locations } = useUser();
@@ -133,7 +192,6 @@ export function DayView({ date, containerRef, zoomLevel, axisView, onEasyBooking
     const allLocations = useMemo(() => {
         const eventLocations = Object.keys(groupedEvents);
         const masterLocationNames = locations.map(l => l.name);
-        // Combine master list with any other locations that might be on events but not in the master list
         const combined = [...new Set([...masterLocationNames, ...eventLocations])];
         return combined.sort((a,b) => a === 'No Location' ? 1 : b === 'No Location' ? -1 : a.localeCompare(b));
     }, [groupedEvents, locations]);
@@ -184,18 +242,6 @@ export function DayView({ date, containerRef, zoomLevel, axisView, onEasyBooking
         }
     };
 
-
-    const getEventPositionStandard = (event: Event) => {
-        const startHour = event.startTime.getHours();
-        const startMinute = event.startTime.getMinutes();
-        const endHour = event.endTime.getHours();
-        const endMinute = event.endTime.getMinutes();
-
-        const left = (startHour + startMinute / 60) * hourWidth;
-        const width = Math.max(((endHour + endMinute / 60) - (startHour + startMinute / 60)) * hourWidth - 4, 20);
-        return { left, width };
-    }
-    
     const getEventPositionReversed = (event: Event) => {
         const startHour = event.startTime.getHours();
         const startMinute = event.startTime.getMinutes();
@@ -215,45 +261,6 @@ export function DayView({ date, containerRef, zoomLevel, axisView, onEasyBooking
         return (now.getHours() + now.getMinutes() / 60) * hourHeight;
     }
     
-    const renderLocationRow = (location: string, isLast: boolean, index: number) => {
-        const eventsInRow = groupedEvents[location] || [];
-        const isCollapsed = collapsedLocations.has(location);
-        return (
-            <div key={location} className={cn("flex", { "border-b": !isLast }, { "bg-muted/10": index % 2 !== 0 })}>
-                <div 
-                    className="w-[160px] shrink-0 p-2 border-r flex items-center justify-start bg-card sticky left-0 z-30 gap-1 cursor-pointer"
-                    onClick={() => toggleLocationCollapse(location)}
-                >
-                    {isCollapsed ? <GoogleSymbol name="chevron_right" className="text-lg" /> : <GoogleSymbol name="expand_more" className="text-lg" />}
-                    <p className="font-medium text-sm truncate">{location}</p>
-                </div>
-                <div className={cn("relative flex-1", isCollapsed ? "h-10" : "h-20")} onClick={(e) => handleEasyBookingClick(e, 'standard')}>
-                    {/* Vertical Grid lines for this row */}
-                    {hours.slice(0, 23).map(hour => (
-                        <div key={`line-${hour}`} className="absolute top-0 bottom-0 border-r" style={{ left: `${(hour + 1) * hourWidth}px` }}></div>
-                    ))}
-                    {/* Events for this row */}
-                    {!isCollapsed && eventsInRow.map(event => {
-                        const { left, width } = getEventPositionStandard(event);
-                        const colors = calendarColorMap[event.calendarId];
-                        return (
-                            <div 
-                                key={event.eventId} 
-                                className={cn(
-                                    "absolute h-[calc(100%-1rem)] top-1/2 -translate-y-1/2 p-2 rounded-lg shadow-md cursor-pointer z-10"
-                                )}
-                                style={{ left: `${left + 2}px`, width: `${width}px`, backgroundColor: colors?.bg, color: colors?.text }}
-                            >
-                                <p className="font-semibold text-sm truncate">{event.title}</p>
-                                <p className="text-xs opacity-90 truncate">{format(event.startTime, timeFormatEvent)} - {format(event.endTime, timeFormatEvent)}</p>
-                            </div>
-                        )
-                    })}
-                </div>
-            </div>
-        );
-    };
-
     const renderStandardView = () => (
         <Card>
             <div style={{ width: `${LOCATION_LABEL_WIDTH_PX + (24 * hourWidth)}px`}}>
@@ -271,7 +278,6 @@ export function DayView({ date, containerRef, zoomLevel, axisView, onEasyBooking
                     </div>
                 ) : (
                     <CardContent className="p-0 relative">
-                        {/* Lunch Break Cue */}
                         <div
                             className="absolute inset-y-0 lunch-break-pattern z-0 pointer-events-none"
                             style={{
@@ -281,7 +287,22 @@ export function DayView({ date, containerRef, zoomLevel, axisView, onEasyBooking
                             title="Lunch Break"
                         />
                         
-                        {allLocations.map((location, index) => renderLocationRow(location, index === allLocations.length - 1, index))}
+                        {allLocations.map((location, index) => (
+                           <DayViewLocationRow
+                                key={location}
+                                location={location}
+                                isLast={index === allLocations.length - 1}
+                                index={index}
+                                hourWidth={hourWidth}
+                                groupedEvents={groupedEvents}
+                                collapsedLocations={collapsedLocations}
+                                calendarColorMap={calendarColorMap}
+                                timeFormatEvent={timeFormatEvent}
+                                toggleLocationCollapse={toggleLocationCollapse}
+                                handleEasyBookingClick={handleEasyBookingClick}
+                                day={date}
+                           />
+                        ))}
                         
                         {isViewingToday && now && (
                             <div 
