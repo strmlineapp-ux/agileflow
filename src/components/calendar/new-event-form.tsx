@@ -142,17 +142,29 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
       return eventStrategy.priorities[0]?.id || '';
     }
     if (eventStrategy.type === 'symbol') {
-      return `${eventStrategy.id}:${Math.floor(eventStrategy.max / 2)}`;
+      return `${eventStrategy.id}:${Math.floor(strategy.max / 2)}`;
     }
     if (eventStrategy.type === 'scale') {
-      return `${eventStrategy.id}:${Math.floor((eventStrategy.max - eventStrategy.min) / 2)}`;
+      return `${eventStrategy.id}:${Math.floor((strategy.max - strategy.min) / 2)}`;
     }
     return '';
   }, [eventStrategy]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
+    defaultValues: initialData ? {
+        calendarId: defaultCalendarId || '',
+        priority: getDefaultPriority(),
+        title: '',
+        location: initialData.location || '',
+        description: '',
+        attachments: [],
+        attendees: [],
+        templateId: '',
+        date: initialData.date,
+        startTime: initialData.startTime,
+        endTime: initialData.endTime,
+    } : {
       title: '',
       calendarId: defaultCalendarId || '',
       priority: getDefaultPriority(),
@@ -213,25 +225,6 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
         user.email.toLowerCase().includes(guestSearch.toLowerCase())
     );
   }, [users, guestSearch, selectedAttendees, assignedRoleUserIds]);
-
-
-  React.useEffect(() => {
-    if (initialData) {
-        form.reset({
-            calendarId: defaultCalendarId || '',
-            priority: getDefaultPriority(),
-            title: '',
-            location: initialData.location || '',
-            description: '',
-            attachments: [],
-            attendees: [],
-            templateId: '',
-            date: initialData.date,
-            startTime: initialData.startTime,
-            endTime: initialData.endTime,
-        });
-    }
-  }, [initialData, form, defaultCalendarId, getDefaultPriority]);
 
   const selectedCalendar = calendars.find(c => c.id === selectedCalendarId) || availableCalendars[0];
   
@@ -798,3 +791,5 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
     </Form>
   );
 }
+
+    

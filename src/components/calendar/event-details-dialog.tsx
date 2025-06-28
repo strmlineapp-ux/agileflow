@@ -228,28 +228,24 @@ const EventEditForm = ({ event, onFinished }: { event: Event, onFinished: () => 
         path: ["endTime"],
       });
 
-    const form = useForm<z.infer<typeof formSchema>>({ resolver: zodResolver(formSchema) });
+    const form = useForm<z.infer<typeof formSchema>>({
+      resolver: zodResolver(formSchema),
+      defaultValues: {
+          title: event.title,
+          calendarId: event.calendarId,
+          priority: event.priority,
+          templateId: event.templateId || '',
+          date: event.startTime,
+          startTime: format(event.startTime, 'HH:mm'),
+          endTime: format(event.endTime, 'HH:mm'),
+          location: event.location || '',
+          description: event.description || '',
+          attendees: event.attendees || [],
+          attachments: event.attachments || [],
+          roleAssignments: event.roleAssignments || {},
+      }
+    });
     
-    // Populate form with event data on load
-    React.useEffect(() => {
-        if (event) {
-            form.reset({
-                title: event.title,
-                calendarId: event.calendarId,
-                priority: event.priority,
-                templateId: event.templateId,
-                date: event.startTime,
-                startTime: format(event.startTime, 'HH:mm'),
-                endTime: format(event.endTime, 'HH:mm'),
-                location: event.location,
-                description: event.description,
-                attendees: event.attendees,
-                attachments: event.attachments,
-                roleAssignments: event.roleAssignments,
-            });
-        }
-    }, [event, form]);
-
     // Watched form values
     const selectedCalendarId = form.watch('calendarId');
     const eventDate = form.watch('date');
@@ -590,11 +586,19 @@ export function EventDetailsDialog({ event, isOpen, onOpenChange }: EventDetails
   const [isEditing, setIsEditing] = React.useState(false);
 
   React.useEffect(() => {
-    // Reset editing state when dialog is closed or event changes
-    if (!isOpen) {
-      setTimeout(() => setIsEditing(false), 200); // delay to prevent flash of read-only content
+    // When the dialog opens, determine if we should start in edit mode.
+    if (isOpen && event) {
+        const calendar = calendars.find(c => c.id === event.calendarId);
+        if (calendar && canManageEventOnCalendar(viewAsUser, calendar)) {
+            setIsEditing(true);
+        } else {
+            setIsEditing(false);
+        }
+    } else {
+        // Reset editing state when dialog is closed
+        setIsEditing(false);
     }
-  }, [isOpen]);
+  }, [isOpen, event, viewAsUser, calendars]);
   
   if (!event) return null;
   
@@ -606,7 +610,7 @@ export function EventDetailsDialog({ event, isOpen, onOpenChange }: EventDetails
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl">
-        {(isEditing || !canManage) && canManage ? (
+        {isEditing && canManage ? (
             <EventEditForm event={event} onFinished={() => onOpenChange(false)} />
         ) : (
             <EventDisplayView event={event} onEdit={() => setIsEditing(true)} />
@@ -615,3 +619,5 @@ export function EventDetailsDialog({ event, isOpen, onOpenChange }: EventDetails
     </Dialog>
   );
 }
+
+    
