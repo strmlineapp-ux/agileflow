@@ -1,14 +1,17 @@
 
+
 'use client';
 
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { format, addHours, startOfDay, isSameDay, isToday } from 'date-fns';
-import { type Event, type User, type SharedCalendar, type BookableLocation } from '@/types';
+import { type Event, type User, type SharedCalendar, type BookableLocation, type Team } from '@/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { cn, getContrastColor } from '@/lib/utils';
 import { useUser } from '@/context/user-context';
 import { canCreateAnyEvent } from '@/lib/permissions';
 import { GoogleSymbol } from '../icons/google-symbol';
+import { Badge } from '../ui/badge';
+import { PriorityBadge } from './priority-badge';
 
 const DEFAULT_HOUR_WIDTH_PX = 120;
 const LOCATION_LABEL_WIDTH_PX = 160;
@@ -27,6 +30,8 @@ const DayViewLocationRow = React.memo(({
     handleEasyBookingClick,
     day,
     onEventClick,
+    users,
+    teams,
 }: {
     location: string;
     isLast: boolean;
@@ -40,6 +45,8 @@ const DayViewLocationRow = React.memo(({
     handleEasyBookingClick: (e: React.MouseEvent<HTMLDivElement>, type: 'standard' | 'reversed', day?: Date) => void;
     day: Date;
     onEventClick: (event: Event) => void;
+    users: User[];
+    teams: Team[];
 }) => {
     const eventsInRow = groupedEvents[location] || [];
     const isCollapsed = collapsedLocations.has(location);
@@ -71,16 +78,36 @@ const DayViewLocationRow = React.memo(({
                 {!isCollapsed && eventsInRow.map(event => {
                     const { left, width } = getEventPositionStandard(event);
                     const colors = calendarColorMap[event.calendarId];
+                    const teamForEvent = teams.find(t => t.id === event.calendarId);
+                    const eventTemplate = teamForEvent?.eventTemplates?.find(t => t.id === event.templateId);
                     return (
                         <div 
                             key={event.eventId} 
                             data-event-id={event.eventId}
                             onClick={(e) => { e.stopPropagation(); onEventClick(event); }}
-                            className="absolute top-1 p-2 rounded-lg shadow-md cursor-pointer z-10"
+                            className="absolute top-1 p-2 rounded-lg shadow-md cursor-pointer z-10 flex flex-col"
                             style={{ left: `${left + 2}px`, width: `${width}px`, backgroundColor: colors?.bg, color: colors?.text }}
                         >
-                            <p className="font-semibold text-sm whitespace-normal">{event.title}</p>
+                            <div className="flex items-center gap-1 flex-wrap mb-1">
+                                <PriorityBadge priorityId={event.priority} />
+                                {eventTemplate && <Badge variant="outline" className="border-transparent bg-background/50 text-foreground/80">{eventTemplate.name}</Badge>}
+                            </div>
+                            <p className="font-semibold text-sm whitespace-normal leading-tight">{event.title}</p>
                             <p className="text-xs opacity-90">{format(event.startTime, timeFormatEvent)} - {format(event.endTime, timeFormatEvent)}</p>
+                             {event.roleAssignments && Object.keys(event.roleAssignments).length > 0 && (
+                                <div className="flex flex-wrap gap-1 mt-1.5">
+                                    {Object.entries(event.roleAssignments).map(([role, userId]) => {
+                                        const user = users.find(u => u.userId === userId);
+                                        if (!user) return null;
+                                        return (
+                                            <Badge key={role} variant="secondary" className="text-xs p-1 px-1.5 rounded-sm">
+                                                <span className="font-normal opacity-70 mr-1">{role}:</span>
+                                                <span className="font-medium">{user.displayName.split(' ')[0]}</span>
+                                            </Badge>
+                                        );
+                                    })}
+                                </div>
+                            )}
                         </div>
                     )
                 })}
@@ -91,7 +118,7 @@ const DayViewLocationRow = React.memo(({
 DayViewLocationRow.displayName = 'DayViewLocationRow';
 
 export function DayView({ date, containerRef, zoomLevel, axisView, onEasyBooking, onEventClick }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', axisView: 'standard' | 'reversed', onEasyBooking: (date: Date) => void, onEventClick: (event: Event) => void }) {
-    const { viewAsUser, events, calendars, locations } = useUser();
+    const { viewAsUser, events, calendars, locations, users, teams } = useUser();
     const [now, setNow] = useState<Date | null>(null);
     const nowMarkerRef = useRef<HTMLDivElement>(null);
     const [collapsedLocations, setCollapsedLocations] = useState<Set<string>>(new Set());
@@ -302,6 +329,8 @@ export function DayView({ date, containerRef, zoomLevel, axisView, onEasyBooking
                                 handleEasyBookingClick={handleEasyBookingClick}
                                 day={date}
                                 onEventClick={onEventClick}
+                                users={users}
+                                teams={teams}
                            />
                         ))}
                         
@@ -361,18 +390,38 @@ export function DayView({ date, containerRef, zoomLevel, axisView, onEasyBooking
                                 {dayEvents.map(event => {
                                     const { top, height } = getEventPositionReversed(event);
                                     const colors = calendarColorMap[event.calendarId];
+                                    const teamForEvent = teams.find(t => t.id === event.calendarId);
+                                    const eventTemplate = teamForEvent?.eventTemplates?.find(t => t.id === event.templateId);
                                     return (
                                         <div 
                                             key={event.eventId} 
                                             data-event-id={event.eventId}
                                             onClick={(e) => { e.stopPropagation(); onEventClick(event); }}
                                             className={cn(
-                                                "absolute left-1 right-1 p-1 rounded-md shadow-sm cursor-pointer"
+                                                "absolute left-1 right-1 p-1 rounded-md shadow-sm cursor-pointer flex flex-col"
                                             )}
                                             style={{ top: `${top}px`, height: `${height}px`, backgroundColor: colors?.bg, color: colors?.text }}
                                         >
-                                            <p className="font-semibold text-xs whitespace-normal">{event.title}</p>
+                                            <div className="flex items-center gap-1 flex-wrap mb-1">
+                                                <PriorityBadge priorityId={event.priority} />
+                                                {eventTemplate && <Badge variant="outline" className="border-transparent bg-background/50 text-foreground/80">{eventTemplate.name}</Badge>}
+                                            </div>
+                                            <p className="font-semibold text-xs whitespace-normal leading-tight">{event.title}</p>
                                             <p className="text-[10px] opacity-90">{format(event.startTime, timeFormatEvent)} - {format(event.endTime, timeFormatEvent)}</p>
+                                            {event.roleAssignments && Object.keys(event.roleAssignments).length > 0 && (
+                                                <div className="flex flex-wrap gap-1 mt-1.5">
+                                                    {Object.entries(event.roleAssignments).map(([role, userId]) => {
+                                                        const user = users.find(u => u.userId === userId);
+                                                        if (!user) return null;
+                                                        return (
+                                                            <Badge key={role} variant="secondary" className="text-[9px] p-0.5 px-1 rounded-sm">
+                                                                <span className="font-normal opacity-70 mr-1">{role}:</span>
+                                                                <span className="font-medium">{user.displayName.split(' ')[0]}</span>
+                                                            </Badge>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
                                         </div>
                                     )
                                 })}

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useEffect, useMemo, useState, useRef } from 'react';
@@ -18,6 +19,8 @@ import { UserStatusBadge } from '@/components/user-status-badge';
 import { Separator } from '@/components/ui/separator';
 import { canCreateAnyEvent } from '@/lib/permissions';
 import { GoogleSymbol } from '../icons/google-symbol';
+import { Badge } from '../ui/badge';
+import { PriorityBadge } from './priority-badge';
 
 const DEFAULT_HOUR_WIDTH_PX = 120;
 const LOCATION_LABEL_WIDTH_PX = 160;
@@ -246,16 +249,36 @@ const ProductionScheduleLocationRow = React.memo(({
                 {!isLocationCollapsed && eventsInRow.map(event => {
                     const { left, width } = getEventPosition(event);
                     const colors = calendarColorMap[event.calendarId];
+                    const teamForEvent = teams.find(t => t.id === event.calendarId);
+                    const eventTemplate = teamForEvent?.eventTemplates?.find(t => t.id === event.templateId);
                     return (
                         <div 
                             key={event.eventId} 
                             data-event-id={event.eventId}
                             onClick={(e) => { e.stopPropagation(); onEventClick(event); }}
-                            className={cn("absolute top-1 p-2 rounded-lg shadow-md cursor-pointer z-10")} 
+                            className={cn("absolute top-1 p-2 rounded-lg shadow-md cursor-pointer z-10 flex flex-col")} 
                             style={{ left: `${left + 2}px`, width: `${width}px`, backgroundColor: colors?.bg, color: colors?.text }}
                         >
-                            <p className="font-semibold text-sm whitespace-normal">{event.title}</p>
+                            <div className="flex items-center gap-1 flex-wrap mb-1">
+                                <PriorityBadge priorityId={event.priority} />
+                                {eventTemplate && <Badge variant="outline" className="border-transparent bg-background/50 text-foreground/80">{eventTemplate.name}</Badge>}
+                            </div>
+                            <p className="font-semibold text-sm whitespace-normal leading-tight">{event.title}</p>
                             <p className="text-xs opacity-90">{format(event.startTime, timeFormatEvent)} - {format(event.endTime, timeFormatEvent)}</p>
+                            {event.roleAssignments && Object.keys(event.roleAssignments).length > 0 && (
+                                <div className="flex flex-wrap gap-1 mt-1.5">
+                                    {Object.entries(event.roleAssignments).map(([role, userId]) => {
+                                        const user = users.find(u => u.userId === userId);
+                                        if (!user) return null;
+                                        return (
+                                            <Badge key={role} variant="secondary" className="text-xs p-1 px-1.5 rounded-sm">
+                                                <span className="font-normal opacity-70 mr-1">{role}:</span>
+                                                <span className="font-medium">{user.displayName.split(' ')[0]}</span>
+                                            </Badge>
+                                        );
+                                    })}
+                                </div>
+                            )}
                         </div>
                     )
                 })}

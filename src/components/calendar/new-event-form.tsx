@@ -202,13 +202,18 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
 
   const selectedAttendees = form.watch('attendees') || [];
   
+  const assignedUserIds = React.useMemo(() => {
+    return new Set(Object.values(roleAssignments).map(assignment => assignment.assignedUser).filter(Boolean) as string[]);
+  }, [roleAssignments]);
+  
   const filteredGuests = React.useMemo(() => {
-    if (!guestSearch) return users;
-    return users.filter(user => 
+    const baseList = users.filter(user => !assignedUserIds.has(user.userId));
+    if (!guestSearch) return baseList;
+    return baseList.filter(user => 
         user.displayName.toLowerCase().includes(guestSearch.toLowerCase()) || 
         user.email.toLowerCase().includes(guestSearch.toLowerCase())
     );
-  }, [users, guestSearch]);
+  }, [users, guestSearch, assignedUserIds]);
 
 
   React.useEffect(() => {
@@ -648,9 +653,10 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                         <div className="flex flex-wrap gap-2">
                             {Object.entries(roleAssignments).map(([role, { assignedUser, popoverOpen }]) => {
                                 const user = assignedUser ? users.find(u => u.userId === assignedUser) : null;
-                                const usersWithRole = users.filter(u => 
-                                  teamForSelectedCalendar.members.includes(u.userId) && u.roles?.includes(role)
-                                );
+                                const usersWithRole = teamForSelectedCalendar.members
+                                    .map(memberId => users.find(u => u.userId === memberId))
+                                    .filter((u): u is User => !!u)
+                                    .filter(u => u.roles?.includes(role));
                                 
                                 const availableUsers = usersWithRole.filter(u => !absencesForDay.some(a => a.userId === u.userId));
                                 const absentUsers = usersWithRole
