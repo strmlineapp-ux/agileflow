@@ -1,4 +1,5 @@
 
+
 import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team } from '@/types';
 
 export const mockCalendars: SharedCalendar[] = [
@@ -124,8 +125,10 @@ export const mockTeams: Team[] = [
         icon: 'movie',
         members: ['1', '2', '6'],
         managers: ['1', '2'],
+        locationCheckManagers: ['1'],
         roles: ['Post-Production', 'Studio Productions Team Admin', 'Video Director', 'Edit Events'],
-        pinnedLocations: ['Studio', 'ACR', 'Training Room']
+        pinnedLocations: ['Studio'],
+        checkLocations: ['Studio'],
     },
     {
         id: 'live-events',
@@ -133,8 +136,10 @@ export const mockTeams: Team[] = [
         icon: 'videocam',
         members: ['1', '2', '3', '4'],
         managers: ['1', '2'],
-        roles: ['TD', 'Manage Checks', 'ES Operator', 'ES Daily Checks', 'Content Op', 'Camera', 'Audio', '1st AD', 'Live Event Team Admin'],
-        pinnedLocations: ['Auditorium', 'Event Space 1 (S2)', 'Event Space 2 (S2)']
+        locationCheckManagers: ['2'],
+        roles: ['TD', 'ES Operator', 'ES Daily Checks', 'Content Op', 'Camera', 'Audio', '1st AD', 'Live Event Team Admin'],
+        pinnedLocations: ['Auditorium', 'ACR', 'Event Space 1 (S2)', 'Event Space 2 (S2)', 'Event Space 3 (R7)', 'Event Space 4 (R7)', 'Training Room', 'Apgar', 'Locke'],
+        checkLocations: ['Training Room', 'Apgar', 'Locke'],
     },
     {
         id: 'productions',
@@ -142,8 +147,10 @@ export const mockTeams: Team[] = [
         icon: 'campaign',
         members: ['2', '3', '5'],
         managers: ['2'],
+        locationCheckManagers: [],
         roles: ['Production Team Admin'],
-        pinnedLocations: []
+        pinnedLocations: [],
+        checkLocations: [],
     }
 ];
 

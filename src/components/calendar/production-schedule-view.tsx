@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useEffect, useMemo, useState, useRef } from 'react';
@@ -58,81 +59,6 @@ const getEventPosition = (event: Event, hourWidth: number) => {
 const ALL_USER_STATUSES: UserStatus[] = [
     'PTO', 'PTO (AM)', 'PTO (PM)', 'TOIL', 'TOIL (AM)', 'TOIL (PM)', 'Sick', 'Offsite', 'Training'
 ];
-
-type ManageChecksDialogProps = {
-    isOpen: boolean;
-    onOpenChange: (isOpen: boolean) => void;
-    day: Date | null;
-    initialLocations: string[];
-    onSave: (newLocations: string[]) => void;
-};
-
-const ManageChecksDialog = ({ isOpen, onOpenChange, day, initialLocations, onSave }: ManageChecksDialogProps) => {
-    const [tempCheckLocations, setTempCheckLocations] = useState(initialLocations);
-    const [newLocationName, setNewLocationName] = useState('');
-
-    useEffect(() => {
-        setTempCheckLocations(initialLocations);
-    }, [initialLocations]);
-
-    const handleAddNewLocation = () => {
-        if (newLocationName && !tempCheckLocations.includes(newLocationName.trim())) {
-            setTempCheckLocations([...tempCheckLocations, newLocationName.trim()]);
-            setNewLocationName('');
-        }
-    };
-
-    const handleRemoveLocation = (locationToRemove: string) => {
-        setTempCheckLocations(tempCheckLocations.filter(loc => loc !== locationToRemove));
-    };
-
-    const handleSaveChanges = () => {
-        onSave(tempCheckLocations);
-        onOpenChange(false);
-    };
-
-    return (
-        <Dialog open={isOpen} onOpenChange={onOpenChange}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Manage Check Locations</DialogTitle>
-                    <DialogDescription>
-                        Add or remove pill buttons for {day ? format(day, 'MMMM d, yyyy') : 'the selected day'}.
-                    </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                    <div className="space-y-2 max-h-60 overflow-y-auto p-1">
-                        {tempCheckLocations.map(loc => (
-                            <div key={loc} className="flex items-center justify-between bg-muted/50 p-2 rounded-md">
-                                <span className="text-sm">{loc}</span>
-                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleRemoveLocation(loc)}>
-                                    <GoogleSymbol name="close" />
-                                    <span className="sr-only">Remove {loc}</span>
-                                </Button>
-                            </div>
-                        ))}
-                        {tempCheckLocations.length === 0 && (
-                            <p className="text-sm text-muted-foreground text-center">No check locations defined.</p>
-                        )}
-                    </div>
-                    <div className="flex gap-2">
-                        <Input
-                            placeholder="New location name"
-                            value={newLocationName}
-                            onChange={(e) => setNewLocationName(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleAddNewLocation()}
-                        />
-                        <Button onClick={handleAddNewLocation}>Add</Button>
-                    </div>
-                </div>
-                <DialogFooter>
-                    <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-                    <Button onClick={handleSaveChanges}>Save Changes</Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    );
-};
 
 type ManageStatusDialogProps = {
     isOpen: boolean;
@@ -250,7 +176,7 @@ const ManageStatusDialog = ({ isOpen, onOpenChange, day, initialAssignments, use
 
 
 export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBooking }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', onEasyBooking: (date: Date) => void }) {
-    const { users, viewAsUser, events, calendars, pinnedLocations, extraCheckLocations, setExtraCheckLocations, userStatusAssignments, setUserStatusAssignments } = useUser();
+    const { users, viewAsUser, events, calendars, pinnedLocations, checkLocations, userStatusAssignments, setUserStatusAssignments, isLocationCheckManager } = useUser();
 
     const [now, setNow] = useState<Date | null>(null);
     const [hourWidth, setHourWidth] = useState(DEFAULT_HOUR_WIDTH_PX);
@@ -263,16 +189,11 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
     const [collapsedLocations, setCollapsedLocations] = useState<Record<string, Set<string>>>({});
     const [dailyCheckAssignments, setDailyCheckAssignments] = useState<Record<string, Record<string, string | null>>>({});
 
-    const defaultCheckLocations = useMemo(() => ["Training Room", "Locke", "Apgar"], []);
-
-    const [isManageChecksDialogOpen, setIsManageChecksDialogOpen] = useState(false);
-    const [editingDayIso, setEditingDayIso] = useState<string | null>(null);
-    
     const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
     const [editingStatusDayIso, setEditingStatusDayIso] = useState<string | null>(null);
     
     const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars);
-    const canManageChecks = viewAsUser.roles?.includes('Manage Checks');
+    const canManageChecks = isLocationCheckManager || viewAsUser.roles?.includes('Admin');
     const managerialRoles = ["Admin", "Service Delivery Manager", "Production Team Admin", "Studio Production Team Admin", "Live Event Team Admin"];
     const canManageStatus = viewAsUser.roles?.some(p => managerialRoles.includes(p));
 
@@ -422,18 +343,6 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
         return (now.getHours() + now.getMinutes() / 60) * hourWidth;
     }
     
-    const handleOpenManageChecksDialog = (dayIso: string) => {
-        setEditingDayIso(dayIso);
-        setIsManageChecksDialogOpen(true);
-    };
-
-    const handleSaveChecks = (newLocations: string[]) => {
-        if (!editingDayIso) return;
-        setExtraCheckLocations(prev => ({ ...prev, [editingDayIso]: newLocations }));
-        toast({ title: "Success", description: "Check locations updated." });
-        setEditingDayIso(null);
-    };
-
     const handleOpenStatusDialog = (dayIso: string) => {
         setEditingStatusDayIso(dayIso);
         setIsStatusDialogOpen(true);
@@ -446,22 +355,12 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
         setEditingStatusDayIso(null);
     };
 
-    const editingDayData = useMemo(() => {
-        if (!editingDayIso) return { day: null, initialLocations: [] };
-        const dayData = weeklyScheduleData.find(d => d.day.toISOString() === editingDayIso);
-        const isWeekend = dayData ? isSaturday(dayData.day) || isSunday(dayData.day) : false;
-        return {
-            day: dayData?.day ?? null,
-            initialLocations: extraCheckLocations[editingDayIso] ?? (isWeekend ? [] : defaultCheckLocations)
-        };
-    }, [editingDayIso, weeklyScheduleData, extraCheckLocations, defaultCheckLocations]);
-
     const editingStatusDayData = useMemo(() => {
         if (!editingStatusDayIso) return { day: null, initialAssignments: [] };
         const dayData = weeklyScheduleData.find(d => d.day.toISOString() === editingStatusDayIso);
         return {
             day: dayData?.day ?? null,
-            initialAssignments: userStatusAssignments[editingDayIso] || []
+            initialAssignments: userStatusAssignments[editingStatusDayIso] || []
         };
     }, [editingStatusDayIso, weeklyScheduleData, userStatusAssignments]);
 
@@ -528,8 +427,6 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
                 const dayIso = day.toISOString();
                 const isDayCollapsed = collapsedDays.has(dayIso);
                 const isDayToday = isToday(day);
-                const isWeekend = isSaturday(day) || isSunday(day);
-                const dailyExtraLocations = extraCheckLocations[dayIso] ?? (isWeekend ? [] : defaultCheckLocations);
                 const dayStatusAssignments = userStatusAssignments[dayIso] || [];
 
                 return (
@@ -537,8 +434,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
                         <Card className="overflow-hidden">
                              <div className="p-2 border-b bg-card flex flex-wrap items-center justify-between gap-4">
                                 <div className="flex flex-wrap items-center gap-2">
-                                    {canManageChecks && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenManageChecksDialog(dayIso)}><GoogleSymbol name="edit" /><span className="sr-only">Edit check locations</span></Button>}
-                                    {dailyExtraLocations.map(location => {
+                                    {checkLocations.map(location => {
                                         const assignedUserId = dailyCheckAssignments[dayIso]?.[location];
                                         const assignedUser = users.find(u => u.userId === assignedUserId);
                                         const pillContent = <>{location}{assignedUser && <span className="ml-2 font-normal text-muted-foreground">({`${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}`})</span>}{!assignedUser && canManageChecks && <GoogleSymbol name="add_circle" className="ml-2" />}</>;
@@ -590,13 +486,6 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
                     </div>
                 );
             })}
-             <ManageChecksDialog 
-                isOpen={isManageChecksDialogOpen}
-                onOpenChange={setIsManageChecksDialogOpen}
-                day={editingDayData.day}
-                initialLocations={editingDayData.initialLocations}
-                onSave={handleSaveChecks}
-             />
             <ManageStatusDialog
                 isOpen={isStatusDialogOpen}
                 onOpenChange={setIsStatusDialogOpen}

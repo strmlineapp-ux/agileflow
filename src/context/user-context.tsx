@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect } from 'react';
@@ -15,8 +16,10 @@ interface UserContextType {
   users: User[];
   allSystemRoles: string[];
   allTeamRoles: string[];
+  isLocationCheckManager: boolean;
   teams: Team[];
   pinnedLocations: string[];
+  checkLocations: string[];
   addTeam: (teamData: Omit<Team, 'id'>) => Promise<void>;
   updateTeam: (teamId: string, teamData: Partial<Omit<Team, 'id'>>) => Promise<void>;
   deleteTeam: (teamId: string) => Promise<void>;
@@ -77,12 +80,22 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const realUser = useMemo(() => users.find(u => u.userId === REAL_USER_ID)!, [users]);
   const viewAsUser = useMemo(() => users.find(u => u.userId === viewAsUserId) || users.find(u => u.userId === REAL_USER_ID)!, [users, viewAsUserId]);
+  
+  const isLocationCheckManager = useMemo(() => {
+    return teams.some(team => team.locationCheckManagers?.includes(viewAsUser.userId));
+  }, [teams, viewAsUser.userId]);
+
+  const userTeams = useMemo(() => teams.filter(team => team.members.includes(viewAsUser.userId)), [teams, viewAsUser.userId]);
 
   const pinnedLocations = useMemo(() => {
-    const userTeams = teams.filter(team => team.members.includes(viewAsUser.userId));
     const allPinned = userTeams.flatMap(team => team.pinnedLocations);
     return [...new Set(allPinned)].sort();
-  }, [teams, viewAsUser.userId]);
+  }, [userTeams]);
+
+  const checkLocations = useMemo(() => {
+    const allChecks = userTeams.flatMap(team => team.checkLocations || []);
+    return [...new Set(allChecks)];
+  }, [userTeams]);
 
   const updateUser = async (userId: string, userData: Partial<User>) => {
     console.log(`Updating user ${userId}:`, userData);
@@ -219,8 +232,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     users,
     allSystemRoles,
     allTeamRoles,
+    isLocationCheckManager,
     teams,
     pinnedLocations,
+    checkLocations,
     addTeam,
     updateTeam,
     deleteTeam,
