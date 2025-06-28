@@ -1,7 +1,4 @@
 
-
-
-
 'use client';
 
 import React, { useEffect, useMemo, useState, useRef } from 'react';
@@ -289,7 +286,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
     const [editingStatusDayIso, setEditingStatusDayIso] = useState<string | null>(null);
     
     const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars);
-    const managerialRoles = ["Admin", "Service Delivery Manager", "Production Team Admin", "Studio Production Team Admin", "Live Event Team Admin"];
+    const managerialRoles = ["Admin", "Service Delivery Manager"];
     const canManageStatus = viewAsUser.roles?.some(p => managerialRoles.includes(p));
 
     const timeFormatTimeline = viewAsUser.timeFormat === '24h' ? 'HH:mm' : 'h a';
@@ -342,23 +339,18 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
             const dayEvents = events.filter(event => format(event.startTime, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd'));
             const dayIso = day.toISOString();
 
-            // All teams that have any pinned locations.
             const teamsWithPinnedLocationsForDay = teams.filter(team => team.pinnedLocations && team.pinnedLocations.length > 0);
             
-            // A flat list of all unique check locations from all teams.
             const allCheckLocationsForDay = [...new Set(teamsWithPinnedLocationsForDay.flatMap(t => t.checkLocations || []))];
             
-            // A flat list of all unique pinned locations
             const allPinnedLocations = [...new Set(teamsWithPinnedLocationsForDay.flatMap(t => t.pinnedLocations))].sort();
 
-            // Pinned locations that are NOT check locations, these are for the grid.
             const gridLocations = allPinnedLocations.filter(loc => !allCheckLocationsForDay.includes(loc));
             
             const locationAliasMap: Record<string, string> = {};
             teams.forEach(team => {
                 if (team.locationAliases) {
                     Object.entries(team.locationAliases).forEach(([canonicalName, alias]) => {
-                        // For simplicity, first alias wins in case of conflict.
                         if (!locationAliasMap[canonicalName]) {
                             locationAliasMap[canonicalName] = alias;
                         }
@@ -366,7 +358,6 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
                 }
             });
             
-            // Group events by their canonical location name for row rendering.
             const groupedEvents = gridLocations.reduce((acc, locationKey) => {
                 acc[locationKey] = dayEvents.filter(e => e.location === locationKey);
                 return acc;
@@ -503,8 +494,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
 
                                         const pillContent = <>{locationAliasMap[location] || location}{assignedUser && <span className="ml-2 font-normal text-muted-foreground">({`${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}`})</span>}{!assignedUser && canManageThisCheckLocation && <GoogleSymbol name="add_circle" className="ml-2" />}</>;
                                         
-                                        const dailyCheckUsers = users.filter(user => teams.some(t => t.checkLocations.includes(location) && team.locationCheckManagers.includes(viewAsUser.userId) && t.members.includes(user.userId) ));
-
+                                        const dailyCheckUsers = users.filter(user => teams.some(t => t.checkLocations.includes(location) && t.locationCheckManagers.includes(viewAsUser.userId) && t.members.includes(user.userId) ));
 
                                         return canManageThisCheckLocation ? (
                                             <Popover key={location}><PopoverTrigger asChild><Button variant={assignedUser ? "secondary" : "outline"} size="sm" className="rounded-full h-8">{pillContent}</Button></PopoverTrigger>
