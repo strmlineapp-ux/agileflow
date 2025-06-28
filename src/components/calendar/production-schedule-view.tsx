@@ -2,7 +2,7 @@
 
 'use client';
 
-import React, { useEffect, useMemo, useState, useRef } from 'react';
+import React, { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { format, addHours, startOfDay, isSaturday, isSunday, isSameDay, isToday, startOfWeek, eachDayOfInterval, addDays } from 'date-fns';
 import { type Event, type User, type UserStatus, type UserStatusAssignment, type Team } from '@/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -250,8 +250,6 @@ const ProductionScheduleLocationRow = React.memo(({
                 {!isLocationCollapsed && eventsInRow.map(event => {
                     const { left, width } = getEventPosition(event);
                     const colors = calendarColorMap[event.calendarId];
-                    const teamForEvent = teams.find(t => t.id === event.calendarId);
-                    const eventTemplate = teamForEvent?.eventTemplates?.find(t => t.id === event.templateId);
                     return (
                         <div 
                             key={event.eventId} 
@@ -260,66 +258,52 @@ const ProductionScheduleLocationRow = React.memo(({
                             className={cn("absolute top-1 p-2 rounded-lg shadow-md cursor-pointer z-10 flex flex-col overflow-hidden")} 
                             style={{ left: `${left + 2}px`, width: `${width}px`, backgroundColor: colors?.bg, color: colors?.text }}
                         >
-                            <div className="flex items-center gap-1 flex-wrap mb-1">
+                            <div className="flex items-center gap-2 flex-wrap mb-1.5">
                                 <PriorityBadge priorityId={event.priority} />
-                                {eventTemplate && (
-                                    <TooltipProvider>
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <Badge variant="outline" className="border-transparent bg-background/50 text-foreground/80 p-1 h-auto">
-                                                    <GoogleSymbol name={eventTemplate.icon} className="text-xs" />
-                                                </Badge>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                                <p>{eventTemplate.name}</p>
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
+                                 {event.roleAssignments && Object.keys(event.roleAssignments).length > 0 && (
+                                    <div className="flex flex-wrap -space-x-2">
+                                        {Object.entries(event.roleAssignments).filter(([, userId]) => !!userId).map(([role, userId]) => {
+                                            const user = users.find(u => u.userId === userId);
+                                            if (!user) return null;
+                                            const teamForEvent = teams.find(t => t.id === event.calendarId);
+                                            const roleInfo = teamForEvent?.roles.find(r => r.name === role);
+                                            const roleIcon = roleInfo?.icon;
+                                            const roleColor = roleInfo?.color;
+
+                                            return (
+                                            <TooltipProvider key={role}>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <div className="relative">
+                                                            <Avatar className="h-6 w-6 border-2 border-background">
+                                                                <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
+                                                                <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                                            </Avatar>
+                                                            {roleIcon && (
+                                                                <div 
+                                                                    className="absolute -bottom-1 -right-1 p-0.5 h-4 w-4 rounded-full flex items-center justify-center border-2 border-background"
+                                                                    style={{ backgroundColor: roleColor, color: getContrastColor(roleColor || '#ffffff') }}
+                                                                >
+                                                                    <GoogleSymbol name={roleIcon} style={{fontSize: '10px'}} />
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                        <p className="flex items-center gap-1">
+                                                        {roleIcon && <GoogleSymbol name={roleIcon} className="text-sm" />}
+                                                        <span>{role}: {user.displayName}</span>
+                                                        </p>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </TooltipProvider>
+                                            );
+                                        })}
+                                    </div>
                                 )}
                             </div>
-                            <p className="font-semibold text-sm whitespace-normal leading-tight">{event.title}</p>
+                            <p className="font-semibold text-sm truncate leading-tight">{event.title}</p>
                             <p className="text-xs opacity-90">{format(event.startTime, timeFormatEvent)} - {format(event.endTime, timeFormatEvent)}</p>
-                            {event.roleAssignments && Object.keys(event.roleAssignments).length > 0 && (
-                                <div className="flex flex-wrap -space-x-2 mt-1.5">
-                                    {Object.entries(event.roleAssignments).filter(([, userId]) => !!userId).map(([role, userId]) => {
-                                        const user = users.find(u => u.userId === userId);
-                                        if (!user) return null;
-                                        const teamForEvent = teams.find(t => t.id === event.calendarId);
-                                        const roleInfo = teamForEvent?.roles.find(r => r.name === role);
-                                        const roleIcon = roleInfo?.icon;
-                                        const roleColor = roleInfo?.color;
-
-                                        return (
-                                        <TooltipProvider key={role}>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <div className="relative">
-                                                        <Avatar className="h-6 w-6 border-2 border-background">
-                                                            <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
-                                                            <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                                                        </Avatar>
-                                                        {roleIcon && (
-                                                            <div 
-                                                                className="absolute -bottom-1 -right-1 p-0.5 h-4 w-4 rounded-full flex items-center justify-center border-2 border-background"
-                                                                style={{ backgroundColor: roleColor, color: getContrastColor(roleColor || '#ffffff') }}
-                                                            >
-                                                                <GoogleSymbol name={roleIcon} style={{fontSize: '10px'}} />
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </TooltipTrigger>
-                                                <TooltipContent>
-                                                    <p className="flex items-center gap-1">
-                                                    {roleIcon && <GoogleSymbol name={roleIcon} className="text-sm" />}
-                                                    <span>{role}: {user.displayName}</span>
-                                                    </p>
-                                                </TooltipContent>
-                                            </Tooltip>
-                                        </TooltipProvider>
-                                        );
-                                    })}
-                                </div>
-                            )}
                         </div>
                     )
                 })}
@@ -372,7 +356,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
         }));
     };
 
-    const handleEasyBookingClick = (e: React.MouseEvent<HTMLDivElement>, day: Date, location: string) => {
+    const handleEasyBookingClick = useCallback((e: React.MouseEvent<HTMLDivElement>, day: Date, location: string) => {
         if ((e.target as HTMLElement).closest('[data-event-id]')) {
             return;
         }
@@ -388,7 +372,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
         const startTime = new Date(day);
         startTime.setHours(hour, minutes, 0, 0);
         onEasyBooking({ startTime, location });
-    };
+    }, [hourWidth, onEasyBooking, userCanCreateEvent, viewAsUser.easyBooking]);
 
     useEffect(() => {
         const timer = setInterval(() => setNow(new Date()), 60 * 1000);

@@ -197,8 +197,6 @@ export function WeekView({ date, containerRef, zoomLevel, onEasyBooking, onEvent
                                     {getEventsForDay(day).map(event => {
                                         const { top, height } = getEventPosition(event);
                                         const colors = calendarColorMap[event.calendarId];
-                                        const teamForEvent = teams.find(t => t.id === event.calendarId);
-                                        const eventTemplate = teamForEvent?.eventTemplates?.find(t => t.id === event.templateId);
                                         return (
                                             <div 
                                                 key={event.eventId} 
@@ -209,66 +207,52 @@ export function WeekView({ date, containerRef, zoomLevel, onEasyBooking, onEvent
                                                 )}
                                                 style={{ top: `${top}px`, height: `${height}px`, backgroundColor: colors?.bg, color: colors?.text }}
                                             >
-                                                <div className="flex items-center gap-1 flex-wrap mb-1">
+                                                <div className="flex items-center gap-2 flex-wrap mb-1">
                                                     <PriorityBadge priorityId={event.priority} />
-                                                    {eventTemplate && (
-                                                        <TooltipProvider>
-                                                            <Tooltip>
-                                                                <TooltipTrigger asChild>
-                                                                    <Badge variant="outline" className="border-transparent bg-background/50 text-foreground/80 p-1 h-auto">
-                                                                        <GoogleSymbol name={eventTemplate.icon} className="text-xs" />
-                                                                    </Badge>
-                                                                </TooltipTrigger>
-                                                                <TooltipContent>
-                                                                    <p>{eventTemplate.name}</p>
-                                                                </TooltipContent>
-                                                            </Tooltip>
-                                                        </TooltipProvider>
+                                                    {event.roleAssignments && Object.keys(event.roleAssignments).length > 0 && (
+                                                        <div className="flex flex-wrap -space-x-2">
+                                                            {Object.entries(event.roleAssignments).filter(([, userId]) => !!userId).map(([role, userId]) => {
+                                                                const user = users.find(u => u.userId === userId);
+                                                                if (!user) return null;
+                                                                const teamForEvent = teams.find(t => t.id === event.calendarId);
+                                                                const roleInfo = teamForEvent?.roles.find(r => r.name === role);
+                                                                const roleIcon = roleInfo?.icon;
+                                                                const roleColor = roleInfo?.color;
+
+                                                                return (
+                                                                <TooltipProvider key={role}>
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger asChild>
+                                                                            <div className="relative">
+                                                                                <Avatar className="h-6 w-6 border-2 border-background">
+                                                                                    <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
+                                                                                    <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                                                                </Avatar>
+                                                                                {roleIcon && (
+                                                                                    <div 
+                                                                                        className="absolute -bottom-1 -right-1 p-0.5 h-4 w-4 rounded-full flex items-center justify-center border-2 border-background"
+                                                                                        style={{ backgroundColor: roleColor, color: getContrastColor(roleColor || '#ffffff') }}
+                                                                                    >
+                                                                                        <GoogleSymbol name={roleIcon} style={{fontSize: '10px'}} />
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent>
+                                                                            <p className="flex items-center gap-1">
+                                                                            {roleIcon && <GoogleSymbol name={roleIcon} className="text-sm" />}
+                                                                            <span>{role}: {user.displayName}</span>
+                                                                            </p>
+                                                                        </TooltipContent>
+                                                                    </Tooltip>
+                                                                </TooltipProvider>
+                                                                );
+                                                            })}
+                                                        </div>
                                                     )}
                                                 </div>
-                                                <p className="font-semibold text-xs whitespace-normal leading-tight">{event.title}</p>
+                                                <p className="font-semibold text-xs truncate leading-tight">{event.title}</p>
                                                 <p className="text-[10px] opacity-90 truncate">{format(event.startTime, timeFormatEvent)} - {format(event.endTime, timeFormatEvent)}</p>
-                                                {event.roleAssignments && Object.keys(event.roleAssignments).length > 0 && (
-                                                    <div className="flex flex-wrap -space-x-2 mt-1.5">
-                                                        {Object.entries(event.roleAssignments).filter(([, userId]) => !!userId).map(([role, userId]) => {
-                                                            const user = users.find(u => u.userId === userId);
-                                                            if (!user) return null;
-                                                            const teamForEvent = teams.find(t => t.id === event.calendarId);
-                                                            const roleInfo = teamForEvent?.roles.find(r => r.name === role);
-                                                            const roleIcon = roleInfo?.icon;
-                                                            const roleColor = roleInfo?.color;
-
-                                                            return (
-                                                            <TooltipProvider key={role}>
-                                                                <Tooltip>
-                                                                    <TooltipTrigger asChild>
-                                                                        <div className="relative">
-                                                                            <Avatar className="h-6 w-6 border-2 border-background">
-                                                                                <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
-                                                                                <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                                                                            </Avatar>
-                                                                            {roleIcon && (
-                                                                                <div 
-                                                                                    className="absolute -bottom-1 -right-1 p-0.5 h-4 w-4 rounded-full flex items-center justify-center border-2 border-background"
-                                                                                    style={{ backgroundColor: roleColor, color: getContrastColor(roleColor || '#ffffff') }}
-                                                                                >
-                                                                                    <GoogleSymbol name={roleIcon} style={{fontSize: '10px'}} />
-                                                                                </div>
-                                                                            )}
-                                                                        </div>
-                                                                    </TooltipTrigger>
-                                                                    <TooltipContent>
-                                                                        <p className="flex items-center gap-1">
-                                                                        {roleIcon && <GoogleSymbol name={roleIcon} className="text-sm" />}
-                                                                        <span>{role}: {user.displayName}</span>
-                                                                        </p>
-                                                                    </TooltipContent>
-                                                                </Tooltip>
-                                                            </TooltipProvider>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                )}
                                             </div>
                                         )
                                     })}

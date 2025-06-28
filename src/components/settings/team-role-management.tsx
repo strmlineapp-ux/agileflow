@@ -36,7 +36,7 @@ export function TeamRoleManagement({ team }: { team: Team }) {
   const [isConflictDialogOpen, setIsConflictDialogOpen] = useState(false);
 
   const [iconSearch, setIconSearch] = useState('');
-  const [activeIconPopover, setActiveIconPopover] = useState<string | null>(null);
+  const [editingRole, setEditingRole] = useState<TeamRole | null>(null);
 
   const rolesForThisTeam = team.roles || [];
 
@@ -63,10 +63,9 @@ export function TeamRoleManagement({ team }: { team: Team }) {
       updateTeam(team.id, { roles: newRoles.sort((a,b) => a.name.localeCompare(b.name)) });
   };
   
-  const handleUpdateRoleIcon = (roleName: string, newIcon: string) => {
-    const updatedRoles = rolesForThisTeam.map(r => r.name === roleName ? { ...r, icon: newIcon } : r);
+  const handleUpdateRole = (roleToUpdate: TeamRole, newValues: Partial<TeamRole>) => {
+    const updatedRoles = rolesForThisTeam.map(r => r.name === roleToUpdate.name ? { ...r, ...newValues } : r);
     handleUpdateTeamRoles(updatedRoles);
-    setActiveIconPopover(null);
   }
 
   const handleAddRole = () => {
@@ -128,6 +127,61 @@ export function TeamRoleManagement({ team }: { team: Team }) {
     setIsDeleteDialogOpen(false);
   };
 
+  const EditRolePopover = ({ role, children }: { role: TeamRole, children: React.ReactNode }) => {
+    const [name, setName] = useState(role.name);
+    const [color, setColor] = useState(role.color);
+    const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
+
+    return (
+      <Popover onOpenChange={(isOpen) => !isOpen && setEditingRole(null)}>
+        <PopoverTrigger asChild onClick={() => setEditingRole(role)}>
+            {children}
+        </PopoverTrigger>
+        <PopoverContent>
+            <DialogHeader>
+                <DialogTitle>Edit Role</DialogTitle>
+            </DialogHeader>
+             <div className="grid gap-4 py-4">
+                <div className="flex items-center gap-2 border rounded-md px-2 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+                    <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
+                        <PopoverTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                            <GoogleSymbol name={role.icon} />
+                        </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-80 p-0">
+                            <div className="p-2 border-b">
+                                <Input placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} />
+                            </div>
+                            <ScrollArea className="h-64">
+                                <div className="grid grid-cols-6 gap-1 p-2">
+                                {filteredIcons.slice(0, 300).map((iconName) => (
+                                    <Button key={iconName} variant={role.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => handleUpdateRole(role, { icon: iconName })} className="text-2xl">
+                                    <GoogleSymbol name={iconName} />
+                                    </Button>
+                                ))}
+                                </div>
+                            </ScrollArea>
+                        </PopoverContent>
+                    </Popover>
+                    <Input 
+                        id="edit-role-name" 
+                        value={name} 
+                        onChange={(e) => setName(e.target.value)} 
+                        onBlur={() => name !== role.name && handleUpdateRole(role, { name })}
+                        className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-9"
+                    />
+                    <div className="relative h-6 w-6 rounded-full shrink-0">
+                        <div className="absolute inset-0 h-full w-full rounded-full border" style={{ backgroundColor: color }} />
+                        <Input type="color" value={color} onChange={(e) => setColor(e.target.value)} onBlur={() => color !== role.color && handleUpdateRole(role, { color })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" />
+                    </div>
+                </div>
+            </div>
+        </PopoverContent>
+      </Popover>
+    )
+  }
+
   return (
     <>
       <Card>
@@ -136,7 +190,7 @@ export function TeamRoleManagement({ team }: { team: Team }) {
             <div>
               <CardTitle>Manage Roles for {team.name}</CardTitle>
               <CardDescription>
-                  Add roles or click a role to remove it. Click the icon to change it.
+                  Add roles or click a role to edit it. Use the 'x' to remove a role.
               </CardDescription>
             </div>
           </div>
@@ -144,35 +198,26 @@ export function TeamRoleManagement({ team }: { team: Team }) {
         <CardContent>
           <div className="flex flex-wrap items-center gap-2">
             {rolesForThisTeam.length > 0 ? rolesForThisTeam.map(role => (
-              <Badge 
-                key={role.name}
-                variant="secondary"
-                style={{ backgroundColor: role.color, color: getContrastColor(role.color) }}
-                className="group text-base py-1 pl-1.5 pr-3 rounded-full border-transparent"
-              >
-                <Popover open={activeIconPopover === role.name} onOpenChange={(isOpen) => setActiveIconPopover(isOpen ? role.name : null)}>
-                  <PopoverTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-6 w-6 mr-1" aria-label={`Change icon for ${role.name}`}>
-                      <GoogleSymbol name={role.icon} />
+              <EditRolePopover key={role.name} role={role}>
+                <Badge 
+                    variant="secondary"
+                    style={{ backgroundColor: role.color, color: getContrastColor(role.color) }}
+                    className="group text-base py-1 pl-3 pr-1 rounded-full border-transparent cursor-pointer"
+                >
+                    <GoogleSymbol name={role.icon} className="mr-2 text-lg" />
+                    <span className="font-medium">{role.name}</span>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => { e.stopPropagation(); openDeleteDialog(role); }}
+                        className="ml-1 h-5 w-5 rounded-full hover:bg-black/20"
+                        style={{ color: getContrastColor(role.color) }}
+                    >
+                        <GoogleSymbol name="cancel" className="text-sm" />
+                        <span className="sr-only">Remove {role.name}</span>
                     </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-80 p-0">
-                    <div className="p-2 border-b">
-                      <Input placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} />
-                    </div>
-                    <ScrollArea className="h-64">
-                      <div className="grid grid-cols-6 gap-1 p-2">
-                        {filteredIcons.slice(0, 300).map((iconName) => (
-                          <Button key={iconName} variant={role.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => handleUpdateRoleIcon(role.name, iconName)} className="text-2xl">
-                            <GoogleSymbol name={iconName} />
-                          </Button>
-                        ))}
-                      </div>
-                    </ScrollArea>
-                  </PopoverContent>
-                </Popover>
-                <span className="cursor-pointer" onClick={() => openDeleteDialog(role)}>{role.name}</span>
-              </Badge>
+                </Badge>
+              </EditRolePopover>
             )) : (
               <p className="text-sm text-muted-foreground">No custom roles defined for this team.</p>
             )}
@@ -225,20 +270,10 @@ export function TeamRoleManagement({ team }: { team: Team }) {
                 onKeyDown={(e) => e.key === 'Enter' && handleAddRole()}
                 className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-9"
               />
-            </div>
-            <div className="relative h-9 w-full">
-                <div
-                    className="absolute inset-0 h-full w-full rounded-md border"
-                    style={{ backgroundColor: newRoleColor }}
-                />
-                <Input
-                    id="color"
-                    type="color"
-                    value={newRoleColor}
-                    onChange={(e) => setNewRoleColor(e.target.value)}
-                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"
-                    aria-label="Role color"
-                />
+               <div className="relative h-6 w-6 rounded-full shrink-0">
+                  <div className="absolute inset-0 h-full w-full rounded-full border" style={{ backgroundColor: newRoleColor }} />
+                  <Input type="color" value={newRoleColor} onChange={(e) => setNewRoleColor(e.target.value)} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" />
+              </div>
             </div>
           </div>
         </DialogContent>

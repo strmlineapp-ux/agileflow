@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -109,7 +110,9 @@ export function MonthView({ date, containerRef, onEventClick }: { date: Date; co
                                  style={badgeStyle}
                                  className={cn("block w-full text-left truncate cursor-pointer border-transparent")}
                              >
-                                 {event.title}
+                                 <span style={{ color: getContrastColor(badgeStyle.backgroundColor || '#ffffff') }}>
+                                    {event.title}
+                                 </span>
                              </Badge>
                          )
                     })}
