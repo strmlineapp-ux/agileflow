@@ -1,6 +1,11 @@
 
 
-import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team, type PriorityStrategy } from '@/types';
+import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team, type PriorityStrategy, type AppSettings } from '@/types';
+
+export const mockAppSettings: AppSettings = {
+  displayName: 'Service Delivery',
+  icon: 'business_center'
+};
 
 export const mockPriorityStrategies: PriorityStrategy[] = [
     {

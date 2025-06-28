@@ -3,8 +3,8 @@
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
-import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type Priority, type PriorityStrategy, type PriorityStrategyApplication } from '@/types';
-import { mockUsers as initialUsers, mockCalendars as initialCalendars, mockEvents as initialEvents, mockLocations as initialLocations, mockTeams, mockPriorityStrategies as initialPriorityStrategies } from '@/lib/mock-data';
+import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type Priority, type PriorityStrategy, type PriorityStrategyApplication, type AppSettings } from '@/types';
+import { mockUsers as initialUsers, mockCalendars as initialCalendars, mockEvents as initialEvents, mockLocations as initialLocations, mockTeams, mockPriorityStrategies as initialPriorityStrategies, mockAppSettings } from '@/lib/mock-data';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
@@ -44,6 +44,8 @@ interface UserContextType {
   getEventStrategy: () => PriorityStrategy | undefined;
   getTaskStrategy: () => PriorityStrategy | undefined;
   getPriorityDisplay: (priorityId: string) => { label: React.ReactNode, description?: string, color: string, shape: 'rounded-md' | 'rounded-full' } | undefined;
+  appSettings: AppSettings;
+  updateAppSettings: (settings: Partial<AppSettings>) => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | null>(null);
@@ -60,6 +62,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [events, setEvents] = useState<Event[]>(initialEvents);
   const [locations, setLocations] = useState<BookableLocation[]>(initialLocations);
   const [priorityStrategies, setPriorityStrategies] = useState<PriorityStrategy[]>(initialPriorityStrategies);
+  const [appSettings, setAppSettings] = useState<AppSettings>(mockAppSettings);
   const { toast } = useToast();
 
   const allTeamRoles = useMemo(() => {
@@ -244,6 +247,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   }, [priorityStrategies]);
 
+  const updateAppSettings = async (settings: Partial<AppSettings>) => {
+    setAppSettings(current => ({ ...current, ...settings }));
+  };
 
   const linkGoogleCalendar = async (userId: string) => {
     const provider = new GoogleAuthProvider();
@@ -309,6 +315,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     getEventStrategy,
     getTaskStrategy,
     getPriorityDisplay,
+    appSettings,
+    updateAppSettings,
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

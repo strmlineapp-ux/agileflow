@@ -13,23 +13,22 @@ import { GoogleSymbol } from '../icons/google-symbol';
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { realUser, viewAsUser, setViewAsUser, users, teams, notifications } = useUser();
+  const { realUser, viewAsUser, setViewAsUser, users, teams, notifications, appSettings } = useUser();
   const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  // Permissions should be based on the user being viewed as.
   const isAdmin = viewAsUser.roles?.includes('Admin');
 
   const userTeams = teams.filter(team => 
     isAdmin || team.managers?.includes(viewAsUser.userId)
   );
 
-  const navItems = [
+  const mainNavItems = [
     { href: '/dashboard/admin', icon: 'shield_person', label: 'Admin', visible: isAdmin },
-    { href: '/dashboard/service-delivery', icon: 'settings_applications', label: 'App Management', visible: isAdmin },
     { href: '/dashboard/calendar', icon: 'calendar_month', label: 'Calendar', visible: true },
     { href: '/dashboard', icon: 'dashboard', label: 'Overview', visible: true },
     { href: '/dashboard/tasks', icon: 'checklist', label: 'Tasks', visible: true },
+    { href: '/dashboard/service-delivery', icon: appSettings.icon, label: appSettings.displayName, visible: isAdmin },
   ];
 
   const teamNavItems = userTeams.map(team => ({
@@ -43,11 +42,7 @@ export function Sidebar() {
     { href: '/dashboard/notifications', icon: 'notifications', label: 'Notifications', visible: true },
   ];
 
-  const allNavItems = [...navItems, ...teamNavItems, ...bottomNavItems].sort((a, b) => {
-    if (a.label === 'Admin' || a.label === 'App Management') return -1;
-    if (b.label === 'Admin' || b.label === 'App Management') return 1;
-    return 0;
-  });
+  const allNavItems = [...mainNavItems, ...teamNavItems, ...bottomNavItems];
 
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-14 flex-col border-r bg-card sm:flex">

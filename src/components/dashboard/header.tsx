@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { GoogleSymbol } from '../icons/google-symbol';
 
 export function Header() {
-  const { realUser, viewAsUser, teams, notifications } = useUser();
+  const { realUser, viewAsUser, teams, notifications, appSettings } = useUser();
   const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
   const unreadCount = notifications.filter((n) => !n.read).length;
   
@@ -78,8 +78,8 @@ export function Header() {
                     Admin
                 </Link>
                 <Link href="/dashboard/service-delivery" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
-                    <GoogleSymbol name="settings_applications" className="text-2xl" />
-                    App Management
+                    <GoogleSymbol name={appSettings.icon} className="text-2xl" />
+                    {appSettings.displayName}
                 </Link>
               </>
             )}

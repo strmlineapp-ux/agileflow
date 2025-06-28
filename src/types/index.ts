@@ -2,6 +2,11 @@
 
 import type React from 'react';
 
+export interface AppSettings {
+  displayName: string;
+  icon: string;
+}
+
 export interface Attendee {
   userId?: string; // Optional: for internal users, this is their ID.
   email: string;
