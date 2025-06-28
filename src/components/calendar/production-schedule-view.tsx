@@ -256,7 +256,7 @@ const ProductionScheduleLocationRow = React.memo(({
                             key={event.eventId} 
                             data-event-id={event.eventId}
                             onClick={(e) => { e.stopPropagation(); onEventClick(event); }}
-                            className={cn("absolute top-1 p-2 rounded-lg shadow-md cursor-pointer z-10 flex flex-col overflow-hidden")} 
+                            className={cn("absolute top-1 p-2 rounded-lg shadow-md cursor-pointer flex flex-col overflow-hidden h-[calc(100%-0.5rem)]")} 
                             style={{ left: `${left + 2}px`, width: `${width}px`, backgroundColor: colors?.bg, color: textColor }}
                         >
                             <div className="flex items-center gap-2 flex-wrap mb-1.5">
@@ -320,6 +320,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
 
     const [now, setNow] = useState<Date | null>(null);
     const [hourWidth, setHourWidth] = useState(DEFAULT_HOUR_WIDTH_PX);
+    const initialScrollPerformed = useRef(false);
 
     const todayCardRef = useRef<HTMLDivElement>(null);
     const nowMarkerRef = useRef<HTMLDivElement>(null);
@@ -437,9 +438,13 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
         setCollapsedLocations(initialCollapsedLocations);
     }, [weeklyScheduleData]);
     
+    useEffect(() => {
+        initialScrollPerformed.current = false;
+    }, [date]);
+
     // Scroll handling
     useEffect(() => {
-        if (isCurrentWeek && containerRef.current && todayCardRef.current) {
+        if (isCurrentWeek && containerRef.current && todayCardRef.current && !initialScrollPerformed.current) {
             const container = containerRef.current;
             const todayElement = todayCardRef.current;
             container.scrollTo({ top: todayElement.offsetTop - 20, behavior: 'smooth' });
@@ -452,6 +457,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
                      scroller.scrollTo({ left: scrollLeft, behavior: 'smooth' });
                 }
             }
+            initialScrollPerformed.current = true;
         }
     }, [date, containerRef, isCurrentWeek, zoomLevel, weekDays, now]);
 
@@ -468,7 +474,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
             let targetScroll = 7 * newHourWidth; // Default for normal zoom
             if (isFit) {
                 targetScroll = 8 * newHourWidth;
-            } else if (isToday(new Date(dayIso)) && now) {
+            } else if (isToday(new Date(dayIso)) && now && !initialScrollPerformed.current) {
                 targetScroll = (now.getHours() - 1) * newHourWidth;
             }
             scroller?.scrollTo({ left: targetScroll, behavior: 'smooth' });

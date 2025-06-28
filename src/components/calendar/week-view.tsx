@@ -29,6 +29,7 @@ export function WeekView({ date, containerRef, zoomLevel, onEasyBooking, onEvent
     const nowMarkerRef = useRef<HTMLDivElement>(null);
     const [hourHeight, setHourHeight] = useState(DEFAULT_HOUR_HEIGHT_PX);
     const [showWeekends, setShowWeekends] = useState(false);
+    const initialScrollPerformed = useRef(false);
     
     const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars);
     const weekStart = useMemo(() => startOfWeek(date, { weekStartsOn: 1 }), [date]);
@@ -75,6 +76,10 @@ export function WeekView({ date, containerRef, zoomLevel, onEasyBooking, onEvent
     }, [isCurrentWeek]);
 
     useEffect(() => {
+        initialScrollPerformed.current = false;
+    }, [date]);
+
+    useEffect(() => {
         const container = containerRef.current;
         if (!container) return;
     
@@ -82,24 +87,17 @@ export function WeekView({ date, containerRef, zoomLevel, onEasyBooking, onEvent
         const newHourHeight = isFit ? container.offsetHeight / 12 : DEFAULT_HOUR_HEIGHT_PX;
         setHourHeight(newHourHeight);
         
-        let scrollTop = 0;
-        if (isFit) {
-            scrollTop = 8 * newHourHeight; // Fit view scrolls to 8am
-        } else if (now && isCurrentWeek) {
-            scrollTop = (now.getHours() - 1) * newHourHeight; // Normal view on current week scrolls to current time
+        if (isCurrentWeek && now && !initialScrollPerformed.current) {
+            if (nowMarkerRef.current) {
+                container.scrollTo({ top: nowMarkerRef.current.offsetTop - (container.offsetHeight / 2), behavior: 'smooth' });
+            }
+            initialScrollPerformed.current = true;
+        } else if (!initialScrollPerformed.current) {
+            container.scrollTo({ top: 7 * newHourHeight, behavior: 'smooth' });
         }
-        container.scrollTo({ top: scrollTop, behavior: 'smooth' });
 
-    }, [zoomLevel, containerRef, now, isCurrentWeek]);
+    }, [zoomLevel, containerRef, now, isCurrentWeek, date]);
 
-    // Center view on "Now" marker
-    useEffect(() => {
-        if (isCurrentWeek && containerRef.current && nowMarkerRef.current && zoomLevel === 'normal') {
-            const container = containerRef.current;
-            const marker = nowMarkerRef.current;
-            container.scrollTo({ top: marker.offsetTop - (container.offsetHeight / 2), behavior: 'smooth' });
-        }
-    }, [now, containerRef, isCurrentWeek, zoomLevel]);
 
     const hours = Array.from({ length: 24 }, (_, i) => i);
 

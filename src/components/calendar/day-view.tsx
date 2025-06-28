@@ -86,10 +86,10 @@ const DayViewLocationRow = React.memo(({
                             key={event.eventId} 
                             data-event-id={event.eventId}
                             onClick={(e) => { e.stopPropagation(); onEventClick(event); }}
-                            className="absolute top-1 p-2 rounded-lg shadow-md cursor-pointer z-10 flex flex-col overflow-hidden"
+                            className="absolute top-1 p-2 rounded-lg shadow-md cursor-pointer flex flex-col overflow-hidden h-[calc(100%-0.5rem)]"
                             style={{ left: `${left + 2}px`, width: `${width}px`, backgroundColor: colors?.bg, color: textColor }}
                         >
-                            <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                             <div className="flex items-center gap-2 flex-wrap mb-1.5">
                                 <PriorityBadge priorityId={event.priority} />
                                 {event.roleAssignments && Object.keys(event.roleAssignments).length > 0 && (
                                     <div className="flex flex-wrap -space-x-2">
@@ -151,6 +151,7 @@ export function DayView({ date, containerRef, zoomLevel, axisView, onEasyBooking
     const [collapsedLocations, setCollapsedLocations] = useState<Set<string>>(new Set());
     const [hourWidth, setHourWidth] = useState(DEFAULT_HOUR_WIDTH_PX);
     const [hourHeight, setHourHeight] = useState(DEFAULT_HOUR_HEIGHT_PX);
+    const initialScrollPerformed = useRef(false);
 
     const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars);
     const isViewingToday = useMemo(() => isSameDay(date, new Date()), [date]);
@@ -177,6 +178,10 @@ export function DayView({ date, containerRef, zoomLevel, axisView, onEasyBooking
             setNow(null);
         }
     }, [isViewingToday]);
+    
+    useEffect(() => {
+        initialScrollPerformed.current = false;
+    }, [date]);
 
     // Handle scroll and zoom adjustments
     useEffect(() => {
@@ -189,42 +194,30 @@ export function DayView({ date, containerRef, zoomLevel, axisView, onEasyBooking
         if (isStandard) {
             const newHourWidth = isFit ? (container.offsetWidth - LOCATION_LABEL_WIDTH_PX) / 12 : DEFAULT_HOUR_WIDTH_PX;
             setHourWidth(newHourWidth);
-            
-            let scrollLeft = 7 * newHourWidth; // Default scroll to 7am
-            if (isFit) {
-                scrollLeft = 8 * newHourWidth; // Fit view scrolls to 8am
-            } else if (now && isViewingToday) {
-                scrollLeft = (now.getHours() - 1) * newHourWidth; // Normal view on today scrolls to current time
-            }
-            container.scrollTo({ left: scrollLeft, behavior: 'smooth' });
-
         } else { // Reversed axis
             const newHourHeight = isFit ? container.offsetHeight / 12 : DEFAULT_HOUR_HEIGHT_PX;
             setHourHeight(newHourHeight);
-
-            let scrollTop = 0;
-            if (isFit) {
-                scrollTop = 8 * newHourHeight;
-            } else if (now && isViewingToday) {
-                scrollTop = (now.getHours() - 1) * newHourHeight;
-            }
-            container.scrollTo({ top: scrollTop, behavior: 'smooth' });
         }
-    }, [zoomLevel, axisView, containerRef, now, isViewingToday, date]);
-
-    // Center view on "Now" marker
-    useEffect(() => {
-        if (isViewingToday && containerRef.current && nowMarkerRef.current && zoomLevel === 'normal') {
-            const container = containerRef.current;
-            const marker = nowMarkerRef.current;
+        
+        // Initial scroll to current time or default time
+        if (isViewingToday && now && !initialScrollPerformed.current) {
+            if (nowMarkerRef.current) {
+                if (axisView === 'standard') {
+                    container.scrollTo({ left: nowMarkerRef.current.offsetLeft - (container.offsetWidth / 2), behavior: 'smooth' });
+                } else {
+                    container.scrollTo({ top: nowMarkerRef.current.offsetTop - (container.offsetHeight / 2), behavior: 'smooth' });
+                }
+            }
+            initialScrollPerformed.current = true;
+        } else if (!initialScrollPerformed.current) {
             if (axisView === 'standard') {
-                container.scrollTo({ left: marker.offsetLeft - (container.offsetWidth / 2), behavior: 'smooth' });
+                container.scrollTo({ left: 7 * hourWidth, behavior: 'smooth' });
             } else {
-                container.scrollTo({ top: marker.offsetTop - (container.offsetHeight / 2), behavior: 'smooth' });
+                container.scrollTo({ top: 7 * hourHeight, behavior: 'smooth' });
             }
         }
-    }, [now, isViewingToday, containerRef, zoomLevel, axisView]);
-
+        
+    }, [zoomLevel, axisView, containerRef, now, isViewingToday, date, hourWidth, hourHeight]);
 
     const hours = Array.from({ length: 24 }, (_, i) => i);
 

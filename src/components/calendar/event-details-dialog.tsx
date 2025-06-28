@@ -205,9 +205,6 @@ const EventEditForm = ({ event, onFinished }: { event: Event, onFinished: () => 
     const [isLoading, setIsLoading] = React.useState(false);
     const [guestSearch, setGuestSearch] = React.useState('');
     const [isGuestPopoverOpen, setIsGuestPopoverOpen] = React.useState(false);
-    const [isCalendarPopoverOpen, setIsCalendarPopoverOpen] = React.useState(false);
-    const [isPriorityPopoverOpen, setIsPriorityPopoverOpen] = React.useState(false);
-    const [isTemplatePopoverOpen, setIsTemplatePopoverOpen] = React.useState(false);
 
     // Form schema
     const formSchema = z.object({
@@ -255,8 +252,7 @@ const EventEditForm = ({ event, onFinished }: { event: Event, onFinished: () => 
     // Derived state
     const availableCalendars = React.useMemo(() => calendars.filter(cal => canManageEventOnCalendar(viewAsUser, cal)), [calendars, viewAsUser]);
     const teamForSelectedCalendar = React.useMemo(() => teams.find(t => t.id === selectedCalendarId), [teams, selectedCalendarId]);
-    const eventTemplates = React.useMemo(() => teamForSelectedCalendar?.eventTemplates || [], [teamForSelectedCalendar]);
-    const selectedTemplate = React.useMemo(() => eventTemplates.find(t => t.id === form.watch('templateId')), [eventTemplates, form]);
+    const selectedTemplate = React.useMemo(() => teamForSelectedCalendar?.eventTemplates?.find(t => t.id === form.watch('templateId')), [teamForSelectedCalendar, form]);
     const assignedRoleUserIds = new Set(Object.values(roleAssignments).filter(Boolean));
     const filteredGuests = React.useMemo(() => {
         const selectedAttendeeIds = new Set(selectedAttendees.map(att => att.userId).filter(Boolean));
@@ -509,7 +505,7 @@ const EventEditForm = ({ event, onFinished }: { event: Event, onFinished: () => 
             render={({ field }) => (
               <FormItem>
                 <div className="flex items-center gap-1">
-                  <DropdownMenu>
+                <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0">
                         <GoogleSymbol name="attachment" className="text-xl" />
@@ -525,6 +521,27 @@ const EventEditForm = ({ event, onFinished }: { event: Event, onFinished: () => 
                       <DropdownMenuItem onSelect={() => handleAddAttachment('drive', 'Project Assets')}>
                         <GoogleDriveIcon className="mr-2 h-4 w-4" />
                         <span>Google Drive</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => handleAddAttachment('docs', 'Meeting Notes')}>
+                        <GoogleDocsIcon className="mr-2 h-4 w-4" />
+                        <span>Google Docs</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => handleAddAttachment('sheets', 'Budget Tracker')}>
+                        <GoogleSheetsIcon className="mr-2 h-4 w-4" />
+                        <span>Google Sheets</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => handleAddAttachment('slides', 'Presentation Deck')}>
+                        <GoogleSlidesIcon className="mr-2 h-4 w-4" />
+                        <span>Google Slides</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => handleAddAttachment('forms', 'Feedback Form')}>
+                        <GoogleFormsIcon className="mr-2 h-4 w-4" />
+                        <span>Google Forms</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onSelect={() => handleAddAttachment('meet', 'Google Meet')}>
+                        <GoogleSymbol name="videocam" className="mr-2 text-lg" />
+                        <span>Add Google Meet</span>
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
