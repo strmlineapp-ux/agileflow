@@ -99,14 +99,6 @@ const getDefaultCalendarId = (user: User, availableCalendars: SharedCalendar[]):
     return undefined;
 };
 
-
-const titlePlaceholders: Record<CalendarId, string> = {
-  'business': 'New Event',
-  'live-events': 'New Live Event',
-  'studio-productions': 'New Production Studios Event',
-  'post-production': 'New EDIT Machine Book',
-};
-
 export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
   const { viewAsUser, users, calendars, addEvent, allBookableLocations, getEventStrategy } = useUser();
   const { toast } = useToast();
@@ -376,7 +368,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                   <FormItem className="w-full">
                       <FormControl>
                           <Input 
-                              placeholder={titlePlaceholders[selectedCalendarId as CalendarId] || 'e.g. Team Standup'} 
+                              placeholder={selectedCalendar?.defaultEventTitle || 'e.g. Team Standup'} 
                               {...field} 
                               className="text-lg font-semibold h-12"
                           />

@@ -1,4 +1,5 @@
 
+
 import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team, type PriorityStrategy } from '@/types';
 
 export const mockPriorityStrategies: PriorityStrategy[] = [
@@ -139,10 +140,10 @@ export const mockUsers: User[] = [
 ];
 
 export const mockCalendars: SharedCalendar[] = [
-    { id: 'studio-productions', name: 'Studio Productions', color: '#FBBF24', managers: ['1', '6'] },
-    { id: 'live-events', name: 'Live Events', color: '#3B82F6', managers: ['1', '2', '3'] },
-    { id: 'business', name: 'Business', color: '#64748B', managers: ['1', '2'] },
-    { id: 'post-production', name: 'Post-Production', color: '#F97316', managers: ['1', '2', '5'] },
+    { id: 'studio-productions', name: 'Studio Productions', color: '#FBBF24', managers: ['1', '6'], defaultEventTitle: 'New Production Studios Event' },
+    { id: 'live-events', name: 'Live Events', color: '#3B82F6', managers: ['1', '2', '3'], defaultEventTitle: 'New Live Event' },
+    { id: 'business', name: 'Business', color: '#64748B', managers: ['1', '2'], defaultEventTitle: 'New Event' },
+    { id: 'post-production', name: 'Post-Production', color: '#F97316', managers: ['1', '2', '5'], defaultEventTitle: 'New EDIT Machine Book' },
 ];
 
 export const mockLocations: BookableLocation[] = [

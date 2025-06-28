@@ -114,6 +114,7 @@ export interface SharedCalendar {
   name: string;
   color: string;
   managers?: string[]; // array of userIds who can manage this calendar
+  defaultEventTitle?: string;
 }
 
 export type AttachmentType = 'drive' | 'docs' | 'sheets' | 'slides' | 'forms' | 'meet' | 'local';

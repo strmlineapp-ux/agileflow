@@ -42,12 +42,14 @@ export function CalendarManagement() {
   const [calendarName, setCalendarName] = useState('');
   const [calendarColor, setCalendarColor] = useState('#3B82F6');
   const [calendarManagers, setCalendarManagers] = useState<string[]>([]);
+  const [defaultEventTitle, setDefaultEventTitle] = useState('');
 
   const openAddDialog = () => {
     setCurrentCalendar(null);
     setCalendarName('');
     setCalendarColor('#3B82F6');
     setCalendarManagers([]);
+    setDefaultEventTitle('');
     setIsAddOrEditDialogOpen(true);
   };
 
@@ -56,6 +58,7 @@ export function CalendarManagement() {
     setCalendarName(calendar.name);
     setCalendarColor(calendar.color);
     setCalendarManagers(calendar.managers || []);
+    setDefaultEventTitle(calendar.defaultEventTitle || '');
     setIsAddOrEditDialogOpen(true);
   };
 
@@ -85,11 +88,11 @@ export function CalendarManagement() {
     }
     if (currentCalendar) {
       // Editing existing calendar
-      await updateCalendar(currentCalendar.id, { name: calendarName, managers: calendarManagers });
+      await updateCalendar(currentCalendar.id, { name: calendarName, managers: calendarManagers, defaultEventTitle });
       toast({ title: 'Success', description: 'Calendar updated successfully.' });
     } else {
       // Adding new calendar
-      await addCalendar({ name: calendarName, color: calendarColor, managers: calendarManagers });
+      await addCalendar({ name: calendarName, color: calendarColor, managers: calendarManagers, defaultEventTitle });
       toast({ title: 'Success', description: 'Calendar added successfully.' });
     }
     setIsAddOrEditDialogOpen(false);
@@ -138,6 +141,10 @@ export function CalendarManagement() {
                 </div>
               </CardHeader>
               <CardContent className="flex-grow space-y-4">
+                  <div>
+                      <p className="text-sm font-medium text-muted-foreground mb-2">Default Event Title</p>
+                      <p className="text-sm italic">{calendar.defaultEventTitle || 'Not set'}</p>
+                  </div>
                   <div>
                       <p className="text-sm font-medium text-muted-foreground mb-2">Managers</p>
                       <div className="flex flex-wrap gap-2 min-h-[34px]">
@@ -215,6 +222,14 @@ export function CalendarManagement() {
                     onChange={(e) => setCalendarName(e.target.value)}
                     placeholder="Calendar Name"
                     className="flex-1 text-lg font-semibold"
+                />
+            </div>
+            <div className="space-y-2">
+                <Input
+                    id="default-title"
+                    value={defaultEventTitle}
+                    onChange={(e) => setDefaultEventTitle(e.target.value)}
+                    placeholder="Default Event Title (e.g., New Event)"
                 />
             </div>
             <div className="space-y-2">
