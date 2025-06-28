@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useUser } from '@/context/user-context';
 import { PinnedLocationManagement } from '@/components/settings/pinned-location-management';
 import { TeamRoleManagement } from '@/components/settings/team-role-management';
+import { TeamMembersView } from '@/components/teams/team-members-view';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -18,16 +19,13 @@ export default function TeamPage() {
   const isSdm = viewAsUser.roles?.includes('Service Delivery Manager') || viewAsUser.roles?.includes('Admin');
   const isTeamManager = team?.managers?.includes(viewAsUser.userId);
 
-  // Added authorization check with redirect
   useEffect(() => {
-    // If teams are loaded, and the team exists, but the user is not authorized, redirect.
     if (teams.length > 0 && team && !isSdm && !isTeamManager) {
       router.push('/dashboard/calendar');
     }
   }, [teams, team, isSdm, isTeamManager, router]);
 
   if (!team || (!isSdm && !isTeamManager)) {
-    // Show skeleton while loading or before redirecting.
     return (
         <div className="space-y-8">
             <Skeleton className="h-48 w-full" />
@@ -39,11 +37,15 @@ export default function TeamPage() {
   return (
     <div className="flex flex-col gap-6">
       <h1 className="font-headline text-3xl font-semibold">{team.name} Team Management</h1>
-      <Tabs defaultValue="roles" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+      <Tabs defaultValue="team" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="team">Team</TabsTrigger>
             <TabsTrigger value="roles">Role Management</TabsTrigger>
             <TabsTrigger value="locations">Pinned Locations</TabsTrigger>
         </TabsList>
+        <TabsContent value="team" className="mt-4">
+           <TeamMembersView team={team} />
+        </TabsContent>
         <TabsContent value="roles" className="mt-4">
            <TeamRoleManagement team={team} />
         </TabsContent>

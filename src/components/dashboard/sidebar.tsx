@@ -3,7 +3,6 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import Logo from '@/components/icons/logo';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -30,8 +29,8 @@ export function Sidebar() {
     { href: '/dashboard/calendar', icon: 'calendar_month', label: 'Calendar', visible: true },
     { href: '/dashboard', icon: 'dashboard', label: 'Overview', visible: true },
     { href: '/dashboard/tasks', icon: 'checklist', label: 'Tasks', visible: true },
-    { href: '/dashboard/service-delivery', icon: sdmConfig.icon, label: sdmConfig.name, visible: isSdm },
     { href: '/dashboard/admin', icon: adminConfig.icon, label: adminConfig.name, visible: isAdmin },
+    { href: '/dashboard/service-delivery', icon: sdmConfig.icon, label: sdmConfig.name, visible: isSdm },
   ];
 
   const teamNavItems = userTeams.map(team => ({
@@ -43,7 +42,6 @@ export function Sidebar() {
 
   const bottomNavItems = [
     { href: '/dashboard/notifications', icon: 'notifications', label: 'Notifications', visible: true },
-    { href: '/dashboard/settings', icon: 'settings', label: 'Settings', visible: true },
   ];
 
   const allNavItems = [...navItems, ...teamNavItems, ...bottomNavItems];
@@ -114,8 +112,8 @@ export function Sidebar() {
             <DropdownMenuContent side="right" align="end" className="w-56">
                 <DropdownMenuItem asChild>
                     <Link href="/dashboard/settings">
-                        <GoogleSymbol name="settings" className="mr-2 text-lg" />
-                        <span>Settings</span>
+                        <GoogleSymbol name="manage_accounts" className="mr-2 text-lg" />
+                        <span>Account Settings</span>
                     </Link>
                 </DropdownMenuItem>
 

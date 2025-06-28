@@ -8,7 +8,6 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import Logo from '@/components/icons/logo';
 import { useUser } from '@/context/user-context';
 import { Badge } from '@/components/ui/badge';
 import { GoogleSymbol } from '../icons/google-symbol';
@@ -45,7 +44,24 @@ export function Header() {
         </SheetTrigger>
         <SheetContent side="left" className="sm:max-w-xs">
           <nav className="grid gap-6 text-lg font-medium">
-            <Logo className="mb-4" />
+            <Link
+              href="/dashboard"
+              className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base"
+            >
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 transition-all group-hover:scale-110"
+              >
+                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M2 17L12 22L22 17" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M2 12L12 17L22 12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span className="sr-only">AgileFlow</span>
+            </Link>
             <Link href="/dashboard/calendar" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
               <GoogleSymbol name="calendar_month" className="text-2xl" />
               Calendar
@@ -58,16 +74,16 @@ export function Header() {
               <GoogleSymbol name="checklist" className="text-2xl" />
               Tasks
             </Link>
-             {isSdm && (
-                <Link href="/dashboard/service-delivery" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
-                    <GoogleSymbol name={sdmConfig.icon} className="text-2xl" />
-                    {sdmConfig.name}
-                </Link>
-            )}
             {isAdmin && (
                 <Link href="/dashboard/admin" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
                     <GoogleSymbol name={adminConfig.icon} className="text-2xl" />
                     {adminConfig.name}
+                </Link>
+            )}
+             {isSdm && (
+                <Link href="/dashboard/service-delivery" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
+                    <GoogleSymbol name={sdmConfig.icon} className="text-2xl" />
+                    {sdmConfig.name}
                 </Link>
             )}
             {userTeams.map(team => (
@@ -86,10 +102,6 @@ export function Header() {
                   {unreadCount}
                 </Badge>
               )}
-            </Link>
-            <Link href="/dashboard/settings" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
-              <GoogleSymbol name="settings" className="text-2xl" />
-              Settings
             </Link>
           </nav>
         </SheetContent>
