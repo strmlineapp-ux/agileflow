@@ -418,8 +418,8 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                                             <AvatarFallback>{attendee.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
                                         </Avatar>
                                         <span className="text-sm font-medium">{attendee.displayName}</span>
-                                        <button type="button" onClick={() => handleToggleGuest(attendee as User)} className="rounded-full hover:bg-muted-foreground/20">
-                                            <GoogleSymbol name="close" className="text-base" />
+                                        <button type="button" onClick={() => handleToggleGuest(attendee as User)} className="h-4 w-4 rounded-full hover:bg-muted-foreground/20 flex items-center justify-center">
+                                            <GoogleSymbol name="close" className="text-sm" />
                                         </button>
                                      </div>
                                 ))}
@@ -539,10 +539,10 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                                 type="button" 
                                 variant="ghost" 
                                 size="icon" 
-                                className="h-6 w-6 shrink-0" 
+                                className="h-4 w-4 shrink-0" 
                                 onClick={() => setAttachments(prev => prev.filter((_, i) => i !== index))}
                             >
-                                <GoogleSymbol name="close" className="text-base" />
+                                <GoogleSymbol name="close" className="text-sm" />
                                 <span className="sr-only">Remove attachment</span>
                             </Button>
                         </div>

@@ -1,10 +1,11 @@
 
 
+
 'use client';
 
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { format, addHours, startOfDay, isSaturday, isSunday, isSameDay, isToday, startOfWeek, eachDayOfInterval, addDays } from 'date-fns';
-import { type Event, type User, type UserStatus, type UserStatusAssignment } from '@/types';
+import { type Event, type User, type UserStatus, type UserStatusAssignment, type Team } from '@/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { Button } from '../ui/button';
@@ -154,6 +155,7 @@ const ManageStatusDialog = ({ isOpen, onOpenChange, day, initialAssignments, use
 const ProductionScheduleLocationRow = React.memo(({
     day,
     location,
+    alias,
     eventsInRow,
     isLast,
     index,
@@ -168,6 +170,7 @@ const ProductionScheduleLocationRow = React.memo(({
 }: {
     day: Date;
     location: string;
+    alias?: string;
     eventsInRow: Event[];
     isLast: boolean;
     index: number;
@@ -189,7 +192,7 @@ const ProductionScheduleLocationRow = React.memo(({
 
     const canManageThisLocation = useMemo(() => {
         if (viewAsUser.roles?.includes('Admin')) return true;
-        // Check if user is a LocationCheckManager for ANY team that has this location pinned.
+        // User must be a Location Check Manager on a team that has this specific location pinned.
         return teams.some(team => 
             team.pinnedLocations.includes(location) && 
             team.locationCheckManagers?.includes(viewAsUser.userId)
@@ -197,6 +200,7 @@ const ProductionScheduleLocationRow = React.memo(({
     }, [viewAsUser, teams, location]);
 
     const dailyCheckUsers = useMemo(() => {
+        // Users can be assigned if they are members of ANY team that has this location pinned.
         const teamsWithLocation = teams.filter(t => t.pinnedLocations.includes(location));
         const userIds = new Set(teamsWithLocation.flatMap(t => t.members));
         return users.filter(u => userIds.has(u.userId));
@@ -221,7 +225,7 @@ const ProductionScheduleLocationRow = React.memo(({
                 </Button>
             </PopoverTrigger>
             <PopoverContent className="w-56 p-0">
-                <div className="p-2 border-b"><p className="text-sm font-medium text-center">Assign User</p></div>
+                <div className="p-2 border-b"><p className="text-sm font-medium text-center">{location}</p></div>
                 <div className="flex flex-col gap-1 max-h-48 overflow-y-auto p-1">
                     {dailyCheckUsers.length > 0 ? dailyCheckUsers.filter(user => user.userId !== assignedUserId).map(user => (
                         <Button key={user.userId} variant="ghost" className="justify-start h-8" onClick={() => handleAssignCheck(dayIso, location, user.userId)}>
@@ -240,7 +244,7 @@ const ProductionScheduleLocationRow = React.memo(({
             <div className="w-[160px] shrink-0 p-2 border-r flex items-center justify-between bg-card sticky left-0 z-30">
                 <div className="flex items-center gap-1 cursor-pointer flex-1 min-w-0" onClick={() => toggleLocationCollapse(dayIso, location)}>
                     {isLocationCollapsed ? <GoogleSymbol name="chevron_right" /> : <GoogleSymbol name="expand_more" />}
-                    <p className="font-medium text-sm truncate">{location}</p>
+                    <p className="font-medium text-sm truncate" title={alias ? location : undefined}>{alias || location}</p>
                 </div>
                  {canManageThisLocation ? assignmentControl : assignedUser && <div className="h-6 text-xs px-1.5 flex items-center justify-center text-muted-foreground">{`${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}`}</div>}
             </div>
@@ -337,17 +341,35 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
             const dayEvents = events.filter(event => format(event.startTime, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd'));
             const dayIso = day.toISOString();
 
+            // All teams that have any pinned locations.
             const teamsWithPinnedLocationsForDay = teams.filter(team => team.pinnedLocations && team.pinnedLocations.length > 0);
-            const allDayLocations = [...new Set(teamsWithPinnedLocationsForDay.flatMap(t => t.pinnedLocations))].sort();
             
+            // A flat list of all unique check locations from all teams.
             const allCheckLocationsForDay = [...new Set(teamsWithPinnedLocationsForDay.flatMap(t => t.checkLocations || []))];
             
+            // A flat list of all unique pinned locations, EXCLUDING those that are check locations.
+            const allDayLocations = [...new Set(teamsWithPinnedLocationsForDay.flatMap(t => t.pinnedLocations))]
+                .sort();
+            
+            const locationAliasMap: Record<string, string> = {};
+            teams.forEach(team => {
+                if (team.locationAliases) {
+                    Object.entries(team.locationAliases).forEach(([canonicalName, alias]) => {
+                        // For simplicity, first alias wins in case of conflict.
+                        if (!locationAliasMap[canonicalName]) {
+                            locationAliasMap[canonicalName] = alias;
+                        }
+                    });
+                }
+            });
+            
+            // Group events by their canonical location name for row rendering.
             const groupedEvents = allDayLocations.reduce((acc, locationKey) => {
                 acc[locationKey] = dayEvents.filter(e => e.location === locationKey);
                 return acc;
             }, {} as Record<string, Event[]>);
             
-            return { day, dayIso, groupedEvents, isWeekend: isSaturday(day) || isSunday(day), allDayLocations, allCheckLocationsForDay };
+            return { day, dayIso, groupedEvents, isWeekend: isSaturday(day) || isSunday(day), allDayLocations, allCheckLocationsForDay, locationAliasMap };
         });
     }, [weekDays, events, teams]);
 
@@ -457,7 +479,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
 
     return (
         <div className="space-y-4">
-            {weeklyScheduleData.map(({ day, dayIso, groupedEvents, allDayLocations, allCheckLocationsForDay }) => {
+            {weeklyScheduleData.map(({ day, dayIso, groupedEvents, allDayLocations, allCheckLocationsForDay, locationAliasMap }) => {
                 const isDayCollapsed = collapsedDays.has(dayIso);
                 const isDayToday = isToday(day);
                 const dayStatusAssignments = userStatusAssignments[dayIso] || [];
@@ -472,19 +494,19 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
                                     {dailyCheckLocationsForPills.map(location => {
                                         const assignedUserId = dailyCheckAssignments[dayIso]?.[location];
                                         const assignedUser = users.find(u => u.userId === assignedUserId);
-                                        const canManageThisLocation = viewAsUser.roles?.includes('Admin') || teams.some(t =>
+                                        const canManageThisCheckLocation = viewAsUser.roles?.includes('Admin') || teams.some(t =>
                                             t.checkLocations.includes(location) && t.locationCheckManagers?.includes(viewAsUser.userId)
                                         );
 
-                                        const pillContent = <>{location}{assignedUser && <span className="ml-2 font-normal text-muted-foreground">({`${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}`})</span>}{!assignedUser && canManageThisLocation && <GoogleSymbol name="add_circle" className="ml-2" />}</>;
+                                        const pillContent = <>{locationAliasMap[location] || location}{assignedUser && <span className="ml-2 font-normal text-muted-foreground">({`${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}`})</span>}{!assignedUser && canManageThisCheckLocation && <GoogleSymbol name="add_circle" className="ml-2" />}</>;
                                         
                                         const dailyCheckUsers = users.filter(user => teams.some(t => t.checkLocations.includes(location) && t.members.includes(user.userId)));
 
 
-                                        return canManageThisLocation ? (
+                                        return canManageThisCheckLocation ? (
                                             <Popover key={location}><PopoverTrigger asChild><Button variant={assignedUser ? "secondary" : "outline"} size="sm" className="rounded-full h-8">{pillContent}</Button></PopoverTrigger>
                                                 <PopoverContent className="w-56 p-0">
-                                                    <div className="p-2 border-b"><p className="text-sm font-medium text-center">Assign User to {location}</p></div>
+                                                    <div className="p-2 border-b"><p className="text-sm font-medium text-center">{locationAliasMap[location] || location}</p></div>
                                                     <div className="flex flex-col gap-1 max-h-48 overflow-y-auto p-1">
                                                         {dailyCheckUsers.length > 0 ? dailyCheckUsers.filter(user => user.userId !== assignedUserId).map(user => (
                                                             <Button key={user.userId} variant="ghost" className="justify-start h-8" onClick={() => handleAssignCheck(dayIso, location, user.userId)}>
@@ -524,6 +546,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
                                                     key={location}
                                                     day={day}
                                                     location={location}
+                                                    alias={locationAliasMap[location]}
                                                     eventsInRow={groupedEvents[location] || []}
                                                     isLast={index === allDayLocations.length - 1}
                                                     index={index}

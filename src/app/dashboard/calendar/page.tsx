@@ -135,7 +135,7 @@ export default function CalendarPage() {
               <Popover open={isPopoverOpen} onOpenChange={(isOpen) => !isOpen ? closePopover() : setIsPopoverOpen(true)}>
                 <PopoverTrigger asChild>
                   <Button>
-                    <GoogleSymbol name="add" className="mr-2" />
+                    <GoogleSymbol name="add_circle" className="mr-2" />
                     New Event
                   </Button>
                 </PopoverTrigger>

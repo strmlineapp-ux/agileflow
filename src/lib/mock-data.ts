@@ -129,6 +129,7 @@ export const mockTeams: Team[] = [
         roles: ['Post-Production', 'Studio Productions Team Admin', 'Video Director', 'Edit Events'],
         pinnedLocations: ['Studio'],
         checkLocations: [],
+        locationAliases: {},
     },
     {
         id: 'live-events',
@@ -140,6 +141,7 @@ export const mockTeams: Team[] = [
         roles: ['TD', 'ES Operator', 'Content Op', 'Camera', 'Audio', '1st AD', 'Live Event Team Admin'],
         pinnedLocations: ['Auditorium', 'ACR', 'Event Space 1 (S2)', 'Event Space 2 (S2)', 'Event Space 3 (R7)', 'Event Space 4 (R7)', 'Training Room', 'Apgar', 'Locke'],
         checkLocations: ['Training Room', 'Apgar', 'Locke'],
+        locationAliases: {},
     },
     {
         id: 'productions',
@@ -151,6 +153,7 @@ export const mockTeams: Team[] = [
         roles: ['Production Team Admin'],
         pinnedLocations: [],
         checkLocations: [],
+        locationAliases: {},
     }
 ];
 
