@@ -18,10 +18,8 @@ export function TeamRoleManagement({ team }: { team: Team }) {
   const { toast } = useToast();
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
-  const [roleToEdit, setRoleToEdit] = useState<string | null>(null);
   const [roleToDelete, setRoleToDelete] = useState<string | null>(null);
   const [newRoleName, setNewRoleName] = useState('');
 
@@ -35,12 +33,6 @@ export function TeamRoleManagement({ team }: { team: Team }) {
   const openAddDialog = () => {
     setNewRoleName('');
     setIsAddDialogOpen(true);
-  };
-
-  const openEditDialog = (role: string) => {
-    setRoleToEdit(role);
-    setNewRoleName(role);
-    setIsEditDialogOpen(true);
   };
 
   const openDeleteDialog = (role: string) => {
@@ -107,18 +99,6 @@ export function TeamRoleManagement({ team }: { team: Team }) {
     setConflictingTeams([]);
   };
 
-  const handleEditRole = () => {
-    const trimmedName = newRoleName.trim();
-    if (trimmedName && roleToEdit && (!allTeamRoles.includes(trimmedName) || trimmedName === roleToEdit)) {
-      const updatedTeamRoles = rolesForThisTeam.map(r => (r === roleToEdit ? trimmedName : r));
-      handleUpdateTeamRoles(updatedTeamRoles);
-      toast({ title: "Role Updated", description: `"${roleToEdit}" has been changed to "${trimmedName}".` });
-      setIsEditDialogOpen(false);
-    } else {
-        toast({ variant: 'destructive', title: "Error", description: `Role "${trimmedName}" already exists or is invalid.` });
-    }
-  };
-
   const handleDeleteRole = () => {
     if (!roleToDelete) return;
     const updatedTeamRoles = rolesForThisTeam.filter(r => r !== roleToDelete);
@@ -135,32 +115,30 @@ export function TeamRoleManagement({ team }: { team: Team }) {
             <div>
               <CardTitle>Manage Roles for {team.name}</CardTitle>
               <CardDescription>
-                  Add, edit, or delete roles available for assignment to this team.
+                  Add roles or click a role to remove it.
               </CardDescription>
             </div>
-            <Button variant="ghost" size="icon" onClick={openAddDialog}>
-              <GoogleSymbol name="add_circle" className="text-2xl" />
-              <span className="sr-only">Add New Role</span>
-            </Button>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {rolesForThisTeam.length > 0 ? rolesForThisTeam.map(role => (
-              <Badge key={role} variant="secondary" className="group text-base py-1 pl-3 pr-1 rounded-full">
-                <span className="font-medium cursor-pointer" onClick={() => openEditDialog(role)}>{role}</span>
-                <button 
-                  type="button" 
-                  className="ml-1 h-4 w-4 hover:bg-destructive/20 rounded-full inline-flex items-center justify-center" 
-                  onClick={() => openDeleteDialog(role)}
-                >
-                  <GoogleSymbol name="cancel" className="text-sm" />
-                  <span className="sr-only">Delete {role}</span>
-                </button>
+              <Badge 
+                key={role} 
+                variant="secondary" 
+                className="group text-base py-1 px-3 rounded-full cursor-pointer hover:bg-destructive/20 hover:text-destructive-foreground transition-colors"
+                onClick={() => openDeleteDialog(role)}
+                title={`Click to delete "${role}"`}
+              >
+                {role}
               </Badge>
             )) : (
-              <p className="text-sm text-muted-foreground w-full text-center">No custom roles defined for this team.</p>
+              <p className="text-sm text-muted-foreground">No custom roles defined for this team.</p>
             )}
+            <Button variant="ghost" size="icon" className="rounded-full" onClick={openAddDialog}>
+                <GoogleSymbol name="add" className="text-xl" />
+                <span className="sr-only">Add New Role</span>
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -181,21 +159,6 @@ export function TeamRoleManagement({ team }: { team: Team }) {
         </DialogContent>
       </Dialog>
       
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
-          <div className="absolute top-4 right-4">
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleEditRole}>
-                  <GoogleSymbol name="check" className="text-xl" />
-                  <span className="sr-only">Save Changes</span>
-              </Button>
-          </div>
-          <DialogHeader><DialogTitle>Edit Role</DialogTitle></DialogHeader>
-          <div className="grid gap-4 py-4">
-            <Input id="edit-role-name" value={newRoleName} onChange={(e) => setNewRoleName(e.target.value)} placeholder="Role Name" onKeyDown={(e) => e.key === 'Enter' && handleEditRole()} />
-          </div>
-        </DialogContent>
-      </Dialog>
-
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
