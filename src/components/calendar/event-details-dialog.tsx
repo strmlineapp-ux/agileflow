@@ -132,7 +132,7 @@ const EventDisplayView = ({ event, onEdit }: { event: Event, onEdit: () => void 
                                                     <span className="font-semibold w-24">{role}:</span>
                                                     {user ? (
                                                         <div className="flex items-center gap-2">
-                                                            <Avatar className="h-6 w-6"><AvatarImage src={user.avatarUrl} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
+                                                            <Avatar className="h-6 w-6"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
                                                             <span>{user.displayName}</span>
                                                         </div>
                                                     ) : <span className="text-muted-foreground italic">Not assigned</span>}
@@ -413,7 +413,7 @@ const EventEditForm = ({ event, onFinished }: { event: Event, onFinished: () => 
             name="location"
             render={({ field }) => (
               <FormItem>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select onValueChange={field.onChange} value={field.value || ''}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a location" />
@@ -592,7 +592,7 @@ export function EventDetailsDialog({ event, isOpen, onOpenChange }: EventDetails
   React.useEffect(() => {
     // Reset editing state when dialog is closed or event changes
     if (!isOpen) {
-      setIsEditing(false);
+      setTimeout(() => setIsEditing(false), 200); // delay to prevent flash of read-only content
     }
   }, [isOpen]);
   
@@ -606,11 +606,8 @@ export function EventDetailsDialog({ event, isOpen, onOpenChange }: EventDetails
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl">
-        {isEditing && canManage ? (
-            <EventEditForm event={event} onFinished={() => {
-                setIsEditing(false);
-                onOpenChange(false);
-            }} />
+        {(isEditing || !canManage) && canManage ? (
+            <EventEditForm event={event} onFinished={() => onOpenChange(false)} />
         ) : (
             <EventDisplayView event={event} onEdit={() => setIsEditing(true)} />
         )}

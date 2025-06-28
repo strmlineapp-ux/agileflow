@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays, startOfWeek, getWeek } from 'date-fns';
 import { useUser } from '@/context/user-context';
 import { canCreateAnyEvent } from '@/lib/permissions';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { NewEventForm } from '@/components/calendar/new-event-form';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { type Event } from '@/types';
@@ -141,17 +141,17 @@ export default function CalendarPage() {
           </div>
           <div className="flex items-center gap-2">
               {userCanCreateEvent && (
-                <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-                  <PopoverTrigger asChild>
+                <Dialog open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                  <DialogTrigger asChild>
                     <Button>
                       <GoogleSymbol name="add_circle" className="mr-2" />
                       New Event
                     </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[500px] p-4" align="end">
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-xl">
                     <NewEventForm onFinished={closePopover} initialData={initialEventData} />
-                  </PopoverContent>
-                </Popover>
+                  </DialogContent>
+                </Dialog>
               )}
               {(view === 'production-schedule' || view === 'day' || view === 'week') && (
                   <Button variant="outline" size="icon" onClick={() => setZoomLevel(zoomLevel === 'normal' ? 'fit' : 'normal')}>
@@ -191,7 +191,7 @@ export default function CalendarPage() {
       <EventDetailsDialog
         event={selectedEvent}
         isOpen={!!selectedEvent}
-        onOpenChange={() => setSelectedEvent(null)}
+        onOpenChange={(isOpen) => !isOpen && setSelectedEvent(null)}
       />
     </>
   );
