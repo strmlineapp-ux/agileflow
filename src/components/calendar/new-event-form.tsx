@@ -36,6 +36,7 @@ import { Slider } from '../ui/slider';
 import { Badge } from '../ui/badge';
 import { ScrollArea } from '../ui/scroll-area';
 import { UserStatusBadge } from '../user-status-badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
 const GoogleDriveIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg viewBox="0 0 16 16" fill="currentColor" {...props}><path d="M9.19,4.5l-3.2,0l-1.7,2.9l3.2,5.7l4.9,0l1.7,-2.9l-4.9,-5.7Z" fill="#0f9d58"></path><path d="M5.99,4.5l-3.2,5.7l1.7,2.9l3.2,-5.7l-1.7,-2.9Z" fill="#ffc107"></path><path d="M10.89,7.4l-3.2,0l-1.7,-2.9l4.9,0l0,0Z" fill="#1976d2"></path></svg>
@@ -116,7 +117,6 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
   const { viewAsUser, users, calendars, teams, addEvent, allBookableLocations, getEventStrategy, userStatusAssignments } = useUser();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = React.useState(false);
-  const [attachments, setAttachments] = React.useState<Attachment[]>([]);
   const [guestSearch, setGuestSearch] = React.useState('');
   const [isGuestPopoverOpen, setIsGuestPopoverOpen] = React.useState(false);
 
@@ -170,6 +170,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
   const selectedTemplateId = form.watch('templateId');
   const eventDate = form.watch('date');
   const selectedAttendees = form.watch('attendees') || [];
+  const attachments = form.watch('attachments') || [];
 
   const teamForSelectedCalendar = React.useMemo(() => {
     return teams.find(t => t.id === selectedCalendarId);
@@ -230,16 +231,22 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
             endTime: initialData.endTime,
         });
     }
-  }, [initialData, form.reset, defaultCalendarId, getDefaultPriority]);
+  }, [initialData, form, defaultCalendarId, getDefaultPriority]);
 
   const selectedCalendar = calendars.find(c => c.id === selectedCalendarId) || availableCalendars[0];
   
   const handleAddAttachment = (type: AttachmentType, name: string) => {
-    setAttachments(prev => [...prev, { type, name, url: '#' }]);
+    const currentAttachments = form.getValues('attachments') || [];
+    form.setValue('attachments', [...currentAttachments, { type, name, url: '#' }]);
     toast({
         title: 'Attachment Added',
         description: `${name} has been attached to the event.`,
     });
+  };
+
+  const handleRemoveAttachment = (indexToRemove: number) => {
+    const currentAttachments = form.getValues('attachments') || [];
+    form.setValue('attachments', currentAttachments.filter((_, i) => i !== indexToRemove));
   };
 
   const handleToggleGuest = (guest: User) => {
@@ -301,7 +308,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
         location: values.location,
         description: values.description,
         priority: values.priority,
-        attachments: attachments,
+        attachments: values.attachments || [],
         attendees: values.attendees || [],
         templateId: values.templateId,
         roleAssignments: finalRoleAssignments,
@@ -313,7 +320,6 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
       });
 
       form.reset();
-      setAttachments([]);
       onFinished?.();
     } catch (error) {
       toast({
@@ -778,7 +784,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                     variant="ghost"
                     size="icon"
                     className="h-4 w-4 shrink-0"
-                    onClick={() => setAttachments(prev => prev.filter((_, i) => i !== index))}
+                    onClick={() => handleRemoveAttachment(index)}
                   >
                     <GoogleSymbol name="cancel" className="text-sm" />
                     <span className="sr-only">Remove attachment</span>

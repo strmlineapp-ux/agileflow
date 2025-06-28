@@ -33,6 +33,7 @@ interface UserContextType {
   deleteCalendar: (calendarId: string) => Promise<void>;
   events: Event[];
   addEvent: (newEventData: Omit<Event, 'eventId' | 'createdBy' | 'createdAt' | 'lastUpdated'>) => Promise<void>;
+  updateEvent: (eventId: string, eventData: Partial<Omit<Event, 'eventId'>>) => Promise<void>;
   locations: BookableLocation[];
   allBookableLocations: BookableLocation[];
   addLocation: (locationName: string) => Promise<void>;
@@ -170,6 +171,15 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     };
     setEvents(currentEvents => [...currentEvents, event]);
   };
+
+  const updateEvent = async (eventId: string, eventData: Partial<Omit<Event, 'eventId'>>) => {
+    console.log(`Updating event ${eventId}:`, eventData);
+    setEvents(currentEvents =>
+      currentEvents.map(e =>
+        e.eventId === eventId ? { ...e, ...eventData, lastUpdated: new Date() } as Event : e
+      )
+    );
+  };
   
   const addLocation = async (locationName: string) => {
       const newLocation: BookableLocation = {
@@ -304,6 +314,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     deleteCalendar,
     events,
     addEvent,
+    updateEvent,
     locations,
     allBookableLocations,
     addLocation,

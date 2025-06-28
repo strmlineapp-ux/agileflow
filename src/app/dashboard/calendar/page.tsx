@@ -141,7 +141,7 @@ export default function CalendarPage() {
           </div>
           <div className="flex items-center gap-2">
               {userCanCreateEvent && (
-                <Popover open={isPopoverOpen} onOpenChange={(isOpen) => !isOpen ? closePopover() : setIsPopoverOpen(true)}>
+                <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                   <PopoverTrigger asChild>
                     <Button>
                       <GoogleSymbol name="add_circle" className="mr-2" />
