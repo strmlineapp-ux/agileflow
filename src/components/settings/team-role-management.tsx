@@ -108,7 +108,7 @@ export function TeamRoleManagement({ team }: { team: Team }) {
                   className="ml-1 h-5 w-5 hover:bg-destructive/20 rounded-full" 
                   onClick={() => openDeleteDialog(role)}
                 >
-                  <GoogleSymbol name="close" className="text-sm" />
+                  <GoogleSymbol name="close" className="text-base" />
                   <span className="sr-only">Delete {role}</span>
                 </Button>
               </Badge>

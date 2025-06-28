@@ -14,6 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { LocationCheckManagerManagement } from '../teams/location-check-manager-management';
 
 export function PinnedLocationManagement({ team }: { team: Team }) {
   const { viewAsUser, locations, updateTeam } = useUser();
@@ -73,78 +74,76 @@ export function PinnedLocationManagement({ team }: { team: Team }) {
 
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-            <GoogleSymbol name="push_pin" />
-            Pinned & Check Locations
-        </CardTitle>
-        <CardDescription>
-          Manage locations pinned to this team's schedule. Click a pinned location to toggle it as a "check location".
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="flex flex-wrap gap-2 min-h-[40px] p-2 border rounded-md bg-muted/50">
-            {pinnedLocationNames.length > 0 ? pinnedLocationNames.map(name => (
-              <Badge 
-                key={name}
-                variant={checkLocationNames.has(name) ? "default" : "secondary"}
-                className={cn(
-                  "rounded-full group text-base py-1 pl-1 pr-3 cursor-pointer",
-                  checkLocationNames.has(name) && "shadow-md"
-                )}
-                onClick={() => handleToggleCheckLocation(name)}
-                >
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); handleUnpinLocation(name); }}
-                  className="mr-1 h-5 w-5 hover:bg-destructive/20 rounded-full inline-flex items-center justify-center"
-                  aria-label={`Unpin ${name}`}
-                >
-                  <GoogleSymbol name="close" className="text-sm" />
-                </button>
-                <span className="font-medium">{name}</span>
-              </Badge>
-            )) : (
-              <p className="text-sm text-muted-foreground w-full text-center">No locations pinned.</p>
-            )}
-          </div>
-          <div className="flex justify-between items-center">
-            <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-              <PopoverTrigger asChild>
-                <Button variant="outline" disabled={!canManage}>
-                  <GoogleSymbol name="add" className="mr-2"/>
-                  Add Pinned Location
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[300px] p-0" align="start">
-                <div className="p-2 border-b">
-                  <Input
-                    placeholder="Search locations..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-                <ScrollArea className="h-48">
-                  {availableToPin.length > 0 ? availableToPin.map(loc => (
-                    <div 
-                      key={loc.id} 
-                      className="p-2 hover:bg-accent cursor-pointer text-sm"
-                      onClick={() => handlePinLocation(loc.name)}
-                    >
-                      {loc.name}
-                    </div>
-                  )) : (
-                    <p className="p-4 text-center text-sm text-muted-foreground">No matching locations.</p>
+    <div className="space-y-6">
+      <LocationCheckManagerManagement team={team} />
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+              <GoogleSymbol name="push_pin" />
+              Pinned & Check Locations
+          </CardTitle>
+          <CardDescription>
+            Manage locations pinned to this team's schedule. Click a pinned location to toggle it as a "check location".
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-2 items-center min-h-[40px] p-2 border rounded-md bg-muted/50">
+              {pinnedLocationNames.length > 0 && pinnedLocationNames.map(name => (
+                <Badge 
+                  key={name}
+                  variant={checkLocationNames.has(name) ? "default" : "secondary"}
+                  className={cn(
+                    "rounded-full group text-base py-1 pl-1 pr-3 cursor-pointer",
+                    checkLocationNames.has(name) && "shadow-md"
                   )}
-                </ScrollArea>
-              </PopoverContent>
-            </Popover>
-            <p className="text-xs text-muted-foreground">Click a pill to toggle its "check" status.</p>
+                  onClick={() => handleToggleCheckLocation(name)}
+                  >
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); handleUnpinLocation(name); }}
+                    className="mr-1 h-5 w-5 hover:bg-destructive/20 rounded-full inline-flex items-center justify-center"
+                    aria-label={`Unpin ${name}`}
+                  >
+                    <GoogleSymbol name="close" className="text-base" />
+                  </button>
+                  <span className="font-medium">{name}</span>
+                </Badge>
+              ))}
+               <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" disabled={!canManage}>
+                    <GoogleSymbol name="add" className="text-xl" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[300px] p-0" align="start">
+                  <div className="p-2 border-b">
+                    <Input
+                      placeholder="Search locations..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
+                  <ScrollArea className="h-48">
+                    {availableToPin.length > 0 ? availableToPin.map(loc => (
+                      <div 
+                        key={loc.id} 
+                        className="p-2 hover:bg-accent cursor-pointer text-sm"
+                        onClick={() => handlePinLocation(loc.name)}
+                      >
+                        {loc.name}
+                      </div>
+                    )) : (
+                      <p className="p-4 text-center text-sm text-muted-foreground">No matching locations.</p>
+                    )}
+                  </ScrollArea>
+                </PopoverContent>
+              </Popover>
+            </div>
+            <p className="text-xs text-muted-foreground text-right">Click a pill to toggle its "check" status.</p>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

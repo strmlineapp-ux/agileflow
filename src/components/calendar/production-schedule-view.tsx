@@ -176,7 +176,7 @@ const ManageStatusDialog = ({ isOpen, onOpenChange, day, initialAssignments, use
 
 
 export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBooking }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', onEasyBooking: (date: Date) => void }) {
-    const { users, viewAsUser, events, calendars, pinnedLocations, checkLocations, userStatusAssignments, setUserStatusAssignments, isLocationCheckManager } = useUser();
+    const { users, teams, viewAsUser, events, calendars, pinnedLocations, checkLocations, userStatusAssignments, setUserStatusAssignments } = useUser();
 
     const [now, setNow] = useState<Date | null>(null);
     const [hourWidth, setHourWidth] = useState(DEFAULT_HOUR_WIDTH_PX);
@@ -193,16 +193,11 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
     const [editingStatusDayIso, setEditingStatusDayIso] = useState<string | null>(null);
     
     const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars);
-    const canManageChecks = isLocationCheckManager || viewAsUser.roles?.includes('Admin');
     const managerialRoles = ["Admin", "Service Delivery Manager", "Production Team Admin", "Studio Production Team Admin", "Live Event Team Admin"];
     const canManageStatus = viewAsUser.roles?.some(p => managerialRoles.includes(p));
 
     const timeFormatTimeline = viewAsUser.timeFormat === '24h' ? 'HH:mm' : 'h a';
     const timeFormatEvent = viewAsUser.timeFormat === '24h' ? 'HH:mm' : 'h:mm a';
-
-    const dailyCheckUsers = useMemo(() => {
-        return users.filter(user => user.roles?.includes('ES Daily Checks'));
-    }, [users]);
     
     const calendarColorMap = useMemo(() => {
         const map: Record<string, { bg: string, text: string }> = {};
@@ -370,6 +365,20 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
         const assignedUserId = dailyCheckAssignments[dayIso]?.[location];
         const assignedUser = users.find(u => u.userId === assignedUserId);
         
+        // A user can manage checks for this location if they are an Admin or a LocationCheckManager for ANY team that has this location pinned.
+        const canManageThisLocation = viewAsUser.roles?.includes('Admin') || teams.some(t =>
+            t.pinnedLocations.includes(location) && t.locationCheckManagers?.includes(viewAsUser.userId)
+        );
+
+        const dailyCheckUsers = useMemo(() => {
+            // Get all teams that have this location pinned
+            const teamsWithLocation = teams.filter(t => t.pinnedLocations.includes(location));
+            // Get all unique members from those teams
+            const userIds = new Set(teamsWithLocation.flatMap(t => t.members));
+            return users.filter(u => userIds.has(u.userId));
+        }, [teams, users, location]);
+
+
         const assignmentControl = (
              <Popover>
                 <PopoverTrigger asChild>
@@ -385,7 +394,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
                                 <Avatar className="h-6 w-6 mr-2"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
                                 <span className="text-sm">{user.displayName}</span>
                             </Button>
-                        )) : <p className="text-sm text-muted-foreground text-center p-2">No users with "ES Daily Checks" role.</p>}
+                        )) : <p className="text-sm text-muted-foreground text-center p-2">No users to assign.</p>}
                     </div>
                     {assignedUser && <div className="p-1 border-t"><Button variant="outline" size="sm" className="w-full text-destructive hover:text-destructive" onClick={() => handleAssignCheck(dayIso, location, null)}>Unassign</Button></div>}
                 </PopoverContent>
@@ -399,7 +408,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
                         {isLocationCollapsed ? <GoogleSymbol name="chevron_right" /> : <GoogleSymbol name="expand_more" />}
                         <p className="font-medium text-sm truncate">{location}</p>
                     </div>
-                     {pinnedLocations.includes(location) && location !== 'Studio' && (canManageChecks ? assignmentControl : assignedUser && <div className="h-6 text-xs px-1.5 flex items-center justify-center text-muted-foreground">{`${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}`}</div>)}
+                     {canManageThisLocation ? assignmentControl : assignedUser && <div className="h-6 text-xs px-1.5 flex items-center justify-center text-muted-foreground">{`${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}`}</div>}
                 </div>
                 <div 
                     className={cn("relative flex-1", isLocationCollapsed ? "h-10" : "h-20")}
@@ -428,17 +437,29 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
                 const isDayCollapsed = collapsedDays.has(dayIso);
                 const isDayToday = isToday(day);
                 const dayStatusAssignments = userStatusAssignments[dayIso] || [];
+                const dailyCheckLocations = checkLocations.filter(loc => allDayLocations.includes(loc));
+                
+                const canManageAnyCheck = viewAsUser.roles?.includes('Admin') || teams.some(t => t.locationCheckManagers?.includes(viewAsUser.userId));
+
 
                 return (
                     <div key={dayIso} ref={isDayToday ? todayCardRef : null}>
                         <Card className="overflow-hidden">
                              <div className="p-2 border-b bg-card flex flex-wrap items-center justify-between gap-4">
                                 <div className="flex flex-wrap items-center gap-2">
-                                    {checkLocations.map(location => {
+                                    {dailyCheckLocations.map(location => {
                                         const assignedUserId = dailyCheckAssignments[dayIso]?.[location];
                                         const assignedUser = users.find(u => u.userId === assignedUserId);
-                                        const pillContent = <>{location}{assignedUser && <span className="ml-2 font-normal text-muted-foreground">({`${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}`})</span>}{!assignedUser && canManageChecks && <GoogleSymbol name="add_circle" className="ml-2" />}</>;
-                                        return canManageChecks ? (
+                                        const canManageThisLocation = viewAsUser.roles?.includes('Admin') || teams.some(t =>
+                                            t.checkLocations.includes(location) && t.locationCheckManagers?.includes(viewAsUser.userId)
+                                        );
+
+                                        const pillContent = <>{location}{assignedUser && <span className="ml-2 font-normal text-muted-foreground">({`${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}`})</span>}{!assignedUser && canManageThisLocation && <GoogleSymbol name="add_circle" className="ml-2" />}</>;
+                                        
+                                        const dailyCheckUsers = users.filter(user => teams.some(t => t.checkLocations.includes(location) && t.members.includes(user.userId)));
+
+
+                                        return canManageThisLocation ? (
                                             <Popover key={location}><PopoverTrigger asChild><Button variant={assignedUser ? "secondary" : "outline"} size="sm" className="rounded-full h-8">{pillContent}</Button></PopoverTrigger>
                                                 <PopoverContent className="w-56 p-0">
                                                     <div className="p-2 border-b"><p className="text-sm font-medium text-center">Assign User to {location}</p></div>
@@ -448,7 +469,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
                                                                 <Avatar className="h-6 w-6 mr-2"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
                                                                 <span className="text-sm">{user.displayName}</span>
                                                             </Button>
-                                                        )) : <p className="text-sm text-muted-foreground text-center p-2">No users with "ES Daily Checks" role.</p>}
+                                                        )) : <p className="text-sm text-muted-foreground text-center p-2">No users to assign.</p>}
                                                     </div>
                                                     {assignedUser && <div className="p-1 border-t"><Button variant="outline" size="sm" className="w-full text-destructive hover:text-destructive" onClick={() => handleAssignCheck(dayIso, location, null)}>Unassign</Button></div>}
                                                 </PopoverContent>

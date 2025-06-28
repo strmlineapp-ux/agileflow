@@ -542,7 +542,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                                 className="h-6 w-6 shrink-0" 
                                 onClick={() => setAttachments(prev => prev.filter((_, i) => i !== index))}
                             >
-                                <GoogleSymbol name="close" className="text-xl" />
+                                <GoogleSymbol name="close" className="text-base" />
                                 <span className="sr-only">Remove attachment</span>
                             </Button>
                         </div>
