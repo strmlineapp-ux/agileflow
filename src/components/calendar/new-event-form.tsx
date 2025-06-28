@@ -136,7 +136,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
     return getDefaultCalendarId(viewAsUser, availableCalendars);
   }, [viewAsUser, availableCalendars]);
 
-  const getDefaultPriority = () => {
+  const getDefaultPriority = React.useCallback(() => {
     if (!eventStrategy) return '';
     if (eventStrategy.type === 'tier') {
       return eventStrategy.priorities[0]?.id || '';
@@ -148,7 +148,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
       return `${eventStrategy.id}:${Math.floor((eventStrategy.max - eventStrategy.min) / 2)}`;
     }
     return '';
-  }
+  }, [eventStrategy]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -156,7 +156,6 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
       title: '',
       calendarId: defaultCalendarId || '',
       priority: getDefaultPriority(),
-      templateId: '',
       date: new Date(),
       startTime: '09:00',
       endTime: '10:00',
@@ -218,7 +217,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
   React.useEffect(() => {
     if (initialData) {
         form.reset({
-            calendarId: defaultCalendarId,
+            calendarId: defaultCalendarId || '',
             priority: getDefaultPriority(),
             title: '',
             location: initialData.location || '',
@@ -231,7 +230,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
             endTime: initialData.endTime,
         });
     }
-  }, [initialData, form, defaultCalendarId]);
+  }, [initialData, form.reset, defaultCalendarId, getDefaultPriority]);
 
   const selectedCalendar = calendars.find(c => c.id === selectedCalendarId) || availableCalendars[0];
   

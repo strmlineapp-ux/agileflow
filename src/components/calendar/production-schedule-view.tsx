@@ -250,13 +250,14 @@ const ProductionScheduleLocationRow = React.memo(({
                 {!isLocationCollapsed && eventsInRow.map(event => {
                     const { left, width } = getEventPosition(event);
                     const colors = calendarColorMap[event.calendarId];
+                    const textColor = getContrastColor(colors?.bg || '#000000');
                     return (
                         <div 
                             key={event.eventId} 
                             data-event-id={event.eventId}
                             onClick={(e) => { e.stopPropagation(); onEventClick(event); }}
                             className={cn("absolute top-1 p-2 rounded-lg shadow-md cursor-pointer z-10 flex flex-col overflow-hidden")} 
-                            style={{ left: `${left + 2}px`, width: `${width}px`, backgroundColor: colors?.bg, color: colors?.text }}
+                            style={{ left: `${left + 2}px`, width: `${width}px`, backgroundColor: colors?.bg, color: textColor }}
                         >
                             <div className="flex items-center gap-2 flex-wrap mb-1.5">
                                 <PriorityBadge priorityId={event.priority} />
@@ -302,8 +303,8 @@ const ProductionScheduleLocationRow = React.memo(({
                                     </div>
                                 )}
                             </div>
-                            <p className="font-semibold text-sm truncate leading-tight">{event.title}</p>
-                            <p className="text-xs opacity-90">{format(event.startTime, timeFormatEvent)} - {format(event.endTime, timeFormatEvent)}</p>
+                            <p className="font-semibold text-xs truncate leading-tight">{event.title}</p>
+                            <p className="text-[10px] opacity-90">{format(event.startTime, timeFormatEvent)} - {format(event.endTime, timeFormatEvent)}</p>
                         </div>
                     )
                 })}

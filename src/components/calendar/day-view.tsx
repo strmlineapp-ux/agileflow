@@ -80,13 +80,14 @@ const DayViewLocationRow = React.memo(({
                 {!isCollapsed && eventsInRow.map(event => {
                     const { left, width } = getEventPositionStandard(event);
                     const colors = calendarColorMap[event.calendarId];
+                    const textColor = getContrastColor(colors?.bg || '#000000');
                     return (
                         <div 
                             key={event.eventId} 
                             data-event-id={event.eventId}
                             onClick={(e) => { e.stopPropagation(); onEventClick(event); }}
                             className="absolute top-1 p-2 rounded-lg shadow-md cursor-pointer z-10 flex flex-col overflow-hidden"
-                            style={{ left: `${left + 2}px`, width: `${width}px`, backgroundColor: colors?.bg, color: colors?.text }}
+                            style={{ left: `${left + 2}px`, width: `${width}px`, backgroundColor: colors?.bg, color: textColor }}
                         >
                             <div className="flex items-center gap-2 flex-wrap mb-1.5">
                                 <PriorityBadge priorityId={event.priority} />
@@ -132,8 +133,8 @@ const DayViewLocationRow = React.memo(({
                                     </div>
                                 )}
                             </div>
-                            <p className="font-semibold text-sm truncate leading-tight">{event.title}</p>
-                            <p className="text-xs opacity-90">{format(event.startTime, timeFormatEvent)} - {format(event.endTime, timeFormatEvent)}</p>
+                            <p className="font-semibold text-xs truncate leading-tight">{event.title}</p>
+                            <p className="text-[10px] opacity-90">{format(event.startTime, timeFormatEvent)} - {format(event.endTime, timeFormatEvent)}</p>
                         </div>
                     )
                 })}
@@ -418,6 +419,7 @@ export function DayView({ date, containerRef, zoomLevel, axisView, onEasyBooking
                                 {dayEvents.map(event => {
                                     const { top, height } = getEventPositionReversed(event);
                                     const colors = calendarColorMap[event.calendarId];
+                                    const textColor = getContrastColor(colors?.bg || '#000000');
                                     return (
                                         <div 
                                             key={event.eventId} 
@@ -426,7 +428,7 @@ export function DayView({ date, containerRef, zoomLevel, axisView, onEasyBooking
                                             className={cn(
                                                 "absolute left-1 right-1 p-1 rounded-md shadow-sm cursor-pointer flex flex-col overflow-hidden"
                                             )}
-                                            style={{ top: `${top}px`, height: `${height}px`, backgroundColor: colors?.bg, color: colors?.text }}
+                                            style={{ top: `${top}px`, height: `${height}px`, backgroundColor: colors?.bg, color: textColor }}
                                         >
                                             <div className="flex items-center gap-2 flex-wrap mb-1">
                                                 <PriorityBadge priorityId={event.priority} />
