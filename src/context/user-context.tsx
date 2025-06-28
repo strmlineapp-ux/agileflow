@@ -2,9 +2,9 @@
 
 'use client';
 
-import React, { createContext, useContext, useState, useMemo, useEffect } from 'react';
-import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type PageConfig, type Priority } from '@/types';
-import { mockUsers as initialUsers, mockCalendars as initialCalendars, mockEvents as initialEvents, mockLocations as initialLocations, mockTeams, mockPriorities as initialPriorities } from '@/lib/mock-data';
+import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
+import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type PageConfig, type Priority, type PriorityStrategy, type PriorityStrategyApplication } from '@/types';
+import { mockUsers as initialUsers, mockCalendars as initialCalendars, mockEvents as initialEvents, mockLocations as initialLocations, mockTeams, mockPriorityStrategies as initialPriorityStrategies } from '@/lib/mock-data';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
@@ -37,10 +37,13 @@ interface UserContextType {
   deleteLocation: (locationId: string) => Promise<void>;
   pageConfigs: PageConfig[];
   updatePageConfig: (pageId: string, pageData: Partial<PageConfig>) => Promise<void>;
-  priorities: Priority[];
-  addPriority: (priorityData: Omit<Priority, 'id'>) => Promise<void>;
-  updatePriority: (priorityId: string, priorityData: Partial<Priority>) => Promise<void>;
-  deletePriority: (priorityId: string) => Promise<void>;
+  priorityStrategies: PriorityStrategy[];
+  addPriorityStrategy: (strategyData: Omit<PriorityStrategy, 'id'>) => Promise<void>;
+  updatePriorityStrategy: (strategyId: string, strategyData: Partial<PriorityStrategy>) => Promise<void>;
+  deletePriorityStrategy: (strategyId: string) => Promise<void>;
+  getEventPriorities: () => Priority[];
+  getTaskPriorities: () => Priority[];
+  getPriorityById: (priorityId: string) => Priority | undefined;
 }
 
 const UserContext = createContext<UserContextType | null>(null);
@@ -62,7 +65,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [events, setEvents] = useState<Event[]>(initialEvents);
   const [locations, setLocations] = useState<BookableLocation[]>(initialLocations);
   const [pageConfigs, setPageConfigs] = useState<PageConfig[]>(initialPageConfigs);
-  const [priorities, setPriorities] = useState<Priority[]>(initialPriorities);
+  const [priorityStrategies, setPriorityStrategies] = useState<PriorityStrategy[]>(initialPriorityStrategies);
   const { toast } = useToast();
 
   const allTeamRoles = useMemo(() => {
@@ -76,10 +79,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const realUser = useMemo(() => users.find(u => u.userId === REAL_USER_ID)!, [users]);
   const viewAsUser = useMemo(() => users.find(u => u.userId === viewAsUserId) || realUser, [users, viewAsUserId, realUser]);
   
-  if (!realUser) {
-    return null; // Should not happen in practice if REAL_USER_ID is always valid
-  }
-
   const updateUser = async (userId: string, userData: Partial<User>) => {
     console.log(`Updating user ${userId}:`, userData);
     setUsers(currentUsers =>
@@ -171,22 +170,40 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       currentConfigs.map(p => (p.id === pageId ? { ...p, ...pageData } : p))
     );
   };
-  
-  const addPriority = async (priorityData: Omit<Priority, 'id'>) => {
-      const newPriority: Priority = {
-          ...priorityData,
-          id: priorityData.label.toLowerCase().replace(/\s+/g, '-'),
-      };
-      setPriorities(current => [...current, newPriority]);
+
+  const addPriorityStrategy = async (strategyData: Omit<PriorityStrategy, 'id'>) => {
+    const newStrategy: PriorityStrategy = {
+      ...strategyData,
+      id: strategyData.name.toLowerCase().replace(/\s+/g, '-'),
+    };
+    setPriorityStrategies(current => [...current, newStrategy]);
   };
 
-  const updatePriority = async (priorityId: string, priorityData: Partial<Priority>) => {
-      setPriorities(current => current.map(p => p.id === priorityId ? { ...p, ...priorityData } as Priority : p));
+  const updatePriorityStrategy = async (strategyId: string, strategyData: Partial<PriorityStrategy>) => {
+    setPriorityStrategies(current =>
+      current.map(s => (s.id === strategyId ? { ...s, ...strategyData } : s))
+    );
   };
 
-  const deletePriority = async (priorityId: string) => {
-      setPriorities(current => current.filter(p => p.id !== priorityId));
+  const deletePriorityStrategy = async (strategyId: string) => {
+    setPriorityStrategies(current => current.filter(s => s.id !== strategyId));
   };
+
+  const getPrioritiesForApplication = useCallback((application: PriorityStrategyApplication) => {
+    const activeStrategy = priorityStrategies.find(s => s.applications.includes(application));
+    return activeStrategy?.priorities || [];
+  }, [priorityStrategies]);
+
+  const getEventPriorities = useCallback(() => getPrioritiesForApplication('events'), [getPrioritiesForApplication]);
+  const getTaskPriorities = useCallback(() => getPrioritiesForApplication('tasks'), [getPrioritiesForApplication]);
+
+  const getPriorityById = useCallback((priorityId: string): Priority | undefined => {
+    for (const strategy of priorityStrategies) {
+      const found = strategy.priorities.find(p => p.id === priorityId);
+      if (found) return found;
+    }
+    return undefined;
+  }, [priorityStrategies]);
 
 
   const linkGoogleCalendar = async (userId: string) => {
@@ -247,10 +264,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     deleteLocation,
     pageConfigs,
     updatePageConfig,
-    priorities,
-    addPriority,
-    updatePriority,
-    deletePriority,
+    priorityStrategies,
+    addPriorityStrategy,
+    updatePriorityStrategy,
+    deletePriorityStrategy,
+    getEventPriorities,
+    getTaskPriorities,
+    getPriorityById,
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

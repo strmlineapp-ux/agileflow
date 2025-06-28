@@ -71,7 +71,7 @@ const formSchema = z.object({
   priority: z.string().nonempty({ message: 'Please select a priority.' }),
   date: z.date({ required_error: 'A date is required.' }),
   startTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, { message: 'Invalid time format (HH:mm).' }),
-  endTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, { message: 'Invalid time format (HH:mm).' }),
+  endTime: z.string().regex(/^([01]\d|2[0-5]\d)$/, { message: 'Invalid time format (HH:mm).' }),
   location: z.string().optional(),
   description: z.string().optional(),
   attachments: z.array(z.any()).optional(),
@@ -107,7 +107,7 @@ const titlePlaceholders: Record<CalendarId, string> = {
 };
 
 export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
-  const { viewAsUser, users, calendars, addEvent, locations, priorities } = useUser();
+  const { viewAsUser, users, calendars, addEvent, locations, getEventPriorities } = useUser();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = React.useState(false);
   const [attachments, setAttachments] = React.useState<Attachment[]>([]);
@@ -117,6 +117,8 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
   const availableCalendars = React.useMemo(() => {
     return calendars.filter(cal => canManageEventOnCalendar(viewAsUser, cal));
   }, [calendars, viewAsUser]);
+  
+  const eventPriorities = React.useMemo(() => getEventPriorities(), [getEventPriorities]);
 
   const defaultCalendarId = React.useMemo(() => {
     return getDefaultCalendarId(viewAsUser, availableCalendars);
@@ -127,7 +129,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
     defaultValues: {
       title: '',
       calendarId: defaultCalendarId || '',
-      priority: priorities.find(p => p.label === 'P3')?.id || priorities[0]?.id || '',
+      priority: eventPriorities[0]?.id || '',
       date: new Date(),
       startTime: '09:00',
       endTime: '10:00',
@@ -153,7 +155,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
     if (initialData) {
         form.reset({
             calendarId: defaultCalendarId,
-            priority: priorities.find(p => p.label === 'P3')?.id || priorities[0]?.id,
+            priority: eventPriorities[0]?.id,
             title: '',
             location: '',
             description: '',
@@ -164,7 +166,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
             endTime: initialData.endTime,
         });
     }
-  }, [initialData, form, defaultCalendarId, priorities]);
+  }, [initialData, form, defaultCalendarId, eventPriorities]);
 
   const selectedCalendarId = form.watch('calendarId');
   const selectedCalendar = calendars.find(c => c.id === selectedCalendarId) || availableCalendars[0];
@@ -296,7 +298,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                                         </button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="start">
-                                        {priorities.map(p => (
+                                        {eventPriorities.map(p => (
                                             <DropdownMenuItem key={p.id} onSelect={() => form.setValue('priority', p.id, { shouldValidate: true })}>
                                                 <PriorityBadge priorityId={p.id} />
                                                 <span className="ml-2 text-sm text-muted-foreground w-20">

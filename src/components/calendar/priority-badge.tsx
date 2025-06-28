@@ -7,8 +7,8 @@ import { useUser } from '@/context/user-context';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
 export function PriorityBadge({ priorityId, className }: { priorityId: Priority['id']; className?: string }) {
-  const { priorities } = useUser();
-  const priority = priorities.find(p => p.id === priorityId);
+  const { getPriorityById } = useUser();
+  const priority = getPriorityById(priorityId);
 
   if (!priority) {
     return <Badge className={cn('bg-muted text-muted-foreground', className)}>Unknown</Badge>;

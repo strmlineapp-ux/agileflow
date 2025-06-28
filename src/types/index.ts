@@ -35,7 +35,7 @@ export interface Team {
   roles: string[]; // team-specific roles
   pinnedLocations: string[]; // array of location names
   checkLocations: string[]; // subset of pinnedLocations designated for daily checks
-  locationAliases?: { [key: string]: string };
+  locationAliases?: { [key:string]: string };
 }
 
 export interface PageConfig {
@@ -51,6 +51,17 @@ export interface Priority {
   color: string;
   shape: 'rounded-md' | 'rounded-full';
 }
+
+export type PriorityStrategyApplication = 'tasks' | 'events';
+
+export interface PriorityStrategy {
+  id: string;
+  name: string;
+  description?: string;
+  applications: PriorityStrategyApplication[];
+  priorities: Priority[];
+}
+
 
 export interface Task {
   taskId: string;
