@@ -267,8 +267,8 @@ const EventEditForm = ({ event, onFinished }: { event: Event, onFinished: () => 
         return users.filter(user => !selectedAttendeeIds.has(user.userId) && !assignedRoleUserIds.has(user.userId));
     }, [users, selectedAttendees, assignedRoleUserIds]);
 
-    const dayKey = startOfDay(eventDate).toISOString();
-    const absencesForDay = userStatusAssignments[dayKey] || [];
+    const dayKey = eventDate ? startOfDay(eventDate).toISOString() : null;
+    const absencesForDay = dayKey ? (userStatusAssignments[dayKey] || []) : [];
 
     // --- Handlers ---
     const handleAddAttachment = (type: AttachmentType, name: string) => {
