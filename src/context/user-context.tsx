@@ -219,11 +219,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       root.classList.add('light'); // default
     }
   }, [realUser.theme]);
-
-  if (!realUser || !viewAsUser) {
-    // This should not happen with mock data
-    return <div>Error: User not found</div>;
-  }
   
   const value = {
     realUser,
