@@ -121,6 +121,7 @@ export interface SharedCalendar {
   managers?: string[]; // array of userIds who can manage this calendar
   defaultEventTitle?: string;
   managerRoleName?: string;
+  roleAssignmentsLabel?: string;
 }
 
 export type AttachmentType = 'drive' | 'docs' | 'sheets' | 'slides' | 'forms' | 'meet' | 'local';

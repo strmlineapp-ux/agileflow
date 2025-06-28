@@ -12,7 +12,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from '@/components/ui/dialog';
 import {
   AlertDialog,
@@ -28,98 +27,132 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { Badge } from '../ui/badge';
-import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+
+type DialogType = 'name' | 'defaultTitle' | 'managerLabel' | 'roleLabel';
 
 export function CalendarManagement() {
   const { users, calendars, addCalendar, updateCalendar, deleteCalendar } = useUser();
   const { toast } = useToast();
 
-  const [isAddOrEditDialogOpen, setIsAddOrEditDialogOpen] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const [currentCalendar, setCurrentCalendar] = useState<SharedCalendar | null>(null);
-  const [calendarName, setCalendarName] = useState('');
-  const [calendarColor, setCalendarColor] = useState('#3B82F6');
-  const [calendarManagers, setCalendarManagers] = useState<string[]>([]);
-  const [defaultEventTitle, setDefaultEventTitle] = useState('');
-  const [managerRoleName, setManagerRoleName] = useState('');
+  // State for specific edit dialogs
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [dialogType, setDialogType] = useState<DialogType | null>(null);
+  const [editingCalendar, setEditingCalendar] = useState<SharedCalendar | null>(null);
+  const [tempValue, setTempValue] = useState('');
+
+  // Add new calendar state
+  const [newCalendarName, setNewCalendarName] = useState('');
+  const [newCalendarColor, setNewCalendarColor] = useState('#3B82F6');
 
   const openAddDialog = () => {
-    setCurrentCalendar(null);
-    setCalendarName('');
-    setCalendarColor('#3B82F6');
-    setCalendarManagers([]);
-    setDefaultEventTitle('');
-    setManagerRoleName('');
-    setIsAddOrEditDialogOpen(true);
+    setNewCalendarName('');
+    setNewCalendarColor('#3B82F6');
+    setIsAddDialogOpen(true);
   };
 
-  const openEditDialog = (calendar: SharedCalendar) => {
-    setCurrentCalendar(calendar);
-    setCalendarName(calendar.name);
-    setCalendarColor(calendar.color);
-    setCalendarManagers(calendar.managers || []);
-    setDefaultEventTitle(calendar.defaultEventTitle || '');
-    setManagerRoleName(calendar.managerRoleName || '');
-    setIsAddOrEditDialogOpen(true);
-  };
-
-  const openDeleteDialog = (calendar: SharedCalendar) => {
-    // Close the edit dialog before opening the delete confirmation
-    setIsAddOrEditDialogOpen(false);
-    setCurrentCalendar(calendar);
-    setIsDeleteDialogOpen(true);
+  const openEditDialog = (calendar: SharedCalendar, type: DialogType) => {
+    setEditingCalendar(calendar);
+    setDialogType(type);
+    switch (type) {
+      case 'name':
+        setTempValue(calendar.name);
+        break;
+      case 'defaultTitle':
+        setTempValue(calendar.defaultEventTitle || '');
+        break;
+      case 'managerLabel':
+        setTempValue(calendar.managerRoleName || '');
+        break;
+      case 'roleLabel':
+        setTempValue(calendar.roleAssignmentsLabel || '');
+        break;
+    }
+    setIsEditDialogOpen(true);
   };
   
-  const handleToggleManager = (userId: string) => {
-      setCalendarManagers(prev => {
-          const newSet = new Set(prev);
-          if (newSet.has(userId)) {
-              newSet.delete(userId);
-          } else {
-              newSet.add(userId);
-          }
-          return Array.from(newSet);
-      });
+  const openDeleteDialog = (calendar: SharedCalendar) => {
+    setEditingCalendar(calendar);
+    setIsDeleteDialogOpen(true);
   };
 
-  const handleSave = async () => {
-    if (!calendarName) {
+  const closeEditDialog = () => {
+    setIsEditDialogOpen(false);
+    setEditingCalendar(null);
+    setDialogType(null);
+    setTempValue('');
+  };
+
+  const handleAddNewCalendar = async () => {
+    if (!newCalendarName.trim()) {
       toast({ variant: 'destructive', title: 'Error', description: 'Calendar name is required.' });
       return;
     }
+    await addCalendar({
+      name: newCalendarName.trim(),
+      color: newCalendarColor,
+      managers: [],
+      defaultEventTitle: 'New Event',
+      managerRoleName: 'Shared Calendar Managers',
+      roleAssignmentsLabel: 'Role Assignments'
+    });
+    toast({ title: 'Success', description: 'Calendar added successfully.' });
+    setIsAddDialogOpen(false);
+  };
 
-    const calendarData = { 
-        name: calendarName, 
-        managers: calendarManagers, 
-        defaultEventTitle,
-        managerRoleName,
-        color: calendarColor
-    };
-
-    if (currentCalendar) {
-      // Editing existing calendar
-      await updateCalendar(currentCalendar.id, calendarData);
-      toast({ title: 'Success', description: 'Calendar updated successfully.' });
-    } else {
-      // Adding new calendar
-      await addCalendar(calendarData);
-      toast({ title: 'Success', description: 'Calendar added successfully.' });
+  const handleSaveEdit = async () => {
+    if (!editingCalendar || dialogType === null) return;
+    if (tempValue.trim() === '') {
+        toast({ variant: 'destructive', title: 'Error', description: 'Value cannot be empty.' });
+        return;
     }
-    setIsAddOrEditDialogOpen(false);
+    
+    let updateData: Partial<SharedCalendar> = {};
+    switch (dialogType) {
+        case 'name':
+            updateData.name = tempValue;
+            break;
+        case 'defaultTitle':
+            updateData.defaultEventTitle = tempValue;
+            break;
+        case 'managerLabel':
+            updateData.managerRoleName = tempValue;
+            break;
+        case 'roleLabel':
+            updateData.roleAssignmentsLabel = tempValue;
+            break;
+    }
+
+    await updateCalendar(editingCalendar.id, updateData);
+    toast({ title: 'Success', description: 'Calendar updated successfully.' });
+    closeEditDialog();
   };
 
   const handleDelete = async () => {
-    if (currentCalendar) {
-      await deleteCalendar(currentCalendar.id);
+    if (editingCalendar) {
+      await deleteCalendar(editingCalendar.id);
       setIsDeleteDialogOpen(false);
+      setEditingCalendar(null);
     }
   };
-
+  
   const handleQuickColorChange = (calendarId: string, newColor: string) => {
     updateCalendar(calendarId, { color: newColor });
   };
+  
+  const getDialogTitle = (): string => {
+      if (!dialogType) return '';
+      switch (dialogType) {
+          case 'name': return 'Edit Calendar Name';
+          case 'defaultTitle': return 'Edit Default Event Title';
+          case 'managerLabel': return 'Edit Manager Label';
+          case 'roleLabel': return 'Edit Role Assignments Label';
+          default: return 'Edit';
+      }
+  }
 
   return (
     <>
@@ -146,19 +179,37 @@ export function CalendarManagement() {
                         </div>
                         <CardTitle className="text-xl">{calendar.name}</CardTitle>
                     </div>
-                    <Button variant="ghost" size="icon" className="-mr-4 -mt-2" onClick={() => openEditDialog(calendar)}>
-                        <GoogleSymbol name="edit" />
-                        <span className="sr-only">Edit Calendar</span>
-                    </Button>
+                    <div className="flex items-center -mr-4 -mt-2">
+                        <Button variant="ghost" size="icon" onClick={() => openEditDialog(calendar, 'name')}>
+                            <GoogleSymbol name="edit" />
+                            <span className="sr-only">Edit Calendar Name</span>
+                        </Button>
+                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => openDeleteDialog(calendar)}>
+                            <GoogleSymbol name="delete" />
+                            <span className="sr-only">Delete Calendar</span>
+                        </Button>
+                    </div>
                 </div>
               </CardHeader>
               <CardContent className="flex-grow space-y-4">
                   <div>
-                      <p className="text-sm font-medium text-muted-foreground mb-2">Default Event Title</p>
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="text-sm font-medium text-muted-foreground">Default Event Title</p>
+                        <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => openEditDialog(calendar, 'defaultTitle')}>
+                            <GoogleSymbol name="edit" className="text-base" />
+                            <span className="sr-only">Edit default event title</span>
+                        </Button>
+                      </div>
                       <p className="text-sm italic">{calendar.defaultEventTitle || 'Not set'}</p>
                   </div>
                   <div>
-                      <p className="text-sm font-medium text-muted-foreground mb-2">{calendar.managerRoleName || 'Team User Manager'}</p>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-sm font-medium text-muted-foreground">{calendar.managerRoleName || 'Shared Calendar Managers'}</p>
+                       <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => openEditDialog(calendar, 'managerLabel')}>
+                            <GoogleSymbol name="edit" className="text-base" />
+                            <span className="sr-only">Edit manager label</span>
+                        </Button>
+                    </div>
                       <div className="flex flex-wrap gap-2 min-h-[34px]">
                       {calendarManagers.length > 0 ? (
                           calendarManagers.map(user => (
@@ -169,6 +220,16 @@ export function CalendarManagement() {
                           ))
                       ) : <p className="text-sm text-muted-foreground italic px-2">No managers assigned.</p>}
                       </div>
+                  </div>
+                   <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="text-sm font-medium text-muted-foreground">Role Assignments Label</p>
+                        <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => openEditDialog(calendar, 'roleLabel')}>
+                            <GoogleSymbol name="edit" className="text-base" />
+                            <span className="sr-only">Edit role assignments label</span>
+                        </Button>
+                      </div>
+                      <p className="text-sm italic">{calendar.roleAssignmentsLabel || 'Role Assignments'}</p>
                   </div>
               </CardContent>
             </Card>
@@ -185,96 +246,49 @@ export function CalendarManagement() {
         </button>
       </div>
 
-      <Dialog open={isAddOrEditDialogOpen} onOpenChange={setIsAddOrEditDialogOpen}>
-        <DialogContent className="max-w-lg">
-          <div className="absolute top-4 right-4 flex items-center gap-1">
-            {currentCalendar && calendars.length > 1 && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                onClick={() => openDeleteDialog(currentCalendar)}
-              >
-                <GoogleSymbol name="delete" className="text-xl" />
-                <span className="sr-only">Delete Calendar</span>
-              </Button>
-            )}
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSave}>
+      {/* Add New Calendar Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent className="max-w-md">
+            <div className="absolute top-4 right-4">
+                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleAddNewCalendar}>
+                    <GoogleSymbol name="check" className="text-xl" />
+                    <span className="sr-only">Add Calendar</span>
+                </Button>
+            </div>
+            <DialogHeader>
+                <DialogTitle>Add New Calendar</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 pt-4">
+                <div className="flex items-center gap-4">
+                    <div className="relative h-9 w-9 shrink-0">
+                        <div className="h-full w-full rounded-full border" style={{ backgroundColor: newCalendarColor }} />
+                        <Input id="color" type="color" value={newCalendarColor} onChange={(e) => setNewCalendarColor(e.target.value)} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" />
+                    </div>
+                    <Input id="name" value={newCalendarName} onChange={(e) => setNewCalendarName(e.target.value)} placeholder="Calendar Name" className="flex-1 text-lg font-semibold" />
+                </div>
+            </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Generic Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={closeEditDialog}>
+        <DialogContent className="max-w-md">
+          <div className="absolute top-4 right-4">
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSaveEdit}>
               <GoogleSymbol name="check" className="text-xl" />
               <span className="sr-only">Save Changes</span>
             </Button>
           </div>
           <DialogHeader>
-            <DialogTitle>{currentCalendar ? 'Edit Calendar' : 'Add New Calendar'}</DialogTitle>
-             <DialogDescription>
-                {currentCalendar ? "Set the calendar's display name and managers." : "Set the calendar's display name, color, and managers."}
-            </DialogDescription>
+            <DialogTitle>{getDialogTitle()}</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-6 pt-4">
-            <div className="flex items-center gap-4">
-                {!currentCalendar && (
-                    <div className="relative h-9 w-9 shrink-0">
-                        <div
-                            className="h-full w-full rounded-full border"
-                            style={{ backgroundColor: calendarColor }}
-                        />
-                        <Input
-                            id="color"
-                            type="color"
-                            value={calendarColor}
-                            onChange={(e) => setCalendarColor(e.target.value)}
-                            className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"
-                            aria-label="Calendar color"
-                        />
-                    </div>
-                )}
-                <Input
-                    id="name"
-                    value={calendarName}
-                    onChange={(e) => setCalendarName(e.target.value)}
-                    placeholder="Calendar Name"
-                    className="flex-1 text-lg font-semibold"
-                />
-            </div>
-            <div className="space-y-2">
-                <Input
-                    id="default-title"
-                    value={defaultEventTitle}
-                    onChange={(e) => setDefaultEventTitle(e.target.value)}
-                    placeholder="Default Event Title (e.g., New Event)"
-                />
-            </div>
-             <div className="space-y-2">
-                <Input
-                    id="manager-role-name"
-                    value={managerRoleName}
-                    onChange={(e) => setManagerRoleName(e.target.value)}
-                    placeholder="Manager Label (e.g., Team User Manager)"
-                />
-            </div>
-            <div className="space-y-2">
-                 <p className="text-sm text-muted-foreground">Calendar Managers</p>
-                 <div className="flex flex-wrap gap-2 rounded-md border bg-muted/50 p-2 min-h-[56px]">
-                  {users.map(user => {
-                    const isManager = calendarManagers.includes(user.userId);
-                    return (
-                      <Badge
-                        key={user.userId}
-                        variant={isManager ? 'default' : 'secondary'}
-                        className={cn('gap-1.5 p-1 pl-2 cursor-pointer rounded-full', isManager && 'shadow-md')}
-                        onClick={() => handleToggleManager(user.userId)}
-                      >
-                        <Avatar className="h-5 w-5">
-                          <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
-                          <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                        </Avatar>
-                        <span className="font-medium">{user.displayName}</span>
-                      </Badge>
-                    );
-                  })}
-                </div>
-                 <p className="text-xs text-muted-foreground text-right pr-2 mt-2">Click user pills to toggle their manager status for this calendar.</p>
-            </div>
+          <div className="grid gap-4 pt-4">
+            <Input
+              id="temp-value"
+              value={tempValue}
+              onChange={(e) => setTempValue(e.target.value)}
+              placeholder="Enter new value"
+            />
           </div>
         </DialogContent>
       </Dialog>
@@ -284,11 +298,11 @@ export function CalendarManagement() {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the "{currentCalendar?.name}" calendar. All events on this calendar will also be removed.
+              This action cannot be undone. This will permanently delete the "{editingCalendar?.name}" calendar. All events on this calendar will also be removed.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setEditingCalendar(null)}>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Continue
             </AlertDialogAction>

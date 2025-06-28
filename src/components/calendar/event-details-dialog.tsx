@@ -61,6 +61,7 @@ export function EventDetailsDialog({ event, isOpen, onOpenChange }: EventDetails
 
   const teamForEvent = teams.find(t => t.id === event.calendarId);
   const eventTemplate = teamForEvent?.eventTemplates?.find(t => t.id === event.templateId);
+  const roleAssignmentsLabel = calendar?.roleAssignmentsLabel || 'Role Assignments';
   
   const assignedUserIds = new Set(Object.values(event.roleAssignments || {}).filter(Boolean) as string[]);
   const guestsToDisplay = (event.attendees || []).filter(attendee => !attendee.userId || !assignedUserIds.has(attendee.userId));
@@ -102,7 +103,7 @@ export function EventDetailsDialog({ event, isOpen, onOpenChange }: EventDetails
                         <div className="flex items-start gap-4">
                             <GoogleSymbol name="badge" className="text-2xl text-muted-foreground mt-0.5" />
                             <div className="flex-1">
-                                <p className="font-medium mb-2">Role Assignments</p>
+                                <p className="font-medium mb-2">{roleAssignmentsLabel}</p>
                                 <div className="space-y-2">
                                     {Object.entries(event.roleAssignments).map(([role, userId]) => {
                                         const user = users.find(u => u.userId === userId);
