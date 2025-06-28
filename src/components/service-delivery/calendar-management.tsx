@@ -12,6 +12,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import {
   AlertDialog,
@@ -24,7 +25,6 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { Badge } from '../ui/badge';
@@ -172,19 +172,36 @@ export function CalendarManagement() {
           </div>
           <DialogHeader>
             <DialogTitle>{currentCalendar ? 'Edit Calendar' : 'Add New Calendar'}</DialogTitle>
+             <DialogDescription>
+                Set the calendar's display name, color, and managers.
+            </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">Name</Label>
-              <Input id="name" value={calendarName} onChange={(e) => setCalendarName(e.target.value)} className="col-span-3" />
+          <div className="grid gap-6 pt-4">
+            <div className="flex items-center gap-4">
+                <div className="relative h-9 w-9 shrink-0">
+                    <div
+                        className="h-full w-full rounded-full border"
+                        style={{ backgroundColor: calendarColor }}
+                    />
+                    <Input
+                        id="color"
+                        type="color"
+                        value={calendarColor}
+                        onChange={(e) => setCalendarColor(e.target.value)}
+                        className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"
+                        aria-label="Calendar color"
+                    />
+                </div>
+                <Input
+                    id="name"
+                    value={calendarName}
+                    onChange={(e) => setCalendarName(e.target.value)}
+                    placeholder="Calendar Name"
+                    className="flex-1 text-lg font-semibold"
+                />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="color" className="text-right">Color</Label>
-              <Input id="color" type="color" value={calendarColor} onChange={(e) => setCalendarColor(e.target.value)} className="col-span-3 p-1" />
-            </div>
-            <Separator />
-             <div className="space-y-2">
-                <Label>Calendar Managers</Label>
+            <div className="space-y-2">
+                <p className="text-sm font-medium text-muted-foreground">Calendar Managers</p>
                  <div className="flex flex-wrap gap-2 rounded-md border bg-muted/50 p-2 min-h-[56px]">
                   {users.map(user => {
                     const isManager = calendarManagers.includes(user.userId);
