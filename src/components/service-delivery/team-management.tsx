@@ -23,13 +23,14 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, Check, XCircle, X } from 'lucide-react';
+import { PlusCircle, Check, Trash2, X } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { DialogClose } from '@radix-ui/react-dialog';
 
 export function TeamManagement() {
   const { users, teams, addTeam, updateTeam, deleteTeam } = useUser();
@@ -94,7 +95,7 @@ export function TeamManagement() {
             allUsers={users}
             addTeam={addTeam}
             updateTeam={updateTeam}
-            onDelete={openDeleteDialog}
+            onDeleteRequest={openDeleteDialog}
           />
       )}
 
@@ -129,10 +130,10 @@ type TeamFormDialogProps = {
     allUsers: User[];
     addTeam: (teamData: Omit<Team, 'id'>) => Promise<void>;
     updateTeam: (teamId: string, teamData: Partial<Team>) => Promise<void>;
-    onDelete: (team: Team) => void;
+    onDeleteRequest: (team: Team) => void;
 };
 
-function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, onDelete }: TeamFormDialogProps) {
+function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, onDeleteRequest }: TeamFormDialogProps) {
     const [name, setName] = useState(team?.name || '');
     const [icon, setIcon] = useState<IconName>(team?.icon as IconName || 'Users');
     const [members, setMembers] = useState<string[]>(team?.members || []);
@@ -195,29 +196,37 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <DialogContent className="sm:max-w-md">
-                 <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="absolute top-4 right-12 h-8 w-8" 
-                    onClick={handleSave}
-                >
-                    <Check className="h-5 w-5" />
-                    <span className="sr-only">Save Changes</span>
-                </Button>
+                 <div className="absolute top-4 right-4 flex items-center gap-1">
+                    {team && (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                            onClick={() => onDeleteRequest(team)}
+                        >
+                            <Trash2 className="h-5 w-5" />
+                            <span className="sr-only">Delete team</span>
+                        </Button>
+                    )}
+                    <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8" 
+                        onClick={handleSave}
+                    >
+                        <Check className="h-5 w-5" />
+                        <span className="sr-only">Save Changes</span>
+                    </Button>
+                    <DialogClose asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <X className="h-5 w-5" />
+                            <span className="sr-only">Close</span>
+                        </Button>
+                    </DialogClose>
+                </div>
 
                 <div className="grid gap-6 pt-6">
                     <div className="flex items-center gap-2">
-                        {team && (
-                             <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-9 w-9 text-muted-foreground hover:text-destructive"
-                                onClick={() => onDelete(team)}
-                            >
-                                <XCircle className="h-5 w-5" />
-                                <span className="sr-only">Delete team</span>
-                            </Button>
-                        )}
                         <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                             <PopoverTrigger asChild>
                             <Button
@@ -327,7 +336,7 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
                                 )}
                             </div>
                         </div>
-                         <p className="text-xs text-muted-foreground pl-12">Click member pills to toggle manager status.</p>
+                         <p className="text-xs text-muted-foreground text-right pr-2">Click member pills to toggle user manager status.</p>
                     </div>
                 </div>
             </DialogContent>
