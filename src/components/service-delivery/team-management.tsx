@@ -23,14 +23,13 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, Check, Trash2, X } from 'lucide-react';
+import { PlusCircle, Check, Trash2 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { DialogClose } from '@radix-ui/react-dialog';
 
 export function TeamManagement() {
   const { users, teams, addTeam, updateTeam, deleteTeam } = useUser();
@@ -217,12 +216,6 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
                         <Check className="h-5 w-5" />
                         <span className="sr-only">Save Changes</span>
                     </Button>
-                    <DialogClose asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <X className="h-5 w-5" />
-                            <span className="sr-only">Close</span>
-                        </Button>
-                    </DialogClose>
                 </div>
 
                 <div className="grid gap-6 pt-6">
