@@ -38,6 +38,8 @@ interface UserContextType {
   locations: BookableLocation[];
   addLocation: (locationName: string) => Promise<void>;
   deleteLocation: (locationId: string) => Promise<void>;
+  appManagerRoleName: string;
+  setAppManagerRoleName: React.Dispatch<React.SetStateAction<string>>;
 }
 
 const UserContext = createContext<UserContextType | null>(null);
@@ -56,6 +58,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [calendars, setCalendars] = useState<SharedCalendar[]>(mockCalendars);
   const [events, setEvents] = useState<Event[]>(initialEvents);
   const [locations, setLocations] = useState<BookableLocation[]>(initialLocations);
+  const [appManagerRoleName, setAppManagerRoleName] = useState('Service Delivery Manager');
   const { toast } = useToast();
 
   const allSystemRoles = useMemo(() => SYSTEM_ROLES, []);
@@ -228,6 +231,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     locations,
     addLocation,
     deleteLocation,
+    appManagerRoleName,
+    setAppManagerRoleName,
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

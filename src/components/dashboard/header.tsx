@@ -5,7 +5,6 @@ import Link from 'next/link';
 import {
   Sheet,
   SheetContent,
-  SheetTrigger,
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/icons/logo';
@@ -18,6 +17,7 @@ export function Header() {
   const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
   const unreadCount = notifications.filter((n) => !n.read).length;
   
+  const isAdmin = realUser.roles?.includes('Admin');
   const isSdm = viewAsUser.roles?.includes('Service Delivery Manager') || viewAsUser.roles?.includes('Admin');
 
   const userTeams = teams.filter(team => 
@@ -58,6 +58,12 @@ export function Header() {
                 <Link href="/dashboard/service-delivery" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
                     <GoogleSymbol name="business_center" className="text-2xl" />
                     Service Delivery
+                </Link>
+            )}
+            {isAdmin && (
+                <Link href="/dashboard/admin" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
+                    <GoogleSymbol name="shield_person" className="text-2xl" />
+                    Admin
                 </Link>
             )}
             {userTeams.map(team => (

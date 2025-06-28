@@ -28,6 +28,7 @@ export function Sidebar() {
     { href: '/dashboard', icon: 'dashboard', label: 'Overview', visible: true },
     { href: '/dashboard/tasks', icon: 'checklist', label: 'Tasks', visible: true },
     { href: '/dashboard/service-delivery', icon: 'business_center', label: 'Service Delivery', visible: isSdm },
+    { href: '/dashboard/admin', icon: 'shield_person', label: 'Admin', visible: isAdmin },
   ];
 
   const teamNavItems = userTeams.map(team => ({
