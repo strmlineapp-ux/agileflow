@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { MonthView } from '@/components/calendar/month-view';
 import { WeekView } from '@/components/calendar/week-view';
@@ -81,7 +81,7 @@ export default function CalendarPage() {
     setIsPopoverOpen(true);
   };
   
-  const getTitle = () => {
+  const title = useMemo(() => {
     if (view === 'month') {
       return format(currentDate, 'MMMM yyyy');
     }
@@ -110,7 +110,7 @@ export default function CalendarPage() {
         <span className="text-xl text-muted-foreground">{dateRange}</span>
       </>
     );
-  };
+  }, [view, currentDate]);
 
   const closePopover = () => {
     setIsPopoverOpen(false);
@@ -128,7 +128,7 @@ export default function CalendarPage() {
             <Button variant="outline" size="icon" onClick={handleNext}>
                 <GoogleSymbol name="chevron_right" />
             </Button>
-            <h1 className="font-headline text-2xl font-semibold ml-4 flex items-baseline gap-3">{getTitle()}</h1>
+            <h1 className="font-headline text-2xl font-semibold ml-4 flex items-baseline gap-3">{title}</h1>
         </div>
         <div className="flex items-center gap-2">
             {userCanCreateEvent && (
