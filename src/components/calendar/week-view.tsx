@@ -5,7 +5,7 @@ import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { format, startOfWeek, addDays, eachDayOfInterval, startOfDay, addHours, isToday, isSaturday, isSunday, isSameDay } from 'date-fns';
 import { type Event } from '@/types';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
+import { cn, getContrastColor } from '@/lib/utils';
 import { mockHolidays } from '@/lib/mock-data';
 import { Button } from '../ui/button';
 import { useUser } from '@/context/user-context';
@@ -14,24 +14,6 @@ import { GoogleSymbol } from '../icons/google-symbol';
 
 const isHoliday = (day: Date) => {
     return mockHolidays.some(holiday => isSameDay(day, holiday));
-}
-
-const getContrastColor = (hsl: string): string => {
-    // Add a guard for undefined input
-    if (!hsl) {
-        return 'hsl(var(--card-foreground))';
-    }
-    // Fix: HSL color values in mock data are space-separated, not comma-separated.
-    const parts = hsl.split(' ');
-    // Ensure we have enough parts to parse lightness
-    if (parts.length < 3) {
-        return 'hsl(var(--card-foreground))'; 
-    }
-    const lightness = parseInt(parts[2].replace('%', '').replace(')', ''));
-    if (isNaN(lightness)) {
-        return 'hsl(var(--card-foreground))';
-    }
-    return lightness > 55 ? 'hsl(var(--card-foreground))' : 'hsl(var(--primary-foreground))';
 }
 
 const DEFAULT_HOUR_HEIGHT_PX = 60;
@@ -214,7 +196,7 @@ export function WeekView({ date, containerRef, zoomLevel, onEasyBooking }: { dat
                                                 )}
                                                 style={{ top: `${top}px`, height: `${height}px`, backgroundColor: colors?.bg, color: colors?.text }}
                                             >
-                                                <p className="font-semibold text-xs truncate">{event.title}</p>
+                                                <p className="font-semibold text-xs whitespace-normal">{event.title}</p>
                                                 <p className="text-[10px] opacity-90 truncate">{format(event.startTime, timeFormatEvent)} - {format(event.endTime, timeFormatEvent)}</p>
                                             </div>
                                         )

@@ -10,11 +10,11 @@ export const mockPriorityStrategies: PriorityStrategy[] = [
         applications: ['events', 'tasks'],
         type: 'tier',
         priorities: [
-            { id: 'p-number:p0', label: 'P0', description: 'Highest priority - immediate action required.', color: 'hsl(0 100% 50%)', shape: 'rounded-md' },
-            { id: 'p-number:p1', label: 'P1', description: 'High priority - requires attention soon.', color: 'hsl(30 95% 54%)', shape: 'rounded-md' },
-            { id: 'p-number:p2', label: 'P2', description: 'Medium priority - standard work.', color: 'hsl(48 96% 53%)', shape: 'rounded-md' },
-            { id: 'p-number:p3', label: 'P3', description: 'Low priority - can be deferred.', color: 'hsl(120 73% 40%)', shape: 'rounded-full' },
-            { id: 'p-number:p4', label: 'P4', description: 'Lowest priority - to be done when time permits.', color: 'hsl(220 9% 46%)', shape: 'rounded-full' },
+            { id: 'p-number:p0', label: 'P0', description: 'Highest priority - immediate action required.', color: '#EF4444', shape: 'rounded-md' },
+            { id: 'p-number:p1', label: 'P1', description: 'High priority - requires attention soon.', color: '#F97316', shape: 'rounded-md' },
+            { id: 'p-number:p2', label: 'P2', description: 'Medium priority - standard work.', color: '#FBBF24', shape: 'rounded-md' },
+            { id: 'p-number:p3', label: 'P3', description: 'Low priority - can be deferred.', color: '#22C55E', shape: 'rounded-full' },
+            { id: 'p-number:p4', label: 'P4', description: 'Lowest priority - to be done when time permits.', color: '#64748B', shape: 'rounded-full' },
         ],
     },
     {
@@ -140,10 +140,10 @@ export const mockUsers: User[] = [
 ];
 
 export const mockCalendars: SharedCalendar[] = [
-    { id: 'studio-productions', name: 'Studio Productions', color: 'hsl(48 96% 53%)', managers: ['1', '6'] }, // Yellow
-    { id: 'live-events', name: 'Live Events', color: 'hsl(210 70% 50%)', managers: ['1', '2', '3'] }, // Blue
-    { id: 'business', name: 'Business', color: 'hsl(220 9% 46%)', managers: ['1', '2'] }, // Grey
-    { id: 'post-production', name: 'Post-Production', color: 'hsl(24 95% 53%)', managers: ['1', '2', '5'] }, // Orange
+    { id: 'studio-productions', name: 'Studio Productions', color: '#FBBF24', managers: ['1', '6'] }, // Amber 400
+    { id: 'live-events', name: 'Live Events', color: '#3B82F6', managers: ['1', '2', '3'] }, // Blue 500
+    { id: 'business', name: 'Business', color: '#64748B', managers: ['1', '2'] }, // Slate 500
+    { id: 'post-production', name: 'Post-Production', color: '#F97316', managers: ['1', '2', '5'] }, // Orange 500
 ];
 
 export const mockLocations: BookableLocation[] = [

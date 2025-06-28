@@ -5,7 +5,7 @@ import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { format, addHours, startOfDay, isSaturday, isSunday, isSameDay, isToday, startOfWeek, eachDayOfInterval, addDays } from 'date-fns';
 import { type Event, type User, type UserStatus, type UserStatusAssignment, type Team } from '@/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
+import { cn, getContrastColor } from '@/lib/utils';
 import { Button } from '../ui/button';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { useUser } from '@/context/user-context';
@@ -18,16 +18,6 @@ import { UserStatusBadge } from '@/components/user-status-badge';
 import { Separator } from '@/components/ui/separator';
 import { canCreateAnyEvent } from '@/lib/permissions';
 import { GoogleSymbol } from '../icons/google-symbol';
-
-const getContrastColor = (hsl: string): string => {
-    if (!hsl) return 'hsl(var(--card-foreground))';
-    const parts = hsl.split(' ');
-    if (parts.length < 3) return 'hsl(var(--card-foreground))'; 
-    const lightness = parseInt(parts[2].replace('%', '').replace(')', ''));
-    if (isNaN(lightness)) return 'hsl(var(--card-foreground))';
-    return lightness > 55 ? 'hsl(var(--card-foreground))' : 'hsl(var(--primary-foreground))';
-}
-
 
 const DEFAULT_HOUR_WIDTH_PX = 120;
 const LOCATION_LABEL_WIDTH_PX = 160;
@@ -256,7 +246,7 @@ const ProductionScheduleLocationRow = React.memo(({
                     const colors = calendarColorMap[event.calendarId];
                     return (
                         <div key={event.eventId} className={cn("absolute top-1 p-2 rounded-lg shadow-md cursor-pointer z-10")} style={{ left: `${left + 2}px`, width: `${width}px`, backgroundColor: colors?.bg, color: colors?.text }}>
-                            <p className="font-semibold text-sm">{event.title}</p>
+                            <p className="font-semibold text-sm whitespace-normal">{event.title}</p>
                             <p className="text-xs opacity-90">{format(event.startTime, timeFormatEvent)} - {format(event.endTime, timeFormatEvent)}</p>
                         </div>
                     )
@@ -489,12 +479,12 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
                                         const assignedUserId = dailyCheckAssignments[dayIso]?.[location];
                                         const assignedUser = users.find(u => u.userId === assignedUserId);
                                         const canManageThisCheckLocation = viewAsUser.roles?.includes('Admin') || teams.some(t =>
-                                            t.checkLocations.includes(location) && t.locationCheckManagers.includes(viewAsUser.userId)
+                                            t.checkLocations.includes(location) && (t.locationCheckManagers || []).includes(viewAsUser.userId)
                                         );
 
                                         const pillContent = <>{locationAliasMap[location] || location}{assignedUser && <span className="ml-2 font-normal text-muted-foreground">({`${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}`})</span>}{!assignedUser && canManageThisCheckLocation && <GoogleSymbol name="add_circle" className="ml-2" />}</>;
                                         
-                                        const dailyCheckUsers = users.filter(user => teams.some(t => t.checkLocations.includes(location) && t.locationCheckManagers.includes(viewAsUser.userId) && t.members.includes(user.userId) ));
+                                        const dailyCheckUsers = users.filter(user => teams.some(t => t.checkLocations.includes(location) && (t.locationCheckManagers || []).includes(viewAsUser.userId) && (t.members || []).includes(user.userId) ));
 
                                         return canManageThisCheckLocation ? (
                                             <Popover key={location}><PopoverTrigger asChild><Button variant={assignedUser ? "secondary" : "outline"} size="sm" className="rounded-full h-8">{pillContent}</Button></PopoverTrigger>

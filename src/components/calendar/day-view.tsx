@@ -5,19 +5,10 @@ import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { format, addHours, startOfDay, isSameDay, isToday } from 'date-fns';
 import { type Event, type User, type SharedCalendar, type BookableLocation } from '@/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
+import { cn, getContrastColor } from '@/lib/utils';
 import { useUser } from '@/context/user-context';
 import { canCreateAnyEvent } from '@/lib/permissions';
 import { GoogleSymbol } from '../icons/google-symbol';
-
-const getContrastColor = (hsl: string): string => {
-    if (!hsl) return 'hsl(var(--card-foreground))';
-    const parts = hsl.split(' ');
-    if (parts.length < 3) return 'hsl(var(--card-foreground))'; 
-    const lightness = parseInt(parts[2].replace('%', '').replace(')', ''));
-    if (isNaN(lightness)) return 'hsl(var(--card-foreground))';
-    return lightness > 55 ? 'hsl(var(--card-foreground))' : 'hsl(var(--primary-foreground))';
-}
 
 const DEFAULT_HOUR_WIDTH_PX = 120;
 const LOCATION_LABEL_WIDTH_PX = 160;
@@ -84,7 +75,7 @@ const DayViewLocationRow = React.memo(({
                             className="absolute top-1 p-2 rounded-lg shadow-md cursor-pointer z-10"
                             style={{ left: `${left + 2}px`, width: `${width}px`, backgroundColor: colors?.bg, color: colors?.text }}
                         >
-                            <p className="font-semibold text-sm">{event.title}</p>
+                            <p className="font-semibold text-sm whitespace-normal">{event.title}</p>
                             <p className="text-xs opacity-90">{format(event.startTime, timeFormatEvent)} - {format(event.endTime, timeFormatEvent)}</p>
                         </div>
                     )
@@ -369,7 +360,7 @@ export function DayView({ date, containerRef, zoomLevel, axisView, onEasyBooking
                                             )}
                                             style={{ top: `${top}px`, height: `${height}px`, backgroundColor: colors?.bg, color: colors?.text }}
                                         >
-                                            <p className="font-semibold text-xs">{event.title}</p>
+                                            <p className="font-semibold text-xs whitespace-normal">{event.title}</p>
                                             <p className="text-[10px] opacity-90">{format(event.startTime, timeFormatEvent)} - {format(event.endTime, timeFormatEvent)}</p>
                                         </div>
                                     )

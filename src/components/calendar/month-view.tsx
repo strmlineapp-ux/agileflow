@@ -4,7 +4,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isToday, isSameMonth, isSaturday, isSunday, isSameDay } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
+import { cn, getContrastColor } from '@/lib/utils';
 import { Badge } from '../ui/badge';
 import { mockHolidays } from '@/lib/mock-data';
 import { Button } from '../ui/button';
@@ -14,25 +14,6 @@ import { GoogleSymbol } from '../icons/google-symbol';
 const isHoliday = (day: Date) => {
     return mockHolidays.some(holiday => isSameDay(day, holiday));
 }
-
-const getContrastColor = (hsl: string): string => {
-    // Add a guard for undefined input
-    if (!hsl) {
-        return 'hsl(var(--card-foreground))';
-    }
-    // Fix: HSL color values in mock data are space-separated, not comma-separated.
-    const parts = hsl.split(' ');
-    // Ensure we have enough parts to parse lightness
-    if (parts.length < 3) {
-        return 'hsl(var(--card-foreground))'; 
-    }
-    const lightness = parseInt(parts[2].replace('%', '').replace(')', ''));
-    if (isNaN(lightness)) {
-        return 'hsl(var(--card-foreground))';
-    }
-    return lightness > 55 ? 'hsl(var(--card-foreground))' : 'hsl(var(--primary-foreground))';
-}
-
 
 export function MonthView({ date, containerRef }: { date: Date; containerRef: React.RefObject<HTMLDivElement> }) {
     const todayRef = useRef<HTMLDivElement>(null);

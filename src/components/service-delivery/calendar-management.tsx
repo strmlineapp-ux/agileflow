@@ -41,13 +41,13 @@ export function CalendarManagement() {
 
   const [currentCalendar, setCurrentCalendar] = useState<SharedCalendar | null>(null);
   const [calendarName, setCalendarName] = useState('');
-  const [calendarColor, setCalendarColor] = useState('');
+  const [calendarColor, setCalendarColor] = useState('#3B82F6');
   const [calendarManagers, setCalendarManagers] = useState<string[]>([]);
 
   const openAddDialog = () => {
     setCurrentCalendar(null);
     setCalendarName('');
-    setCalendarColor('#3692E9');
+    setCalendarColor('#3B82F6');
     setCalendarManagers([]);
     setIsAddOrEditDialogOpen(true);
   };

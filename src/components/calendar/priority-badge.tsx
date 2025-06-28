@@ -2,7 +2,7 @@
 
 import { Badge } from '@/components/ui/badge';
 import { type Priority } from '@/types';
-import { cn } from '@/lib/utils';
+import { cn, getContrastColor } from '@/lib/utils';
 import { useUser } from '@/context/user-context';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
@@ -14,10 +14,12 @@ export function PriorityBadge({ priorityId, className }: { priorityId: string; c
     return <Badge className={cn('bg-muted text-muted-foreground', className)}>Unknown</Badge>;
   }
 
+  const textColor = getContrastColor(priorityInfo.color);
+
   const badge = (
     <Badge
       variant="default"
-      style={{ backgroundColor: priorityInfo.color, color: 'white' }}
+      style={{ backgroundColor: priorityInfo.color, color: textColor }}
       className={cn(
         'border-transparent',
         priorityInfo.shape === 'rounded-full' ? 'rounded-full' : 'rounded-md',
