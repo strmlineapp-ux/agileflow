@@ -46,7 +46,7 @@ const GoogleSlidesIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg viewBox="0 0 16 16" fill="currentColor" {...props}><path d="M13,2H3C2.4,2,2,2.4,2,3v10c0,0.6,0.4,1,1,1h10c0.6,0,1-0.4,1-1V3C14,2.4,13.6,2,13,2z" fill="#ffc107"></path><path d="M12,4H4v6h8V4z" fill="#ffffff"></path></svg>
 );
 const GoogleFormsIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg viewBox="0 0 16 16" fill="currentColor" {...props}><path d="M13,2H3C2.4,2,2,2.4,2,3v10c0,0.6,0.4,1,1,1h10c0.6,0,1-0.4,1-1V3C14,2.4,13.6,2,13,2z" fill="#7e57c2"></path><path d="M10,11H6v-1h4V11z M11,8H6V7h5V8z M8,5H6v1h2V5z" fill="#ffffff"></path></svg>
+    <svg viewBox="0 0 16 16" fill="currentColor" {...props}><path d="M13,2H3C2.4,2,2,2.4,2,3v10c0,0.6,0.4,1,1,1h10c0.6,0,1-0.4,1-1V3C14,2.4,13.6,2,13,2z" fill="#7e57c2"></path><path d="M10,11H6v-1h4V11z M11,8H6V7h5V8z M8,5H6V4h2V5z" fill="#ffffff"></path></svg>
 );
 
 const attachmentIcons: Record<AttachmentType, React.ReactNode> = {
@@ -260,387 +260,345 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
     }
   }
 
-  const renderPriorityInput = () => {
-    if (!eventStrategy) return null;
-
-    const value = form.watch('priority');
-
-    switch (eventStrategy.type) {
-      case 'tier':
-        return (
-          <FormField
-            control={form.control}
-            name="priority"
-            render={({ field }) => (
-              <FormItem>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger><SelectValue placeholder="Select priority" /></SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {eventStrategy.priorities.map(p => (
-                      <SelectItem key={p.id} value={p.id}>
-                        <div className="flex items-center gap-2">
-                           <PriorityBadge priorityId={p.id} />
-                           <span className="font-semibold">{p.label}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        );
-      case 'symbol':
-        return (
-            <FormField
-            control={form.control}
-            name="priority"
-            render={({ field }) => (
-              <FormItem>
-                <Select 
-                    onValueChange={field.onChange} 
-                    defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger><SelectValue placeholder="Select rating" /></SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {Array.from({ length: eventStrategy.max }, (_, i) => eventStrategy.max - i).map(num => (
-                      <SelectItem key={num} value={`${eventStrategy.id}:${num}`}>
-                          <div className="flex items-center" style={{ color: eventStrategy.color }}>
-                            {Array.from({ length: num }).map((_, i) => (
-                                <GoogleSymbol key={i} name={eventStrategy.icon} className="text-base" />
-                            ))}
-                          </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        );
-      case 'scale':
-        const currentScaleValue = Number(value.split(':')[1] || 0);
-        return (
-          <FormField
-            control={form.control}
-            name="priority"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                   <div className="flex items-center gap-4">
-                     <Slider
-                        defaultValue={[currentScaleValue]}
-                        min={eventStrategy.min}
-                        max={eventStrategy.max}
-                        step={1}
-                        onValueChange={(val) => field.onChange(`${eventStrategy.id}:${val[0]}`)}
-                        className="flex-1"
-                    />
-                    <PriorityBadge priorityId={value} />
-                   </div>
-                </FormControl>
-              </FormItem>
-            )}
-          />
-        );
-      default:
-        return null;
-    }
-  };
-
   return (
     <div>
-        <Form {...form}>
+      <div className="flex items-center justify-between pb-4">
+        <h3 className="text-lg font-semibold">New Event</h3>
+        <div className="flex items-center">
+          <Button variant="ghost" size="icon" onClick={onFinished} disabled={isLoading} aria-label="Discard event">
+            <GoogleSymbol name="delete" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={form.handleSubmit(onSubmit)} disabled={isLoading} aria-label="Create event">
+            <GoogleSymbol name="check" />
+          </Button>
+        </div>
+      </div>
+      <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <div className="flex items-center gap-2">
+            {availableCalendars.length > 1 && (
+              <FormField
+                control={form.control}
+                name="calendarId"
+                render={({ field }) => (
+                  <FormItem>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="h-auto p-1.5 flex items-center gap-1.5">
+                          <div className="h-4 w-4 rounded-sm shrink-0" style={{ backgroundColor: selectedCalendar?.color }} />
+                          <GoogleSymbol name="arrow_drop_down" className="text-base" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        {availableCalendars.map(cal => (
+                          <DropdownMenuItem key={cal.id} onSelect={() => field.onChange(cal.id)}>
+                            <div className="flex items-center gap-2">
+                              <div className="h-3 w-3 rounded-full border" style={{ backgroundColor: cal.color }} />
+                              <span>{cal.name}</span>
+                            </div>
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {eventStrategy && (
+              <FormField
+                control={form.control}
+                name="priority"
+                render={({ field }) => (
+                  <FormItem>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="h-auto p-0.5">
+                          <PriorityBadge priorityId={field.value} />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        {eventStrategy.type === 'tier' &&
+                          eventStrategy.priorities.map(p => (
+                            <DropdownMenuItem key={p.id} onSelect={() => field.onChange(p.id)}>
+                              <div className="flex items-center gap-2">
+                                <PriorityBadge priorityId={p.id} />
+                                <span className="font-semibold">{p.label}</span>
+                              </div>
+                            </DropdownMenuItem>
+                          ))}
+                        {eventStrategy.type === 'symbol' &&
+                          Array.from({ length: eventStrategy.max }, (_, i) => eventStrategy.max - i).map(num => (
+                            <DropdownMenuItem key={num} onSelect={() => field.onChange(`${eventStrategy.id}:${num}`)}>
+                              <div className="flex items-center" style={{ color: eventStrategy.color }}>
+                                {Array.from({ length: num }).map((_, i) => (
+                                  <GoogleSymbol key={i} name={eventStrategy.icon} className="text-base" />
+                                ))}
+                              </div>
+                            </DropdownMenuItem>
+                          ))}
+                        {eventStrategy.type === 'scale' && (
+                          <div className="p-2 w-48">
+                            <Slider
+                              defaultValue={[Number(field.value.split(':')[1] || 0)]}
+                              min={eventStrategy.min}
+                              max={eventStrategy.max}
+                              step={1}
+                              onValueChange={val => field.onChange(`${eventStrategy.id}:${val[0]}`)}
+                              className="flex-1"
+                            />
+                          </div>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+            
             <FormField
                 control={form.control}
                 name="title"
                 render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="flex-1">
                         <FormControl>
                             <Input 
                                 placeholder={titlePlaceholders[selectedCalendarId as CalendarId] || 'e.g. Team Standup'} 
                                 {...field} 
-                                className="text-lg font-semibold"
+                                className="text-lg font-semibold border-none focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-auto"
                             />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
                 )}
             />
-            
-            <div className="flex items-start gap-2">
-                <FormField
-                    control={form.control}
-                    name="date"
-                    render={({ field }) => (
-                        <FormItem className="flex-1">
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <FormControl>
-                                        <Button
-                                            variant={'outline'}
-                                            className={cn('w-full justify-start text-left font-normal', !field.value && 'text-muted-foreground')}
-                                        >
-                                            <GoogleSymbol name="calendar_month" className="mr-2 text-lg" />
-                                            {field.value ? format(field.value, 'MMM d, yyyy') : <span>Pick a date</span>}
-                                        </Button>
-                                    </FormControl>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
-                                    <Calendar
-                                        mode="single"
-                                        selected={field.value}
-                                        onSelect={field.onChange}
-                                        initialFocus
-                                    />
-                                </PopoverContent>
-                            </Popover>
-                             <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                <FormField
-                    control={form.control}
-                    name="startTime"
-                    render={({ field }) => (
-                        <FormItem>
-                           <FormControl>
-                             <Input type="time" {...field} className="w-[110px]" step="900" />
-                           </FormControl>
-                           <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                <FormField
-                    control={form.control}
-                    name="endTime"
-                    render={({ field }) => (
-                        <FormItem>
-                             <FormControl>
-                                <Input type="time" {...field} className="w-[110px]" step="900" />
-                             </FormControl>
-                             <FormMessage />
-                        </FormItem>
-                    )}
-                />
-            </div>
+          </div>
 
-            <div className="grid grid-cols-2 gap-4">
-                {availableCalendars.length > 1 ? (
-                    <FormField
-                        control={form.control}
-                        name="calendarId"
-                        render={({ field }) => (
-                            <FormItem>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                    <FormControl>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select a calendar" />
-                                        </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        {availableCalendars.map(cal => (
-                                            <SelectItem key={cal.id} value={cal.id}>
-                                                 <div className="flex items-center gap-2">
-                                                    <div className="h-3 w-3 rounded-full border" style={{ backgroundColor: cal.color }} />
-                                                    <span>{cal.name}</span>
-                                                </div>
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                ) : <div />}
-
-                <FormField
-                    control={form.control}
-                    name="location"
-                    render={({ field }) => (
-                        <FormItem>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select a location" />
-                                    </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                    {allBookableLocations.map(loc => (
-                                        <SelectItem key={loc.id} value={loc.name}>{loc.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-            </div>
-            
-            {renderPriorityInput()}
-
-
+          <div className="flex items-start gap-2">
             <FormField
               control={form.control}
-              name="attendees"
-              render={() => (
-                <FormItem>
-                    <div className="space-y-2">
-                        {selectedAttendees.length > 0 && (
-                            <div className="flex flex-wrap gap-2">
-                                {selectedAttendees.map(attendee => (
-                                     <div key={attendee.email} className="flex items-center gap-2 p-1 pr-2 bg-muted rounded-full">
-                                        <Avatar className="h-6 w-6">
-                                            <AvatarImage src={attendee.avatarUrl} alt={attendee.displayName} data-ai-hint="user avatar"/>
-                                            <AvatarFallback>{attendee.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                                        </Avatar>
-                                        <span className="text-sm font-medium">{attendee.displayName}</span>
-                                        <button type="button" onClick={() => handleToggleGuest(attendee as User)} className="h-4 w-4 rounded-full hover:bg-muted-foreground/20 flex items-center justify-center">
-                                            <GoogleSymbol name="cancel" className="text-sm" />
-                                        </button>
-                                     </div>
-                                ))}
-                            </div>
-                        )}
-
-                        <Popover open={isGuestPopoverOpen} onOpenChange={setIsGuestPopoverOpen}>
-                            <PopoverTrigger asChild>
-                                <Button variant="outline" className="w-full justify-start font-normal">
-                                    <GoogleSymbol name="group" className="mr-2 text-xl" />
-                                    Add guests
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-[480px] p-0" align="start">
-                                <div className="p-2">
-                                    <Input
-                                        placeholder="Search by name or email..."
-                                        value={guestSearch}
-                                        onChange={e => setGuestSearch(e.target.value)}
-                                        className="w-full"
-                                    />
-                                </div>
-                                <Separator />
-                                <div className="max-h-60 overflow-y-auto p-1">
-                                    {filteredGuests.map(guest => (
-                                        <div
-                                            key={guest.userId}
-                                            onClick={() => handleToggleGuest(guest)}
-                                            className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer"
-                                        >
-                                            <input
-                                                type="checkbox"
-                                                className="h-4 w-4"
-                                                checked={selectedAttendees.some(att => att.email === guest.email)}
-                                                readOnly
-                                            />
-                                            <Avatar className="h-8 w-8">
-                                                <AvatarImage src={guest.avatarUrl} alt={guest.displayName} data-ai-hint="user avatar" />
-                                                <AvatarFallback>{guest.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                                            </Avatar>
-                                            <div>
-                                                <p className="font-medium text-sm">{guest.displayName}</p>
-                                                <p className="text-xs text-muted-foreground">{guest.email}</p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </PopoverContent>
-                        </Popover>
-                    </div>
+              name="date"
+              render={({ field }) => (
+                <FormItem className="flex-1">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={'outline'}
+                          className={cn('w-full justify-start text-left font-normal', !field.value && 'text-muted-foreground')}
+                        >
+                          <GoogleSymbol name="calendar_month" className="mr-2 text-lg" />
+                          {field.value ? format(field.value, 'MMM d, yyyy') : <span>Pick a date</span>}
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
                 </FormItem>
               )}
             />
-
-             <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                    <FormItem>
-                        <div className="flex items-center gap-1">
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0">
-                                        <GoogleSymbol name="attachment" className="text-xl" />
-                                        <span className="sr-only">Attach file</span>
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="start">
-                                    <DropdownMenuItem onSelect={() => handleAddAttachment('local', 'design_brief.pdf')}>
-                                        <GoogleSymbol name="description" className="mr-2 text-lg" />
-                                        <span>Attach file</span>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem onSelect={() => handleAddAttachment('drive', 'Project Assets')}>
-                                        <GoogleDriveIcon className="mr-2 h-4 w-4" />
-                                        <span>Google Drive</span>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onSelect={() => handleAddAttachment('docs', 'Meeting Notes')}>
-                                        <GoogleDocsIcon className="mr-2 h-4 w-4" />
-                                        <span>Google Docs</span>
-                                    </DropdownMenuItem>
-                                     <DropdownMenuItem onSelect={() => handleAddAttachment('sheets', 'Budget Tracker')}>
-                                        <GoogleSheetsIcon className="mr-2 h-4 w-4" />
-                                        <span>Google Sheets</span>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onSelect={() => handleAddAttachment('slides', 'Presentation Deck')}>
-                                        <GoogleSlidesIcon className="mr-2 h-4 w-4" />
-                                        <span>Google Slides</span>
-                                    </DropdownMenuItem>
-                                     <DropdownMenuItem onSelect={() => handleAddAttachment('forms', 'Feedback Form')}>
-                                        <GoogleFormsIcon className="mr-2 h-4 w-4" />
-                                        <span>Google Forms</span>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem onSelect={() => handleAddAttachment('meet', 'Google Meet')}>
-                                        <GoogleSymbol name="videocam" className="mr-2 text-lg" />
-                                        <span>Add Google Meet</span>
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </div>
-                        <FormControl><Textarea placeholder="Add more details..." {...field} /></FormControl>
-                        <FormMessage />
-                    </FormItem>
-                )}
+            <FormField
+              control={form.control}
+              name="startTime"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Input type="time" {...field} className="w-[110px]" step="900" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
+            <FormField
+              control={form.control}
+              name="endTime"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Input type="time" {...field} className="w-[110px]" step="900" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
-            {attachments.length > 0 && (
-                <div className="space-y-2">
-                    {attachments.map((att, index) => (
-                        <div key={index} className="flex items-center justify-between gap-2 text-sm p-2 bg-muted/50 rounded-md">
-                            <div className="flex items-center gap-2 flex-1 min-w-0">
-                                {attachmentIcons[att.type]}
-                                <span className="truncate">{att.name}</span>
-                            </div>
-                            <Button 
-                                type="button" 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-4 w-4 shrink-0" 
-                                onClick={() => setAttachments(prev => prev.filter((_, i) => i !== index))}
-                            >
-                                <GoogleSymbol name="cancel" className="text-sm" />
-                                <span className="sr-only">Remove attachment</span>
-                            </Button>
-                        </div>
+          <FormField
+            control={form.control}
+            name="location"
+            render={({ field }) => (
+              <FormItem>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a location" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {allBookableLocations.map(loc => (
+                      <SelectItem key={loc.id} value={loc.name}>
+                        {loc.name}
+                      </SelectItem>
                     ))}
-                </div>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
             )}
+          />
 
+          <FormField
+            control={form.control}
+            name="attendees"
+            render={() => (
+              <FormItem>
+                <div className="space-y-2">
+                  {selectedAttendees.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {selectedAttendees.map(attendee => (
+                        <div key={attendee.email} className="flex items-center gap-2 p-1 pr-2 bg-muted rounded-full">
+                          <Avatar className="h-6 w-6">
+                            <AvatarImage src={attendee.avatarUrl} alt={attendee.displayName} data-ai-hint="user avatar" />
+                            <AvatarFallback>{attendee.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                          </Avatar>
+                          <span className="text-sm font-medium">{attendee.displayName}</span>
+                          <button type="button" onClick={() => handleToggleGuest(attendee as User)} className="h-4 w-4 rounded-full hover:bg-muted-foreground/20 flex items-center justify-center">
+                            <GoogleSymbol name="cancel" className="text-sm" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <Popover open={isGuestPopoverOpen} onOpenChange={setIsGuestPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start font-normal">
+                        <GoogleSymbol name="group" className="mr-2 text-xl" />
+                        Add guests
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[480px] p-0" align="start">
+                      <div className="p-2">
+                        <Input
+                          placeholder="Search by name or email..."
+                          value={guestSearch}
+                          onChange={e => setGuestSearch(e.target.value)}
+                          className="w-full"
+                        />
+                      </div>
+                      <Separator />
+                      <div className="max-h-60 overflow-y-auto p-1">
+                        {filteredGuests.map(guest => (
+                          <div
+                            key={guest.userId}
+                            onClick={() => handleToggleGuest(guest)}
+                            className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer"
+                          >
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4"
+                              checked={selectedAttendees.some(att => att.email === guest.email)}
+                              readOnly
+                            />
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage src={guest.avatarUrl} alt={guest.displayName} data-ai-hint="user avatar" />
+                              <AvatarFallback>{guest.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-medium text-sm">{guest.displayName}</p>
+                              <p className="text-xs text-muted-foreground">{guest.email}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </FormItem>
+            )}
+          />
 
-            <Button type="submit" disabled={isLoading} className="w-full">
-                {isLoading ? 'Creating...' : 'Create Event'}
-            </Button>
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex items-center gap-1">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0">
+                        <GoogleSymbol name="attachment" className="text-xl" />
+                        <span className="sr-only">Attach file</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start">
+                      <DropdownMenuItem onSelect={() => handleAddAttachment('local', 'design_brief.pdf')}>
+                        <GoogleSymbol name="description" className="mr-2 text-lg" />
+                        <span>Attach file</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onSelect={() => handleAddAttachment('drive', 'Project Assets')}>
+                        <GoogleDriveIcon className="mr-2 h-4 w-4" />
+                        <span>Google Drive</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => handleAddAttachment('docs', 'Meeting Notes')}>
+                        <GoogleDocsIcon className="mr-2 h-4 w-4" />
+                        <span>Google Docs</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => handleAddAttachment('sheets', 'Budget Tracker')}>
+                        <GoogleSheetsIcon className="mr-2 h-4 w-4" />
+                        <span>Google Sheets</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => handleAddAttachment('slides', 'Presentation Deck')}>
+                        <GoogleSlidesIcon className="mr-2 h-4 w-4" />
+                        <span>Google Slides</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => handleAddAttachment('forms', 'Feedback Form')}>
+                        <GoogleFormsIcon className="mr-2 h-4 w-4" />
+                        <span>Google Forms</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onSelect={() => handleAddAttachment('meet', 'Google Meet')}>
+                        <GoogleSymbol name="videocam" className="mr-2 text-lg" />
+                        <span>Add Google Meet</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+                <FormControl><Textarea placeholder="Add more details..." {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {attachments.length > 0 && (
+            <div className="space-y-2">
+              {attachments.map((att, index) => (
+                <div key={index} className="flex items-center justify-between gap-2 text-sm p-2 bg-muted/50 rounded-md">
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    {attachmentIcons[att.type]}
+                    <span className="truncate">{att.name}</span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-4 w-4 shrink-0"
+                    onClick={() => setAttachments(prev => prev.filter((_, i) => i !== index))}
+                  >
+                    <GoogleSymbol name="cancel" className="text-sm" />
+                    <span className="sr-only">Remove attachment</span>
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
         </form>
-        </Form>
+      </Form>
     </div>
   );
 }
