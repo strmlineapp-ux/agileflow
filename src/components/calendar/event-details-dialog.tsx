@@ -208,8 +208,7 @@ const EventEditForm = ({ event, onFinished }: { event: Event, onFinished: () => 
     const [isLinkDialogOpen, setIsLinkDialogOpen] = React.useState(false);
     const [linkName, setLinkName] = React.useState('');
     const [linkUrl, setLinkUrl] = React.useState('');
-    const [isCustomRolePopoverOpen, setIsCustomRolePopoverOpen] = React.useState(false);
-    const [customRoleName, setCustomRoleName] = React.useState('');
+    const [isAddRolePopoverOpen, setIsAddRolePopoverOpen] = React.useState(false);
 
     const formSchema = z.object({
         title: z.string().min(2, { message: 'Title must be at least 2 characters.' }),
@@ -267,9 +266,14 @@ const EventEditForm = ({ event, onFinished }: { event: Event, onFinished: () => 
         }
         handleAddAttachment('link', linkName.trim(), linkUrl.trim());
         setIsLinkDialogOpen(false);
-        setLinkName('');
-        setLinkUrl('');
     }
+
+    React.useEffect(() => {
+        if (!isLinkDialogOpen) {
+            setLinkName('');
+            setLinkUrl('');
+        }
+    }, [isLinkDialogOpen]);
 
     const handleRemoveAttachment = (index: number) => {
         const currentAttachments = form.getValues('attachments') || [];
@@ -314,19 +318,13 @@ const EventEditForm = ({ event, onFinished }: { event: Event, onFinished: () => 
         }
     };
 
-    const handleAddCustomRole = () => {
-        const name = customRoleName.trim();
-        if (!name) {
-            toast({ variant: 'destructive', title: "Role name cannot be empty." });
-            return;
-        }
-        if (roleAssignments.hasOwnProperty(name)) {
-            toast({ variant: 'destructive', title: `Role "${name}" already exists for this event.` });
-            return;
-        }
-        form.setValue(`roleAssignments.${name}`, null);
-        setCustomRoleName('');
-        setIsCustomRolePopoverOpen(false);
+    const handleAddRequestedRole = (roleName: string) => {
+      if (roleAssignments.hasOwnProperty(roleName)) {
+        toast({ variant: 'destructive', title: `Role "${roleName}" is already requested for this event.` });
+        return;
+      }
+      form.setValue(`roleAssignments.${roleName}`, null);
+      setIsAddRolePopoverOpen(false);
     };
     
     async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -352,21 +350,21 @@ const EventEditForm = ({ event, onFinished }: { event: Event, onFinished: () => 
             setIsLoading(false);
         }
     }
+    
+    const availableRolesToAdd = teamForSelectedCalendar?.roles.filter(r => !roleAssignments.hasOwnProperty(r.name)) || [];
+
 
     return (
     <>
       <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
-        <div className="flex items-center justify-between pb-4">
-          <DialogTitle>Edit Event</DialogTitle>
-          <div className="flex items-center">
+        <div className="flex items-center justify-end pb-4 -mr-2">
             <Button type="button" variant="ghost" size="icon" onClick={onFinished} disabled={isLoading} aria-label="Discard changes">
               <GoogleSymbol name="close" />
             </Button>
             <Button type="submit" variant="ghost" size="icon" disabled={isLoading} aria-label="Save changes">
               <GoogleSymbol name="check" />
             </Button>
-          </div>
         </div>
         <ScrollArea className="max-h-[60vh] -mr-4 pr-4">
         <div className="space-y-4">
@@ -528,15 +526,23 @@ const EventEditForm = ({ event, onFinished }: { event: Event, onFinished: () => 
                     <CardContent className="p-2">
                         <div className="flex items-center justify-between mb-2 px-1">
                             <p className="text-sm text-muted-foreground">Requested Roles</p>
-                             <Popover open={isCustomRolePopoverOpen} onOpenChange={setIsCustomRolePopoverOpen}>
+                             <Popover open={isAddRolePopoverOpen} onOpenChange={setIsAddRolePopoverOpen}>
                                 <PopoverTrigger asChild>
                                     <Button type="button" variant="ghost" size="icon" className="h-6 w-6"><GoogleSymbol name="add_circle" className="text-lg" /></Button>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-60 p-2">
-                                    <div className="flex gap-2">
-                                        <Input placeholder="Custom role name" value={customRoleName} onChange={(e) => setCustomRoleName(e.target.value)} />
-                                        <Button size="icon" onClick={handleAddCustomRole}><GoogleSymbol name="add" /></Button>
+                                <PopoverContent className="w-60 p-0">
+                                  <ScrollArea className="h-48">
+                                    <div className="p-1">
+                                      {availableRolesToAdd.length > 0 ? availableRolesToAdd.map(role => (
+                                        <div key={role.name} onClick={() => handleAddRequestedRole(role.name)} className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer">
+                                          <GoogleSymbol name={role.icon} className="text-lg" />
+                                          <span>{role.name}</span>
+                                        </div>
+                                      )) : (
+                                        <p className="p-2 text-center text-sm text-muted-foreground">No more roles to add.</p>
+                                      )}
                                     </div>
+                                  </ScrollArea>
                                 </PopoverContent>
                             </Popover>
                         </div>
@@ -695,16 +701,24 @@ const EventEditForm = ({ event, onFinished }: { event: Event, onFinished: () => 
     </Form>
 
     <Dialog open={isLinkDialogOpen} onOpenChange={setIsLinkDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
+            <div className="absolute top-4 right-4 flex items-center gap-1">
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setIsLinkDialogOpen(false)}>
+                    <GoogleSymbol name="close" className="text-xl" />
+                    <span className="sr-only">Cancel</span>
+                </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleAddLink}>
+                    <GoogleSymbol name="check" className="text-xl" />
+                    <span className="sr-only">Add Link</span>
+                </Button>
+            </div>
             <DialogHeader>
-                <DialogTitle>Add Link</DialogTitle>
-                <DialogDescription>Paste a URL and give it a display name.</DialogDescription>
+                <DialogTitle>Add Link Attachment</DialogTitle>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
+            <div className="grid gap-4 pt-4">
                 <Input placeholder="URL (e.g., https://example.com)" value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} />
                 <Input placeholder="Display Name (e.g., Project Website)" value={linkName} onChange={(e) => setLinkName(e.target.value)} />
             </div>
-            <Button onClick={handleAddLink}>Add Link</Button>
         </DialogContent>
     </Dialog>
     </>
@@ -725,29 +739,24 @@ export function EventDetailsDialog({ event, isOpen, onOpenChange }: EventDetails
   const [isEditing, setIsEditing] = React.useState(false);
 
   React.useEffect(() => {
-    if (isOpen && event) {
-        const calendar = calendars.find(c => c.id === event.calendarId);
-        if (calendar && canManageEventOnCalendar(viewAsUser, calendar)) {
-            setIsEditing(true);
-        } else {
-            setIsEditing(false);
-        }
-    } else {
-        setIsEditing(false);
+    if (!isOpen) {
+        setIsEditing(false); // Reset editing state when dialog closes
     }
-  }, [isOpen, event, viewAsUser, calendars]);
-  
+  }, [isOpen]);
+
   if (!event) return null;
   
   const calendar = calendars.find(c => c.id === event.calendarId);
   if (!calendar) return null;
 
   const canManage = canManageEventOnCalendar(viewAsUser, calendar);
+  
+  const shouldAutoEdit = canManage;
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
-        {isEditing && canManage ? (
+        {shouldAutoEdit ? (
             <EventEditForm event={event} onFinished={() => onOpenChange(false)} />
         ) : (
             <EventDisplayView event={event} onEdit={() => setIsEditing(true)} />

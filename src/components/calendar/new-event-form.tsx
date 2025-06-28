@@ -98,7 +98,7 @@ const formSchema = z.object({
 
 type NewEventFormProps = {
   onFinished?: () => void;
-  initialData?: { date: Date; startTime: string; endTime: string; location?: string; } | null;
+  initialData?: Partial<z.infer<typeof formSchema>>;
 };
 
 const getDefaultCalendarId = (user: User, availableCalendars: SharedCalendar[]): string | undefined => {
@@ -120,8 +120,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
   const [isLinkDialogOpen, setIsLinkDialogOpen] = React.useState(false);
   const [linkName, setLinkName] = React.useState('');
   const [linkUrl, setLinkUrl] = React.useState('');
-  const [isCustomRolePopoverOpen, setIsCustomRolePopoverOpen] = React.useState(false);
-  const [customRoleName, setCustomRoleName] = React.useState('');
+  const [isAddRolePopoverOpen, setIsAddRolePopoverOpen] = React.useState(false);
 
   const [isCalendarPopoverOpen, setIsCalendarPopoverOpen] = React.useState(false);
   const [isPriorityPopoverOpen, setIsPriorityPopoverOpen] = React.useState(false);
@@ -155,19 +154,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: initialData ? {
-        calendarId: defaultCalendarId || '',
-        priority: getDefaultPriority(),
-        title: '',
-        location: initialData.location || '',
-        description: '',
-        attachments: [],
-        attendees: [],
-        templateId: '',
-        date: initialData.date,
-        startTime: initialData.startTime,
-        endTime: initialData.endTime,
-    } : {
+    defaultValues: {
       title: '',
       calendarId: defaultCalendarId || '',
       priority: getDefaultPriority(),
@@ -178,6 +165,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
       description: '',
       attachments: [],
       attendees: [],
+      ...initialData,
     },
   });
   
@@ -237,9 +225,14 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
     }
     handleAddAttachment('link', linkName.trim(), linkUrl.trim());
     setIsLinkDialogOpen(false);
-    setLinkName('');
-    setLinkUrl('');
   }
+
+  React.useEffect(() => {
+    if (!isLinkDialogOpen) {
+        setLinkName('');
+        setLinkUrl('');
+    }
+  }, [isLinkDialogOpen]);
 
   const handleRemoveAttachment = (indexToRemove: number) => {
     const currentAttachments = form.getValues('attachments') || [];
@@ -299,19 +292,13 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
     }));
   };
 
-  const handleAddCustomRole = () => {
-    const name = customRoleName.trim();
-    if (!name) {
-        toast({ variant: 'destructive', title: "Role name cannot be empty." });
+  const handleAddRequestedRole = (roleName: string) => {
+    if (roleAssignments.hasOwnProperty(roleName)) {
+        toast({ variant: 'destructive', title: `Role "${roleName}" is already requested for this event.` });
         return;
     }
-    if (roleAssignments.hasOwnProperty(name)) {
-        toast({ variant: 'destructive', title: `Role "${name}" already exists for this event.` });
-        return;
-    }
-    setRoleAssignments(prev => ({ ...prev, [name]: { assignedUser: null, popoverOpen: false } }));
-    setCustomRoleName('');
-    setIsCustomRolePopoverOpen(false);
+    setRoleAssignments(prev => ({ ...prev, [roleName]: { assignedUser: null, popoverOpen: false } }));
+    setIsAddRolePopoverOpen(false);
   };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -365,6 +352,8 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
 
   const dayKey = eventDate ? startOfDay(eventDate).toISOString() : null;
   const absencesForDay = dayKey ? (userStatusAssignments[dayKey] || []) : [];
+  
+  const availableRolesToAdd = teamForSelectedCalendar?.roles.filter(r => !roleAssignments.hasOwnProperty(r.name)) || [];
 
   return (
     <>
@@ -671,15 +660,23 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                     <CardContent className="p-2">
                         <div className="flex items-center justify-between mb-2 px-1">
                             <p className="text-sm text-muted-foreground">Requested Roles</p>
-                            <Popover open={isCustomRolePopoverOpen} onOpenChange={setIsCustomRolePopoverOpen}>
+                            <Popover open={isAddRolePopoverOpen} onOpenChange={setIsAddRolePopoverOpen}>
                                 <PopoverTrigger asChild>
                                     <Button type="button" variant="ghost" size="icon" className="h-6 w-6"><GoogleSymbol name="add_circle" className="text-lg" /></Button>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-60 p-2">
-                                    <div className="flex gap-2">
-                                        <Input placeholder="Custom role name" value={customRoleName} onChange={(e) => setCustomRoleName(e.target.value)} />
-                                        <Button size="icon" onClick={handleAddCustomRole}><GoogleSymbol name="add" /></Button>
+                                <PopoverContent className="w-60 p-0">
+                                  <ScrollArea className="h-48">
+                                    <div className="p-1">
+                                      {availableRolesToAdd.length > 0 ? availableRolesToAdd.map(role => (
+                                        <div key={role.name} onClick={() => handleAddRequestedRole(role.name)} className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer">
+                                          <GoogleSymbol name={role.icon} className="text-lg" />
+                                          <span>{role.name}</span>
+                                        </div>
+                                      )) : (
+                                        <p className="p-2 text-center text-sm text-muted-foreground">No more roles to add.</p>
+                                      )}
                                     </div>
+                                  </ScrollArea>
                                 </PopoverContent>
                             </Popover>
                         </div>
@@ -833,16 +830,24 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
     </Form>
 
     <Dialog open={isLinkDialogOpen} onOpenChange={setIsLinkDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
+            <div className="absolute top-4 right-4 flex items-center gap-1">
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setIsLinkDialogOpen(false)}>
+                    <GoogleSymbol name="close" className="text-xl" />
+                    <span className="sr-only">Cancel</span>
+                </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleAddLink}>
+                    <GoogleSymbol name="check" className="text-xl" />
+                    <span className="sr-only">Add Link</span>
+                </Button>
+            </div>
             <DialogHeader>
-                <DialogTitle>Add Link</DialogTitle>
-                <DialogDescription>Paste a URL and give it a display name.</DialogDescription>
+                <DialogTitle>Add Link Attachment</DialogTitle>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
+            <div className="grid gap-4 pt-4">
                 <Input placeholder="URL (e.g., https://example.com)" value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} />
                 <Input placeholder="Display Name (e.g., Project Website)" value={linkName} onChange={(e) => setLinkName(e.target.value)} />
             </div>
-            <Button onClick={handleAddLink}>Add Link</Button>
         </DialogContent>
     </Dialog>
     </>
