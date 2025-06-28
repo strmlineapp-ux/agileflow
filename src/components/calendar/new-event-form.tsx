@@ -77,7 +77,7 @@ const formSchema = z.object({
   templateId: z.string().optional(),
   date: z.date({ required_error: 'A date is required.' }),
   startTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, { message: 'Invalid time format (HH:mm).' }),
-  endTime: z.string().regex(/^([01]\d|2[0-5]\d)$/, { message: 'Invalid time format (HH:mm).' }),
+  endTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, { message: 'Invalid time format (HH:mm).' }),
   location: z.string().optional(),
   description: z.string().optional(),
   attachments: z.array(z.any()).optional(),
