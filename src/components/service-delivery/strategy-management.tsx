@@ -4,13 +4,10 @@
 import { useState } from 'react';
 import { useUser } from '@/context/user-context';
 import { type PriorityStrategy } from '@/types';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { GoogleSymbol } from '../icons/google-symbol';
-import { PriorityBadge } from '../calendar/priority-badge';
 import { PriorityStrategyForm } from './priority-strategy-form';
-import { Badge } from '../ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../ui/alert-dialog';
 
 export function StrategyManagement() {
@@ -56,55 +53,18 @@ export function StrategyManagement() {
                 Define sets of priorities and apply them to different parts of the application.
             </p>
         </div>
-        <Button onClick={openAddDialog}>
-          <GoogleSymbol name="add_circle" className="mr-2" />
-          New Strategy
-        </Button>
       </div>
 
-      <div className="space-y-6">
-        {priorityStrategies.map(strategy => (
-          <Card key={strategy.id}>
-            <CardHeader>
-                <div className="flex items-start justify-between">
-                    <div>
-                        <CardTitle>{strategy.name}</CardTitle>
-                        <CardDescription>{strategy.description}</CardDescription>
-                    </div>
-                    <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => openEditDialog(strategy)}>
-                            <GoogleSymbol name="edit" />
-                            <span className="sr-only">Edit Strategy</span>
-                        </Button>
-                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => openDeleteDialog(strategy)}>
-                            <GoogleSymbol name="delete" />
-                            <span className="sr-only">Delete Strategy</span>
-                        </Button>
-                    </div>
-                </div>
-            </CardHeader>
-            <CardContent>
-                <div className="space-y-4">
-                    <div>
-                        <h4 className="text-sm font-medium mb-2">Priorities</h4>
-                        <div className="flex flex-wrap gap-1">
-                            {strategy.priorities.map(p => <PriorityBadge key={p.id} priorityId={p.id} />)}
-                        </div>
-                    </div>
-                    <div>
-                        <h4 className="text-sm font-medium mb-2">Applied To</h4>
-                        <div className="flex flex-wrap gap-2">
-                            {strategy.applications.length > 0 ? (
-                                strategy.applications.map(app => <Badge key={app} variant="secondary" className="capitalize">{app}</Badge>)
-                            ) : (
-                                <p className="text-sm text-muted-foreground italic">Not applied to any area.</p>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            </CardContent>
-          </Card>
-        ))}
+       <div className="flex flex-wrap gap-3">
+          {priorityStrategies.map(strategy => (
+            <Button key={strategy.id} variant="outline" className="h-auto font-medium" onClick={() => openEditDialog(strategy)}>
+                {strategy.name}
+            </Button>
+          ))}
+           <Button variant="outline" className="h-auto font-medium border-dashed" onClick={openAddDialog}>
+                <GoogleSymbol name="add" className="mr-2" />
+                New Strategy
+            </Button>
       </div>
 
       {isFormOpen && (

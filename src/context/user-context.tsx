@@ -39,11 +39,11 @@ interface UserContextType {
   updatePageConfig: (pageId: string, pageData: Partial<PageConfig>) => Promise<void>;
   priorityStrategies: PriorityStrategy[];
   addPriorityStrategy: (strategyData: Omit<PriorityStrategy, 'id'>) => Promise<void>;
-  updatePriorityStrategy: (strategyId: string, strategyData: Partial<PriorityStrategy>) => Promise<void>;
+  updatePriorityStrategy: (strategyId: string, strategyData: Partial<Omit<PriorityStrategy, 'id'>>) => Promise<void>;
   deletePriorityStrategy: (strategyId: string) => Promise<void>;
-  getEventPriorities: () => Priority[];
-  getTaskPriorities: () => Priority[];
-  getPriorityById: (priorityId: string) => Priority | undefined;
+  getEventStrategy: () => PriorityStrategy | undefined;
+  getTaskStrategy: () => PriorityStrategy | undefined;
+  getPriorityDisplay: (priorityId: string) => { label: string, description?: string, color: string, shape: 'rounded-md' | 'rounded-full' } | undefined;
 }
 
 const UserContext = createContext<UserContextType | null>(null);
@@ -179,9 +179,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setPriorityStrategies(current => [...current, newStrategy]);
   };
 
-  const updatePriorityStrategy = async (strategyId: string, strategyData: Partial<PriorityStrategy>) => {
+  const updatePriorityStrategy = async (strategyId: string, strategyData: Partial<Omit<PriorityStrategy, 'id'>>) => {
     setPriorityStrategies(current =>
-      current.map(s => (s.id === strategyId ? { ...s, ...strategyData } : s))
+      current.map(s => (s.id === strategyId ? { ...s, ...strategyData } as PriorityStrategy : s))
     );
   };
 
@@ -189,20 +189,44 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setPriorityStrategies(current => current.filter(s => s.id !== strategyId));
   };
 
-  const getPrioritiesForApplication = useCallback((application: PriorityStrategyApplication) => {
-    const activeStrategy = priorityStrategies.find(s => s.applications.includes(application));
-    return activeStrategy?.priorities || [];
+  const getStrategyForApplication = useCallback((application: PriorityStrategyApplication) => {
+    return priorityStrategies.find(s => s.applications.includes(application));
   }, [priorityStrategies]);
 
-  const getEventPriorities = useCallback(() => getPrioritiesForApplication('events'), [getPrioritiesForApplication]);
-  const getTaskPriorities = useCallback(() => getPrioritiesForApplication('tasks'), [getPrioritiesForApplication]);
+  const getEventStrategy = useCallback(() => getStrategyForApplication('events'), [getStrategyForApplication]);
+  const getTaskStrategy = useCallback(() => getStrategyForApplication('tasks'), [getStrategyForApplication]);
+  
+  const getPriorityDisplay = useCallback((priorityId: string): { label: string, description?: string, color: string, shape: 'rounded-md' | 'rounded-full' } | undefined => {
+    if (!priorityId || !priorityId.includes(':')) return undefined;
 
-  const getPriorityById = useCallback((priorityId: string): Priority | undefined => {
-    for (const strategy of priorityStrategies) {
-      const found = strategy.priorities.find(p => p.id === priorityId);
-      if (found) return found;
+    const [strategyId, value] = priorityId.split(':');
+    const strategy = priorityStrategies.find(s => s.id === strategyId);
+    if (!strategy) return undefined;
+
+    switch (strategy.type) {
+        case 'tier':
+            const tierPriority = strategy.priorities.find(p => p.id === priorityId);
+            return tierPriority;
+        case 'symbol':
+            const numValue = parseInt(value, 10);
+            return {
+                label: Array(numValue).fill(strategy.symbol).join(''),
+                description: `${numValue} / ${strategy.max} ${strategy.symbol}`,
+                color: strategy.color,
+                shape: 'rounded-md'
+            };
+        case 'scale':
+            const scaleValue = parseInt(value, 10);
+            const interval = strategy.intervals.find(i => scaleValue >= i.from && scaleValue <= i.to);
+            return {
+                label: interval?.label || 'Uncategorized',
+                description: `Score: ${scaleValue} / ${strategy.max}`,
+                color: interval?.color || '#888888',
+                shape: 'rounded-full'
+            };
+        default:
+            return undefined;
     }
-    return undefined;
   }, [priorityStrategies]);
 
 
@@ -268,9 +292,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     addPriorityStrategy,
     updatePriorityStrategy,
     deletePriorityStrategy,
-    getEventPriorities,
-    getTaskPriorities,
-    getPriorityById,
+    getEventStrategy,
+    getTaskStrategy,
+    getPriorityDisplay,
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

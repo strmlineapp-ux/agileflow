@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { type Priority, type PriorityStrategy, type PriorityStrategyApplication } from '@/types';
+import { type Priority, type PriorityStrategy, type PriorityStrategyApplication, PriorityStrategyType } from '@/types';
 import { useUser } from '@/context/user-context';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -15,6 +15,7 @@ import { GoogleSymbol } from '../icons/google-symbol';
 import { PriorityBadge } from '../calendar/priority-badge';
 import { PriorityItemForm } from './priority-item-form';
 import { Separator } from '../ui/separator';
+import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 
 type PriorityStrategyFormProps = {
   isOpen: boolean;
@@ -30,6 +31,7 @@ export function PriorityStrategyForm({ isOpen, onClose, strategy }: PriorityStra
     name: '',
     description: '',
     applications: [],
+    type: 'tier',
     priorities: [],
   });
   const [isPriorityFormOpen, setIsPriorityFormOpen] = useState(false);
@@ -39,8 +41,17 @@ export function PriorityStrategyForm({ isOpen, onClose, strategy }: PriorityStra
   useEffect(() => {
     if (strategy) {
       setStrategyState(strategy);
+    } else {
+        // Reset to default for new strategy
+        setStrategyState({
+            name: '',
+            description: '',
+            applications: [],
+            type: 'tier',
+            priorities: [],
+        });
     }
-  }, [strategy]);
+  }, [strategy, isOpen]);
 
   const handleSave = () => {
     if (!strategyState.name.trim()) {
@@ -60,7 +71,6 @@ export function PriorityStrategyForm({ isOpen, onClose, strategy }: PriorityStra
             return;
         }
     }
-
 
     if (strategy) {
       updatePriorityStrategy(strategy.id, strategyState);
@@ -87,7 +97,9 @@ export function PriorityStrategyForm({ isOpen, onClose, strategy }: PriorityStra
   }
 
   const handleSavePriority = (priorityData: Omit<Priority, 'id'>) => {
+    if (strategyState.type !== 'tier') return;
     setStrategyState(prev => {
+        if (prev.type !== 'tier') return prev;
         const newPriorities = [...prev.priorities];
         const strategyId = strategy?.id || strategyState.name.toLowerCase().replace(/\s+/g, '-');
         const newPriority: Priority = {
@@ -95,7 +107,7 @@ export function PriorityStrategyForm({ isOpen, onClose, strategy }: PriorityStra
             id: `${strategyId}:${priorityData.label.toLowerCase().replace(/\s+/g, '-')}`,
         };
 
-        if (editingPriority) { // Editing existing
+        if (editingPriority && editingPriority.index > -1) { // Editing existing
             newPriorities[editingPriority.index] = newPriority;
         } else { // Adding new
             newPriorities.push(newPriority);
@@ -105,11 +117,59 @@ export function PriorityStrategyForm({ isOpen, onClose, strategy }: PriorityStra
   };
   
   const handleDeletePriority = (index: number) => {
-      setStrategyState(prev => ({
+      if (strategyState.type !== 'tier') return;
+      setStrategyState(prev => {
+        if (prev.type !== 'tier') return prev;
+        return {
           ...prev,
           priorities: prev.priorities.filter((_, i) => i !== index),
-      }));
+        }
+      });
   }
+
+  const handleStrategyTypeChange = (type: PriorityStrategyType) => {
+    setStrategyState(prev => {
+        const base = { ...prev, type };
+        switch(type) {
+            case 'tier':
+                return { ...base, priorities: [] };
+            case 'symbol':
+                return { ...base, symbol: '⭐', max: 5, color: '#FFC107' };
+            case 'scale':
+                return { ...base, min: 0, max: 100, intervals: [] };
+            default:
+                return prev;
+        }
+    })
+  }
+  
+  const handleAddInterval = () => {
+    if (strategyState.type !== 'scale') return;
+    setStrategyState(prev => {
+        if (prev.type !== 'scale') return prev;
+        const newInterval = { label: 'New Interval', from: 0, to: 10, color: '#cccccc' };
+        return { ...prev, intervals: [...prev.intervals, newInterval] };
+    });
+  }
+
+  const handleIntervalChange = (index: number, field: string, value: any) => {
+     if (strategyState.type !== 'scale') return;
+     setStrategyState(prev => {
+        if (prev.type !== 'scale') return prev;
+        const newIntervals = [...prev.intervals];
+        newIntervals[index] = { ...newIntervals[index], [field]: value };
+        return { ...prev, intervals: newIntervals };
+     });
+  }
+  
+  const handleDeleteInterval = (index: number) => {
+      if (strategyState.type !== 'scale') return;
+      setStrategyState(prev => {
+          if (prev.type !== 'scale') return prev;
+          return { ...prev, intervals: prev.intervals.filter((_, i) => i !== index) };
+      });
+  }
+
 
   return (
     <>
@@ -163,40 +223,110 @@ export function PriorityStrategyForm({ isOpen, onClose, strategy }: PriorityStra
             </div>
 
             <Separator />
-
+            
             <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                    <Label>Priorities in this Strategy</Label>
-                    <Button variant="outline" size="sm" onClick={() => handleOpenPriorityForm(null)}>
-                        <GoogleSymbol name="add" className="mr-1" />
-                        Add Priority
-                    </Button>
+                <Label>Strategy Type</Label>
+                <RadioGroup value={strategyState.type} onValueChange={(v) => handleStrategyTypeChange(v as any)} className="flex items-center gap-4">
+                    <div className="flex items-center space-x-2"><RadioGroupItem value="tier" id="type-tier" /><Label htmlFor="type-tier">Tier</Label></div>
+                    <div className="flex items-center space-x-2"><RadioGroupItem value="symbol" id="type-symbol" /><Label htmlFor="type-symbol">Symbol</Label></div>
+                    <div className="flex items-center space-x-2"><RadioGroupItem value="scale" id="type-scale" /><Label htmlFor="type-scale">Scale</Label></div>
+                </RadioGroup>
+            </div>
+
+            {strategyState.type === 'tier' && (
+                <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                        <Label>Priorities</Label>
+                        <Button variant="outline" size="sm" onClick={() => handleOpenPriorityForm(null)}>
+                            <GoogleSymbol name="add" className="mr-1" />
+                            Add Priority
+                        </Button>
+                    </div>
+                    <div className="divide-y divide-border rounded-md border">
+                        {strategyState.priorities.map((p, index) => (
+                        <div key={index} className="p-2 px-3 flex items-center justify-between hover:bg-muted/50">
+                            <div className="flex items-center gap-4">
+                            <PriorityBadge priorityId={p.id} />
+                            <div>
+                                <p className="font-semibold">{p.label}</p>
+                                <p className="text-sm text-muted-foreground">{p.description}</p>
+                            </div>
+                            </div>
+                            <div className="flex items-center">
+                            <Button variant="ghost" size="icon" onClick={() => handleOpenPriorityForm(p, index)}>
+                                <GoogleSymbol name="edit" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDeletePriority(index)}>
+                                <GoogleSymbol name="delete" />
+                            </Button>
+                            </div>
+                        </div>
+                        ))}
+                        {strategyState.priorities.length === 0 && (
+                            <p className="text-sm text-muted-foreground text-center p-4">No priorities defined for this strategy.</p>
+                        )}
+                    </div>
                 </div>
-                <div className="divide-y divide-border rounded-md border">
-                    {strategyState.priorities.map((p, index) => (
-                    <div key={index} className="p-2 px-3 flex items-center justify-between hover:bg-muted/50">
-                        <div className="flex items-center gap-4">
-                        <PriorityBadge priorityId={p.id} />
-                        <div>
-                            <p className="font-semibold">{p.label}</p>
-                            <p className="text-sm text-muted-foreground">{p.description}</p>
+            )}
+            
+            {strategyState.type === 'symbol' && (
+                <div className="space-y-4 rounded-md border p-4">
+                    <div className="grid grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="symbol-char">Symbol</Label>
+                            <Input id="symbol-char" value={strategyState.symbol} onChange={e => setStrategyState(s => ({ ...s, type: 'symbol', symbol: e.target.value }))} maxLength={2} />
                         </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="symbol-max">Max Value</Label>
+                            <Input id="symbol-max" type="number" value={strategyState.max} onChange={e => setStrategyState(s => ({ ...s, type: 'symbol', max: Number(e.target.value) }))} min={1} />
                         </div>
-                        <div className="flex items-center">
-                        <Button variant="ghost" size="icon" onClick={() => handleOpenPriorityForm(p, index)}>
-                            <GoogleSymbol name="edit" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDeletePriority(index)}>
-                            <GoogleSymbol name="delete" />
-                        </Button>
+                         <div className="space-y-2">
+                            <Label htmlFor="symbol-color">Color</Label>
+                            <Input id="symbol-color" type="color" value={strategyState.color} onChange={e => setStrategyState(s => ({ ...s, type: 'symbol', color: e.target.value }))} className="p-1" />
                         </div>
                     </div>
-                    ))}
-                    {strategyState.priorities.length === 0 && (
-                        <p className="text-sm text-muted-foreground text-center p-4">No priorities defined for this strategy.</p>
-                    )}
                 </div>
-            </div>
+            )}
+
+            {strategyState.type === 'scale' && (
+                <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4 rounded-md border p-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="scale-min">Min Value</Label>
+                            <Input id="scale-min" type="number" value={strategyState.min} onChange={e => setStrategyState(s => ({ ...s, type: 'scale', min: Number(e.target.value) }))} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="scale-max">Max Value</Label>
+                            <Input id="scale-max" type="number" value={strategyState.max} onChange={e => setStrategyState(s => ({ ...s, type: 'scale', max: Number(e.target.value) }))} />
+                        </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                         <div className="flex items-center justify-between">
+                            <Label>Intervals</Label>
+                            <Button variant="outline" size="sm" onClick={handleAddInterval}>
+                                <GoogleSymbol name="add" className="mr-1" />
+                                Add Interval
+                            </Button>
+                        </div>
+                        <div className="space-y-2 rounded-md border p-2">
+                           {strategyState.intervals.map((interval, index) => (
+                               <div key={index} className="flex items-center gap-2 p-2 rounded hover:bg-muted/50">
+                                   <Input placeholder="Label" value={interval.label} onChange={e => handleIntervalChange(index, 'label', e.target.value)} className="w-1/3" />
+                                   <Input type="number" placeholder="From" value={interval.from} onChange={e => handleIntervalChange(index, 'from', Number(e.target.value))} />
+                                   <Input type="number" placeholder="To" value={interval.to} onChange={e => handleIntervalChange(index, 'to', Number(e.target.value))} />
+                                   <Input type="color" value={interval.color} onChange={e => handleIntervalChange(index, 'color', e.target.value)} className="p-1 h-10 w-16" />
+                                   <Button variant="ghost" size="icon" onClick={() => handleDeleteInterval(index)}><GoogleSymbol name="delete" /></Button>
+                               </div>
+                           ))}
+                           {strategyState.intervals.length === 0 && (
+                                <p className="text-sm text-muted-foreground text-center p-4">No intervals defined.</p>
+                           )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
           </div>
         </DialogContent>
       </Dialog>

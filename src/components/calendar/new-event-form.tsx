@@ -11,7 +11,7 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormMessage, FormLabel } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
@@ -31,6 +31,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { PriorityBadge } from './priority-badge';
 import { Separator } from '@/components/ui/separator';
 import { GoogleSymbol } from '../icons/google-symbol';
+import { Slider } from '../ui/slider';
 
 const GoogleDriveIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg viewBox="0 0 16 16" fill="currentColor" {...props}><path d="M9.19,4.5l-3.2,0l-1.7,2.9l3.2,5.7l4.9,0l1.7,-2.9l-4.9,-5.7Z" fill="#0f9d58"></path><path d="M5.99,4.5l-3.2,5.7l1.7,2.9l3.2,-5.7l-1.7,-2.9Z" fill="#ffc107"></path><path d="M10.89,7.4l-3.2,0l-1.7,-2.9l4.9,0l0,0Z" fill="#1976d2"></path></svg>
@@ -107,7 +108,7 @@ const titlePlaceholders: Record<CalendarId, string> = {
 };
 
 export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
-  const { viewAsUser, users, calendars, addEvent, locations, getEventPriorities } = useUser();
+  const { viewAsUser, users, calendars, addEvent, locations, getEventStrategy } = useUser();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = React.useState(false);
   const [attachments, setAttachments] = React.useState<Attachment[]>([]);
@@ -118,18 +119,32 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
     return calendars.filter(cal => canManageEventOnCalendar(viewAsUser, cal));
   }, [calendars, viewAsUser]);
   
-  const eventPriorities = React.useMemo(() => getEventPriorities(), [getEventPriorities]);
+  const eventStrategy = React.useMemo(() => getEventStrategy(), [getEventStrategy]);
 
   const defaultCalendarId = React.useMemo(() => {
     return getDefaultCalendarId(viewAsUser, availableCalendars);
   }, [viewAsUser, availableCalendars]);
+
+  const getDefaultPriority = () => {
+    if (!eventStrategy) return '';
+    if (eventStrategy.type === 'tier') {
+      return eventStrategy.priorities[0]?.id || '';
+    }
+    if (eventStrategy.type === 'symbol') {
+      return `${eventStrategy.id}:${Math.floor(eventStrategy.max / 2)}`;
+    }
+    if (eventStrategy.type === 'scale') {
+      return `${eventStrategy.id}:${Math.floor((eventStrategy.max - eventStrategy.min) / 2)}`;
+    }
+    return '';
+  }
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: '',
       calendarId: defaultCalendarId || '',
-      priority: eventPriorities[0]?.id || '',
+      priority: getDefaultPriority(),
       date: new Date(),
       startTime: '09:00',
       endTime: '10:00',
@@ -155,7 +170,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
     if (initialData) {
         form.reset({
             calendarId: defaultCalendarId,
-            priority: eventPriorities[0]?.id,
+            priority: getDefaultPriority(),
             title: '',
             location: '',
             description: '',
@@ -166,7 +181,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
             endTime: initialData.endTime,
         });
     }
-  }, [initialData, form, defaultCalendarId, eventPriorities]);
+  }, [initialData, form, defaultCalendarId, eventStrategy]);
 
   const selectedCalendarId = form.watch('calendarId');
   const selectedCalendar = calendars.find(c => c.id === selectedCalendarId) || availableCalendars[0];
@@ -245,6 +260,96 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
     }
   }
 
+  const renderPriorityInput = () => {
+    if (!eventStrategy) return null;
+
+    const field = form.control.getFieldState('priority');
+    const value = form.watch('priority');
+
+    switch (eventStrategy.type) {
+      case 'tier':
+        return (
+          <FormField
+            control={form.control}
+            name="priority"
+            render={({ field }) => (
+              <FormItem>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger><SelectValue placeholder="Select priority" /></SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {eventStrategy.priorities.map(p => (
+                      <SelectItem key={p.id} value={p.id}>
+                        <div className="flex items-center gap-2">
+                           <PriorityBadge priorityId={p.id} />
+                           <span className="font-semibold">{p.label}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        );
+      case 'symbol':
+        return (
+            <FormField
+            control={form.control}
+            name="priority"
+            render={({ field }) => (
+              <FormItem>
+                <Select 
+                    onValueChange={field.onChange} 
+                    defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger><SelectValue placeholder="Select rating" /></SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {Array.from({ length: eventStrategy.max }, (_, i) => eventStrategy.max - i).map(num => (
+                      <SelectItem key={num} value={`${eventStrategy.id}:${num}`}>
+                          {Array(num).fill(eventStrategy.symbol).join('')}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        );
+      case 'scale':
+        const currentScaleValue = Number(value.split(':')[1] || 0);
+        return (
+          <FormField
+            control={form.control}
+            name="priority"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                    Priority: <PriorityBadge priorityId={value} />
+                </FormLabel>
+                <FormControl>
+                    <Slider
+                        defaultValue={[currentScaleValue]}
+                        min={eventStrategy.min}
+                        max={eventStrategy.max}
+                        step={1}
+                        onValueChange={(val) => field.onChange(`${eventStrategy.id}:${val[0]}`)}
+                    />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div>
         <Form {...form}>
@@ -254,69 +359,13 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                 name="title"
                 render={({ field }) => (
                     <FormItem>
-                         <div className="relative">
-                            <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-2 h-full">
-                                {availableCalendars.length > 1 ? (
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <button
-                                                type="button"
-                                                className="flex items-center justify-center h-5 w-5 rounded-full border cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                                style={{ backgroundColor: selectedCalendar.color }}
-                                                aria-label="Select calendar"
-                                            />
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="start">
-                                            {availableCalendars.map(cal => (
-                                                <DropdownMenuItem
-                                                    key={cal.id}
-                                                    onSelect={() => form.setValue('calendarId', cal.id, { shouldValidate: true })}
-                                                >
-                                                    <div className="flex items-center gap-2">
-                                                        <div
-                                                            className="h-3 w-3 rounded-full border"
-                                                            style={{ backgroundColor: cal.color }}
-                                                        />
-                                                        <span>{cal.name}</span>
-                                                    </div>
-                                                </DropdownMenuItem>
-                                            ))}
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                ) : (
-                                    <div
-                                        className="h-5 w-5 rounded-full border"
-                                        style={{ backgroundColor: selectedCalendar.color }}
-                                        aria-label={`Calendar: ${selectedCalendar.name}`}
-                                    />
-                                )}
-
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <button type="button">
-                                            <PriorityBadge priorityId={form.watch('priority')} />
-                                        </button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="start">
-                                        {eventPriorities.map(p => (
-                                            <DropdownMenuItem key={p.id} onSelect={() => form.setValue('priority', p.id, { shouldValidate: true })}>
-                                                <PriorityBadge priorityId={p.id} />
-                                                <span className="ml-2 text-sm text-muted-foreground w-20">
-                                                  {p.label}
-                                                </span>
-                                            </DropdownMenuItem>
-                                        ))}
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            </div>
-                            <FormControl>
+                        <FormControl>
                             <Input 
                                 placeholder={titlePlaceholders[selectedCalendarId as CalendarId] || 'e.g. Team Standup'} 
                                 {...field} 
-                                className="pl-24"
+                                className="text-lg font-semibold"
                             />
-                            </FormControl>
-                        </div>
+                        </FormControl>
                         <FormMessage />
                     </FormItem>
                 )}
@@ -379,27 +428,61 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                 />
             </div>
 
-            <FormField
-                control={form.control}
-                name="location"
-                render={({ field }) => (
-                    <FormItem>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select a location" />
-                                </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                                {locations.map(loc => (
-                                    <SelectItem key={loc.id} value={loc.name}>{loc.name}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <FormMessage />
-                    </FormItem>
-                )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+                {availableCalendars.length > 1 ? (
+                    <FormField
+                        control={form.control}
+                        name="calendarId"
+                        render={({ field }) => (
+                            <FormItem>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select a calendar" />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        {availableCalendars.map(cal => (
+                                            <SelectItem key={cal.id} value={cal.id}>
+                                                 <div className="flex items-center gap-2">
+                                                    <div className="h-3 w-3 rounded-full border" style={{ backgroundColor: cal.color }} />
+                                                    <span>{cal.name}</span>
+                                                </div>
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                ) : <div />}
+
+                <FormField
+                    control={form.control}
+                    name="location"
+                    render={({ field }) => (
+                        <FormItem>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select a location" />
+                                    </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    {locations.map(loc => (
+                                        <SelectItem key={loc.id} value={loc.name}>{loc.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            </div>
+            
+            {renderPriorityInput()}
+
 
             <FormField
               control={form.control}
@@ -412,7 +495,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                                 {selectedAttendees.map(attendee => (
                                      <div key={attendee.email} className="flex items-center gap-2 p-1 pr-2 bg-muted rounded-full">
                                         <Avatar className="h-6 w-6">
-                                            <AvatarImage src={attendee.avatarUrl} alt={attendee.displayName} data-ai-hint="user avatar" />
+                                            <AvatarImage src={attendee.avatarUrl} alt={attendee.displayName} data-ai-hint="user avatar"/>
                                             <AvatarFallback>{attendee.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
                                         </Avatar>
                                         <span className="text-sm font-medium">{attendee.displayName}</span>

@@ -53,14 +53,40 @@ export interface Priority {
 }
 
 export type PriorityStrategyApplication = 'tasks' | 'events';
+export type PriorityStrategyType = 'tier' | 'symbol' | 'scale';
 
-export interface PriorityStrategy {
-  id: string;
-  name: string;
-  description?: string;
-  applications: PriorityStrategyApplication[];
-  priorities: Priority[];
+interface TierStrategyConfig {
+    type: 'tier';
+    priorities: Priority[];
 }
+
+interface SymbolStrategyConfig {
+    type: 'symbol';
+    symbol: string;
+    max: number;
+    color: string;
+}
+
+interface ScaleInterval {
+    label: string;
+    from: number;
+    to: number;
+    color: string;
+}
+
+interface ScaleStrategyConfig {
+    type: 'scale';
+    min: number;
+    max: number;
+    intervals: ScaleInterval[];
+}
+
+export type PriorityStrategy = {
+    id: string;
+    name: string;
+    description?: string;
+    applications: PriorityStrategyApplication[];
+} & (TierStrategyConfig | SymbolStrategyConfig | ScaleStrategyConfig);
 
 
 export interface Task {
@@ -69,7 +95,7 @@ export interface Task {
   description?: string;
   assignedTo: User[];
   dueDate: Date;
-  priority: Priority['id'];
+  priority: string; // e.g., 'p-number:p2' or 'star-rating:4' or 'effort-scale:75'
   status: 'not_started' | 'in_progress' | 'awaiting_review' | 'completed' | 'blocked';
   createdBy: string; // userId
   createdAt: Date;
@@ -103,7 +129,7 @@ export interface Event {
   attendees: Attendee[];
   location?: string;
   associatedTaskId?: string;
-  priority: Priority['id'];
+  priority: string; // e.g., 'p-number:p2' or 'star-rating:4' or 'effort-scale:75'
   attachments: Attachment[];
   createdBy: string; // userId
   createdAt: Date;

@@ -2,37 +2,44 @@
 
 import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team, type PriorityStrategy } from '@/types';
 
-const pNumberPriorities = [
-    { id: 'p-number:p0', label: 'P0', description: 'Highest priority - immediate action required.', color: 'hsl(0 100% 50%)', shape: 'rounded-md' },
-    { id: 'p-number:p1', label: 'P1', description: 'High priority - requires attention soon.', color: 'hsl(30 95% 54%)', shape: 'rounded-md' },
-    { id: 'p-number:p2', label: 'P2', description: 'Medium priority - standard work.', color: 'hsl(48 96% 53%)', shape: 'rounded-md' },
-    { id: 'p-number:p3', label: 'P3', description: 'Low priority - can be deferred.', color: 'hsl(120 73% 40%)', shape: 'rounded-full' },
-    { id: 'p-number:p4', label: 'P4', description: 'Lowest priority - to be done when time permits.', color: 'hsl(220 9% 46%)', shape: 'rounded-full' },
-];
-
-const tShirtPriorities = [
-    { id: 't-shirt:xs', label: 'XS', description: 'Extra Small - minimal effort.', color: 'hsl(210 20% 80%)', shape: 'rounded-full' },
-    { id: 't-shirt:s', label: 'S', description: 'Small - a few hours of work.', color: 'hsl(180 50% 70%)', shape: 'rounded-full' },
-    { id: 't-shirt:m', label: 'M', description: 'Medium - a couple of days.', color: 'hsl(120 50% 60%)', shape: 'rounded-full' },
-    { id: 't-shirt:l', label: 'L', description: 'Large - a full week of work.', color: 'hsl(60 70% 60%)', shape: 'rounded-full' },
-    { id: 't-shirt:xl', label: 'XL', description: 'Extra Large - multiple weeks.', color: 'hsl(30 80% 60%)', shape: 'rounded-full' },
-];
-
-
 export const mockPriorityStrategies: PriorityStrategy[] = [
     {
         id: 'p-number',
         name: 'P# Scale',
         description: 'Standard P-number priority system for criticality.',
         applications: ['events', 'tasks'],
-        priorities: pNumberPriorities,
+        type: 'tier',
+        priorities: [
+            { id: 'p-number:p0', label: 'P0', description: 'Highest priority - immediate action required.', color: 'hsl(0 100% 50%)', shape: 'rounded-md' },
+            { id: 'p-number:p1', label: 'P1', description: 'High priority - requires attention soon.', color: 'hsl(30 95% 54%)', shape: 'rounded-md' },
+            { id: 'p-number:p2', label: 'P2', description: 'Medium priority - standard work.', color: 'hsl(48 96% 53%)', shape: 'rounded-md' },
+            { id: 'p-number:p3', label: 'P3', description: 'Low priority - can be deferred.', color: 'hsl(120 73% 40%)', shape: 'rounded-full' },
+            { id: 'p-number:p4', label: 'P4', description: 'Lowest priority - to be done when time permits.', color: 'hsl(220 9% 46%)', shape: 'rounded-full' },
+        ],
     },
     {
-        id: 't-shirt',
-        name: 'T-Shirt Sizes',
-        description: 'Estimate effort and complexity for engineering tasks.',
+        id: 'star-rating',
+        name: 'Star Rating',
+        description: 'A simple 5-star rating system.',
         applications: [],
-        priorities: tShirtPriorities,
+        type: 'symbol',
+        symbol: '⭐',
+        max: 5,
+        color: '#FFC107'
+    },
+    {
+        id: 'effort-score',
+        name: 'Effort Score',
+        description: 'A numeric scale for estimating effort.',
+        applications: [],
+        type: 'scale',
+        min: 0,
+        max: 100,
+        intervals: [
+            { label: 'Trivial', from: 0, to: 10, color: '#4CAF50' },
+            { label: 'Medium', from: 11, to: 50, color: '#FFC107' },
+            { label: 'High', from: 51, to: 100, color: '#F44336' },
+        ]
     }
 ];
 
