@@ -1,10 +1,11 @@
 
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
 import { useUser } from '@/context/user-context';
 import { type Team, type User } from '@/types';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
@@ -28,43 +29,6 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { googleSymbolNames } from '@/lib/google-symbols';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-
-
-// Helper component for stacked avatars
-const AvatarStack = ({ userIds, allUsers, max = 5 }: { userIds: string[], allUsers: User[], max?: number }) => {
-    const usersToShow = userIds.map(id => allUsers.find(u => u.userId === id)).filter(Boolean) as User[];
-    const visibleUsers = usersToShow.slice(0, max);
-    const hiddenCount = Math.max(0, usersToShow.length - max);
-
-    return (
-        <TooltipProvider>
-            <div className="flex -space-x-2 overflow-hidden">
-                {visibleUsers.map(user => (
-                    <Tooltip key={user.userId}>
-                        <TooltipTrigger asChild>
-                            <Avatar className="h-8 w-8 border-2 border-card">
-                                <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
-                                <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                            </Avatar>
-                        </TooltipTrigger>
-                        <TooltipContent>{user.displayName}</TooltipContent>
-                    </Tooltip>
-                ))}
-                {hiddenCount > 0 && (
-                     <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Avatar className="h-8 w-8 border-2 border-card">
-                                <AvatarFallback>+{hiddenCount}</AvatarFallback>
-                            </Avatar>
-                        </TooltipTrigger>
-                        <TooltipContent>{hiddenCount} more member(s)</TooltipContent>
-                    </Tooltip>
-                )}
-            </div>
-        </TooltipProvider>
-    );
-};
 
 export function TeamManagement() {
   const { users, teams, addTeam, updateTeam, deleteTeam } = useUser();
@@ -107,8 +71,8 @@ export function TeamManagement() {
     <>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {teams.map(team => {
-                const teamManagers = team.managers || [];
-                const teamMembers = team.members.filter(m => !teamManagers.includes(m));
+                const teamManagers = (team.managers || []).map(id => users.find(u => u.userId === id)).filter(Boolean) as User[];
+                const teamMembers = team.members.filter(m => !(team.managers || []).includes(m)).map(id => users.find(u => u.userId === id)).filter(Boolean) as User[];
 
                 return (
                     <Card key={team.id} className="flex flex-col">
@@ -126,16 +90,30 @@ export function TeamManagement() {
                         </CardHeader>
                         <CardContent className="flex-grow space-y-4">
                             <div>
-                                <p className="text-sm font-medium text-muted-foreground mb-2">Managers</p>
+                                <p className="text-sm font-medium text-muted-foreground mb-2">{team.managerRoleName || 'Managers'}</p>
+                                <div className="flex flex-wrap gap-2 min-h-[34px]">
                                 {teamManagers.length > 0 ? (
-                                    <AvatarStack userIds={teamManagers} allUsers={users} />
-                                ) : <p className="text-sm text-muted-foreground italic">No managers assigned.</p>}
+                                    teamManagers.map(user => (
+                                        <Badge key={user.userId} variant="secondary" className="gap-1.5 p-1 pl-2 rounded-full">
+                                            <Avatar className="h-5 w-5"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
+                                            <span className="font-medium">{user.displayName}</span>
+                                        </Badge>
+                                    ))
+                                ) : <p className="text-sm text-muted-foreground italic px-2">No managers assigned.</p>}
+                                </div>
                             </div>
                             <div>
-                                <p className="text-sm font-medium text-muted-foreground mb-2">Members</p>
+                                <p className="text-sm font-medium text-muted-foreground mb-2">{team.memberRoleName || 'Members'}</p>
+                                 <div className="flex flex-wrap gap-2 min-h-[34px]">
                                 {teamMembers.length > 0 ? (
-                                    <AvatarStack userIds={teamMembers} allUsers={users} />
-                                ) : <p className="text-sm text-muted-foreground italic">No other members.</p>}
+                                    teamMembers.map(user => (
+                                        <Badge key={user.userId} variant="secondary" className="gap-1.5 p-1 pl-2 rounded-full">
+                                            <Avatar className="h-5 w-5"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
+                                            <span className="font-medium">{user.displayName}</span>
+                                        </Badge>
+                                    ))
+                                ) : <p className="text-sm text-muted-foreground italic px-2">No other members.</p>}
+                                </div>
                             </div>
                         </CardContent>
                     </Card>
@@ -199,6 +177,8 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
     const [icon, setIcon] = useState<string>(team?.icon || 'group');
     const [members, setMembers] = useState<string[]>(team?.members || []);
     const [managers, setManagers] = useState<string[]>(team?.managers || []);
+    const [managerRoleName, setManagerRoleName] = useState(team?.managerRoleName || '');
+    const [memberRoleName, setMemberRoleName] = useState(team?.memberRoleName || '');
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
     const [isMemberPopoverOpen, setIsMemberPopoverOpen] = useState(false);
     const [memberSearch, setMemberSearch] = useState('');
@@ -230,15 +210,21 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
             return;
         }
 
+        const teamData = {
+            name,
+            icon,
+            members,
+            managers,
+            managerRoleName,
+            memberRoleName,
+        };
+
         if (team) { // Editing
-            updateTeam(team.id, { name, icon, members, managers });
+            updateTeam(team.id, teamData);
             toast({ title: "Success", description: `Team "${name}" updated.` });
         } else { // Creating
             addTeam({
-                name,
-                icon,
-                members,
-                managers,
+                ...teamData,
                 roles: [],
                 pinnedLocations: [],
                 checkLocations: [],
@@ -343,6 +329,26 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
                             onChange={(e) => setName(e.target.value)}
                             className="text-lg font-semibold flex-1 border-none focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-auto"
                         />
+                    </div>
+                     <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="manager-role-name">Manager Role Label</Label>
+                            <Input
+                                id="manager-role-name"
+                                placeholder="e.g., Leads"
+                                value={managerRoleName}
+                                onChange={(e) => setManagerRoleName(e.target.value)}
+                            />
+                        </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="member-role-name">Member Role Label</Label>
+                            <Input
+                                id="member-role-name"
+                                placeholder="e.g., Contributors"
+                                value={memberRoleName}
+                                onChange={(e) => setMemberRoleName(e.target.value)}
+                            />
+                        </div>
                     </div>
 
                     <div className="space-y-2">

@@ -140,10 +140,10 @@ export const mockUsers: User[] = [
 ];
 
 export const mockCalendars: SharedCalendar[] = [
-    { id: 'studio-productions', name: 'Studio Productions', color: '#FBBF24', managers: ['1', '6'] }, // Amber 400
-    { id: 'live-events', name: 'Live Events', color: '#3B82F6', managers: ['1', '2', '3'] }, // Blue 500
-    { id: 'business', name: 'Business', color: '#64748B', managers: ['1', '2'] }, // Slate 500
-    { id: 'post-production', name: 'Post-Production', color: '#F97316', managers: ['1', '2', '5'] }, // Orange 500
+    { id: 'studio-productions', name: 'Studio Productions', color: '#FBBF24', managers: ['1', '6'] },
+    { id: 'live-events', name: 'Live Events', color: '#3B82F6', managers: ['1', '2', '3'] },
+    { id: 'business', name: 'Business', color: '#64748B', managers: ['1', '2'] },
+    { id: 'post-production', name: 'Post-Production', color: '#F97316', managers: ['1', '2', '5'] },
 ];
 
 export const mockLocations: BookableLocation[] = [
@@ -166,6 +166,8 @@ export const mockTeams: Team[] = [
         icon: 'movie',
         members: ['1', '2', '6'],
         managers: ['1', '2'],
+        managerRoleName: 'Directors',
+        memberRoleName: 'Crew',
         locationCheckManagers: ['1'],
         roles: ['Post-Production', 'Studio Productions Team Admin', 'Video Director', 'Edit Events'],
         pinnedLocations: ['Studio'],
