@@ -43,6 +43,7 @@ export function CalendarManagement() {
   const [calendarColor, setCalendarColor] = useState('#3B82F6');
   const [calendarManagers, setCalendarManagers] = useState<string[]>([]);
   const [defaultEventTitle, setDefaultEventTitle] = useState('');
+  const [managerRoleName, setManagerRoleName] = useState('');
 
   const openAddDialog = () => {
     setCurrentCalendar(null);
@@ -50,6 +51,7 @@ export function CalendarManagement() {
     setCalendarColor('#3B82F6');
     setCalendarManagers([]);
     setDefaultEventTitle('');
+    setManagerRoleName('');
     setIsAddOrEditDialogOpen(true);
   };
 
@@ -59,6 +61,7 @@ export function CalendarManagement() {
     setCalendarColor(calendar.color);
     setCalendarManagers(calendar.managers || []);
     setDefaultEventTitle(calendar.defaultEventTitle || '');
+    setManagerRoleName(calendar.managerRoleName || '');
     setIsAddOrEditDialogOpen(true);
   };
 
@@ -86,13 +89,22 @@ export function CalendarManagement() {
       toast({ variant: 'destructive', title: 'Error', description: 'Calendar name is required.' });
       return;
     }
+
+    const calendarData = { 
+        name: calendarName, 
+        managers: calendarManagers, 
+        defaultEventTitle,
+        managerRoleName,
+        color: calendarColor
+    };
+
     if (currentCalendar) {
       // Editing existing calendar
-      await updateCalendar(currentCalendar.id, { name: calendarName, managers: calendarManagers, defaultEventTitle });
+      await updateCalendar(currentCalendar.id, calendarData);
       toast({ title: 'Success', description: 'Calendar updated successfully.' });
     } else {
       // Adding new calendar
-      await addCalendar({ name: calendarName, color: calendarColor, managers: calendarManagers, defaultEventTitle });
+      await addCalendar(calendarData);
       toast({ title: 'Success', description: 'Calendar added successfully.' });
     }
     setIsAddOrEditDialogOpen(false);
@@ -146,7 +158,7 @@ export function CalendarManagement() {
                       <p className="text-sm italic">{calendar.defaultEventTitle || 'Not set'}</p>
                   </div>
                   <div>
-                      <p className="text-sm font-medium text-muted-foreground mb-2">Managers</p>
+                      <p className="text-sm font-medium text-muted-foreground mb-2">{calendar.managerRoleName || 'Team User Manager'}</p>
                       <div className="flex flex-wrap gap-2 min-h-[34px]">
                       {calendarManagers.length > 0 ? (
                           calendarManagers.map(user => (
@@ -230,6 +242,14 @@ export function CalendarManagement() {
                     value={defaultEventTitle}
                     onChange={(e) => setDefaultEventTitle(e.target.value)}
                     placeholder="Default Event Title (e.g., New Event)"
+                />
+            </div>
+             <div className="space-y-2">
+                <Input
+                    id="manager-role-name"
+                    value={managerRoleName}
+                    onChange={(e) => setManagerRoleName(e.target.value)}
+                    placeholder="Manager Label (e.g., Team User Manager)"
                 />
             </div>
             <div className="space-y-2">

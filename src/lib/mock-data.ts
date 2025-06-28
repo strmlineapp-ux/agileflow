@@ -145,8 +145,8 @@ export const mockUsers: User[] = [
 ];
 
 export const mockCalendars: SharedCalendar[] = [
-    { id: 'studio-productions', name: 'Studio Productions', color: '#FBBF24', managers: ['1', '6'], defaultEventTitle: 'New Production Studios Event' },
-    { id: 'live-events', name: 'Live Events', color: '#3B82F6', managers: ['1', '2', '3'], defaultEventTitle: 'New Live Event' },
+    { id: 'studio-productions', name: 'Studio Productions', color: '#FBBF24', managers: ['1', '6'], defaultEventTitle: 'New Production Studios Event', managerRoleName: 'Production Managers' },
+    { id: 'live-events', name: 'Live Events', color: '#3B82F6', managers: ['1', '2', '3'], defaultEventTitle: 'New Live Event', managerRoleName: 'Event Leads' },
     { id: 'business', name: 'Business', color: '#64748B', managers: ['1', '2'], defaultEventTitle: 'New Event' },
     { id: 'post-production', name: 'Post-Production', color: '#F97316', managers: ['1', '2', '5'], defaultEventTitle: 'New Event Edit' },
 ];
@@ -281,8 +281,11 @@ export const mockEvents: Event[] = [
         attendees: [mockUsers[3], mockUsers[4]].map(userToAttendee), 
         location: 'Event Space 1 (S2)',
         priority: 'p-number:p1',
-        attachments: [],
-        roleAssignments: {},
+        templateId: 'template-4',
+        roleAssignments: {
+            'TD': '1',
+            'Content Op': '4',
+        },
         createdBy: '1', 
         createdAt: new Date(), 
         lastUpdated: new Date() 

@@ -82,6 +82,14 @@ const formSchema = z.object({
   description: z.string().optional(),
   attachments: z.array(z.any()).optional(),
   attendees: z.array(AttendeeSchema).optional(),
+}).refine(data => {
+    if (data.startTime && data.endTime) {
+        return data.endTime > data.startTime;
+    }
+    return true;
+}, {
+    message: "End time must be after start time.",
+    path: ["endTime"],
 });
 
 type NewEventFormProps = {
@@ -278,12 +286,6 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
 
     const endTime = new Date(values.date);
     endTime.setHours(endHour, endMinute, 0, 0);
-
-    if (endTime <= startTime) {
-      form.setError('endTime', { message: 'End time must be after start time.' });
-      setIsLoading(false);
-      return;
-    }
 
     const finalRoleAssignments: Record<string, string | null> = {};
     if (selectedTemplate) {
@@ -634,14 +636,14 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
             )}
           />
 
-            {selectedTemplate && (
+            {selectedTemplate && teamForSelectedCalendar && (
                 <Card>
                     <CardContent className="p-2">
                         <p className="text-sm text-muted-foreground mb-2 px-1">Requested Roles</p>
                         <div className="flex flex-wrap gap-2">
                             {Object.entries(roleAssignments).map(([role, { assignedUser, popoverOpen }]) => {
                                 const user = assignedUser ? users.find(u => u.userId === assignedUser) : null;
-                                const usersWithRole = users.filter(u => u.roles?.includes(role));
+                                const usersWithRole = users.filter(u => teamForSelectedCalendar.members.includes(u.userId) && u.roles?.includes(role));
                                 
                                 const availableUsers = usersWithRole.filter(u => !absencesForDay.some(a => a.userId === u.userId));
                                 const absentUsers = usersWithRole

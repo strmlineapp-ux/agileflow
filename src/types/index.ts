@@ -1,3 +1,4 @@
+
 import type React from 'react';
 
 export interface AppSettings {
@@ -119,6 +120,7 @@ export interface SharedCalendar {
   color: string;
   managers?: string[]; // array of userIds who can manage this calendar
   defaultEventTitle?: string;
+  managerRoleName?: string;
 }
 
 export type AttachmentType = 'drive' | 'docs' | 'sheets' | 'slides' | 'forms' | 'meet' | 'local';

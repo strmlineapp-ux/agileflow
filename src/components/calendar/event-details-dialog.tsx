@@ -60,6 +60,10 @@ export function EventDetailsDialog({ event, isOpen, onOpenChange }: EventDetails
   const timeFormat = format(event.startTime, 'eeee, MMM d, yyyy') + ' ⋅ ' + format(event.startTime, 'p') + ' - ' + format(event.endTime, 'p');
 
   const teamForEvent = teams.find(t => t.id === event.calendarId);
+  const eventTemplate = teamForEvent?.eventTemplates?.find(t => t.id === event.templateId);
+  
+  const assignedUserIds = new Set(Object.values(event.roleAssignments || {}).filter(Boolean) as string[]);
+  const guestsToDisplay = (event.attendees || []).filter(attendee => !attendee.userId || !assignedUserIds.has(attendee.userId));
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -75,6 +79,7 @@ export function EventDetailsDialog({ event, isOpen, onOpenChange }: EventDetails
                         <Badge style={{ backgroundColor: calendar.color, color: getContrastColor(calendar.color) }} className="border-transparent">{calendar.name}</Badge>
                     )}
                     <PriorityBadge priorityId={event.priority} />
+                    {eventTemplate && <Badge variant="secondary">{eventTemplate.name}</Badge>}
                 </div>
                 
                 {event.location && (
@@ -90,30 +95,7 @@ export function EventDetailsDialog({ event, isOpen, onOpenChange }: EventDetails
                         <p className="text-sm">{event.description}</p>
                     </div>
                 )}
-
-                {event.attendees && event.attendees.length > 0 && (
-                    <>
-                        <Separator />
-                        <div className="flex items-start gap-4">
-                            <GoogleSymbol name="group" className="text-2xl text-muted-foreground mt-0.5" />
-                            <div className="flex-1">
-                                <p className="font-medium mb-2">{event.attendees.length} Guests</p>
-                                <div className="space-y-2">
-                                    {event.attendees.map(attendee => (
-                                        <div key={attendee.email} className="flex items-center gap-3">
-                                            <Avatar className="h-8 w-8">
-                                                <AvatarImage src={attendee.avatarUrl} alt={attendee.displayName} data-ai-hint="user avatar" />
-                                                <AvatarFallback>{attendee.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                                            </Avatar>
-                                            <span className="text-sm">{attendee.displayName}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    </>
-                )}
-
+                
                 {teamForEvent && event.roleAssignments && Object.keys(event.roleAssignments).length > 0 && (
                      <>
                         <Separator />
@@ -136,6 +118,29 @@ export function EventDetailsDialog({ event, isOpen, onOpenChange }: EventDetails
                                             </div>
                                         );
                                     })}
+                                </div>
+                            </div>
+                        </div>
+                    </>
+                )}
+
+                {guestsToDisplay.length > 0 && (
+                    <>
+                        <Separator />
+                        <div className="flex items-start gap-4">
+                            <GoogleSymbol name="group" className="text-2xl text-muted-foreground mt-0.5" />
+                            <div className="flex-1">
+                                <p className="font-medium mb-2">{guestsToDisplay.length} Guests</p>
+                                <div className="space-y-2">
+                                    {guestsToDisplay.map(attendee => (
+                                        <div key={attendee.email} className="flex items-center gap-3">
+                                            <Avatar className="h-8 w-8">
+                                                <AvatarImage src={attendee.avatarUrl} alt={attendee.displayName} data-ai-hint="user avatar" />
+                                                <AvatarFallback>{attendee.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                            </Avatar>
+                                            <span className="text-sm">{attendee.displayName}</span>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         </div>
