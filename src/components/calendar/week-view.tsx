@@ -23,7 +23,7 @@ const isHoliday = (day: Date) => {
 
 const DEFAULT_HOUR_HEIGHT_PX = 60;
 
-export function WeekView({ date, containerRef, zoomLevel, onEasyBooking, onEventClick }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', onEasyBooking: (date: Date) => void, onEventClick: (event: Event) => void }) {
+export function WeekView({ date, containerRef, zoomLevel, onEasyBooking, onEventClick }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', onEasyBooking: (data: { startTime: Date, location?: string }) => void, onEventClick: (event: Event) => void }) {
     const { viewAsUser, events, calendars, users, teams } = useUser();
     const [now, setNow] = useState<Date | null>(null);
     const nowMarkerRef = useRef<HTMLDivElement>(null);
@@ -61,7 +61,7 @@ export function WeekView({ date, containerRef, zoomLevel, onEasyBooking, onEvent
 
         const startTime = new Date(day);
         startTime.setHours(hour, minutes, 0, 0);
-        onEasyBooking(startTime);
+        onEasyBooking({ startTime });
     };
 
     useEffect(() => {
@@ -211,7 +211,20 @@ export function WeekView({ date, containerRef, zoomLevel, onEasyBooking, onEvent
                                             >
                                                 <div className="flex items-center gap-1 flex-wrap mb-1">
                                                     <PriorityBadge priorityId={event.priority} />
-                                                    {eventTemplate && <Badge variant="outline" className="border-transparent bg-background/50 text-foreground/80">{eventTemplate.name}</Badge>}
+                                                    {eventTemplate && (
+                                                        <TooltipProvider>
+                                                            <Tooltip>
+                                                                <TooltipTrigger asChild>
+                                                                    <Badge variant="outline" className="border-transparent bg-background/50 text-foreground/80 p-1 h-auto">
+                                                                        <GoogleSymbol name={eventTemplate.icon} className="text-base" />
+                                                                    </Badge>
+                                                                </TooltipTrigger>
+                                                                <TooltipContent>
+                                                                    <p>{eventTemplate.name}</p>
+                                                                </TooltipContent>
+                                                            </Tooltip>
+                                                        </TooltipProvider>
+                                                    )}
                                                 </div>
                                                 <p className="font-semibold text-xs whitespace-normal leading-tight">{event.title}</p>
                                                 <p className="text-[10px] opacity-90 truncate">{format(event.startTime, timeFormatEvent)} - {format(event.endTime, timeFormatEvent)}</p>

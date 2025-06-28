@@ -176,7 +176,7 @@ const ProductionScheduleLocationRow = React.memo(({
     dailyCheckAssignments: Record<string, Record<string, string | null>>;
     toggleLocationCollapse: (dayIso: string, location: string) => void;
     handleAssignCheck: (dayIso: string, location: string, userId: string | null) => void;
-    handleEasyBookingClick: (e: React.MouseEvent<HTMLDivElement>, day: Date) => void;
+    handleEasyBookingClick: (e: React.MouseEvent<HTMLDivElement>, day: Date, location: string) => void;
     onEventClick: (event: Event) => void;
 }) => {
     const { viewAsUser, users, teams } = useUser();
@@ -244,7 +244,7 @@ const ProductionScheduleLocationRow = React.memo(({
             </div>
             <div 
                 className={cn("relative flex-1", isLocationCollapsed ? "h-10" : "min-h-[5rem] py-1")}
-                onClick={(e) => handleEasyBookingClick(e, day)}
+                onClick={(e) => handleEasyBookingClick(e, day, location)}
             >
                 {Array.from({ length: 23 }).map((_, hour) => <div key={`line-${location}-${hour}`} className="absolute top-0 bottom-0 border-r" style={{ left: `${(hour + 1) * hourWidth}px` }}></div>)}
                 {!isLocationCollapsed && eventsInRow.map(event => {
@@ -262,7 +262,20 @@ const ProductionScheduleLocationRow = React.memo(({
                         >
                             <div className="flex items-center gap-1 flex-wrap mb-1">
                                 <PriorityBadge priorityId={event.priority} />
-                                {eventTemplate && <Badge variant="outline" className="border-transparent bg-background/50 text-foreground/80">{eventTemplate.name}</Badge>}
+                                {eventTemplate && (
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Badge variant="outline" className="border-transparent bg-background/50 text-foreground/80 p-1 h-auto">
+                                                    <GoogleSymbol name={eventTemplate.icon} className="text-base" />
+                                                </Badge>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>{eventTemplate.name}</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                )}
                             </div>
                             <p className="font-semibold text-sm whitespace-normal leading-tight">{event.title}</p>
                             <p className="text-xs opacity-90">{format(event.startTime, timeFormatEvent)} - {format(event.endTime, timeFormatEvent)}</p>
@@ -313,7 +326,7 @@ const ProductionScheduleLocationRow = React.memo(({
 ProductionScheduleLocationRow.displayName = 'ProductionScheduleLocationRow';
 
 
-export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBooking, onEventClick }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', onEasyBooking: (date: Date) => void, onEventClick: (event: Event) => void }) {
+export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBooking, onEventClick }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', onEasyBooking: (data: { startTime: Date, location?: string }) => void, onEventClick: (event: Event) => void }) {
     const { users, teams, viewAsUser, events, calendars, userStatusAssignments, setUserStatusAssignments } = useUser();
 
     const [now, setNow] = useState<Date | null>(null);
@@ -355,7 +368,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
         }));
     };
 
-    const handleEasyBookingClick = (e: React.MouseEvent<HTMLDivElement>, day: Date) => {
+    const handleEasyBookingClick = (e: React.MouseEvent<HTMLDivElement>, day: Date, location: string) => {
         if ((e.target as HTMLElement).closest('[data-event-id]')) {
             return;
         }
@@ -370,7 +383,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
 
         const startTime = new Date(day);
         startTime.setHours(hour, minutes, 0, 0);
-        onEasyBooking(startTime);
+        onEasyBooking({ startTime, location });
     };
 
     useEffect(() => {

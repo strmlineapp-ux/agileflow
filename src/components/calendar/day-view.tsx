@@ -44,7 +44,7 @@ const DayViewLocationRow = React.memo(({
     calendarColorMap: Record<string, { bg: string; text: string }>;
     timeFormatEvent: string;
     toggleLocationCollapse: (location: string) => void;
-    handleEasyBookingClick: (e: React.MouseEvent<HTMLDivElement>, type: 'standard' | 'reversed', day?: Date) => void;
+    handleEasyBookingClick: (e: React.MouseEvent<HTMLDivElement>, type: 'standard' | 'reversed', day: Date, location: string) => void;
     day: Date;
     onEventClick: (event: Event) => void;
     users: User[];
@@ -73,7 +73,7 @@ const DayViewLocationRow = React.memo(({
                 {isCollapsed ? <GoogleSymbol name="chevron_right" className="text-lg mt-1" /> : <GoogleSymbol name="expand_more" className="text-lg mt-1" />}
                 <p className="font-medium text-sm">{location}</p>
             </div>
-            <div className={cn("relative flex-1", isCollapsed ? "h-10" : "min-h-[5rem] py-1")} onClick={(e) => handleEasyBookingClick(e, 'standard', day)}>
+            <div className={cn("relative flex-1", isCollapsed ? "h-10" : "min-h-[5rem] py-1")} onClick={(e) => handleEasyBookingClick(e, 'standard', day, location)}>
                 {Array.from({ length: 23 }).map((_, hour) => (
                     <div key={`line-${hour}`} className="absolute top-0 bottom-0 border-r" style={{ left: `${(hour + 1) * hourWidth}px` }}></div>
                 ))}
@@ -92,7 +92,20 @@ const DayViewLocationRow = React.memo(({
                         >
                             <div className="flex items-center gap-1 flex-wrap mb-1">
                                 <PriorityBadge priorityId={event.priority} />
-                                {eventTemplate && <Badge variant="outline" className="border-transparent bg-background/50 text-foreground/80">{eventTemplate.name}</Badge>}
+                                {eventTemplate && (
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Badge variant="outline" className="border-transparent bg-background/50 text-foreground/80 p-1 h-auto">
+                                                    <GoogleSymbol name={eventTemplate.icon} className="text-base" />
+                                                </Badge>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>{eventTemplate.name}</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                )}
                             </div>
                             <p className="font-semibold text-sm whitespace-normal leading-tight">{event.title}</p>
                             <p className="text-xs opacity-90">{format(event.startTime, timeFormatEvent)} - {format(event.endTime, timeFormatEvent)}</p>
@@ -142,7 +155,7 @@ const DayViewLocationRow = React.memo(({
 });
 DayViewLocationRow.displayName = 'DayViewLocationRow';
 
-export function DayView({ date, containerRef, zoomLevel, axisView, onEasyBooking, onEventClick }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', axisView: 'standard' | 'reversed', onEasyBooking: (date: Date) => void, onEventClick: (event: Event) => void }) {
+export function DayView({ date, containerRef, zoomLevel, axisView, onEasyBooking, onEventClick }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', axisView: 'standard' | 'reversed', onEasyBooking: (data: { startTime: Date, location?: string }) => void, onEventClick: (event: Event) => void }) {
     const { viewAsUser, events, calendars, locations, users, teams } = useUser();
     const [now, setNow] = useState<Date | null>(null);
     const nowMarkerRef = useRef<HTMLDivElement>(null);
@@ -263,7 +276,7 @@ export function DayView({ date, containerRef, zoomLevel, axisView, onEasyBooking
         });
     };
 
-    const handleEasyBookingClick = (e: React.MouseEvent<HTMLDivElement>, type: 'standard' | 'reversed', day?: Date) => {
+    const handleEasyBookingClick = (e: React.MouseEvent<HTMLDivElement>, type: 'standard' | 'reversed', day: Date, location?: string) => {
         if ((e.target as HTMLElement).closest('[data-event-id]')) {
             return;
         }
@@ -271,7 +284,8 @@ export function DayView({ date, containerRef, zoomLevel, axisView, onEasyBooking
         if (!viewAsUser.easyBooking || !userCanCreateEvent) return;
 
         const rect = e.currentTarget.getBoundingClientRect();
-        const targetDate = day || date;
+        
+        let startTime;
 
         if (type === 'standard') {
             const x = e.clientX - rect.left;
@@ -279,19 +293,19 @@ export function DayView({ date, containerRef, zoomLevel, axisView, onEasyBooking
             const hour = Math.floor(clickedHour);
             const minutes = Math.floor((clickedHour % 1) * 60);
 
-            const startTime = new Date(targetDate);
+            startTime = new Date(day);
             startTime.setHours(hour, minutes, 0, 0);
-            onEasyBooking(startTime);
-        } else {
+        } else { // reversed
             const y = e.clientY - rect.top;
             const clickedHour = y / hourHeight;
             const hour = Math.floor(clickedHour);
             const minutes = Math.floor((clickedHour % 1) * 60);
 
-            const startTime = new Date(targetDate);
+            startTime = new Date(day);
             startTime.setHours(hour, minutes, 0, 0);
-            onEasyBooking(startTime);
         }
+        
+        onEasyBooking({ startTime, location });
     };
 
     const getEventPositionReversed = (event: Event) => {
@@ -390,7 +404,7 @@ export function DayView({ date, containerRef, zoomLevel, axisView, onEasyBooking
                     </div>
 
                     {/* Day column */}
-                    <div className="relative" onClick={(e) => handleEasyBookingClick(e, 'reversed')}>
+                    <div className="relative" onClick={(e) => handleEasyBookingClick(e, 'reversed', date)}>
                         {/* Lunch Break Cue */}
                         <div
                             className="absolute inset-x-0 lunch-break-pattern z-0 pointer-events-none"
@@ -429,7 +443,20 @@ export function DayView({ date, containerRef, zoomLevel, axisView, onEasyBooking
                                         >
                                             <div className="flex items-center gap-1 flex-wrap mb-1">
                                                 <PriorityBadge priorityId={event.priority} />
-                                                {eventTemplate && <Badge variant="outline" className="border-transparent bg-background/50 text-foreground/80">{eventTemplate.name}</Badge>}
+                                                {eventTemplate && (
+                                                    <TooltipProvider>
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Badge variant="outline" className="border-transparent bg-background/50 text-foreground/80 p-1 h-auto">
+                                                                    <GoogleSymbol name={eventTemplate.icon} className="text-base" />
+                                                                </Badge>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>
+                                                                <p>{eventTemplate.name}</p>
+                                                            </TooltipContent>
+                                                        </Tooltip>
+                                                    </TooltipProvider>
+                                                )}
                                             </div>
                                             <p className="font-semibold text-xs whitespace-normal leading-tight">{event.title}</p>
                                             <p className="text-[10px] opacity-90">{format(event.startTime, timeFormatEvent)} - {format(event.endTime, timeFormatEvent)}</p>

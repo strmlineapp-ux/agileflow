@@ -71,15 +71,16 @@ export default function CalendarPage() {
     }
   };
 
-  const handleEasyBooking = (startTime: Date) => {
+  const handleEasyBooking = (data: { startTime: Date; location?: string }) => {
     if (!viewAsUser.easyBooking || !userCanCreateEvent) return;
 
-    const endTime = new Date(startTime.getTime() + 60 * 60 * 1000); // Default to 1 hour
+    const endTime = new Date(data.startTime.getTime() + 60 * 60 * 1000); // Default to 1 hour
 
     setInitialEventData({
-        date: startTime,
-        startTime: format(startTime, 'HH:mm'),
+        date: data.startTime,
+        startTime: format(data.startTime, 'HH:mm'),
         endTime: format(endTime, 'HH:mm'),
+        location: data.location,
     });
     setIsPopoverOpen(true);
   };

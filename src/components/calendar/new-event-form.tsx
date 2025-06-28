@@ -94,7 +94,7 @@ const formSchema = z.object({
 
 type NewEventFormProps = {
   onFinished?: () => void;
-  initialData?: { date: Date; startTime: string; endTime: string; } | null;
+  initialData?: { date: Date; startTime: string; endTime: string; location?: string; } | null;
 };
 
 const getDefaultCalendarId = (user: User, availableCalendars: SharedCalendar[]): CalendarId | undefined => {
@@ -201,15 +201,18 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
     setIsTemplatePopoverOpen(false);
   };
   
+  const assignedRoleUserIds = new Set(Object.values(roleAssignments).map(a => a.assignedUser).filter(Boolean));
+
   const filteredGuests = React.useMemo(() => {
     const selectedAttendeeIds = new Set(selectedAttendees.map(att => att.userId).filter(Boolean));
-    const baseList = users.filter(user => !selectedAttendeeIds.has(user.userId));
+    const baseList = users.filter(user => !selectedAttendeeIds.has(user.userId) && !assignedRoleUserIds.has(user.userId));
+    
     if (!guestSearch) return baseList;
     return baseList.filter(user => 
         user.displayName.toLowerCase().includes(guestSearch.toLowerCase()) || 
         user.email.toLowerCase().includes(guestSearch.toLowerCase())
     );
-  }, [users, guestSearch, selectedAttendees]);
+  }, [users, guestSearch, selectedAttendees, assignedRoleUserIds]);
 
 
   React.useEffect(() => {
@@ -218,7 +221,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
             calendarId: defaultCalendarId,
             priority: getDefaultPriority(),
             title: '',
-            location: '',
+            location: initialData.location || '',
             description: '',
             attachments: [],
             attendees: [],
@@ -228,7 +231,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
             endTime: initialData.endTime,
         });
     }
-  }, [initialData, form, defaultCalendarId, eventStrategy]);
+  }, [initialData, form, defaultCalendarId]);
 
   const selectedCalendar = calendars.find(c => c.id === selectedCalendarId) || availableCalendars[0];
   
@@ -259,11 +262,6 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
 
   const handleAssignUserToRole = (role: string, user: User) => {
     setRoleAssignments(prev => ({ ...prev, [role]: { assignedUser: user.userId, popoverOpen: false }}));
-    // Also add to guest list if not already there
-    const currentAttendees = form.getValues('attendees') || [];
-    if (!currentAttendees.some(att => att.userId === user.userId)) {
-        handleToggleGuest(user);
-    }
   };
 
   const handleUnassignUserFromRole = (role: string) => {
@@ -552,7 +550,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
             name="location"
             render={({ field }) => (
               <FormItem>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a location" />
@@ -653,10 +651,12 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                         <div className="flex flex-wrap gap-2">
                             {Object.entries(roleAssignments).map(([role, { assignedUser, popoverOpen }]) => {
                                 const user = assignedUser ? users.find(u => u.userId === assignedUser) : null;
-                                const usersWithRole = teamForSelectedCalendar.members
+                                
+                                const teamMemberUsers = teamForSelectedCalendar.members
                                     .map(memberId => users.find(u => u.userId === memberId))
-                                    .filter((u): u is User => !!u)
-                                    .filter(u => u.roles?.includes(role));
+                                    .filter((u): u is User => !!u);
+                                    
+                                const usersWithRole = teamMemberUsers.filter(u => u.roles?.includes(role));
                                 
                                 const availableUsers = usersWithRole.filter(u => !absencesForDay.some(a => a.userId === u.userId));
                                 const absentUsers = usersWithRole
