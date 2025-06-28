@@ -1,5 +1,4 @@
 
-
 import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team, type PriorityStrategy } from '@/types';
 
 export const mockPriorityStrategies: PriorityStrategy[] = [
@@ -25,7 +24,7 @@ export const mockPriorityStrategies: PriorityStrategy[] = [
         type: 'symbol',
         icon: 'star',
         max: 5,
-        color: '#FFC107'
+        color: '#FBBF24'
     },
     {
         id: 'effort-score',
@@ -166,8 +165,8 @@ export const mockTeams: Team[] = [
         icon: 'movie',
         members: ['1', '2', '6'],
         managers: ['1', '2'],
-        managerRoleName: 'Directors',
-        memberRoleName: 'Crew',
+        managerRoleName: 'User Managers',
+        memberRoleName: 'Team Members',
         locationCheckManagers: ['1'],
         roles: ['Post-Production', 'Studio Productions Team Admin', 'Video Director', 'Edit Events'],
         pinnedLocations: ['Studio'],
