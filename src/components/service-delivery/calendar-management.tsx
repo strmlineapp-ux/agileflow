@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -54,6 +53,8 @@ export function CalendarManagement() {
   };
 
   const openDeleteDialog = (calendar: SharedCalendar) => {
+    // Close the edit dialog before opening the delete confirmation
+    setIsAddOrEditDialogOpen(false);
     setCurrentCalendar(calendar);
     setIsDeleteDialogOpen(true);
   };
@@ -113,6 +114,23 @@ export function CalendarManagement() {
 
       <Dialog open={isAddOrEditDialogOpen} onOpenChange={setIsAddOrEditDialogOpen}>
         <DialogContent>
+          <div className="absolute top-4 right-4 flex items-center gap-1">
+            {currentCalendar && calendars.length > 1 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                onClick={() => openDeleteDialog(currentCalendar)}
+              >
+                <GoogleSymbol name="delete" className="text-xl" />
+                <span className="sr-only">Delete Calendar</span>
+              </Button>
+            )}
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSave}>
+              <GoogleSymbol name="check" className="text-xl" />
+              <span className="sr-only">Save Changes</span>
+            </Button>
+          </div>
           <DialogHeader>
             <DialogTitle>{currentCalendar ? 'Edit Calendar' : 'Add New Calendar'}</DialogTitle>
           </DialogHeader>
@@ -126,15 +144,6 @@ export function CalendarManagement() {
               <Input id="color" type="color" value={calendarColor} onChange={(e) => setCalendarColor(e.target.value)} className="col-span-3 p-1" />
             </div>
           </div>
-          <DialogFooter>
-            {currentCalendar && (
-                 <Button variant="destructive" className="mr-auto" onClick={() => openDeleteDialog(currentCalendar)} disabled={calendars.length <= 1}>
-                    Delete
-                </Button>
-            )}
-            <Button variant="outline" onClick={() => setIsAddOrEditDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSave}>Save Changes</Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 

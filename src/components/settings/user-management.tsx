@@ -13,7 +13,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -55,6 +54,7 @@ export function UserManagement() {
         }
         await updateUser(editingContactUser.userId, { phone });
         setEditingContactUser(null);
+        toast({ title: 'Success', description: 'Contact number updated.' });
     };
 
     return (
@@ -241,6 +241,12 @@ export function UserManagement() {
 
             <Dialog open={!!editingContactUser} onOpenChange={(isOpen) => !isOpen && setEditingContactUser(null)}>
                 <DialogContent>
+                    <div className="absolute top-4 right-4">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSavePhone}>
+                            <GoogleSymbol name="check" className="text-xl" />
+                            <span className="sr-only">Save Phone Number</span>
+                        </Button>
+                    </div>
                     <DialogHeader>
                         <DialogTitle>Edit contact number</DialogTitle>
                     </DialogHeader>
@@ -250,10 +256,6 @@ export function UserManagement() {
                             <Input id="phone-number" value={phone} onChange={(e) => setPhone(e.target.value)} className="col-span-3" placeholder="e.g. 123-456-7890" />
                         </div>
                     </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setEditingContactUser(null)}>Cancel</Button>
-                        <Button onClick={handleSavePhone}>Save changes</Button>
-                    </DialogFooter>
                 </DialogContent>
             </Dialog>
         </>

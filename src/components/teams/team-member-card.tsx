@@ -14,7 +14,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -92,7 +91,7 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
             </div>
             <div className="flex flex-wrap gap-1 min-h-[24px]">
               {teamSpecificRoles.length > 0 ? (
-                teamSpecificRoles.map(role => <Badge key={role} variant="secondary">{role}</Badge>)
+                teamSpecificRoles.map(role => <Badge key={role} variant="secondary" className="rounded-full">{role}</Badge>)
               ) : (
                 <p className="text-xs text-muted-foreground italic">No team roles assigned.</p>
               )}
@@ -103,6 +102,12 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
       
       <Dialog open={isRolesDialogOpen} onOpenChange={(isOpen) => !isOpen && closeRolesDialog()}>
         <DialogContent className="max-w-md">
+            <div className="absolute top-4 right-4">
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSaveRoles}>
+                    <GoogleSymbol name="check" className="text-xl" />
+                    <span className="sr-only">Save Roles</span>
+                </Button>
+            </div>
             <DialogHeader>
                 <DialogTitle>Edit Roles for {member.displayName}</DialogTitle>
                 <DialogDescription>Assign or remove roles specific to the {team.name} team.</DialogDescription>
@@ -141,10 +146,6 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
                     </div>
                     </div>
             </div>
-            <DialogFooter>
-                <Button variant="outline" onClick={closeRolesDialog}>Cancel</Button>
-                <Button onClick={handleSaveRoles}>Save Changes</Button>
-            </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
