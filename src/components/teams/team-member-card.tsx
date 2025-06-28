@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -83,11 +82,11 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
         <CardContent>
           <p className="text-sm text-muted-foreground">{member.title}</p>
           <div className="mt-4 space-y-2">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1">
                 <h4 className="text-sm font-medium">Team Roles</h4>
                 {canManageRoles && (
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleOpenRolesDialog}>
-                        <GoogleSymbol name="edit" className="text-lg" />
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleOpenRolesDialog}>
+                        <GoogleSymbol name="edit" className="text-base" />
                         <span className="sr-only">Edit roles for {member.displayName}</span>
                     </Button>
                 )}
