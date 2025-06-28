@@ -10,12 +10,13 @@ import { mockHolidays } from '@/lib/mock-data';
 import { Button } from '../ui/button';
 import { useUser } from '@/context/user-context';
 import { GoogleSymbol } from '../icons/google-symbol';
+import { type Event } from '@/types';
 
 const isHoliday = (day: Date) => {
     return mockHolidays.some(holiday => isSameDay(day, holiday));
 }
 
-export function MonthView({ date, containerRef }: { date: Date; containerRef: React.RefObject<HTMLDivElement> }) {
+export function MonthView({ date, containerRef, onEventClick }: { date: Date; containerRef: React.RefObject<HTMLDivElement>; onEventClick: (event: Event) => void; }) {
     const todayRef = useRef<HTMLDivElement>(null);
     const { events, calendars } = useUser();
 
@@ -94,6 +95,8 @@ export function MonthView({ date, containerRef }: { date: Date; containerRef: Re
                          return (
                              <Badge 
                                  key={event.eventId} 
+                                 data-event-id={event.eventId}
+                                 onClick={() => onEventClick(event)}
                                  style={{ backgroundColor: colors?.bg, color: colors?.text }}
                                  className={cn("block w-full text-left truncate cursor-pointer border-transparent")}
                              >

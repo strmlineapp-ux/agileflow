@@ -18,7 +18,7 @@ const isHoliday = (day: Date) => {
 
 const DEFAULT_HOUR_HEIGHT_PX = 60;
 
-export function WeekView({ date, containerRef, zoomLevel, onEasyBooking }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', onEasyBooking: (date: Date) => void }) {
+export function WeekView({ date, containerRef, zoomLevel, onEasyBooking, onEventClick }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', onEasyBooking: (date: Date) => void, onEventClick: (event: Event) => void }) {
     const { viewAsUser, events, calendars } = useUser();
     const [now, setNow] = useState<Date | null>(null);
     const nowMarkerRef = useRef<HTMLDivElement>(null);
@@ -42,6 +42,10 @@ export function WeekView({ date, containerRef, zoomLevel, onEasyBooking }: { dat
     }, [calendars]);
 
     const handleEasyBookingClick = (e: React.MouseEvent<HTMLDivElement>, day: Date) => {
+        if ((e.target as HTMLElement).closest('[data-event-id]')) {
+            return;
+        }
+
         if (!viewAsUser.easyBooking || !userCanCreateEvent) return;
 
         const rect = e.currentTarget.getBoundingClientRect();
@@ -191,6 +195,8 @@ export function WeekView({ date, containerRef, zoomLevel, onEasyBooking }: { dat
                                         return (
                                             <div 
                                                 key={event.eventId} 
+                                                data-event-id={event.eventId}
+                                                onClick={(e) => { e.stopPropagation(); onEventClick(event); }}
                                                 className={cn(
                                                     "absolute left-1 right-1 p-1 rounded-md shadow-sm cursor-pointer"
                                                 )}

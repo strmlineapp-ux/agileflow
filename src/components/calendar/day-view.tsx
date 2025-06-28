@@ -26,6 +26,7 @@ const DayViewLocationRow = React.memo(({
     toggleLocationCollapse,
     handleEasyBookingClick,
     day,
+    onEventClick,
 }: {
     location: string;
     isLast: boolean;
@@ -38,6 +39,7 @@ const DayViewLocationRow = React.memo(({
     toggleLocationCollapse: (location: string) => void;
     handleEasyBookingClick: (e: React.MouseEvent<HTMLDivElement>, type: 'standard' | 'reversed', day?: Date) => void;
     day: Date;
+    onEventClick: (event: Event) => void;
 }) => {
     const eventsInRow = groupedEvents[location] || [];
     const isCollapsed = collapsedLocations.has(location);
@@ -72,6 +74,8 @@ const DayViewLocationRow = React.memo(({
                     return (
                         <div 
                             key={event.eventId} 
+                            data-event-id={event.eventId}
+                            onClick={(e) => { e.stopPropagation(); onEventClick(event); }}
                             className="absolute top-1 p-2 rounded-lg shadow-md cursor-pointer z-10"
                             style={{ left: `${left + 2}px`, width: `${width}px`, backgroundColor: colors?.bg, color: colors?.text }}
                         >
@@ -86,7 +90,7 @@ const DayViewLocationRow = React.memo(({
 });
 DayViewLocationRow.displayName = 'DayViewLocationRow';
 
-export function DayView({ date, containerRef, zoomLevel, axisView, onEasyBooking }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', axisView: 'standard' | 'reversed', onEasyBooking: (date: Date) => void }) {
+export function DayView({ date, containerRef, zoomLevel, axisView, onEasyBooking, onEventClick }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', axisView: 'standard' | 'reversed', onEasyBooking: (date: Date) => void, onEventClick: (event: Event) => void }) {
     const { viewAsUser, events, calendars, locations } = useUser();
     const [now, setNow] = useState<Date | null>(null);
     const nowMarkerRef = useRef<HTMLDivElement>(null);
@@ -208,6 +212,10 @@ export function DayView({ date, containerRef, zoomLevel, axisView, onEasyBooking
     };
 
     const handleEasyBookingClick = (e: React.MouseEvent<HTMLDivElement>, type: 'standard' | 'reversed', day?: Date) => {
+        if ((e.target as HTMLElement).closest('[data-event-id]')) {
+            return;
+        }
+
         if (!viewAsUser.easyBooking || !userCanCreateEvent) return;
 
         const rect = e.currentTarget.getBoundingClientRect();
@@ -293,6 +301,7 @@ export function DayView({ date, containerRef, zoomLevel, axisView, onEasyBooking
                                 toggleLocationCollapse={toggleLocationCollapse}
                                 handleEasyBookingClick={handleEasyBookingClick}
                                 day={date}
+                                onEventClick={onEventClick}
                            />
                         ))}
                         
@@ -355,6 +364,8 @@ export function DayView({ date, containerRef, zoomLevel, axisView, onEasyBooking
                                     return (
                                         <div 
                                             key={event.eventId} 
+                                            data-event-id={event.eventId}
+                                            onClick={(e) => { e.stopPropagation(); onEventClick(event); }}
                                             className={cn(
                                                 "absolute left-1 right-1 p-1 rounded-md shadow-sm cursor-pointer"
                                             )}

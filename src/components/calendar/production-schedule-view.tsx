@@ -157,6 +157,7 @@ const ProductionScheduleLocationRow = React.memo(({
     toggleLocationCollapse,
     handleAssignCheck,
     handleEasyBookingClick,
+    onEventClick,
 }: {
     day: Date;
     location: string;
@@ -172,6 +173,7 @@ const ProductionScheduleLocationRow = React.memo(({
     toggleLocationCollapse: (dayIso: string, location: string) => void;
     handleAssignCheck: (dayIso: string, location: string, userId: string | null) => void;
     handleEasyBookingClick: (e: React.MouseEvent<HTMLDivElement>, day: Date) => void;
+    onEventClick: (event: Event) => void;
 }) => {
     const { viewAsUser, users, teams } = useUser();
     
@@ -245,7 +247,13 @@ const ProductionScheduleLocationRow = React.memo(({
                     const { left, width } = getEventPosition(event);
                     const colors = calendarColorMap[event.calendarId];
                     return (
-                        <div key={event.eventId} className={cn("absolute top-1 p-2 rounded-lg shadow-md cursor-pointer z-10")} style={{ left: `${left + 2}px`, width: `${width}px`, backgroundColor: colors?.bg, color: colors?.text }}>
+                        <div 
+                            key={event.eventId} 
+                            data-event-id={event.eventId}
+                            onClick={(e) => { e.stopPropagation(); onEventClick(event); }}
+                            className={cn("absolute top-1 p-2 rounded-lg shadow-md cursor-pointer z-10")} 
+                            style={{ left: `${left + 2}px`, width: `${width}px`, backgroundColor: colors?.bg, color: colors?.text }}
+                        >
                             <p className="font-semibold text-sm whitespace-normal">{event.title}</p>
                             <p className="text-xs opacity-90">{format(event.startTime, timeFormatEvent)} - {format(event.endTime, timeFormatEvent)}</p>
                         </div>
@@ -258,7 +266,7 @@ const ProductionScheduleLocationRow = React.memo(({
 ProductionScheduleLocationRow.displayName = 'ProductionScheduleLocationRow';
 
 
-export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBooking }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', onEasyBooking: (date: Date) => void }) {
+export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBooking, onEventClick }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', onEasyBooking: (date: Date) => void, onEventClick: (event: Event) => void }) {
     const { users, teams, viewAsUser, events, calendars, userStatusAssignments, setUserStatusAssignments } = useUser();
 
     const [now, setNow] = useState<Date | null>(null);
@@ -301,6 +309,10 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
     };
 
     const handleEasyBookingClick = (e: React.MouseEvent<HTMLDivElement>, day: Date) => {
+        if ((e.target as HTMLElement).closest('[data-event-id]')) {
+            return;
+        }
+
         if (!viewAsUser.easyBooking || !userCanCreateEvent) return;
 
         const rect = e.currentTarget.getBoundingClientRect();
@@ -541,6 +553,7 @@ export function ProductionScheduleView({ date, containerRef, zoomLevel, onEasyBo
                                                     toggleLocationCollapse={toggleLocationCollapse}
                                                     handleAssignCheck={handleAssignCheck}
                                                     handleEasyBookingClick={handleEasyBookingClick}
+                                                    onEventClick={onEventClick}
                                                 />
                                             ))}
                                             {isDayToday && now && <div ref={nowMarkerRef} className="absolute top-0 bottom-0 z-20 pointer-events-none" style={{ left: `${LOCATION_LABEL_WIDTH_PX + calculateCurrentTimePosition()}px` }}><div className="relative w-0.5 h-full bg-primary"><div className="absolute -top-1.5 -left-[5px] h-3 w-3 rounded-full bg-primary border-2 border-background"></div></div></div>}
