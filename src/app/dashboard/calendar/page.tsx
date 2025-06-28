@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { MonthView } from '@/components/calendar/month-view';
 import { WeekView } from '@/components/calendar/week-view';
@@ -12,7 +12,7 @@ import { format, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays, sta
 import { useUser } from '@/context/user-context';
 import { canCreateAnyEvent } from '@/lib/permissions';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
-import { NewEventForm } from '@/components/calendar/new-event-form';
+import { EventForm } from '@/components/calendar/new-event-form';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { type Event } from '@/types';
 import { EventDetailsDialog } from '@/components/calendar/event-details-dialog';
@@ -35,44 +35,44 @@ export default function CalendarPage() {
   
   const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars);
 
-  const handlePrev = () => {
+  const handlePrev = useCallback(() => {
     switch (view) {
       case 'month':
-        setCurrentDate(subMonths(currentDate, 1));
+        setCurrentDate(d => subMonths(d, 1));
         break;
       case 'week':
       case 'production-schedule':
-        setCurrentDate(subWeeks(currentDate, 1));
+        setCurrentDate(d => subWeeks(d, 1));
         break;
       case 'day':
-        setCurrentDate(subDays(currentDate, 1));
+        setCurrentDate(d => subDays(d, 1));
         break;
     }
-  };
+  }, [view]);
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     switch (view) {
       case 'month':
-        setCurrentDate(addMonths(currentDate, 1));
+        setCurrentDate(d => addMonths(d, 1));
         break;
       case 'week':
       case 'production-schedule':
-        setCurrentDate(addWeeks(currentDate, 1));
+        setCurrentDate(d => addWeeks(d, 1));
         break;
       case 'day':
-        setCurrentDate(addDays(currentDate, 1));
+        setCurrentDate(d => addDays(d, 1));
         break;
     }
-  };
+  }, [view]);
 
-  const goToToday = () => {
+  const goToToday = useCallback(() => {
     setCurrentDate(new Date());
     if (view === 'production-schedule' || view === 'day' || view === 'week') {
       setZoomLevel('normal');
     }
-  };
+  }, [view]);
 
-  const handleEasyBooking = (data: { startTime: Date; location?: string }) => {
+  const handleEasyBooking = useCallback((data: { startTime: Date; location?: string }) => {
     if (!viewAsUser.easyBooking || !userCanCreateEvent) return;
 
     const endTime = new Date(data.startTime.getTime() + 60 * 60 * 1000); // Default to 1 hour
@@ -84,7 +84,7 @@ export default function CalendarPage() {
         location: data.location,
     });
     setIsNewEventOpen(true);
-  };
+  }, [userCanCreateEvent, viewAsUser.easyBooking]);
   
   const title = useMemo(() => {
     if (view === 'month') {
@@ -117,14 +117,14 @@ export default function CalendarPage() {
     );
   }, [view, currentDate]);
 
-  const closeNewEventDialog = () => {
+  const closeNewEventDialog = useCallback(() => {
     setIsNewEventOpen(false);
     setInitialEventData(null);
-  };
+  }, []);
 
-  const onEventClick = (event: Event) => {
+  const onEventClick = useCallback((event: Event) => {
     setSelectedEvent(event);
-  };
+  }, []);
 
   return (
     <>
@@ -156,7 +156,7 @@ export default function CalendarPage() {
                       <TooltipContent>New Event</TooltipContent>
                     </Tooltip>
                     <DialogContent className="sm:max-w-xl">
-                      <NewEventForm onFinished={closeNewEventDialog} initialData={initialEventData} />
+                      <EventForm onFinished={closeNewEventDialog} initialData={initialEventData} />
                     </DialogContent>
                   </Dialog>
                 )}
