@@ -13,6 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { PriorityBadge } from '../calendar/priority-badge';
+import { cn } from '@/lib/utils';
 
 export function StrategyManagement() {
   const { priorityStrategies, deletePriorityStrategy } = useUser();
@@ -79,7 +80,13 @@ export function StrategyManagement() {
 
        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {priorityStrategies.map(strategy => (
-            <Card key={strategy.id} className="flex flex-col">
+            <Card 
+              key={strategy.id} 
+              className={cn(
+                "flex flex-col transition-all",
+                strategy.applications.length > 0 && "border-primary/50 shadow-lg"
+              )}
+            >
                 <CardHeader>
                     <div className="flex items-start justify-between">
                         <CardTitle>{strategy.name}</CardTitle>
@@ -95,11 +102,8 @@ export function StrategyManagement() {
                     <CardDescription>{strategy.description || 'No description provided.'}</CardDescription>
                 </CardHeader>
                 <CardContent className="flex-grow">
-                     <div className="flex flex-wrap gap-2">
-                        {strategy.applications.length > 0 ? 
-                            strategy.applications.map(app => <Badge key={app} variant="secondary">{app}</Badge>) :
-                            <Badge variant="outline">Not Applied</Badge>
-                        }
+                     <div className="flex flex-wrap gap-2 min-h-[24px]">
+                        {strategy.applications.map(app => <Badge key={app} variant="secondary">{app}</Badge>)}
                     </div>
                 </CardContent>
                 <CardFooter>
