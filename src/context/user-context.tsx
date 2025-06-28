@@ -34,6 +34,7 @@ interface UserContextType {
   events: Event[];
   addEvent: (newEventData: Omit<Event, 'eventId' | 'createdBy' | 'createdAt' | 'lastUpdated'>) => Promise<void>;
   locations: BookableLocation[];
+  allBookableLocations: BookableLocation[];
   addLocation: (locationName: string) => Promise<void>;
   deleteLocation: (locationId: string) => Promise<void>;
   pageConfigs: PageConfig[];
@@ -79,6 +80,27 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const realUser = useMemo(() => users.find(u => u.userId === REAL_USER_ID)!, [users]);
   const viewAsUser = useMemo(() => users.find(u => u.userId === viewAsUserId) || realUser, [users, viewAsUserId, realUser]);
+
+  const allBookableLocations = useMemo(() => {
+    const globalLocations = locations.map(l => ({ id: l.id, name: l.name }));
+    
+    const workstationLocations = teams.flatMap(team => 
+        (team.workstations || []).map(wsName => ({
+            id: `${team.id}-${wsName.toLowerCase().replace(/\s+/g, '-')}`,
+            name: wsName,
+        }))
+    );
+    
+    const combined = [...globalLocations, ...workstationLocations];
+    const uniqueNames = new Map();
+    combined.forEach(loc => {
+        if (!uniqueNames.has(loc.name)) {
+            uniqueNames.set(loc.name, loc);
+        }
+    });
+    
+    return Array.from(uniqueNames.values()).sort((a,b) => a.name.localeCompare(b.name));
+  }, [locations, teams]);
   
   const updateUser = async (userId: string, userData: Partial<User>) => {
     console.log(`Updating user ${userId}:`, userData);
@@ -291,6 +313,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     events,
     addEvent,
     locations,
+    allBookableLocations,
     addLocation,
     deleteLocation,
     pageConfigs,

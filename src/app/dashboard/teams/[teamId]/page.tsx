@@ -1,6 +1,5 @@
 
 
-
 'use client';
 
 import { useParams } from 'next/navigation';
@@ -10,6 +9,7 @@ import { TeamRoleManagement } from '@/components/settings/team-role-management';
 import { TeamMembersView } from '@/components/teams/team-members-view';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { WorkstationManagement } from '@/components/settings/workstation-management';
 
 export default function TeamPage() {
   const { teamId } = useParams();
@@ -45,10 +45,11 @@ export default function TeamPage() {
     <div className="flex flex-col gap-6">
       <h1 className="font-headline text-3xl font-semibold">{team.name} Team Management</h1>
       <Tabs defaultValue="team" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="team">Team</TabsTrigger>
             <TabsTrigger value="roles">Role Management</TabsTrigger>
             <TabsTrigger value="locations">Pinned Locations</TabsTrigger>
+            <TabsTrigger value="workstations">Workstations</TabsTrigger>
         </TabsList>
         <TabsContent value="team" className="mt-4">
           <TeamMembersView team={team} />
@@ -58,6 +59,9 @@ export default function TeamPage() {
         </TabsContent>
         <TabsContent value="locations" className="mt-4">
             <PinnedLocationManagement team={team} />
+        </TabsContent>
+        <TabsContent value="workstations" className="mt-4">
+            <WorkstationManagement team={team} />
         </TabsContent>
       </Tabs>
     </div>

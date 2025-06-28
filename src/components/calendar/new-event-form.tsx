@@ -108,7 +108,7 @@ const titlePlaceholders: Record<CalendarId, string> = {
 };
 
 export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
-  const { viewAsUser, users, calendars, addEvent, locations, getEventStrategy } = useUser();
+  const { viewAsUser, users, calendars, addEvent, allBookableLocations, getEventStrategy } = useUser();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = React.useState(false);
   const [attachments, setAttachments] = React.useState<Attachment[]>([]);
@@ -474,7 +474,7 @@ export function NewEventForm({ onFinished, initialData }: NewEventFormProps) {
                                     </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                    {locations.map(loc => (
+                                    {allBookableLocations.map(loc => (
                                         <SelectItem key={loc.id} value={loc.name}>{loc.name}</SelectItem>
                                     ))}
                                 </SelectContent>
