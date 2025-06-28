@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
 } from '@/components/ui/dialog';
 import {
   AlertDialog,
@@ -24,7 +23,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, Check, XCircle } from 'lucide-react';
+import { PlusCircle, Check, XCircle, X } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
@@ -196,8 +195,29 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <DialogContent className="sm:max-w-md">
+                 <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="absolute top-4 right-12 h-8 w-8" 
+                    onClick={handleSave}
+                >
+                    <Check className="h-5 w-5" />
+                    <span className="sr-only">Save Changes</span>
+                </Button>
+
                 <div className="grid gap-6 pt-6">
                     <div className="flex items-center gap-2">
+                        {team && (
+                             <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-9 w-9 text-muted-foreground hover:text-destructive"
+                                onClick={() => onDelete(team)}
+                            >
+                                <XCircle className="h-5 w-5" />
+                                <span className="sr-only">Delete team</span>
+                            </Button>
+                        )}
                         <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                             <PopoverTrigger asChild>
                             <Button
@@ -232,12 +252,11 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
                             placeholder="Team Name"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            className="text-lg font-semibold flex-1"
+                            className="text-lg font-semibold flex-1 border-none focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-auto"
                         />
                     </div>
 
                     <div className="space-y-2">
-                         <p className="text-sm text-muted-foreground">Click member pills to toggle manager status.</p>
                         <div className="flex items-start gap-2 rounded-md border bg-muted/50 p-2">
                            
                             <Popover open={isMemberPopoverOpen} onOpenChange={setIsMemberPopoverOpen}>
@@ -308,28 +327,9 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
                                 )}
                             </div>
                         </div>
+                         <p className="text-xs text-muted-foreground pl-12">Click member pills to toggle manager status.</p>
                     </div>
                 </div>
-
-                <DialogFooter className="sm:justify-between pt-6">
-                    <div>
-                        {team && (
-                             <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-9 w-9 text-muted-foreground hover:text-destructive"
-                                onClick={() => onDelete(team)}
-                            >
-                                <XCircle className="h-5 w-5" />
-                                <span className="sr-only">Delete team</span>
-                            </Button>
-                        )}
-                    </div>
-                    <Button size="icon" onClick={handleSave}>
-                        <Check className="h-4 w-4" />
-                        <span className="sr-only">Save Changes</span>
-                    </Button>
-                </DialogFooter>
             </DialogContent>
         </Dialog>
     );
