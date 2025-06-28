@@ -5,6 +5,9 @@ import type React from 'react';
 export interface AppSettings {
   displayName: string;
   icon: string;
+  calendarManagementLabel?: string;
+  teamManagementLabel?: string;
+  strategyLabel?: string;
 }
 
 export interface Attendee {
@@ -54,11 +57,14 @@ export interface Team {
   managerRoleName?: string;
   memberRoleName?: string;
   locationCheckManagers: string[]; // array of userIds who can manage check locations
+  checkManagersLabel?: string;
   roles: TeamRole[]; // team-specific roles
   pinnedLocations: string[]; // array of location names
+  pinnedLocationsLabel?: string;
   checkLocations: string[]; // subset of pinnedLocations designated for daily checks
   locationAliases?: { [key:string]: string };
   workstations?: string[];
+  workstationsLabel?: string;
   eventTemplates?: EventTemplate[];
 }
 

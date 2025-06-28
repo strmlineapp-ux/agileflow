@@ -16,6 +16,7 @@ import { NewEventForm } from '@/components/calendar/new-event-form';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { type Event } from '@/types';
 import { EventDetailsDialog } from '@/components/calendar/event-details-dialog';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export default function CalendarPage() {
   const { realUser, viewAsUser, calendars } = useUser();
@@ -23,7 +24,7 @@ export default function CalendarPage() {
   const [view, setView] = useState<'month' | 'week' | 'day' | 'production-schedule'>(realUser.defaultCalendarView || 'day');
   const [zoomLevel, setZoomLevel] = useState<'normal' | 'fit'>('normal');
   const [dayViewAxis, setDayViewAxis] = useState<'standard' | 'reversed'>('standard');
-  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [isNewEventOpen, setIsNewEventOpen] = useState(false);
   const [initialEventData, setInitialEventData] = useState<any>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   
@@ -82,7 +83,7 @@ export default function CalendarPage() {
         endTime: format(endTime, 'HH:mm'),
         location: data.location,
     });
-    setIsPopoverOpen(true);
+    setIsNewEventOpen(true);
   };
   
   const title = useMemo(() => {
@@ -116,8 +117,8 @@ export default function CalendarPage() {
     );
   }, [view, currentDate]);
 
-  const closePopover = () => {
-    setIsPopoverOpen(false);
+  const closeNewEventDialog = () => {
+    setIsNewEventOpen(false);
     setInitialEventData(null);
   };
 
@@ -140,31 +141,48 @@ export default function CalendarPage() {
               <h1 className="font-headline text-2xl font-semibold ml-4 flex items-baseline gap-3">{title}</h1>
           </div>
           <div className="flex items-center gap-2">
-              {userCanCreateEvent && (
-                <Dialog open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-                  <DialogTrigger asChild>
-                    <Button>
-                      <GoogleSymbol name="add_circle" className="mr-2" />
-                      New Event
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-xl">
-                    <NewEventForm onFinished={closePopover} initialData={initialEventData} />
-                  </DialogContent>
-                </Dialog>
-              )}
-              {(view === 'production-schedule' || view === 'day' || view === 'week') && (
-                  <Button variant="outline" size="icon" onClick={() => setZoomLevel(zoomLevel === 'normal' ? 'fit' : 'normal')}>
-                      {zoomLevel === 'normal' ? <GoogleSymbol name="close_fullscreen" /> : <GoogleSymbol name="open_in_full" />}
-                      <span className="sr-only">{zoomLevel === 'normal' ? 'Fit to view' : 'Reset view'}</span>
-                  </Button>
-              )}
-              {view === 'day' && (
-                  <Button variant="outline" size="icon" onClick={() => setDayViewAxis(dayViewAxis === 'standard' ? 'reversed' : 'standard')}>
-                      <GoogleSymbol name="swap_horiz" />
-                      <span className="sr-only">{dayViewAxis === 'standard' ? 'Switch to reversed axis view' : 'Switch to standard view'}</span>
-                  </Button>
-              )}
+              <TooltipProvider>
+                {userCanCreateEvent && (
+                  <Dialog open={isNewEventOpen} onOpenChange={setIsNewEventOpen}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <DialogTrigger asChild>
+                          <Button size="icon">
+                            <GoogleSymbol name="add_circle" />
+                            <span className="sr-only">New Event</span>
+                          </Button>
+                        </DialogTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent>New Event</TooltipContent>
+                    </Tooltip>
+                    <DialogContent className="sm:max-w-xl">
+                      <NewEventForm onFinished={closeNewEventDialog} initialData={initialEventData} />
+                    </DialogContent>
+                  </Dialog>
+                )}
+                {(view === 'production-schedule' || view === 'day' || view === 'week') && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="outline" size="icon" onClick={() => setZoomLevel(zoomLevel === 'normal' ? 'fit' : 'normal')}>
+                          {zoomLevel === 'normal' ? <GoogleSymbol name="close_fullscreen" /> : <GoogleSymbol name="open_in_full" />}
+                          <span className="sr-only">{zoomLevel === 'normal' ? 'Fit to view' : 'Reset view'}</span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>{zoomLevel === 'normal' ? 'Fit to view' : 'Reset view'}</TooltipContent>
+                  </Tooltip>
+                )}
+                {view === 'day' && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button variant="outline" size="icon" onClick={() => setDayViewAxis(dayViewAxis === 'standard' ? 'reversed' : 'standard')}>
+                            <GoogleSymbol name="swap_horiz" />
+                            <span className="sr-only">{dayViewAxis === 'standard' ? 'Switch to reversed axis view' : 'Switch to standard view'}</span>
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>{dayViewAxis === 'standard' ? 'Reversed axis view' : 'Standard view'}</TooltipContent>
+                  </Tooltip>
+                )}
+              </TooltipProvider>
               <TabsList>
                   <TabsTrigger value="month">Month</TabsTrigger>
                   <TabsTrigger value="week">Week</TabsTrigger>

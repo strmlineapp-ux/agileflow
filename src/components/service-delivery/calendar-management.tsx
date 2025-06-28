@@ -163,7 +163,7 @@ export function CalendarManagement() {
             <Card key={calendar.id} className="flex flex-col">
               <CardHeader>
                 <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
+                    <CardTitle className="flex items-center gap-3 text-xl">
                         <div className="relative h-4 w-4 rounded-full border shrink-0">
                             <div
                                 className="h-full w-full rounded-full"
@@ -177,13 +177,13 @@ export function CalendarManagement() {
                                 aria-label={`Change color for ${calendar.name}`}
                             />
                         </div>
-                        <CardTitle className="text-xl">{calendar.name}</CardTitle>
-                    </div>
-                    <div className="flex items-center -mr-4 -mt-2">
-                        <Button variant="ghost" size="icon" onClick={() => openEditDialog(calendar, 'name')}>
-                            <GoogleSymbol name="edit" />
+                        {calendar.name}
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openEditDialog(calendar, 'name')}>
+                            <GoogleSymbol name="edit" className="text-lg" />
                             <span className="sr-only">Edit Calendar Name</span>
                         </Button>
+                    </CardTitle>
+                    <div className="flex items-center -mr-4 -mt-2">
                         <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => openDeleteDialog(calendar)}>
                             <GoogleSymbol name="delete" />
                             <span className="sr-only">Delete Calendar</span>

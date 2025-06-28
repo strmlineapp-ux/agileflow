@@ -14,14 +14,20 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from '../ui/badge';
 import { PriorityBadge } from '../calendar/priority-badge';
 import { cn } from '@/lib/utils';
+import { Dialog, DialogContent, DialogHeader } from '../ui/dialog';
+import { Input } from '../ui/input';
 
 export function StrategyManagement() {
-  const { priorityStrategies, deletePriorityStrategy } = useUser();
+  const { appSettings, updateAppSettings, priorityStrategies, deletePriorityStrategy } = useUser();
   const { toast } = useToast();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingStrategy, setEditingStrategy] = useState<PriorityStrategy | null>(null);
   const [strategyToDelete, setStrategyToDelete] = useState<PriorityStrategy | null>(null);
+  
+  const [isTitleDialogOpen, setIsTitleDialogOpen] = useState(false);
+  const [tempTitle, setTempTitle] = useState(appSettings.strategyLabel || '');
+
 
   const openAddDialog = () => {
     setEditingStrategy(null);
@@ -49,6 +55,16 @@ export function StrategyManagement() {
       setStrategyToDelete(null);
   }
 
+  const handleSaveTitle = () => {
+    if (!tempTitle.trim()) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Title cannot be empty.' });
+        return;
+    }
+    updateAppSettings({ strategyLabel: tempTitle });
+    toast({ title: 'Success', description: 'Section title updated.' });
+    setIsTitleDialogOpen(false);
+  };
+
   const renderPriorityPreview = (strategy: PriorityStrategy) => {
     switch (strategy.type) {
       case 'tier':
@@ -71,7 +87,13 @@ export function StrategyManagement() {
     <>
       <div className="flex items-center justify-between mb-6">
         <div>
-            <h2 className="text-2xl font-semibold tracking-tight">Priority Strategies</h2>
+            <div className="flex items-center gap-2">
+                <h2 className="text-2xl font-semibold tracking-tight">{appSettings.strategyLabel || 'Priority Strategies'}</h2>
+                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setTempTitle(appSettings.strategyLabel || 'Priority Strategies'); setIsTitleDialogOpen(true); }}>
+                    <GoogleSymbol name="edit" className="text-lg" />
+                    <span className="sr-only">Edit section title</span>
+                </Button>
+            </div>
             <p className="text-muted-foreground">
                 Define sets of priorities and apply them to different parts of the application.
             </p>
@@ -89,15 +111,17 @@ export function StrategyManagement() {
             >
                 <CardHeader>
                     <div className="flex items-start justify-between">
-                        <CardTitle>{strategy.name}</CardTitle>
-                        <div className="flex -mr-4 -mt-2">
-                             <Button variant="ghost" size="icon" onClick={() => openEditDialog(strategy)}>
-                                <GoogleSymbol name="edit" />
+                        <CardTitle className="flex items-center gap-2">
+                          {strategy.name}
+                           <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openEditDialog(strategy)}>
+                                <GoogleSymbol name="edit" className="text-lg" />
+                                <span className="sr-only">Edit strategy</span>
                             </Button>
-                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => openDeleteDialog(strategy)}>
-                                <GoogleSymbol name="delete" />
-                            </Button>
-                        </div>
+                        </CardTitle>
+                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive -mr-4 -mt-2" onClick={() => openDeleteDialog(strategy)}>
+                            <GoogleSymbol name="delete" />
+                            <span className="sr-only">Delete strategy</span>
+                        </Button>
                     </div>
                     <CardDescription>{strategy.description || 'No description provided.'}</CardDescription>
                 </CardHeader>
@@ -148,6 +172,28 @@ export function StrategyManagement() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={isTitleDialogOpen} onOpenChange={setIsTitleDialogOpen}>
+        <DialogContent className="max-w-md">
+            <div className="absolute top-4 right-4">
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSaveTitle}>
+                    <GoogleSymbol name="check" className="text-xl" />
+                    <span className="sr-only">Save title</span>
+                </Button>
+            </div>
+          <DialogHeader>
+            <DialogTitle>Edit Section Title</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+              <Input 
+                id="section-title" 
+                value={tempTitle} 
+                onChange={(e) => setTempTitle(e.target.value)} 
+                className="col-span-4"
+              />
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

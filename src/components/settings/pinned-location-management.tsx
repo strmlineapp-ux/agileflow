@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useMemo } from 'react';
@@ -22,6 +23,11 @@ export function PinnedLocationManagement({ team }: { team: Team }) {
   
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddPopoverOpen, setIsAddPopoverOpen] = useState(false);
+  
+  const [isTitleEditDialogOpen, setIsTitleEditDialogOpen] = useState(false);
+  const [editingTitleKey, setEditingTitleKey] = useState<keyof Team | null>(null);
+  const [tempTitle, setTempTitle] = useState('');
+
   const [isAliasDialogOpen, setIsAliasDialogOpen] = useState(false);
   const [editingLocationName, setEditingLocationName] = useState<string | null>(null);
   const [tempAlias, setTempAlias] = useState('');
@@ -35,6 +41,24 @@ export function PinnedLocationManagement({ team }: { team: Team }) {
       .filter(loc => !pinnedLocationNames.includes(loc.name))
       .filter(loc => loc.name.toLowerCase().includes(searchTerm.toLowerCase()));
   }, [locations, pinnedLocationNames, searchTerm]);
+  
+  const openTitleEditDialog = (key: keyof Team, currentTitle: string) => {
+    setEditingTitleKey(key);
+    setTempTitle(currentTitle);
+    setIsTitleEditDialogOpen(true);
+  }
+
+  const handleSaveTitle = () => {
+    if (!editingTitleKey) return;
+    if (!tempTitle.trim()) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Title cannot be empty.' });
+        return;
+    }
+    updateTeam(team.id, { [editingTitleKey]: tempTitle });
+    toast({ title: 'Success', description: 'Section title updated.' });
+    setIsTitleEditDialogOpen(false);
+  };
+
 
   const handleOpenAliasDialog = (locationName: string) => {
     if (!canManage) return;
@@ -112,55 +136,16 @@ export function PinnedLocationManagement({ team }: { team: Team }) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
               <GoogleSymbol name="push_pin" />
-              Pinned & Check Locations
-          </CardTitle>
-          <CardDescription>
-            Manage locations pinned to this team's schedule. Click a pill to toggle its "check" status. Use the edit icon to set a custom display name.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex flex-wrap gap-2 items-center min-h-[40px] p-2 border rounded-md bg-muted/50">
-              {pinnedLocationNames.length > 0 && pinnedLocationNames.map(name => {
-                const alias = team.locationAliases?.[name];
-                return (
-                  <Badge 
-                    key={name}
-                    variant={checkLocationNames.has(name) ? "default" : "secondary"}
-                    className={cn(
-                      "rounded-full group text-base py-1 pl-1 pr-3 cursor-pointer",
-                      checkLocationNames.has(name) && "shadow-md"
-                    )}
-                    onClick={() => handleToggleCheckLocation(name)}
-                    >
-                    <button
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); handleUnpinLocation(name); }}
-                      className="mr-1 h-4 w-4 hover:bg-destructive/20 rounded-full inline-flex items-center justify-center"
-                      aria-label={`Unpin ${name}`}
-                    >
-                      <GoogleSymbol name="cancel" className="text-sm" />
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); handleOpenAliasDialog(name); }}
-                      className="mr-1 h-4 w-4 hover:bg-primary/20 rounded-full inline-flex items-center justify-center"
-                      aria-label={`Edit alias for ${name}`}
-                    >
-                      <GoogleSymbol name="edit" className="text-sm" />
-                    </button>
-
-                    <span className="font-medium" title={alias ? name : undefined}>
-                      {alias || name}
-                    </span>
-                  </Badge>
-                );
-              })}
-              <Popover open={isAddPopoverOpen} onOpenChange={setIsAddPopoverOpen}>
+              {team.pinnedLocationsLabel || 'Pinned & Check Locations'}
+               <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openTitleEditDialog('pinnedLocationsLabel', team.pinnedLocationsLabel || 'Pinned & Check Locations')}>
+                  <GoogleSymbol name="edit" className="text-lg" />
+                  <span className="sr-only">Edit section title</span>
+              </Button>
+               <Popover open={isAddPopoverOpen} onOpenChange={setIsAddPopoverOpen}>
                 <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" disabled={!canManage}>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" disabled={!canManage}>
                     <GoogleSymbol name="add_circle" className="text-xl" />
+                    <span className="sr-only">Pin a location</span>
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-[300px] p-0" align="start">
@@ -186,6 +171,50 @@ export function PinnedLocationManagement({ team }: { team: Team }) {
                   </ScrollArea>
                 </PopoverContent>
               </Popover>
+          </CardTitle>
+          <CardDescription>
+            Manage locations pinned to this team's schedule. Click a pill to toggle its "check" status. Use the edit icon to set a custom display name.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-2 items-center min-h-[40px] p-2 border rounded-md bg-muted/50">
+              {pinnedLocationNames.length > 0 ? pinnedLocationNames.map(name => {
+                const alias = team.locationAliases?.[name];
+                return (
+                  <Badge 
+                    key={name}
+                    variant={checkLocationNames.has(name) ? "default" : "secondary"}
+                    className={cn(
+                      "rounded-full group text-base py-1 pl-3 pr-1 cursor-pointer",
+                      checkLocationNames.has(name) && "shadow-md"
+                    )}
+                    onClick={() => handleToggleCheckLocation(name)}
+                    >
+                    <span className="font-medium mr-1" title={alias ? name : undefined}>
+                      {alias || name}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); handleOpenAliasDialog(name); }}
+                      className="mr-1 h-4 w-4 hover:bg-primary/20 rounded-full inline-flex items-center justify-center opacity-50 group-hover:opacity-100 transition-opacity"
+                      aria-label={`Edit alias for ${name}`}
+                    >
+                      <GoogleSymbol name="edit" className="text-sm" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); handleUnpinLocation(name); }}
+                      className="h-4 w-4 hover:bg-destructive/20 rounded-full inline-flex items-center justify-center opacity-50 group-hover:opacity-100 transition-opacity"
+                      aria-label={`Unpin ${name}`}
+                    >
+                      <GoogleSymbol name="cancel" className="text-sm" />
+                    </button>
+                  </Badge>
+                );
+              }) : (
+                <p className="p-2 text-sm text-muted-foreground w-full text-center">No locations pinned.</p>
+              )}
             </div>
             <p className="text-xs text-muted-foreground text-right">Click a pill to toggle its "check" status.</p>
           </div>
@@ -216,6 +245,28 @@ export function PinnedLocationManagement({ team }: { team: Team }) {
                 placeholder="Leave blank to use default name"
               />
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={isTitleEditDialogOpen} onOpenChange={setIsTitleEditDialogOpen}>
+        <DialogContent className="max-w-md">
+            <div className="absolute top-4 right-4">
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSaveTitle}>
+                    <GoogleSymbol name="check" className="text-xl" />
+                    <span className="sr-only">Save title</span>
+                </Button>
+            </div>
+          <DialogHeader>
+            <DialogTitle>Edit Section Title</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+              <Input 
+                id="section-title" 
+                value={tempTitle} 
+                onChange={(e) => setTempTitle(e.target.value)} 
+                className="col-span-4"
+              />
           </div>
         </DialogContent>
       </Dialog>

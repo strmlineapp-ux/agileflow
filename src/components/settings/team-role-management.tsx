@@ -138,9 +138,9 @@ export function TeamRoleManagement({ team }: { team: Team }) {
             {children}
         </PopoverTrigger>
         <PopoverContent>
-            <div className="flex flex-col space-y-1.5 text-center sm:text-left">
-              <h3 className="text-lg font-semibold leading-none tracking-tight">Edit Role</h3>
-            </div>
+          <div className="space-y-1.5 text-center sm:text-left">
+            <h3 className="text-lg font-semibold leading-none tracking-tight">Edit Role</h3>
+          </div>
              <div className="grid gap-4 py-4">
                 <div className="flex items-center gap-2 border rounded-md px-2 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
                     <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
@@ -188,7 +188,13 @@ export function TeamRoleManagement({ team }: { team: Team }) {
         <CardHeader>
           <div className="flex items-start justify-between">
             <div>
-              <CardTitle>Manage Roles for {team.name}</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                Manage Roles for {team.name}
+                 <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={openAddDialog}>
+                    <GoogleSymbol name="add_circle" className="text-xl" />
+                    <span className="sr-only">Add New Role</span>
+                </Button>
+              </CardTitle>
               <CardDescription>
                   Add roles or click a role to edit it. Use the 'x' to remove a role.
               </CardDescription>
@@ -221,10 +227,6 @@ export function TeamRoleManagement({ team }: { team: Team }) {
             )) : (
               <p className="text-sm text-muted-foreground">No custom roles defined for this team.</p>
             )}
-            <Button variant="ghost" size="icon" className="rounded-full" onClick={openAddDialog}>
-                <GoogleSymbol name="add" className="text-xl" />
-                <span className="sr-only">Add New Role</span>
-            </Button>
           </div>
         </CardContent>
       </Card>
@@ -319,4 +321,3 @@ export function TeamRoleManagement({ team }: { team: Team }) {
     </>
   );
 }
-

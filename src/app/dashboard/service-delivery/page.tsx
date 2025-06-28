@@ -97,9 +97,9 @@ export default function AppManagementPage() {
         </div>
         <Tabs defaultValue="calendars">
           <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="calendars">Calendar Management</TabsTrigger>
-              <TabsTrigger value="teams">Team Management</TabsTrigger>
-              <TabsTrigger value="strategy">Strategy</TabsTrigger>
+              <TabsTrigger value="calendars">{appSettings.calendarManagementLabel || 'Calendar Management'}</TabsTrigger>
+              <TabsTrigger value="teams">{appSettings.teamManagementLabel || 'Team Management'}</TabsTrigger>
+              <TabsTrigger value="strategy">{appSettings.strategyLabel || 'Strategy'}</TabsTrigger>
           </TabsList>
           <TabsContent value="calendars" className="mt-4">
               <CalendarManagement />

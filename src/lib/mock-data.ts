@@ -4,7 +4,10 @@ import { type Event, type User, type Task, type Notification, type SharedCalenda
 
 export const mockAppSettings: AppSettings = {
   displayName: 'Service Delivery',
-  icon: 'business_center'
+  icon: 'business_center',
+  calendarManagementLabel: 'Calendar Management',
+  teamManagementLabel: 'Team Management',
+  strategyLabel: 'Strategy',
 };
 
 export const mockPriorityStrategies: PriorityStrategy[] = [
@@ -182,10 +185,13 @@ export const mockTeams: Team[] = [
             { name: 'Audio', icon: 'mic', color: '#EC4899' },
             { name: 'D.o.P.', icon: 'camera', color: '#8B5CF6' },
         ],
+        checkManagersLabel: 'Location Check Managers',
         pinnedLocations: ['Studio'],
+        pinnedLocationsLabel: 'Pinned & Check Locations',
         checkLocations: [],
         locationAliases: {},
         workstations: ['EDIT 1', 'EDIT 2', 'EDIT 3', 'EDIT 4', 'Pro Tools Machine'],
+        workstationsLabel: 'Manage Workstations',
         eventTemplates: [
             { id: 'template-1', name: 'Basic Studio Shoot', icon: 'theaters', requestedRoles: ['Video Director', 'Edit Events'] },
             { id: 'template-2', name: 'Voice Over Record', icon: 'record_voice_over', requestedRoles: ['Post-Production'] }
@@ -200,6 +206,7 @@ export const mockTeams: Team[] = [
         managerRoleName: 'User Managers',
         memberRoleName: 'Team Members',
         locationCheckManagers: ['2'],
+        checkManagersLabel: 'Location Check Managers',
         roles: [
             { name: 'TD', icon: 'engineering', color: '#F43F5E' },
             { name: 'ES Operator', icon: 'slideshow', color: '#14B8A6' },
@@ -209,9 +216,11 @@ export const mockTeams: Team[] = [
             { name: '1st AD', icon: 'group', color: '#A855F7' }
         ],
         pinnedLocations: ['Auditorium', 'ACR', 'Event Space 1 (S2)', 'Event Space 2 (S2)', 'Event Space 3 (R7)', 'Event Space 4 (R7)', 'Training Room', 'Apgar', 'Locke'],
+        pinnedLocationsLabel: 'Pinned & Check Locations',
         checkLocations: ['Training Room', 'Apgar', 'Locke'],
         locationAliases: {},
         workstations: [],
+        workstationsLabel: 'Manage Workstations',
         eventTemplates: [
             { id: 'template-3', name: 'Standard Live Event', icon: 'podcasts', requestedRoles: ['TD', 'ES Operator', 'Camera', 'Audio'] },
             { id: 'template-4', name: 'Auditorium Presentation', icon: 'slideshow', requestedRoles: ['TD', 'Content Op'] }
@@ -226,11 +235,14 @@ export const mockTeams: Team[] = [
         managerRoleName: 'User Managers',
         memberRoleName: 'Team Members',
         locationCheckManagers: [],
+        checkManagersLabel: 'Location Check Managers',
         roles: [],
         pinnedLocations: [],
+        pinnedLocationsLabel: 'Pinned & Check Locations',
         checkLocations: [],
         locationAliases: {},
         workstations: [],
+        workstationsLabel: 'Manage Workstations',
         eventTemplates: [],
     }
 ];
