@@ -204,44 +204,61 @@ function CustomRoleCard({
                                 style={{ backgroundColor: linkGroup.color }}
                                 aria-label="Edit link group"
                             >
-                                <GoogleSymbol name={linkGroup.icon} className="text-xs" style={{ color: getContrastColor(linkGroup.color) }}/>
+                                <GoogleSymbol name={linkGroup.icon} style={{ fontSize: '10px', color: getContrastColor(linkGroup.color) }}/>
                             </div>
                         </PopoverTrigger>
-                        <PopoverContent>
-                            <div className="space-y-4">
-                                <h4 className="font-medium">Edit Link Group</h4>
-                                <div className="flex items-center gap-2">
+                        <PopoverContent className="w-auto p-2">
+                            <div className="flex items-center gap-2">
+                                <div className="relative">
                                     <Popover open={isLinkIconPopoverOpen} onOpenChange={setIsLinkIconPopoverOpen}>
-                                    <PopoverTrigger asChild><Button variant="outline" size="icon"><GoogleSymbol name={linkGroup.icon} /></Button></PopoverTrigger>
-                                    <PopoverContent className="w-80 p-0">
-                                        <div className="p-2 border-b"><Input placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} /></div>
-                                        <ScrollArea className="h-64">
-                                            <div className="grid grid-cols-6 gap-1 p-2">
-                                                {filteredIcons.slice(0, 300).map((iconName) => (
-                                                    <Button key={iconName} variant={linkGroup.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdateLinkGroup(role.linkGroupId!, { ...linkGroup, icon: iconName }); setIsLinkIconPopoverOpen(false); }} className="text-2xl"><GoogleSymbol name={iconName} /></Button>
-                                                ))}
+                                        <PopoverTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="h-9 w-9 text-2xl text-muted-foreground hover:text-foreground">
+                                                <GoogleSymbol name={linkGroup.icon} />
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-80 p-0">
+                                            <div className="p-2 border-b">
+                                                <Input placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} />
                                             </div>
-                                        </ScrollArea>
-                                    </PopoverContent>
+                                            <ScrollArea className="h-64">
+                                                <div className="grid grid-cols-6 gap-1 p-2">
+                                                    {filteredIcons.slice(0, 300).map((iconName) => (
+                                                        <Button
+                                                            key={iconName}
+                                                            variant={linkGroup.icon === iconName ? "default" : "ghost"}
+                                                            size="icon"
+                                                            onClick={() => { onUpdateLinkGroup(role.linkGroupId!, { ...linkGroup, icon: iconName }); setIsLinkIconPopoverOpen(false); }}
+                                                            className="text-2xl"
+                                                        >
+                                                            <GoogleSymbol name={iconName} />
+                                                        </Button>
+                                                    ))}
+                                                </div>
+                                            </ScrollArea>
+                                        </PopoverContent>
                                     </Popover>
                                     <Popover open={isLinkColorPopoverOpen} onOpenChange={setIsLinkColorPopoverOpen}>
-                                    <PopoverTrigger asChild>
-                                        <div className="h-8 w-8 rounded-md border cursor-pointer" style={{ backgroundColor: linkGroup.color }} />
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-2">
-                                        <div className="grid grid-cols-8 gap-1">
-                                        {predefinedColors.map(color => (
-                                            <button key={color} className="h-6 w-6 rounded-full border" style={{ backgroundColor: color }} onClick={() => { onUpdateLinkGroup(role.linkGroupId!, { ...linkGroup, color: color }); setIsLinkColorPopoverOpen(false); }}/>
-                                        ))}
-                                        <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
-                                            <GoogleSymbol name="colorize" className="text-muted-foreground" />
-                                            <Input type="color" value={linkGroup.color} onChange={(e) => onUpdateLinkGroup(role.linkGroupId!, { ...linkGroup, color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" aria-label="Custom color picker"/>
-                                        </div>
-                                        </div>
-                                    </PopoverContent>
+                                        <PopoverTrigger asChild>
+                                            <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-popover cursor-pointer" aria-label="Change link group color">
+                                                <div className="h-full w-full rounded-full" style={{ backgroundColor: linkGroup.color }}/>
+                                            </div>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-2">
+                                            <div className="grid grid-cols-8 gap-1">
+                                                {predefinedColors.map(color => (
+                                                    <button key={color} className="h-6 w-6 rounded-full border" style={{ backgroundColor: color }} onClick={() => { onUpdateLinkGroup(role.linkGroupId!, { ...linkGroup, color: color }); setIsLinkColorPopoverOpen(false); }}/>
+                                                ))}
+                                                <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
+                                                    <GoogleSymbol name="colorize" className="text-muted-foreground" />
+                                                    <Input type="color" value={linkGroup.color} onChange={(e) => onUpdateLinkGroup(role.linkGroupId!, { ...linkGroup, color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" aria-label="Custom color picker"/>
+                                                </div>
+                                            </div>
+                                        </PopoverContent>
                                     </Popover>
                                 </div>
-                                <Button variant="outline" size="sm" onClick={() => { onUnlink(role.id); setIsLinkPopoverOpen(false); }}>Unlink from Group</Button>
+                                <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-destructive" onClick={() => { onUnlink(role.id); setIsLinkPopoverOpen(false); }}>
+                                    <GoogleSymbol name="link_off" className="text-2xl" />
+                                </Button>
                             </div>
                         </PopoverContent>
                     </Popover>
@@ -608,5 +625,7 @@ export default function AdminPage() {
     </>
   );
 }
+
+    
 
     
