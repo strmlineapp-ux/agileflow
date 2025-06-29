@@ -1,10 +1,10 @@
 
 
 import { Badge } from '@/components/ui/badge';
-import { type Priority } from '@/types';
 import { cn, getContrastColor } from '@/lib/utils';
 import { useUser } from '@/context/user-context';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import { GoogleSymbol } from '../icons/google-symbol';
 
 export function PriorityBadge({ priorityId, className }: { priorityId: string; className?: string }) {
   const { getPriorityDisplay } = useUser();
@@ -16,17 +16,20 @@ export function PriorityBadge({ priorityId, className }: { priorityId: string; c
 
   const textColor = getContrastColor(priorityInfo.color);
 
+  const badgeContent = (
+    <>
+      {priorityInfo.icon && <GoogleSymbol name={priorityInfo.icon} className="text-sm mr-1" />}
+      {priorityInfo.label}
+    </>
+  );
+
   const badge = (
     <Badge
       variant="default"
       style={{ backgroundColor: priorityInfo.color, color: textColor }}
-      className={cn(
-        'border-transparent',
-        priorityInfo.shape === 'rounded-full' ? 'rounded-full' : 'rounded-md',
-        className
-      )}
+      className={cn('border-transparent', 'gap-1', className)}
     >
-      {priorityInfo.label}
+      {badgeContent}
     </Badge>
   );
 

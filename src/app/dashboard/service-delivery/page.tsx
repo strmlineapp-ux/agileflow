@@ -7,7 +7,6 @@ import { useUser } from '@/context/user-context';
 import { CalendarManagement } from '@/components/service-delivery/calendar-management';
 import { TeamManagement } from '@/components/service-delivery/team-management';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { StrategyManagement } from '@/components/service-delivery/strategy-management';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -155,19 +154,15 @@ export default function AppManagementPage() {
             )}
         </div>
         <Tabs defaultValue="calendars">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="calendars">{appSettings.calendarManagementLabel || 'Calendar Management'}</TabsTrigger>
               <TabsTrigger value="teams">{appSettings.teamManagementLabel || 'Team Management'}</TabsTrigger>
-              <TabsTrigger value="strategy">{appSettings.strategyLabel || 'Strategy'}</TabsTrigger>
           </TabsList>
           <TabsContent value="calendars" className="mt-4">
               <CalendarManagement />
           </TabsContent>
           <TabsContent value="teams" className="mt-4">
               <TeamManagement />
-          </TabsContent>
-          <TabsContent value="strategy" className="mt-4">
-              <StrategyManagement />
           </TabsContent>
         </Tabs>
       </div>

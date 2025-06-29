@@ -29,7 +29,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { PriorityBadge } from './priority-badge';
 import { Separator } from '@/components/ui/separator';
 import { GoogleSymbol } from '../icons/google-symbol';
-import { Slider } from '../ui/slider';
 import { Badge as UiBadge } from '../ui/badge';
 import { ScrollArea } from '../ui/scroll-area';
 import { UserStatusBadge } from '../user-status-badge';
@@ -113,7 +112,7 @@ const getDefaultCalendarId = (user: User, availableCalendars: SharedCalendar[], 
 };
 
 export function EventForm({ event, onFinished, initialData }: EventFormProps) {
-  const { realUser, viewAsUser, users, calendars, teams, addEvent, updateEvent, allBookableLocations, getEventStrategy, userStatusAssignments, appSettings } = useUser();
+  const { realUser, viewAsUser, users, calendars, teams, addEvent, updateEvent, allBookableLocations, getPriorityDisplay, userStatusAssignments, appSettings } = useUser();
   const { toast } = useToast();
   
   const isEditing = !!event;
@@ -137,25 +136,13 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
     return calendars.filter(cal => canManageEventOnCalendar(viewAsUser, cal, appSettings.customAdminRoles));
   }, [calendars, viewAsUser, appSettings.customAdminRoles]);
   
-  const eventStrategy = React.useMemo(() => getEventStrategy(), [getEventStrategy]);
+  const eventPriorityBadges = React.useMemo(() => {
+    return teams.flatMap(t => t.badgeCollections.filter(c => c.applications?.includes('events'))).flatMap(c => c.badgeIds).map(id => teams.flatMap(t => t.allBadges).find(b => b.id === id)).filter((b): b is Badge => !!b);
+  }, [teams]);
 
   const defaultCalendarId = React.useMemo(() => {
     return getDefaultCalendarId(viewAsUser, availableCalendars, appSettings.customAdminRoles);
   }, [viewAsUser, availableCalendars, appSettings.customAdminRoles]);
-
-  const getDefaultPriority = React.useCallback(() => {
-    if (!eventStrategy) return '';
-    if (eventStrategy.type === 'tier') {
-      return eventStrategy.priorities[0]?.id || '';
-    }
-    if (eventStrategy.type === 'symbol') {
-      return `${eventStrategy.id}:${Math.floor(eventStrategy.max / 2)}`;
-    }
-    if (eventStrategy.type === 'scale') {
-      return `${eventStrategy.id}:${Math.floor((eventStrategy.max - eventStrategy.min) / 2)}`;
-    }
-    return '';
-  }, [eventStrategy]);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -174,7 +161,7 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
     } : {
       title: '',
       calendarId: initialData?.calendarId || defaultCalendarId || '',
-      priority: getDefaultPriority(),
+      priority: '',
       date: new Date(),
       startTime: '09:00',
       endTime: '10:00',
@@ -441,61 +428,35 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                 />
                 )}
 
-                {eventStrategy && (
-                <FormField
+                {eventPriorityBadges.length > 0 && (
+                  <FormField
                     control={form.control}
                     name="priority"
                     render={({ field }) => (
-                    <FormItem>
+                      <FormItem>
                         <Popover open={isPriorityPopoverOpen} onOpenChange={setIsPriorityPopoverOpen}>
-                        <PopoverTrigger asChild>
+                          <PopoverTrigger asChild>
                             <Button variant="ghost" className="h-auto p-0">
-                            <PriorityBadge priorityId={field.value} />
+                              {field.value ? <PriorityBadge priorityId={field.value} /> : <UiBadge variant="outline">Priority</UiBadge>}
                             </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="p-1 w-auto" align="start">
-                            {eventStrategy.type === 'tier' &&
-                            eventStrategy.priorities.map(p => (
-                                <div key={p.id}
+                          </PopoverTrigger>
+                          <PopoverContent className="p-1 w-auto" align="start">
+                            {eventPriorityBadges.map(p => (
+                              <div key={p.id}
                                 onClick={() => { field.onChange(p.id); setIsPriorityPopoverOpen(false); }}
                                 className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer"
-                                >
+                              >
                                 <PriorityBadge priorityId={p.id} />
-                                <span className="font-semibold">{p.label}</span>
-                                </div>
+                              </div>
                             ))}
-                            {eventStrategy.type === 'symbol' &&
-                            Array.from({ length: eventStrategy.max }, (_, i) => eventStrategy.max - i).map(num => (
-                                <div key={num}
-                                onClick={() => { field.onChange(`${eventStrategy.id}:${num}`); setIsPriorityPopoverOpen(false); }}
-                                className="flex items-center p-2 rounded-md hover:bg-accent cursor-pointer"
-                                >
-                                <div className="flex items-center" style={{ color: eventStrategy.color }}>
-                                    {Array.from({ length: num }).map((_, i) => (
-                                    <GoogleSymbol key={i} name={eventStrategy.icon} className="text-base" />
-                                    ))}
-                                </div>
-                                </div>
-                            ))}
-                            {eventStrategy.type === 'scale' && (
-                            <div className="p-4 w-48">
-                                <Slider
-                                defaultValue={[Number(field.value.split(':')[1] || 0)]}
-                                min={eventStrategy.min}
-                                max={eventStrategy.max}
-                                step={1}
-                                onValueChange={val => field.onChange(`${eventStrategy.id}:${val[0]}`)}
-                                className="flex-1"
-                                />
-                            </div>
-                            )}
-                        </PopoverContent>
+                          </PopoverContent>
                         </Popover>
                         <FormMessage />
-                    </FormItem>
+                      </FormItem>
                     )}
-                />
+                  />
                 )}
+                
 
                 {eventTemplates.length > 0 && (
                     <FormField

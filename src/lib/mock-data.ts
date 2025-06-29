@@ -1,6 +1,6 @@
 
 
-import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team, type PriorityStrategy, type AppSettings, type Badge, type BadgeCollection } from '@/types';
+import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team, type AppSettings, type Badge, type BadgeCollection } from '@/types';
 
 export const mockAppSettings: AppSettings = {
   customAdminRoles: [
@@ -17,47 +17,6 @@ export const mockAppSettings: AppSettings = {
   teamManagementLabel: 'Team Management',
   strategyLabel: 'Strategy',
 };
-
-export const mockPriorityStrategies: PriorityStrategy[] = [
-    {
-        id: 'p-number',
-        name: 'P# Scale',
-        description: 'Standard P-number priority system for criticality.',
-        applications: ['events', 'tasks'],
-        type: 'tier',
-        priorities: [
-            { id: 'p-number:p0', label: 'P0', description: 'Highest priority - immediate action required.', color: '#EF4444', shape: 'rounded-md' },
-            { id: 'p-number:p1', label: 'P1', description: 'High priority - requires attention soon.', color: '#F97316', shape: 'rounded-md' },
-            { id: 'p-number:p2', label: 'P2', description: 'Medium priority - standard work.', color: '#FBBF24', shape: 'rounded-md' },
-            { id: 'p-number:p3', label: 'P3', description: 'Low priority - can be deferred.', color: '#22C55E', shape: 'rounded-full' },
-            { id: 'p-number:p4', label: 'P4', description: 'Lowest priority - to be done when time permits.', color: '#64748B', shape: 'rounded-full' },
-        ],
-    },
-    {
-        id: 'star-rating',
-        name: 'Star Rating',
-        description: 'A simple 5-star rating system.',
-        applications: [],
-        type: 'symbol',
-        icon: 'star',
-        max: 5,
-        color: '#FBBF24'
-    },
-    {
-        id: 'effort-score',
-        name: 'Effort Score',
-        description: 'A numeric scale for estimating effort.',
-        applications: [],
-        type: 'scale',
-        min: 0,
-        max: 100,
-        intervals: [
-            { label: 'Trivial', from: 0, to: 10, color: '#4CAF50' },
-            { label: 'Medium', from: 11, to: 50, color: '#FFC107' },
-            { label: 'High', from: 51, to: 100, color: '#F44336' },
-        ]
-    }
-];
 
 export const mockUsers: User[] = [
     { 
@@ -206,6 +165,61 @@ const liveEventsBadges: Badge[] = [
     { id: 'badge-1stad', ownerCollectionId: liveEventsCollectionId, name: '1st AD', icon: 'group', color: '#A855F7' }
 ];
 
+const pScaleCollectionId = 'p-scale-collection';
+const pScaleBadges: Badge[] = [
+    { id: 'p0', ownerCollectionId: pScaleCollectionId, name: 'P0', icon: 'priority_high', color: '#EF4444', description: 'Highest priority - immediate action required.' },
+    { id: 'p1', ownerCollectionId: pScaleCollectionId, name: 'P1', icon: 'priority_high', color: '#F97316', description: 'High priority - requires attention soon.' },
+    { id: 'p2', ownerCollectionId: pScaleCollectionId, name: 'P2', icon: 'priority_high', color: '#FBBF24', description: 'Medium priority - standard work.' },
+    { id: 'p3', ownerCollectionId: pScaleCollectionId, name: 'P3', icon: 'priority_high', color: '#22C55E', description: 'Low priority - can be deferred.' },
+    { id: 'p4', ownerCollectionId: pScaleCollectionId, name: 'P4', icon: 'priority_high', color: '#64748B', description: 'Lowest priority - to be done when time permits.' },
+];
+const pScaleCollection: BadgeCollection = {
+    id: pScaleCollectionId,
+    name: 'P# Scale',
+    icon: 'rule',
+    color: '#94A3B8',
+    viewMode: 'assorted',
+    applications: ['events', 'tasks'],
+    description: 'Standard P-number priority system for criticality.',
+    badgeIds: pScaleBadges.map(b => b.id)
+};
+
+const starRatingCollectionId = 'star-rating-collection';
+const starRatingBadges: Badge[] = [
+    { id: 'star1', ownerCollectionId: starRatingCollectionId, name: '1 Star', icon: 'star', color: '#FBBF24' },
+    { id: 'star2', ownerCollectionId: starRatingCollectionId, name: '2 Stars', icon: 'star', color: '#FBBF24' },
+    { id: 'star3', ownerCollectionId: starRatingCollectionId, name: '3 Stars', icon: 'star', color: '#FBBF24' },
+    { id: 'star4', ownerCollectionId: starRatingCollectionId, name: '4 Stars', icon: 'star', color: '#FBBF24' },
+    { id: 'star5', ownerCollectionId: starRatingCollectionId, name: '5 Stars', icon: 'star', color: '#FBBF24' },
+];
+const starRatingCollection: BadgeCollection = {
+    id: starRatingCollectionId,
+    name: 'Star Rating',
+    icon: 'stars',
+    color: '#FBBF24',
+    viewMode: 'assorted',
+    applications: [],
+    description: 'A simple 5-star rating system.',
+    badgeIds: starRatingBadges.map(b => b.id)
+};
+
+const effortScoreCollectionId = 'effort-score-collection';
+const effortScoreBadges: Badge[] = [
+    { id: 'effort-trivial', ownerCollectionId: effortScoreCollectionId, name: 'Trivial', icon: 'speed', color: '#4CAF50' },
+    { id: 'effort-medium', ownerCollectionId: effortScoreCollectionId, name: 'Medium', icon: 'speed', color: '#FFC107' },
+    { id: 'effort-high', ownerCollectionId: effortScoreCollectionId, name: 'High', icon: 'speed', color: '#F44336' },
+];
+const effortScoreCollection: BadgeCollection = {
+    id: effortScoreCollectionId,
+    name: 'Effort Score',
+    icon: 'speed',
+    color: '#888888',
+    viewMode: 'assorted',
+    applications: [],
+    description: 'A numeric scale for estimating effort.',
+    badgeIds: effortScoreBadges.map(b => b.id)
+};
+
 export const mockTeams: Team[] = [
     {
         id: 'studio-productions',
@@ -218,7 +232,10 @@ export const mockTeams: Team[] = [
         locationCheckManagers: ['1'],
         checkManagersLabel: 'Location Check Managers',
         allBadges: [
-            ...studioProdBadges
+            ...studioProdBadges,
+            ...pScaleBadges,
+            ...starRatingBadges,
+            ...effortScoreBadges,
         ],
         badgeCollections: [{
             id: studioProdCollectionId,
@@ -226,10 +243,10 @@ export const mockTeams: Team[] = [
             icon: 'video_settings',
             color: '#10B981',
             viewMode: 'assorted',
-            applications: ['events', 'tasks'],
+            applications: ['users'],
             description: 'Badges related to the full pipeline of audio and video creation, from directing to post-production.',
             badgeIds: studioProdBadges.map(b => b.id)
-        }],
+        }, pScaleCollection, starRatingCollection, effortScoreCollection],
         pinnedLocations: ['Studio'],
         pinnedLocationsLabel: 'Pinned & Check Locations',
         checkLocations: [],
@@ -312,13 +329,13 @@ const userToAttendee = (user: User): Attendee => ({
 });
 
 export const mockTasks: Task[] = [
-  { taskId: '1', title: 'Design new dashboard layout', assignedTo: [mockUsers[0]], dueDate: new Date(), priority: 'p-number:p1', status: 'in_progress', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
-  { taskId: '2', title: 'Develop authentication API', assignedTo: [mockUsers[1], mockUsers[2]], dueDate: new Date(new Date().setDate(new Date().getDate() + 1)), priority: 'p-number:p0', status: 'awaiting_review', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
-  { taskId: '3', title: 'Write documentation for components', assignedTo: [mockUsers[2]], dueDate: new Date(new Date().setDate(new Date().getDate() + 7)), priority: 'p-number:p2', status: 'not_started', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
-  { taskId: '4', title: 'Fix login page CSS bug', assignedTo: [mockUsers[1]], dueDate: new Date(new Date().setDate(new Date().getDate() - 2)), priority: 'p-number:p3', status: 'completed', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
-  { taskId: '5', title: 'Setup CI/CD pipeline', assignedTo: [mockUsers[0], mockUsers[1]], dueDate: new Date(new Date().setDate(new Date().getDate() + 2)), priority: 'p-number:p1', status: 'blocked', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
-  { taskId: '6', title: 'User testing for new features', assignedTo: [mockUsers[2]], dueDate: new Date(), priority: 'p-number:p2', status: 'in_progress', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
-  { taskId: '7', title: 'Update project dependencies', assignedTo: [mockUsers[1]], dueDate: new Date(new Date().setDate(new Date().getDate() + 10)), priority: 'p-number:p4', status: 'not_started', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
+  { taskId: '1', title: 'Design new dashboard layout', assignedTo: [mockUsers[0]], dueDate: new Date(), priority: 'p1', status: 'in_progress', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
+  { taskId: '2', title: 'Develop authentication API', assignedTo: [mockUsers[1], mockUsers[2]], dueDate: new Date(new Date().setDate(new Date().getDate() + 1)), priority: 'p0', status: 'awaiting_review', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
+  { taskId: '3', title: 'Write documentation for components', assignedTo: [mockUsers[2]], dueDate: new Date(new Date().setDate(new Date().getDate() + 7)), priority: 'p2', status: 'not_started', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
+  { taskId: '4', title: 'Fix login page CSS bug', assignedTo: [mockUsers[1]], dueDate: new Date(new Date().setDate(new Date().getDate() - 2)), priority: 'p3', status: 'completed', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
+  { taskId: '5', title: 'Setup CI/CD pipeline', assignedTo: [mockUsers[0], mockUsers[1]], dueDate: new Date(new Date().setDate(new Date().getDate() + 2)), priority: 'p1', status: 'blocked', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
+  { taskId: '6', title: 'User testing for new features', assignedTo: [mockUsers[2]], dueDate: new Date(), priority: 'p2', status: 'in_progress', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
+  { taskId: '7', title: 'Update project dependencies', assignedTo: [mockUsers[1]], dueDate: new Date(new Date().setDate(new Date().getDate() + 10)), priority: 'p4', status: 'not_started', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
 ];
 
 const today = new Date();
@@ -347,7 +364,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(today).setHours(9, 30, 0, 0)), 
         attendees: [mockUsers[0], mockUsers[1], mockUsers[2]].map(userToAttendee), 
         location: 'ACR',
-        priority: 'p-number:p2',
+        priority: 'p2',
         attachments: [],
         roleAssignments: {},
         createdBy: '1', 
@@ -362,7 +379,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(today).setHours(12, 0, 0, 0)), 
         attendees: [], 
         location: 'Event Space 1 (S2)',
-        priority: 'p-number:p1',
+        priority: 'p1',
         templateId: 'template-4',
         roleAssignments: {
             'TD': '1',
@@ -380,7 +397,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(today).setHours(13, 0, 0, 0)), 
         attendees: [mockUsers[5]].map(userToAttendee), 
         location: 'ACR',
-        priority: 'p-number:p3',
+        priority: 'p3',
         attachments: [],
         roleAssignments: {},
         createdBy: '2', 
@@ -395,7 +412,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(today).setHours(17, 30, 0, 0)), 
         attendees: [mockUsers[2], mockUsers[5]].map(userToAttendee), 
         location: 'Studio',
-        priority: 'p-number:p0',
+        priority: 'p0',
         attachments: [],
         roleAssignments: {},
         createdBy: '1', 
@@ -411,7 +428,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(tomorrow).setHours(12, 30, 0, 0)),
         attendees: [mockUsers[1], mockUsers[4], mockUsers[5]].map(userToAttendee), 
         location: 'Studio',
-        priority: 'p-number:p2',
+        priority: 'p2',
         attachments: [],
         roleAssignments: {},
         createdBy: '2', 
@@ -426,7 +443,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(tomorrow).setHours(16, 30, 0, 0)),
         attendees: [mockUsers[3]].map(userToAttendee), 
         location: 'Event Space 3 (R7)',
-        priority: 'p-number:p3',
+        priority: 'p3',
         attachments: [],
         roleAssignments: {},
         createdBy: '3', 
@@ -442,7 +459,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(yesterday).setHours(17, 0, 0, 0)),
         attendees: mockUsers.map(userToAttendee), 
         location: 'Event Space 4 (R7)',
-        priority: 'p-number:p4',
+        priority: 'p4',
         attachments: [],
         roleAssignments: {},
         createdBy: '1', 
@@ -457,7 +474,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(yesterday).setHours(11, 0, 0, 0)),
         attendees: [mockUsers[5]].map(userToAttendee), 
         location: 'Studio',
-        priority: 'p-number:p3',
+        priority: 'p3',
         attachments: [],
         roleAssignments: {},
         createdBy: '2', 
@@ -473,7 +490,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(twoDaysLater).setHours(12, 0, 0, 0)),
         attendees: mockUsers.map(userToAttendee), 
         location: 'Auditorium',
-        priority: 'p-number:p2',
+        priority: 'p2',
         attachments: [],
         roleAssignments: {},
         createdBy: '1', 
@@ -488,7 +505,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(twoDaysLater).setHours(18, 0, 0, 0)),
         attendees: [mockUsers[2], mockUsers[3], mockUsers[5]].map(userToAttendee), 
         location: 'Event Space 2 (S2)',
-        priority: 'p-number:p1',
+        priority: 'p1',
         attachments: [],
         roleAssignments: {},
         createdBy: '1', 
@@ -503,7 +520,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(threeDaysLater).setHours(17, 0, 0, 0)),
         attendees: [mockUsers[1], mockUsers[5]].map(userToAttendee), 
         location: 'ACR',
-        priority: 'p-number:p2',
+        priority: 'p2',
         attachments: [],
         roleAssignments: {},
         createdBy: '2', 
@@ -518,7 +535,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(fourDaysLater).setHours(18, 0, 0, 0)),
         attendees: [mockUsers[0], mockUsers[3]].map(userToAttendee), 
         location: 'Auditorium',
-        priority: 'p-number:p1',
+        priority: 'p1',
         attachments: [],
         roleAssignments: {},
         createdBy: '1', 
@@ -534,7 +551,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(threeDaysAgo).setHours(13, 0, 0, 0)),
         attendees: [mockUsers[0], mockUsers[2]].map(userToAttendee), 
         location: 'Off-site',
-        priority: 'p-number:p3',
+        priority: 'p3',
         attachments: [],
         roleAssignments: {},
         createdBy: '1', 
@@ -549,7 +566,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(fourDaysAgo).setHours(16, 0, 0, 0)),
         attendees: [mockUsers[4], mockUsers[5]].map(userToAttendee), 
         location: 'Studio',
-        priority: 'p-number:p3',
+        priority: 'p3',
         attachments: [],
         roleAssignments: {},
         createdBy: '2', 
@@ -565,7 +582,7 @@ export const mockEvents: Event[] = [
         endTime: new Date(new Date(weekendShootDate).setHours(16, 0, 0, 0)),
         attendees: [mockUsers[0], mockUsers[5]].map(userToAttendee), 
         location: 'Studio',
-        priority: 'p-number:p1',
+        priority: 'p1',
         attachments: [],
         roleAssignments: {},
         createdBy: '1', 
@@ -580,7 +597,7 @@ export const mockEvents: Event[] = [
         startTime: new Date(new Date(twoDaysAgo).setHours(11, 0, 0, 0)),
         endTime: new Date(new Date(twoDaysAgo).setHours(12, 0, 0, 0)),
         attendees: [mockUsers[0], mockUsers[1]].map(userToAttendee), 
-        priority: 'p-number:p3',
+        priority: 'p3',
         attachments: [],
         roleAssignments: {},
         createdBy: '1', 

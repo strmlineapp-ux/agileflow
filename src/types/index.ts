@@ -9,7 +9,7 @@ export interface LinkGroup {
 
 export interface CustomAdminRole {
   id: string;
-  name: string;
+  name:string;
   icon: string;
   color: string;
   linkGroupId?: string;
@@ -106,58 +106,13 @@ export interface Team {
   eventTemplates?: EventTemplate[];
 }
 
-export interface Priority {
-  id: string;
-  label: string;
-  description?: string;
-  color: string;
-  shape: 'rounded-md' | 'rounded-full';
-}
-
-export type PriorityStrategyApplication = 'tasks' | 'events';
-export type PriorityStrategyType = 'tier' | 'symbol' | 'scale';
-
-interface TierStrategyConfig {
-    type: 'tier';
-    priorities: Priority[];
-}
-
-interface SymbolStrategyConfig {
-    type: 'symbol';
-    icon: string;
-    max: number;
-    color: string;
-}
-
-interface ScaleInterval {
-    label: string;
-    from: number;
-    to: number;
-    color: string;
-}
-
-interface ScaleStrategyConfig {
-    type: 'scale';
-    min: number;
-    max: number;
-    intervals: ScaleInterval[];
-}
-
-export type PriorityStrategy = {
-    id: string;
-    name: string;
-    description?: string;
-    applications: PriorityStrategyApplication[];
-} & (TierStrategyConfig | SymbolStrategyConfig | ScaleStrategyConfig);
-
-
 export interface Task {
   taskId: string;
   title: string;
   description?: string;
   assignedTo: User[];
   dueDate: Date;
-  priority: string; // e.g., 'p-number:p2' or 'star-rating:4' or 'effort-scale:75'
+  priority: string; // Holds the ID of a badge used for priority
   status: 'not_started' | 'in_progress' | 'awaiting_review' | 'completed' | 'blocked';
   createdBy: string; // userId
   createdAt: Date;
@@ -194,7 +149,7 @@ export interface Event {
   attendees: Attendee[];
   location?: string;
   associatedTaskId?: string;
-  priority: string; // e.g., 'p-number:p2' or 'star-rating:4' or 'effort-scale:75'
+  priority: string; // Holds the ID of a badge used for priority
   templateId?: string;
   roleAssignments?: Record<string, string | null>;
   attachments: Attachment[];

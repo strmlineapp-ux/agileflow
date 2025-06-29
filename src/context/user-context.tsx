@@ -3,8 +3,8 @@
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
-import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type Priority, type PriorityStrategy, type PriorityStrategyApplication, type AppSettings, type Badge } from '@/types';
-import { mockUsers as initialUsers, mockCalendars as initialCalendars, mockEvents as initialEvents, mockLocations as initialLocations, mockTeams, mockPriorityStrategies as initialPriorityStrategies, mockAppSettings } from '@/lib/mock-data';
+import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge } from '@/types';
+import { mockUsers as initialUsers, mockCalendars as initialCalendars, mockEvents as initialEvents, mockLocations as initialLocations, mockTeams, mockAppSettings } from '@/lib/mock-data';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
@@ -40,13 +40,7 @@ interface UserContextType {
   allBookableLocations: BookableLocation[];
   addLocation: (locationName: string) => Promise<void>;
   deleteLocation: (locationId: string) => Promise<void>;
-  priorityStrategies: PriorityStrategy[];
-  addPriorityStrategy: (strategyData: Omit<PriorityStrategy, 'id'>) => Promise<void>;
-  updatePriorityStrategy: (strategyId: string, strategyData: Partial<Omit<PriorityStrategy, 'id'>>) => Promise<void>;
-  deletePriorityStrategy: (strategyId: string) => Promise<void>;
-  getEventStrategy: () => PriorityStrategy | undefined;
-  getTaskStrategy: () => PriorityStrategy | undefined;
-  getPriorityDisplay: (priorityId: string) => { label: React.ReactNode, description?: string, color: string, shape: 'rounded-md' | 'rounded-full' } | undefined;
+  getPriorityDisplay: (badgeId: string) => { label: React.ReactNode, description?: string, color: string, icon?: string } | undefined;
   appSettings: AppSettings;
   updateAppSettings: (settings: Partial<AppSettings>) => Promise<void>;
 }
@@ -68,7 +62,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [calendars, setCalendars] = useState<SharedCalendar[]>(initialCalendars);
   const [events, setEvents] = useState<Event[]>(initialEvents);
   const [locations, setLocations] = useState<BookableLocation[]>(initialLocations);
-  const [priorityStrategies, setPriorityStrategies] = useState<PriorityStrategy[]>(initialPriorityStrategies);
   const [appSettings, setAppSettings] = useState<AppSettings>(mockAppSettings);
   const { toast } = useToast();
 
@@ -228,73 +221,23 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       await simulateApi();
       setLocations(current => current.filter(loc => loc.id !== locationId));
   }, []);
-
-  const addPriorityStrategy = useCallback(async (strategyData: Omit<PriorityStrategy, 'id'>) => {
-    const newStrategy: PriorityStrategy = {
-      ...strategyData,
-      id: crypto.randomUUID(),
-    };
-    await simulateApi();
-    setPriorityStrategies(current => [...current, newStrategy]);
-  }, []);
-
-  const updatePriorityStrategy = useCallback(async (strategyId: string, strategyData: Partial<Omit<PriorityStrategy, 'id'>>) => {
-    await simulateApi();
-    setPriorityStrategies(current =>
-      current.map(s => (s.id === strategyId ? { ...s, ...strategyData } as PriorityStrategy : s))
-    );
-  }, []);
-
-  const deletePriorityStrategy = useCallback(async (strategyId: string) => {
-    await simulateApi();
-    setPriorityStrategies(current => current.filter(s => s.id !== strategyId));
-  }, []);
-
-  const getStrategyForApplication = useCallback((application: PriorityStrategyApplication) => {
-    return priorityStrategies.find(s => s.applications.includes(application));
-  }, [priorityStrategies]);
-
-  const getEventStrategy = useCallback(() => getStrategyForApplication('events'), [getStrategyForApplication]);
-  const getTaskStrategy = useCallback(() => getStrategyForApplication('tasks'), [getStrategyForApplication]);
   
-  const getPriorityDisplay = useCallback((priorityId: string): { label: React.ReactNode, description?: string, color: string, shape: 'rounded-md' | 'rounded-full' } | undefined => {
-    if (!priorityId || !priorityId.includes(':')) return undefined;
+  const getPriorityDisplay = useCallback((badgeId: string): { label: React.ReactNode, description?: string, color: string, icon?: string } | undefined => {
+    if (!badgeId) return undefined;
 
-    const [strategyId, value] = priorityId.split(':');
-    const strategy = priorityStrategies.find(s => s.id === strategyId);
-    if (!strategy) return undefined;
-
-    switch (strategy.type) {
-        case 'tier':
-            const tierPriority = strategy.priorities.find(p => p.id === priorityId);
-            return tierPriority;
-        case 'symbol':
-            const numValue = parseInt(value, 10);
+    for (const team of teams) {
+        const badge = (team.allBadges || []).find(b => b.id === badgeId);
+        if (badge) {
             return {
-                label: (
-                    <div className="flex items-center">
-                        {Array.from({ length: numValue }).map((_, i) => (
-                            <GoogleSymbol key={i} name={strategy.icon} className="text-base" />
-                        ))}
-                    </div>
-                ),
-                description: `${numValue} / ${strategy.max}`,
-                color: strategy.color,
-                shape: 'rounded-md'
+                label: badge.name,
+                description: badge.description,
+                color: badge.color,
+                icon: badge.icon
             };
-        case 'scale':
-            const scaleValue = parseInt(value, 10);
-            const interval = strategy.intervals.find(i => scaleValue >= i.from && scaleValue <= i.to);
-            return {
-                label: interval?.label || 'Uncategorized',
-                description: `Score: ${scaleValue} / ${strategy.max}`,
-                color: interval?.color || '#888888',
-                shape: 'rounded-full'
-            };
-        default:
-            return undefined;
+        }
     }
-  }, [priorityStrategies]);
+    return undefined;
+  }, [teams]);
 
   const updateAppSettings = useCallback(async (settings: Partial<AppSettings>) => {
     await simulateApi();
@@ -362,22 +305,15 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     allBookableLocations,
     addLocation,
     deleteLocation,
-    priorityStrategies,
-    addPriorityStrategy,
-    updatePriorityStrategy,
-    deletePriorityStrategy,
-    getEventStrategy,
-    getTaskStrategy,
     getPriorityDisplay,
     appSettings,
     updateAppSettings,
   }), [
     loading, realUser, viewAsUser, users, allBadges, allRoles, teams, notifications, userStatusAssignments,
-    calendars, events, locations, allBookableLocations, priorityStrategies, appSettings,
+    calendars, events, locations, allBookableLocations, appSettings,
     addTeam, updateTeam, deleteTeam, setNotifications, setUserStatusAssignments, addUser,
     updateUser, linkGoogleCalendar, addCalendar, updateCalendar, deleteCalendar,
-    addEvent, updateEvent, addLocation, deleteLocation, addPriorityStrategy,
-    updatePriorityStrategy, deletePriorityStrategy, getEventStrategy, getTaskStrategy,
+    addEvent, updateEvent, addLocation, deleteLocation,
     getPriorityDisplay, updateAppSettings
   ]);
 
