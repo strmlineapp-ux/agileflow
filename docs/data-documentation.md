@@ -89,4 +89,5 @@ A sub-entity of `AppSettings`, `CustomAdminRole` defines a single, dynamic admin
 | `name: string` | **Internal.** The display name for the role (e.g., "Service Admin", "Service Admin+"). This is editable inline on the Admin Management page. |
 | `icon: string` | **Internal.** The Google Symbol name for the icon associated with the role. |
 | `color: string` | **Internal.** The hex color code for the icon's badge. |
-```
+| `linkGroupId?: string` | **Internal.** An identifier used to group multiple `CustomAdminRole` entities at the same hierarchical level. |
+| `teamAdmins?: string[]` | **Internal.** An array of `userId`s for users who have been designated as a "Team Admin" for this specific role level. This is managed on the Admin Management page. |
