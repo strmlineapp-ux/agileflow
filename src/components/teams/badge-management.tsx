@@ -15,10 +15,9 @@ import { ScrollArea } from '../ui/scroll-area';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { cn, getContrastColor } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '../ui/dropdown-menu';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogHeader as AlertDialogHeaderUI, AlertDialogTitle as AlertDialogTitleUI, AlertDialogDescription as AlertDialogDescriptionUI, AlertDialogFooter } from '@/components/ui/alert-dialog';
 import { Textarea } from '../ui/textarea';
-import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProps } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProps, type DraggableProvidedDragHandleProps } from 'react-beautiful-dnd';
 import { Separator } from '../ui/separator';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -45,94 +44,66 @@ const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
   return <Droppable {...props}>{children}</Droppable>;
 };
 
-function BadgeForm({ badge: initialBadge, onSave, onClose }: { badge: Badge, onSave: (badge: Badge) => void, onClose: () => void }) {
+function DetailedBadgeCard({ badge, onUpdateBadge, onDelete, isLink, linkColor }: { badge: Badge, onUpdateBadge: (badgeData: Partial<Badge>) => void; onDelete: () => void, isLink: boolean, linkColor?: string }) {
     const { toast } = useToast();
-
-    const [badge, setBadge] = useState<Badge>(initialBadge);
-    
-    // States for inline name editing
-    const [isEditingName, setIsEditingName] = useState(false);
-    const nameInputRef = useRef<HTMLInputElement>(null);
-    
-    // States for popovers and dialogs
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
-
-    // States for popover content
     const [iconSearch, setIconSearch] = useState('');
+
+    const [isEditingName, setIsEditingName] = useState(false);
+    const nameInputRef = useRef<HTMLInputElement>(null);
+
+    const [isEditingDescription, setIsEditingDescription] = useState(false);
+    const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
 
     useEffect(() => {
         if (isEditingName && nameInputRef.current) {
-          nameInputRef.current.focus();
-          nameInputRef.current.select();
+            nameInputRef.current.focus();
+            nameInputRef.current.select();
         }
     }, [isEditingName]);
 
+    useEffect(() => {
+        if (isEditingDescription && descriptionTextareaRef.current) {
+            descriptionTextareaRef.current.focus();
+            descriptionTextareaRef.current.select();
+        }
+    }, [isEditingDescription]);
+
     const handleSaveName = () => {
-        const newName = nameInputRef.current?.value;
-        if (!newName?.trim()) {
-            toast({ variant: 'destructive', title: 'Error', description: 'Badge name cannot be empty.' });
-            setBadge(b => ({ ...b, name: initialBadge.name })); // revert
+        const newName = nameInputRef.current?.value.trim();
+        if (newName === '') {
+             toast({ variant: 'destructive', title: 'Error', description: 'Badge name cannot be empty.' });
+        } else if (newName && newName !== badge.name) {
+            onUpdateBadge({ name: newName });
+            toast({ title: 'Success', description: 'Badge name updated.'});
         }
         setIsEditingName(false);
     };
 
     const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') handleSaveName();
-        else if (e.key === 'Escape') {
-          setBadge(b => ({ ...b, name: initialBadge.name }));
-          setIsEditingName(false);
+        else if (e.key === 'Escape') setIsEditingName(false);
+    };
+
+    const handleSaveDescription = () => {
+        const newDescription = descriptionTextareaRef.current?.value.trim();
+        if (newDescription !== (badge.description || '')) {
+            onUpdateBadge({ description: newDescription });
+            toast({ title: 'Success', description: 'Badge description updated.'});
         }
+        setIsEditingDescription(false);
     };
     
-    const filteredIcons = useMemo(() => {
-        if (!iconSearch) return googleSymbolNames;
-        return googleSymbolNames.filter(iconName => iconName.toLowerCase().includes(iconSearch.toLowerCase()));
-    }, [iconSearch]);
-
-    const handleSaveClick = () => {
-        if (!badge.name.trim()) {
-            toast({ variant: 'destructive', title: 'Error', description: 'Badge name cannot be empty.' });
-            return;
+    const handleDescriptionKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          handleSaveDescription();
+        } else if (e.key === 'Escape') {
+          setIsEditingDescription(false);
         }
-        onSave(badge);
-        onClose();
     };
-    
-    return (
-        <DialogContent>
-            <div className="absolute top-4 right-4 flex items-center gap-1">
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSaveClick} aria-label="Save Changes">
-                    <GoogleSymbol name="check" className="text-xl" />
-                </Button>
-            </div>
-            <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto pr-2">
-                 <div className="flex items-center gap-3">
-                     <div className="relative">
-                        <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
-                            <PopoverTrigger asChild><Button variant="outline" size="icon" className="h-10 w-10 text-2xl" style={{ color: badge.color }}><GoogleSymbol name={badge.icon} /></Button></PopoverTrigger>
-                            <PopoverContent className="w-80 p-0"><div className="p-2 border-b"><Input placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} /></div><ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={badge.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { setBadge(b => ({ ...b, icon: iconName })); setIsIconPopoverOpen(false);}} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea></PopoverContent>
-                        </Popover>
-                         <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}><PopoverTrigger asChild><div className="absolute -bottom-1 -right-0 h-5 w-5 rounded-full border-2 border-dialog cursor-pointer" style={{ backgroundColor: badge.color }} /></PopoverTrigger><PopoverContent className="w-auto p-2"><div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {setBadge(b => ({ ...b, color: c })); setIsColorPopoverOpen(false);}}/>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={badge.color} onChange={(e) => setBadge(b => ({ ...b, color: e.target.value }))} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div></PopoverContent></Popover>
-                    </div>
-                     {isEditingName ? (
-                        <Input ref={nameInputRef} value={badge.name} onChange={e => setBadge(b => ({ ...b, name: e.target.value }))} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>
-                    ) : (
-                        <h3 onClick={() => setIsEditingName(true)} className="text-2xl font-semibold cursor-pointer">{badge.name || 'New Badge'}</h3>
-                    )}
-                </div>
-                 <div className="space-y-2">
-                    <Textarea id="description" value={badge.description} onChange={e => setBadge(b => ({ ...b, description: e.target.value }))} placeholder="Description (optional)" />
-                </div>
-            </div>
-        </DialogContent>
-    );
-}
 
-function DetailedBadgeCard({ badge, onUpdateBadge, onEdit, onDelete, isLink, linkColor }: { badge: Badge, onUpdateBadge: (badgeData: Badge) => void; onEdit: () => void, onDelete: () => void, isLink: boolean, linkColor?: string }) {
-    const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
-    const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
-    const [iconSearch, setIconSearch] = useState('');
 
     const filteredIcons = useMemo(() => {
         if (!iconSearch) return googleSymbolNames;
@@ -143,7 +114,7 @@ function DetailedBadgeCard({ badge, onUpdateBadge, onEdit, onDelete, isLink, lin
         <Card className="group">
             <CardHeader>
                 <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
                          <div className="relative">
                             <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                                 <PopoverTrigger asChild>
@@ -153,13 +124,13 @@ function DetailedBadgeCard({ badge, onUpdateBadge, onEdit, onDelete, isLink, lin
                                 </PopoverTrigger>
                                 <PopoverContent className="w-80 p-0">
                                     <div className="p-2 border-b"><Input placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} /></div>
-                                    <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={badge.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdateBadge({ ...badge, icon: iconName }); setIsIconPopoverOpen(false);}} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
+                                    <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={badge.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdateBadge({ icon: iconName }); setIsIconPopoverOpen(false);}} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
                                 </PopoverContent>
                             </Popover>
                              <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
                                 <PopoverTrigger asChild><div className="absolute -bottom-1 -right-0 h-5 w-5 rounded-full border-2 border-card cursor-pointer" style={{ backgroundColor: badge.color }} /></PopoverTrigger>
                                 <PopoverContent className="w-auto p-2">
-                                <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdateBadge({ ...badge, color: c }); setIsColorPopoverOpen(false);}}/>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={badge.color} onChange={(e) => onUpdateBadge({ ...badge, color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
+                                <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdateBadge({ color: c }); setIsColorPopoverOpen(false);}}/>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={badge.color} onChange={(e) => onUpdateBadge({ color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
                                 </PopoverContent>
                             </Popover>
                             {isLink && (
@@ -172,21 +143,31 @@ function DetailedBadgeCard({ badge, onUpdateBadge, onEdit, onDelete, isLink, lin
                                 </div>
                             )}
                         </div>
-                        <CardTitle onClick={onEdit} className="cursor-pointer">{badge.name}</CardTitle>
+                        {isEditingName ? (
+                            <Input ref={nameInputRef} defaultValue={badge.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>
+                        ) : (
+                            <CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer">{badge.name}</CardTitle>
+                        )}
                     </div>
                     <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onDelete(); }} className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive">
                         <GoogleSymbol name="delete" />
                     </Button>
                 </div>
             </CardHeader>
-            <CardContent className="space-y-4 pt-0 cursor-pointer" onClick={onEdit}>
-                {badge.description && <p className="text-sm text-muted-foreground">{badge.description}</p>}
+            <CardContent className="space-y-4 pt-0">
+                 {isEditingDescription ? (
+                    <Textarea ref={descriptionTextareaRef} defaultValue={badge.description} onBlur={handleSaveDescription} onKeyDown={handleDescriptionKeyDown} />
+                 ) : (
+                    <p className="text-sm text-muted-foreground cursor-text min-h-[20px]" onClick={() => setIsEditingDescription(true)}>
+                        {badge.description || 'Click to add description.'}
+                    </p>
+                 )}
             </CardContent>
         </Card>
     );
 }
 
-function BadgeDisplayItem({ badge, viewMode, isLink, linkColor, onUpdateBadge, onDelete }: { badge: Badge; viewMode: BadgeCollection['viewMode']; isLink: boolean; linkColor?: string; onUpdateBadge: (badgeData: Badge) => void; onDelete: () => void; }) {
+function BadgeDisplayItem({ badge, viewMode, isLink, linkColor, onUpdateBadge, onDelete }: { badge: Badge; viewMode: BadgeCollection['viewMode']; isLink: boolean; linkColor?: string; onUpdateBadge: (badgeData: Partial<Badge>) => void; onDelete: () => void; }) {
     const { toast } = useToast();
     const [isEditingName, setIsEditingName] = useState(false);
     const [currentName, setCurrentName] = useState(badge.name);
@@ -194,6 +175,10 @@ function BadgeDisplayItem({ badge, viewMode, isLink, linkColor, onUpdateBadge, o
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
     const [iconSearch, setIconSearch] = useState('');
+    
+    const [isEditingDescription, setIsEditingDescription] = useState(false);
+    const [currentDescription, setCurrentDescription] = useState(badge.description || '');
+    const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
 
     useEffect(() => {
         if (isEditingName && nameInputRef.current) {
@@ -202,12 +187,19 @@ function BadgeDisplayItem({ badge, viewMode, isLink, linkColor, onUpdateBadge, o
         }
     }, [isEditingName]);
 
+    useEffect(() => {
+        if (isEditingDescription && descriptionTextareaRef.current) {
+            descriptionTextareaRef.current.focus();
+            descriptionTextareaRef.current.select();
+        }
+    }, [isEditingDescription]);
+
     const handleSaveName = () => {
-        if (!currentName.trim()) {
+        if (currentName.trim() === '') {
             toast({ variant: 'destructive', title: 'Error', description: 'Badge name cannot be empty.' });
             setCurrentName(badge.name); // Revert
         } else if (currentName.trim() !== badge.name) {
-            onUpdateBadge({ ...badge, name: currentName.trim() });
+            onUpdateBadge({ name: currentName.trim() });
         }
         setIsEditingName(false);
     };
@@ -219,20 +211,36 @@ function BadgeDisplayItem({ badge, viewMode, isLink, linkColor, onUpdateBadge, o
             setIsEditingName(false);
         }
     };
+    
+    const handleSaveDescription = () => {
+        const newDescription = currentDescription.trim();
+        if (newDescription !== (badge.description || '')) {
+            onUpdateBadge({ description: newDescription });
+        }
+        setIsEditingDescription(false);
+    };
+    
+    const handleDescriptionKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSaveDescription();
+        } else if (e.key === 'Escape') {
+            setCurrentDescription(badge.description || '');
+            setIsEditingDescription(false);
+        }
+    };
+
 
     const filteredIcons = useMemo(() => {
         if (!iconSearch) return googleSymbolNames;
         return googleSymbolNames.filter(iconName => iconName.toLowerCase().includes(iconSearch.toLowerCase()));
     }, [iconSearch]);
     
-    const onEdit = () => { setIsEditingName(true); }
-
     if (viewMode === 'detailed') {
       return (
         <DetailedBadgeCard
             badge={badge}
             onUpdateBadge={onUpdateBadge}
-            onEdit={onEdit}
             onDelete={onDelete}
             isLink={isLink}
             linkColor={linkColor}
@@ -250,13 +258,13 @@ function BadgeDisplayItem({ badge, viewMode, isLink, linkColor, onUpdateBadge, o
                 </PopoverTrigger>
                 <PopoverContent className="w-80 p-0">
                     <div className="p-2 border-b"><Input placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} /></div>
-                    <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={badge.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdateBadge({ ...badge, icon: iconName }); setIsIconPopoverOpen(false);}} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
+                    <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={badge.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdateBadge({ icon: iconName }); setIsIconPopoverOpen(false);}} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
                 </PopoverContent>
             </Popover>
              <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
                 <PopoverTrigger asChild><div className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-muted cursor-pointer" style={{ backgroundColor: badge.color }} /></PopoverTrigger>
                 <PopoverContent className="w-auto p-2">
-                <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdateBadge({ ...badge, color: c }); setIsColorPopoverOpen(false);}}/>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={badge.color} onChange={(e) => onUpdateBadge({ ...badge, color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
+                <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdateBadge({ color: c }); setIsColorPopoverOpen(false);}}/>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={badge.color} onChange={(e) => onUpdateBadge({ color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
                 </PopoverContent>
             </Popover>
             {isLink && (
@@ -285,7 +293,7 @@ function BadgeDisplayItem({ badge, viewMode, isLink, linkColor, onUpdateBadge, o
             )}
         />
     ) : (
-        <span className={cn("font-semibold cursor-text", viewMode === 'assorted' && 'text-sm')} onClick={onEdit}>{badge.name}</span>
+        <span className={cn("font-semibold cursor-text", viewMode === 'assorted' && 'text-sm')} onClick={() => setIsEditingName(true)}>{badge.name}</span>
     );
 
     if (viewMode === 'list') {
@@ -294,7 +302,21 @@ function BadgeDisplayItem({ badge, viewMode, isLink, linkColor, onUpdateBadge, o
             {sharedIconAndColorEditor}
             <div className="flex-1 space-y-1">
                 {inlineNameEditor}
-                {badge.description && <p className="text-sm text-muted-foreground">{badge.description}</p>}
+                {isEditingDescription ? (
+                    <Textarea 
+                        ref={descriptionTextareaRef}
+                        value={currentDescription}
+                        onChange={e => setCurrentDescription(e.target.value)}
+                        onBlur={handleSaveDescription}
+                        onKeyDown={handleDescriptionKeyDown}
+                        className="text-sm"
+                        placeholder="Click to add a description."
+                    />
+                ) : (
+                    <p className="text-sm text-muted-foreground cursor-text min-h-[20px]" onClick={() => setIsEditingDescription(true)}>
+                        {badge.description || 'Click to add a description.'}
+                    </p>
+                )}
             </div>
             <Button variant="ghost" size="icon" onClick={onDelete} className="h-8 w-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity">
                 <GoogleSymbol name="delete" />
@@ -315,13 +337,13 @@ function BadgeDisplayItem({ badge, viewMode, isLink, linkColor, onUpdateBadge, o
                     </PopoverTrigger>
                     <PopoverContent className="w-80 p-0">
                         <div className="p-2 border-b"><Input placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} /></div>
-                        <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={badge.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdateBadge({ ...badge, icon: iconName }); setIsIconPopoverOpen(false);}} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
+                        <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={badge.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdateBadge({ icon: iconName }); setIsIconPopoverOpen(false);}} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
                     </PopoverContent>
                 </Popover>
                  <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
                     <PopoverTrigger asChild><div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border border-background cursor-pointer" style={{ backgroundColor: badge.color }} /></PopoverTrigger>
                     <PopoverContent className="w-auto p-2">
-                    <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdateBadge({ ...badge, color: c }); setIsColorPopoverOpen(false);}}/>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={badge.color} onChange={(e) => onUpdateBadge({ ...badge, color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
+                    <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdateBadge({ color: c }); setIsColorPopoverOpen(false);}}/>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={badge.color} onChange={(e) => onUpdateBadge({ color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
                     </PopoverContent>
                 </Popover>
                 {isLink && (
@@ -342,15 +364,16 @@ function BadgeDisplayItem({ badge, viewMode, isLink, linkColor, onUpdateBadge, o
     );
 }
 
-function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInTeam, onUpdateCollection, onDeleteCollection, onAddBadge, onUpdateBadge, onDeleteBadge }: {
+function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInTeam, onUpdateCollection, onDeleteCollection, onAddBadge, onUpdateBadge, onDeleteBadge, dragHandleProps }: {
     collection: BadgeCollection;
     allBadgesInTeam: Badge[];
     allCollectionsInTeam: BadgeCollection[];
     onUpdateCollection: (collectionId: string, newValues: Partial<Omit<BadgeCollection, 'id' | 'badgeIds'>>) => void;
     onDeleteCollection: (collectionId: string) => void;
     onAddBadge: (collectionId: string) => void;
-    onUpdateBadge: (badgeData: Badge) => void;
+    onUpdateBadge: (badgeData: Partial<Badge>) => void;
     onDeleteBadge: (collectionId: string, badgeId: string) => void;
+    dragHandleProps: DraggableProvidedDragHandleProps | null | undefined;
 }) {
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isEditingName, setIsEditingName] = useState(false);
@@ -402,53 +425,58 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInTeam
         <Card>
             <CardHeader>
                 <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                         <div className="relative">
-                            <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
-                                <PopoverTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-9 w-9 text-2xl" style={{ color: collection.color }}>
-                                        <GoogleSymbol name={collection.icon} />
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-80 p-0">
-                                    <div className="p-2 border-b">
-                                        <Input placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} />
-                                    </div>
-                                    <ScrollArea className="h-64">
-                                        <div className="grid grid-cols-6 gap-1 p-2">
-                                            {filteredIcons.slice(0, 300).map((iconName) => (
-                                                <Button key={iconName} variant={collection.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdateCollection(collection.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="text-2xl">
-                                                    <GoogleSymbol name={iconName} />
-                                                </Button>
-                                            ))}
-                                        </div>
-                                    </ScrollArea>
-                                </PopoverContent>
-                            </Popover>
-                            <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                                <PopoverTrigger asChild>
-                                    <div className="absolute -bottom-1 -right-0 h-4 w-4 rounded-full border-2 border-card cursor-pointer" style={{ backgroundColor: collection.color }} />
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-2">
-                                    <div className="grid grid-cols-8 gap-1">
-                                        {predefinedColors.map(color => (
-                                            <button key={color} className="h-6 w-6 rounded-full border" style={{ backgroundColor: color }} onClick={() => {onUpdateCollection(collection.id, { color }); setIsColorPopoverOpen(false);}}/>
-                                        ))}
-                                        <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
-                                            <GoogleSymbol name="colorize" className="text-muted-foreground" />
-                                            <Input type="color" value={collection.color} onChange={(e) => onUpdateCollection(collection.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/>
-                                        </div>
-                                    </div>
-                                </PopoverContent>
-                            </Popover>
+                    <div className="flex items-center gap-1 flex-1 min-w-0">
+                         <div {...dragHandleProps} className="cursor-grab text-muted-foreground pr-1">
+                            <GoogleSymbol name="drag_indicator" />
                         </div>
-                        <div className="flex items-center gap-1 flex-1 min-w-0">
-                            {isEditingName ? (
-                                <Input ref={nameInputRef} defaultValue={collection.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>
-                            ) : (
-                                <CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer truncate">{collection.name}</CardTitle>
-                            )}
-                            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => onAddBadge(collection.id)}><GoogleSymbol name="add_circle" className="text-xl" /><span className="sr-only">Add Badge</span></Button>
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                             <div className="relative">
+                                <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
+                                    <PopoverTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-9 w-9 text-2xl" style={{ color: collection.color }}>
+                                            <GoogleSymbol name={collection.icon} />
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-80 p-0">
+                                        <div className="p-2 border-b">
+                                            <Input placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} />
+                                        </div>
+                                        <ScrollArea className="h-64">
+                                            <div className="grid grid-cols-6 gap-1 p-2">
+                                                {filteredIcons.slice(0, 300).map((iconName) => (
+                                                    <Button key={iconName} variant={collection.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdateCollection(collection.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="text-2xl">
+                                                        <GoogleSymbol name={iconName} />
+                                                    </Button>
+                                                ))}
+                                            </div>
+                                        </ScrollArea>
+                                    </PopoverContent>
+                                </Popover>
+                                <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                                    <PopoverTrigger asChild>
+                                        <div className="absolute -bottom-1 -right-0 h-4 w-4 rounded-full border-2 border-card cursor-pointer" style={{ backgroundColor: collection.color }} />
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-2">
+                                        <div className="grid grid-cols-8 gap-1">
+                                            {predefinedColors.map(color => (
+                                                <button key={color} className="h-6 w-6 rounded-full border" style={{ backgroundColor: color }} onClick={() => {onUpdateCollection(collection.id, { color }); setIsColorPopoverOpen(false);}}/>
+                                            ))}
+                                            <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
+                                                <GoogleSymbol name="colorize" className="text-muted-foreground" />
+                                                <Input type="color" value={collection.color} onChange={(e) => onUpdateCollection(collection.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/>
+                                            </div>
+                                        </div>
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
+                            <div className="flex items-center gap-1 flex-1 min-w-0">
+                                {isEditingName ? (
+                                    <Input ref={nameInputRef} defaultValue={collection.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>
+                                ) : (
+                                    <CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer truncate">{collection.name}</CardTitle>
+                                )}
+                                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => onAddBadge(collection.id)}><GoogleSymbol name="add_circle" className="text-xl" /><span className="sr-only">Add Badge</span></Button>
+                            </div>
                         </div>
                     </div>
                      <div className="flex items-center gap-1">
@@ -493,10 +521,10 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInTeam
                             ref={provided.innerRef}
                             {...provided.droppableProps}
                             className={cn(
-                                "min-h-[60px]",
+                                "min-h-[60px] rounded-md border-2 border-dashed border-transparent p-2",
                                 collection.viewMode === 'assorted' && "flex flex-wrap gap-2",
                                 collection.viewMode === 'list' && "flex flex-col gap-1",
-                                collection.viewMode === 'detailed' && "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+                                collection.viewMode === 'detailed' && "grid grid-cols-1 md:grid-cols-2 gap-4"
                             )}>
                             {collectionBadges.map((badge, index) => {
                                 const isLink = badge.ownerCollectionId !== collection.id;
@@ -511,7 +539,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInTeam
                                             viewMode={collection.viewMode} 
                                             isLink={isLink} 
                                             linkColor={linkColor}
-                                            onUpdateBadge={onUpdateBadge}
+                                            onUpdateBadge={(data) => onUpdateBadge({ ...badge, ...data })}
                                             onDelete={() => onDeleteBadge(collection.id, badge.id)}
                                         />
                                     </div>)}
@@ -605,10 +633,9 @@ export function BadgeManagement({ team }: { team: Team }) {
         updateTeam(team.id, { allBadges: newAllBadges, badgeCollections: newCollections });
     };
     
-    const handleUpdateBadge = (badgeData: Badge) => {
-        const newAllBadges = team.allBadges.map(b => b.id === badgeData.id ? badgeData : b);
+    const handleUpdateBadge = (badgeData: Partial<Badge>) => {
+        const newAllBadges = team.allBadges.map(b => b.id === badgeData.id ? {...b, ...badgeData} : b);
         updateTeam(team.id, { allBadges: newAllBadges });
-        toast({ title: 'Badge Updated', description: `"${badgeData.name}" has been saved.` });
     };
 
     const handleDeleteBadge = (collectionId: string, badgeId: string) => {
@@ -691,11 +718,11 @@ export function BadgeManagement({ team }: { team: Team }) {
             <DragDropContext onDragEnd={onDragEnd}>
                 <StrictModeDroppable droppableId="collections-list" type="collection">
                     {(provided) => (
-                        <div className="space-y-6" ref={provided.innerRef} {...provided.droppableProps}>
+                        <div className="flex flex-col gap-6" ref={provided.innerRef} {...provided.droppableProps}>
                         {(team.badgeCollections || []).map((collection, index) => (
                             <Draggable key={collection.id} draggableId={collection.id} index={index}>
                                 {(provided) => (
-                                    <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
+                                    <div ref={provided.innerRef} {...provided.draggableProps}>
                                         <BadgeCollectionCard
                                             key={collection.id}
                                             collection={collection}
@@ -706,6 +733,7 @@ export function BadgeManagement({ team }: { team: Team }) {
                                             onAddBadge={handleAddBadge}
                                             onUpdateBadge={handleUpdateBadge}
                                             onDeleteBadge={handleDeleteBadge}
+                                            dragHandleProps={provided.dragHandleProps}
                                         />
                                     </div>
                                 )}
