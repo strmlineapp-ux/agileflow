@@ -332,6 +332,20 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
     });
   };
 
+  const handleRoleAction = (role: string) => {
+    const assignment = roleAssignments[role];
+    if (assignment?.assignedUser) {
+      // Un-assign the user but keep the role request
+      setRoleAssignments(prev => ({
+        ...prev,
+        [role]: { ...prev[role], assignedUser: null },
+      }));
+    } else {
+      // If no user is assigned, remove the role request itself
+      handleRemoveRequestedRole(role);
+    }
+  };
+
   const onSubmit = React.useCallback(async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
     const [startHour, startMinute] = values.startTime.split(':').map(Number);
@@ -738,10 +752,13 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                                         >
                                             <Popover open={popoverOpen} onOpenChange={() => toggleRolePopover(role)}>
                                                 <PopoverTrigger asChild>
-                                                    <span className="cursor-pointer">
-                                                        {role}
-                                                        {user && <span className="font-normal mx-2 text-muted-foreground">/</span>}
-                                                        {user && <span className="font-semibold">{user.displayName}</span>}
+                                                    <span className="cursor-pointer flex items-center gap-1.5">
+                                                        {roleInfo && <GoogleSymbol name={roleInfo.icon} className="text-base" />}
+                                                        <span>
+                                                            {role}
+                                                            {user && <span className="font-normal mx-2 text-muted-foreground">/</span>}
+                                                            {user && <span className="font-semibold">{user.displayName}</span>}
+                                                        </span>
                                                     </span>
                                                 </PopoverTrigger>
                                                 <PopoverContent className="w-[300px] p-0">
@@ -769,9 +786,9 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                                             </Popover>
                                             <button
                                                 type="button"
-                                                onClick={() => handleRemoveRequestedRole(role)}
+                                                onClick={() => handleRoleAction(role)}
                                                 className="h-4 w-4 rounded-full hover:bg-black/10 flex items-center justify-center"
-                                                aria-label={`Remove role ${role}`}
+                                                aria-label={user ? `Unassign user from ${role}` : `Remove role ${role}`}
                                             >
                                                 <GoogleSymbol name="cancel" className="text-xs" />
                                             </button>
