@@ -106,6 +106,7 @@ const predefinedColors = [
 
 function CustomRoleCard({ 
   role,
+  index,
   users, 
   onUpdate, 
   onDelete, 
@@ -116,6 +117,7 @@ function CustomRoleCard({
   isLinking
 }: { 
   role: CustomAdminRole; 
+  index: number;
   users: User[]; 
   onUpdate: (updatedRole: CustomAdminRole) => void;
   onDelete: () => void;
@@ -276,7 +278,17 @@ function CustomRoleCard({
                         </PopoverContent>
                     </Popover>
                     <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                        <PopoverTrigger asChild><div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card cursor-pointer" aria-label="Change service admin color"><div className="h-full w-full rounded-full" style={{ backgroundColor: role.color }}/></div></PopoverTrigger>
+                        <PopoverTrigger asChild>
+                            <div 
+                                className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full border-2 border-card cursor-pointer flex items-center justify-center" 
+                                aria-label="Change service admin color"
+                                style={{ backgroundColor: role.color }}
+                            >
+                                <span className="text-xs font-bold" style={{ color: getContrastColor(role.color) }}>
+                                    {index + 1}
+                                </span>
+                            </div>
+                        </PopoverTrigger>
                         <PopoverContent className="w-auto p-2">
                         <div className="grid grid-cols-8 gap-1">
                             {predefinedColors.map(color => (<button key={color} className="h-6 w-6 rounded-full border" style={{ backgroundColor: color }} onClick={() => { onUpdate({ ...role, color: color }); setIsColorPopoverOpen(false); }} aria-label={`Set color to ${color}`}/>))}
@@ -579,6 +591,7 @@ export default function AdminPage() {
                         <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
                           <CustomRoleCard
                             role={role}
+                            index={index}
                             users={users}
                             onUpdate={handleUpdateCustomRole}
                             onDelete={() => handleDeleteCustomRole(role.id)}
@@ -631,4 +644,5 @@ export default function AdminPage() {
     
 
     
+
 
