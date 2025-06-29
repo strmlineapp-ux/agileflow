@@ -13,12 +13,12 @@ This table details the information stored directly within each `User` object.
 | Data Point | Description & Link to Services |
 | :--- | :--- |
 | `userId: string` | **Internal.** A unique identifier for each user. This is the primary key used to link a user to all other parts of the system. |
-| `displayName: string` | **Internal.** The user's full name, displayed throughout the app (e.g., in headers, member lists, and assignments). In a production system, this would be populated from the authentication provider (like a Google account) upon signup. |
+| `displayName: string` | **Internal / Google Service.** The user's full name. While currently internal, this is designed to be populated from the **Google User Profile** upon a "Sign in with Google" action. |
 | `email: string` | **Internal / Google Service.** The user's email address. This is the primary field used for login. The "Sign in with Google" button uses **Firebase Authentication** with the **Google Auth Provider** to verify this email. |
-| `title?: string` | **Internal.** The user's professional title (e.g., "Lead Engineer," "Producer"). |
-| `avatarUrl?: string` | **Internal.** A URL to the user's profile picture. While currently using placeholders, this would typically be populated from the **Google User Profile** picture upon a "Sign in with Google" action. |
-| `phone?: string` | **Internal.** The user's contact phone number. |
-| `location?: string` | **Internal.** The user's primary work location. |
+| `title?: string` | **Internal.** The user's professional title (e.g., "Lead Engineer," "Producer"). This field is specific to AgileFlow and is not sourced from the user's Google Account. |
+| `avatarUrl?: string` | **Internal / Google Service.** A URL to the user's profile picture. While currently using placeholders, this is designed to be populated from the **Google User Profile** picture upon a "Sign in with Google" action. |
+| `phone?: string` | **Internal.** The user's contact phone number. This field is specific to AgileFlow and is not sourced from the user's Google Account. |
+| `location?: string` | **Internal.** The user's primary work location. This field is specific to AgileFlow and is not sourced from the user's Google Account. |
 | `googleCalendarLinked: boolean` | **Google Service.** A flag that is set to `true` only after the user successfully completes an OAuth consent flow via **Firebase Authentication** to grant the app permission to access their Google Calendar. |
 | `roles?: string[]` | **Internal.** An array of role names assigned to the user. This critical field mixes system-level roles (like `Admin`) with team-specific roles (like `Camera` or `Audio`) to determine permissions. |
 | `directReports?: string[]` | **Internal.** An array of `userId`s for users who report directly to this user. This is currently informational. |
