@@ -15,6 +15,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle as UIAlertDialogTitle } from '@/components/ui/alert-dialog';
+import { DragDropContext, Droppable, Draggable, type DropResult } from 'react-beautiful-dnd';
 
 
 // A card to display a user with a specific role.
@@ -340,6 +341,34 @@ export default function AdminPage() {
       toast({ title: 'Success', description: 'Role level deleted.' });
   }
 
+  const onDragEnd = (result: DropResult) => {
+    const { source, destination } = result;
+
+    if (!destination) {
+      return;
+    }
+
+    // Prevent dropping before the locked "Admins" card
+    if (destination.index === 0) {
+      return;
+    }
+
+    // Adjust indices because our state array (customAdminRoles) doesn't include the Admins card.
+    const sourceIndex = source.index - 1;
+    const destinationIndex = destination.index - 1;
+    
+    if (sourceIndex === destinationIndex) {
+        return;
+    }
+
+    const reorderedRoles = Array.from(appSettings.customAdminRoles);
+    const [movedRole] = reorderedRoles.splice(sourceIndex, 1);
+    reorderedRoles.splice(destinationIndex, 0, movedRole);
+
+    updateAppSettings({ customAdminRoles: reorderedRoles });
+  };
+
+
   return (
     <>
       <div className="flex flex-col gap-8">
@@ -351,33 +380,56 @@ export default function AdminPage() {
             </Button>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 items-start">
-          {/* Admins Column */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <CardTitle>Admins</CardTitle>
-                <AddUserToRoleButton usersToAdd={nonAdminUsers} onAdd={handleAdminToggle} roleName="Admin" />
-              </div>
-              <CardDescription>Assign or revoke Admin privileges. This is the highest level of access.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {adminUsers.map(user => (
-                <UserRoleCard key={user.userId} user={user} onRemove={handleAdminToggle} />
-              ))}
-            </CardContent>
-          </Card>
-          
-          {appSettings.customAdminRoles.map(role => (
-              <CustomRoleCard
-                key={role.id}
-                role={role}
-                users={users}
-                onUpdate={handleUpdateCustomRole}
-                onDelete={() => handleDeleteCustomRole(role.id)}
-              />
-          ))}
-        </div>
+        <DragDropContext onDragEnd={onDragEnd}>
+            <Droppable droppableId="admin-roles-list">
+              {(provided) => (
+                <div 
+                  className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 items-start"
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                >
+                  {/* Draggable but disabled Admins Card */}
+                  <Draggable draggableId="admins-card-static" index={0} isDragDisabled={true}>
+                    {(provided) => (
+                      <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
+                        <Card>
+                          <CardHeader>
+                            <div className="flex items-center gap-2">
+                              <CardTitle>Admins</CardTitle>
+                              <AddUserToRoleButton usersToAdd={nonAdminUsers} onAdd={handleAdminToggle} roleName="Admin" />
+                            </div>
+                            <CardDescription>Assign or revoke Admin privileges. This is the highest level of access.</CardDescription>
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            {adminUsers.map(user => (
+                              <UserRoleCard key={user.userId} user={user} onRemove={handleAdminToggle} />
+                            ))}
+                          </CardContent>
+                        </Card>
+                      </div>
+                    )}
+                  </Draggable>
+                  
+                  {/* Draggable Custom Role Cards */}
+                  {appSettings.customAdminRoles.map((role, index) => (
+                    <Draggable key={role.id} draggableId={role.id} index={index + 1}>
+                      {(provided) => (
+                        <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
+                          <CustomRoleCard
+                            role={role}
+                            users={users}
+                            onUpdate={handleUpdateCustomRole}
+                            onDelete={() => handleDeleteCustomRole(role.id)}
+                          />
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
       </div>
 
       <Dialog open={is2faDialogOpen} onOpenChange={(isOpen) => !isOpen && close2faDialog()}>
