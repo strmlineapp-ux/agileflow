@@ -7,17 +7,20 @@ import { usePathname } from 'next/navigation';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal } from '../ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal, DropdownMenuLabel } from '../ui/dropdown-menu';
 import { useUser } from '@/context/user-context';
 import { GoogleSymbol } from '../icons/google-symbol';
+import { Badge } from '../ui/badge';
+import { getContrastColor } from '@/lib/utils';
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { realUser, viewAsUser, setViewAsUser, users, teams, notifications, appSettings } = useUser();
+  const { realUser, viewAsUser, setViewAsUser, users, teams, notifications, appSettings, allRoles } = useUser();
   const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const isAdmin = viewAsUser.roles?.includes('Admin');
+  const isSdm = viewAsUser.roles?.includes('Service Delivery Manager');
 
   const userTeams = teams.filter(team => 
     isAdmin || team.managers?.includes(viewAsUser.userId)
@@ -28,7 +31,7 @@ export function Sidebar() {
     { href: '/dashboard/calendar', icon: 'calendar_month', label: 'Calendar', visible: true },
     { href: '/dashboard', icon: 'dashboard', label: 'Overview', visible: true },
     { href: '/dashboard/tasks', icon: 'checklist', label: 'Tasks', visible: true },
-    { href: '/dashboard/service-delivery', icon: appSettings.icon, label: appSettings.displayName, visible: isAdmin },
+    { href: '/dashboard/service-delivery', icon: appSettings.icon, label: appSettings.displayName, visible: isSdm || isAdmin },
   ];
 
   const teamNavItems = userTeams.map(team => ({
@@ -107,7 +110,42 @@ export function Sidebar() {
                 <TooltipContent side="right">User Account</TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            <DropdownMenuContent side="right" align="end" className="w-56">
+            <DropdownMenuContent side="right" align="end" className="w-64">
+                <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">{viewAsUser.displayName}</p>
+                        <p className="text-xs leading-none text-muted-foreground">{viewAsUser.email}</p>
+                    </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <div className="px-2 py-1.5">
+                    <p className="text-xs text-muted-foreground mb-2">Roles</p>
+                    <div className="flex flex-wrap gap-1">
+                        {(viewAsUser.roles && viewAsUser.roles.length > 0) ? (
+                            viewAsUser.roles.map(roleName => {
+                                const roleInfo = allRoles.find(r => r.name === roleName);
+                                return (
+                                    <Badge 
+                                        key={roleName} 
+                                        style={roleInfo ? { backgroundColor: roleInfo.color, color: getContrastColor(roleInfo.color) } : {}}
+                                        variant={roleInfo ? "default" : "secondary"}
+                                        className={cn(
+                                            "rounded-full gap-1 text-xs py-0.5 px-2",
+                                            !roleInfo && "opacity-75",
+                                            roleInfo && "border-transparent"
+                                        )}
+                                    >
+                                        {roleInfo && <GoogleSymbol name={roleInfo.icon} className="text-sm" />}
+                                        <span>{roleName}</span>
+                                    </Badge>
+                                )
+                            })
+                        ) : (
+                            <p className="text-xs text-muted-foreground italic">No roles assigned</p>
+                        )}
+                    </div>
+                </div>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                     <Link href="/dashboard/settings">
                         <GoogleSymbol name="manage_accounts" className="mr-2 text-lg" />
