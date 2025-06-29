@@ -34,7 +34,7 @@ export function PinnedLocationManagement({ team }: { team: Team }) {
 
   const pinnedLocationNames = team.pinnedLocations || [];
   const checkLocationNames = new Set(team.checkLocations || []);
-  const canManage = viewAsUser.isAdmin || team.managers?.includes(viewAsUser.userId);
+  const canManage = viewAsUser.isAdmin || team.teamAdmins?.includes(viewAsUser.userId);
 
   const availableToPin = useMemo(() => {
     return locations

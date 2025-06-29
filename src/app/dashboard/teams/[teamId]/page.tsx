@@ -17,7 +17,7 @@ export default function TeamPage() {
   const { viewAsUser, teams } = useUser();
 
   const team = teams.find(t => t.id === teamId);
-  const isSdm = viewAsUser.roles?.includes('Service Delivery Manager') || viewAsUser.isAdmin;
+  const isServiceAdmin = viewAsUser.roles?.includes('Service Admin') || viewAsUser.isAdmin;
   
   if (!team) {
     // This can happen if the teamId is invalid or data is loading.
@@ -34,8 +34,8 @@ export default function TeamPage() {
     );
   }
   
-  const isTeamManager = team.managers?.includes(viewAsUser.userId);
-  const canViewPage = isSdm || isTeamManager;
+  const isTeamAdmin = team.teamAdmins?.includes(viewAsUser.userId);
+  const canViewPage = isServiceAdmin || isTeamAdmin;
 
   // This check must happen after all hooks are called.
   if (!canViewPage) {

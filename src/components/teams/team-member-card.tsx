@@ -29,7 +29,7 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
   const [isRolesDialogOpen, setIsRolesDialogOpen] = useState(false);
   const [tempRoles, setTempRoles] = useState<string[]>([]);
 
-  const canManageRoles = viewAsUser.isAdmin || team.managers?.includes(viewAsUser.userId);
+  const canManageRoles = viewAsUser.isAdmin || team.teamAdmins?.includes(viewAsUser.userId);
 
   const teamRoleNames = team.roles.map(r => r.name);
   const otherTeamRolesForMember = (member.roles || []).filter(roleName => !teamRoleNames.includes(roleName));

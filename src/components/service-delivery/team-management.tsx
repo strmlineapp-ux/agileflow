@@ -70,8 +70,8 @@ export function TeamManagement() {
     <>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {teams.map(team => {
-                const teamManagers = (team.managers || []).map(id => users.find(u => u.userId === id)).filter(Boolean) as User[];
-                const teamMembers = team.members.filter(m => !(team.managers || []).includes(m)).map(id => users.find(u => u.userId === id)).filter(Boolean) as User[];
+                const teamAdmins = (team.teamAdmins || []).map(id => users.find(u => u.userId === id)).filter(Boolean) as User[];
+                const teamMembers = team.members.filter(m => !(team.teamAdmins || []).includes(m)).map(id => users.find(u => u.userId === id)).filter(Boolean) as User[];
 
                 return (
                     <Card key={team.id} className="flex flex-col">
@@ -91,16 +91,16 @@ export function TeamManagement() {
                         </CardHeader>
                         <CardContent className="flex-grow space-y-4">
                             <div>
-                                <p className="text-sm font-medium text-muted-foreground mb-2">{team.managerRoleName || 'User Managers'}</p>
+                                <p className="text-sm font-medium text-muted-foreground mb-2">{team.managerRoleName || 'Team Admins'}</p>
                                 <div className="flex flex-wrap gap-2 min-h-[34px]">
-                                {teamManagers.length > 0 ? (
-                                    teamManagers.map(user => (
+                                {teamAdmins.length > 0 ? (
+                                    teamAdmins.map(user => (
                                         <Badge key={user.userId} variant="secondary" className="gap-1.5 p-1 pl-2 rounded-full">
                                             <Avatar className="h-5 w-5"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
                                             <span className="font-medium">{user.displayName}</span>
                                         </Badge>
                                     ))
-                                ) : <p className="text-sm text-muted-foreground italic px-2">No managers assigned.</p>}
+                                ) : <p className="text-sm text-muted-foreground italic px-2">No admins assigned.</p>}
                                 </div>
                             </div>
                             <div>
@@ -177,7 +177,7 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
     const [name, setName] = useState(team?.name || '');
     const [icon, setIcon] = useState<string>(team?.icon || 'group');
     const [members, setMembers] = useState<string[]>(team?.members || []);
-    const [managers, setManagers] = useState<string[]>(team?.managers || []);
+    const [teamAdmins, setTeamAdmins] = useState<string[]>(team?.teamAdmins || []);
     const [managerRoleName, setManagerRoleName] = useState(team?.managerRoleName || '');
     const [memberRoleName, setMemberRoleName] = useState(team?.memberRoleName || '');
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
@@ -189,16 +189,16 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
     const handleMemberToggleInPopover = (userId: string, isChecked: boolean) => {
         setMembers(prev => {
             const updatedMembers = isChecked ? [...prev, userId] : prev.filter(id => id !== userId);
-            // If a user is removed from members, also remove them from managers
+            // If a user is removed from members, also remove them from admins
             if (!isChecked) {
-                setManagers(currentManagers => currentManagers.filter(id => id !== userId));
+                setTeamAdmins(currentAdmins => currentAdmins.filter(id => id !== userId));
             }
             return updatedMembers;
         });
     };
 
-    const handleManagerToggle = (userId: string) => {
-        setManagers(prev => 
+    const handleAdminToggle = (userId: string) => {
+        setTeamAdmins(prev => 
             prev.includes(userId) 
                 ? prev.filter(id => id !== userId) 
                 : [...prev, userId]
@@ -215,7 +215,7 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
             name,
             icon,
             members,
-            managers,
+            teamAdmins,
             managerRoleName,
             memberRoleName,
         };
@@ -335,7 +335,7 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
                         <div className="space-y-2">
                             <Input
                                 id="manager-role-name"
-                                placeholder="User Manager Label (e.g. Leads)"
+                                placeholder="Team Admin Label (e.g. Leads)"
                                 value={managerRoleName}
                                 onChange={(e) => setManagerRoleName(e.target.value)}
                             />
@@ -400,13 +400,13 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
                                 members.map(userId => {
                                     const user = allUsers.find(u => u.userId === userId);
                                     if (!user) return null;
-                                    const isManager = managers.includes(userId);
+                                    const isAdmin = teamAdmins.includes(userId);
                                     return (
                                     <Badge 
                                         key={user.userId} 
-                                        variant={isManager ? 'default' : 'secondary'}
-                                        className={cn("gap-1.5 p-1 pl-2 cursor-pointer", isManager && "shadow-md")}
-                                        onClick={() => handleManagerToggle(userId)}
+                                        variant={isAdmin ? 'default' : 'secondary'}
+                                        className={cn("gap-1.5 p-1 pl-2 cursor-pointer", isAdmin && "shadow-md")}
+                                        onClick={() => handleAdminToggle(userId)}
                                     >
                                         <Avatar className="h-5 w-5">
                                             <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
@@ -421,7 +421,7 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
                                 )}
                             </div>
                         </div>
-                         <p className="text-xs text-muted-foreground text-right pr-2">Click member pills to toggle user manager status.</p>
+                         <p className="text-xs text-muted-foreground text-right pr-2">Click member pills to toggle Team Admin status.</p>
                     </div>
                 </div>
             </DialogContent>

@@ -26,7 +26,7 @@ export default function AppManagementPage() {
   const [tempName, setTempName] = useState(appSettings.displayName);
   const [iconSearch, setIconSearch] = useState('');
 
-  const isAdmin = viewAsUser.isAdmin;
+  const canAccessPage = viewAsUser.isAdmin || viewAsUser.roles?.includes('Service Admin');
   
   const filteredIcons = useMemo(() => {
     if (!iconSearch) return googleSymbolNames;
@@ -35,7 +35,7 @@ export default function AppManagementPage() {
     );
   }, [iconSearch]);
 
-  if (!isAdmin) {
+  if (!canAccessPage) {
     return null; // Navigation is filtered, so this prevents direct URL access.
   }
 
@@ -45,7 +45,7 @@ export default function AppManagementPage() {
         return;
     }
     updateAppSettings({ displayName: tempName });
-    toast({ title: 'Success', description: 'App Management display name updated.' });
+    toast({ title: 'Success', description: 'Service Admin display name updated.' });
     setIsNameDialogOpen(false);
   };
 
@@ -123,7 +123,7 @@ export default function AppManagementPage() {
           <DialogHeader>
             <DialogTitle>Edit Display Name</DialogTitle>
             <DialogDescription>
-              Change the display name for the App Management section.
+              Change the display name for the Service Admin section.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -132,7 +132,7 @@ export default function AppManagementPage() {
                 value={tempName} 
                 onChange={(e) => setTempName(e.target.value)} 
                 className="col-span-4"
-                placeholder="App Management Display Name"
+                placeholder="Service Admin Display Name"
               />
           </div>
         </DialogContent>

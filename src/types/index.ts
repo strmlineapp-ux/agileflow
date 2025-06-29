@@ -55,7 +55,7 @@ export interface Team {
   name: string;
   icon: string;
   members: string[]; // array of userIds
-  managers?: string[]; // array of userIds who are managers for this team
+  teamAdmins?: string[]; // array of userIds who are admins for this team
   managerRoleName?: string;
   memberRoleName?: string;
   locationCheckManagers: string[]; // array of userIds who can manage check locations

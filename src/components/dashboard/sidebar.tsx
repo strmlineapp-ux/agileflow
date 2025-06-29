@@ -20,10 +20,10 @@ export function Sidebar() {
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const isAdmin = viewAsUser.isAdmin;
-  const isSdm = viewAsUser.roles?.includes('Service Delivery Manager');
+  const isServiceAdmin = viewAsUser.roles?.includes('Service Admin');
 
   const userTeams = teams.filter(team => 
-    isAdmin || team.managers?.includes(viewAsUser.userId)
+    isAdmin || team.teamAdmins?.includes(viewAsUser.userId)
   );
 
   const mainNavItems = [
@@ -31,7 +31,7 @@ export function Sidebar() {
     { href: '/dashboard/calendar', icon: 'calendar_month', label: 'Calendar', visible: true },
     { href: '/dashboard', icon: 'dashboard', label: 'Overview', visible: true },
     { href: '/dashboard/tasks', icon: 'checklist', label: 'Tasks', visible: true },
-    { href: '/dashboard/service-delivery', icon: appSettings.icon, label: appSettings.displayName, visible: isSdm || isAdmin },
+    { href: '/dashboard/service-delivery', icon: appSettings.icon, label: appSettings.displayName, visible: isServiceAdmin || isAdmin },
   ];
 
   const teamNavItems = userTeams.map(team => ({
