@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState } from 'react';
@@ -11,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Textarea } from '../ui/textarea';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 
 type PriorityItemFormProps = {
   isOpen: boolean;
@@ -19,11 +21,18 @@ type PriorityItemFormProps = {
   onSave: (data: Omit<Priority, 'id'>) => void;
 };
 
+const predefinedColors = [
+    '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
+    '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6',
+    '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
+];
+
 export function PriorityItemForm({ isOpen, onClose, priority, onSave }: PriorityItemFormProps) {
   const [label, setLabel] = useState(priority?.label || '');
   const [description, setDescription] = useState(priority?.description || '');
   const [color, setColor] = useState(priority?.color || '#888888');
   const [shape, setShape] = useState<'rounded-md' | 'rounded-full'>(priority?.shape || 'rounded-full');
+  const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
   const { toast } = useToast();
 
   const handleSave = () => {
@@ -56,20 +65,37 @@ export function PriorityItemForm({ isOpen, onClose, priority, onSave }: Priority
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <div className="relative h-9 w-full">
-                  <div
-                      className="absolute inset-0 h-full w-full rounded-md border"
-                      style={{ backgroundColor: color }}
-                  />
-                  <Input
-                      id="color"
-                      type="color"
-                      value={color}
-                      onChange={(e) => setColor(e.target.value)}
-                      className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"
-                      aria-label="Priority color"
-                  />
-              </div>
+              <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                  <PopoverTrigger asChild>
+                      <button className="h-9 w-full rounded-md border" style={{ backgroundColor: color }} aria-label="Open color picker" />
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-2">
+                      <div className="grid grid-cols-8 gap-1">
+                          {predefinedColors.map(c => (
+                          <button
+                              key={c}
+                              className="h-6 w-6 rounded-full border"
+                              style={{ backgroundColor: c }}
+                              onClick={() => {
+                                  setColor(c);
+                                  setIsColorPopoverOpen(false);
+                              }}
+                              aria-label={`Set color to ${c}`}
+                          />
+                          ))}
+                          <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
+                          <GoogleSymbol name="colorize" className="text-muted-foreground" />
+                          <Input
+                              type="color"
+                              value={color}
+                              onChange={(e) => setColor(e.target.value)}
+                              className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"
+                              aria-label="Custom color picker"
+                          />
+                          </div>
+                      </div>
+                  </PopoverContent>
+              </Popover>
             </div>
             <div className="space-y-2">
               <RadioGroup value={shape} onValueChange={(v) => setShape(v as any)} className="flex items-center gap-4 pt-2">

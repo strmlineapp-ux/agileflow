@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -28,6 +29,11 @@ type PriorityStrategyFormProps = {
 };
 
 const APPLICATIONS: PriorityStrategyApplication[] = ['events', 'tasks'];
+const predefinedColors = [
+    '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
+    '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6',
+    '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
+];
 
 export function PriorityStrategyForm({ isOpen, onClose, strategy }: PriorityStrategyFormProps) {
   const { priorityStrategies, addPriorityStrategy, updatePriorityStrategy } = useUser();
@@ -44,6 +50,8 @@ export function PriorityStrategyForm({ isOpen, onClose, strategy }: PriorityStra
   // States for icon picker
   const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
   const [iconSearch, setIconSearch] = useState('');
+  const [isSymbolColorPopoverOpen, setIsSymbolColorPopoverOpen] = useState(false);
+  const [openIntervalColorPopoverIndex, setOpenIntervalColorPopoverIndex] = useState<number | null>(null);
 
   const { toast } = useToast();
   
@@ -330,20 +338,37 @@ export function PriorityStrategyForm({ isOpen, onClose, strategy }: PriorityStra
                             <Input id="symbol-max" type="number" value={strategyState.max} onChange={e => setStrategyState(s => ({ ...s, type: 'symbol', max: Number(e.target.value) }))} min={1} placeholder="Max Value" />
                         </div>
                          <div className="space-y-2">
-                            <div className="relative h-9 w-full">
-                                <div
-                                    className="absolute inset-0 h-full w-full rounded-md border"
-                                    style={{ backgroundColor: strategyState.color }}
-                                />
-                                <Input
-                                    id="symbol-color"
-                                    type="color"
-                                    value={strategyState.color}
-                                    onChange={(e) => setStrategyState(s => ({ ...s, type: 'symbol', color: e.target.value }))}
-                                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"
-                                    aria-label="Symbol color"
-                                />
-                            </div>
+                            <Popover open={isSymbolColorPopoverOpen} onOpenChange={setIsSymbolColorPopoverOpen}>
+                                <PopoverTrigger asChild>
+                                    <Button variant="outline" style={{ backgroundColor: strategyState.color }} className="w-full justify-center h-10" />
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-2">
+                                <div className="grid grid-cols-8 gap-1">
+                                    {predefinedColors.map(c => (
+                                        <button
+                                            key={c}
+                                            className="h-6 w-6 rounded-full border"
+                                            style={{ backgroundColor: c }}
+                                            onClick={() => {
+                                                setStrategyState(s => ({ ...s, type: 'symbol', color: c }));
+                                                setIsSymbolColorPopoverOpen(false);
+                                            }}
+                                            aria-label={`Set color to ${c}`}
+                                        />
+                                    ))}
+                                    <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
+                                        <GoogleSymbol name="colorize" className="text-muted-foreground" />
+                                        <Input
+                                            type="color"
+                                            value={strategyState.color}
+                                            onChange={(e) => setStrategyState(s => ({ ...s, type: 'symbol', color: e.target.value }))}
+                                            className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"
+                                            aria-label="Custom color picker"
+                                        />
+                                    </div>
+                                    </div>
+                                </PopoverContent>
+                            </Popover>
                         </div>
                     </div>
                 </div>
@@ -374,19 +399,37 @@ export function PriorityStrategyForm({ isOpen, onClose, strategy }: PriorityStra
                                    <Input placeholder="Label" value={interval.label} onChange={e => handleIntervalChange(index, 'label', e.target.value)} className="w-1/3" />
                                    <Input type="number" placeholder="From" value={interval.from} onChange={e => handleIntervalChange(index, 'from', Number(e.target.value))} />
                                    <Input type="number" placeholder="To" value={interval.to} onChange={e => handleIntervalChange(index, 'to', Number(e.target.value))} />
-                                   <div className="relative h-10 w-16 shrink-0">
-                                        <div
-                                            className="absolute inset-0 h-full w-full rounded-md border"
-                                            style={{ backgroundColor: interval.color }}
-                                        />
-                                        <Input
-                                            type="color"
-                                            value={interval.color}
-                                            onChange={(e) => handleIntervalChange(index, 'color', e.target.value)}
-                                            className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"
-                                            aria-label={`Color for ${interval.label}`}
-                                        />
-                                    </div>
+                                   <Popover open={openIntervalColorPopoverIndex === index} onOpenChange={(isOpen) => setOpenIntervalColorPopoverIndex(isOpen ? index : null)}>
+                                        <PopoverTrigger asChild>
+                                            <Button variant="outline" style={{ backgroundColor: interval.color }} className="h-10 w-16 shrink-0" />
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-2">
+                                        <div className="grid grid-cols-8 gap-1">
+                                            {predefinedColors.map(c => (
+                                                <button
+                                                    key={c}
+                                                    className="h-6 w-6 rounded-full border"
+                                                    style={{ backgroundColor: c }}
+                                                    onClick={() => {
+                                                        handleIntervalChange(index, 'color', c);
+                                                        setOpenIntervalColorPopoverIndex(null);
+                                                    }}
+                                                    aria-label={`Set color to ${c}`}
+                                                />
+                                            ))}
+                                            <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
+                                                <GoogleSymbol name="colorize" className="text-muted-foreground" />
+                                                <Input
+                                                    type="color"
+                                                    value={interval.color}
+                                                    onChange={(e) => handleIntervalChange(index, 'color', e.target.value)}
+                                                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"
+                                                    aria-label="Custom color picker"
+                                                />
+                                            </div>
+                                            </div>
+                                        </PopoverContent>
+                                    </Popover>
                                    <Button variant="ghost" size="icon" onClick={() => handleDeleteInterval(index)}><GoogleSymbol name="delete" /></Button>
                                </div>
                            ))}

@@ -19,6 +19,12 @@ import { googleSymbolNames } from '@/lib/google-symbols';
 import { cn } from '@/lib/utils';
 import { getContrastColor } from '@/lib/utils';
 
+const predefinedColors = [
+    '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
+    '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6',
+    '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
+];
+
 export function TeamRoleManagement({ team }: { team: Team }) {
   const { updateTeam, teams, realUser, notifications, setNotifications } = useUser();
   const { toast } = useToast();
@@ -30,6 +36,8 @@ export function TeamRoleManagement({ team }: { team: Team }) {
   const [newRoleName, setNewRoleName] = useState('');
   const [newRoleIcon, setNewRoleIcon] = useState('engineering');
   const [newRoleColor, setNewRoleColor] = useState('#64748B');
+  const [isAddColorPopoverOpen, setIsAddColorPopoverOpen] = useState(false);
+
 
   const [roleToAdd, setRoleToAdd] = useState('');
   const [conflictingTeams, setConflictingTeams] = useState<string[]>([]);
@@ -131,6 +139,13 @@ export function TeamRoleManagement({ team }: { team: Team }) {
     const [name, setName] = useState(role.name);
     const [color, setColor] = useState(role.color);
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
+    const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
+
+    const handleUpdate = (field: keyof TeamRole, value: string) => {
+        if (role[field] !== value) {
+            handleUpdateRole(role, { [field]: value });
+        }
+    };
 
     return (
       <Popover onOpenChange={(isOpen) => !isOpen && setEditingRole(null)}>
@@ -156,7 +171,7 @@ export function TeamRoleManagement({ team }: { team: Team }) {
                             <ScrollArea className="h-64">
                                 <div className="grid grid-cols-6 gap-1 p-2">
                                 {filteredIcons.slice(0, 300).map((iconName) => (
-                                    <Button key={iconName} variant={role.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => handleUpdateRole(role, { icon: iconName })} className="text-2xl">
+                                    <Button key={iconName} variant={role.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => handleUpdate('icon', iconName)} className="text-2xl">
                                     <GoogleSymbol name={iconName} />
                                     </Button>
                                 ))}
@@ -168,13 +183,47 @@ export function TeamRoleManagement({ team }: { team: Team }) {
                         id="edit-role-name" 
                         value={name} 
                         onChange={(e) => setName(e.target.value)} 
-                        onBlur={() => name !== role.name && handleUpdateRole(role, { name })}
+                        onBlur={() => handleUpdate('name', name)}
                         className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-9"
                     />
-                    <div className="relative h-6 w-6 rounded-full shrink-0">
-                        <div className="absolute inset-0 h-full w-full rounded-full border" style={{ backgroundColor: color }} />
-                        <Input type="color" value={color} onChange={(e) => setColor(e.target.value)} onBlur={() => color !== role.color && handleUpdateRole(role, { color })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" />
-                    </div>
+                    <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                        <PopoverTrigger asChild>
+                            <div
+                                className="h-6 w-6 rounded-full shrink-0 cursor-pointer border"
+                                style={{ backgroundColor: color }}
+                            />
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-2">
+                            <div className="grid grid-cols-8 gap-1">
+                                {predefinedColors.map(c => (
+                                <button
+                                    key={c}
+                                    className="h-6 w-6 rounded-full border"
+                                    style={{ backgroundColor: c }}
+                                    onClick={() => {
+                                        setColor(c);
+                                        handleUpdate('color', c);
+                                        setIsColorPopoverOpen(false);
+                                    }}
+                                    aria-label={`Set color to ${c}`}
+                                />
+                                ))}
+                                <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
+                                <GoogleSymbol name="colorize" className="text-muted-foreground" />
+                                <Input
+                                    type="color"
+                                    value={color}
+                                    onChange={(e) => {
+                                      setColor(e.target.value)
+                                      handleUpdate('color', e.target.value)
+                                    }}
+                                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"
+                                    aria-label="Custom color picker"
+                                />
+                                </div>
+                            </div>
+                        </PopoverContent>
+                    </Popover>
                 </div>
             </div>
         </PopoverContent>
@@ -272,10 +321,40 @@ export function TeamRoleManagement({ team }: { team: Team }) {
                 onKeyDown={(e) => e.key === 'Enter' && handleAddRole()}
                 className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-9"
               />
-              <div className="relative h-6 w-6 rounded-full shrink-0">
-                  <div className="absolute inset-0 h-full w-full rounded-full border" style={{ backgroundColor: newRoleColor }} />
-                  <Input type="color" value={newRoleColor} onChange={(e) => setNewRoleColor(e.target.value)} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" />
-              </div>
+              <Popover open={isAddColorPopoverOpen} onOpenChange={setIsAddColorPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <div
+                      className="h-6 w-6 rounded-full shrink-0 cursor-pointer border"
+                      style={{ backgroundColor: newRoleColor }}
+                    />
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-2">
+                    <div className="grid grid-cols-8 gap-1">
+                      {predefinedColors.map(c => (
+                        <button
+                          key={c}
+                          className="h-6 w-6 rounded-full border"
+                          style={{ backgroundColor: c }}
+                          onClick={() => {
+                            setNewRoleColor(c);
+                            setIsAddColorPopoverOpen(false);
+                          }}
+                          aria-label={`Set color to ${c}`}
+                        />
+                      ))}
+                      <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
+                        <GoogleSymbol name="colorize" className="text-muted-foreground" />
+                        <Input
+                          type="color"
+                          value={newRoleColor}
+                          onChange={(e) => setNewRoleColor(e.target.value)}
+                          className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"
+                          aria-label="Custom color picker"
+                        />
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
             </div>
           </div>
         </DialogContent>

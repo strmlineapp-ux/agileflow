@@ -28,8 +28,15 @@ import { useToast } from '@/hooks/use-toast';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { Badge } from '../ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 
 type DialogType = 'name' | 'defaultTitle' | 'managerLabel' | 'roleLabel';
+
+const predefinedColors = [
+    '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
+    '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6',
+    '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
+];
 
 export function CalendarManagement() {
   const { users, calendars, addCalendar, updateCalendar, deleteCalendar } = useUser();
@@ -37,6 +44,8 @@ export function CalendarManagement() {
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isAddColorPopoverOpen, setIsAddColorPopoverOpen] = useState(false);
+  const [openColorPopoverId, setOpenColorPopoverId] = useState<string | null>(null);
 
   // State for specific edit dialogs
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -164,19 +173,40 @@ export function CalendarManagement() {
               <CardHeader>
                 <div className="flex items-start justify-between">
                     <CardTitle className="flex items-center gap-3 text-xl">
-                        <div className="relative h-4 w-4 rounded-full border shrink-0">
-                            <div
-                                className="h-full w-full rounded-full"
-                                style={{ backgroundColor: calendar.color }}
-                            />
-                            <Input
-                                type="color"
-                                value={calendar.color}
-                                onChange={(e) => handleQuickColorChange(calendar.id, e.target.value)}
-                                className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"
-                                aria-label={`Change color for ${calendar.name}`}
-                            />
-                        </div>
+                        <Popover open={openColorPopoverId === calendar.id} onOpenChange={(isOpen) => setOpenColorPopoverId(isOpen ? calendar.id : null)}>
+                            <PopoverTrigger asChild>
+                                <div
+                                    className="h-4 w-4 rounded-full border shrink-0 cursor-pointer"
+                                    style={{ backgroundColor: calendar.color }}
+                                />
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-2">
+                                <div className="grid grid-cols-8 gap-1">
+                                    {predefinedColors.map(color => (
+                                        <button
+                                            key={color}
+                                            className="h-6 w-6 rounded-full border"
+                                            style={{ backgroundColor: color }}
+                                            onClick={() => {
+                                                handleQuickColorChange(calendar.id, color);
+                                                setOpenColorPopoverId(null);
+                                            }}
+                                            aria-label={`Set color to ${color}`}
+                                        />
+                                    ))}
+                                    <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
+                                        <GoogleSymbol name="colorize" className="text-muted-foreground" />
+                                        <Input
+                                            type="color"
+                                            value={calendar.color}
+                                            onChange={(e) => handleQuickColorChange(calendar.id, e.target.value)}
+                                            className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"
+                                            aria-label="Custom color picker"
+                                        />
+                                    </div>
+                                </div>
+                            </PopoverContent>
+                        </Popover>
                         {calendar.name}
                         <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openEditDialog(calendar, 'name')}>
                             <GoogleSymbol name="edit" className="text-lg" />
@@ -260,10 +290,37 @@ export function CalendarManagement() {
             </DialogHeader>
             <div className="grid gap-4 pt-4">
                 <div className="flex items-center gap-4">
-                    <div className="relative h-9 w-9 shrink-0">
-                        <div className="h-full w-full rounded-full border" style={{ backgroundColor: newCalendarColor }} />
-                        <Input id="color" type="color" value={newCalendarColor} onChange={(e) => setNewCalendarColor(e.target.value)} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" />
-                    </div>
+                     <Popover open={isAddColorPopoverOpen} onOpenChange={setIsAddColorPopoverOpen}>
+                        <PopoverTrigger asChild>
+                            <div className="h-9 w-9 rounded-full border shrink-0 cursor-pointer" style={{ backgroundColor: newCalendarColor }} />
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-2">
+                            <div className="grid grid-cols-8 gap-1">
+                            {predefinedColors.map(color => (
+                                <button
+                                key={color}
+                                className="h-6 w-6 rounded-full border"
+                                style={{ backgroundColor: color }}
+                                onClick={() => {
+                                    setNewCalendarColor(color);
+                                    setIsAddColorPopoverOpen(false);
+                                }}
+                                aria-label={`Set color to ${color}`}
+                                />
+                            ))}
+                            <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
+                                <GoogleSymbol name="colorize" className="text-muted-foreground" />
+                                <Input
+                                type="color"
+                                value={newCalendarColor}
+                                onChange={(e) => setNewCalendarColor(e.target.value)}
+                                className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"
+                                aria-label="Custom color picker"
+                                />
+                            </div>
+                            </div>
+                        </PopoverContent>
+                    </Popover>
                     <Input id="name" value={newCalendarName} onChange={(e) => setNewCalendarName(e.target.value)} placeholder="Calendar Name" className="flex-1 text-lg font-semibold" />
                 </div>
             </div>
