@@ -72,6 +72,8 @@ export interface BadgeCollection {
   color: string;
   viewMode: 'assorted' | 'scale' | 'list';
   badges: Badge[];
+  description?: string;
+  attachments?: Attachment[];
 }
 
 export interface Team {

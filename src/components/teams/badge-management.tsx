@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -59,12 +60,42 @@ function BadgeForm({ badge, onSave, onClose }: { badge: Badge | null, onSave: (b
     const [color, setColor] = useState(badge?.color || '#64748B');
     const [attachments, setAttachments] = useState<Attachment[]>(badge?.attachments || []);
     
+    // Inline Name Editing State
+    const [isEditingName, setIsEditingName] = useState(false);
+    const nameInputRef = useRef<HTMLInputElement>(null);
+
+    // Popover States
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
     const [iconSearch, setIconSearch] = useState('');
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
     const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
     const [linkName, setLinkName] = useState('');
     const [linkUrl, setLinkUrl] = useState('');
+    
+    useEffect(() => {
+        if (isEditingName && nameInputRef.current) {
+          nameInputRef.current.focus();
+          nameInputRef.current.select();
+        }
+    }, [isEditingName]);
+
+    const handleSaveName = () => {
+        if (!name.trim()) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Badge name cannot be empty.' });
+            setName(badge?.name || 'New Badge');
+        }
+        setIsEditingName(false);
+    };
+
+    const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+          handleSaveName();
+        } else if (e.key === 'Escape') {
+          setName(badge?.name || '');
+          setIsEditingName(false);
+        }
+    };
+
 
     const filteredIcons = useMemo(() => {
         if (!iconSearch) return googleSymbolNames;
@@ -114,14 +145,9 @@ function BadgeForm({ badge, onSave, onClose }: { badge: Badge | null, onSave: (b
                     <span className="sr-only">Save Badge</span>
                 </Button>
             </div>
-            <DialogHeader>
-                <DialogTitle>{badge ? 'Edit Badge' : 'Add New Badge'}</DialogTitle>
-                <DialogDescription>
-                    Manage the badge's details, description, and linked resources.
-                </DialogDescription>
-            </DialogHeader>
+            
             <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto pr-2">
-                 <div className="flex items-center gap-2">
+                 <div className="flex items-center gap-3">
                      <div className="relative">
                         <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                             <PopoverTrigger asChild>
@@ -136,7 +162,7 @@ function BadgeForm({ badge, onSave, onClose }: { badge: Badge | null, onSave: (b
                         </Popover>
                          <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
                             <PopoverTrigger asChild>
-                                <div className="absolute -bottom-1 -right-0 h-5 w-5 rounded-full border-2 border-card cursor-pointer" style={{ backgroundColor: color }} />
+                                <div className="absolute -bottom-1 -right-0 h-5 w-5 rounded-full border-2 border-dialog cursor-pointer" style={{ backgroundColor: color }} />
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-2">
                             <div className="grid grid-cols-8 gap-1">
@@ -148,17 +174,19 @@ function BadgeForm({ badge, onSave, onClose }: { badge: Badge | null, onSave: (b
                             </PopoverContent>
                         </Popover>
                     </div>
-                    <Input id="name" value={name} onChange={e => setName(e.target.value)} placeholder="Badge Name" />
+                     {isEditingName ? (
+                        <Input ref={nameInputRef} value={name} onChange={e => setName(e.target.value)} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>
+                    ) : (
+                        <h3 onClick={() => setIsEditingName(true)} className="text-2xl font-semibold cursor-pointer">{name || 'New Badge'}</h3>
+                    )}
                 </div>
-                 <Textarea id="description" value={description} onChange={e => setDescription(e.target.value)} placeholder="Description (optional)" />
-                 
+
                 <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                        <h4 className="text-sm font-medium text-muted-foreground">Attachments</h4>
+                    <div className="flex items-center gap-2 -ml-2">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0 text-muted-foreground hover:text-primary">
-                                <GoogleSymbol name="add" className="text-xl" />
+                                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-muted-foreground hover:text-primary">
+                                <GoogleSymbol name="attachment" className="text-xl" />
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="start">
@@ -172,6 +200,7 @@ function BadgeForm({ badge, onSave, onClose }: { badge: Badge | null, onSave: (b
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
+                         <h4 className="text-sm font-medium text-muted-foreground">Attachments</h4>
                     </div>
                     {attachments.length > 0 && (
                         <div className="space-y-2 rounded-md border p-2">
@@ -196,6 +225,8 @@ function BadgeForm({ badge, onSave, onClose }: { badge: Badge | null, onSave: (b
                         </div>
                     )}
                 </div>
+                 
+                 <Textarea id="description" value={description} onChange={e => setDescription(e.target.value)} placeholder="Description (optional)" />
             </div>
         </DialogContent>
         <Dialog open={isLinkDialogOpen} onOpenChange={setIsLinkDialogOpen}>
@@ -396,7 +427,7 @@ function BadgeCollectionCard({ collection, onUpdateCollection }: {
                             ) : (
                                 <CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer">{collection.name}</CardTitle>
                             )}
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openForm(null)}>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => openForm(null)}>
                                 <GoogleSymbol name="add_circle" className="text-xl" />
                                 <span className="sr-only">Add Badge</span>
                             </Button>

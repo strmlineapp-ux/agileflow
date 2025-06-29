@@ -199,9 +199,11 @@ export const mockTeams: Team[] = [
         locationCheckManagers: ['1'],
         badgeCollections: [{
             name: 'Audio & Video Production',
-            icon: 'speaker_group',
-            color: '#0EA5E9',
+            icon: 'video_settings',
+            color: '#8B5CF6',
             viewMode: 'assorted',
+            description: 'Badges related to the full pipeline of audio and video creation, from directing to post-production.',
+            attachments: [],
             badges: [
                 { name: 'Post-Production', icon: 'movie_filter', color: '#F97316', description: 'Handles all post-production tasks including editing, color grading, and final exports.' },
                 { name: 'Video Director', icon: 'videocam', color: '#3B82F6' },
@@ -238,6 +240,8 @@ export const mockTeams: Team[] = [
             icon: 'palette',
             color: '#64748B',
             viewMode: 'assorted',
+            description: 'General skills and roles for live event execution.',
+            attachments: [],
             badges: [
                 { name: 'TD', icon: 'engineering', color: '#F43F5E' },
                 { name: 'ES Operator', icon: 'slideshow', color: '#14B8A6' },
