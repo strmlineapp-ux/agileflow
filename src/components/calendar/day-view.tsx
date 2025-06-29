@@ -2,7 +2,7 @@
 
 'use client';
 
-import React, { useEffect, useMemo, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useMemo, useState, useRef, useCallback, useLayoutEffect } from 'react';
 import { format, addHours, startOfDay, isSameDay, isToday } from 'date-fns';
 import { type Event, type User, type SharedCalendar, type BookableLocation, type Team } from '@/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -152,6 +152,7 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
     const [hourWidth, setHourWidth] = useState(DEFAULT_HOUR_WIDTH_PX);
     const [hourHeight, setHourHeight] = useState(DEFAULT_HOUR_HEIGHT_PX);
     const initialScrollPerformed = useRef(false);
+    const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
 
     const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars);
     const isViewingToday = useMemo(() => isSameDay(date, new Date()), [date]);
@@ -183,20 +184,39 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
         initialScrollPerformed.current = false;
     }, [date]);
 
-    // Effect for calculating dimensions based on zoom and view axis
-    useEffect(() => {
+    // This layout effect observes the container size and updates state
+    // It's more stable than calculating size in a normal useEffect
+    useLayoutEffect(() => {
         const container = containerRef.current;
         if (!container) return;
+        
+        const resizeObserver = new ResizeObserver(entries => {
+            for (let entry of entries) {
+                setContainerSize({ width: entry.contentRect.width, height: entry.contentRect.height });
+            }
+        });
 
+        resizeObserver.observe(container);
+        setContainerSize({ width: container.offsetWidth, height: container.offsetHeight });
+
+        return () => resizeObserver.disconnect();
+    }, [containerRef]);
+
+    // Effect for calculating dimensions based on zoom and view axis, now dependent on stable containerSize
+    useEffect(() => {
         const isFit = zoomLevel === 'fit';
         if (axisView === 'standard') {
-            const newHourWidth = isFit ? (container.offsetWidth - LOCATION_LABEL_WIDTH_PX) / 12 : DEFAULT_HOUR_WIDTH_PX;
-            setHourWidth(newHourWidth);
+            if (containerSize.width > 0) {
+                const newHourWidth = isFit ? (containerSize.width - LOCATION_LABEL_WIDTH_PX) / 12 : DEFAULT_HOUR_WIDTH_PX;
+                setHourWidth(newHourWidth);
+            }
         } else { // Reversed axis
-            const newHourHeight = isFit ? container.offsetHeight / 12 : DEFAULT_HOUR_HEIGHT_PX;
-            setHourHeight(newHourHeight);
+            if (containerSize.height > 0) {
+                const newHourHeight = isFit ? containerSize.height / 12 : DEFAULT_HOUR_HEIGHT_PX;
+                setHourHeight(newHourHeight);
+            }
         }
-    }, [zoomLevel, axisView, containerRef]);
+    }, [zoomLevel, axisView, containerSize]);
 
     // Effect for scrolling to current time or a default position
     useEffect(() => {

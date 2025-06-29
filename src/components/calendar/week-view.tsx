@@ -2,7 +2,7 @@
 
 'use client';
 
-import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useMemo, useRef, useCallback, useLayoutEffect } from 'react';
 import { format, startOfWeek, addDays, eachDayOfInterval, startOfDay, addHours, isToday, isSaturday, isSunday, isSameDay } from 'date-fns';
 import { type Event, type Team } from '@/types';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
@@ -30,6 +30,7 @@ export const WeekView = React.memo(({ date, containerRef, zoomLevel, onEasyBooki
     const [hourHeight, setHourHeight] = useState(DEFAULT_HOUR_HEIGHT_PX);
     const [showWeekends, setShowWeekends] = useState(false);
     const initialScrollPerformed = useRef(false);
+    const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
     
     const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars);
     const weekStart = useMemo(() => startOfWeek(date, { weekStartsOn: 1 }), [date]);
@@ -79,14 +80,30 @@ export const WeekView = React.memo(({ date, containerRef, zoomLevel, onEasyBooki
         initialScrollPerformed.current = false;
     }, [date]);
 
-    // Effect for calculating hour height based on zoom
-    useEffect(() => {
+    useLayoutEffect(() => {
         const container = containerRef.current;
         if (!container) return;
-        const isFit = zoomLevel === 'fit';
-        const newHourHeight = isFit ? container.offsetHeight / 12 : DEFAULT_HOUR_HEIGHT_PX;
-        setHourHeight(newHourHeight);
-    }, [zoomLevel, containerRef]);
+
+        const resizeObserver = new ResizeObserver(entries => {
+            for (let entry of entries) {
+                setContainerSize({ width: entry.contentRect.width, height: entry.contentRect.height });
+            }
+        });
+
+        resizeObserver.observe(container);
+        setContainerSize({ width: container.offsetWidth, height: container.offsetHeight });
+
+        return () => resizeObserver.disconnect();
+    }, [containerRef]);
+
+    // Effect for calculating hour height based on zoom
+    useEffect(() => {
+        if (containerSize.height > 0) {
+            const isFit = zoomLevel === 'fit';
+            const newHourHeight = isFit ? containerSize.height / 12 : DEFAULT_HOUR_HEIGHT_PX;
+            setHourHeight(newHourHeight);
+        }
+    }, [zoomLevel, containerSize]);
 
     // Effect for scrolling to current time or a default position
     useEffect(() => {

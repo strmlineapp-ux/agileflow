@@ -40,7 +40,7 @@ export function SignUpForm() {
     setIsLoading(true);
 
     const newNotification = {
-      id: new Date().toISOString(),
+      id: crypto.randomUUID(),
       type: 'access_request' as const,
       status: 'pending' as const,
       user: { // This is the user requesting access

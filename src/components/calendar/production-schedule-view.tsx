@@ -1,7 +1,8 @@
 
+
 'use client';
 
-import React, { useEffect, useMemo, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useMemo, useState, useRef, useCallback, useLayoutEffect } from 'react';
 import { format, addHours, startOfDay, isSaturday, isSunday, isSameDay, isToday, startOfWeek, eachDayOfInterval, addDays } from 'date-fns';
 import { type Event, type User, type UserStatus, type UserStatusAssignment, type Team } from '@/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -322,6 +323,7 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
     const [now, setNow] = useState<Date | null>(null);
     const [hourWidth, setHourWidth] = useState(DEFAULT_HOUR_WIDTH_PX);
     const initialScrollPerformed = useRef(false);
+    const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
 
     const todayCardRef = useRef<HTMLDivElement>(null);
     const nowMarkerRef = useRef<HTMLDivElement>(null);
@@ -453,15 +455,30 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
         initialScrollPerformed.current = false;
     }, [date]);
 
-    // Effect for calculating hour width based on zoom
-    useEffect(() => {
+    useLayoutEffect(() => {
         const firstScroller = Array.from(dayScrollerRefs.current.values())[0];
         if (!firstScroller) return;
 
-        const isFit = zoomLevel === 'fit';
-        const newHourWidth = isFit ? (firstScroller.offsetWidth - LOCATION_LABEL_WIDTH_PX) / 12 : DEFAULT_HOUR_WIDTH_PX;
-        setHourWidth(newHourWidth);
-    }, [zoomLevel, weeklyScheduleData]);
+        const resizeObserver = new ResizeObserver(entries => {
+            for (let entry of entries) {
+                setContainerSize({ width: entry.contentRect.width, height: entry.contentRect.height });
+            }
+        });
+
+        resizeObserver.observe(firstScroller);
+        setContainerSize({ width: firstScroller.offsetWidth, height: firstScroller.offsetHeight });
+
+        return () => resizeObserver.disconnect();
+    }, [weeklyScheduleData]);
+
+    // Effect for calculating hour width based on zoom
+    useEffect(() => {
+        if (containerSize.width > 0) {
+            const isFit = zoomLevel === 'fit';
+            const newHourWidth = isFit ? (containerSize.width - LOCATION_LABEL_WIDTH_PX) / 12 : DEFAULT_HOUR_WIDTH_PX;
+            setHourWidth(newHourWidth);
+        }
+    }, [zoomLevel, containerSize]);
 
     // Effect for scrolling main container to today
     useEffect(() => {
