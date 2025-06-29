@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import Link from 'next/link';
@@ -13,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { useUser } from '@/context/user-context';
 import { Badge } from '@/components/ui/badge';
 import { GoogleSymbol } from '../icons/google-symbol';
-import { type AppPage, type Team } from '@/types';
+import { type AppPage, type Team, type User } from '@/types';
 
 const hasAccess = (user: User, page: AppPage, teams: Team[]): boolean => {
     if (user.isAdmin) return true;

@@ -1,9 +1,8 @@
-
-
 'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useMemo } from 'react';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -12,7 +11,7 @@ import { useUser } from '@/context/user-context';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { Badge } from '../ui/badge';
 import { getContrastColor } from '@/lib/utils';
-import { type AppPage, type Team } from '@/types';
+import { type AppPage, type Team, type User } from '@/types';
 
 const hasAccess = (user: User, page: AppPage, teams: Team[]): boolean => {
     if (user.isAdmin) return true;
