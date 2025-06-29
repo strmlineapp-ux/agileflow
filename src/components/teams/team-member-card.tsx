@@ -20,10 +20,9 @@ import {
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
-import { getContrastColor } from '@/lib/utils';
 
 export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
-  const { viewAsUser, updateUser, allRoles } = useUser();
+  const { viewAsUser, updateUser, allBadges, appSettings } = useUser();
   const { toast } = useToast();
   
   const [isRolesDialogOpen, setIsRolesDialogOpen] = useState(false);
@@ -31,9 +30,8 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
 
   const canManageRoles = viewAsUser.isAdmin || team.teamAdmins?.includes(viewAsUser.userId);
 
-  const teamRoleNames = team.roles.map(r => r.name);
-  const otherTeamRolesForMember = (member.roles || []).filter(roleName => !teamRoleNames.includes(roleName));
-
+  const teamBadgeNames = team.badgeCollections.flatMap(c => c.badges.map(b => b.name));
+  const otherRolesForMember = (member.roles || []).filter(roleName => !teamBadgeNames.includes(roleName));
 
   const handleOpenRolesDialog = () => {
     setTempRoles(member.roles || []);
@@ -57,15 +55,15 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
   };
   
   const handleSaveRoles = async () => {
-    const nonTeamRoles = (member.roles || []).filter(role => !teamRoleNames.includes(role));
-    const newTeamRoles = tempRoles.filter(role => teamRoleNames.includes(role));
+    const nonTeamRoles = (member.roles || []).filter(role => !teamBadgeNames.includes(role));
+    const newTeamRoles = tempRoles.filter(role => teamBadgeNames.includes(role));
 
     const finalRoles = [...new Set([...nonTeamRoles, ...newTeamRoles])];
 
     await updateUser(member.userId, { roles: finalRoles });
     toast({
-        title: 'Roles Updated',
-        description: `Roles for ${member.displayName} have been updated.`
+        title: 'Badges Updated',
+        description: `Badges for ${member.displayName} have been updated.`
     });
     closeRolesDialog();
   }
@@ -84,18 +82,18 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
           <p className="text-sm text-muted-foreground">{member.title}</p>
           <div className="mt-4 space-y-2">
             <div className="flex items-center gap-1">
-                <h4 className="text-sm font-medium">Team Roles</h4>
+                <h4 className="text-sm font-medium">Team Badges</h4>
                 {canManageRoles && (
                     <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleOpenRolesDialog}>
                         <GoogleSymbol name="edit" className="text-base" />
-                        <span className="sr-only">Edit roles for {member.displayName}</span>
+                        <span className="sr-only">Edit badges for {member.displayName}</span>
                     </Button>
                 )}
             </div>
             <div className="flex flex-wrap gap-1 min-h-[24px]">
               {(member.roles && member.roles.length > 0) ? (
                 (member.roles || []).map(roleName => {
-                    const roleInfo = allRoles.find(r => r.name === roleName);
+                    const roleInfo = allBadges.find(r => r.name === roleName) || appSettings.customAdminRoles.find(r => r.name === roleName);
                     return (
                         <Badge
                             key={roleName}
@@ -112,7 +110,7 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
                     )
                 })
               ) : (
-                <p className="text-xs text-muted-foreground italic">No roles assigned.</p>
+                <p className="text-xs text-muted-foreground italic">No badges assigned.</p>
               )}
             </div>
           </div>
@@ -128,35 +126,35 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
                 </Button>
             </div>
             <DialogHeader>
-                <DialogTitle>Edit Roles for {member.displayName}</DialogTitle>
-                <DialogDescription>Assign or remove roles specific to the {team.name} team.</DialogDescription>
+                <DialogTitle>Edit Badges for {member.displayName}</DialogTitle>
+                <DialogDescription>Assign or remove badges specific to the {team.name} team.</DialogDescription>
             </DialogHeader>
             <div className="py-2">
                 <div className="flex flex-wrap gap-2 rounded-md border bg-muted/50 p-2 min-h-[56px]">
-                    {team.roles.map(role => {
-                        const isAssigned = tempRoles.includes(role.name);
+                    {team.badgeCollections.flatMap(c => c.badges).map(badge => {
+                        const isAssigned = tempRoles.includes(badge.name);
                         return (
                         <Badge
-                            key={role.name}
+                            key={badge.name}
                             variant={'outline'}
-                            style={isAssigned ? { color: role.color, borderColor: role.color } : {}}
+                            style={isAssigned ? { color: badge.color, borderColor: badge.color } : {}}
                             className={cn(
                                 'gap-1.5 p-1 px-3 cursor-pointer rounded-full text-sm',
                                 isAssigned ? 'border-2' : 'border-dashed'
                             )}
-                            onClick={() => handleToggleRole(role.name)}
+                            onClick={() => handleToggleRole(badge.name)}
                         >
-                            <GoogleSymbol name={role.icon} className="text-base" />
-                            {role.name}
+                            <GoogleSymbol name={badge.icon} className="text-base" />
+                            {badge.name}
                         </Badge>
                         );
                     })}
 
-                    {team.roles.length > 0 && otherTeamRolesForMember.length > 0 && (
+                    {team.badgeCollections.flatMap(c => c.badges).length > 0 && otherRolesForMember.length > 0 && (
                         <div className="w-full my-1 border-t"></div>
                     )}
 
-                    {otherTeamRolesForMember.map(role => (
+                    {otherRolesForMember.map(role => (
                         <TooltipProvider key={role}>
                             <Tooltip>
                                 <TooltipTrigger>
@@ -168,14 +166,14 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
                                     </Badge>
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                    <p>This role is managed by another team.</p>
+                                    <p>This role is managed by another team or is a system role.</p>
                                 </TooltipContent>
                             </Tooltip>
                         </TooltipProvider>
                     ))}
                 </div>
                  <p className="text-xs text-muted-foreground text-right pr-2 mt-2">
-                    Click a pill to toggle the role.
+                    Click a pill to toggle the badge.
                 </p>
             </div>
         </DialogContent>

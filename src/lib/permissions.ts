@@ -51,11 +51,8 @@ export const canCreateAnyEvent = (user: User, allCalendars: SharedCalendar[], cu
 export const getAllUserRoles = (user: User, teams: Team[]): string[] => {
     const allRoles = new Set<string>(user.roles || []);
     
-    teams.forEach(team => {
-        if (team.members.includes(user.userId)) {
-            team.roles.forEach(role => allRoles.add(role.name));
-        }
-    });
+    // In a more complex system, this might involve fetching roles based on team membership.
+    // For now, user.roles is the source of truth for both system roles and badges.
 
     return Array.from(allRoles);
 };

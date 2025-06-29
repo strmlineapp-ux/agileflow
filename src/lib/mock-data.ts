@@ -1,6 +1,6 @@
 
 
-import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team, type PriorityStrategy, type AppSettings, type TeamRole } from '@/types';
+import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team, type PriorityStrategy, type AppSettings, type Badge } from '@/types';
 
 export const mockAppSettings: AppSettings = {
   customAdminRoles: [
@@ -197,14 +197,17 @@ export const mockTeams: Team[] = [
         managerRoleName: 'Team Admins',
         memberRoleName: 'Team Members',
         locationCheckManagers: ['1'],
-        roles: [
-            { name: 'Post-Production', icon: 'movie_filter', color: '#F97316' },
-            { name: 'Video Director', icon: 'videocam', color: '#3B82F6' },
-            { name: 'Edit Events', icon: 'edit_calendar', color: '#10B981' },
-            { name: 'Camera', icon: 'photo_camera', color: '#6366F1' },
-            { name: 'Audio', icon: 'mic', color: '#EC4899' },
-            { name: 'D.o.P.', icon: 'camera', color: '#8B5CF6' },
-        ],
+        badgeCollections: [{
+            name: 'Skills',
+            badges: [
+                { name: 'Post-Production', icon: 'movie_filter', color: '#F97316' },
+                { name: 'Video Director', icon: 'videocam', color: '#3B82F6' },
+                { name: 'Edit Events', icon: 'edit_calendar', color: '#10B981' },
+                { name: 'Camera', icon: 'photo_camera', color: '#6366F1' },
+                { name: 'Audio', icon: 'mic', color: '#EC4899' },
+                { name: 'D.o.P.', icon: 'camera', color: '#8B5CF6' },
+            ]
+        }],
         checkManagersLabel: 'Location Check Managers',
         pinnedLocations: ['Studio'],
         pinnedLocationsLabel: 'Pinned & Check Locations',
@@ -227,14 +230,17 @@ export const mockTeams: Team[] = [
         memberRoleName: 'Team Members',
         locationCheckManagers: ['2'],
         checkManagersLabel: 'Location Check Managers',
-        roles: [
-            { name: 'TD', icon: 'engineering', color: '#F43F5E' },
-            { name: 'ES Operator', icon: 'slideshow', color: '#14B8A6' },
-            { name: 'Content Op', icon: 'article', color: '#0EA5E9' },
-            { name: 'Camera', icon: 'photo_camera', color: '#6366F1' },
-            { name: 'Audio', icon: 'mic', color: '#EC4899' },
-            { name: '1st AD', icon: 'group', color: '#A855F7' }
-        ],
+        badgeCollections: [{
+            name: 'Skills',
+            badges: [
+                { name: 'TD', icon: 'engineering', color: '#F43F5E' },
+                { name: 'ES Operator', icon: 'slideshow', color: '#14B8A6' },
+                { name: 'Content Op', icon: 'article', color: '#0EA5E9' },
+                { name: 'Camera', icon: 'photo_camera', color: '#6366F1' },
+                { name: 'Audio', icon: 'mic', color: '#EC4899' },
+                { name: '1st AD', icon: 'group', color: '#A855F7' }
+            ]
+        }],
         pinnedLocations: ['Auditorium', 'ACR', 'Event Space 1 (S2)', 'Event Space 2 (S2)', 'Event Space 3 (R7)', 'Event Space 4 (R7)', 'Training Room', 'Apgar', 'Locke'],
         pinnedLocationsLabel: 'Pinned & Check Locations',
         checkLocations: ['Training Room', 'Apgar', 'Locke'],
@@ -256,7 +262,7 @@ export const mockTeams: Team[] = [
         memberRoleName: 'Team Members',
         locationCheckManagers: [],
         checkManagersLabel: 'Location Check Managers',
-        roles: [],
+        badgeCollections: [],
         pinnedLocations: [],
         pinnedLocationsLabel: 'Pinned & Check Locations',
         checkLocations: [],
@@ -553,43 +559,8 @@ export const mockEvents: Event[] = [
     },
 ];
 
-export const mockNotifications: Notification[] = [
-  {
-    id: '1',
-    type: 'standard',
-    user: mockUsers[1],
-    content: 'assigned you to a new task: Develop authentication API',
-    time: new Date(new Date().setHours(new Date().getHours() - 1)),
-    read: false,
-  },
-  {
-    id: '2',
-    type: 'standard',
-    user: mockUsers[0],
-    content: 'mentioned you in a comment on Project Kickoff',
-    time: new Date(new Date().setDate(new Date().getDate() - 1)),
-    read: false,
-  },
-  {
-    id: '3',
-    type: 'standard',
-    user: mockUsers[2],
-    content: 'completed the task: Fix login page CSS bug',
-    time: new Date(new Date().setDate(new Date().getDate() - 2)),
-    read: true,
-  },
-  {
-    id: '4',
-    type: 'standard',
-    user: { displayName: 'System', avatarUrl: 'https://placehold.co/40x40.png', userId: 'system', email: 'system', googleCalendarLinked: false, easyBooking: false, accountType: 'Viewer' },
-    content: 'New features are now available in the Calendar view.',
-    time: new Date(new Date().setDate(new Date().getDate() - 3)),
-    read: true,
-  }
-];
-
-
 const currentYear = new Date().getFullYear();
+
 export const mockHolidays: Date[] = [
     new Date(currentYear, 0, 1), // New Year's Day
     new Date(currentYear, 6, 4), // Independence Day

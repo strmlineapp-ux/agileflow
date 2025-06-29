@@ -97,7 +97,7 @@ const DayViewLocationRow = React.memo(({
                                             const user = users.find(u => u.userId === userId);
                                             if (!user) return null;
                                             const teamForEvent = teams.find(t => t.id === event.calendarId);
-                                            const roleInfo = teamForEvent?.roles.find(r => r.name === role);
+                                            const roleInfo = teamForEvent?.badgeCollections.flatMap(c => c.badges).find(b => b.name === role);
                                             const roleIcon = roleInfo?.icon;
                                             const roleColor = roleInfo?.color;
 
@@ -460,7 +460,7 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
                                                             const user = users.find(u => u.userId === userId);
                                                             if (!user) return null;
                                                             const teamForEvent = teams.find(t => t.id === event.calendarId);
-                                                            const roleInfo = teamForEvent?.roles.find(r => r.name === role);
+                                                            const roleInfo = teamForEvent?.badgeCollections.flatMap(c => c.badges).find(b => b.name === role);
                                                             const roleIcon = roleInfo?.icon;
                                                             const roleColor = roleInfo?.color;
 

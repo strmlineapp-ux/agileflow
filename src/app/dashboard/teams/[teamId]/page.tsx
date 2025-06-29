@@ -5,7 +5,7 @@
 import { useParams } from 'next/navigation';
 import { useUser } from '@/context/user-context';
 import { PinnedLocationManagement } from '@/components/settings/pinned-location-management';
-import { TeamRoleManagement } from '@/components/settings/team-role-management';
+import { BadgeManagement } from '@/components/teams/badge-management';
 import { TeamMembersView } from '@/components/teams/team-members-view';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -48,7 +48,7 @@ export default function TeamPage() {
       <Tabs defaultValue="team" className="w-full">
         <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="team">Team</TabsTrigger>
-            <TabsTrigger value="roles">Role Management</TabsTrigger>
+            <TabsTrigger value="badges">Badges</TabsTrigger>
             <TabsTrigger value="locations">Pinned Locations</TabsTrigger>
             <TabsTrigger value="workstations">Workstations</TabsTrigger>
             <TabsTrigger value="templates">Event Templates</TabsTrigger>
@@ -56,8 +56,8 @@ export default function TeamPage() {
         <TabsContent value="team" className="mt-4">
           <TeamMembersView team={team} />
         </TabsContent>
-        <TabsContent value="roles" className="mt-4">
-          <TeamRoleManagement team={team} />
+        <TabsContent value="badges" className="mt-4">
+          <BadgeManagement team={team} />
         </TabsContent>
         <TabsContent value="locations" className="mt-4">
             <PinnedLocationManagement team={team} />

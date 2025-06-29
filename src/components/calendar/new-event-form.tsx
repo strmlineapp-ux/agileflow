@@ -283,24 +283,24 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
     }
   };
 
-  const handleAddGuestsByRole = (roleName: string) => {
+  const handleAddGuestsByBadge = (badgeName: string) => {
       if (!teamForSelectedCalendar) return;
       const currentAttendees = form.getValues('attendees') || [];
       const currentAttendeeEmails = new Set(currentAttendees.map(att => att.email));
       
-      const usersInRole = teamForSelectedCalendar.members
+      const usersWithBadge = teamForSelectedCalendar.members
           .map(memberId => users.find(u => u.userId === memberId))
-          .filter((u): u is User => !!u && u.roles?.includes(roleName));
+          .filter((u): u is User => !!u && u.roles?.includes(badgeName));
 
-      const newAttendees = usersInRole
+      const newAttendees = usersWithBadge
           .filter(u => !currentAttendeeEmails.has(u.email) && !assignedUserIds.has(u.userId))
           .map(u => ({ userId: u.userId, displayName: u.displayName, email: u.email, avatarUrl: u.avatarUrl }));
 
       if (newAttendees.length > 0) {
           form.setValue('attendees', [...currentAttendees, ...newAttendees]);
-          toast({ title: 'Guests Added', description: `${newAttendees.length} user(s) with role "${roleName}" added.` });
+          toast({ title: 'Guests Added', description: `${newAttendees.length} user(s) with badge "${badgeName}" added.` });
       } else {
-          toast({ title: 'No New Guests', description: `All users with role "${roleName}" are already invited or assigned.`, variant: 'default' });
+          toast({ title: 'No New Guests', description: `All users with badge "${badgeName}" are already invited or assigned.`, variant: 'default' });
       }
   };
 
@@ -315,12 +315,12 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
     }));
   };
 
-  const handleAddRequestedRole = (roleName: string) => {
-    if (roleAssignments.hasOwnProperty(roleName)) {
-        toast({ variant: 'destructive', title: `Role "${roleName}" is already requested for this event.` });
+  const handleAddRequestedRole = (badgeName: string) => {
+    if (roleAssignments.hasOwnProperty(badgeName)) {
+        toast({ variant: 'destructive', title: `Badge "${badgeName}" is already requested for this event.` });
         return;
     }
-    setRoleAssignments(prev => ({ ...prev, [roleName]: { assignedUser: null, popoverOpen: false } }));
+    setRoleAssignments(prev => ({ ...prev, [badgeName]: { assignedUser: null, popoverOpen: false } }));
     setIsAddRolePopoverOpen(false);
   };
   
@@ -396,7 +396,8 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
   const dayKey = eventDate ? startOfDay(eventDate).toISOString() : null;
   const absencesForDay = dayKey && userStatusAssignments[dayKey] ? userStatusAssignments[dayKey] : [];
   
-  const availableRolesToAdd = teamForSelectedCalendar?.roles.filter(r => !roleAssignments.hasOwnProperty(r.name)) || [];
+  const teamBadges = teamForSelectedCalendar?.badgeCollections.flatMap(c => c.badges) || [];
+  const availableBadgesToAdd = teamBadges.filter(b => !roleAssignments.hasOwnProperty(b.name)) || [];
   const hasRequestedRoles = Object.keys(roleAssignments).length > 0;
 
   return (
@@ -640,9 +641,9 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
 
             {hasRequestedRoles && (
               <div className="flex flex-wrap items-center gap-2 p-2 border-none">
-                  {Object.entries(roleAssignments).map(([role, { assignedUser, popoverOpen }]) => {
+                  {Object.entries(roleAssignments).map(([badgeName, { assignedUser, popoverOpen }]) => {
                       const user = assignedUser ? users.find(u => u.userId === assignedUser) : null;
-                      const roleInfo = teamForSelectedCalendar?.roles.find(r => r.name === role);
+                      const badgeInfo = teamForSelectedCalendar?.badgeCollections.flatMap(c => c.badges).find(b => b.name === badgeName);
                       
                       const teamMemberUsers = teamForSelectedCalendar?.members
                           .map(memberId => users.find(u => u.userId === memberId))
@@ -658,23 +659,23 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
 
                       return (
                           <Badge
-                              key={role}
+                              key={badgeName}
                               variant="outline"
                               style={{
                                   borderStyle: 'solid',
                                   borderWidth: assignedUser ? '2px' : '1px',
-                                  borderColor: roleInfo?.color || 'hsl(var(--border))',
-                                  color: roleInfo?.color,
+                                  borderColor: badgeInfo?.color || 'hsl(var(--border))',
+                                  color: badgeInfo?.color,
                                   ...(assignedUser ? {} : {borderStyle: 'dashed'})
                               }}
                               className="text-sm p-1 pl-1.5 rounded-full flex items-center gap-1 bg-transparent"
                           >
-                              <Popover open={popoverOpen} onOpenChange={() => toggleRolePopover(role)}>
+                              <Popover open={popoverOpen} onOpenChange={() => toggleRolePopover(badgeName)}>
                                   <PopoverTrigger asChild>
                                       <span className="cursor-pointer flex items-center gap-1.5">
-                                          {roleInfo && <GoogleSymbol name={roleInfo.icon} className="text-base" />}
+                                          {badgeInfo && <GoogleSymbol name={badgeInfo.icon} className="text-base" />}
                                           <span>
-                                              {role}
+                                              {badgeName}
                                               {user && <span className="font-normal mx-2 text-muted-foreground">/</span>}
                                               {user && <span className="font-semibold">{user.displayName}</span>}
                                           </span>
@@ -684,7 +685,7 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                                       <ScrollArea className="max-h-60">
                                           <div className="p-1">
                                           {availableUsers.map(u => (
-                                              <div key={u.userId} onClick={() => handleAssignUserToRole(role, u)} className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer">
+                                              <div key={u.userId} onClick={() => handleAssignUserToRole(badgeName, u)} className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer">
                                                   <Avatar className="h-8 w-8"><AvatarImage src={u.avatarUrl} alt={u.displayName} data-ai-hint="user avatar" /><AvatarFallback>{u.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
                                                   <p className="font-medium text-sm">{u.displayName}</p>
                                               </div>
@@ -705,9 +706,9 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                               </Popover>
                               <button
                                   type="button"
-                                  onClick={() => handleRoleAction(role)}
+                                  onClick={() => handleRoleAction(badgeName)}
                                   className="h-4 w-4 rounded-full hover:bg-black/10 flex items-center justify-center"
-                                  aria-label={user ? `Unassign user from ${role}` : `Remove role ${role}`}
+                                  aria-label={user ? `Unassign user from ${badgeName}` : `Remove badge ${badgeName}`}
                               >
                                   <GoogleSymbol name="cancel" className="text-xs" />
                               </button>
@@ -816,18 +817,18 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                                     <Button type="button" variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary"><GoogleSymbol name="badge" className="text-xl" /></Button>
                                 </PopoverTrigger>
                             </TooltipTrigger>
-                            <TooltipContent><p>Add Role Request</p></TooltipContent>
+                            <TooltipContent><p>Add Badge Request</p></TooltipContent>
                         </Tooltip>
                         <PopoverContent className="w-60 p-0">
                             <ScrollArea className="h-48">
                             <div className="p-1">
-                                {availableRolesToAdd.length > 0 ? availableRolesToAdd.map(role => (
-                                <div key={role.name} onClick={() => handleAddRequestedRole(role.name)} className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer">
-                                    <GoogleSymbol name={role.icon} className="text-lg" />
-                                    <span>{role.name}</span>
+                                {availableBadgesToAdd.length > 0 ? availableBadgesToAdd.map(badge => (
+                                <div key={badge.name} onClick={() => handleAddRequestedRole(badge.name)} className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer">
+                                    <GoogleSymbol name={badge.icon} className="text-lg" />
+                                    <span>{badge.name}</span>
                                 </div>
                                 )) : (
-                                <p className="p-2 text-center text-sm text-muted-foreground">No more roles to add.</p>
+                                <p className="p-2 text-center text-sm text-muted-foreground">No more badges to add.</p>
                                 )}
                             </div>
                             </ScrollArea>
@@ -849,7 +850,7 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                             <Tabs defaultValue="by-name">
                                 <TabsList className="grid w-full grid-cols-2">
                                     <TabsTrigger value="by-name">By Name or Email</TabsTrigger>
-                                    <TabsTrigger value="by-role">By Role</TabsTrigger>
+                                    <TabsTrigger value="by-badge">By Badge</TabsTrigger>
                                 </TabsList>
                                 <TabsContent value="by-name" className="p-0">
                                     <div className="p-2">
@@ -867,11 +868,11 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                                     </div>
                                     </ScrollArea>
                                 </TabsContent>
-                                <TabsContent value="by-role" className="p-2">
+                                <TabsContent value="by-badge" className="p-2">
                                     <ScrollArea className="max-h-[280px]">
                                         <div className="flex flex-wrap gap-2 p-2">
-                                            {(teamForSelectedCalendar?.roles || []).map(role => (
-                                                <Badge key={role.name} onClick={() => handleAddGuestsByRole(role.name)} className="cursor-pointer">{role.name}</Badge>
+                                            {(teamForSelectedCalendar?.badgeCollections.flatMap(c => c.badges) || []).map(badge => (
+                                                <Badge key={badge.name} onClick={() => handleAddGuestsByBadge(badge.name)} className="cursor-pointer">{badge.name}</Badge>
                                             ))}
                                         </div>
                                     </ScrollArea>

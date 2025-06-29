@@ -22,16 +22,16 @@ This table details the information stored directly within each `User` object.
 | `phone?: string` | **Google Service.** The user's contact phone number. This is designed to be populated from the user's **Google Account profile** **after the user grants the necessary permissions**. |
 | `location?: string` | **Google Service.** The user's primary work location. This is designed to be populated from the user's **Google Account profile** (from their address information) **after the user grants the necessary permissions**. |
 | `googleCalendarLinked: boolean` | **Google Service.** A flag that is set to `true` only after the user successfully completes an OAuth consent flow via **Firebase Authentication** to grant the app permission to access their Google Calendar. |
-| `roles?: string[]` | **Internal.** An array of role name strings. This is a flat list that includes both System-Level roles (e.g., "Service Admin") and Team-Specific roles (e.g., "Camera"). The application determines the role's meaning and properties by looking it up in `AppSettings` or the relevant `Team` object. |
+| `roles?: string[]` | **Internal.** An array of role name strings. This is a flat list that includes both System-Level roles (e.g., "Service Admin") and team-specific Badges (e.g., "Camera"). The application determines the role's meaning and properties by looking it up in `AppSettings` or the relevant `Team` object. |
 | `directReports?: string[]` | **Internal.** An array of `userId`s for users who report directly to this user. This is currently informational. |
 | `theme?: 'light' \| 'dark' \| ...` | **Internal.** A UI preference for the app's color scheme. |
 | `defaultCalendarView?: 'month' \| 'week' \| ...` | **Internal.** A UI preference for the default calendar layout. |
 | `easyBooking?: boolean` | **Internal.** A UI preference for enabling quick event creation from the calendar. |
 | `timeFormat?: '12h' \| '24h'` | **Internal.** A UI preference for displaying time in 12-hour or 24-hour format. |
 
-### User Roles & Permissions
+### Roles & Badges
 
-The application uses a combination of the `isAdmin` flag and the `roles` array to dictate a user's permissions and capabilities. There are two main categories of roles:
+The application uses a combination of the `isAdmin` flag and the `roles` array to dictate a user's permissions and capabilities. There are two main categories:
 
 1.  **System-Level Roles**
     *   **Description**: These are high-privilege roles that grant broad, application-wide permissions. They are checked directly in the code to control access to entire pages or administrative features.
@@ -40,10 +40,10 @@ The application uses a combination of the `isAdmin` flag and the `roles` array t
         *   **Custom Admin Roles** (e.g., "Service Admin"): These roles are defined as `CustomAdminRole` objects within `AppSettings`. They allow for a granular hierarchy of permissions between the main `Admin` and standard users.
     *   **Management**: The `Admin` status is managed on the **Admin Management** page. Custom Admin Roles are also created, ordered, and assigned to users on this page. Assigning a user to one of these roles adds the role's `name` to the user's `roles` array.
 
-2.  **Team-Specific Roles**
-    *   **Description**: These are functional roles defined within a specific `Team` and are used for contextual assignments, such as assigning a "Camera Operator" to a specific event.
-    *   **Properties**: Each `TeamRole` has an associated `name`, `icon`, and `color` for display purposes.
-    *   **Management**: These roles are created and managed by Team Admins on the specific `Team Management` page for each team. Assigning a team role to a user adds the role's `name` to their `user.roles` array.
+2.  **Badges (Team-Specific)**
+    *   **Description**: These are functional roles (now called "Badges") defined within a specific `Team` and are used for contextual assignments, such as assigning a "Camera Operator" to a specific event. They are grouped into **Badge Collections**.
+    *   **Properties**: Each `Badge` has an associated `name`, `icon`, and `color` for display purposes.
+    *   **Management**: These are created and managed by Team Admins on the specific `Team Management` page for each team, under the "Badges" tab. Assigning a badge to a user adds the badge's `name` to their `user.roles` array.
 
 ### Associated Data & Relationships
 
@@ -94,3 +94,35 @@ A sub-entity of `AppSettings`, `CustomAdminRole` defines a single, dynamic admin
 | `color: string` | **Internal.** The hex color code for the icon's badge. |
 | `linkGroupId?: string` | **Internal.** An identifier used to group multiple `CustomAdminRole` entities at the same hierarchical level. If present, it points to a key in `AppSettings.linkGroups`. |
 | `teamAdmins?: string[]` | **Internal.** An array of `userId`s for users who have been designated as a "Team Admin" for this specific role level. This is managed on the Admin Management page. |
+
+## Team Entity
+
+The `Team` entity groups users together and defines a set of team-specific configurations, most notably their functional **Badges**.
+
+### Team Data
+
+| Data Point | Description |
+| :--- | :--- |
+| `id: string` | A unique identifier for the team. |
+| `name: string` | The display name of the team. |
+| `icon: string` | The Google Symbol name for the team's icon. |
+| `members: string[]` | An array of `userId`s for all members of the team. |
+| `teamAdmins: string[]` | A subset of `members` who have administrative privileges for this team. |
+| `badgeCollections: BadgeCollection[]` | An array of collections, which group the team's functional **Badges**. For now, there is one collection per team: "Skills". |
+
+### BadgeCollection Entity
+A sub-entity of `Team`, this groups related Badges together.
+
+| Data Point | Description |
+| :--- | :--- |
+| `name: string` | The name of the collection (e.g., "Skills"). |
+| `badges: Badge[]` | An array of `Badge` objects belonging to this collection. |
+
+### Badge Entity
+This represents a specific, functional role or skill within a team.
+
+| Data Point | Description |
+| :--- | :--- |
+| `name: string` | The display name for the badge (e.g., "Camera", "Audio"). |
+| `icon: string` | The Google Symbol name for the badge's icon. |
+| `color: string` | The hex color code for the badge's icon and outline. |

@@ -15,7 +15,7 @@ import { getContrastColor } from '@/lib/utils';
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { realUser, viewAsUser, setViewAsUser, users, teams, notifications, appSettings, allRoles } = useUser();
+  const { realUser, viewAsUser, setViewAsUser, users, teams, notifications, appSettings, allBadges } = useUser();
   const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -120,11 +120,11 @@ export function Sidebar() {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <div className="px-2 py-1.5">
-                    <p className="text-xs text-muted-foreground mb-2">Roles</p>
+                    <p className="text-xs text-muted-foreground mb-2">Roles & Badges</p>
                     <div className="flex flex-wrap gap-1">
                         {(viewAsUser.roles && viewAsUser.roles.length > 0) ? (
                             viewAsUser.roles.map(roleName => {
-                                const roleInfo = allRoles.find(r => r.name === roleName);
+                                const roleInfo = allBadges.find(r => r.name === roleName) || appSettings.customAdminRoles.find(r => r.name === roleName);
                                 return (
                                     <Badge
                                         key={roleName}
@@ -141,7 +141,7 @@ export function Sidebar() {
                                 )
                             })
                         ) : (
-                            <p className="text-xs text-muted-foreground italic">No roles assigned</p>
+                            <p className="text-xs text-muted-foreground italic">No roles or badges assigned</p>
                         )}
                     </div>
                 </div>

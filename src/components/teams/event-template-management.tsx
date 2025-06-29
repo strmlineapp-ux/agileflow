@@ -39,7 +39,7 @@ function EventTemplateForm({
   const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
   const [iconSearch, setIconSearch] = useState('');
   
-  const availableRoles = team.roles.filter(role => !requestedRoles.includes(role.name) && role.name.toLowerCase().includes(roleSearch.toLowerCase()));
+  const availableBadges = team.badgeCollections.flatMap(c => c.badges).filter(badge => !requestedRoles.includes(badge.name) && badge.name.toLowerCase().includes(roleSearch.toLowerCase()));
 
   const filteredIcons = googleSymbolNames.filter(iconName =>
     iconName.toLowerCase().includes(iconSearch.toLowerCase())
@@ -125,7 +125,7 @@ function EventTemplateForm({
             </div>
         </div>
         <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">Requested Roles</p>
+            <p className="text-sm text-muted-foreground">Requested Badges</p>
             <div className="flex flex-wrap gap-2 items-center min-h-[40px] p-2 border rounded-md bg-muted/50">
               {requestedRoles.map(role => (
                 <Badge key={role} variant="secondary" className="group text-base py-1 pl-3 pr-1 rounded-full">
@@ -149,22 +149,22 @@ function EventTemplateForm({
                 <PopoverContent className="w-[250px] p-0" align="start">
                     <div className="p-2 border-b">
                         <Input
-                          placeholder="Search roles..."
+                          placeholder="Search badges..."
                           value={roleSearch}
                           onChange={(e) => setRoleSearch(e.target.value)}
                         />
                     </div>
                     <ScrollArea className="h-40">
-                        {availableRoles.length > 0 ? availableRoles.map(role => (
+                        {availableBadges.length > 0 ? availableBadges.map(badge => (
                             <div 
-                                key={role.name} 
+                                key={badge.name} 
                                 className="p-2 hover:bg-accent cursor-pointer text-sm"
-                                onClick={() => handleAddRole(role.name)}
+                                onClick={() => handleAddRole(badge.name)}
                             >
-                                {role.name}
+                                {badge.name}
                             </div>
                         )) : (
-                            <p className="p-4 text-center text-sm text-muted-foreground">No matching roles.</p>
+                            <p className="p-4 text-center text-sm text-muted-foreground">No matching badges.</p>
                         )}
                     </ScrollArea>
                 </PopoverContent>
@@ -277,12 +277,12 @@ export function EventTemplateManagement({ team }: { team: Team }) {
                     </div>
                 </CardHeader>
                 <CardContent className="flex-grow">
-                    <p className="text-sm font-medium text-muted-foreground mb-2">Requested Roles</p>
+                    <p className="text-sm font-medium text-muted-foreground mb-2">Requested Badges</p>
                     <div className="flex flex-wrap gap-1 min-h-[24px]">
                       {template.requestedRoles.length > 0 ? (
                         template.requestedRoles.map(role => <Badge key={role} variant="secondary" className="rounded-full">{role}</Badge>)
                       ) : (
-                        <p className="text-xs text-muted-foreground italic">No roles requested.</p>
+                        <p className="text-xs text-muted-foreground italic">No badges requested.</p>
                       )}
                     </div>
                 </CardContent>

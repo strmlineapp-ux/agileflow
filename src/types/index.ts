@@ -43,7 +43,7 @@ export interface User {
   location?: string;
   phone?: string;
   title?: string;
-  roles?: string[]; // Team-specific functional roles
+  roles?: string[]; // Contains names of CustomAdminRoles and Badges
   directReports?: string[];
   theme?: 'light' | 'dark' | 'high-visibility' | 'firebase';
   defaultCalendarView?: 'month' | 'week' | 'day' | 'production-schedule';
@@ -55,13 +55,18 @@ export interface EventTemplate {
   id: string;
   name: string; // This is the "Tag"
   icon: string;
-  requestedRoles: string[]; // array of TeamRole names
+  requestedRoles: string[]; // array of Badge names
 }
 
-export interface TeamRole {
+export interface Badge {
   name: string;
   icon: string;
   color: string;
+}
+
+export interface BadgeCollection {
+    name: string;
+    badges: Badge[];
 }
 
 export interface Team {
@@ -74,7 +79,7 @@ export interface Team {
   memberRoleName?: string;
   locationCheckManagers: string[]; // array of userIds who can manage check locations
   checkManagersLabel?: string;
-  roles: TeamRole[]; // team-specific roles
+  badgeCollections: BadgeCollection[]; // team-specific badges, grouped into collections
   pinnedLocations: string[]; // array of location names
   pinnedLocationsLabel?: string;
   checkLocations: string[]; // subset of pinnedLocations designated for daily checks

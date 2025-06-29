@@ -3,7 +3,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
-import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type Priority, type PriorityStrategy, type PriorityStrategyApplication, type AppSettings, type TeamRole } from '@/types';
+import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type Priority, type PriorityStrategy, type PriorityStrategyApplication, type AppSettings, type Badge } from '@/types';
 import { mockUsers as initialUsers, mockCalendars as initialCalendars, mockEvents as initialEvents, mockLocations as initialLocations, mockTeams, mockPriorityStrategies as initialPriorityStrategies, mockAppSettings } from '@/lib/mock-data';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
@@ -16,7 +16,8 @@ interface UserContextType {
   viewAsUser: User;
   setViewAsUser: (userId: string) => void;
   users: User[];
-  allRoles: TeamRole[];
+  allBadges: Badge[];
+  allRoles: { name: string; icon: string; color: string; }[];
   teams: Team[];
   addTeam: (teamData: Omit<Team, 'id'>) => Promise<void>;
   updateTeam: (teamId: string, teamData: Partial<Omit<Team, 'id'>>) => Promise<void>;
@@ -80,17 +81,35 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     return () => clearTimeout(timer);
   }, []);
 
-  const allRoles = useMemo(() => {
-    const rolesMap = new Map<string, TeamRole>();
+  const allBadges = useMemo(() => {
+    const badgesMap = new Map<string, Badge>();
     teams.forEach(team => {
-        (team.roles || []).forEach(role => {
-            if (!rolesMap.has(role.name)) {
-                rolesMap.set(role.name, role);
-            }
+        (team.badgeCollections || []).forEach(collection => {
+            (collection.badges || []).forEach(badge => {
+                if (!badgesMap.has(badge.name)) {
+                    badgesMap.set(badge.name, badge);
+                }
+            });
         });
     });
-    return Array.from(rolesMap.values()).sort((a,b) => a.name.localeCompare(b.name));
+    return Array.from(badgesMap.values()).sort((a,b) => a.name.localeCompare(b.name));
   }, [teams]);
+
+  const allRoles = useMemo(() => {
+    const combined = new Map<string, { name: string; icon: string; color: string; }>();
+
+    appSettings.customAdminRoles.forEach(role => {
+      combined.set(role.name, role);
+    });
+
+    allBadges.forEach(badge => {
+      if (!combined.has(badge.name)) {
+        combined.set(badge.name, badge);
+      }
+    });
+
+    return Array.from(combined.values());
+  }, [appSettings.customAdminRoles, allBadges]);
 
   const realUser = useMemo(() => users.find(u => u.userId === REAL_USER_ID)!, [users]);
   const viewAsUser = useMemo(() => users.find(u => u.userId === viewAsUserId) || realUser, [users, viewAsUserId, realUser]);
@@ -319,6 +338,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     viewAsUser,
     setViewAsUser: setViewAsUserId,
     users,
+    allBadges,
     allRoles,
     teams,
     addTeam,
@@ -352,7 +372,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     appSettings,
     updateAppSettings,
   }), [
-    loading, realUser, viewAsUser, users, allRoles, teams, notifications, userStatusAssignments,
+    loading, realUser, viewAsUser, users, allBadges, allRoles, teams, notifications, userStatusAssignments,
     calendars, events, locations, allBookableLocations, priorityStrategies, appSettings,
     addTeam, updateTeam, deleteTeam, setNotifications, setUserStatusAssignments, addUser,
     updateUser, linkGoogleCalendar, addCalendar, updateCalendar, deleteCalendar,
