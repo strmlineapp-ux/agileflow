@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -14,30 +13,36 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
-// Component to manage a list of users with admin privileges
-const AdminManager = ({
-  allUsers,
-  onAdminToggle,
+// A generic component to manage assigning a role or status to a list of users.
+const RoleManager = ({
+  title,
+  description,
+  users,
+  onToggle,
+  roleCheck,
 }: {
-  allUsers: User[];
-  onAdminToggle: (user: User) => void;
+  title: string;
+  description: string;
+  users: User[];
+  onToggle: (user: User) => void;
+  roleCheck: (user: User) => boolean;
 }) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Manage Admins</CardTitle>
-        <CardDescription>Assign or revoke Admin privileges. This action requires 2FA.</CardDescription>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="flex flex-wrap gap-2 rounded-md border bg-muted/50 p-2 min-h-[56px]">
-          {allUsers.map(user => {
-            const isAdmin = user.isAdmin;
+          {users.map(user => {
+            const hasRole = roleCheck(user);
             return (
               <Badge
                 key={user.userId}
-                variant={isAdmin ? 'default' : 'secondary'}
-                className={cn('gap-1.5 p-1 pl-2 cursor-pointer rounded-full', isAdmin && 'shadow-md')}
-                onClick={() => onAdminToggle(user)}
+                variant={hasRole ? 'default' : 'secondary'}
+                className={cn('gap-1.5 p-1 pl-2 cursor-pointer rounded-full', hasRole && 'shadow-md')}
+                onClick={() => onToggle(user)}
               >
                 <Avatar className="h-5 w-5">
                   <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
@@ -48,7 +53,7 @@ const AdminManager = ({
             );
           })}
         </div>
-        <p className="text-xs text-muted-foreground text-right pr-2 mt-2">Click user pills to toggle their admin status.</p>
+        <p className="text-xs text-muted-foreground text-right pr-2 mt-2">Click user pills to toggle their status.</p>
       </CardContent>
     </Card>
   );
@@ -67,18 +72,30 @@ export default function AdminPage() {
 
   // This check must happen after all hooks are called.
   if (!isAdmin) {
-    // This is now a safe return because nav is filtered.
-    // This case handles loading states or direct URL access attempts.
-    return null;
+    return null; // Navigation is filtered, so this prevents direct URL access.
   }
 
-  const handleRoleToggle = (user: User) => {
+  const handleAdminToggle = (user: User) => {
     const action = () => {
       updateUser(user.userId, { isAdmin: !user.isAdmin });
       toast({ title: 'Success', description: `${user.displayName}'s admin status has been updated.` });
     };
+    setOn2faSuccess(() => action);
+    setIs2faDialogOpen(true);
+  };
+  
+  const handleServiceAdminToggle = (user: User) => {
+    const action = () => {
+        const currentRoles = user.roles || [];
+        const isServiceAdmin = currentRoles.includes('Service Admin');
+        const newRoles = isServiceAdmin
+          ? currentRoles.filter(role => role !== 'Service Admin')
+          : [...currentRoles, 'Service Admin'];
 
-    // Require 2FA for 'Admin' role
+        updateUser(user.userId, { roles: newRoles });
+        toast({ title: 'Success', description: `${user.displayName}'s Service Admin status has been updated.` });
+    };
+
     setOn2faSuccess(() => action);
     setIs2faDialogOpen(true);
   };
@@ -108,9 +125,20 @@ export default function AdminPage() {
       <div className="flex flex-col gap-8">
         <h1 className="font-headline text-3xl font-semibold">Admin Management</h1>
         
-        <AdminManager
-            allUsers={users}
-            onAdminToggle={handleRoleToggle}
+        <RoleManager
+            title="Manage Admins"
+            description="Assign or revoke Admin privileges. This is the highest level of access."
+            users={users}
+            onToggle={handleAdminToggle}
+            roleCheck={(user) => user.isAdmin}
+        />
+
+        <RoleManager
+            title="Manage Service Admins"
+            description="Assign or revoke Service Admin privileges for managing app-wide settings."
+            users={users}
+            onToggle={handleServiceAdminToggle}
+            roleCheck={(user) => user.roles?.includes('Service Admin') || false}
         />
       </div>
 
