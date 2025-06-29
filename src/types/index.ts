@@ -65,8 +65,11 @@ export interface Badge {
 }
 
 export interface BadgeCollection {
-    name: string;
-    badges: Badge[];
+  name: string;
+  icon: string;
+  color: string;
+  viewMode: 'assorted' | 'scale' | 'list';
+  badges: Badge[];
 }
 
 export interface Team {

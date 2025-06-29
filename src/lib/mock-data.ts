@@ -199,6 +199,9 @@ export const mockTeams: Team[] = [
         locationCheckManagers: ['1'],
         badgeCollections: [{
             name: 'Skills',
+            icon: 'palette',
+            color: '#64748B',
+            viewMode: 'assorted',
             badges: [
                 { name: 'Post-Production', icon: 'movie_filter', color: '#F97316' },
                 { name: 'Video Director', icon: 'videocam', color: '#3B82F6' },
@@ -232,6 +235,9 @@ export const mockTeams: Team[] = [
         checkManagersLabel: 'Location Check Managers',
         badgeCollections: [{
             name: 'Skills',
+            icon: 'palette',
+            color: '#64748B',
+            viewMode: 'assorted',
             badges: [
                 { name: 'TD', icon: 'engineering', color: '#F43F5E' },
                 { name: 'ES Operator', icon: 'slideshow', color: '#14B8A6' },
