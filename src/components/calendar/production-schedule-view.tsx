@@ -278,16 +278,16 @@ const ProductionScheduleLocationRow = React.memo(({
                                                 <Tooltip>
                                                     <TooltipTrigger asChild>
                                                         <div className="relative">
-                                                            <Avatar className="h-6 w-6 border-2 border-background">
+                                                            <Avatar className="h-5 w-5">
                                                                 <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
                                                                 <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
                                                             </Avatar>
                                                             {roleIcon && (
                                                                 <div 
-                                                                    className="absolute -bottom-1.5 -right-1.5 h-5 w-5 rounded-full flex items-center justify-center border-2 border-background"
+                                                                    className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full flex items-center justify-center"
                                                                     style={{ backgroundColor: roleColor, color: getContrastColor(roleColor || '#ffffff') }}
                                                                 >
-                                                                    <GoogleSymbol name={roleIcon} style={{fontSize: '12px'}} />
+                                                                    <GoogleSymbol name={roleIcon} style={{fontSize: '10px'}} />
                                                                 </div>
                                                             )}
                                                         </div>
