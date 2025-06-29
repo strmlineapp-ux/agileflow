@@ -4,6 +4,7 @@ import { Sidebar } from '@/components/dashboard/sidebar';
 import { Header } from '@/components/dashboard/header';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { useUser } from '@/context/user-context';
 
 export default function DashboardLayout({
   children,
@@ -12,6 +13,15 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const isCalendarPage = pathname.startsWith('/dashboard/calendar');
+  const { loading } = useUser();
+
+  if (loading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <div className="h-16 w-16 animate-spin rounded-full border-4 border-dashed border-primary"></div>
+      </div>
+    );
+  }
 
   return (
       <div className="flex min-h-screen w-full bg-muted/40">

@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 
 interface UserContextType {
+  loading: boolean;
   realUser: User;
   viewAsUser: User;
   setViewAsUser: (userId: string) => void;
@@ -57,6 +58,7 @@ const REAL_USER_ID = '1'; // Alice is the admin
 const simulateApi = (delay = 50) => new Promise(res => setTimeout(res, delay));
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
+  const [loading, setLoading] = useState(true);
   const [viewAsUserId, setViewAsUserId] = useState<string>(REAL_USER_ID);
   const [users, setUsers] = useState<User[]>(initialUsers);
   const [teams, setTeams] = useState<Team[]>(mockTeams);
@@ -68,6 +70,15 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [priorityStrategies, setPriorityStrategies] = useState<PriorityStrategy[]>(initialPriorityStrategies);
   const [appSettings, setAppSettings] = useState<AppSettings>(mockAppSettings);
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Simulate initial data loading process
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 500); // Adjust delay as needed
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const allRoles = useMemo(() => {
     const rolesMap = new Map<string, TeamRole>();
@@ -303,6 +314,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, [viewAsUser.theme]);
   
   const value = useMemo(() => ({
+    loading,
     realUser,
     viewAsUser,
     setViewAsUser: setViewAsUserId,
@@ -340,7 +352,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     appSettings,
     updateAppSettings,
   }), [
-    realUser, viewAsUser, users, allRoles, teams, notifications, userStatusAssignments,
+    loading, realUser, viewAsUser, users, allRoles, teams, notifications, userStatusAssignments,
     calendars, events, locations, allBookableLocations, priorityStrategies, appSettings,
     addTeam, updateTeam, deleteTeam, setNotifications, setUserStatusAssignments, addUser,
     updateUser, linkGoogleCalendar, addCalendar, updateCalendar, deleteCalendar,
