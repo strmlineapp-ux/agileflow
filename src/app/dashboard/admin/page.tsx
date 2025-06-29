@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useUser } from '@/context/user-context';
 import { type User } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -91,6 +91,39 @@ export default function AdminPage() {
   const [on2faSuccess, setOn2faSuccess] = useState<(() => void) | null>(null);
   const [twoFactorCode, setTwoFactorCode] = useState('');
   const [iconSearch, setIconSearch] = useState('');
+
+  const [isEditingName, setIsEditingName] = useState(false);
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isEditingName && nameInputRef.current) {
+      nameInputRef.current.focus();
+      nameInputRef.current.select();
+    }
+  }, [isEditingName]);
+
+  const handleSaveName = () => {
+    const input = nameInputRef.current;
+    if (!input || !input.value.trim()) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Display name cannot be empty.' });
+      setIsEditingName(false);
+      return;
+    }
+    if (input.value.trim() !== appSettings.displayName) {
+      updateAppSettings({ displayName: input.value.trim() });
+      toast({ title: 'Success', description: 'Display name updated.' });
+    }
+    setIsEditingName(false);
+  };
+
+  const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSaveName();
+    } else if (e.key === 'Escape') {
+      setIsEditingName(false);
+    }
+  };
+
 
   const predefinedColors = [
     '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
@@ -263,10 +296,22 @@ export default function AdminPage() {
                     </PopoverContent>
                   </Popover>
                 </div>
-                <CardTitle>Service Admins</CardTitle>
-                <AddUserToRoleButton usersToAdd={nonServiceAdminUsers} onAdd={handleServiceAdminToggle} roleName="Service Admin" />
+                {isEditingName ? (
+                   <Input
+                        ref={nameInputRef}
+                        defaultValue={appSettings.displayName}
+                        onBlur={handleSaveName}
+                        onKeyDown={handleNameKeyDown}
+                        className="h-auto p-0 text-2xl font-semibold leading-none tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-b-2 focus-visible:border-primary"
+                    />
+                ) : (
+                    <CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer">
+                        {appSettings.displayName}
+                    </CardTitle>
+                )}
+                <AddUserToRoleButton usersToAdd={nonServiceAdminUsers} onAdd={handleServiceAdminToggle} roleName={appSettings.displayName} />
               </div>
-              <CardDescription>Assign or revoke Service Admin privileges for managing app-wide settings.</CardDescription>
+              <CardDescription>Assign or revoke {appSettings.displayName} privileges for managing app-wide settings.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {serviceAdminUsers.map(user => (
