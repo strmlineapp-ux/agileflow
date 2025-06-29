@@ -263,28 +263,30 @@ function CustomRoleCard({
                         </PopoverContent>
                     </Popover>
                   )}
-                  <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
-                    <PopoverTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-2xl text-muted-foreground hover:text-foreground">
-                          <GoogleSymbol name={role.icon} />
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-80 p-0">
-                        <div className="p-2 border-b"><Input placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} /></div>
-                        <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={role.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate({ ...role, icon: iconName }); setIsIconPopoverOpen(false); }} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
-                    </PopoverContent>
-                  </Popover>
-                   <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                    <PopoverTrigger asChild><div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card cursor-pointer" aria-label="Change service admin color"><div className="h-full w-full rounded-full" style={{ backgroundColor: role.color }}/></div></PopoverTrigger>
-                    <PopoverContent className="w-auto p-2">
-                      <div className="grid grid-cols-8 gap-1">
-                        {predefinedColors.map(color => (<button key={color} className="h-6 w-6 rounded-full border" style={{ backgroundColor: color }} onClick={() => { onUpdate({ ...role, color: color }); setIsColorPopoverOpen(false); }} aria-label={`Set color to ${color}`}/>))}
-                        <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
-                          <GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={role.color} onChange={(e) => onUpdate({ ...role, color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" aria-label="Custom color picker"/>
+                  <div className="relative">
+                    <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
+                        <PopoverTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-9 w-9 text-2xl text-muted-foreground hover:text-foreground">
+                            <GoogleSymbol name={role.icon} />
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-80 p-0">
+                            <div className="p-2 border-b"><Input placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} /></div>
+                            <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={role.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate({ ...role, icon: iconName }); setIsIconPopoverOpen(false); }} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
+                        </PopoverContent>
+                    </Popover>
+                    <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                        <PopoverTrigger asChild><div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card cursor-pointer" aria-label="Change service admin color"><div className="h-full w-full rounded-full" style={{ backgroundColor: role.color }}/></div></PopoverTrigger>
+                        <PopoverContent className="w-auto p-2">
+                        <div className="grid grid-cols-8 gap-1">
+                            {predefinedColors.map(color => (<button key={color} className="h-6 w-6 rounded-full border" style={{ backgroundColor: color }} onClick={() => { onUpdate({ ...role, color: color }); setIsColorPopoverOpen(false); }} aria-label={`Set color to ${color}`}/>))}
+                            <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
+                            <GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={role.color} onChange={(e) => onUpdate({ ...role, color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" aria-label="Custom color picker"/>
+                            </div>
                         </div>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
+                        </PopoverContent>
+                    </Popover>
+                  </div>
                 </div>
                 {isEditingName ? (<Input ref={nameInputRef} defaultValue={role.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="font-body h-auto p-0 text-2xl font-semibold leading-none tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>) : (<CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer">{role.name}</CardTitle>)}
                 <AddUserToRoleButton usersToAdd={unassignedUsers} onAdd={handleRoleToggle} roleName={role.name} />
@@ -629,3 +631,4 @@ export default function AdminPage() {
     
 
     
+

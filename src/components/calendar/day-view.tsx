@@ -112,10 +112,10 @@ const DayViewLocationRow = React.memo(({
                                                             </Avatar>
                                                             {roleIcon && (
                                                                 <div 
-                                                                    className="absolute -bottom-1 -right-1 p-0.5 h-4 w-4 rounded-full flex items-center justify-center border-2 border-background"
+                                                                    className="absolute -bottom-1.5 -right-1.5 h-5 w-5 rounded-full flex items-center justify-center border-2 border-background"
                                                                     style={{ backgroundColor: roleColor, color: getContrastColor(roleColor || '#ffffff') }}
                                                                 >
-                                                                    <GoogleSymbol name={roleIcon} style={{fontSize: '10px'}} />
+                                                                    <GoogleSymbol name={roleIcon} style={{fontSize: '12px'}} />
                                                                 </div>
                                                             )}
                                                         </div>
@@ -475,10 +475,10 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
                                                                             </Avatar>
                                                                             {roleIcon && (
                                                                                 <div
-                                                                                    className="absolute -bottom-1 -right-1 p-0.5 h-4 w-4 rounded-full flex items-center justify-center border-2 border-background"
+                                                                                    className="absolute -bottom-1.5 -right-1.5 h-5 w-5 rounded-full flex items-center justify-center border-2 border-background"
                                                                                     style={{ backgroundColor: roleColor, color: getContrastColor(roleColor || '#ffffff') }}
                                                                                 >
-                                                                                    <GoogleSymbol name={roleIcon} style={{fontSize: '10px'}} />
+                                                                                    <GoogleSymbol name={roleIcon} style={{fontSize: '12px'}} />
                                                                                 </div>
                                                                             )}
                                                                         </div>

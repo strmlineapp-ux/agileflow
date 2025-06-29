@@ -46,6 +46,31 @@ This pattern replaces large, card-style "Add New" buttons with a more compact an
 - **Behavior:** Clicking the button initiates the process of adding a new item, typically by opening a dialog or form.
 - **Application:** Used for creating new items in a list or grid, such as adding a new team, calendar, priority strategy, or event template.
 
+---
+
+### 4. Compact Edit Popover
+
+This is a minimal, title-less popover for quick, focused editing actions, typically for an icon and its associated color.
+
+- **Trigger:** An icon button, often with a color badge overlay (see "Icon & Color Editing Flow").
+- **Interaction:**
+  - The popover appears without a header or title.
+  - It contains icon-only buttons for its actions.
+  - Actions are arranged horizontally. Common actions include an icon picker, a color picker (as a badge on the icon picker), and a cancel/delete/unlink action.
+- **Application:** Used for editing linked group properties.
+
+---
+
+### 5. Icon & Color Editing Flow
+
+This is a consistent pattern for allowing a user to change both an icon and its color.
+
+- **Trigger:** A single, interactive unit composed of a primary icon button and a smaller color swatch badge overlaid on its corner.
+- **Interaction:**
+  - Clicking the main part of the button opens an icon picker popover.
+  - Clicking the color swatch badge opens a color picker popover.
+- **Application:** Used for editing team role icons/colors, custom admin role icons/colors, and linked group icons/colors.
+
 ## Visual & Theming Elements
 
 ### Icons & Hover Effects
@@ -61,5 +86,9 @@ This pattern replaces large, card-style "Add New" buttons with a more compact an
 ### Subtle Visual Cues
 
 - **Lunch Break Pattern**: A subtle diagonal line pattern is used in calendar views to visually block out the typical lunch period (12:00 - 14:30). This serves as a non-intrusive reminder to avoid scheduling meetings during that time.
+- **Icon as Badge**: An icon displayed as a small, circular overlay on another element (e.g., an Avatar or another icon) to provide secondary information.
+    - **Appearance**: A circular badge (e.g., `h-5 w-5`) with a `border-2` of the parent element's background color (e.g., `border-card` or `border-background`) to create a "punched out" effect. The icon inside should be sized appropriately (e.g., `font-size: 12px`).
+    - **Placement**: Typically positioned on the bottom-right or top-right corner of the parent element.
+    - **Application**: Used for displaying a user's role on their avatar, or a linked group status on a role icon.
 
     

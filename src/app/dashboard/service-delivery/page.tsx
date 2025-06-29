@@ -16,6 +16,12 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { useToast } from '@/hooks/use-toast';
 
+const predefinedColors = [
+    '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
+    '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6',
+    '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
+];
+
 export default function AppManagementPage() {
   const { viewAsUser, appSettings, updateAppSettings } = useUser();
   const { toast } = useToast();
@@ -23,6 +29,7 @@ export default function AppManagementPage() {
   const serviceAdminRole = appSettings.customAdminRoles[0];
 
   const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
+  const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
   const [iconSearch, setIconSearch] = useState('');
   const [isEditingName, setIsEditingName] = useState(false);
   const nameInputRef = useRef<HTMLInputElement>(null);
@@ -78,41 +85,61 @@ export default function AppManagementPage() {
     setIsIconPopoverOpen(false);
   }
 
+  const handleColorSelect = (newColor: string) => {
+    const newRoles = [...appSettings.customAdminRoles];
+    newRoles[0] = { ...newRoles[0], color: newColor };
+    updateAppSettings({ customAdminRoles: newRoles });
+    setIsColorPopoverOpen(false);
+  };
+
   return (
     <>
       <div className="flex flex-col gap-6">
         <div className="flex items-center gap-3">
-          <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
-              <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-10 w-10 text-3xl text-muted-foreground hover:text-foreground">
-                    <GoogleSymbol name={serviceAdminRole.icon} />
-                  </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80 p-0">
-                  <div className="p-2 border-b">
-                      <Input
-                          placeholder="Search icons..."
-                          value={iconSearch}
-                          onChange={(e) => setIconSearch(e.target.value)}
-                      />
-                  </div>
-                  <ScrollArea className="h-64">
-                      <div className="grid grid-cols-6 gap-1 p-2">
-                          {filteredIcons.slice(0, 300).map((iconName) => (
-                              <Button
-                                  key={iconName}
-                                  variant={serviceAdminRole.icon === iconName ? "default" : "ghost"}
-                                  size="icon"
-                                  onClick={() => handleIconSelect(iconName)}
-                                  className="text-2xl"
-                              >
-                                  <GoogleSymbol name={iconName} />
-                              </Button>
-                          ))}
-                      </div>
-                  </ScrollArea>
-              </PopoverContent>
-          </Popover>
+          <div className="relative">
+            <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
+                <PopoverTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-10 w-10 text-3xl text-muted-foreground hover:text-foreground">
+                      <GoogleSymbol name={serviceAdminRole.icon} />
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-0">
+                    <div className="p-2 border-b">
+                        <Input
+                            placeholder="Search icons..."
+                            value={iconSearch}
+                            onChange={(e) => setIconSearch(e.target.value)}
+                        />
+                    </div>
+                    <ScrollArea className="h-64">
+                        <div className="grid grid-cols-6 gap-1 p-2">
+                            {filteredIcons.slice(0, 300).map((iconName) => (
+                                <Button
+                                    key={iconName}
+                                    variant={serviceAdminRole.icon === iconName ? "default" : "ghost"}
+                                    size="icon"
+                                    onClick={() => handleIconSelect(iconName)}
+                                    className="text-2xl"
+                                >
+                                    <GoogleSymbol name={iconName} />
+                                </Button>
+                            ))}
+                        </div>
+                    </ScrollArea>
+                </PopoverContent>
+            </Popover>
+            <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                <PopoverTrigger asChild><div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full border-2 border-card cursor-pointer" aria-label="Change role color"><div className="h-full w-full rounded-full" style={{ backgroundColor: serviceAdminRole.color }}/></div></PopoverTrigger>
+                <PopoverContent className="w-auto p-2">
+                    <div className="grid grid-cols-8 gap-1">
+                    {predefinedColors.map(color => (<button key={color} className="h-6 w-6 rounded-full border" style={{ backgroundColor: color }} onClick={() => handleColorSelect(color)} aria-label={`Set color to ${color}`}/>))}
+                    <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
+                        <GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={serviceAdminRole.color} onChange={(e) => handleColorSelect(e.target.value)} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" aria-label="Custom color picker"/>
+                    </div>
+                    </div>
+                </PopoverContent>
+            </Popover>
+          </div>
             {isEditingName ? (
                 <Input
                     ref={nameInputRef}
