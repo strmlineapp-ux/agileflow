@@ -16,6 +16,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle as UIAlertDialogTitle } from '@/components/ui/alert-dialog';
 import { DragDropContext, Droppable, Draggable, type DropResult } from 'react-beautiful-dnd';
+import { Skeleton } from '@/components/ui/skeleton';
 
 
 // A card to display a user with a specific role.
@@ -268,9 +269,30 @@ function CustomRoleCard({ role, users, onUpdate, onDelete }: { role: CustomAdmin
     );
 }
 
+const AdminPageSkeleton = () => (
+    <div className="flex flex-col gap-8">
+      <div className="flex items-center gap-2">
+        <Skeleton className="h-9 w-64" />
+        <Skeleton className="h-8 w-8 rounded-full" />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 items-start">
+        <Skeleton className="h-64 w-full" />
+        <Skeleton className="h-64 w-full" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    </div>
+  );
+
 export default function AdminPage() {
   const { toast } = useToast();
   const { viewAsUser, users, updateUser, appSettings, updateAppSettings } = useUser();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    // This ensures the component only renders on the client,
+    // preventing hydration mismatches with drag-and-drop.
+    setIsClient(true);
+  }, []);
   
   const isAdmin = useMemo(() => viewAsUser.isAdmin, [viewAsUser]);
 
@@ -368,6 +390,9 @@ export default function AdminPage() {
     updateAppSettings({ customAdminRoles: reorderedRoles });
   };
 
+  if (!isClient) {
+    return <AdminPageSkeleton />;
+  }
 
   return (
     <>
