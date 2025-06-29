@@ -1,9 +1,8 @@
 
-
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
-import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type Priority, type PriorityStrategy, type PriorityStrategyApplication, type AppSettings } from '@/types';
+import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type Priority, type PriorityStrategy, type PriorityStrategyApplication, type AppSettings, type TeamRole } from '@/types';
 import { mockUsers as initialUsers, mockCalendars as initialCalendars, mockEvents as initialEvents, mockLocations as initialLocations, mockTeams, mockPriorityStrategies as initialPriorityStrategies, mockAppSettings } from '@/lib/mock-data';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
@@ -15,7 +14,7 @@ interface UserContextType {
   viewAsUser: User;
   setViewAsUser: (userId: string) => void;
   users: User[];
-  allTeamRoles: string[];
+  allRoles: TeamRole[];
   teams: Team[];
   addTeam: (teamData: Omit<Team, 'id'>) => Promise<void>;
   updateTeam: (teamId: string, teamData: Partial<Omit<Team, 'id'>>) => Promise<void>;
@@ -69,12 +68,16 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [appSettings, setAppSettings] = useState<AppSettings>(mockAppSettings);
   const { toast } = useToast();
 
-  const allTeamRoles = useMemo(() => {
-    const allRoles = new Set<string>();
+  const allRoles = useMemo(() => {
+    const rolesMap = new Map<string, TeamRole>();
     teams.forEach(team => {
-        team.roles.forEach(role => allRoles.add(role.name));
+        (team.roles || []).forEach(role => {
+            if (!rolesMap.has(role.name)) {
+                rolesMap.set(role.name, role);
+            }
+        });
     });
-    return Array.from(allRoles).sort();
+    return Array.from(rolesMap.values()).sort((a,b) => a.name.localeCompare(b.name));
   }, [teams]);
 
   const realUser = useMemo(() => users.find(u => u.userId === REAL_USER_ID)!, [users]);
@@ -306,7 +309,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     viewAsUser,
     setViewAsUser: setViewAsUserId,
     users,
-    allTeamRoles,
+    allRoles,
     teams,
     addTeam,
     updateTeam,
@@ -339,7 +342,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     appSettings,
     updateAppSettings,
   }), [
-    realUser, viewAsUser, users, allTeamRoles, teams, notifications, userStatusAssignments,
+    realUser, viewAsUser, users, allRoles, teams, notifications, userStatusAssignments,
     calendars, events, locations, allBookableLocations, priorityStrategies, appSettings,
     addTeam, updateTeam, deleteTeam, setNotifications, setUserStatusAssignments, addUser,
     updateUser, linkGoogleCalendar, addCalendar, updateCalendar, deleteCalendar,
