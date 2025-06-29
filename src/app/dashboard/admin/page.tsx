@@ -24,6 +24,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 // #region Helper Components and Constants
 const predefinedColors = [
@@ -123,6 +124,7 @@ function CustomRoleCard({
   role,
   rank,
   users, 
+  canLink,
   onUpdate, 
   onDelete, 
   onLink,
@@ -134,6 +136,7 @@ function CustomRoleCard({
   role: CustomAdminRole; 
   rank: number;
   users: User[]; 
+  canLink: boolean;
   onUpdate: (updatedRole: CustomAdminRole) => void;
   onDelete: () => void;
   onLink: (roleId: string) => void;
@@ -327,7 +330,7 @@ function CustomRoleCard({
                 </div>
                 {isEditingName ? (<Input ref={nameInputRef} defaultValue={role.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="font-body h-auto p-0 text-2xl font-semibold leading-none tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>) : (<CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer">{role.name}</CardTitle>)}
                 <AddUserToRoleButton usersToAdd={unassignedUsers} onAdd={handleRoleToggle} roleName={role.name} />
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => onLink(role.id)}><GoogleSymbol name="link" /></Button>
+                {canLink && <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => onLink(role.id)}><GoogleSymbol name="link" /></Button>}
                 <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setIsDeleteDialogOpen(true)}><GoogleSymbol name="delete" /></Button>
               </div>
               <CardDescription>Assign or revoke {role.name} privileges for managing app-wide settings.</CardDescription>
@@ -367,6 +370,8 @@ const RolesManagement = () => {
   const [on2faSuccess, setOn2faSuccess] = useState<(() => void) | null>(null);
   const [twoFactorCode, setTwoFactorCode] = useState('');
   const [linkingState, setLinkingState] = useState<{ roleId: string } | null>(null);
+  
+  const canLinkRoles = appSettings.customAdminRoles.length > 1;
 
   const roleRanks = useMemo(() => {
     const ranks = new Map<string, number>();
@@ -591,6 +596,7 @@ const RolesManagement = () => {
                             role={role}
                             rank={roleRanks[index]}
                             users={users}
+                            canLink={canLinkRoles}
                             onUpdate={handleUpdateCustomRole}
                             onDelete={() => handleDeleteCustomRole(role.id)}
                             onLink={handleLinkClick}
@@ -647,7 +653,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
     return (
         <Popover open={isOpen} onOpenChange={setIsOpen}>
             <PopoverTrigger asChild>
-                <Button variant="outline" size="sm">Access ({access.users.length + access.teams.length + access.roles.length})</Button>
+                <Button variant="ghost" size="icon" className="h-7 w-7"><GoogleSymbol name="group_add" /></Button>
             </PopoverTrigger>
             <PopoverContent className="w-80 p-0">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -690,7 +696,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm">Manage Tabs ({page.associatedTabs.length})</Button>
+        <Button variant="ghost" size="icon" className="h-7 w-7"><GoogleSymbol name="layers" /></Button>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0">
         <div className="p-2 border-b"><Label>Associated Tabs</Label></div>
@@ -768,11 +774,15 @@ function PageCard({ page, onUpdate, onDelete }: { page: AppPage; onUpdate: (id: 
                               </PopoverContent>
                             </Popover>
                         </div>
-                        {isEditingName ? (
-                            <Input ref={nameInputRef} defaultValue={page.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>
-                        ) : (
-                            <CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer">{page.name}</CardTitle>
-                        )}
+                        <div className="flex items-center gap-1">
+                            {isEditingName ? (
+                                <Input ref={nameInputRef} defaultValue={page.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>
+                            ) : (
+                                <CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer">{page.name}</CardTitle>
+                            )}
+                            <PageAccessControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
+                            <PageTabsControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
+                        </div>
                     </div>
                     <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => onDelete(page.id)}>
                         <GoogleSymbol name="delete" />
@@ -782,16 +792,14 @@ function PageCard({ page, onUpdate, onDelete }: { page: AppPage; onUpdate: (id: 
             <CardContent className="space-y-4">
                 <div>
                     <h4 className="font-medium text-sm mb-2">Details</h4>
-                    <div className="flex gap-2 text-sm text-muted-foreground">
+                    <CardDescription>
+                        This page is shown in the sidebar for users or team admins you grant access to.
+                        When associating with a Team, only Team Admins get access. 
+                        When associating with a Service Admin role, only users designated as Team Admins for that role get access.
+                    </CardDescription>
+                    <div className="flex gap-2 text-sm text-muted-foreground mt-2">
                         <Badge variant="outline">{page.path}</Badge>
                         {page.isDynamic && <Badge variant="outline">Dynamic</Badge>}
-                    </div>
-                </div>
-                <div>
-                    <h4 className="font-medium text-sm mb-2">Controls</h4>
-                    <div className="flex gap-2">
-                        <PageAccessControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
-                        <PageTabsControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
                     </div>
                 </div>
             </CardContent>
@@ -826,27 +834,104 @@ const PagesManagement = () => {
         updateAppSettings({ pages: appSettings.pages.filter(p => p.id !== pageId) });
         toast({ title: 'Page Deleted' });
     };
+    
+    const onDragEnd = (result: DropResult) => {
+        const { source, destination, draggableId } = result;
+
+        if (!destination) return;
+        
+        // Handle duplication
+        if (destination.droppableId === 'duplicate-page-zone') {
+            const pageToDuplicate = appSettings.pages.find(p => p.id === draggableId);
+            if (pageToDuplicate) {
+                const newPage: AppPage = {
+                    ...JSON.parse(JSON.stringify(pageToDuplicate)), // Deep copy
+                    id: crypto.randomUUID(),
+                    name: `${pageToDuplicate.name} (Copy)`,
+                };
+                // Insert the new page right after the original one
+                const originalIndex = appSettings.pages.findIndex(p => p.id === draggableId);
+                const newPages = [...appSettings.pages];
+                newPages.splice(originalIndex + 1, 0, newPage);
+                updateAppSettings({ pages: newPages });
+                toast({ title: 'Page Duplicated', description: `A copy of "${pageToDuplicate.name}" was created.` });
+            }
+            return;
+        }
+
+        // Handle reordering
+        if (source.droppableId === 'pages-list' && destination.droppableId === 'pages-list') {
+            if (source.index === destination.index) return;
+
+            const reorderedPages = Array.from(appSettings.pages);
+            const [movedPage] = reorderedPages.splice(source.index, 1);
+            reorderedPages.splice(destination.index, 0, movedPage);
+            updateAppSettings({ pages: reorderedPages });
+        }
+    };
 
     return (
-        <div className="space-y-8">
-            <div className="flex items-center gap-2">
-                <h2 className="text-2xl font-semibold tracking-tight">Pages</h2>
-                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={handleAddPage}>
-                    <GoogleSymbol name="add_circle" className="text-xl" />
-                    <span className="sr-only">Add New Page</span>
-                </Button>
+        <DragDropContext onDragEnd={onDragEnd}>
+            <div className="space-y-8">
+                <div className="flex items-center gap-2">
+                    <h2 className="text-2xl font-semibold tracking-tight">Pages</h2>
+                    <StrictModeDroppable droppableId="duplicate-page-zone">
+                        {(provided, snapshot) => (
+                            <div 
+                                ref={provided.innerRef} 
+                                {...provided.droppableProps}
+                                className={cn(
+                                    "rounded-full transition-all p-0.5",
+                                    snapshot.isDraggingOver && "ring-2 ring-primary ring-offset-2 bg-accent"
+                                )}
+                            >
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={handleAddPage}>
+                                                <GoogleSymbol name="add_circle" className="text-xl" />
+                                                <span className="sr-only">Add New Page</span>
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>{snapshot.isDraggingOver ? 'Drop to Duplicate' : 'Add New Page'}</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            </div>
+                        )}
+                    </StrictModeDroppable>
+                </div>
+                <StrictModeDroppable droppableId="pages-list">
+                    {(provided) => (
+                        <div 
+                            className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                            ref={provided.innerRef}
+                            {...provided.droppableProps}
+                        >
+                            {appSettings.pages.map((page, index) => (
+                                <Draggable key={page.id} draggableId={page.id} index={index}>
+                                    {(provided) => (
+                                        <div 
+                                            ref={provided.innerRef} 
+                                            {...provided.draggableProps} 
+                                            {...provided.dragHandleProps}
+                                        >
+                                            <PageCard
+                                                page={page}
+                                                onUpdate={handleUpdatePage}
+                                                onDelete={handleDeletePage}
+                                            />
+                                        </div>
+                                    )}
+                                </Draggable>
+                            ))}
+                            {provided.placeholder}
+                        </div>
+                    )}
+                </StrictModeDroppable>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {appSettings.pages.map(page => (
-                    <PageCard
-                        key={page.id}
-                        page={page}
-                        onUpdate={handleUpdatePage}
-                        onDelete={handleDeletePage}
-                    />
-                ))}
-            </div>
-        </div>
+        </DragDropContext>
     );
 };
 // #endregion

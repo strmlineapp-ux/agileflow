@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -10,19 +11,7 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { useUser } from '@/context/user-context';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { Badge } from '../ui/badge';
-import { getContrastColor } from '@/lib/utils';
-import { type AppPage, type Team, type User } from '@/types';
-
-const hasAccess = (user: User, page: AppPage, teams: Team[]): boolean => {
-    if (user.isAdmin) return true;
-    if (page.access.users.includes(user.userId)) return true;
-    if (page.access.roles.some(role => user.roles?.includes(role))) return true;
-
-    const userTeamIds = teams.filter(t => t.members.includes(user.userId)).map(t => t.id);
-    if (page.access.teams.some(teamId => userTeamIds.includes(teamId))) return true;
-    
-    return false;
-};
+import { hasAccess } from '@/lib/permissions';
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -31,8 +20,8 @@ export function Sidebar() {
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const visiblePages = useMemo(() => {
-    return appSettings.pages.filter(page => hasAccess(viewAsUser, page, teams));
-  }, [viewAsUser, appSettings.pages, teams]);
+    return appSettings.pages.filter(page => hasAccess(viewAsUser, page, teams, appSettings.customAdminRoles));
+  }, [viewAsUser, appSettings.pages, teams, appSettings.customAdminRoles]);
   
   const userManagedTeams = useMemo(() => {
       if(viewAsUser.isAdmin || allRoles.some(r => viewAsUser.roles?.includes(r.name))) {

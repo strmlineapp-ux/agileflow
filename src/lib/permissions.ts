@@ -1,6 +1,6 @@
 
 
-import { type User, type CalendarId, type SharedCalendar, type Team, type CustomAdminRole } from '@/types';
+import { type User, type AppPage, type SharedCalendar, type Team, type CustomAdminRole } from '@/types';
 
 /**
  * Checks if a user has permission to manage events (create, edit, delete) on a specific calendar.
@@ -55,4 +55,36 @@ export const getAllUserRoles = (user: User, teams: Team[]): string[] => {
     // For now, user.roles is the source of truth for both system roles and badges.
 
     return Array.from(allRoles);
+};
+
+
+/**
+ * Checks if a user has permission to view a page based on its access rules.
+ * @param user The user to check.
+ * @param page The page configuration.
+ * @param teams The list of all teams.
+ * @param customAdminRoles The list of all custom admin roles.
+ * @returns `true` if the user has access, `false` otherwise.
+ */
+export const hasAccess = (user: User, page: AppPage, teams: Team[], customAdminRoles: CustomAdminRole[]): boolean => {
+    // System admin has universal access
+    if (user.isAdmin) return true;
+
+    // Direct user assignment always grants access
+    if (page.access.users.includes(user.userId)) return true;
+
+    // Team-based access: grants access ONLY if the user is a Team Admin of an associated team
+    const userIsTeamAdminForPage = teams.some(team =>
+        page.access.teams.includes(team.id) && (team.teamAdmins || []).includes(user.userId)
+    );
+    if (userIsTeamAdminForPage) return true;
+
+    // Role-based access: grants access ONLY if the user is a Team Admin of an associated Service Admin group
+    const userIsRoleAdminForPage = customAdminRoles.some(role =>
+        page.access.roles.includes(role.name) && (role.teamAdmins || []).includes(user.userId)
+    );
+    if (userIsRoleAdminForPage) return true;
+    
+    // Default to no access
+    return false;
 };
