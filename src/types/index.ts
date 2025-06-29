@@ -62,6 +62,8 @@ export interface Badge {
   name: string;
   icon: string;
   color: string;
+  description?: string;
+  attachments?: Attachment[];
 }
 
 export interface BadgeCollection {

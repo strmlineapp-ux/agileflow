@@ -223,7 +223,7 @@ export function CalendarManagement() {
                         </Button>
                     </CardTitle>
                     <div className="flex items-center -mr-4 -mt-2">
-                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => openDeleteDialog(calendar)}>
+                        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive" onClick={() => openDeleteDialog(calendar)}>
                             <GoogleSymbol name="delete" />
                             <span className="sr-only">Delete Calendar</span>
                         </Button>

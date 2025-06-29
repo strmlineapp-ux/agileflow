@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -60,8 +61,9 @@ const UserRoleCard = ({ user, onRemove, isTeamAdmin, onSetTeamAdmin }: { user: U
             size="icon" 
             onClick={(e) => { e.stopPropagation(); onRemove(user); }} 
             aria-label={`Remove role from ${user.displayName}`}
+            className="text-muted-foreground hover:text-destructive"
         >
-          <GoogleSymbol name="cancel" className="text-destructive" />
+          <GoogleSymbol name="cancel" />
         </Button>
       </CardContent>
     </Card>
@@ -321,7 +323,7 @@ function CustomRoleCard({
                 {isEditingName ? (<Input ref={nameInputRef} defaultValue={role.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="font-body h-auto p-0 text-2xl font-semibold leading-none tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>) : (<CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer">{role.name}</CardTitle>)}
                 <AddUserToRoleButton usersToAdd={unassignedUsers} onAdd={handleRoleToggle} roleName={role.name} />
                 <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => onLink(role.id)}><GoogleSymbol name="link" /></Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setIsDeleteDialogOpen(true)}><GoogleSymbol name="delete" /></Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setIsDeleteDialogOpen(true)}><GoogleSymbol name="delete" /></Button>
               </div>
               <CardDescription>Assign or revoke {role.name} privileges for managing app-wide settings.</CardDescription>
             </CardHeader>

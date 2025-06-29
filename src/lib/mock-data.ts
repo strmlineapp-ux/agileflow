@@ -198,12 +198,12 @@ export const mockTeams: Team[] = [
         memberRoleName: 'Team Members',
         locationCheckManagers: ['1'],
         badgeCollections: [{
-            name: 'Skills',
-            icon: 'palette',
-            color: '#64748B',
+            name: 'Audio & Video Production',
+            icon: 'speaker_group',
+            color: '#0EA5E9',
             viewMode: 'assorted',
             badges: [
-                { name: 'Post-Production', icon: 'movie_filter', color: '#F97316' },
+                { name: 'Post-Production', icon: 'movie_filter', color: '#F97316', description: 'Handles all post-production tasks including editing, color grading, and final exports.' },
                 { name: 'Video Director', icon: 'videocam', color: '#3B82F6' },
                 { name: 'Edit Events', icon: 'edit_calendar', color: '#10B981' },
                 { name: 'Camera', icon: 'photo_camera', color: '#6366F1' },

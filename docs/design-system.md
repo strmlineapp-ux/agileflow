@@ -44,13 +44,13 @@ This pattern replaces large, card-style "Add New" buttons with a more compact an
 - **Appearance:** A circular button containing a plus (`+`) or `add_circle` icon.
 - **Placement:** Positioned directly adjacent to the title of the section or list it pertains to.
 - **Behavior:** Clicking the button initiates the process of adding a new item, typically by opening a dialog or form.
-- **Application:** Used for creating new items in a list or grid, such as adding a new team, calendar, priority strategy, or event template.
+- **Application:** Used for creating new items in a list or grid, such as adding a new team, calendar, priority strategy, or a badge to a collection.
 
 ---
 
 ### 4. Compact Edit Popover
 
-This is a minimal, title-less popover for quick, focused editing actions, typically for an icon and its associated color.
+This is a minimal, title-less popover for quick, focused editing actions, typically for an icon and its associated color. This is the reference to follow for any popover that will only feature an icon picker, a color picker, and a cancel/delete/unlink action.
 
 - **Trigger:** An icon button, often with a color badge overlay (see "Icon & Color Editing Flow").
 - **Interaction:**
@@ -63,7 +63,7 @@ This is a minimal, title-less popover for quick, focused editing actions, typica
 
 ### 5. Icon & Color Editing Flow
 
-This is a consistent pattern for allowing a user to change both an icon and its color.
+This is the consistent reference pattern for allowing a user to change both an icon and its color.
 
 - **Trigger:** A single, interactive unit composed of a primary icon button and a smaller color swatch badge overlaid on its corner.
 - **Interaction:**
@@ -77,6 +77,7 @@ This is a consistent pattern for allowing a user to change both an icon and its 
 
 - **Icon Set**: We exclusively use **Google Material Symbols** via the `<GoogleSymbol />` component. This ensures a consistent visual language.
 - **Hover Behavior**: The color of icons on hover is typically determined by their parent element. For example, an icon inside a `<Button variant="ghost">` will change to the primary theme color on hover because the button's text color changes, and the icon inherits that color. This creates a clean and predictable interaction.
+- **Destructive Actions**: Delete or other destructive action icons are `text-muted-foreground` by default and become `text-destructive` on hover to provide a clear but not overwhelming visual warning.
 
 ### Theming & Button Styles
 
@@ -86,8 +87,8 @@ This is a consistent pattern for allowing a user to change both an icon and its 
 ### Subtle Visual Cues
 
 - **Lunch Break Pattern**: A subtle diagonal line pattern is used in calendar views to visually block out the typical lunch period (12:00 - 14:30). This serves as a non-intrusive reminder to avoid scheduling meetings during that time.
-- **Icon as Badge**: An icon displayed as a small, circular overlay on another element (e.g., an Avatar or another icon) to provide secondary information.
-    - **Appearance**: A circular badge (e.g., `h-5 w-5`) with a `border-2` of the parent element's background color (e.g., `border-card` or `border-background`) to create a "punched out" effect. The icon inside should be sized appropriately (e.g., `font-size: 12px`).
+- **Icon as Badge**: An icon displayed as a small, circular overlay on another element (e.g., an Avatar or another icon) to provide secondary information. The size of the icon within the badge should be large enough to be clearly identifiable while fitting neatly within its container.
+    - **Appearance**: A circular badge (e.g., `h-5 w-5`) with a `border-2` of the parent element's background color (e.g., `border-card` or `border-background`) to create a "punched out" effect. The icon inside should be sized appropriately (e.g., `font-size: 12px` or `text-base` depending on container).
     - **Placement**: Typically positioned on the bottom-right or top-right corner of the parent element.
     - **Application**: Used for displaying a user's role on their avatar, or a linked group status on a role icon.
 
