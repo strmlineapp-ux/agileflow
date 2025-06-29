@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -31,7 +31,7 @@ const UserRoleCard = ({ user, onRemove }: { user: User; onRemove: (user: User) =
           </div>
         </div>
         <Button variant="ghost" size="icon" onClick={() => onRemove(user)} aria-label={`Remove role from ${user.displayName}`}>
-          <GoogleSymbol name="remove_circle_outline" className="text-destructive" />
+          <GoogleSymbol name="cancel" className="text-destructive" />
         </Button>
       </CardContent>
     </Card>
@@ -51,7 +51,7 @@ const AddUserToRoleButton = ({ usersToAdd, onAdd, roleName }: { usersToAdd: User
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
         <Button variant="outline" className="w-full border-dashed">
-          <GoogleSymbol name="add" className="mr-2" />
+          <GoogleSymbol name="add_circle" className="mr-2" />
           Assign {roleName}
         </Button>
       </PopoverTrigger>
@@ -124,7 +124,8 @@ export default function AdminPage() {
   };
 
   const handleVerify2fa = () => {
-    if (twoFactorCode === '123456') { // Mock 2FA code
+    // Mock 2FA code
+    if (twoFactorCode === '123456') { 
       on2faSuccess?.();
       close2faDialog();
     } else {
@@ -181,10 +182,16 @@ export default function AdminPage() {
 
       <Dialog open={is2faDialogOpen} onOpenChange={(isOpen) => !isOpen && close2faDialog()}>
         <DialogContent className="sm:max-w-md">
+          <div className="absolute top-4 right-4">
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleVerify2fa}>
+                  <GoogleSymbol name="check" className="text-xl" />
+                  <span className="sr-only">Verify & Change</span>
+              </Button>
+          </div>
           <DialogHeader>
-            <DialogTitle>Two-Factor Authentication Required</DialogTitle>
+            <DialogTitle>Two-Factor Authentication</DialogTitle>
             <DialogDescription>
-              Changing a privileged role requires secondary authentication. Enter the code from your authenticator app to proceed.
+              Enter the code from your authenticator app and click the checkmark to confirm the role change.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -193,12 +200,9 @@ export default function AdminPage() {
               value={twoFactorCode}
               onChange={(e) => setTwoFactorCode(e.target.value)}
               placeholder="123456"
+              onKeyDown={(e) => e.key === 'Enter' && handleVerify2fa()}
             />
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={close2faDialog}>Cancel</Button>
-            <Button onClick={handleVerify2fa}>Verify & Change</Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
