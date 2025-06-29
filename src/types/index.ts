@@ -65,7 +65,14 @@ export interface Badge {
   icon: string;
   color: string;
   description?: string;
+  schedule?: {
+    startDate?: Date;
+    endDate?: Date;
+  };
+  assignedUsers?: string[];
 }
+
+export type BadgeApplication = 'users' | 'events' | 'tasks' | 'badges';
 
 export interface BadgeCollection {
   id: string;
@@ -75,6 +82,7 @@ export interface BadgeCollection {
   viewMode: 'assorted' | 'scale' | 'list';
   badgeIds: string[];
   description?: string;
+  applications?: BadgeApplication[];
 }
 
 export interface Team {

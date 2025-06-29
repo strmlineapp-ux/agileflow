@@ -8,22 +8,19 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { type Team, type Badge, type BadgeCollection, type User, type Attachment, type AttachmentType } from '@/types';
+import { type Team, type Badge, type BadgeCollection, type User, type BadgeApplication } from '@/types';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { ScrollArea } from '../ui/scroll-area';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { cn, getContrastColor } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '../ui/dropdown-menu';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogHeader as AlertDialogHeaderUI, AlertDialogTitle as AlertDialogTitleUI, AlertDialogDescription as AlertDialogDescriptionUI, AlertDialogFooter } from '@/components/ui/alert-dialog';
 import { Textarea } from '../ui/textarea';
 import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProps } from 'react-beautiful-dnd';
-import { createMeetLink } from '@/ai/flows/create-meet-link-flow';
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Separator } from '../ui/separator';
-import { Calendar } from '../ui/calendar';
-import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from '../ui/tooltip';
+import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
 
 const predefinedColors = [
@@ -31,36 +28,6 @@ const predefinedColors = [
     '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6',
     '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
 ];
-
-const GoogleDriveIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg viewBox="0 0 16 16" fill="currentColor" {...props}><path d="M9.19,4.5l-3.2,0l-1.7,2.9l3.2,5.7l4.9,0l-1.7,-2.9l-4.9,-5.7Z" fill="#0f9d58"></path><path d="M5.99,4.5l-3.2,5.7l1.7,2.9l3.2,-5.7l-1.7,-2.9Z" fill="#ffc107"></path><path d="M10.89,7.4l-3.2,0l-1.7,-2.9l4.9,0l0,0Z" fill="#1976d2"></path></svg>
-);
-const GoogleDocsIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg viewBox="0 0 16 16" fill="currentColor" {...props}><path d="M13,2H3C2.4,2,2,2.4,2,3v10c0,0.6,0.4,1,1,1h10c0.6,0,1-0.4,1-1V3C14,2.4,13.6,2,13,2z" fill="#4285f4"></path><path d="M10,9H6V8h4V9z M11,7H6V6h5V7z M11,5H6V4h5V5z" fill="#ffffff"></path></svg>
-);
-const GoogleSheetsIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg viewBox="0 0 16 16" fill="currentColor" {...props}><path d="M13,2H3C2.4,2,2,2.4,2,3v10c0,0.6,0.4,1,1,1h10c0.6,0,1-0.4,1-1V3C14,2.4,13.6,2,13,2z" fill="#0f9d58"></path><path d="M7,11v-1H5v-1h2V8H5V7h2V6H4v6h3V11z M12,12H8v-1h1V8H8V7h4v1h-1v2h1V12z" fill="#ffffff"></path></svg>
-);
-const GoogleSlidesIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg viewBox="0 0 16 16" fill="currentColor" {...props}><path d="M13,2H3C2.4,2,2,2.4,2,3v10c0,0.6,0.4,1,1,1h10c0.6,0,1-0.4,1-1V3C14,2.4,13.6,2,13,2z" fill="#ffc107"></path><path d="M12,4H4v6h8V4z" fill="#ffffff"></path></svg>
-);
-const GoogleFormsIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg viewBox="0 0 16 16" fill="currentColor" {...props}><path d="M13,2H3C2.4,2,2,2.4,2,3v10c0,0.6,0.4,1,1,1h10c0.6,0,1-0.4,1-1V3C14,2.4,13.6,2,13,2z" fill="#7e57c2"></path><path d="M10,11H6v-1h4V11z M11,8H6V7h5V8z M8,5H6V4h2V5z" fill="#ffffff"></path></svg>
-);
-const GoogleMeetIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z" fill="#00897B"/></svg>
-);
-
-const attachmentIcons: Record<AttachmentType, React.ReactNode> = {
-  drive: <GoogleDriveIcon className="mr-2 h-4 w-4" />,
-  docs: <GoogleDocsIcon className="mr-2 h-4 w-4" />,
-  sheets: <GoogleSheetsIcon className="mr-2 h-4 w-4" />,
-  slides: <GoogleSlidesIcon className="mr-2 h-4 w-4" />,
-  forms: <GoogleFormsIcon className="mr-2 h-4 w-4" />,
-  meet: <GoogleMeetIcon className="mr-2 h-4 w-4" />,
-  local: <GoogleSymbol name="description" className="mr-2 text-lg" />,
-  link: <GoogleSymbol name="link" className="mr-2 text-lg" />,
-};
 
 // Wrapper to fix issues with react-beautiful-dnd and React 18 Strict Mode
 const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
@@ -80,9 +47,7 @@ const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
 
 function BadgeForm({ badge: initialBadge, onSave, onClose }: { badge: Badge, onSave: (badge: Badge) => void, onClose: () => void }) {
     const { toast } = useToast();
-    const { users } = useUser();
 
-    // Use a state to manage the badge data, fetching rich data if needed
     const [badge, setBadge] = useState<Badge>(initialBadge);
     
     // States for inline name editing
@@ -92,16 +57,9 @@ function BadgeForm({ badge: initialBadge, onSave, onClose }: { badge: Badge, onS
     // States for popovers and dialogs
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
-    const [isSchedulePopoverOpen, setIsSchedulePopoverOpen] = useState(false);
-    const [isUsersPopoverOpen, setIsUsersPopoverOpen] = useState(false);
-    const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
 
     // States for popover content
     const [iconSearch, setIconSearch] = useState('');
-    const [guestSearch, setGuestSearch] = useState('');
-    const [linkName, setLinkName] = useState('');
-    const [linkUrl, setLinkUrl] = useState('');
-    const [isCreatingMeetLink, setIsCreatingMeetLink] = useState(false);
 
     useEffect(() => {
         if (isEditingName && nameInputRef.current) {
@@ -127,41 +85,6 @@ function BadgeForm({ badge: initialBadge, onSave, onClose }: { badge: Badge, onS
         }
     };
     
-    const handleAddAttachment = (type: AttachmentType, name: string, url: string = '#') => {
-        const currentAttachments = badge.attachments || [];
-        setBadge(b => ({...b, attachments: [...currentAttachments, { type, name, url }]}));
-    };
-    
-    const handleAddLink = () => {
-        if (!linkUrl.trim() || !linkName.trim()) {
-            toast({ variant: 'destructive', title: 'Error', description: 'Both URL and display name are required.' });
-            return;
-        }
-        handleAddAttachment('link', linkName.trim(), linkUrl.trim());
-        setIsLinkDialogOpen(false);
-    };
-
-    useEffect(() => {
-        if (!isLinkDialogOpen) {
-            setLinkName('');
-            setLinkUrl('');
-        }
-    }, [isLinkDialogOpen]);
-
-    const handleToggleUser = (userToToggle: User) => {
-        const currentUsers = badge.assignedUsers || [];
-        const isAssigned = currentUsers.some(u => u === userToToggle.userId);
-        const newUsers = isAssigned 
-            ? currentUsers.filter(id => id !== userToToggle.userId)
-            : [...currentUsers, userToToggle.userId];
-        setBadge(b => ({ ...b, assignedUsers: newUsers }));
-    };
-
-    const filteredGuests = useMemo(() => {
-        const assignedSet = new Set(badge.assignedUsers || []);
-        return users.filter(user => !assignedSet.has(user.userId));
-    }, [users, badge.assignedUsers]);
-    
     const filteredIcons = useMemo(() => {
         if (!iconSearch) return googleSymbolNames;
         return googleSymbolNames.filter(iconName => iconName.toLowerCase().includes(iconSearch.toLowerCase()));
@@ -175,8 +98,6 @@ function BadgeForm({ badge: initialBadge, onSave, onClose }: { badge: Badge, onS
         onSave(badge);
         onClose();
     };
-    
-    const { startDate, endDate } = badge.schedule || {};
     
     return (
         <DialogContent>
@@ -204,52 +125,6 @@ function BadgeForm({ badge: initialBadge, onSave, onClose }: { badge: Badge, onS
                     )}
                 </div>
                  <div className="space-y-2">
-                    <div className="flex items-center gap-1">
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Popover open={isSchedulePopoverOpen} onOpenChange={setIsSchedulePopoverOpen}>
-                                        <PopoverTrigger asChild>
-                                            <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary"><GoogleSymbol name="calendar_month" className="text-xl" /></Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-auto p-0">
-                                            <Calendar
-                                            mode="range"
-                                            selected={{ from: startDate, to: endDate }}
-                                            onSelect={(range) => setBadge(b => ({ ...b, schedule: { startDate: range?.from, endDate: range?.to }}))}
-                                            numberOfMonths={2}
-                                            />
-                                        </PopoverContent>
-                                    </Popover>
-                                </TooltipTrigger>
-                                <TooltipContent><p>Set Dates</p></TooltipContent>
-                            </Tooltip>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Popover open={isUsersPopoverOpen} onOpenChange={setIsUsersPopoverOpen}>
-                                        <PopoverTrigger asChild>
-                                            <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary"><GoogleSymbol name="group_add" className="text-xl" /></Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-[300px] p-0" align="start">
-                                            <div className="p-2"><Input placeholder="Search by name..." value={guestSearch} onChange={e => setGuestSearch(e.target.value)} /></div>
-                                            <Separator />
-                                            <ScrollArea className="max-h-60">
-                                                <div className="p-1">
-                                                    {filteredGuests.filter(g => g.displayName.toLowerCase().includes(guestSearch.toLowerCase())).map(user => (
-                                                        <div key={user.userId} onClick={() => handleToggleUser(user)} className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer">
-                                                            <Avatar className="h-8 w-8"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
-                                                            <div><p className="font-medium text-sm">{user.displayName}</p></div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </ScrollArea>
-                                        </PopoverContent>
-                                    </Popover>
-                                </TooltipTrigger>
-                                <TooltipContent><p>Assign Users</p></TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    </div>
                     <Textarea id="description" value={badge.description} onChange={e => setBadge(b => ({ ...b, description: e.target.value }))} placeholder="Description (optional)" />
                 </div>
             </div>
@@ -388,6 +263,21 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInTeam
     };
     
     const collectionBadges = collection.badgeIds.map(id => allBadgesInTeam.find(b => b.id === id)).filter((b): b is Badge => !!b);
+    
+    const APPLICATIONS: { key: BadgeApplication, icon: string, label: string }[] = [
+        { key: 'users', icon: 'group', label: 'Users' },
+        { key: 'events', icon: 'calendar_month', label: 'Events' },
+        { key: 'tasks', icon: 'checklist', label: 'Tasks' },
+        { key: 'badges', icon: 'style', label: 'Badges' },
+    ];
+
+    const handleToggleApplication = (application: BadgeApplication) => {
+        const currentApplications = collection.applications || [];
+        const newApplications = currentApplications.includes(application)
+            ? currentApplications.filter(app => app !== application)
+            : [...currentApplications, application];
+        onUpdateCollection(collection.id, { applications: newApplications });
+    };
 
     return (
         <Card>
@@ -408,8 +298,28 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInTeam
                             <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => onAddBadge(collection.id)}><GoogleSymbol name="add_circle" className="text-xl" /><span className="sr-only">Add Badge</span></Button>
                         </div>
                     </div>
-                    <div className="flex items-center justify-end -mr-2">
-                         <DropdownMenu>
+                     <div className="flex items-center gap-1">
+                        {APPLICATIONS.map(app => (
+                            <TooltipProvider key={app.key}>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className={cn("h-7 w-7", (collection.applications || []).includes(app.key) ? 'text-primary' : 'text-muted-foreground')}
+                                            onClick={() => handleToggleApplication(app.key)}
+                                        >
+                                            <GoogleSymbol name={app.icon} className="text-xl" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Associate with {app.label}</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        ))}
+                        <Separator orientation="vertical" className="h-6 mx-1" />
+                        <DropdownMenu>
                             <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><GoogleSymbol name="more_vert" /></Button></DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                                 <DropdownMenuItem onClick={() => onUpdateCollection(collection.id, { viewMode: 'assorted' })}><GoogleSymbol name="view_module" className="mr-2" />Assorted View</DropdownMenuItem>
@@ -490,6 +400,7 @@ export function BadgeManagement({ team }: { team: Team }) {
             color: '#64748B',
             viewMode: 'assorted',
             badgeIds: [],
+            applications: [],
             description: '',
         };
         const newCollections = [...team.badgeCollections, newCollection];

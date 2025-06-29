@@ -216,6 +216,7 @@ export const mockTeams: Team[] = [
         managerRoleName: 'Team Admins',
         memberRoleName: 'Team Members',
         locationCheckManagers: ['1'],
+        checkManagersLabel: 'Location Check Managers',
         allBadges: [
             ...studioProdBadges
         ],
@@ -225,10 +226,10 @@ export const mockTeams: Team[] = [
             icon: 'video_settings',
             color: '#10B981',
             viewMode: 'assorted',
+            applications: ['events', 'tasks'],
             description: 'Badges related to the full pipeline of audio and video creation, from directing to post-production.',
             badgeIds: studioProdBadges.map(b => b.id)
         }],
-        checkManagersLabel: 'Location Check Managers',
         pinnedLocations: ['Studio'],
         pinnedLocationsLabel: 'Pinned & Check Locations',
         checkLocations: [],
@@ -261,6 +262,7 @@ export const mockTeams: Team[] = [
             icon: 'palette',
             color: '#64748B',
             viewMode: 'assorted',
+            applications: ['users', 'events'],
             description: 'General skills and roles for live event execution.',
             badgeIds: [
                 ...liveEventsBadges.map(b => b.id),
