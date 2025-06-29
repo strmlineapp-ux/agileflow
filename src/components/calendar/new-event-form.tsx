@@ -636,7 +636,7 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
           />
 
             {teamForSelectedCalendar && (
-                <div className="flex flex-wrap gap-2 items-center min-h-[40px]">
+                <div className="flex flex-wrap items-center gap-2 min-h-[40px]">
                     {Object.entries(roleAssignments).map(([role, { assignedUser, popoverOpen }]) => {
                         const user = assignedUser ? users.find(u => u.userId === assignedUser) : null;
                         const roleInfo = teamForSelectedCalendar.roles.find(r => r.name === role);
@@ -657,11 +657,13 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                             <Badge
                                 key={role}
                                 variant="outline"
-                                style={
-                                  assignedUser
-                                  ? { borderStyle: 'solid', borderWidth: '2px', color: roleInfo?.color, borderColor: roleInfo?.color }
-                                  : { borderStyle: 'dashed', color: roleInfo?.color, borderColor: roleInfo?.color }
-                                }
+                                style={{
+                                    borderStyle: 'solid',
+                                    borderWidth: assignedUser ? '2px' : '1px',
+                                    borderColor: roleInfo?.color || 'hsl(var(--border))',
+                                    color: roleInfo?.color,
+                                    ...(assignedUser ? {} : {borderStyle: 'dashed'})
+                                }}
                                 className="text-sm p-1 pl-1.5 rounded-full flex items-center gap-1 bg-transparent"
                             >
                                 <Popover open={popoverOpen} onOpenChange={() => toggleRolePopover(role)}>
@@ -735,142 +737,147 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
             render={({ field }) => (
               <FormItem>
                 <div className="flex items-center gap-1">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0">
-                        <GoogleSymbol name="attachment" className="text-xl" />
-                        <span className="sr-only">Attach file</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start">
-                      <DropdownMenuItem onSelect={() => handleAddAttachment('local', 'design_brief.pdf')}>
-                        <GoogleSymbol name="description" className="mr-2 text-lg" />
-                        <span>Attach file</span>
-                      </DropdownMenuItem>
-                       <DropdownMenuItem onSelect={() => { setIsLinkDialogOpen(true); }}>
-                        <GoogleSymbol name="link" className="mr-2 text-lg" />
-                        <span>Add Link</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onSelect={() => handleAddAttachment('drive', 'Project Assets')}>
-                        <GoogleDriveIcon className="mr-2 h-4 w-4" />
-                        <span>Google Drive</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onSelect={() => handleAddAttachment('docs', 'Meeting Notes')}>
-                        <GoogleDocsIcon className="mr-2 h-4 w-4" />
-                        <span>Google Docs</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onSelect={() => handleAddAttachment('sheets', 'Budget Tracker')}>
-                        <GoogleSheetsIcon className="mr-2 h-4 w-4" />
-                        <span>Google Sheets</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onSelect={() => handleAddAttachment('slides', 'Presentation Deck')}>
-                        <GoogleSlidesIcon className="mr-2 h-4 w-4" />
-                        <span>Google Slides</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onSelect={() => handleAddAttachment('forms', 'Feedback Form')}>
-                        <GoogleFormsIcon className="mr-2 h-4 w-4" />
-                        <span>Google Forms</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        disabled={isCreatingMeetLink}
-                        onSelect={async () => {
-                          setIsCreatingMeetLink(true);
-                          try {
-                            const eventTitle = form.getValues('title') || 'New Event';
-                            const result = await createMeetLink({ title: eventTitle });
-                            handleAddAttachment('meet', 'Meet link', result.meetLink);
-                          } catch (error) {
-                            console.error('Failed to create Meet link:', error);
-                            toast({
-                              variant: 'destructive',
-                              title: 'Error',
-                              description: 'Could not generate a Meet link.',
-                            });
-                          } finally {
-                            setIsCreatingMeetLink(false);
-                          }
-                        }}
-                      >
-                        <GoogleMeetIcon className="mr-2 h-4 w-4" />
-                        <span>{isCreatingMeetLink ? 'Generating...' : 'Meet link'}</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                    <TooltipProvider>
-                      {teamForSelectedCalendar && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Popover open={isAddRolePopoverOpen} onOpenChange={setIsAddRolePopoverOpen}>
-                                <PopoverTrigger asChild>
-                                    <Button type="button" variant="ghost" size="icon" className="h-6 w-6"><GoogleSymbol name="account_circle" className="text-xl" /></Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-60 p-0">
-                                  <ScrollArea className="h-48">
-                                    <div className="p-1">
-                                      {availableRolesToAdd.length > 0 ? availableRolesToAdd.map(role => (
-                                        <div key={role.name} onClick={() => handleAddRequestedRole(role.name)} className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer">
-                                          <GoogleSymbol name={role.icon} className="text-lg" />
-                                          <span>{role.name}</span>
-                                        </div>
-                                      )) : (
-                                        <p className="p-2 text-center text-sm text-muted-foreground">No more roles to add.</p>
-                                      )}
-                                    </div>
-                                  </ScrollArea>
-                                </PopoverContent>
-                            </Popover>
-                          </TooltipTrigger>
-                          <TooltipContent><p>Add Role Request</p></TooltipContent>
-                        </Tooltip>
-                      )}
+                  <TooltipProvider>
+                    <DropdownMenu>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Popover open={isGuestPopoverOpen} onOpenChange={setIsGuestPopoverOpen}>
-                              <PopoverTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-6 w-6">
-                                      <GoogleSymbol name="group_add" className="text-xl" />
-                                  </Button>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-[480px] p-0" align="start">
-                                  <Tabs defaultValue="by-name">
-                                      <TabsList className="grid w-full grid-cols-2">
-                                          <TabsTrigger value="by-name">By Name or Email</TabsTrigger>
-                                          <TabsTrigger value="by-role">By Role</TabsTrigger>
-                                      </TabsList>
-                                      <TabsContent value="by-name" className="p-0">
-                                          <div className="p-2">
-                                              <Input placeholder="Search by name or email..." value={guestSearch} onChange={e => setGuestSearch(e.target.value)} className="w-full" />
-                                          </div>
-                                          <Separator />
-                                          <ScrollArea className="max-h-60">
-                                          <div className="p-1">
-                                          {filteredGuests.filter(g => g.displayName.toLowerCase().includes(guestSearch.toLowerCase()) || g.email.toLowerCase().includes(guestSearch.toLowerCase())).map(guest => (
-                                              <div key={guest.userId} onClick={() => handleToggleGuest(guest)} className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer">
-                                                  <Avatar className="h-8 w-8"><AvatarImage src={guest.avatarUrl} alt={guest.displayName} data-ai-hint="user avatar" /><AvatarFallback>{guest.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
-                                                  <div><p className="font-medium text-sm">{guest.displayName}</p><p className="text-xs text-muted-foreground">{guest.email}</p></div>
-                                              </div>
-                                          ))}
-                                          </div>
-                                          </ScrollArea>
-                                      </TabsContent>
-                                      <TabsContent value="by-role" className="p-2">
-                                          <ScrollArea className="max-h-[280px]">
-                                              <div className="flex flex-wrap gap-2 p-2">
-                                                  {(teamForSelectedCalendar?.roles || []).map(role => (
-                                                      <Badge key={role.name} onClick={() => handleAddGuestsByRole(role.name)} className="cursor-pointer">{role.name}</Badge>
-                                                  ))}
-                                              </div>
-                                          </ScrollArea>
-                                      </TabsContent>
-                                  </Tabs>
-                              </PopoverContent>
-                          </Popover>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0 text-muted-foreground hover:text-foreground">
+                              <GoogleSymbol name="attachment" className="text-xl" />
+                              <span className="sr-only">Attach file</span>
+                            </Button>
+                          </DropdownMenuTrigger>
                         </TooltipTrigger>
-                        <TooltipContent><p>Add Guests</p></TooltipContent>
+                        <TooltipContent><p>Attach File</p></TooltipContent>
                       </Tooltip>
-                    </TooltipProvider>
+                      <DropdownMenuContent align="start">
+                        <DropdownMenuItem onSelect={() => handleAddAttachment('local', 'design_brief.pdf')}>
+                          <GoogleSymbol name="description" className="mr-2 text-lg" />
+                          <span>Attach file</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => { setIsLinkDialogOpen(true); }}>
+                          <GoogleSymbol name="link" className="mr-2 text-lg" />
+                          <span>Add Link</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onSelect={() => handleAddAttachment('drive', 'Project Assets')}>
+                          <GoogleDriveIcon className="mr-2 h-4 w-4" />
+                          <span>Google Drive</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => handleAddAttachment('docs', 'Meeting Notes')}>
+                          <GoogleDocsIcon className="mr-2 h-4 w-4" />
+                          <span>Google Docs</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => handleAddAttachment('sheets', 'Budget Tracker')}>
+                          <GoogleSheetsIcon className="mr-2 h-4 w-4" />
+                          <span>Google Sheets</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => handleAddAttachment('slides', 'Presentation Deck')}>
+                          <GoogleSlidesIcon className="mr-2 h-4 w-4" />
+                          <span>Google Slides</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => handleAddAttachment('forms', 'Feedback Form')}>
+                          <GoogleFormsIcon className="mr-2 h-4 w-4" />
+                          <span>Google Forms</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          disabled={isCreatingMeetLink}
+                          onSelect={async () => {
+                            setIsCreatingMeetLink(true);
+                            try {
+                              const eventTitle = form.getValues('title') || 'New Event';
+                              const result = await createMeetLink({ title: eventTitle });
+                              handleAddAttachment('meet', 'Meet link', result.meetLink);
+                            } catch (error) {
+                              console.error('Failed to create Meet link:', error);
+                              toast({
+                                variant: 'destructive',
+                                title: 'Error',
+                                description: 'Could not generate a Meet link.',
+                              });
+                            } finally {
+                              setIsCreatingMeetLink(false);
+                            }
+                          }}
+                        >
+                          <GoogleMeetIcon className="mr-2 h-4 w-4" />
+                          <span>{isCreatingMeetLink ? 'Generating...' : 'Meet link'}</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    {teamForSelectedCalendar && (
+                      <Popover open={isAddRolePopoverOpen} onOpenChange={setIsAddRolePopoverOpen}>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <PopoverTrigger asChild>
+                                    <Button type="button" variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground"><GoogleSymbol name="account_circle" className="text-xl" /></Button>
+                                </PopoverTrigger>
+                            </TooltipTrigger>
+                            <TooltipContent><p>Add Role Request</p></TooltipContent>
+                        </Tooltip>
+                        <PopoverContent className="w-60 p-0">
+                            <ScrollArea className="h-48">
+                            <div className="p-1">
+                                {availableRolesToAdd.length > 0 ? availableRolesToAdd.map(role => (
+                                <div key={role.name} onClick={() => handleAddRequestedRole(role.name)} className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer">
+                                    <GoogleSymbol name={role.icon} className="text-lg" />
+                                    <span>{role.name}</span>
+                                </div>
+                                )) : (
+                                <p className="p-2 text-center text-sm text-muted-foreground">No more roles to add.</p>
+                                )}
+                            </div>
+                            </ScrollArea>
+                        </PopoverContent>
+                      </Popover>
+                    )}
+                    <Popover open={isGuestPopoverOpen} onOpenChange={setIsGuestPopoverOpen}>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <PopoverTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground">
+                                        <GoogleSymbol name="group_add" className="text-xl" />
+                                    </Button>
+                                </PopoverTrigger>
+                            </TooltipTrigger>
+                            <TooltipContent><p>Add Guests</p></TooltipContent>
+                        </Tooltip>
+                        <PopoverContent className="w-[480px] p-0" align="start">
+                            <Tabs defaultValue="by-name">
+                                <TabsList className="grid w-full grid-cols-2">
+                                    <TabsTrigger value="by-name">By Name or Email</TabsTrigger>
+                                    <TabsTrigger value="by-role">By Role</TabsTrigger>
+                                </TabsList>
+                                <TabsContent value="by-name" className="p-0">
+                                    <div className="p-2">
+                                        <Input placeholder="Search by name or email..." value={guestSearch} onChange={e => setGuestSearch(e.target.value)} className="w-full" />
+                                    </div>
+                                    <Separator />
+                                    <ScrollArea className="max-h-60">
+                                    <div className="p-1">
+                                    {filteredGuests.filter(g => g.displayName.toLowerCase().includes(guestSearch.toLowerCase()) || g.email.toLowerCase().includes(guestSearch.toLowerCase())).map(guest => (
+                                        <div key={guest.userId} onClick={() => handleToggleGuest(guest)} className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer">
+                                            <Avatar className="h-8 w-8"><AvatarImage src={guest.avatarUrl} alt={guest.displayName} data-ai-hint="user avatar" /><AvatarFallback>{guest.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
+                                            <div><p className="font-medium text-sm">{guest.displayName}</p><p className="text-xs text-muted-foreground">{guest.email}</p></div>
+                                        </div>
+                                    ))}
+                                    </div>
+                                    </ScrollArea>
+                                </TabsContent>
+                                <TabsContent value="by-role" className="p-2">
+                                    <ScrollArea className="max-h-[280px]">
+                                        <div className="flex flex-wrap gap-2 p-2">
+                                            {(teamForSelectedCalendar?.roles || []).map(role => (
+                                                <Badge key={role.name} onClick={() => handleAddGuestsByRole(role.name)} className="cursor-pointer">{role.name}</Badge>
+                                            ))}
+                                        </div>
+                                    </ScrollArea>
+                                </TabsContent>
+                            </Tabs>
+                        </PopoverContent>
+                    </Popover>
+                  </TooltipProvider>
                 </div>
                 <FormControl><Textarea placeholder="Add more details..." {...field} /></FormControl>
                 <FormMessage />
