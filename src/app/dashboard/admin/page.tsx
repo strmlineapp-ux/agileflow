@@ -228,6 +228,10 @@ function CustomRoleCard({
                                   {predefinedColors.map(color => (
                                     <button key={color} className="h-6 w-6 rounded-full border" style={{ backgroundColor: color }} onClick={() => { onUpdateLinkGroup(role.linkGroupId!, { ...linkGroup, color: color }); setIsLinkColorPopoverOpen(false); }}/>
                                   ))}
+                                  <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
+                                    <GoogleSymbol name="colorize" className="text-muted-foreground" />
+                                    <Input type="color" value={linkGroup.color} onChange={(e) => onUpdateLinkGroup(role.linkGroupId!, { ...linkGroup, color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" aria-label="Custom color picker"/>
+                                  </div>
                                 </div>
                               </PopoverContent>
                             </Popover>
@@ -393,46 +397,60 @@ export default function AdminPage() {
         setLinkingState(null); // Cancel linking
         return;
     }
-
-    const sourceRole = appSettings.customAdminRoles.find(r => r.id === linkingState.roleId);
-    const targetRole = appSettings.customAdminRoles.find(r => r.id === roleId);
-
-    if (!sourceRole || !targetRole) {
-        setLinkingState(null);
-        return;
-    }
-
-    const rolesToUpdate = appSettings.customAdminRoles.map(r => ({ ...r }));
-    let linkGroupsToUpdate = { ...appSettings.linkGroups };
     
-    // Case 1: Neither is in a group -> create a new group
+    // Make mutable copies to update
+    const rolesWithUpdatedLinks = appSettings.customAdminRoles.map(r => ({ ...r }));
+    let linkGroupsToUpdate = { ...appSettings.linkGroups };
+
+    const sourceRole = rolesWithUpdatedLinks.find(r => r.id === linkingState.roleId)!;
+    const targetRole = rolesWithUpdatedLinks.find(r => r.id === roleId)!;
+
+    // This part assigns the correct linkGroupId based on the interaction
     if (!sourceRole.linkGroupId && !targetRole.linkGroupId) {
         const newGroupId = crypto.randomUUID();
-        rolesToUpdate.find(r => r.id === sourceRole.id)!.linkGroupId = newGroupId;
-        rolesToUpdate.find(r => r.id === targetRole.id)!.linkGroupId = newGroupId;
+        sourceRole.linkGroupId = newGroupId;
+        targetRole.linkGroupId = newGroupId;
         linkGroupsToUpdate[newGroupId] = { icon: 'link', color: '#64748B' };
-    }
-    // Case 2: Source is in a group, target is not -> target joins group
-    else if (sourceRole.linkGroupId && !targetRole.linkGroupId) {
-        rolesToUpdate.find(r => r.id === targetRole.id)!.linkGroupId = sourceRole.linkGroupId;
-    }
-    // Case 3: Target is in a group, source is not -> source joins group
-    else if (!sourceRole.linkGroupId && targetRole.linkGroupId) {
-        rolesToUpdate.find(r => r.id === sourceRole.id)!.linkGroupId = targetRole.linkGroupId;
-    }
-    // Case 4: Both are in different groups -> merge groups
-    else if (sourceRole.linkGroupId !== targetRole.linkGroupId) {
+    } else if (sourceRole.linkGroupId && !targetRole.linkGroupId) {
+        targetRole.linkGroupId = sourceRole.linkGroupId;
+    } else if (!sourceRole.linkGroupId && targetRole.linkGroupId) {
+        sourceRole.linkGroupId = targetRole.linkGroupId;
+    } else if (sourceRole.linkGroupId !== targetRole.linkGroupId) {
         const targetGroupId = targetRole.linkGroupId!;
         const sourceGroupId = sourceRole.linkGroupId!;
-        rolesToUpdate.forEach(r => {
+        rolesWithUpdatedLinks.forEach(r => {
             if (r.linkGroupId === targetGroupId) {
                 r.linkGroupId = sourceGroupId;
             }
         });
         delete linkGroupsToUpdate[targetGroupId];
     }
+    
+    // Now, reorder the array based on the new groups
+    const reorderedRoles: CustomAdminRole[] = [];
+    const processedRoleIds = new Set<string>();
 
-    updateAppSettings({ customAdminRoles: rolesToUpdate, linkGroups: linkGroupsToUpdate });
+    rolesWithUpdatedLinks.forEach(role => {
+        if (processedRoleIds.has(role.id)) {
+            return; // Already processed as part of a group
+        }
+
+        if (role.linkGroupId) {
+            // Find all roles in the same group
+            const groupRoles = rolesWithUpdatedLinks.filter(r => r.linkGroupId === role.linkGroupId);
+            groupRoles.forEach(groupRole => {
+                reorderedRoles.push(groupRole);
+                processedRoleIds.add(groupRole.id);
+            });
+        } else {
+            // Role is not in a group
+            reorderedRoles.push(role);
+            processedRoleIds.add(role.id);
+        }
+    });
+
+    // Final update with reordered and updated roles
+    updateAppSettings({ customAdminRoles: reorderedRoles, linkGroups: linkGroupsToUpdate });
     setLinkingState(null);
   };
   
@@ -586,3 +604,5 @@ export default function AdminPage() {
     </>
   );
 }
+
+    
