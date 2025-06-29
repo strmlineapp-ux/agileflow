@@ -4,7 +4,7 @@
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useUser } from '@/context/user-context';
-import { type User, type CustomAdminRole, type LinkGroup, type AppPage, type AppTab } from '@/types';
+import { type User, type CustomAdminRole, type LinkGroup, type AppPage, type AppTab, type Team } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,8 +21,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { cn, getContrastColor } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 
 // #region Helper Components and Constants
 const predefinedColors = [
@@ -620,31 +621,192 @@ const RolesManagement = () => {
 // #endregion
 
 // #region Pages Management Tab
-const PagesManagement = () => {
-    const { appSettings, updateAppSettings, users, teams } = useUser();
+
+function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: Partial<AppPage>) => void }) {
+    const { users, teams, appSettings } = useUser();
+    const [isOpen, setIsOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [activeTab, setActiveTab] = useState("users");
+
+    const access = page.access;
+
+    const handleToggle = (type: 'users' | 'teams' | 'roles', id: string) => {
+        const currentIds = new Set(access[type] || []);
+        if (currentIds.has(id)) {
+            currentIds.delete(id);
+        } else {
+            currentIds.add(id);
+        }
+        onUpdate({ access: { ...access, [type]: Array.from(currentIds) } });
+    };
+
+    const filteredUsers = useMemo(() => users.filter(u => u.displayName.toLowerCase().includes(searchTerm.toLowerCase())), [users, searchTerm]);
+    const filteredTeams = useMemo(() => teams.filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase())), [teams, searchTerm]);
+    const filteredRoles = useMemo(() => appSettings.customAdminRoles.filter(r => r.name.toLowerCase().includes(searchTerm.toLowerCase())), [appSettings.customAdminRoles, searchTerm]);
+
+    return (
+        <Popover open={isOpen} onOpenChange={setIsOpen}>
+            <PopoverTrigger asChild>
+                <Button variant="outline" size="sm">Access ({access.users.length + access.teams.length + access.roles.length})</Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 p-0">
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                    <TabsList className="grid w-full grid-cols-3">
+                        <TabsTrigger value="users">Users</TabsTrigger>
+                        <TabsTrigger value="teams">Teams</TabsTrigger>
+                        <TabsTrigger value="roles">Roles</TabsTrigger>
+                    </TabsList>
+                    <div className="p-2 border-b">
+                      <Input placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                    </div>
+                    <TabsContent value="users" className="m-0">
+                        <ScrollArea className="h-64"><div className="p-1 space-y-1">{filteredUsers.map(user => <div key={user.userId} className="flex items-center gap-2 p-2 rounded-md text-sm cursor-pointer hover:bg-accent" onClick={() => handleToggle('users', user.userId)}><Checkbox checked={access.users.includes(user.userId)} readOnly/>{user.displayName}</div>)}</div></ScrollArea>
+                    </TabsContent>
+                    <TabsContent value="teams" className="m-0">
+                        <ScrollArea className="h-64"><div className="p-1 space-y-1">{filteredTeams.map(team => <div key={team.id} className="flex items-center gap-2 p-2 rounded-md text-sm cursor-pointer hover:bg-accent" onClick={() => handleToggle('teams', team.id)}><Checkbox checked={access.teams.includes(team.id)} readOnly/>{team.name}</div>)}</div></ScrollArea>
+                    </TabsContent>
+                    <TabsContent value="roles" className="m-0">
+                        <ScrollArea className="h-64"><div className="p-1 space-y-1">{filteredRoles.map(role => <div key={role.id} className="flex items-center gap-2 p-2 rounded-md text-sm cursor-pointer hover:bg-accent" onClick={() => handleToggle('roles', role.name)}><Checkbox checked={access.roles.includes(role.name)} readOnly/>{role.name}</div>)}</div></ScrollArea>
+                    </TabsContent>
+                </Tabs>
+            </PopoverContent>
+        </Popover>
+    );
+}
+
+function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: Partial<AppPage>) => void }) {
+  const { appSettings } = useUser();
+  
+  const handleToggle = (tabId: string) => {
+    const currentIds = new Set(page.associatedTabs || []);
+    if (currentIds.has(tabId)) {
+        currentIds.delete(tabId);
+    } else {
+        currentIds.add(tabId);
+    }
+    onUpdate({ associatedTabs: Array.from(currentIds) });
+  };
+  
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="outline" size="sm">Manage Tabs ({page.associatedTabs.length})</Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-80 p-0">
+        <div className="p-2 border-b"><Label>Associated Tabs</Label></div>
+        <ScrollArea className="h-64">
+          <div className="p-1 space-y-1">
+            {appSettings.tabs.map(tab => (
+              <div key={tab.id} className="flex items-center gap-2 p-2 rounded-md text-sm cursor-pointer hover:bg-accent" onClick={() => handleToggle(tab.id)}>
+                <Checkbox checked={(page.associatedTabs || []).includes(tab.id)} readOnly />
+                <span>{tab.name}</span>
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+
+function PageCard({ page, onUpdate, onDelete }: { page: AppPage; onUpdate: (id: string, data: Partial<AppPage>) => void; onDelete: (id: string) => void; }) {
     const { toast } = useToast();
-    const [isEditingName, setIsEditingName] = useState<string | null>(null);
+    const [isEditingName, setIsEditingName] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
+    const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
+    const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
+    const [iconSearch, setIconSearch] = useState('');
 
     useEffect(() => {
-        if (isEditingName && nameInputRef.current) {
-          nameInputRef.current.focus();
-          nameInputRef.current.select();
-        }
+        if (isEditingName) nameInputRef.current?.focus();
     }, [isEditingName]);
+
+    const handleSaveName = () => {
+        const newName = nameInputRef.current?.value.trim();
+        if (newName && newName !== page.name) {
+            onUpdate(page.id, { name: newName });
+        }
+        setIsEditingName(false);
+    };
+
+    const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') handleSaveName();
+        else if (e.key === 'Escape') setIsEditingName(false);
+    };
+
+    const filteredIcons = useMemo(() => googleSymbolNames.filter(icon => icon.toLowerCase().includes(iconSearch.toLowerCase())), [iconSearch]);
+
+    return (
+        <Card>
+            <CardHeader>
+                <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="relative">
+                            <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
+                                <PopoverTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-9 w-9 text-2xl" style={{ color: page.color }}>
+                                        <GoogleSymbol name={page.icon} />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-80 p-0">
+                                  <div className="p-2 border-b"><Input placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} /></div>
+                                  <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={page.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(page.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
+                                </PopoverContent>
+                            </Popover>
+                            <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                              <PopoverTrigger asChild>
+                                  <div className="absolute -bottom-1 -right-0 h-4 w-4 rounded-full border-2 border-card cursor-pointer" style={{ backgroundColor: page.color }} />
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-2">
+                                  <div className="grid grid-cols-8 gap-1">
+                                      {predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => { onUpdate(page.id, { color: c }); setIsColorPopoverOpen(false); }}/>))}
+                                      <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
+                                          <GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={page.color} onChange={(e) => onUpdate(page.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/>
+                                      </div>
+                                  </div>
+                              </PopoverContent>
+                            </Popover>
+                        </div>
+                        {isEditingName ? (
+                            <Input ref={nameInputRef} defaultValue={page.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>
+                        ) : (
+                            <CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer">{page.name}</CardTitle>
+                        )}
+                    </div>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => onDelete(page.id)}>
+                        <GoogleSymbol name="delete" />
+                    </Button>
+                </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div>
+                    <h4 className="font-medium text-sm mb-2">Details</h4>
+                    <div className="flex gap-2 text-sm text-muted-foreground">
+                        <Badge variant="outline">{page.path}</Badge>
+                        {page.isDynamic && <Badge variant="outline">Dynamic</Badge>}
+                    </div>
+                </div>
+                <div>
+                    <h4 className="font-medium text-sm mb-2">Controls</h4>
+                    <div className="flex gap-2">
+                        <PageAccessControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
+                        <PageTabsControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+    );
+}
+
+const PagesManagement = () => {
+    const { appSettings, updateAppSettings } = useUser();
+    const { toast } = useToast();
 
     const handleUpdatePage = useCallback((pageId: string, data: Partial<AppPage>) => {
         const newPages = appSettings.pages.map(p => p.id === pageId ? { ...p, ...data } : p);
         updateAppSettings({ pages: newPages });
     }, [appSettings.pages, updateAppSettings]);
-
-    const handleSaveName = (pageId: string) => {
-        const newName = nameInputRef.current?.value.trim();
-        if (newName) {
-            handleUpdatePage(pageId, { name: newName });
-        }
-        setIsEditingName(null);
-    };
 
     const handleAddPage = () => {
         const newPage: AppPage = {
@@ -676,60 +838,12 @@ const PagesManagement = () => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {appSettings.pages.map(page => (
-                    <Card key={page.id}>
-                        <CardHeader>
-                            <div className="flex items-start justify-between">
-                                <div className="flex items-center gap-3">
-                                    {/* Icon/Color Picker */}
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="h-9 w-9 text-2xl" style={{ color: page.color }}>
-                                                <GoogleSymbol name={page.icon} />
-                                            </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-auto p-2">
-                                            {/* Simplified Picker for brevity */}
-                                            <Input type="color" value={page.color} onChange={(e) => handleUpdatePage(page.id, { color: e.target.value })} />
-                                        </PopoverContent>
-                                    </Popover>
-                                    {isEditingName === page.id ? (
-                                        <Input ref={nameInputRef} defaultValue={page.name} onBlur={() => handleSaveName(page.id)} onKeyDown={(e) => e.key === 'Enter' && handleSaveName(page.id)} />
-                                    ) : (
-                                        <CardTitle className="cursor-pointer" onClick={() => setIsEditingName(page.id)}>{page.name}</CardTitle>
-                                    )}
-                                </div>
-                                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => handleDeletePage(page.id)}>
-                                    <GoogleSymbol name="delete" />
-                                </Button>
-                            </div>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div>
-                                <h4 className="font-medium text-sm mb-2">Access Control</h4>
-                                <div className="flex gap-2">
-                                    <Popover>
-                                        <PopoverTrigger asChild><Button variant="outline" size="sm">Users ({page.access.users.length})</Button></PopoverTrigger>
-                                        <PopoverContent className="p-2"><p>User selection UI...</p></PopoverContent>
-                                    </Popover>
-                                    <Popover>
-                                        <PopoverTrigger asChild><Button variant="outline" size="sm">Teams ({page.access.teams.length})</Button></PopoverTrigger>
-                                        <PopoverContent className="p-2"><p>Team selection UI...</p></PopoverContent>
-                                    </Popover>
-                                    <Popover>
-                                        <PopoverTrigger asChild><Button variant="outline" size="sm">Roles ({page.access.roles.length})</Button></PopoverTrigger>
-                                        <PopoverContent className="p-2"><p>Role selection UI...</p></PopoverContent>
-                                    </Popover>
-                                </div>
-                            </div>
-                             <div>
-                                <h4 className="font-medium text-sm mb-2">Associated Tabs</h4>
-                                <Popover>
-                                    <PopoverTrigger asChild><Button variant="outline" size="sm">Manage Tabs ({page.associatedTabs.length})</Button></PopoverTrigger>
-                                    <PopoverContent className="p-2"><p>Tab selection UI...</p></PopoverContent>
-                                </Popover>
-                            </div>
-                        </CardContent>
-                    </Card>
+                    <PageCard
+                        key={page.id}
+                        page={page}
+                        onUpdate={handleUpdatePage}
+                        onDelete={handleDeletePage}
+                    />
                 ))}
             </div>
         </div>
@@ -738,6 +852,70 @@ const PagesManagement = () => {
 // #endregion
 
 // #region Tabs Management Tab
+function TabItem({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string, data: Partial<AppTab>) => void; }) {
+    const [isEditingName, setIsEditingName] = useState(false);
+    const nameInputRef = useRef<HTMLInputElement>(null);
+    const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
+    const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
+    const [iconSearch, setIconSearch] = useState('');
+
+    useEffect(() => {
+        if (isEditingName) nameInputRef.current?.focus();
+    }, [isEditingName]);
+
+    const handleSaveName = () => {
+        const newName = nameInputRef.current?.value.trim();
+        if (newName && newName !== tab.name) {
+            onUpdate(tab.id, { name: newName });
+        }
+        setIsEditingName(false);
+    };
+
+    const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') handleSaveName();
+        else if (e.key === 'Escape') setIsEditingName(false);
+    };
+
+    const filteredIcons = useMemo(() => googleSymbolNames.filter(icon => icon.toLowerCase().includes(iconSearch.toLowerCase())), [iconSearch]);
+
+    return (
+        <div className="flex items-center p-3 gap-4">
+            <div className="relative">
+                <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
+                    <PopoverTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-xl" style={{ color: tab.color }}>
+                            <GoogleSymbol name={tab.icon} />
+                        </Button>
+                    </PopoverTrigger>
+                     <PopoverContent className="w-80 p-0">
+                        <div className="p-2 border-b"><Input placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} /></div>
+                        <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={tab.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(tab.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
+                    </PopoverContent>
+                </Popover>
+                <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                    <PopoverTrigger asChild>
+                        <div className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-card cursor-pointer" style={{ backgroundColor: tab.color }} />
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-2">
+                        <div className="grid grid-cols-8 gap-1">
+                            {predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => { onUpdate(tab.id, { color: c }); setIsColorPopoverOpen(false); }}/>))}
+                            <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
+                                <GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={tab.color} onChange={(e) => onUpdate(tab.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/>
+                            </div>
+                        </div>
+                    </PopoverContent>
+                </Popover>
+            </div>
+            {isEditingName ? (
+              <Input ref={nameInputRef} defaultValue={tab.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
+            ) : (
+              <span className="font-semibold cursor-pointer flex-1" onClick={() => setIsEditingName(true)}>{tab.name}</span>
+            )}
+            <Badge variant="outline">{tab.componentKey}</Badge>
+        </div>
+    );
+}
+
 const TabsManagement = () => {
     const { appSettings, updateAppSettings } = useUser();
 
@@ -753,20 +931,7 @@ const TabsManagement = () => {
                 <CardContent className="p-0">
                     <div className="divide-y">
                         {appSettings.tabs.map(tab => (
-                            <div key={tab.id} className="flex items-center p-3 gap-4">
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-xl" style={{ color: tab.color }}>
-                                            <GoogleSymbol name={tab.icon} />
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-2">
-                                        <Input type="color" value={tab.color} onChange={(e) => handleUpdateTab(tab.id, { color: e.target.value })} />
-                                    </PopoverContent>
-                                </Popover>
-                                <Input value={tab.name} onChange={(e) => handleUpdateTab(tab.id, { name: e.target.value })} className="font-semibold" />
-                                <Badge variant="outline">{tab.componentKey}</Badge>
-                            </div>
+                            <TabItem key={tab.id} tab={tab} onUpdate={handleUpdateTab} />
                         ))}
                     </div>
                 </CardContent>
