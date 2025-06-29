@@ -50,9 +50,9 @@ const AddUserToRoleButton = ({ usersToAdd, onAdd, roleName }: { usersToAdd: User
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" className="w-full border-dashed">
-          <GoogleSymbol name="add_circle" className="mr-2" />
-          Assign {roleName}
+        <Button variant="ghost" size="icon" className="h-8 w-8">
+            <GoogleSymbol name="add_circle" className="text-2xl" />
+            <span className="sr-only">Assign {roleName}</span>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="p-0 w-80">
@@ -153,28 +153,32 @@ export default function AdminPage() {
           {/* Admins Column */}
           <Card>
             <CardHeader>
-              <CardTitle>Admins</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle>Admins</CardTitle>
+                <AddUserToRoleButton usersToAdd={nonAdminUsers} onAdd={handleAdminToggle} roleName="Admin" />
+              </div>
               <CardDescription>Assign or revoke Admin privileges. This is the highest level of access.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {adminUsers.map(user => (
                 <UserRoleCard key={user.userId} user={user} onRemove={handleAdminToggle} />
               ))}
-              <AddUserToRoleButton usersToAdd={nonAdminUsers} onAdd={handleAdminToggle} roleName="Admin" />
             </CardContent>
           </Card>
           
           {/* Service Admins Column */}
           <Card>
             <CardHeader>
-              <CardTitle>Service Admins</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle>Service Admins</CardTitle>
+                <AddUserToRoleButton usersToAdd={nonServiceAdminUsers} onAdd={handleServiceAdminToggle} roleName="Service Admin" />
+              </div>
               <CardDescription>Assign or revoke Service Admin privileges for managing app-wide settings.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {serviceAdminUsers.map(user => (
                 <UserRoleCard key={user.userId} user={user} onRemove={handleServiceAdminToggle} />
               ))}
-              <AddUserToRoleButton usersToAdd={nonServiceAdminUsers} onAdd={handleServiceAdminToggle} roleName="Service Admin" />
             </CardContent>
           </Card>
         </div>
