@@ -22,6 +22,7 @@ export interface User {
   email: string;
   displayName:string;
   isAdmin: boolean;
+  accountType: 'Full' | 'Viewer';
   googleCalendarLinked: boolean;
   googleCalendarId?: string;
   avatarUrl?: string;

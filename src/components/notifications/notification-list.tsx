@@ -24,10 +24,11 @@ export function NotificationList() {
 
     if (approved) {
       const newUser: User = {
-        userId: (users.length + 1).toString(),
+        userId: crypto.randomUUID(),
         email: notification.data.email,
         displayName: notification.data.displayName,
         isAdmin: false,
+        accountType: 'Viewer',
         googleCalendarLinked: false,
         avatarUrl: `https://placehold.co/40x40.png`,
         roles: [],
