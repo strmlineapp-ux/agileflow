@@ -10,7 +10,7 @@ import { type User, type CalendarId, type SharedCalendar, type Team } from '@/ty
  */
 export const canManageEventOnCalendar = (user: User, calendar: SharedCalendar): boolean => {
     // Admin and SDM roles have universal access to manage all calendars
-    if (user.roles?.includes('Admin') || user.roles?.includes('Service Delivery Manager')) {
+    if (user.isAdmin || user.roles?.includes('Service Delivery Manager')) {
         return true;
     }
 
@@ -31,7 +31,7 @@ export const canManageEventOnCalendar = (user: User, calendar: SharedCalendar): 
  */
 export const canCreateAnyEvent = (user: User, allCalendars: SharedCalendar[]): boolean => {
     // If Admin or SDM, they can always create events as long as there's a calendar.
-    if (user.roles?.includes('Admin') || user.roles?.includes('Service Delivery Manager')) {
+    if (user.isAdmin || user.roles?.includes('Service Delivery Manager')) {
         return allCalendars.length > 0;
     }
 
@@ -51,7 +51,7 @@ export const getAllUserRoles = (user: User, teams: Team[]): string[] => {
     
     teams.forEach(team => {
         if (team.members.includes(user.userId)) {
-            team.roles.forEach(role => allRoles.add(role));
+            team.roles.forEach(role => allRoles.add(role.name));
         }
     });
 

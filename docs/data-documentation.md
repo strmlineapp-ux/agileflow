@@ -15,12 +15,13 @@ This table details the information stored directly within each `User` object.
 | `userId: string` | **Internal.** A unique identifier for each user. This is the primary key used to link a user to all other parts of the system. |
 | `displayName: string` | **Google Service.** The user's full name. This is part of the basic profile information obtained during a standard "Sign in with Google" action and **does not require separate permissions**. |
 | `email: string` | **Internal / Google Service.** The user's email address. This is the primary field used for login. The "Sign in with Google" button uses **Firebase Authentication** with the **Google Auth Provider** to verify this email. |
+| `isAdmin: boolean` | **Internal.** A dedicated flag to indicate if a user has administrative privileges, granting them access to all settings and management pages. |
 | `title?: string` | **Google Service.** The user's professional title. This is designed to be populated from the user's **Google Account profile** (from their organization details) **after the user grants the necessary permissions**. |
 | `avatarUrl?: string` | **Google Service.** A URL to the user's profile picture. This is part of the basic profile information obtained during a standard "Sign in with Google" action and **does not require separate permissions**. |
 | `phone?: string` | **Google Service.** The user's contact phone number. This is designed to be populated from the user's **Google Account profile** **after the user grants the necessary permissions**. |
 | `location?: string` | **Google Service.** The user's primary work location. This is designed to be populated from the user's **Google Account profile** (from their address information) **after the user grants the necessary permissions**. |
 | `googleCalendarLinked: boolean` | **Google Service.** A flag that is set to `true` only after the user successfully completes an OAuth consent flow via **Firebase Authentication** to grant the app permission to access their Google Calendar. |
-| `roles?: string[]` | **Internal.** An array of role names assigned to the user, critical for determining permissions. See the **User Roles & Permissions** section below for a detailed breakdown. |
+| `roles?: string[]` | **Internal.** An array of team-specific role names assigned to the user (e.g., `Camera`, `Audio`). This is critical for contextual assignments. |
 | `directReports?: string[]` | **Internal.** An array of `userId`s for users who report directly to this user. This is currently informational. |
 | `theme?: 'light' \| 'dark' \| ...` | **Internal.** A UI preference for the app's color scheme. |
 | `defaultCalendarView?: 'month' \| 'week' \| ...` | **Internal.** A UI preference for the default calendar layout. |
@@ -29,12 +30,12 @@ This table details the information stored directly within each `User` object.
 
 ### User Roles & Permissions
 
-The `roles` array on the `User` object is a flat list of strings that dictates a user's permissions and capabilities. While it's a simple array, the roles within it fall into two distinct categories based on how they are used in the application:
+The application uses a combination of the `isAdmin` flag and the `roles` array to dictate a user's permissions and capabilities:
 
 1.  **System-Level Roles**
     *   **Description**: These are high-privilege roles that grant broad, application-wide permissions. They are checked directly in the code to control access to entire pages or administrative features.
-    *   **Examples**: `Admin`, `Service Delivery Manager`.
-    *   **Management**: These roles are not defined in any settings UI. They are assigned to users by an administrator, and their meaning is determined by the application's internal logic.
+    *   **Examples**: `Admin` (via the `isAdmin` flag), `Service Delivery Manager`.
+    *   **Management**: The `Admin` status is managed on the Admin page. Other system-level roles are assigned to users by an administrator, and their meaning is determined by the application's internal logic.
 
 2.  **Team-Specific Roles**
     *   **Description**: These roles are defined within a specific `Team` and are used for contextual assignments, such as assigning a user to a specific function for an event (e.g., "Camera Operator"). They have associated metadata like an icon and color for display purposes.
@@ -62,5 +63,5 @@ Not all user capabilities are stored directly as a field on the `User` object. M
 | Capability | Where Data is Stored & How It's Used |
 | :--- | :--- |
 | **Absence Statuses** (e.g., `PTO`, `Sick`) | **Storage:** This data is **not stored on the `User` object**. It is managed in the `userStatusAssignments` state within the `UserContext`, which is a dictionary keyed by date (`YYYY-MM-DD`).<br>**Usage:** The `ProductionScheduleView` allows authorized managers to assign these statuses to users for specific days. The calendar then uses this data to visually indicate a user's availability. |
-| **Access to Pages** (e.g., `/admin`) | **Storage:** This is **not stored directly as data**. Access control is handled directly in the UI components.<br>**Usage:** Components like the `Sidebar` and the page layouts contain logic that checks the current user's `roles` array (e.g., `user.roles.includes('Admin')`). If the required role is not present, the link or the entire page is not rendered. |
+| **Access to Pages** (e.g., `/admin`) | **Storage:** This is **not stored directly as data**. Access control is handled directly in the UI components.<br>**Usage:** Components like the `Sidebar` and the page layouts contain logic that checks the current user's `isAdmin` flag or `roles` array (e.g., `user.isAdmin`). If the required role is not present, the link or the entire page is not rendered. |
 | **Interaction Permissions** (e.g., editing an event, managing a team) | **Storage:** This is also **not stored directly**. Permissions are derived by combining user roles with the context of a specific data item.<br>**Usage:** The application uses helper functions (like `canManageEventOnCalendar`) that check if a user's `userId` is in a `Team`'s `managers` list or if the user has a system-level role like `Admin`. This determines whether UI elements like "Edit" buttons are displayed. |

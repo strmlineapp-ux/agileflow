@@ -19,7 +19,7 @@ export function Sidebar() {
   const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const isAdmin = viewAsUser.roles?.includes('Admin');
+  const isAdmin = viewAsUser.isAdmin;
   const isSdm = viewAsUser.roles?.includes('Service Delivery Manager');
 
   const userTeams = teams.filter(team => 
@@ -152,7 +152,7 @@ export function Sidebar() {
                     </Link>
                 </DropdownMenuItem>
 
-                {realUser.roles?.includes('Admin') && (
+                {realUser.isAdmin && (
                   <DropdownMenuSub>
                     <DropdownMenuSubTrigger>
                       <GoogleSymbol name="how_to_reg" className="mr-2 text-lg" />

@@ -17,7 +17,7 @@ export default function TeamPage() {
   const { viewAsUser, teams } = useUser();
 
   const team = teams.find(t => t.id === teamId);
-  const isSdm = viewAsUser.roles?.includes('Service Delivery Manager') || viewAsUser.roles?.includes('Admin');
+  const isSdm = viewAsUser.roles?.includes('Service Delivery Manager') || viewAsUser.isAdmin;
   
   if (!team) {
     // This can happen if the teamId is invalid or data is loading.

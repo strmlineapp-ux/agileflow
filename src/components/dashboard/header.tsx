@@ -18,7 +18,7 @@ export function Header() {
   const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
   const unreadCount = notifications.filter((n) => !n.read).length;
   
-  const isAdmin = viewAsUser.roles?.includes('Admin');
+  const isAdmin = viewAsUser.isAdmin;
 
   const userTeams = teams.filter(team => 
     isAdmin || team.managers?.includes(viewAsUser.userId)

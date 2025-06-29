@@ -14,36 +14,30 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
-// Component to manage a list of users with a specific role via pills
-const UserRoleManager = ({
-  title,
-  description,
+// Component to manage a list of users with admin privileges
+const AdminManager = ({
   allUsers,
-  roleName,
-  onRoleToggle,
+  onAdminToggle,
 }: {
-  title: string;
-  description: string;
   allUsers: User[];
-  roleName: string;
-  onRoleToggle: (user: User) => void;
+  onAdminToggle: (user: User) => void;
 }) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
+        <CardTitle>Manage Admins</CardTitle>
+        <CardDescription>Assign or revoke Admin privileges. This action requires 2FA.</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="flex flex-wrap gap-2 rounded-md border bg-muted/50 p-2 min-h-[56px]">
           {allUsers.map(user => {
-            const hasRole = user.roles?.includes(roleName);
+            const isAdmin = user.isAdmin;
             return (
               <Badge
                 key={user.userId}
-                variant={hasRole ? 'default' : 'secondary'}
-                className={cn('gap-1.5 p-1 pl-2 cursor-pointer rounded-full', hasRole && 'shadow-md')}
-                onClick={() => onRoleToggle(user)}
+                variant={isAdmin ? 'default' : 'secondary'}
+                className={cn('gap-1.5 p-1 pl-2 cursor-pointer rounded-full', isAdmin && 'shadow-md')}
+                onClick={() => onAdminToggle(user)}
               >
                 <Avatar className="h-5 w-5">
                   <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
@@ -54,7 +48,7 @@ const UserRoleManager = ({
             );
           })}
         </div>
-        <p className="text-xs text-muted-foreground text-right pr-2 mt-2">Click user pills to toggle their role status.</p>
+        <p className="text-xs text-muted-foreground text-right pr-2 mt-2">Click user pills to toggle their admin status.</p>
       </CardContent>
     </Card>
   );
@@ -64,7 +58,7 @@ export default function AdminPage() {
   const { toast } = useToast();
   const { viewAsUser, users, updateUser } = useUser();
   
-  const isAdmin = useMemo(() => viewAsUser.roles?.includes('Admin'), [viewAsUser.roles]);
+  const isAdmin = useMemo(() => viewAsUser.isAdmin, [viewAsUser]);
 
   // 2FA Dialog State
   const [is2faDialogOpen, setIs2faDialogOpen] = useState(false);
@@ -80,15 +74,8 @@ export default function AdminPage() {
 
   const handleRoleToggle = (user: User) => {
     const action = () => {
-      const currentRoles = new Set(user.roles || []);
-      const roleName = 'Admin';
-      if (currentRoles.has(roleName)) {
-        currentRoles.delete(roleName);
-      } else {
-        currentRoles.add(roleName);
-      }
-      updateUser(user.userId, { roles: Array.from(currentRoles) });
-      toast({ title: 'Success', description: `${user.displayName}'s roles have been updated.` });
+      updateUser(user.userId, { isAdmin: !user.isAdmin });
+      toast({ title: 'Success', description: `${user.displayName}'s admin status has been updated.` });
     };
 
     // Require 2FA for 'Admin' role
@@ -121,12 +108,9 @@ export default function AdminPage() {
       <div className="flex flex-col gap-8">
         <h1 className="font-headline text-3xl font-semibold">Admin Management</h1>
         
-        <UserRoleManager
-            title="Manage Admins"
-            description="Assign or revoke Admin privileges. This action requires 2FA."
+        <AdminManager
             allUsers={users}
-            roleName="Admin"
-            onRoleToggle={handleRoleToggle}
+            onAdminToggle={handleRoleToggle}
         />
       </div>
 

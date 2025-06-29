@@ -29,10 +29,10 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
   const [isRolesDialogOpen, setIsRolesDialogOpen] = useState(false);
   const [tempRoles, setTempRoles] = useState<string[]>([]);
 
-  const canManageRoles = viewAsUser.roles?.includes('Admin') || team.managers?.includes(viewAsUser.userId);
+  const canManageRoles = viewAsUser.isAdmin || team.managers?.includes(viewAsUser.userId);
 
   const teamRoleNames = team.roles.map(r => r.name);
-  const otherTeamRolesForMember = (member.roles || []).filter(roleName => !teamRoleNames.includes(roleName) && roleName !== 'Admin');
+  const otherTeamRolesForMember = (member.roles || []).filter(roleName => !teamRoleNames.includes(roleName));
 
 
   const handleOpenRolesDialog = () => {
@@ -93,8 +93,8 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
                 )}
             </div>
             <div className="flex flex-wrap gap-1 min-h-[24px]">
-              {(member.roles || []).filter(r => r !== 'Admin').length > 0 ? (
-                (member.roles || []).filter(r => r !== 'Admin').map(roleName => {
+              {(member.roles && member.roles.length > 0) ? (
+                (member.roles || []).map(roleName => {
                     const roleInfo = allRoles.find(r => r.name === roleName);
                     return (
                         <Badge

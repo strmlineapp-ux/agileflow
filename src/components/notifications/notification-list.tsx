@@ -14,7 +14,7 @@ import { GoogleSymbol } from '../icons/google-symbol';
 export function NotificationList() {
   const { toast } = useToast();
   const { realUser, users, addUser, notifications, setNotifications } = useUser();
-  const isAdmin = realUser.roles?.includes('Admin');
+  const isAdmin = realUser.isAdmin;
   
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -27,6 +27,7 @@ export function NotificationList() {
         userId: (users.length + 1).toString(),
         email: notification.data.email,
         displayName: notification.data.displayName,
+        isAdmin: false,
         googleCalendarLinked: false,
         avatarUrl: `https://placehold.co/40x40.png`,
         roles: [],

@@ -26,7 +26,7 @@ export default function AppManagementPage() {
   const [tempName, setTempName] = useState(appSettings.displayName);
   const [iconSearch, setIconSearch] = useState('');
 
-  const isAdmin = viewAsUser.roles?.includes('Admin');
+  const isAdmin = viewAsUser.isAdmin;
   
   const filteredIcons = useMemo(() => {
     if (!iconSearch) return googleSymbolNames;

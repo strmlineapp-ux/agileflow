@@ -21,13 +21,14 @@ export interface User {
   userId: string;
   email: string;
   displayName:string;
+  isAdmin: boolean;
   googleCalendarLinked: boolean;
   googleCalendarId?: string;
   avatarUrl?: string;
   location?: string;
   phone?: string;
   title?: string;
-  roles?: string[]; // System-level roles like 'Admin' and names of TeamRoles
+  roles?: string[]; // Team-specific functional roles
   directReports?: string[];
   theme?: 'light' | 'dark' | 'high-visibility' | 'firebase';
   defaultCalendarView?: 'month' | 'week' | 'day' | 'production-schedule';
@@ -180,7 +181,6 @@ export interface Notification {
   user: Pick<User, 'userId' | 'displayName' | 'avatarUrl' | 'easyBooking'>; // The user who *caused* the notification
   content: string;
   time: Date;
-  read: boolean;
   data?: { // payload for access_requests
     email: string;
     displayName: string;

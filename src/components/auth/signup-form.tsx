@@ -46,7 +46,8 @@ export function SignUpForm() {
       user: { // This is the user requesting access
         displayName: values.email,
         avatarUrl: `https://placehold.co/40x40.png`,
-        userId: ''
+        userId: '',
+        isAdmin: false,
       },
       content: `${values.email} has requested access.`,
       time: new Date(),
