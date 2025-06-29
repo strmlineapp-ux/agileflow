@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -279,10 +280,10 @@ function BadgeDisplayItem({ badge, viewMode, isLink, linkColor, onUpdateBadge, o
     
     const handleDescriptionKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            handleSaveDescription();
+          e.preventDefault();
+          handleSaveDescription();
         } else if (e.key === 'Escape') {
-            setIsEditingDescription(false);
+          setIsEditingDescription(false);
         }
     };
 
@@ -737,34 +738,80 @@ export function BadgeManagement({ team }: { team: Team }) {
         }
     };
     
+    const handleDuplicateCollection = (sourceCollectionId: string) => {
+        const sourceCollection = team.badgeCollections.find(c => c.id === sourceCollectionId);
+        if (!sourceCollection) return;
+
+        const newCollectionId = crypto.randomUUID();
+        const newCollection: BadgeCollection = {
+            ...sourceCollection,
+            id: newCollectionId,
+            name: `${sourceCollection.name} (Copy)`,
+            badgeIds: [], // This will be populated with new badge IDs
+        };
+        
+        const badgesToDuplicate = team.allBadges.filter(b => b.ownerCollectionId === sourceCollection.id);
+        
+        const newBadges: Badge[] = badgesToDuplicate.map(sourceBadge => {
+            const newBadgeId = crypto.randomUUID();
+            return {
+                ...sourceBadge,
+                id: newBadgeId,
+                ownerCollectionId: newCollectionId,
+            };
+        });
+
+        newCollection.badgeIds = newBadges.map(b => b.id);
+        
+        const updatedCollections = [...team.badgeCollections, newCollection];
+        const updatedAllBadges = [...team.allBadges, ...newBadges];
+        
+        updateTeam(team.id, {
+            badgeCollections: updatedCollections,
+            allBadges: updatedAllBadges,
+        });
+
+        toast({
+            title: 'Collection Duplicated',
+            description: `"${newCollection.name}" has been created.`,
+        });
+    };
+
     const onDragEnd = (result: DropResult) => {
         const { source, destination, draggableId, type } = result;
     
         if (!destination) return;
     
-        // Handle reordering of collections
+        if (destination.droppableId === 'duplicate-collection-zone') {
+            if (type === 'collection') {
+                handleDuplicateCollection(draggableId);
+            }
+            return;
+        }
+
         if (type === 'collection') {
-            const reorderedCollections = Array.from(team.badgeCollections);
-            const [moved] = reorderedCollections.splice(source.index, 1);
-            reorderedCollections.splice(destination.index, 0, moved);
-            updateTeam(team.id, { badgeCollections: reorderedCollections });
+            if (source.droppableId === 'collections-list' && destination.droppableId === 'collections-list') {
+                const reorderedCollections = Array.from(team.badgeCollections);
+                const [moved] = reorderedCollections.splice(source.index, 1);
+                reorderedCollections.splice(destination.index, 0, moved);
+                updateTeam(team.id, { badgeCollections: reorderedCollections });
+            }
             return;
         }
     
-        // Handle dragging badges
         const sourceCollection = team.badgeCollections.find(c => c.id === source.droppableId);
         const destCollection = team.badgeCollections.find(c => c.id === destination.droppableId);
     
         if (!sourceCollection || !destCollection) return;
     
-        if (source.droppableId === destination.droppableId) { // Reorder within same collection
+        if (source.droppableId === destination.droppableId) {
             const reorderedIds = Array.from(sourceCollection.badgeIds);
             const [movedId] = reorderedIds.splice(source.index, 1);
             reorderedIds.splice(destination.index, 0, movedId);
     
             const newCollections = team.badgeCollections.map(c => c.id === sourceCollection.id ? { ...c, badgeIds: reorderedIds } : c);
             updateTeam(team.id, { badgeCollections: newCollections });
-        } else { // Share/move to a different collection
+        } else {
             if (destCollection.badgeIds.includes(draggableId)) {
                 toast({ variant: 'default', title: 'Already linked', description: 'This badge is already in the destination collection.'});
                 return;
@@ -784,16 +831,39 @@ export function BadgeManagement({ team }: { team: Team }) {
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <h2 className="text-2xl font-semibold tracking-tight">Badge Collections</h2>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={handleAddCollection}>
-                        <GoogleSymbol name="add_circle" className="text-xl" />
-                        <span className="sr-only">New Collection</span>
-                    </Button>
+                    <StrictModeDroppable droppableId="duplicate-collection-zone" type="collection">
+                        {(provided, snapshot) => (
+                            <div
+                                ref={provided.innerRef}
+                                {...provided.droppableProps}
+                                className={cn(
+                                    "rounded-full transition-all",
+                                    snapshot.isDraggingOver && "ring-2 ring-primary ring-offset-2 bg-accent"
+                                )}
+                            >
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={handleAddCollection}>
+                                                <GoogleSymbol name="add_circle" className="text-xl" />
+                                                <span className="sr-only">New Collection or Drop to Duplicate</span>
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>{snapshot.isDraggingOver ? 'Drop to Duplicate' : 'Add New Collection'}</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                                <div style={{ display: 'none' }}>{provided.placeholder}</div>
+                            </div>
+                        )}
+                    </StrictModeDroppable>
                 </div>
             </div>
             <DragDropContext onDragEnd={onDragEnd}>
                 <StrictModeDroppable droppableId="collections-list" type="collection">
                     {(provided) => (
-                        <div className="flex flex-col" ref={provided.innerRef} {...provided.droppableProps}>
+                        <div className="flex flex-col gap-6" ref={provided.innerRef} {...provided.droppableProps}>
                         {(team.badgeCollections || []).map((collection, index) => (
                             <Draggable key={collection.id} draggableId={collection.id} index={index}>
                                 {(provided) => (
@@ -801,7 +871,6 @@ export function BadgeManagement({ team }: { team: Team }) {
                                         ref={provided.innerRef} 
                                         {...provided.draggableProps} 
                                         {...provided.dragHandleProps}
-                                        className="mb-6"
                                     >
                                         <BadgeCollectionCard
                                             key={collection.id}
@@ -843,7 +912,3 @@ export function BadgeManagement({ team }: { team: Team }) {
         </div>
     );
 }
-
-    
-
-    
