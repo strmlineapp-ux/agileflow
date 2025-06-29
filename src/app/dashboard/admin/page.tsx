@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { googleSymbolNames } from '@/lib/google-symbols';
 
 
 // A card to display a user with a specific role.
@@ -78,7 +79,7 @@ const AddUserToRoleButton = ({ usersToAdd, onAdd, roleName }: { usersToAdd: User
 
 export default function AdminPage() {
   const { toast } = useToast();
-  const { viewAsUser, users, updateUser, appSettings } = useUser();
+  const { viewAsUser, users, updateUser, appSettings, updateAppSettings } = useUser();
   
   const isAdmin = useMemo(() => viewAsUser.isAdmin, [viewAsUser]);
 
@@ -86,6 +87,18 @@ export default function AdminPage() {
   const [is2faDialogOpen, setIs2faDialogOpen] = useState(false);
   const [on2faSuccess, setOn2faSuccess] = useState<(() => void) | null>(null);
   const [twoFactorCode, setTwoFactorCode] = useState('');
+
+  // Icon Picker State
+  const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
+  const [iconSearch, setIconSearch] = useState('');
+  
+  const filteredIcons = useMemo(() => {
+    if (!iconSearch) return googleSymbolNames;
+    return googleSymbolNames.filter(iconName =>
+        iconName.toLowerCase().includes(iconSearch.toLowerCase())
+    );
+  }, [iconSearch]);
+
 
   // This check must happen after all hooks are called.
   if (!isAdmin) {
@@ -144,6 +157,11 @@ export default function AdminPage() {
     setOn2faSuccess(null);
   };
 
+  const handleIconSelect = (newIcon: string) => {
+    updateAppSettings({ icon: newIcon });
+    setIsIconPopoverOpen(false);
+  }
+
   return (
     <>
       <div className="flex flex-col gap-8">
@@ -170,7 +188,37 @@ export default function AdminPage() {
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2">
-                <GoogleSymbol name={appSettings.icon} className="text-2xl text-muted-foreground" />
+                <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
+                  <PopoverTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-2xl text-muted-foreground hover:text-foreground">
+                        <GoogleSymbol name={appSettings.icon} />
+                      </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80 p-0">
+                      <div className="p-2 border-b">
+                          <Input
+                              placeholder="Search icons..."
+                              value={iconSearch}
+                              onChange={(e) => setIconSearch(e.target.value)}
+                          />
+                      </div>
+                      <ScrollArea className="h-64">
+                          <div className="grid grid-cols-6 gap-1 p-2">
+                              {filteredIcons.slice(0, 300).map((iconName) => (
+                                  <Button
+                                      key={iconName}
+                                      variant={appSettings.icon === iconName ? "default" : "ghost"}
+                                      size="icon"
+                                      onClick={() => handleIconSelect(iconName)}
+                                      className="text-2xl"
+                                  >
+                                      <GoogleSymbol name={iconName} />
+                                  </Button>
+                              ))}
+                          </div>
+                      </ScrollArea>
+                  </PopoverContent>
+                </Popover>
                 <CardTitle>Service Admins</CardTitle>
                 <AddUserToRoleButton usersToAdd={nonServiceAdminUsers} onAdd={handleServiceAdminToggle} roleName="Service Admin" />
               </div>
