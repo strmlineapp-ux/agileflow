@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState } from 'react';
@@ -22,7 +23,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/
 import { getContrastColor } from '@/lib/utils';
 
 export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
-  const { viewAsUser, updateUser } = useUser();
+  const { viewAsUser, updateUser, allRoles } = useUser();
   const { toast } = useToast();
   
   const [isRolesDialogOpen, setIsRolesDialogOpen] = useState(false);
@@ -31,7 +32,6 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
   const canManageRoles = viewAsUser.roles?.includes('Admin') || team.managers?.includes(viewAsUser.userId);
 
   const teamRoleNames = team.roles.map(r => r.name);
-  const memberTeamRoles = (member.roles || []).filter(roleName => teamRoleNames.includes(roleName));
   const otherTeamRolesForMember = (member.roles || []).filter(roleName => !teamRoleNames.includes(roleName) && roleName !== 'Admin');
 
 
@@ -95,16 +95,15 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
             <div className="flex flex-wrap gap-1 min-h-[24px]">
               {(member.roles || []).filter(r => r !== 'Admin').length > 0 ? (
                 (member.roles || []).filter(r => r !== 'Admin').map(roleName => {
-                    const roleInfo = team.roles.find(r => r.name === roleName);
+                    const roleInfo = allRoles.find(r => r.name === roleName);
                     return (
-                        <Badge 
-                            key={roleName} 
-                            style={roleInfo ? { backgroundColor: roleInfo.color, color: getContrastColor(roleInfo.color) } : {}}
-                            variant={roleInfo ? "default" : "secondary"}
+                        <Badge
+                            key={roleName}
+                            variant="outline"
+                            style={roleInfo ? { color: roleInfo.color, borderColor: roleInfo.color } : {}}
                             className={cn(
                                 "rounded-full gap-1.5 pl-2",
-                                !roleInfo && "opacity-50",
-                                roleInfo && "border-transparent"
+                                !roleInfo && "opacity-50"
                             )}
                         >
                             {roleInfo && <GoogleSymbol name={roleInfo.icon} className="text-sm" />}
@@ -139,11 +138,11 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
                         return (
                         <Badge
                             key={role.name}
-                            variant={isAssigned ? 'default' : 'secondary'}
-                            style={isAssigned ? { backgroundColor: role.color, color: getContrastColor(role.color) } : {}}
+                            variant={'outline'}
+                            style={isAssigned ? { color: role.color, borderColor: role.color } : {}}
                             className={cn(
-                                'gap-1.5 p-1 px-3 cursor-pointer rounded-full text-sm', 
-                                isAssigned && 'shadow-md border-transparent'
+                                'gap-1.5 p-1 px-3 cursor-pointer rounded-full text-sm',
+                                isAssigned ? 'border-2' : 'border-dashed'
                             )}
                             onClick={() => handleToggleRole(role.name)}
                         >

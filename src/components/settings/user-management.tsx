@@ -1,8 +1,9 @@
 
+
 "use client";
 
 import { useState, Fragment } from 'react';
-import { type User } from '@/types';
+import { type User, type Team } from '@/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -22,9 +23,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { GoogleSymbol } from '../icons/google-symbol';
+import { Badge } from '../ui/badge';
 
 export function UserManagement() {
-    const { realUser, users, updateUser, linkGoogleCalendar } = useUser();
+    const { realUser, users, updateUser, linkGoogleCalendar, allRoles, teams } = useUser();
     
     // State for editing user contact
     const [editingContactUser, setEditingContactUser] = useState<User | null>(null);
@@ -56,6 +58,13 @@ export function UserManagement() {
         toast({ title: 'Success', description: 'Contact number updated.' });
     };
 
+    const canViewRoles = (targetUser: User): boolean => {
+        if (realUser.roles?.includes('Admin')) return true;
+        const managedTeamIds = teams.filter(t => t.managers?.includes(realUser.userId)).map(t => t.id);
+        const userIsInManagedTeam = teams.some(t => managedTeamIds.includes(t.id) && t.members.includes(targetUser.userId));
+        return userIsInManagedTeam;
+    }
+
     return (
         <>
             <Card>
@@ -68,12 +77,15 @@ export function UserManagement() {
                                 <TableHead className="w-[48px]" />
                                 <TableHead>User</TableHead>
                                 <TableHead>Title</TableHead>
-                                <TableHead>Location</TableHead>
+                                <TableHead>Roles</TableHead>
                                 <TableHead><span className="sr-only">Actions</span></TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {users.map(user => (
+                            {users.map(user => {
+                                 const rolesToDisplay = (user.roles || []).filter(r => r !== 'Admin');
+                                 const canSeeRoles = user.userId === realUser.userId || canViewRoles(user);
+                                return (
                                 <Fragment key={user.userId}>
                                     <TableRow>
                                         <TableCell>
@@ -120,7 +132,26 @@ export function UserManagement() {
                                             </div>
                                         </TableCell>
                                         <TableCell>{user.title}</TableCell>
-                                        <TableCell>{user.location}</TableCell>
+                                         <TableCell>
+                                            {canSeeRoles && (
+                                                <div className="flex flex-wrap gap-1">
+                                                {rolesToDisplay.map(role => {
+                                                    const roleInfo = allRoles.find(r => r.name === role);
+                                                    return (
+                                                        <Badge
+                                                            key={role}
+                                                            variant="outline"
+                                                            style={roleInfo ? { color: roleInfo.color, borderColor: roleInfo.color } : {}}
+                                                            className="rounded-full gap-1 text-xs py-0.5 px-2"
+                                                        >
+                                                            {roleInfo && <GoogleSymbol name={roleInfo.icon} className="text-sm" />}
+                                                            <span>{role}</span>
+                                                        </Badge>
+                                                    );
+                                                })}
+                                                </div>
+                                            )}
+                                        </TableCell>
                                         <TableCell className="text-right">
                                             {user.userId === realUser.userId && (
                                                 <Popover>
@@ -225,7 +256,7 @@ export function UserManagement() {
                                         </TableRow>
                                     )}
                                 </Fragment>
-                            ))}
+                            )})}
                         </TableBody>
                     </Table>
                 </CardContent>

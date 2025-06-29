@@ -125,14 +125,13 @@ export function Sidebar() {
                             viewAsUser.roles.map(roleName => {
                                 const roleInfo = allRoles.find(r => r.name === roleName);
                                 return (
-                                    <Badge 
-                                        key={roleName} 
-                                        style={roleInfo ? { backgroundColor: roleInfo.color, color: getContrastColor(roleInfo.color) } : {}}
-                                        variant={roleInfo ? "default" : "secondary"}
+                                    <Badge
+                                        key={roleName}
+                                        variant="outline"
+                                        style={roleInfo ? { color: roleInfo.color, borderColor: roleInfo.color } : {}}
                                         className={cn(
                                             "rounded-full gap-1 text-xs py-0.5 px-2",
-                                            !roleInfo && "opacity-75",
-                                            roleInfo && "border-transparent"
+                                            !roleInfo && "opacity-75"
                                         )}
                                     >
                                         {roleInfo && <GoogleSymbol name={roleInfo.icon} className="text-sm" />}

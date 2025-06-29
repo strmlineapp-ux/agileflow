@@ -206,9 +206,9 @@ export function TeamRoleManagement({ team }: { team: Team }) {
             {rolesForThisTeam.length > 0 ? rolesForThisTeam.map(role => (
               <EditRolePopover key={role.name} role={role}>
                 <Badge 
-                    variant="secondary"
-                    style={{ backgroundColor: role.color, color: getContrastColor(role.color) }}
-                    className="group text-base py-1 pl-3 pr-1 rounded-full border-transparent cursor-pointer"
+                    variant="outline"
+                    style={{ color: role.color, borderColor: role.color }}
+                    className="group text-base py-1 pl-3 pr-1 rounded-full cursor-pointer"
                 >
                     <GoogleSymbol name={role.icon} className="mr-2 text-lg" />
                     <span className="font-medium">{role.name}</span>
@@ -217,7 +217,7 @@ export function TeamRoleManagement({ team }: { team: Team }) {
                         size="icon"
                         onClick={(e) => { e.stopPropagation(); openDeleteDialog(role); }}
                         className="ml-1 h-5 w-5 rounded-full hover:bg-black/20"
-                        style={{ color: getContrastColor(role.color) }}
+                        style={{ color: role.color }}
                     >
                         <GoogleSymbol name="cancel" className="text-sm" />
                         <span className="sr-only">Remove {role.name}</span>
