@@ -65,7 +65,8 @@ This pattern describes how a single entity (like a Badge) can exist in multiple 
 
 - **Mechanism**: Implemented via drag-and-drop. Dragging an item from its "home" collection to another creates a shared link, not a copy.
 - **Visual Cues**:
-  - A linked item is visually distinguished by a `link` icon next to its name or on its badge.
+  - A linked item is visually distinguished by a `link` icon overlay on its main icon.
+  - The color of this link overlay is inherited from the collection it is being viewed in, providing immediate context.
   - The original item (the source of truth) does not have this icon.
 - **Behavior**:
   - Editing a linked item (e.g., changing its name, icon, or color) modifies the original item, and the changes are instantly reflected in all other places where it is linked.
@@ -92,6 +93,4 @@ This pattern describes how a single entity (like a Badge) can exist in multiple 
 - **Icon as Badge**: An icon displayed as a small, circular overlay on another element (e.g., an Avatar or another icon) to provide secondary information. The size of the icon within the badge should be large enough to be clearly identifiable while fitting neatly within its container.
     - **Appearance**: A circular badge (e.g., `h-5 w-5`) with a `border-2` of the parent element's background color (e.g., `border-card` or `border-background`) to create a "punched out" effect. The icon inside should be sized appropriately (e.g., `font-size: 14px` or similar, depending on container).
     - **Placement**: Typically positioned on the bottom-right or top-right corner of the parent element.
-    - **Application**: Used for displaying a user's role on their avatar, or a linked group status on a role icon.
-
-    
+    - **Application**: Used for displaying a user's role on their avatar, a linked group status on a role icon, or a `link` icon on a shared Badge.

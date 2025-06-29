@@ -226,7 +226,6 @@ export const mockTeams: Team[] = [
             color: '#10B981',
             viewMode: 'assorted',
             description: 'Badges related to the full pipeline of audio and video creation, from directing to post-production.',
-            attachments: [],
             badgeIds: studioProdBadges.map(b => b.id)
         }],
         checkManagersLabel: 'Location Check Managers',

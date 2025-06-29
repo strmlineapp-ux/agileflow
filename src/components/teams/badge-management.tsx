@@ -8,34 +8,24 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { type Team, type Badge, type BadgeCollection, type Attachment, type AttachmentType } from '@/types';
+import { type Team, type Badge, type BadgeCollection } from '@/types';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { ScrollArea } from '../ui/scroll-area';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { cn, getContrastColor } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '../ui/dropdown-menu';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogHeader as AlertDialogHeaderUI, AlertDialogTitle as AlertDialogTitleUI, AlertDialogDescription as AlertDialogDescriptionUI, AlertDialogFooter } from '@/components/ui/alert-dialog';
 import { Textarea } from '../ui/textarea';
 import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProps } from 'react-beautiful-dnd';
+
 
 const predefinedColors = [
     '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
     '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6',
     '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
 ];
-
-const attachmentIcons: Record<AttachmentType, React.ReactNode> = {
-  drive: <GoogleSymbol name="folder" className="text-lg text-yellow-500" />,
-  docs: <GoogleSymbol name="article" className="text-lg text-blue-500" />,
-  sheets: <GoogleSymbol name="assessment" className="text-lg text-green-500" />,
-  slides: <GoogleSymbol name="slideshow" className="text-lg text-yellow-600" />,
-  forms: <GoogleSymbol name="quiz" className="text-lg text-purple-500" />,
-  meet: <GoogleSymbol name="videocam" className="text-lg text-green-600" />,
-  local: <GoogleSymbol name="description" className="text-lg" />,
-  link: <GoogleSymbol name="link" className="text-lg" />,
-};
 
 // Wrapper to fix issues with react-beautiful-dnd and React 18 Strict Mode
 const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
@@ -59,7 +49,6 @@ function BadgeForm({ badge, onSave, onClose }: { badge: Badge, onSave: (badge: B
     const [description, setDescription] = useState(badge?.description || '');
     const [icon, setIcon] = useState(badge?.icon || 'new_releases');
     const [color, setColor] = useState(badge?.color || '#64748B');
-    const [attachments, setAttachments] = useState<Attachment[]>(badge?.attachments || []);
     
     const [isEditingName, setIsEditingName] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
@@ -67,9 +56,6 @@ function BadgeForm({ badge, onSave, onClose }: { badge: Badge, onSave: (badge: B
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
     const [iconSearch, setIconSearch] = useState('');
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
-    const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
-    const [linkName, setLinkName] = useState('');
-    const [linkUrl, setLinkUrl] = useState('');
     
     useEffect(() => {
         if (isEditingName && nameInputRef.current) {
@@ -104,32 +90,11 @@ function BadgeForm({ badge, onSave, onClose }: { badge: Badge, onSave: (badge: B
             toast({ variant: 'destructive', title: 'Error', description: 'Badge name cannot be empty.' });
             return;
         }
-        onSave({ ...badge, name, icon, color, description, attachments });
+        onSave({ ...badge, name, icon, color, description });
         onClose();
     };
     
-     const handleAddAttachment = (type: AttachmentType, name: string, url: string = '#') => {
-        setAttachments(prev => [...prev, { type, name, url }]);
-     };
-
-     const handleAddLink = () => {
-        if (!linkUrl.trim() || !linkName.trim()) {
-            toast({ variant: 'destructive', title: 'Error', description: 'Both URL and display name are required.' });
-            return;
-        }
-        handleAddAttachment('link', linkName.trim(), linkUrl.trim());
-        setIsLinkDialogOpen(false);
-    };
-    
-    useEffect(() => {
-        if (!isLinkDialogOpen) { setLinkName(''); setLinkUrl(''); }
-    }, [isLinkDialogOpen]);
-    
-    const handleRemoveAttachment = (indexToRemove: number) => {
-        setAttachments(prev => prev.filter((_, i) => i !== indexToRemove));
-    };
-
-    return <>
+    return (
         <DialogContent>
              <div className="absolute top-4 right-4"><Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSaveClick}><GoogleSymbol name="check" className="text-xl" /><span className="sr-only">Save Badge</span></Button></div>
             <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto pr-2">
@@ -147,33 +112,13 @@ function BadgeForm({ badge, onSave, onClose }: { badge: Badge, onSave: (badge: B
                         <h3 onClick={() => setIsEditingName(true)} className="text-2xl font-semibold cursor-pointer">{name || 'New Badge'}</h3>
                     )}
                 </div>
-                <div className="space-y-2">
-                    <div className="flex items-center gap-2 -ml-2">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-muted-foreground hover:text-primary"><GoogleSymbol name="attachment" className="text-xl" /></Button></DropdownMenuTrigger>
-                            <DropdownMenuContent align="start"><DropdownMenuItem onSelect={() => handleAddAttachment('local', 'New Document.pdf')}><GoogleSymbol name="description" className="mr-2 text-lg" /><span>Attach file</span></DropdownMenuItem><DropdownMenuItem onSelect={() => setIsLinkDialogOpen(true)}><GoogleSymbol name="link" className="mr-2 text-lg" /><span>Add Link</span></DropdownMenuItem></DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                    {attachments.length > 0 && (
-                        <div className="space-y-2 rounded-md border p-2">
-                        {attachments.map((att, index) => (
-                            <div key={index} className="flex items-center justify-between gap-2 text-sm p-1 pr-2 rounded-md hover:bg-muted">
-                            <a href={att.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 flex-1 min-w-0">{attachmentIcons[att.type]}<span className="truncate underline-offset-4 hover:underline">{att.name}</span></a>
-                            <Button type="button" variant="ghost" size="icon" className="h-5 w-5 shrink-0 text-muted-foreground hover:text-destructive" onClick={() => handleRemoveAttachment(index)}><GoogleSymbol name="close" className="text-sm" /><span className="sr-only">Remove attachment</span></Button>
-                            </div>
-                        ))}</div>
-                    )}
-                </div>
-                 <Textarea id="description" value={description} onChange={e => setDescription(e.target.value)} placeholder="Description (optional)" />
+                <Textarea id="description" value={description} onChange={e => setDescription(e.target.value)} placeholder="Description (optional)" />
             </div>
         </DialogContent>
-        <Dialog open={isLinkDialogOpen} onOpenChange={setIsLinkDialogOpen}>
-            <DialogContent className="max-w-md"><div className="absolute top-4 right-4 flex items-center gap-1"><Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setIsLinkDialogOpen(false)}><GoogleSymbol name="close" className="text-xl" /></Button><Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleAddLink}><GoogleSymbol name="check" className="text-xl" /></Button></div><DialogHeader><DialogTitle>Add Link Attachment</DialogTitle></DialogHeader><div className="grid gap-4 pt-4"><Input placeholder="URL (e.g., https://example.com)" value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} /><Input placeholder="Display Name (e.g., Project Website)" value={linkName} onChange={(e) => setLinkName(e.target.value)} /></div></DialogContent>
-        </Dialog>
-    </>;
+    );
 }
 
-function DetailedBadgeCard({ badge, onEdit, onDelete, isLink }: { badge: Badge, onEdit: () => void, onDelete: () => void, isLink: boolean }) {
+function DetailedBadgeCard({ badge, onEdit, onDelete, isLink, linkColor }: { badge: Badge, onEdit: () => void, onDelete: () => void, isLink: boolean, linkColor?: string }) {
     return (
         <Card className="group cursor-pointer" onClick={onEdit}>
             <CardHeader>
@@ -181,7 +126,15 @@ function DetailedBadgeCard({ badge, onEdit, onDelete, isLink }: { badge: Badge, 
                     <div className="flex items-center gap-3">
                         <div className="relative">
                             <GoogleSymbol name={badge.icon} className="text-3xl" style={{ color: badge.color }} />
-                            {isLink && <div className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-card bg-muted flex items-center justify-center" title="Linked Badge"><GoogleSymbol name="link" style={{fontSize: '12px'}} className="text-muted-foreground"/></div>}
+                             {isLink && (
+                                <div 
+                                    className="absolute -top-1 -right-1 h-5 w-5 rounded-full border-2 border-card flex items-center justify-center"
+                                    style={{ backgroundColor: linkColor }}
+                                    title="Linked Badge"
+                                >
+                                    <GoogleSymbol name="link" style={{ fontSize: '14px', color: getContrastColor(linkColor || '#000') }}/>
+                                </div>
+                            )}
                         </div>
                         <CardTitle>{badge.name}</CardTitle>
                     </div>
@@ -192,30 +145,26 @@ function DetailedBadgeCard({ badge, onEdit, onDelete, isLink }: { badge: Badge, 
             </CardHeader>
             <CardContent className="space-y-4 pt-0">
                 {badge.description && <p className="text-sm text-muted-foreground">{badge.description}</p>}
-                {badge.attachments && badge.attachments.length > 0 && (
-                     <div className="space-y-2">
-                        <Separator />
-                        <h4 className="text-sm font-medium pt-2">Attachments</h4>
-                         {badge.attachments.map((att, index) => (
-                            <a key={index} href={att.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-2 rounded-md hover:bg-muted">
-                                {attachmentIcons[att.type]}
-                                <span className="text-sm font-medium underline-offset-4 hover:underline">{att.name}</span>
-                            </a>
-                        ))}
-                     </div>
-                 )}
             </CardContent>
         </Card>
     );
 }
 
-function BadgeDisplayItem({ badge, viewMode, isLink, onEdit, onDelete }: { badge: Badge; viewMode: BadgeCollection['viewMode']; isLink: boolean; onEdit: () => void; onDelete: () => void; }) {
+function BadgeDisplayItem({ badge, viewMode, isLink, linkColor, onEdit, onDelete }: { badge: Badge; viewMode: BadgeCollection['viewMode']; isLink: boolean; linkColor?: string; onEdit: () => void; onDelete: () => void; }) {
     if (viewMode === 'list') {
       return (
         <div className="group flex w-full items-center gap-4 p-2 rounded-md hover:bg-muted/50 cursor-pointer" onClick={onEdit}>
             <div className="relative">
                 <GoogleSymbol name={badge.icon} className="text-2xl" style={{ color: badge.color }} />
-                {isLink && <div className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-card bg-muted flex items-center justify-center" title="Linked Badge"><GoogleSymbol name="link" style={{fontSize: '12px'}} className="text-muted-foreground"/></div>}
+                {isLink && (
+                    <div
+                        className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-card bg-muted flex items-center justify-center"
+                        style={{ backgroundColor: linkColor }}
+                        title="Linked Badge"
+                    >
+                        <GoogleSymbol name="link" style={{fontSize: '12px', color: getContrastColor(linkColor || '#000')}}/>
+                    </div>
+                )}
             </div>
             <div className="flex-1 font-semibold">{badge.name}</div>
             <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onDelete(); }} className="h-8 w-8 text-muted-foreground hover:text-destructive">
@@ -226,13 +175,24 @@ function BadgeDisplayItem({ badge, viewMode, isLink, onEdit, onDelete }: { badge
     }
 
     if (viewMode === 'scale') {
-        return <DetailedBadgeCard badge={badge} onEdit={onEdit} onDelete={onDelete} isLink={isLink} />;
+        return <DetailedBadgeCard badge={badge} onEdit={onEdit} onDelete={onDelete} isLink={isLink} linkColor={linkColor} />;
     }
     
     return (
         <div className="group relative inline-flex items-center gap-2 rounded-full border-2 p-1 pr-2 cursor-pointer" style={{ borderColor: badge.color, color: badge.color }} onClick={onEdit}>
-            {isLink && <GoogleSymbol name="link" style={{fontSize: '12px'}} className="ml-1 text-muted-foreground"/>}
-            <GoogleSymbol name={badge.icon} className="text-base" /><span className="font-semibold">{badge.name}</span>
+             <div className="relative">
+                <GoogleSymbol name={badge.icon} className="text-base" />
+                {isLink && (
+                    <div
+                        className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-background flex items-center justify-center"
+                        style={{ backgroundColor: linkColor }}
+                        title="Linked Badge"
+                    >
+                        <GoogleSymbol name="link" style={{fontSize: '10px', color: getContrastColor(linkColor || '#000')}}/>
+                    </div>
+                )}
+            </div>
+            <span className="font-semibold">{badge.name}</span>
             <button type="button" onClick={(e) => { e.stopPropagation(); onDelete(); }} className="ml-1 h-5 w-5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full inline-flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" aria-label={`Delete ${badge.name}`}>
                 <GoogleSymbol name="close" className="text-sm" />
             </button>
@@ -341,11 +301,24 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, onUpdateCollection, 
                                 collection.viewMode === 'list' && "flex flex-col gap-1",
                                 collection.viewMode === 'scale' && "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
                             )}>
-                            {collectionBadges.map((badge, index) => (
+                            {collectionBadges.map((badge, index) => {
+                                const isLink = badge.ownerCollectionId !== collection.id;
+                                const linkColor = isLink ? collection.color : undefined;
+                                return (
                                 <Draggable key={badge.id} draggableId={badge.id} index={index}>
-                                    {(provided) => (<div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}><BadgeDisplayItem badge={badge} viewMode={collection.viewMode} isLink={badge.ownerCollectionId !== collection.id} onEdit={() => openForm(badge)} onDelete={() => onDeleteBadge(collection.id, badge.id)}/></div>)}
+                                    {(provided) => (<div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
+                                        <BadgeDisplayItem 
+                                            badge={badge} 
+                                            viewMode={collection.viewMode} 
+                                            isLink={isLink} 
+                                            linkColor={linkColor}
+                                            onEdit={() => openForm(badge)} 
+                                            onDelete={() => onDeleteBadge(collection.id, badge.id)}
+                                        />
+                                    </div>)}
                                 </Draggable>
-                            ))}
+                                );
+                            })}
                             {provided.placeholder}
                         </div>
                     )}

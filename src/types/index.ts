@@ -65,7 +65,6 @@ export interface Badge {
   icon: string;
   color: string;
   description?: string;
-  attachments?: Attachment[];
 }
 
 export interface BadgeCollection {
@@ -76,7 +75,6 @@ export interface BadgeCollection {
   viewMode: 'assorted' | 'scale' | 'list';
   badgeIds: string[];
   description?: string;
-  attachments?: Attachment[];
 }
 
 export interface Team {
