@@ -32,7 +32,7 @@ import { Slider } from '../ui/slider';
 import { Badge } from '../ui/badge';
 import { ScrollArea } from '../ui/scroll-area';
 import { UserStatusBadge } from '../user-status-badge';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 
@@ -335,13 +335,11 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
   const handleRoleAction = (role: string) => {
     const assignment = roleAssignments[role];
     if (assignment?.assignedUser) {
-      // Un-assign the user but keep the role request
       setRoleAssignments(prev => ({
         ...prev,
         [role]: { ...prev[role], assignedUser: null },
       }));
     } else {
-      // If no user is assigned, remove the role request itself
       handleRemoveRequestedRole(role);
     }
   };
@@ -638,7 +636,7 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
           />
 
             {teamForSelectedCalendar && (
-                <div className="flex flex-wrap gap-2 p-2 border rounded-md min-h-[40px] items-center">
+                <div className="flex flex-wrap gap-2 items-center min-h-[40px]">
                     {Object.entries(roleAssignments).map(([role, { assignedUser, popoverOpen }]) => {
                         const user = assignedUser ? users.find(u => u.userId === assignedUser) : null;
                         const roleInfo = teamForSelectedCalendar.roles.find(r => r.name === role);
@@ -660,14 +658,11 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                                 key={role}
                                 variant="outline"
                                 style={
-                                  isEditing
-                                  ? { borderStyle: 'dashed', color: roleInfo?.color, borderColor: roleInfo?.color }
-                                  : { color: roleInfo?.color, borderColor: roleInfo?.color }
+                                  assignedUser
+                                  ? { borderStyle: 'solid', borderWidth: '2px', color: roleInfo?.color, borderColor: roleInfo?.color }
+                                  : { borderStyle: 'dashed', color: roleInfo?.color, borderColor: roleInfo?.color }
                                 }
-                                className={cn(
-                                    "text-sm p-1 pl-1.5 rounded-full flex items-center gap-1 bg-transparent",
-                                    user && "border-2 border-solid"
-                                )}
+                                className="text-sm p-1 pl-1.5 rounded-full flex items-center gap-1 bg-transparent"
                             >
                                 <Popover open={popoverOpen} onOpenChange={() => toggleRolePopover(role)}>
                                     <PopoverTrigger asChild>
@@ -714,66 +709,6 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                             </Badge>
                         );
                     })}
-
-                    <Popover open={isAddRolePopoverOpen} onOpenChange={setIsAddRolePopoverOpen}>
-                        <PopoverTrigger asChild>
-                            <Button type="button" variant="ghost" size="icon" className="h-6 w-6"><GoogleSymbol name="add_circle" className="text-lg" /></Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-60 p-0">
-                          <ScrollArea className="h-48">
-                            <div className="p-1">
-                              {availableRolesToAdd.length > 0 ? availableRolesToAdd.map(role => (
-                                <div key={role.name} onClick={() => handleAddRequestedRole(role.name)} className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer">
-                                  <GoogleSymbol name={role.icon} className="text-lg" />
-                                  <span>{role.name}</span>
-                                </div>
-                              )) : (
-                                <p className="p-2 text-center text-sm text-muted-foreground">No more roles to add.</p>
-                              )}
-                            </div>
-                          </ScrollArea>
-                        </PopoverContent>
-                    </Popover>
-                    <Popover open={isGuestPopoverOpen} onOpenChange={setIsGuestPopoverOpen}>
-                        <PopoverTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-6 w-6">
-                                <GoogleSymbol name="group_add" className="text-xl" />
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[480px] p-0" align="start">
-                            <Tabs defaultValue="by-name">
-                                <TabsList className="grid w-full grid-cols-2">
-                                    <TabsTrigger value="by-name">By Name or Email</TabsTrigger>
-                                    <TabsTrigger value="by-role">By Role</TabsTrigger>
-                                </TabsList>
-                                <TabsContent value="by-name" className="p-0">
-                                    <div className="p-2">
-                                        <Input placeholder="Search by name or email..." value={guestSearch} onChange={e => setGuestSearch(e.target.value)} className="w-full" />
-                                    </div>
-                                    <Separator />
-                                    <ScrollArea className="max-h-60">
-                                    <div className="p-1">
-                                    {filteredGuests.filter(g => g.displayName.toLowerCase().includes(guestSearch.toLowerCase()) || g.email.toLowerCase().includes(guestSearch.toLowerCase())).map(guest => (
-                                        <div key={guest.userId} onClick={() => handleToggleGuest(guest)} className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer">
-                                            <Avatar className="h-8 w-8"><AvatarImage src={guest.avatarUrl} alt={guest.displayName} data-ai-hint="user avatar" /><AvatarFallback>{guest.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
-                                            <div><p className="font-medium text-sm">{guest.displayName}</p><p className="text-xs text-muted-foreground">{guest.email}</p></div>
-                                        </div>
-                                    ))}
-                                    </div>
-                                    </ScrollArea>
-                                </TabsContent>
-                                <TabsContent value="by-role" className="p-2">
-                                    <ScrollArea className="max-h-[280px]">
-                                        <div className="flex flex-wrap gap-2 p-2">
-                                            {(teamForSelectedCalendar?.roles || []).map(role => (
-                                                <Badge key={role.name} onClick={() => handleAddGuestsByRole(role.name)} className="cursor-pointer">{role.name}</Badge>
-                                            ))}
-                                        </div>
-                                    </ScrollArea>
-                                </TabsContent>
-                            </Tabs>
-                        </PopoverContent>
-                    </Popover>
                 </div>
             )}
 
@@ -863,6 +798,79 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
+                    <TooltipProvider>
+                      {teamForSelectedCalendar && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Popover open={isAddRolePopoverOpen} onOpenChange={setIsAddRolePopoverOpen}>
+                                <PopoverTrigger asChild>
+                                    <Button type="button" variant="ghost" size="icon" className="h-6 w-6"><GoogleSymbol name="account_circle" className="text-xl" /></Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-60 p-0">
+                                  <ScrollArea className="h-48">
+                                    <div className="p-1">
+                                      {availableRolesToAdd.length > 0 ? availableRolesToAdd.map(role => (
+                                        <div key={role.name} onClick={() => handleAddRequestedRole(role.name)} className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer">
+                                          <GoogleSymbol name={role.icon} className="text-lg" />
+                                          <span>{role.name}</span>
+                                        </div>
+                                      )) : (
+                                        <p className="p-2 text-center text-sm text-muted-foreground">No more roles to add.</p>
+                                      )}
+                                    </div>
+                                  </ScrollArea>
+                                </PopoverContent>
+                            </Popover>
+                          </TooltipTrigger>
+                          <TooltipContent><p>Add Role Request</p></TooltipContent>
+                        </Tooltip>
+                      )}
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Popover open={isGuestPopoverOpen} onOpenChange={setIsGuestPopoverOpen}>
+                              <PopoverTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-6 w-6">
+                                      <GoogleSymbol name="group_add" className="text-xl" />
+                                  </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-[480px] p-0" align="start">
+                                  <Tabs defaultValue="by-name">
+                                      <TabsList className="grid w-full grid-cols-2">
+                                          <TabsTrigger value="by-name">By Name or Email</TabsTrigger>
+                                          <TabsTrigger value="by-role">By Role</TabsTrigger>
+                                      </TabsList>
+                                      <TabsContent value="by-name" className="p-0">
+                                          <div className="p-2">
+                                              <Input placeholder="Search by name or email..." value={guestSearch} onChange={e => setGuestSearch(e.target.value)} className="w-full" />
+                                          </div>
+                                          <Separator />
+                                          <ScrollArea className="max-h-60">
+                                          <div className="p-1">
+                                          {filteredGuests.filter(g => g.displayName.toLowerCase().includes(guestSearch.toLowerCase()) || g.email.toLowerCase().includes(guestSearch.toLowerCase())).map(guest => (
+                                              <div key={guest.userId} onClick={() => handleToggleGuest(guest)} className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer">
+                                                  <Avatar className="h-8 w-8"><AvatarImage src={guest.avatarUrl} alt={guest.displayName} data-ai-hint="user avatar" /><AvatarFallback>{guest.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
+                                                  <div><p className="font-medium text-sm">{guest.displayName}</p><p className="text-xs text-muted-foreground">{guest.email}</p></div>
+                                              </div>
+                                          ))}
+                                          </div>
+                                          </ScrollArea>
+                                      </TabsContent>
+                                      <TabsContent value="by-role" className="p-2">
+                                          <ScrollArea className="max-h-[280px]">
+                                              <div className="flex flex-wrap gap-2 p-2">
+                                                  {(teamForSelectedCalendar?.roles || []).map(role => (
+                                                      <Badge key={role.name} onClick={() => handleAddGuestsByRole(role.name)} className="cursor-pointer">{role.name}</Badge>
+                                                  ))}
+                                              </div>
+                                          </ScrollArea>
+                                      </TabsContent>
+                                  </Tabs>
+                              </PopoverContent>
+                          </Popover>
+                        </TooltipTrigger>
+                        <TooltipContent><p>Add Guests</p></TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                 </div>
                 <FormControl><Textarea placeholder="Add more details..." {...field} /></FormControl>
                 <FormMessage />
