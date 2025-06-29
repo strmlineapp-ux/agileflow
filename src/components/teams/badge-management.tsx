@@ -18,7 +18,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Textarea } from '../ui/textarea';
 import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProps } from 'react-beautiful-dnd';
 import { Separator } from '../ui/separator';
-import { Tooltip, TooltipProvider, TooltipContent } from '@/components/ui/tooltip';
+import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Calendar } from '@/components/ui/calendar';
 import { Avatar, AvatarImage, AvatarFallback } from '../ui/avatar';
 import { Dialog, DialogContent as DialogContentUI, DialogHeader as DialogHeaderUI, DialogTitle as DialogTitleUI } from '../ui/dialog';
@@ -421,7 +421,7 @@ function BadgeDisplayItem({ badge, viewMode, isLink, linkColor, onUpdateBadge, o
     );
 }
 
-function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInTeam, onUpdateCollection, onDeleteCollection, onAddBadge, onUpdateBadge, onDeleteBadge, onFetchBadgeDetail, getBadgeDetail }: {
+function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInTeam, onUpdateCollection, onDeleteCollection, onAddBadge, onUpdateBadge, onDeleteBadge, onFetchBadgeDetail, getBadgeDetail, team }: {
     collection: BadgeCollection;
     allBadgesInTeam: Badge[];
     allCollectionsInTeam: BadgeCollection[];
@@ -432,6 +432,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInTeam
     onDeleteBadge: (collectionId: string, badgeId: string) => void;
     onFetchBadgeDetail: (badgeId: string) => void;
     getBadgeDetail: (badgeId: string) => BadgeDetail | null;
+    team: Team
 }) {
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isEditingName, setIsEditingName] = useState(false);
@@ -592,7 +593,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInTeam
                                             onUpdateBadge={onUpdateBadge}
                                             onDelete={() => onDeleteBadge(collection.id, badge.id)}
                                             onFetchBadgeDetail={onFetchBadgeDetail}
-                                            badgeDetail={getBadgeDetail(badge.id)}
+                                            getBadgeDetail={getBadgeDetail}
                                             team={team}
                                         />
                                     </div>)}
@@ -814,6 +815,7 @@ export function BadgeManagement({ team }: { team: Team }) {
                                             onDeleteBadge={handleDeleteBadge}
                                             onFetchBadgeDetail={handleFetchBadgeDetail}
                                             getBadgeDetail={getBadgeDetail}
+                                            team={team}
                                         />
                                     </div>
                                 )}
@@ -841,5 +843,7 @@ export function BadgeManagement({ team }: { team: Team }) {
         </div>
     );
 }
+
+    
 
     
