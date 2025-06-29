@@ -183,41 +183,50 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
         initialScrollPerformed.current = false;
     }, [date]);
 
-    // Handle scroll and zoom adjustments
+    // Effect for calculating dimensions based on zoom and view axis
     useEffect(() => {
         const container = containerRef.current;
         if (!container) return;
 
         const isFit = zoomLevel === 'fit';
-        const isStandard = axisView === 'standard';
-
-        if (isStandard) {
+        if (axisView === 'standard') {
             const newHourWidth = isFit ? (container.offsetWidth - LOCATION_LABEL_WIDTH_PX) / 12 : DEFAULT_HOUR_WIDTH_PX;
             setHourWidth(newHourWidth);
         } else { // Reversed axis
             const newHourHeight = isFit ? container.offsetHeight / 12 : DEFAULT_HOUR_HEIGHT_PX;
             setHourHeight(newHourHeight);
         }
-        
-        // Initial scroll to current time or default time
-        if (isViewingToday && now && !initialScrollPerformed.current) {
-            if (nowMarkerRef.current) {
+    }, [zoomLevel, axisView, containerRef]);
+
+    // Effect for scrolling to current time or a default position
+    useEffect(() => {
+        const container = containerRef.current;
+        if (!container || initialScrollPerformed.current) return;
+
+        const performScroll = () => {
+            if (isViewingToday && now && nowMarkerRef.current) {
                 if (axisView === 'standard') {
                     container.scrollTo({ left: nowMarkerRef.current.offsetLeft - (container.offsetWidth / 2), behavior: 'smooth' });
                 } else {
                     container.scrollTo({ top: nowMarkerRef.current.offsetTop - (container.offsetHeight / 2), behavior: 'smooth' });
                 }
+            } else {
+                // Scroll to a default position (e.g., 7 AM) on other days
+                if (axisView === 'standard') {
+                    container.scrollTo({ left: 7 * hourWidth, behavior: 'auto' });
+                } else {
+                    container.scrollTo({ top: 7 * hourHeight, behavior: 'auto' });
+                }
             }
             initialScrollPerformed.current = true;
-        } else if (!initialScrollPerformed.current) {
-            if (axisView === 'standard') {
-                container.scrollTo({ left: 7 * hourWidth, behavior: 'smooth' });
-            } else {
-                container.scrollTo({ top: 7 * hourHeight, behavior: 'smooth' });
-            }
-        }
-        
-    }, [zoomLevel, axisView, containerRef, now, isViewingToday, date, hourWidth, hourHeight]);
+        };
+
+        // Delay scroll slightly to allow dimensions to stabilize
+        const scrollTimeout = setTimeout(performScroll, 50);
+
+        return () => clearTimeout(scrollTimeout);
+
+    }, [containerRef, now, isViewingToday, date, hourWidth, hourHeight, axisView]);
 
     const hours = Array.from({ length: 24 }, (_, i) => i);
 

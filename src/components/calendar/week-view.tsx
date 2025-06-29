@@ -79,24 +79,35 @@ export const WeekView = React.memo(({ date, containerRef, zoomLevel, onEasyBooki
         initialScrollPerformed.current = false;
     }, [date]);
 
+    // Effect for calculating hour height based on zoom
     useEffect(() => {
         const container = containerRef.current;
         if (!container) return;
-    
         const isFit = zoomLevel === 'fit';
         const newHourHeight = isFit ? container.offsetHeight / 12 : DEFAULT_HOUR_HEIGHT_PX;
         setHourHeight(newHourHeight);
-        
-        if (isCurrentWeek && now && !initialScrollPerformed.current) {
-            if (nowMarkerRef.current) {
+    }, [zoomLevel, containerRef]);
+
+    // Effect for scrolling to current time or a default position
+    useEffect(() => {
+        const container = containerRef.current;
+        if (!container || initialScrollPerformed.current) return;
+    
+        const performScroll = () => {
+            if (isCurrentWeek && now && nowMarkerRef.current) {
                 container.scrollTo({ top: nowMarkerRef.current.offsetTop - (container.offsetHeight / 2), behavior: 'smooth' });
+            } else {
+                container.scrollTo({ top: 7 * hourHeight, behavior: 'auto' });
             }
             initialScrollPerformed.current = true;
-        } else if (!initialScrollPerformed.current) {
-            container.scrollTo({ top: 7 * newHourHeight, behavior: 'smooth' });
-        }
+        };
 
-    }, [zoomLevel, containerRef, now, isCurrentWeek, date]);
+        // Delay scroll slightly to allow dimensions to stabilize
+        const scrollTimeout = setTimeout(performScroll, 50);
+
+        return () => clearTimeout(scrollTimeout);
+
+    }, [containerRef, now, isCurrentWeek, date, hourHeight]);
 
 
     const hours = Array.from({ length: 24 }, (_, i) => i);

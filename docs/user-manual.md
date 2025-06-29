@@ -5,11 +5,10 @@ Welcome to AgileFlow, your team's central hub for managing tasks, scheduling eve
 ## 1. Getting Started
 
 ### 1.1 Requesting Access
-To begin using AgileFlow, you must first request access.
-1.  Navigate to the main page.
-2.  Click the "Sign up" link.
-3.  Enter your email address and click "Request Access".
-4.  An administrator will review your request.
+To begin using AgileFlow, you must first request access from an administrator.
+1.  Navigate to the main page and click the "Sign up" link.
+2.  Enter your email address and click "Request Access".
+3.  An administrator will review your request and grant you access.
 
 ### 1.2 Signing In
 Once your access has been approved, you can sign in:
@@ -19,39 +18,40 @@ Once your access has been approved, you can sign in:
 
 ## 2. Navigating the App
 
-The main navigation is located on the left sidebar, providing quick access to:
-- **Calendar**: Your central scheduling tool.
-- **Overview**: A dashboard of key statistics.
-- **Tasks**: Your personal and team task lists.
-- **Notifications**: Important updates and action items.
-- **Settings**: Manage user and application settings.
+The main navigation is located in the sidebar on the left, providing quick, icon-based access to all sections of the app. Hover over an icon to see its name.
+
+- **Main Navigation**: Access to core features like the Calendar, Overview, Tasks, and Notifications.
+- **Team Management**: If you are a manager of a team, a link to that team's management page will appear here.
+- **Admin Pages**: If you are an Admin, you will see links to the Admin and Service Delivery pages.
+- **User Profile**: At the bottom of the sidebar, you can access your profile, user preferences, and the "View as" feature (for Admins).
 
 ## 3. Dashboard Overview
 
-The **Overview** page gives you a high-level summary of team activity, including active tasks, tasks due soon, and completed tasks. You can also see a list of your most recent tasks.
+The **Overview** page gives you a high-level summary of team activity, including cards for Active Tasks, Tasks Due Soon, and Completed Tasks. You can also see a list of your most recent tasks.
 
 ## 4. Calendar
 
 The calendar is a powerful tool for visualizing and managing your team's schedule.
 
-### 4.1 Calendar Views & Controls
+### 4.1 Creating Events
+- Click the **(+)** icon in the header to open the new event form.
+- Fill in the details, including title, date, time, location, and priority.
+- You can add attachments, request specific roles for the event, and invite guests.
+- **Easy Booking**: In your user preferences, you can enable "Easy Booking," which allows you to click on any empty time slot in the Day, Week, or Production Schedule views to quickly open the new event form with the time pre-filled.
 
-You can switch between four different views:
-- **Month**: A traditional monthly overview.
-- **Week**: A 7-day timeline view.
-- **Day**: A detailed hourly view for a single day. Can be switched between a horizontal (standard) or vertical (reversed) axis.
-- **Production Schedule**: A specialized view showing events organized by location for an entire week.
+### 4.2 Calendar Views & Controls
+- **View Tabs**: Switch between four different views:
+    - **Month**: A traditional monthly overview.
+    - **Week**: A 7-day timeline view.
+    - **Day**: A detailed hourly view for a single day. Can be switched between a horizontal (standard) or vertical (reversed) axis.
+    - **Production Schedule**: A specialized view showing events organized by location for an entire week.
+- **Controls**: Use the controls at the top to navigate between dates, jump to "Today," and adjust the view (e.g., zoom in/out).
+- **Lunch Break**: A subtle diagonal pattern between 12:00 and 14:30 serves as a visual reminder to keep time free for a lunch break.
 
-Use the controls at the top to navigate between dates, jump to "Today", and adjust the view (e.g., zoom in/out).
-
-A subtle diagonal pattern between 12:00 and 14:30 serves as a visual reminder to keep time free for a lunch break.
-
-### 4.2 Production Schedule View
-
+### 4.3 Production Schedule View
 This is the most detailed view, designed for production planning.
-
-- **Daily Checks**: Users with the "Manage Checks" role can add, remove, and assign users to daily check locations that appear as pills at the top of each day.
-- **User Statuses**: Managers can assign absence statuses (e.g., PTO, Sick, TOIL) to users. These appear as color-coded pills on the right side of each day's header. Click the pencil icon to open a dialog to manage these statuses.
+- **Daily Checks**: Users with the "Manage Checks" permission can add, remove, and assign users to daily check locations that appear as pills at the top of each day.
+- **User Statuses**: Managers can assign absence statuses (e.g., PTO, Sick) to users by clicking the `account_circle_off` icon. These appear as color-coded pills on the right side of each day's header.
 
 ## 5. Tasks
 
@@ -63,31 +63,45 @@ The **Tasks** page helps you stay on top of your work.
 ## 6. Notifications
 
 The **Notifications** page keeps you informed.
-- **Unread Count**: A badge shows the number of unread notifications.
+- **Unread Count**: A badge on the sidebar shows the number of unread notifications.
 - **Access Requests**: Administrators can approve or reject new user access requests directly from the notification list.
 
-## 7. Settings & User Management
+## 7. Settings & Preferences
 
-The **Settings** page is where you manage users, roles, and personal preferences. Click on any user row to expand it and view detailed options.
+### 7.1 User Preferences
+Access your preferences by clicking your avatar in the bottom-left corner of the sidebar.
+- **Change Colour Scheme**: Choose between `light`, `dark`, `high-visibility`, and `firebase` themes.
+- **Set Default Calendar View**: Select which calendar view you want to see when you log in.
+- **Set Time Format**: Choose between 12-hour and 24-hour time display.
+- **Enable Easy Booking**: Toggle the quick-create event feature.
 
-### 7.1 For All Users
+### 7.2 User Management Page
+Navigate to **Settings > User Management** from the sidebar (availability depends on permissions).
+- **View All Users**: See a list of all users in the system.
+- **Edit Contact Info**: Click the arrow on a user row to expand it. You can edit your own contact phone number.
+- **Link Google Calendar**: Click the grey dot on your avatar to link your Google Calendar, which enables features like creating Meet links.
 
-- **Personal Preferences**: Click the **palette icon** on your own user row to open the preferences popover. Here you can:
-    - **Change Colour Scheme**: Choose between `light`, `dark`, or `high-visibility` themes.
-    - **Set Default Calendar View**: Select which calendar view you want to see when you log in.
-- **Contact Info**: You can edit your own contact phone number.
+## 8. Management Pages (Admin & Manager Roles)
 
-### 7.2 For Managers & Administrators
+### 8.1 Admin Management (`/dashboard/admin`)
+- **Manage Admins**: Assign or revoke Admin privileges for any user. This action requires two-factor authentication for security.
 
-Users with the appropriate permissions can manage their teams and the application.
+### 8.2 Service Delivery Management (`/dashboard/service-delivery`)
+This is the central hub for global application settings.
+- **Manage Calendars**: Create, edit, or delete shared calendars. You can set a calendar's color, default event title, and assign managers.
+- **Manage Teams**: Create new teams, edit existing team details (name, icon), and assign members and managers.
+- **Manage Priority Strategies**: Define different systems for prioritizing tasks and events (e.g., P0-P4 scale, star ratings).
 
-- **Edit Permissions**: Assign or revoke functional permissions (e.g., `Events`, `Production`). Editing high-privilege permissions like `Admin` or `Service Delivery Manager` requires two-factor authentication for security.
-- **Manage Roles**: Assign custom roles to users (e.g., `Camera`, `Audio`).
-- **Edit Global Roles**: Managers can add or remove roles from the global list available for assignment.
-- **Manage Reporting Lines**: Privileged users can define who reports to whom within the team structure.
+### 8.3 Team Management (`/dashboard/teams/[teamId]`)
+This page is for managing the specifics of an individual team.
+- **Team Members**: View all members of the team and manage their team-specific roles.
+- **Role Management**: Create or edit the custom roles available for this team (e.g., `Camera`, `Audio`).
+- **Pinned Locations**: Pin locations to the team's Production Schedule. You can also designate locations as "check locations."
+- **Workstations**: Manage a list of bookable workstations or machines for the team.
+- **Event Templates**: Create reusable templates for common events, pre-filling requested roles to speed up event creation.
+- **Location Check Managers**: Assign users who are allowed to manage the daily check assignments for this team's locations.
 
-### 7.3 View As Another User
-
+### 8.4 View As Another User (Admin Only)
 Administrators can view the application from another user's perspective.
 1.  Click your avatar in the bottom-left corner of the sidebar.
 2.  Select "View as" from the dropdown menu.

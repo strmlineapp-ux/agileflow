@@ -453,46 +453,42 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
         initialScrollPerformed.current = false;
     }, [date]);
 
-    // Scroll handling
+    // Effect for calculating hour width based on zoom
     useEffect(() => {
-        if (isCurrentWeek && containerRef.current && todayCardRef.current && !initialScrollPerformed.current) {
-            const container = containerRef.current;
-            const todayElement = todayCardRef.current;
-            container.scrollTo({ top: todayElement.offsetTop - 20, behavior: 'smooth' });
-
-            if (nowMarkerRef.current && zoomLevel === 'normal' && now) {
-                const todayIso = weekDays.find(isToday)!.toISOString();
-                const scroller = dayScrollerRefs.current.get(todayIso);
-                if (scroller) {
-                     const scrollLeft = nowMarkerRef.current.offsetLeft - (scroller.offsetWidth / 2) + (LOCATION_LABEL_WIDTH_PX / 2);
-                     scroller.scrollTo({ left: scrollLeft, behavior: 'smooth' });
-                }
-            }
-            initialScrollPerformed.current = true;
-        }
-    }, [date, containerRef, isCurrentWeek, zoomLevel, weekDays, now]);
-
-    // Zoom handling
-    useEffect(() => {
-        const firstScroller = dayScrollerRefs.current.values().next().value;
+        const firstScroller = Array.from(dayScrollerRefs.current.values())[0];
         if (!firstScroller) return;
 
         const isFit = zoomLevel === 'fit';
         const newHourWidth = isFit ? (firstScroller.offsetWidth - LOCATION_LABEL_WIDTH_PX) / 12 : DEFAULT_HOUR_WIDTH_PX;
         setHourWidth(newHourWidth);
+    }, [zoomLevel, weeklyScheduleData]);
 
+    // Effect for scrolling main container to today
+    useEffect(() => {
+        if (isCurrentWeek && containerRef.current && todayCardRef.current && !initialScrollPerformed.current) {
+            containerRef.current.scrollTo({ top: todayCardRef.current.offsetTop - 20, behavior: 'smooth' });
+        }
+    }, [date, containerRef, isCurrentWeek]);
+
+    // Effect for scrolling the day's timeline and resetting flag
+    useEffect(() => {
         if (initialScrollPerformed.current) return;
+        
+        const todayIso = weekDays.find(isToday)?.toISOString();
+        const scroller = todayIso ? dayScrollerRefs.current.get(todayIso) : undefined;
 
-        dayScrollerRefs.current.forEach((scroller, dayIso) => {
-            let targetScroll = 7 * newHourWidth; // Default for normal zoom
-            if (isFit) {
-                targetScroll = 8 * newHourWidth;
-            } else if (isToday(new Date(dayIso)) && now && !initialScrollPerformed.current) {
-                targetScroll = (now.getHours() - 1) * newHourWidth;
-            }
-            scroller?.scrollTo({ left: targetScroll, behavior: 'auto' });
-        });
-    }, [zoomLevel, now]);
+        if (isCurrentWeek && now && scroller) {
+            const scrollLeft = (now.getHours() + now.getMinutes() / 60) * hourWidth - (scroller.offsetWidth / 2) + (LOCATION_LABEL_WIDTH_PX / 2);
+            scroller.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+            initialScrollPerformed.current = true;
+        } else if (!isCurrentWeek) {
+            // Set default scroll for all visible day scrollers
+            dayScrollerRefs.current.forEach((s) => {
+                if (s) s.scrollTo({ left: 7 * hourWidth, behavior: 'auto' });
+            });
+            initialScrollPerformed.current = true;
+        }
+    }, [now, isCurrentWeek, weekDays, hourWidth]);
 
     const toggleDayCollapse = useCallback((dayIso: string) => {
         setCollapsedDays(prev => {
@@ -572,11 +568,10 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
 
                 const tempChecksForDaySet = tempDailyChecks[dayIso] || new Set();
                 
-                const allChecksForDaySet = new Set([...allCheckLocationsForDay, ...Array.from(tempChecksForDaySet)]);
-                const allChecksToRender = Array.from(allChecksForDaySet).sort();
+                const allChecksToRender = Array.from(new Set([...allCheckLocationsForDay, ...Array.from(tempChecksForDaySet)])).sort();
 
                 const availableLocationsForTempCheck = allPinnedLocationsFromAllTeams
-                    .filter(loc => !allChecksForDaySet.has(loc))
+                    .filter(loc => !allChecksToRender.includes(loc))
                     .filter(loc => loc.toLowerCase().includes(checkSearchTerm.toLowerCase()));
 
                 return (

@@ -31,7 +31,7 @@ interface UserContextType {
   updateCalendar: (calendarId: string, calendarData: Partial<SharedCalendar>) => Promise<void>;
   deleteCalendar: (calendarId: string) => Promise<void>;
   events: Event[];
-  addEvent: (newEventData: Omit<Event, 'eventId' | 'createdBy' | 'createdAt' | 'lastUpdated'>) => Promise<void>;
+  addEvent: (newEventData: Omit<Event, 'eventId'>) => Promise<void>;
   updateEvent: (eventId: string, eventData: Partial<Omit<Event, 'eventId'>>) => Promise<void>;
   locations: BookableLocation[];
   allBookableLocations: BookableLocation[];
@@ -119,7 +119,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
    const addTeam = useCallback(async (teamData: Omit<Team, 'id'>) => {
     const newTeam: Team = {
         ...teamData,
-        id: teamData.name.toLowerCase().replace(/\s+/g, '-'),
+        id: crypto.randomUUID(),
     };
     await simulateApi();
     setTeams(current => [...current, newTeam]);
@@ -139,7 +139,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const addCalendar = useCallback(async (newCalendarData: Omit<SharedCalendar, 'id'>) => {
     const newCalendar: SharedCalendar = {
       ...newCalendarData,
-      id: newCalendarData.name.toLowerCase().replace(/\s+/g, '-'),
+      id: crypto.randomUUID(),
     };
     await simulateApi();
     setCalendars(current => [...current, newCalendar]);
@@ -166,17 +166,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, [calendars.length, toast]);
 
 
-  const addEvent = useCallback(async (newEventData: Omit<Event, 'eventId' | 'createdBy' | 'createdAt' | 'lastUpdated'>) => {
+  const addEvent = useCallback(async (newEventData: Omit<Event, 'eventId'>) => {
     const event: Event = {
       ...newEventData,
-      eventId: new Date().toISOString(),
-      createdBy: realUser.userId,
-      createdAt: new Date(),
-      lastUpdated: new Date(),
+      eventId: crypto.randomUUID(),
     };
     await simulateApi();
     setEvents(currentEvents => [...currentEvents, event]);
-  }, [realUser.userId]);
+  }, []);
 
   const updateEvent = useCallback(async (eventId: string, eventData: Partial<Omit<Event, 'eventId'>>) => {
     await simulateApi();
@@ -189,7 +186,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   
   const addLocation = useCallback(async (locationName: string) => {
       const newLocation: BookableLocation = {
-          id: locationName.toLowerCase().replace(/\s+/g, '-'),
+          id: crypto.randomUUID(),
           name: locationName,
       };
       await simulateApi();
@@ -204,7 +201,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const addPriorityStrategy = useCallback(async (strategyData: Omit<PriorityStrategy, 'id'>) => {
     const newStrategy: PriorityStrategy = {
       ...strategyData,
-      id: strategyData.name.toLowerCase().replace(/\s+/g, '-'),
+      id: crypto.randomUUID(),
     };
     await simulateApi();
     setPriorityStrategies(current => [...current, newStrategy]);

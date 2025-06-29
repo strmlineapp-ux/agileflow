@@ -214,7 +214,7 @@ export function EventTemplateManagement({ team }: { team: Team }) {
     } else { // Adding new
       const newTemplate: EventTemplate = {
         ...templateData,
-        id: `template-${Date.now()}` // simple unique id
+        id: crypto.randomUUID(),
       };
       updatedTemplates = [...templates, newTemplate];
       toast({ title: 'Template Created', description: `"${templateData.name}" has been added.` });
