@@ -216,7 +216,7 @@ const ProductionScheduleLocationRow = React.memo(({
          <Popover>
             <PopoverTrigger asChild>
                 <Button variant="ghost" size={assignedUser ? "sm" : "icon"} className={cn("h-6 text-xs", assignedUser ? "w-auto px-1.5" : "w-6 ml-1")}>
-                    {assignedUser ? `${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}` : <GoogleSymbol name="add_circle" />}
+                    {assignedUser ? `${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}` : <GoogleSymbol name="person_add" />}
                 </Button>
             </PopoverTrigger>
             <PopoverContent className="w-56 p-0">
@@ -596,7 +596,7 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
                                             <>
                                                 {locationAliasMap[location] || location}
                                                 {assignedUser && <span className="ml-2 font-normal text-muted-foreground">({`${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}`})</span>}
-                                                {!assignedUser && canManageThisCheckLocation && <GoogleSymbol name="add_circle" className="ml-2" />}
+                                                {!assignedUser && canManageThisCheckLocation && <GoogleSymbol name="person_add" className="ml-2" />}
                                             </>
                                         );
                                         

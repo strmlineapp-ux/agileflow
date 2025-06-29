@@ -402,7 +402,7 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
     <>
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
-        <div className="flex items-center justify-end pb-4 -mr-2">
+        <div className="flex items-center justify-end -mt-6 -mr-6 mb-4">
             <Button type="button" variant="ghost" size="icon" onClick={onFinished} disabled={isLoading} aria-label="Discard changes">
               <GoogleSymbol name="close" />
             </Button>
@@ -635,83 +635,83 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
             )}
           />
 
-            {teamForSelectedCalendar && (
-                <div className="flex flex-wrap items-center gap-2 min-h-[40px]">
-                    {Object.entries(roleAssignments).map(([role, { assignedUser, popoverOpen }]) => {
-                        const user = assignedUser ? users.find(u => u.userId === assignedUser) : null;
-                        const roleInfo = teamForSelectedCalendar.roles.find(r => r.name === role);
-                        
-                        const teamMemberUsers = teamForSelectedCalendar.members
-                            .map(memberId => users.find(u => u.userId === memberId))
-                            .filter((u): u is User => !!u);
-                            
-                        const availableUsers = teamMemberUsers
-                            .filter(u => !absencesForDay.some(a => a.userId === u.userId))
-                            .filter(u => !Object.values(roleAssignments).some(val => val.assignedUser === u.userId));
-                        
-                        const absentUsers = teamMemberUsers
-                            .filter(u => absencesForDay.some(a => a.userId === u.userId))
-                            .map(u => ({ ...u, absence: absencesForDay.find(a => a.userId === u.userId)!.status }));
+            {Object.keys(roleAssignments).length > 0 && (
+              <div className="flex flex-wrap items-center gap-2">
+                  {Object.entries(roleAssignments).map(([role, { assignedUser, popoverOpen }]) => {
+                      const user = assignedUser ? users.find(u => u.userId === assignedUser) : null;
+                      const roleInfo = teamForSelectedCalendar?.roles.find(r => r.name === role);
+                      
+                      const teamMemberUsers = teamForSelectedCalendar?.members
+                          .map(memberId => users.find(u => u.userId === memberId))
+                          .filter((u): u is User => !!u) || [];
+                          
+                      const availableUsers = teamMemberUsers
+                          .filter(u => !absencesForDay.some(a => a.userId === u.userId))
+                          .filter(u => !Object.values(roleAssignments).some(val => val.assignedUser === u.userId && val.assignedUser !== assignedUser));
+                      
+                      const absentUsers = teamMemberUsers
+                          .filter(u => absencesForDay.some(a => a.userId === u.userId))
+                          .map(u => ({ ...u, absence: absencesForDay.find(a => a.userId === u.userId)!.status }));
 
-                        return (
-                            <Badge
-                                key={role}
-                                variant="outline"
-                                style={{
-                                    borderStyle: 'solid',
-                                    borderWidth: assignedUser ? '2px' : '1px',
-                                    borderColor: roleInfo?.color || 'hsl(var(--border))',
-                                    color: roleInfo?.color,
-                                    ...(assignedUser ? {} : {borderStyle: 'dashed'})
-                                }}
-                                className="text-sm p-1 pl-1.5 rounded-full flex items-center gap-1 bg-transparent"
-                            >
-                                <Popover open={popoverOpen} onOpenChange={() => toggleRolePopover(role)}>
-                                    <PopoverTrigger asChild>
-                                        <span className="cursor-pointer flex items-center gap-1.5">
-                                            {roleInfo && <GoogleSymbol name={roleInfo.icon} className="text-base" />}
-                                            <span>
-                                                {role}
-                                                {user && <span className="font-normal mx-2 text-muted-foreground">/</span>}
-                                                {user && <span className="font-semibold">{user.displayName}</span>}
-                                            </span>
-                                        </span>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-[300px] p-0">
-                                        <ScrollArea className="max-h-60">
-                                            <div className="p-1">
-                                            {availableUsers.map(u => (
-                                                <div key={u.userId} onClick={() => handleAssignUserToRole(role, u)} className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer">
-                                                    <Avatar className="h-8 w-8"><AvatarImage src={u.avatarUrl} alt={u.displayName} data-ai-hint="user avatar" /><AvatarFallback>{u.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
-                                                    <p className="font-medium text-sm">{u.displayName}</p>
-                                                </div>
-                                            ))}
-                                            {absentUsers.length > 0 && availableUsers.length > 0 && <Separator className="my-1" />}
-                                            {absentUsers.map(u => (
-                                                <div key={u.userId} className="flex items-center justify-between gap-2 p-2 rounded-md opacity-50 cursor-not-allowed">
-                                                    <div className="flex items-center gap-2">
-                                                        <Avatar className="h-8 w-8"><AvatarImage src={u.avatarUrl} alt={u.displayName} data-ai-hint="user avatar" /><AvatarFallback>{u.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
-                                                        <p className="font-medium text-sm">{u.displayName}</p>
-                                                    </div>
-                                                    <UserStatusBadge status={u.absence}>{u.absence}</UserStatusBadge>
-                                                </div>
-                                            ))}
-                                            </div>
-                                        </ScrollArea>
-                                    </PopoverContent>
-                                </Popover>
-                                <button
-                                    type="button"
-                                    onClick={() => handleRoleAction(role)}
-                                    className="h-4 w-4 rounded-full hover:bg-black/10 flex items-center justify-center"
-                                    aria-label={user ? `Unassign user from ${role}` : `Remove role ${role}`}
-                                >
-                                    <GoogleSymbol name="cancel" className="text-xs" />
-                                </button>
-                            </Badge>
-                        );
-                    })}
-                </div>
+                      return (
+                          <Badge
+                              key={role}
+                              variant="outline"
+                              style={{
+                                  borderStyle: 'solid',
+                                  borderWidth: assignedUser ? '2px' : '1px',
+                                  borderColor: roleInfo?.color || 'hsl(var(--border))',
+                                  color: roleInfo?.color,
+                                  ...(assignedUser ? {} : {borderStyle: 'dashed'})
+                              }}
+                              className="text-sm p-1 pl-1.5 rounded-full flex items-center gap-1 bg-transparent"
+                          >
+                              <Popover open={popoverOpen} onOpenChange={() => toggleRolePopover(role)}>
+                                  <PopoverTrigger asChild>
+                                      <span className="cursor-pointer flex items-center gap-1.5">
+                                          {roleInfo && <GoogleSymbol name={roleInfo.icon} className="text-base" />}
+                                          <span>
+                                              {role}
+                                              {user && <span className="font-normal mx-2 text-muted-foreground">/</span>}
+                                              {user && <span className="font-semibold">{user.displayName}</span>}
+                                          </span>
+                                      </span>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-[300px] p-0">
+                                      <ScrollArea className="max-h-60">
+                                          <div className="p-1">
+                                          {availableUsers.map(u => (
+                                              <div key={u.userId} onClick={() => handleAssignUserToRole(role, u)} className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer">
+                                                  <Avatar className="h-8 w-8"><AvatarImage src={u.avatarUrl} alt={u.displayName} data-ai-hint="user avatar" /><AvatarFallback>{u.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
+                                                  <p className="font-medium text-sm">{u.displayName}</p>
+                                              </div>
+                                          ))}
+                                          {absentUsers.length > 0 && availableUsers.length > 0 && <Separator className="my-1" />}
+                                          {absentUsers.map(u => (
+                                              <div key={u.userId} className="flex items-center justify-between gap-2 p-2 rounded-md opacity-50 cursor-not-allowed">
+                                                  <div className="flex items-center gap-2">
+                                                      <Avatar className="h-8 w-8"><AvatarImage src={u.avatarUrl} alt={u.displayName} data-ai-hint="user avatar" /><AvatarFallback>{u.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
+                                                      <p className="font-medium text-sm">{u.displayName}</p>
+                                                  </div>
+                                                  <UserStatusBadge status={u.absence}>{u.absence}</UserStatusBadge>
+                                              </div>
+                                          ))}
+                                          </div>
+                                      </ScrollArea>
+                                  </PopoverContent>
+                              </Popover>
+                              <button
+                                  type="button"
+                                  onClick={() => handleRoleAction(role)}
+                                  className="h-4 w-4 rounded-full hover:bg-black/10 flex items-center justify-center"
+                                  aria-label={user ? `Unassign user from ${role}` : `Remove role ${role}`}
+                              >
+                                  <GoogleSymbol name="cancel" className="text-xs" />
+                              </button>
+                          </Badge>
+                      );
+                  })}
+              </div>
             )}
 
             {selectedAttendees.length > 0 && (
@@ -742,9 +742,8 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0 text-muted-foreground hover:text-foreground">
+                            <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0 text-primary">
                               <GoogleSymbol name="attachment" className="text-xl" />
-                              <span className="sr-only">Attach file</span>
                             </Button>
                           </DropdownMenuTrigger>
                         </TooltipTrigger>
@@ -811,7 +810,7 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <PopoverTrigger asChild>
-                                    <Button type="button" variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground"><GoogleSymbol name="account_circle" className="text-xl" /></Button>
+                                    <Button type="button" variant="ghost" size="icon" className="h-6 w-6 text-primary"><GoogleSymbol name="account_circle" className="text-xl" /></Button>
                                 </PopoverTrigger>
                             </TooltipTrigger>
                             <TooltipContent><p>Add Role Request</p></TooltipContent>
@@ -836,7 +835,7 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <PopoverTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground">
+                                    <Button variant="ghost" size="icon" className="h-6 w-6 text-primary">
                                         <GoogleSymbol name="group_add" className="text-xl" />
                                     </Button>
                                 </PopoverTrigger>
