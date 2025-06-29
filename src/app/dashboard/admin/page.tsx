@@ -153,7 +153,7 @@ export default function AdminPage() {
           {/* Admins Column */}
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
                 <CardTitle>Admins</CardTitle>
                 <AddUserToRoleButton usersToAdd={nonAdminUsers} onAdd={handleAdminToggle} roleName="Admin" />
               </div>
@@ -169,7 +169,7 @@ export default function AdminPage() {
           {/* Service Admins Column */}
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
                 <CardTitle>Service Admins</CardTitle>
                 <AddUserToRoleButton usersToAdd={nonServiceAdminUsers} onAdd={handleServiceAdminToggle} roleName="Service Admin" />
               </div>
