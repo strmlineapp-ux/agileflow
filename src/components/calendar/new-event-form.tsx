@@ -813,7 +813,7 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <PopoverTrigger asChild>
-                                    <Button type="button" variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary"><GoogleSymbol name="account_circle" className="text-xl" /></Button>
+                                    <Button type="button" variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary"><GoogleSymbol name="badge" className="text-xl" /></Button>
                                 </PopoverTrigger>
                             </TooltipTrigger>
                             <TooltipContent><p>Add Role Request</p></TooltipContent>
