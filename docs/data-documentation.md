@@ -22,7 +22,7 @@ This table details the information stored directly within each `User` object.
 | `phone?: string` | **Google Service.** The user's contact phone number. This is designed to be populated from the user's **Google Account profile** **after the user grants the necessary permissions**. |
 | `location?: string` | **Google Service.** The user's primary work location. This is designed to be populated from the user's **Google Account profile** (from their address information) **after the user grants the necessary permissions**. |
 | `googleCalendarLinked: boolean` | **Google Service.** A flag that is set to `true` only after the user successfully completes an OAuth consent flow via **Firebase Authentication** to grant the app permission to access their Google Calendar. |
-| `roles?: string[]` | **Internal.** An array of team-specific role names assigned to the user (e.g., `Camera`, `Audio`). This is critical for contextual assignments. |
+| `roles?: string[]` | **Internal.** An array of role name strings. This is a flat list that includes both System-Level roles (e.g., "Service Admin") and Team-Specific roles (e.g., "Camera"). The application determines the role's meaning and properties by looking it up in `AppSettings` or the relevant `Team` object. |
 | `directReports?: string[]` | **Internal.** An array of `userId`s for users who report directly to this user. This is currently informational. |
 | `theme?: 'light' \| 'dark' \| ...` | **Internal.** A UI preference for the app's color scheme. |
 | `defaultCalendarView?: 'month' \| 'week' \| ...` | **Internal.** A UI preference for the default calendar layout. |
@@ -31,17 +31,19 @@ This table details the information stored directly within each `User` object.
 
 ### User Roles & Permissions
 
-The application uses a combination of the `isAdmin` flag and the `roles` array to dictate a user's permissions and capabilities:
+The application uses a combination of the `isAdmin` flag and the `roles` array to dictate a user's permissions and capabilities. There are two main categories of roles:
 
 1.  **System-Level Roles**
     *   **Description**: These are high-privilege roles that grant broad, application-wide permissions. They are checked directly in the code to control access to entire pages or administrative features.
-    *   **Examples**: `Admin` (via the `isAdmin` flag), `Service Admin`.
-    *   **Management**: The `Admin` status is managed on the Admin page. Other system-level roles are assigned to users by an administrator, and their meaning is determined by the application's internal logic.
+    *   **Types**:
+        *   **Admin**: The highest-level role, controlled by the `isAdmin` boolean flag on the `User` object. It grants universal access.
+        *   **Custom Admin Roles** (e.g., "Service Admin"): These roles are defined as `CustomAdminRole` objects within `AppSettings`. They allow for a granular hierarchy of permissions between the main `Admin` and standard users.
+    *   **Management**: The `Admin` status is managed on the **Admin Management** page. Custom Admin Roles are also created, ordered, and assigned to users on this page. Assigning a user to one of these roles adds the role's `name` to the user's `roles` array.
 
 2.  **Team-Specific Roles**
-    *   **Description**: These roles are defined within a specific `Team` and are used for contextual assignments, such as assigning a user to a specific function for an event (e.g., "Camera Operator"). They have associated metadata like an icon and color for display purposes.
-    *   **Examples**: `Camera`, `Audio`, `Video Director`, `Post-Production`.
-    *   **Management**: These roles are created and managed by Team Admins on the `Team Management` page.
+    *   **Description**: These are functional roles defined within a specific `Team` and are used for contextual assignments, such as assigning a "Camera Operator" to a specific event.
+    *   **Properties**: Each `TeamRole` has an associated `name`, `icon`, and `color` for display purposes.
+    *   **Management**: These roles are created and managed by Team Admins on the specific `Team Management` page for each team. Assigning a team role to a user adds the role's `name` to their `user.roles` array.
 
 ### Associated Data & Relationships
 
@@ -76,6 +78,7 @@ This entity, `AppSettings`, holds global configuration data that allows for cust
 | Data Point | Description & Link to Services |
 | :--- | :--- |
 | `customAdminRoles: CustomAdminRole[]` | **Internal.** An array of objects defining custom administrative roles. This allows admins to create a hierarchy of roles between the system `Admin` and standard users. Each role has a name, icon, and color, which are editable on the Admin Management page. |
+| `linkGroups: Record<string, LinkGroup>` | **Internal.** A dictionary that stores the shared properties (icon and color) for linked `CustomAdminRole` entities. The key is the `linkGroupId`. |
 | `calendarManagementLabel?: string` | **Internal.** An alias for the "Calendar Management" tab on the Service Delivery page. |
 | `teamManagementLabel?: string` | **Internal.** An alias for the "Team Management" tab on the Service Delivery page. |
 | `strategyLabel?: string` | **Internal.** An alias for the "Strategy" tab on the Service Delivery page. |
@@ -89,5 +92,5 @@ A sub-entity of `AppSettings`, `CustomAdminRole` defines a single, dynamic admin
 | `name: string` | **Internal.** The display name for the role (e.g., "Service Admin", "Service Admin+"). This is editable inline on the Admin Management page. |
 | `icon: string` | **Internal.** The Google Symbol name for the icon associated with the role. |
 | `color: string` | **Internal.** The hex color code for the icon's badge. |
-| `linkGroupId?: string` | **Internal.** An identifier used to group multiple `CustomAdminRole` entities at the same hierarchical level. |
+| `linkGroupId?: string` | **Internal.** An identifier used to group multiple `CustomAdminRole` entities at the same hierarchical level. If present, it points to a key in `AppSettings.linkGroups`. |
 | `teamAdmins?: string[]` | **Internal.** An array of `userId`s for users who have been designated as a "Team Admin" for this specific role level. This is managed on the Admin Management page. |
