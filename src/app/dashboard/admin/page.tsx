@@ -15,8 +15,24 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle as UIAlertDialogTitle } from '@/components/ui/alert-dialog';
-import { DragDropContext, Droppable, Draggable, type DropResult } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProps } from 'react-beautiful-dnd';
 import { Skeleton } from '@/components/ui/skeleton';
+
+// Wrapper to fix issues with react-beautiful-dnd and React 18 Strict Mode
+const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
+  const [enabled, setEnabled] = useState(false);
+  useEffect(() => {
+    const animation = requestAnimationFrame(() => setEnabled(true));
+    return () => {
+      cancelAnimationFrame(animation);
+      setEnabled(false);
+    };
+  }, []);
+  if (!enabled) {
+    return null;
+  }
+  return <Droppable {...props}>{children}</Droppable>;
+};
 
 
 // A card to display a user with a specific role.
@@ -286,13 +302,6 @@ const AdminPageSkeleton = () => (
 export default function AdminPage() {
   const { toast } = useToast();
   const { viewAsUser, users, updateUser, appSettings, updateAppSettings } = useUser();
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    // This ensures the component only renders on the client,
-    // preventing hydration mismatches with drag-and-drop.
-    setIsClient(true);
-  }, []);
   
   const isAdmin = useMemo(() => viewAsUser.isAdmin, [viewAsUser]);
 
@@ -390,10 +399,6 @@ export default function AdminPage() {
     updateAppSettings({ customAdminRoles: reorderedRoles });
   };
 
-  if (!isClient) {
-    return <AdminPageSkeleton />;
-  }
-
   return (
     <>
       <div className="flex flex-col gap-8">
@@ -406,7 +411,7 @@ export default function AdminPage() {
         </div>
         
         <DragDropContext onDragEnd={onDragEnd}>
-            <Droppable droppableId="admin-roles-list">
+            <StrictModeDroppable droppableId="admin-roles-list">
               {(provided) => (
                 <div 
                   className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 items-start"
@@ -453,7 +458,7 @@ export default function AdminPage() {
                   {provided.placeholder}
                 </div>
               )}
-            </Droppable>
+            </StrictModeDroppable>
           </DragDropContext>
       </div>
 
