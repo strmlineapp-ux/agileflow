@@ -572,27 +572,34 @@ export function BadgeManagement({ team }: { team: Team }) {
     const handleDuplicateCollection = (sourceCollectionId: string) => {
         const sourceCollection = team.badgeCollections.find(c => c.id === sourceCollectionId);
         if (!sourceCollection) return;
-
+    
         const newCollectionId = crypto.randomUUID();
+        
+        const badgeIdMap = new Map<string, string>(); // Old owned ID -> New ID
+        const newBadges: Badge[] = [];
+    
+        // Find badges owned by the source collection to duplicate them.
+        team.allBadges.forEach(badge => {
+            if (badge.ownerCollectionId === sourceCollection.id) {
+                const newBadgeId = crypto.randomUUID();
+                badgeIdMap.set(badge.id, newBadgeId);
+                newBadges.push({
+                    ...badge,
+                    id: newBadgeId,
+                    ownerCollectionId: newCollectionId,
+                });
+            }
+        });
+    
+        // The new collection will have new IDs for its owned badges, and keep the same IDs for linked badges.
         const newCollection: BadgeCollection = {
             ...sourceCollection,
             id: newCollectionId,
             name: `${sourceCollection.name} (Copy)`,
-            badgeIds: [], // This will be populated with new badge IDs
+            badgeIds: sourceCollection.badgeIds.map(oldId => {
+                return badgeIdMap.get(oldId) || oldId; // Use new ID if it was owned, otherwise keep original (linked) ID
+            }),
         };
-        
-        const badgesToDuplicate = team.allBadges.filter(b => b.ownerCollectionId === sourceCollection.id);
-        
-        const newBadges: Badge[] = badgesToDuplicate.map(sourceBadge => {
-            const newBadgeId = crypto.randomUUID();
-            return {
-                ...sourceBadge,
-                id: newBadgeId,
-                ownerCollectionId: newCollectionId,
-            };
-        });
-
-        newCollection.badgeIds = newBadges.map(b => b.id);
         
         const updatedCollections = [...team.badgeCollections, newCollection];
         const updatedAllBadges = [...team.allBadges, ...newBadges];
@@ -601,7 +608,7 @@ export function BadgeManagement({ team }: { team: Team }) {
             badgeCollections: updatedCollections,
             allBadges: updatedAllBadges,
         });
-
+    
         toast({
             title: 'Collection Duplicated',
             description: `"${newCollection.name}" has been created.`,
@@ -669,7 +676,7 @@ export function BadgeManagement({ team }: { team: Team }) {
                                     ref={provided.innerRef}
                                     {...provided.droppableProps}
                                     className={cn(
-                                        "rounded-full transition-all",
+                                        "rounded-full transition-all p-1",
                                         snapshot.isDraggingOver && "ring-2 ring-primary ring-offset-2 bg-accent"
                                     )}
                                 >
@@ -686,7 +693,6 @@ export function BadgeManagement({ team }: { team: Team }) {
                                             </TooltipContent>
                                         </Tooltip>
                                     </TooltipProvider>
-                                    <div style={{ display: 'none' }}>{provided.placeholder}</div>
                                 </div>
                             )}
                         </StrictModeDroppable>
