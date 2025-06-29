@@ -637,66 +637,6 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
             )}
           />
 
-            <Card>
-                <CardContent className="p-2">
-                    <div className="flex items-start gap-2">
-                    <Popover open={isGuestPopoverOpen} onOpenChange={setIsGuestPopoverOpen}>
-                        <PopoverTrigger asChild>
-                            <Button variant="ghost" size="icon" className="shrink-0">
-                            <GoogleSymbol name="group_add" className="text-xl" />
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[480px] p-0" align="start">
-                            <Tabs defaultValue="by-name">
-                                <TabsList className="grid w-full grid-cols-2">
-                                    <TabsTrigger value="by-name">By Name or Email</TabsTrigger>
-                                    <TabsTrigger value="by-role">By Role</TabsTrigger>
-                                </TabsList>
-                                <TabsContent value="by-name" className="p-0">
-                                    <div className="p-2">
-                                        <Input placeholder="Search by name or email..." value={guestSearch} onChange={e => setGuestSearch(e.target.value)} className="w-full" />
-                                    </div>
-                                    <Separator />
-                                    <ScrollArea className="max-h-60">
-                                    <div className="p-1">
-                                    {filteredGuests.filter(g => g.displayName.toLowerCase().includes(guestSearch.toLowerCase()) || g.email.toLowerCase().includes(guestSearch.toLowerCase())).map(guest => (
-                                        <div key={guest.userId} onClick={() => handleToggleGuest(guest)} className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer">
-                                            <Avatar className="h-8 w-8"><AvatarImage src={guest.avatarUrl} alt={guest.displayName} data-ai-hint="user avatar" /><AvatarFallback>{guest.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
-                                            <div><p className="font-medium text-sm">{guest.displayName}</p><p className="text-xs text-muted-foreground">{guest.email}</p></div>
-                                        </div>
-                                    ))}
-                                    </div>
-                                    </ScrollArea>
-                                </TabsContent>
-                                <TabsContent value="by-role" className="p-2">
-                                    <ScrollArea className="max-h-[280px]">
-                                        <div className="flex flex-wrap gap-2 p-2">
-                                            {(teamForSelectedCalendar?.roles || []).map(role => (
-                                                <Badge key={role.name} onClick={() => handleAddGuestsByRole(role.name)} className="cursor-pointer">{role.name}</Badge>
-                                            ))}
-                                        </div>
-                                    </ScrollArea>
-                                </TabsContent>
-                            </Tabs>
-                        </PopoverContent>
-                    </Popover>
-                    <div className="flex flex-wrap gap-1 items-center min-h-[40px] flex-1">
-                        {selectedAttendees.length > 0 ? (
-                            selectedAttendees.map(attendee => (
-                            <div key={attendee.email} className="flex items-center gap-2 p-1 pr-2 bg-muted rounded-full">
-                                <Avatar className="h-6 w-6"><AvatarImage src={attendee.avatarUrl} alt={attendee.displayName} data-ai-hint="user avatar" /><AvatarFallback>{attendee.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
-                                <span className="text-sm font-medium">{attendee.displayName}</span>
-                                <button type="button" onClick={() => handleToggleGuest(attendee as User)} className="h-4 w-4 rounded-full hover:bg-muted-foreground/20 flex items-center justify-center"><GoogleSymbol name="cancel" className="text-sm" /></button>
-                            </div>
-                            ))
-                        ) : (
-                            <p className="text-sm text-muted-foreground">Add guests...</p>
-                        )}
-                    </div>
-                    </div>
-                </CardContent>
-            </Card>
-
             {teamForSelectedCalendar && (
                 <Card>
                     <CardContent className="p-2">
@@ -722,6 +662,46 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                                       </ScrollArea>
                                     </PopoverContent>
                                 </Popover>
+                                <Popover open={isGuestPopoverOpen} onOpenChange={setIsGuestPopoverOpen}>
+                                    <PopoverTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-6 w-6">
+                                            <GoogleSymbol name="group_add" className="text-xl" />
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-[480px] p-0" align="start">
+                                        <Tabs defaultValue="by-name">
+                                            <TabsList className="grid w-full grid-cols-2">
+                                                <TabsTrigger value="by-name">By Name or Email</TabsTrigger>
+                                                <TabsTrigger value="by-role">By Role</TabsTrigger>
+                                            </TabsList>
+                                            <TabsContent value="by-name" className="p-0">
+                                                <div className="p-2">
+                                                    <Input placeholder="Search by name or email..." value={guestSearch} onChange={e => setGuestSearch(e.target.value)} className="w-full" />
+                                                </div>
+                                                <Separator />
+                                                <ScrollArea className="max-h-60">
+                                                <div className="p-1">
+                                                {filteredGuests.filter(g => g.displayName.toLowerCase().includes(guestSearch.toLowerCase()) || g.email.toLowerCase().includes(guestSearch.toLowerCase())).map(guest => (
+                                                    <div key={guest.userId} onClick={() => handleToggleGuest(guest)} className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer">
+                                                        <Avatar className="h-8 w-8"><AvatarImage src={guest.avatarUrl} alt={guest.displayName} data-ai-hint="user avatar" /><AvatarFallback>{guest.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
+                                                        <div><p className="font-medium text-sm">{guest.displayName}</p><p className="text-xs text-muted-foreground">{guest.email}</p></div>
+                                                    </div>
+                                                ))}
+                                                </div>
+                                                </ScrollArea>
+                                            </TabsContent>
+                                            <TabsContent value="by-role" className="p-2">
+                                                <ScrollArea className="max-h-[280px]">
+                                                    <div className="flex flex-wrap gap-2 p-2">
+                                                        {(teamForSelectedCalendar?.roles || []).map(role => (
+                                                            <Badge key={role.name} onClick={() => handleAddGuestsByRole(role.name)} className="cursor-pointer">{role.name}</Badge>
+                                                        ))}
+                                                    </div>
+                                                </ScrollArea>
+                                            </TabsContent>
+                                        </Tabs>
+                                    </PopoverContent>
+                                </Popover>
                             </div>
                             <div className="flex flex-wrap gap-2 p-2 border rounded-md bg-muted/50 min-h-[40px]">
                                 {Object.entries(roleAssignments).map(([role, { assignedUser, popoverOpen }]) => {
@@ -744,10 +724,10 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                                         <Badge
                                             key={role}
                                             variant="outline"
-                                            style={roleInfo ? { color: roleInfo.color, borderColor: roleInfo.color } : {}}
+                                            style={user ? { color: roleInfo?.color, borderColor: roleInfo?.color } : { borderStyle: 'dashed', color: roleInfo?.color, borderColor: roleInfo?.color }}
                                             className={cn(
-                                                "text-sm p-1 pl-3 rounded-full flex items-center gap-1",
-                                                user ? "border-2" : "border-dashed"
+                                                "text-sm p-1 pl-3 rounded-full flex items-center gap-1 bg-transparent",
+                                                user && "border-2"
                                             )}
                                         >
                                             <Popover open={popoverOpen} onOpenChange={() => toggleRolePopover(role)}>
@@ -796,6 +776,22 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                                     );
                                 })}
                             </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
+            {selectedAttendees.length > 0 && (
+                <Card>
+                    <CardContent className="p-2">
+                        <div className="flex flex-wrap gap-1 items-center min-h-[40px] flex-1">
+                            {selectedAttendees.map(attendee => (
+                            <div key={attendee.email} className="flex items-center gap-2 p-1 pr-2 bg-muted rounded-full">
+                                <Avatar className="h-6 w-6"><AvatarImage src={attendee.avatarUrl} alt={attendee.displayName} data-ai-hint="user avatar" /><AvatarFallback>{attendee.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
+                                <span className="text-sm font-medium">{attendee.displayName}</span>
+                                <button type="button" onClick={() => handleToggleGuest(attendee as User)} className="h-4 w-4 rounded-full hover:bg-muted-foreground/20 flex items-center justify-center"><GoogleSymbol name="cancel" className="text-sm" /></button>
+                            </div>
+                            ))}
                         </div>
                     </CardContent>
                 </Card>
