@@ -1,6 +1,6 @@
 
 
-import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team, type PriorityStrategy, type AppSettings, type Badge } from '@/types';
+import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team, type PriorityStrategy, type AppSettings, type Badge, type BadgeCollection } from '@/types';
 
 export const mockAppSettings: AppSettings = {
   customAdminRoles: [
@@ -187,6 +187,25 @@ export const mockLocations: BookableLocation[] = [
     { id: 'apgar', name: 'Apgar' },
 ];
 
+const studioProdCollectionId = 'av-prod-collection';
+const liveEventsCollectionId = 'skills-collection';
+
+const studioProdBadges: Badge[] = [
+    { id: 'badge-postprod', ownerCollectionId: studioProdCollectionId, name: 'Post-Production', icon: 'movie_filter', color: '#F97316', description: 'Handles all post-production tasks including editing, color grading, and final exports.' },
+    { id: 'badge-director', ownerCollectionId: studioProdCollectionId, name: 'Video Director', icon: 'videocam', color: '#3B82F6' },
+    { id: 'badge-editevents', ownerCollectionId: studioProdCollectionId, name: 'Edit Events', icon: 'edit_calendar', color: '#10B981' },
+    { id: 'badge-camera', ownerCollectionId: studioProdCollectionId, name: 'Camera', icon: 'photo_camera', color: '#6366F1' },
+    { id: 'badge-audio', ownerCollectionId: studioProdCollectionId, name: 'Audio', icon: 'mic', color: '#EC4899' },
+    { id: 'badge-dop', ownerCollectionId: studioProdCollectionId, name: 'D.o.P.', icon: 'camera', color: '#8B5CF6' },
+];
+
+const liveEventsBadges: Badge[] = [
+    { id: 'badge-td', ownerCollectionId: liveEventsCollectionId, name: 'TD', icon: 'engineering', color: '#F43F5E' },
+    { id: 'badge-esop', ownerCollectionId: liveEventsCollectionId, name: 'ES Operator', icon: 'slideshow', color: '#14B8A6' },
+    { id: 'badge-contentop', ownerCollectionId: liveEventsCollectionId, name: 'Content Op', icon: 'article', color: '#0EA5E9' },
+    { id: 'badge-1stad', ownerCollectionId: liveEventsCollectionId, name: '1st AD', icon: 'group', color: '#A855F7' }
+];
+
 export const mockTeams: Team[] = [
     {
         id: 'studio-productions',
@@ -197,21 +216,18 @@ export const mockTeams: Team[] = [
         managerRoleName: 'Team Admins',
         memberRoleName: 'Team Members',
         locationCheckManagers: ['1'],
+        allBadges: [
+            ...studioProdBadges
+        ],
         badgeCollections: [{
+            id: studioProdCollectionId,
             name: 'Audio & Video Production',
             icon: 'video_settings',
-            color: '#8B5CF6',
+            color: '#10B981',
             viewMode: 'assorted',
             description: 'Badges related to the full pipeline of audio and video creation, from directing to post-production.',
             attachments: [],
-            badges: [
-                { name: 'Post-Production', icon: 'movie_filter', color: '#F97316', description: 'Handles all post-production tasks including editing, color grading, and final exports.' },
-                { name: 'Video Director', icon: 'videocam', color: '#3B82F6' },
-                { name: 'Edit Events', icon: 'edit_calendar', color: '#10B981' },
-                { name: 'Camera', icon: 'photo_camera', color: '#6366F1' },
-                { name: 'Audio', icon: 'mic', color: '#EC4899' },
-                { name: 'D.o.P.', icon: 'camera', color: '#8B5CF6' },
-            ]
+            badgeIds: studioProdBadges.map(b => b.id)
         }],
         checkManagersLabel: 'Location Check Managers',
         pinnedLocations: ['Studio'],
@@ -235,20 +251,22 @@ export const mockTeams: Team[] = [
         memberRoleName: 'Team Members',
         locationCheckManagers: ['2'],
         checkManagersLabel: 'Location Check Managers',
+        allBadges: [
+            ...liveEventsBadges,
+            // Include shared badges here that are owned by other collections
+            // For now, let's just use the ones owned by this team
+        ],
         badgeCollections: [{
+            id: liveEventsCollectionId,
             name: 'Skills',
             icon: 'palette',
             color: '#64748B',
             viewMode: 'assorted',
             description: 'General skills and roles for live event execution.',
-            attachments: [],
-            badges: [
-                { name: 'TD', icon: 'engineering', color: '#F43F5E' },
-                { name: 'ES Operator', icon: 'slideshow', color: '#14B8A6' },
-                { name: 'Content Op', icon: 'article', color: '#0EA5E9' },
-                { name: 'Camera', icon: 'photo_camera', color: '#6366F1' },
-                { name: 'Audio', icon: 'mic', color: '#EC4899' },
-                { name: '1st AD', icon: 'group', color: '#A855F7' }
+            badgeIds: [
+                ...liveEventsBadges.map(b => b.id),
+                'badge-camera', // Linked from studio productions
+                'badge-audio',  // Linked from studio productions
             ]
         }],
         pinnedLocations: ['Auditorium', 'ACR', 'Event Space 1 (S2)', 'Event Space 2 (S2)', 'Event Space 3 (R7)', 'Event Space 4 (R7)', 'Training Room', 'Apgar', 'Locke'],
@@ -272,6 +290,7 @@ export const mockTeams: Team[] = [
         memberRoleName: 'Team Members',
         locationCheckManagers: [],
         checkManagersLabel: 'Location Check Managers',
+        allBadges: [],
         badgeCollections: [],
         pinnedLocations: [],
         pinnedLocationsLabel: 'Pinned & Check Locations',

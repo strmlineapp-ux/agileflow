@@ -43,7 +43,7 @@ export interface User {
   location?: string;
   phone?: string;
   title?: string;
-  roles?: string[]; // Contains names of CustomAdminRoles and Badges
+  roles?: string[]; // Contains names of CustomAdminRoles and Badge names
   directReports?: string[];
   theme?: 'light' | 'dark' | 'high-visibility' | 'firebase';
   defaultCalendarView?: 'month' | 'week' | 'day' | 'production-schedule';
@@ -59,6 +59,8 @@ export interface EventTemplate {
 }
 
 export interface Badge {
+  id: string;
+  ownerCollectionId: string;
   name: string;
   icon: string;
   color: string;
@@ -67,11 +69,12 @@ export interface Badge {
 }
 
 export interface BadgeCollection {
+  id: string;
   name: string;
   icon: string;
   color: string;
-  viewMode: 'assorted' | 'scale' | 'list' | 'detailed';
-  badges: Badge[];
+  viewMode: 'assorted' | 'scale' | 'list';
+  badgeIds: string[];
   description?: string;
   attachments?: Attachment[];
 }
@@ -86,7 +89,8 @@ export interface Team {
   memberRoleName?: string;
   locationCheckManagers: string[]; // array of userIds who can manage check locations
   checkManagersLabel?: string;
-  badgeCollections: BadgeCollection[]; // team-specific badges, grouped into collections
+  allBadges: Badge[]; // The single source of truth for all badges in this team
+  badgeCollections: BadgeCollection[]; // Groups of badges, containing badge IDs
   pinnedLocations: string[]; // array of location names
   pinnedLocationsLabel?: string;
   checkLocations: string[]; // subset of pinnedLocations designated for daily checks
@@ -208,6 +212,7 @@ export interface Notification {
   user: Pick<User, 'userId' | 'displayName' | 'avatarUrl' | 'easyBooking'>; // The user who *caused* the notification
   content: string;
   time: Date;
+  read: boolean;
   data?: { // payload for access_requests
     email: string;
     displayName: string;

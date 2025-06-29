@@ -20,7 +20,7 @@ interface UserContextType {
   allRoles: { name: string; icon: string; color: string; }[];
   teams: Team[];
   addTeam: (teamData: Omit<Team, 'id'>) => Promise<void>;
-  updateTeam: (teamId: string, teamData: Partial<Omit<Team, 'id'>>) => Promise<void>;
+  updateTeam: (teamId: string, teamData: Partial<Team>) => Promise<void>;
   deleteTeam: (teamId: string) => Promise<void>;
   notifications: Notification[];
   setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>;
@@ -84,15 +84,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const allBadges = useMemo(() => {
     const badgesMap = new Map<string, Badge>();
     teams.forEach(team => {
-        (team.badgeCollections || []).forEach(collection => {
-            (collection.badges || []).forEach(badge => {
-                if (!badgesMap.has(badge.name)) {
-                    badgesMap.set(badge.name, badge);
-                }
-            });
+        (team.allBadges || []).forEach(badge => {
+            if (!badgesMap.has(badge.id)) {
+                badgesMap.set(badge.id, badge);
+            }
         });
     });
-    return Array.from(badgesMap.values()).sort((a,b) => a.name.localeCompare(b.name));
+    return Array.from(badgesMap.values());
   }, [teams]);
 
   const allRoles = useMemo(() => {
@@ -149,14 +147,16 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
    const addTeam = useCallback(async (teamData: Omit<Team, 'id'>) => {
     const newTeam: Team = {
-        ...teamData,
-        id: crypto.randomUUID(),
+      ...teamData,
+      id: crypto.randomUUID(),
+      allBadges: [],
+      badgeCollections: [],
     };
     await simulateApi();
     setTeams(current => [...current, newTeam]);
   }, []);
 
-  const updateTeam = useCallback(async (teamId: string, teamData: Partial<Omit<Team, 'id'>>) => {
+  const updateTeam = useCallback(async (teamId: string, teamData: Partial<Team>) => {
     await simulateApi();
     setTeams(current => current.map(t => t.id === teamId ? { ...t, ...teamData } as Team : t));
   }, []);

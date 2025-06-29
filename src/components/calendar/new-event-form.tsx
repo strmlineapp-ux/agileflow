@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -12,7 +13,7 @@ import { canManageEventOnCalendar } from '@/lib/permissions';
 import { cn, getContrastColor } from '@/lib/utils';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { createMeetLink } from '@/ai/flows/create-meet-link-flow';
-import { type User, type SharedCalendar, type Attachment, type AttachmentType, type Attendee, type Event } from '@/types';
+import { type User, type SharedCalendar, type Attachment, type AttachmentType, type Attendee, type Event, type Badge } from '@/types';
 
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -29,7 +30,7 @@ import { PriorityBadge } from './priority-badge';
 import { Separator } from '@/components/ui/separator';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { Slider } from '../ui/slider';
-import { Badge } from '../ui/badge';
+import { Badge as UiBadge } from '../ui/badge';
 import { ScrollArea } from '../ui/scroll-area';
 import { UserStatusBadge } from '../user-status-badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -396,7 +397,7 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
   const dayKey = eventDate ? startOfDay(eventDate).toISOString() : null;
   const absencesForDay = dayKey && userStatusAssignments[dayKey] ? userStatusAssignments[dayKey] : [];
   
-  const teamBadges = teamForSelectedCalendar?.badgeCollections.flatMap(c => c.badges) || [];
+  const teamBadges = teamForSelectedCalendar?.allBadges || [];
   const availableBadgesToAdd = teamBadges.filter(b => !roleAssignments.hasOwnProperty(b.name)) || [];
   const hasRequestedRoles = Object.keys(roleAssignments).length > 0;
 
@@ -505,10 +506,10 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                                 <Popover open={isTemplatePopoverOpen} onOpenChange={setIsTemplatePopoverOpen}>
                                     <PopoverTrigger asChild>
                                         <Button variant="ghost" className="h-auto p-0">
-                                            <Badge variant={selectedTemplate ? 'default' : 'secondary'} className="gap-2">
+                                            <UiBadge variant={selectedTemplate ? 'default' : 'secondary'} className="gap-2">
                                                 {selectedTemplate && <GoogleSymbol name={selectedTemplate.icon} />}
                                                 {selectedTemplate?.name || 'Tag'}
-                                            </Badge>
+                                            </UiBadge>
                                         </Button>
                                     </PopoverTrigger>
                                     <PopoverContent className="p-1 w-auto" align="start">
@@ -524,7 +525,7 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                                                 className="p-2 rounded-md hover:bg-accent cursor-pointer flex items-center gap-2"
                                             >
                                                 <GoogleSymbol name={template.icon} className="text-muted-foreground" />
-                                                <Badge>{template.name}</Badge>
+                                                <UiBadge>{template.name}</UiBadge>
                                             </div>
                                         ))}
                                     </PopoverContent>
@@ -643,7 +644,7 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
               <div className="flex flex-wrap items-center gap-2 p-2 border-none">
                   {Object.entries(roleAssignments).map(([badgeName, { assignedUser, popoverOpen }]) => {
                       const user = assignedUser ? users.find(u => u.userId === assignedUser) : null;
-                      const badgeInfo = teamForSelectedCalendar?.badgeCollections.flatMap(c => c.badges).find(b => b.name === badgeName);
+                      const badgeInfo = teamForSelectedCalendar?.allBadges.find(b => b.name === badgeName);
                       
                       const teamMemberUsers = teamForSelectedCalendar?.members
                           .map(memberId => users.find(u => u.userId === memberId))
@@ -658,7 +659,7 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                           .map(u => ({ ...u, absence: absencesForDay.find(a => a.userId === u.userId)!.status }));
 
                       return (
-                          <Badge
+                          <UiBadge
                               key={badgeName}
                               variant="outline"
                               style={{
@@ -712,7 +713,7 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                               >
                                   <GoogleSymbol name="cancel" className="text-xs" />
                               </button>
-                          </Badge>
+                          </UiBadge>
                       );
                   })}
               </div>
@@ -823,7 +824,7 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                             <ScrollArea className="h-48">
                             <div className="p-1">
                                 {availableBadgesToAdd.length > 0 ? availableBadgesToAdd.map(badge => (
-                                <div key={badge.name} onClick={() => handleAddRequestedRole(badge.name)} className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer">
+                                <div key={badge.id} onClick={() => handleAddRequestedRole(badge.name)} className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer">
                                     <GoogleSymbol name={badge.icon} className="text-lg" />
                                     <span>{badge.name}</span>
                                 </div>
@@ -871,8 +872,8 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                                 <TabsContent value="by-badge" className="p-2">
                                     <ScrollArea className="max-h-[280px]">
                                         <div className="flex flex-wrap gap-2 p-2">
-                                            {(teamForSelectedCalendar?.badgeCollections.flatMap(c => c.badges) || []).map(badge => (
-                                                <Badge key={badge.name} onClick={() => handleAddGuestsByBadge(badge.name)} className="cursor-pointer">{badge.name}</Badge>
+                                            {(teamForSelectedCalendar?.allBadges || []).map(badge => (
+                                                <UiBadge key={badge.id} onClick={() => handleAddGuestsByBadge(badge.name)} className="cursor-pointer">{badge.name}</UiBadge>
                                             ))}
                                         </div>
                                     </ScrollArea>

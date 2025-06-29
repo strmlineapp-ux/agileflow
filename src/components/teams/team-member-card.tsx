@@ -3,13 +3,13 @@
 'use client';
 
 import { useState } from 'react';
-import { type User, type Team } from '@/types';
+import { type User, type Team, type Badge } from '@/types';
 import { useUser } from '@/context/user-context';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Badge as UiBadge } from '@/components/ui/badge';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import {
   Dialog,
@@ -22,7 +22,7 @@ import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
 export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
-  const { viewAsUser, updateUser, allBadges, appSettings } = useUser();
+  const { viewAsUser, updateUser, allRoles } = useUser();
   const { toast } = useToast();
   
   const [isRolesDialogOpen, setIsRolesDialogOpen] = useState(false);
@@ -30,7 +30,7 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
 
   const canManageRoles = viewAsUser.isAdmin || team.teamAdmins?.includes(viewAsUser.userId);
 
-  const teamBadgeNames = team.badgeCollections.flatMap(c => c.badges.map(b => b.name));
+  const teamBadgeNames = team.allBadges.map(b => b.name);
   const otherRolesForMember = (member.roles || []).filter(roleName => !teamBadgeNames.includes(roleName));
 
   const handleOpenRolesDialog = () => {
@@ -92,10 +92,10 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
             </div>
             <div className="flex flex-wrap gap-1 min-h-[24px]">
               {(member.roles && member.roles.length > 0) ? (
-                (member.roles || []).map(roleName => {
-                    const roleInfo = allBadges.find(r => r.name === roleName) || appSettings.customAdminRoles.find(r => r.name === roleName);
+                (member.roles || []).filter(roleName => teamBadgeNames.includes(roleName)).map(roleName => {
+                    const roleInfo = allRoles.find(r => r.name === roleName);
                     return (
-                        <Badge
+                        <UiBadge
                             key={roleName}
                             variant="outline"
                             style={roleInfo ? { color: roleInfo.color, borderColor: roleInfo.color } : {}}
@@ -106,7 +106,7 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
                         >
                             {roleInfo && <GoogleSymbol name={roleInfo.icon} className="text-sm" />}
                             <span>{roleName}</span>
-                        </Badge>
+                        </UiBadge>
                     )
                 })
               ) : (
@@ -131,11 +131,11 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
             </DialogHeader>
             <div className="py-2">
                 <div className="flex flex-wrap gap-2 rounded-md border bg-muted/50 p-2 min-h-[56px]">
-                    {team.badgeCollections.flatMap(c => c.badges).map(badge => {
+                    {team.allBadges.map(badge => {
                         const isAssigned = tempRoles.includes(badge.name);
                         return (
-                        <Badge
-                            key={badge.name}
+                        <UiBadge
+                            key={badge.id}
                             variant={'outline'}
                             style={isAssigned ? { color: badge.color, borderColor: badge.color } : {}}
                             className={cn(
@@ -146,11 +146,11 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
                         >
                             <GoogleSymbol name={badge.icon} className="text-base" />
                             {badge.name}
-                        </Badge>
+                        </UiBadge>
                         );
                     })}
 
-                    {team.badgeCollections.flatMap(c => c.badges).length > 0 && otherRolesForMember.length > 0 && (
+                    {team.allBadges.length > 0 && otherRolesForMember.length > 0 && (
                         <div className="w-full my-1 border-t"></div>
                     )}
 
@@ -158,12 +158,12 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
                         <TooltipProvider key={role}>
                             <Tooltip>
                                 <TooltipTrigger>
-                                     <Badge
+                                     <UiBadge
                                         variant={'outline'}
                                         className={cn('gap-1.5 p-1 px-3 rounded-full text-sm opacity-50 cursor-not-allowed')}
                                     >
                                         {role}
-                                    </Badge>
+                                    </UiBadge>
                                 </TooltipTrigger>
                                 <TooltipContent>
                                     <p>This role is managed by another team or is a system role.</p>

@@ -4,13 +4,12 @@
 
 import React, { useEffect, useMemo, useState, useRef, useCallback, useLayoutEffect } from 'react';
 import { format, addHours, startOfDay, isSameDay, isToday } from 'date-fns';
-import { type Event, type User, type SharedCalendar, type BookableLocation, type Team } from '@/types';
+import { type Event, type User, type SharedCalendar, type BookableLocation, type Team, type Badge } from '@/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { cn, getContrastColor } from '@/lib/utils';
 import { useUser } from '@/context/user-context';
 import { canCreateAnyEvent } from '@/lib/permissions';
 import { GoogleSymbol } from '../icons/google-symbol';
-import { Badge } from '../ui/badge';
 import { PriorityBadge } from './priority-badge';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
@@ -97,7 +96,7 @@ const DayViewLocationRow = React.memo(({
                                             const user = users.find(u => u.userId === userId);
                                             if (!user) return null;
                                             const teamForEvent = teams.find(t => t.id === event.calendarId);
-                                            const roleInfo = teamForEvent?.badgeCollections.flatMap(c => c.badges).find(b => b.name === role);
+                                            const roleInfo = teamForEvent?.allBadges.find(b => b.name === role);
                                             const roleIcon = roleInfo?.icon;
                                             const roleColor = roleInfo?.color;
 
@@ -106,13 +105,13 @@ const DayViewLocationRow = React.memo(({
                                                 <Tooltip>
                                                     <TooltipTrigger asChild>
                                                         <div className="relative">
-                                                            <Avatar className="h-5 w-5">
+                                                            <Avatar className="h-6 w-6">
                                                                 <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
                                                                 <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
                                                             </Avatar>
                                                             {roleIcon && (
                                                                 <div 
-                                                                    className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full flex items-center justify-center"
+                                                                    className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-background flex items-center justify-center"
                                                                     style={{ backgroundColor: roleColor, color: getContrastColor(roleColor || '#ffffff') }}
                                                                 >
                                                                     <GoogleSymbol name={roleIcon} style={{fontSize: '10px'}} />
@@ -460,7 +459,7 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
                                                             const user = users.find(u => u.userId === userId);
                                                             if (!user) return null;
                                                             const teamForEvent = teams.find(t => t.id === event.calendarId);
-                                                            const roleInfo = teamForEvent?.badgeCollections.flatMap(c => c.badges).find(b => b.name === role);
+                                                            const roleInfo = teamForEvent?.allBadges.find(b => b.name === role);
                                                             const roleIcon = roleInfo?.icon;
                                                             const roleColor = roleInfo?.color;
 
@@ -469,13 +468,13 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
                                                                 <Tooltip>
                                                                     <TooltipTrigger asChild>
                                                                         <div className="relative">
-                                                                            <Avatar className="h-5 w-5">
+                                                                            <Avatar className="h-6 w-6">
                                                                                 <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
                                                                                 <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
                                                                             </Avatar>
                                                                             {roleIcon && (
                                                                                 <div
-                                                                                    className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full flex items-center justify-center"
+                                                                                    className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-background flex items-center justify-center"
                                                                                     style={{ backgroundColor: roleColor, color: getContrastColor(roleColor || '#ffffff') }}
                                                                                 >
                                                                                     <GoogleSymbol name={roleIcon} style={{fontSize: '10px'}} />

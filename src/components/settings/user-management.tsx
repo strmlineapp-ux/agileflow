@@ -1,6 +1,6 @@
 
 
-"use client";
+'use client';
 
 import { useState, Fragment } from 'react';
 import { type User, type Team } from '@/types';
@@ -59,8 +59,8 @@ export function UserManagement() {
     };
 
     const canViewRoles = (targetUser: User): boolean => {
-        if (realUser.roles?.includes('Admin')) return true;
-        const managedTeamIds = teams.filter(t => t.managers?.includes(realUser.userId)).map(t => t.id);
+        if (realUser.isAdmin) return true;
+        const managedTeamIds = teams.filter(t => t.teamAdmins?.includes(realUser.userId)).map(t => t.id);
         const userIsInManagedTeam = teams.some(t => managedTeamIds.includes(t.id) && t.members.includes(targetUser.userId));
         return userIsInManagedTeam;
     }
