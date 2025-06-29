@@ -83,14 +83,20 @@ export default function AdminPage() {
   
   const isAdmin = useMemo(() => viewAsUser.isAdmin, [viewAsUser]);
 
-  // 2FA Dialog State
+  // Dialog & Popover States
   const [is2faDialogOpen, setIs2faDialogOpen] = useState(false);
+  const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
+  const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
+  
   const [on2faSuccess, setOn2faSuccess] = useState<(() => void) | null>(null);
   const [twoFactorCode, setTwoFactorCode] = useState('');
-
-  // Icon Picker State
-  const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
   const [iconSearch, setIconSearch] = useState('');
+
+  const predefinedColors = [
+    '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
+    '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6',
+    '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
+  ];
   
   const filteredIcons = useMemo(() => {
     if (!iconSearch) return googleSymbolNames;
@@ -220,19 +226,42 @@ export default function AdminPage() {
                         </ScrollArea>
                     </PopoverContent>
                   </Popover>
-                  <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card">
-                      <div
+                   <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card cursor-pointer" aria-label="Change service admin color">
+                        <div
                           className="h-full w-full rounded-full"
                           style={{ backgroundColor: appSettings.serviceAdminColor || '#8B5CF6' }}
-                      />
-                      <Input
-                          type="color"
-                          value={appSettings.serviceAdminColor || '#8B5CF6'}
-                          onChange={(e) => updateAppSettings({ serviceAdminColor: e.target.value })}
-                          className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"
-                          aria-label="Change service admin color"
-                      />
-                  </div>
+                        />
+                      </div>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-2">
+                      <div className="grid grid-cols-8 gap-1">
+                        {predefinedColors.map(color => (
+                          <button
+                            key={color}
+                            className="h-6 w-6 rounded-full border"
+                            style={{ backgroundColor: color }}
+                            onClick={() => {
+                              updateAppSettings({ serviceAdminColor: color });
+                              setIsColorPopoverOpen(false);
+                            }}
+                            aria-label={`Set color to ${color}`}
+                          />
+                        ))}
+                        <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
+                          <GoogleSymbol name="colorize" className="text-muted-foreground" />
+                          <Input
+                            type="color"
+                            value={appSettings.serviceAdminColor || '#8B5CF6'}
+                            onChange={(e) => updateAppSettings({ serviceAdminColor: e.target.value })}
+                            className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"
+                            aria-label="Custom color picker"
+                          />
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <CardTitle>Service Admins</CardTitle>
                 <AddUserToRoleButton usersToAdd={nonServiceAdminUsers} onAdd={handleServiceAdminToggle} roleName="Service Admin" />
