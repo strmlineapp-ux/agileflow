@@ -188,37 +188,52 @@ export default function AdminPage() {
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2">
-                <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
-                  <PopoverTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-2xl text-muted-foreground hover:text-foreground">
-                        <GoogleSymbol name={appSettings.icon} />
-                      </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-80 p-0">
-                      <div className="p-2 border-b">
-                          <Input
-                              placeholder="Search icons..."
-                              value={iconSearch}
-                              onChange={(e) => setIconSearch(e.target.value)}
-                          />
-                      </div>
-                      <ScrollArea className="h-64">
-                          <div className="grid grid-cols-6 gap-1 p-2">
-                              {filteredIcons.slice(0, 300).map((iconName) => (
-                                  <Button
-                                      key={iconName}
-                                      variant={appSettings.icon === iconName ? "default" : "ghost"}
-                                      size="icon"
-                                      onClick={() => handleIconSelect(iconName)}
-                                      className="text-2xl"
-                                  >
-                                      <GoogleSymbol name={iconName} />
-                                  </Button>
-                              ))}
-                          </div>
-                      </ScrollArea>
-                  </PopoverContent>
-                </Popover>
+                <div className="relative">
+                  <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
+                    <PopoverTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-2xl text-muted-foreground hover:text-foreground">
+                          <GoogleSymbol name={appSettings.icon} />
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80 p-0">
+                        <div className="p-2 border-b">
+                            <Input
+                                placeholder="Search icons..."
+                                value={iconSearch}
+                                onChange={(e) => setIconSearch(e.target.value)}
+                            />
+                        </div>
+                        <ScrollArea className="h-64">
+                            <div className="grid grid-cols-6 gap-1 p-2">
+                                {filteredIcons.slice(0, 300).map((iconName) => (
+                                    <Button
+                                        key={iconName}
+                                        variant={appSettings.icon === iconName ? "default" : "ghost"}
+                                        size="icon"
+                                        onClick={() => handleIconSelect(iconName)}
+                                        className="text-2xl"
+                                    >
+                                        <GoogleSymbol name={iconName} />
+                                    </Button>
+                                ))}
+                            </div>
+                        </ScrollArea>
+                    </PopoverContent>
+                  </Popover>
+                  <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card">
+                      <div
+                          className="h-full w-full rounded-full"
+                          style={{ backgroundColor: appSettings.serviceAdminColor || '#8B5CF6' }}
+                      />
+                      <Input
+                          type="color"
+                          value={appSettings.serviceAdminColor || '#8B5CF6'}
+                          onChange={(e) => updateAppSettings({ serviceAdminColor: e.target.value })}
+                          className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"
+                          aria-label="Change service admin color"
+                      />
+                  </div>
+                </div>
                 <CardTitle>Service Admins</CardTitle>
                 <AddUserToRoleButton usersToAdd={nonServiceAdminUsers} onAdd={handleServiceAdminToggle} roleName="Service Admin" />
               </div>

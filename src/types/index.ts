@@ -5,6 +5,7 @@ import type React from 'react';
 export interface AppSettings {
   displayName: string;
   icon: string;
+  serviceAdminColor?: string;
   calendarManagementLabel?: string;
   teamManagementLabel?: string;
   strategyLabel?: string;

@@ -5,6 +5,7 @@ import { type Event, type User, type Task, type Notification, type SharedCalenda
 export const mockAppSettings: AppSettings = {
   displayName: 'Service Admin',
   icon: 'business_center',
+  serviceAdminColor: '#8B5CF6',
   calendarManagementLabel: 'Calendar Management',
   teamManagementLabel: 'Team Management',
   strategyLabel: 'Strategy',
