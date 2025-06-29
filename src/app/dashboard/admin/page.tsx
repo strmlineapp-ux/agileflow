@@ -204,7 +204,7 @@ function CustomRoleCard({
                                 style={{ backgroundColor: linkGroup.color }}
                                 aria-label="Edit link group"
                             >
-                                <GoogleSymbol name={linkGroup.icon} style={{ fontSize: '10px', color: getContrastColor(linkGroup.color) }}/>
+                                <GoogleSymbol name={linkGroup.icon} style={{ fontSize: '12px', color: getContrastColor(linkGroup.color) }}/>
                             </div>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-2">
