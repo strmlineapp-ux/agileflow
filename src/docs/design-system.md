@@ -66,7 +66,7 @@ This pattern describes how a single entity (like a Badge) can exist in multiple 
 - **Mechanism**: Implemented via drag-and-drop. Dragging an item from its "home" collection to another creates a shared link, not a copy.
 - **Visual Cues**:
   - A linked item is visually distinguished by a `link` icon overlay on its main icon.
-  - The color of this link overlay is inherited from the collection it is being viewed in, providing immediate context.
+  - The color of this link overlay is inherited from the badge's **original parent collection**, indicating its source.
   - The original item (the source of truth) does not have this icon.
 - **Behavior**:
   - Editing a linked item (e.g., changing its name, icon, or color) modifies the original item, and the changes are instantly reflected in all other places where it is linked.
