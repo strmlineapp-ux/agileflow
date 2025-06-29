@@ -9,6 +9,7 @@ export const mockAppSettings: AppSettings = {
       name: 'Service Admin',
       icon: 'business_center',
       color: '#8B5CF6',
+      teamAdmins: [],
     },
   ],
   linkGroups: {},

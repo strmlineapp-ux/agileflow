@@ -13,6 +13,7 @@ export interface CustomAdminRole {
   icon: string;
   color: string;
   linkGroupId?: string;
+  teamAdmins?: string[];
 }
 
 export interface AppSettings {

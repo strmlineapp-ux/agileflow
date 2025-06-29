@@ -38,10 +38,13 @@ const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
 
 
 // A card to display a user with a specific role.
-const UserRoleCard = ({ user, onRemove }: { user: User; onRemove: (user: User) => void }) => {
+const UserRoleCard = ({ user, onRemove, isTeamAdmin, onSetTeamAdmin }: { user: User; onRemove: (user: User) => void; isTeamAdmin: boolean; onSetTeamAdmin: (user: User) => void; }) => {
   return (
-    <Card>
-      <CardContent className="p-4 flex items-center justify-between">
+    <Card 
+        className={cn("transition-all", isTeamAdmin && "ring-2 ring-primary")}
+        onClick={() => onSetTeamAdmin(user)}
+    >
+      <CardContent className="p-4 flex items-center justify-between cursor-pointer">
         <div className="flex items-center gap-4">
           <Avatar>
             <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
@@ -52,7 +55,12 @@ const UserRoleCard = ({ user, onRemove }: { user: User; onRemove: (user: User) =
             <p className="text-sm text-muted-foreground">{user.email}</p>
           </div>
         </div>
-        <Button variant="ghost" size="icon" onClick={() => onRemove(user)} aria-label={`Remove role from ${user.displayName}`}>
+        <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={(e) => { e.stopPropagation(); onRemove(user); }} 
+            aria-label={`Remove role from ${user.displayName}`}
+        >
           <GoogleSymbol name="cancel" className="text-destructive" />
         </Button>
       </CardContent>
@@ -192,6 +200,16 @@ function CustomRoleCard({
         toast({ title: 'Success', description: `${user.displayName}'s role has been updated.` });
     };
 
+    const handleSetTeamAdmin = (userToUpdate: User) => {
+        const currentAdmins = role.teamAdmins || [];
+        const isAlreadyAdmin = currentAdmins.includes(userToUpdate.userId);
+        const newAdmins = isAlreadyAdmin
+            ? currentAdmins.filter(id => id !== userToUpdate.userId)
+            : [...currentAdmins, userToUpdate.userId];
+        onUpdate({ ...role, teamAdmins: newAdmins });
+    };
+
+
     return (
         <>
         <Card className={cn(isLinking && "ring-2 ring-primary ring-offset-2 ring-offset-background")}>
@@ -308,7 +326,15 @@ function CustomRoleCard({
               <CardDescription>Assign or revoke {role.name} privileges for managing app-wide settings.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {assignedUsers.map(user => (<UserRoleCard key={user.userId} user={user} onRemove={handleRoleToggle} />))}
+              {assignedUsers.map(user => (
+                <UserRoleCard 
+                    key={user.userId} 
+                    user={user} 
+                    onRemove={handleRoleToggle}
+                    isTeamAdmin={(role.teamAdmins || []).includes(user.userId)}
+                    onSetTeamAdmin={handleSetTeamAdmin}
+                />
+              ))}
             </CardContent>
           </Card>
           <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
@@ -427,6 +453,7 @@ export default function AdminPage() {
         name: newRoleName,
         icon: 'add_moderator',
         color: predefinedColors[appSettings.customAdminRoles.length % predefinedColors.length],
+        teamAdmins: [],
     };
     updateAppSettings({ customAdminRoles: [...appSettings.customAdminRoles, newRole] });
     toast({ title: 'New Level Added', description: `"${newRoleName}" has been created.` });
@@ -601,7 +628,7 @@ export default function AdminPage() {
                           </CardHeader>
                           <CardContent className="space-y-4">
                             {adminUsers.map(user => (
-                              <UserRoleCard key={user.userId} user={user} onRemove={handleAdminToggle} />
+                              <UserRoleCard key={user.userId} user={user} onRemove={handleAdminToggle} isTeamAdmin={false} onSetTeamAdmin={() => {}} />
                             ))}
                           </CardContent>
                         </Card>
@@ -665,12 +692,3 @@ export default function AdminPage() {
     </>
   );
 }
-
-    
-
-    
-
-
-
-
-    
