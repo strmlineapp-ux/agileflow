@@ -11,6 +11,7 @@ export const mockAppSettings: AppSettings = {
       color: '#8B5CF6',
     },
   ],
+  linkGroups: {},
   calendarManagementLabel: 'Calendar Management',
   teamManagementLabel: 'Team Management',
   strategyLabel: 'Strategy',

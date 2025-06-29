@@ -2,15 +2,22 @@
 
 import type React from 'react';
 
+export interface LinkGroup {
+  icon: string;
+  color: string;
+}
+
 export interface CustomAdminRole {
   id: string;
   name: string;
   icon: string;
   color: string;
+  linkGroupId?: string;
 }
 
 export interface AppSettings {
   customAdminRoles: CustomAdminRole[];
+  linkGroups: Record<string, LinkGroup>;
   calendarManagementLabel?: string;
   teamManagementLabel?: string;
   strategyLabel?: string;

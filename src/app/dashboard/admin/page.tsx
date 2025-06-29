@@ -3,7 +3,7 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useUser } from '@/context/user-context';
-import { type User, type CustomAdminRole } from '@/types';
+import { type User, type CustomAdminRole, type LinkGroup } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +17,8 @@ import { googleSymbolNames } from '@/lib/google-symbols';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle as UIAlertDialogTitle } from '@/components/ui/alert-dialog';
 import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProps } from 'react-beautiful-dnd';
 import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
 // Wrapper to fix issues with react-beautiful-dnd and React 18 Strict Mode
 const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
@@ -102,13 +104,36 @@ const predefinedColors = [
     '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
 ];
 
-function CustomRoleCard({ role, users, onUpdate, onDelete }: { role: CustomAdminRole; users: User[], onUpdate: (updatedRole: CustomAdminRole) => void, onDelete: () => void }) {
+function CustomRoleCard({ 
+  role,
+  users, 
+  onUpdate, 
+  onDelete, 
+  onLink,
+  linkGroup,
+  onUpdateLinkGroup,
+  onUnlink,
+  isLinking
+}: { 
+  role: CustomAdminRole; 
+  users: User[]; 
+  onUpdate: (updatedRole: CustomAdminRole) => void;
+  onDelete: () => void;
+  onLink: (roleId: string) => void;
+  linkGroup: LinkGroup | null;
+  onUpdateLinkGroup: (groupId: string, newGroup: LinkGroup) => void;
+  onUnlink: (roleId: string) => void;
+  isLinking: boolean;
+}) {
     const { toast } = useToast();
     const { updateUser } = useUser();
     
     // Popover States
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
+    const [isLinkPopoverOpen, setIsLinkPopoverOpen] = useState(false);
+    const [isLinkIconPopoverOpen, setIsLinkIconPopoverOpen] = useState(false);
+    const [isLinkColorPopoverOpen, setIsLinkColorPopoverOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     
     const [iconSearch, setIconSearch] = useState('');
@@ -117,17 +142,17 @@ function CustomRoleCard({ role, users, onUpdate, onDelete }: { role: CustomAdmin
 
     useEffect(() => {
         if (isEditingName && nameInputRef.current) {
-        nameInputRef.current.focus();
-        nameInputRef.current.select();
+          nameInputRef.current.focus();
+          nameInputRef.current.select();
         }
     }, [isEditingName]);
 
     const handleSaveName = () => {
         const input = nameInputRef.current;
         if (!input || !input.value.trim()) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Display name cannot be empty.' });
-        setIsEditingName(false);
-        return;
+          toast({ variant: 'destructive', title: 'Error', description: 'Display name cannot be empty.' });
+          setIsEditingName(false);
+          return;
         }
         if (input.value.trim() !== role.name) {
             onUpdate({ ...role, name: input.value.trim() });
@@ -138,9 +163,9 @@ function CustomRoleCard({ role, users, onUpdate, onDelete }: { role: CustomAdmin
 
     const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
-        handleSaveName();
+          handleSaveName();
         } else if (e.key === 'Escape') {
-        setIsEditingName(false);
+          setIsEditingName(false);
         }
     };
     
@@ -167,9 +192,51 @@ function CustomRoleCard({ role, users, onUpdate, onDelete }: { role: CustomAdmin
 
     return (
         <>
-        <Card>
+        <Card className={cn(isLinking && "ring-2 ring-primary ring-offset-2 ring-offset-background")}>
             <CardHeader>
               <div className="flex items-center gap-2">
+                {linkGroup && (
+                  <Popover open={isLinkPopoverOpen} onOpenChange={setIsLinkPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Badge style={{ backgroundColor: linkGroup.color }} className="text-primary-foreground border-transparent cursor-pointer">
+                        <GoogleSymbol name={linkGroup.icon} />
+                      </Badge>
+                    </PopoverTrigger>
+                    <PopoverContent>
+                      <div className="space-y-4">
+                        <h4 className="font-medium">Edit Link Group</h4>
+                        <div className="flex items-center gap-2">
+                            <Popover open={isLinkIconPopoverOpen} onOpenChange={setIsLinkIconPopoverOpen}>
+                              <PopoverTrigger asChild><Button variant="outline" size="icon"><GoogleSymbol name={linkGroup.icon} /></Button></PopoverTrigger>
+                               <PopoverContent className="w-80 p-0">
+                                <div className="p-2 border-b"><Input placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} /></div>
+                                <ScrollArea className="h-64">
+                                    <div className="grid grid-cols-6 gap-1 p-2">
+                                        {filteredIcons.slice(0, 300).map((iconName) => (
+                                            <Button key={iconName} variant={linkGroup.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdateLinkGroup(role.linkGroupId!, { ...linkGroup, icon: iconName }); setIsLinkIconPopoverOpen(false); }} className="text-2xl"><GoogleSymbol name={iconName} /></Button>
+                                        ))}
+                                    </div>
+                                </ScrollArea>
+                            </PopoverContent>
+                            </Popover>
+                            <Popover open={isLinkColorPopoverOpen} onOpenChange={setIsLinkColorPopoverOpen}>
+                              <PopoverTrigger asChild>
+                                <div className="h-8 w-8 rounded-md border cursor-pointer" style={{ backgroundColor: linkGroup.color }} />
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-2">
+                                <div className="grid grid-cols-8 gap-1">
+                                  {predefinedColors.map(color => (
+                                    <button key={color} className="h-6 w-6 rounded-full border" style={{ backgroundColor: color }} onClick={() => { onUpdateLinkGroup(role.linkGroupId!, { ...linkGroup, color: color }); setIsLinkColorPopoverOpen(false); }}/>
+                                  ))}
+                                </div>
+                              </PopoverContent>
+                            </Popover>
+                        </div>
+                        <Button variant="outline" size="sm" onClick={() => { onUnlink(role.id); setIsLinkPopoverOpen(false); }}>Unlink from Group</Button>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                )}
                 <div className="relative">
                   <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                     <PopoverTrigger asChild>
@@ -178,106 +245,42 @@ function CustomRoleCard({ role, users, onUpdate, onDelete }: { role: CustomAdmin
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-80 p-0">
-                        <div className="p-2 border-b">
-                            <Input
-                                placeholder="Search icons..."
-                                value={iconSearch}
-                                onChange={(e) => setIconSearch(e.target.value)}
-                            />
-                        </div>
-                        <ScrollArea className="h-64">
-                            <div className="grid grid-cols-6 gap-1 p-2">
-                                {filteredIcons.slice(0, 300).map((iconName) => (
-                                    <Button
-                                        key={iconName}
-                                        variant={role.icon === iconName ? "default" : "ghost"}
-                                        size="icon"
-                                        onClick={() => { onUpdate({ ...role, icon: iconName }); setIsIconPopoverOpen(false); }}
-                                        className="text-2xl"
-                                    >
-                                        <GoogleSymbol name={iconName} />
-                                    </Button>
-                                ))}
-                            </div>
-                        </ScrollArea>
+                        <div className="p-2 border-b"><Input placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} /></div>
+                        <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={role.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate({ ...role, icon: iconName }); setIsIconPopoverOpen(false); }} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
                     </PopoverContent>
                   </Popover>
                    <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                    <PopoverTrigger asChild>
-                      <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card cursor-pointer" aria-label="Change service admin color">
-                        <div
-                          className="h-full w-full rounded-full"
-                          style={{ backgroundColor: role.color }}
-                        />
-                      </div>
-                    </PopoverTrigger>
+                    <PopoverTrigger asChild><div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card cursor-pointer" aria-label="Change service admin color"><div className="h-full w-full rounded-full" style={{ backgroundColor: role.color }}/></div></PopoverTrigger>
                     <PopoverContent className="w-auto p-2">
                       <div className="grid grid-cols-8 gap-1">
-                        {predefinedColors.map(color => (
-                          <button
-                            key={color}
-                            className="h-6 w-6 rounded-full border"
-                            style={{ backgroundColor: color }}
-                            onClick={() => {
-                                onUpdate({ ...role, color: color });
-                                setIsColorPopoverOpen(false);
-                            }}
-                            aria-label={`Set color to ${color}`}
-                          />
-                        ))}
+                        {predefinedColors.map(color => (<button key={color} className="h-6 w-6 rounded-full border" style={{ backgroundColor: color }} onClick={() => { onUpdate({ ...role, color: color }); setIsColorPopoverOpen(false); }} aria-label={`Set color to ${color}`}/>))}
                         <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
-                          <GoogleSymbol name="colorize" className="text-muted-foreground" />
-                          <Input
-                            type="color"
-                            value={role.color}
-                            onChange={(e) => onUpdate({ ...role, color: e.target.value })}
-                            className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"
-                            aria-label="Custom color picker"
-                          />
+                          <GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={role.color} onChange={(e) => onUpdate({ ...role, color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" aria-label="Custom color picker"/>
                         </div>
                       </div>
                     </PopoverContent>
                   </Popover>
                 </div>
-                {isEditingName ? (
-                   <Input
-                        ref={nameInputRef}
-                        defaultValue={role.name}
-                        onBlur={handleSaveName}
-                        onKeyDown={handleNameKeyDown}
-                        className="font-body h-auto p-0 text-2xl font-semibold leading-none tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                    />
-                ) : (
-                    <CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer">
-                        {role.name}
-                    </CardTitle>
-                )}
+                {isEditingName ? (<Input ref={nameInputRef} defaultValue={role.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="font-body h-auto p-0 text-2xl font-semibold leading-none tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>) : (<CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer">{role.name}</CardTitle>)}
                 <AddUserToRoleButton usersToAdd={unassignedUsers} onAdd={handleRoleToggle} roleName={role.name} />
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setIsDeleteDialogOpen(true)}>
-                    <GoogleSymbol name="delete" />
-                </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => onLink(role.id)}><GoogleSymbol name="link" /></Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setIsDeleteDialogOpen(true)}><GoogleSymbol name="delete" /></Button>
               </div>
               <CardDescription>Assign or revoke {role.name} privileges for managing app-wide settings.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {assignedUsers.map(user => (
-                <UserRoleCard key={user.userId} user={user} onRemove={handleRoleToggle} />
-              ))}
+              {assignedUsers.map(user => (<UserRoleCard key={user.userId} user={user} onRemove={handleRoleToggle} />))}
             </CardContent>
           </Card>
           <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
             <AlertDialogContent>
                 <AlertDialogHeader>
                     <UIAlertDialogTitle>Are you absolutely sure?</UIAlertDialogTitle>
-                    <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete the "{role.name}" role level and unassign all users.
-                    </AlertDialogDescription>
+                    <AlertDialogDescription>This action cannot be undone. This will permanently delete the "{role.name}" role level and unassign all users.</AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={onDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                        Continue
-                    </AlertDialogAction>
+                    <AlertDialogAction onClick={onDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Continue</AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
@@ -310,6 +313,10 @@ export default function AdminPage() {
   
   const [on2faSuccess, setOn2faSuccess] = useState<(() => void) | null>(null);
   const [twoFactorCode, setTwoFactorCode] = useState('');
+  
+  // State for linking roles
+  const [linkingState, setLinkingState] = useState<{ roleId: string } | null>(null);
+
 
   // This check must happen after all hooks are called.
   if (!isAdmin) {
@@ -367,10 +374,94 @@ export default function AdminPage() {
   }
   
   const handleDeleteCustomRole = (roleId: string) => {
+      const roleToUpdate = appSettings.customAdminRoles.find(r => r.id === roleId);
+      if (roleToUpdate?.linkGroupId) {
+        handleUnlinkRole(roleId, true);
+      }
       const newRoles = appSettings.customAdminRoles.filter(r => r.id !== roleId);
       updateAppSettings({ customAdminRoles: newRoles });
       toast({ title: 'Success', description: 'Role level deleted.' });
   }
+
+  const handleLinkClick = (roleId: string) => {
+    if (!linkingState) {
+        setLinkingState({ roleId });
+        return;
+    }
+
+    if (linkingState.roleId === roleId) {
+        setLinkingState(null); // Cancel linking
+        return;
+    }
+
+    const sourceRole = appSettings.customAdminRoles.find(r => r.id === linkingState.roleId);
+    const targetRole = appSettings.customAdminRoles.find(r => r.id === roleId);
+
+    if (!sourceRole || !targetRole) {
+        setLinkingState(null);
+        return;
+    }
+
+    const rolesToUpdate = appSettings.customAdminRoles.map(r => ({ ...r }));
+    let linkGroupsToUpdate = { ...appSettings.linkGroups };
+    
+    // Case 1: Neither is in a group -> create a new group
+    if (!sourceRole.linkGroupId && !targetRole.linkGroupId) {
+        const newGroupId = crypto.randomUUID();
+        rolesToUpdate.find(r => r.id === sourceRole.id)!.linkGroupId = newGroupId;
+        rolesToUpdate.find(r => r.id === targetRole.id)!.linkGroupId = newGroupId;
+        linkGroupsToUpdate[newGroupId] = { icon: 'link', color: '#64748B' };
+    }
+    // Case 2: Source is in a group, target is not -> target joins group
+    else if (sourceRole.linkGroupId && !targetRole.linkGroupId) {
+        rolesToUpdate.find(r => r.id === targetRole.id)!.linkGroupId = sourceRole.linkGroupId;
+    }
+    // Case 3: Target is in a group, source is not -> source joins group
+    else if (!sourceRole.linkGroupId && targetRole.linkGroupId) {
+        rolesToUpdate.find(r => r.id === sourceRole.id)!.linkGroupId = targetRole.linkGroupId;
+    }
+    // Case 4: Both are in different groups -> merge groups
+    else if (sourceRole.linkGroupId !== targetRole.linkGroupId) {
+        const targetGroupId = targetRole.linkGroupId!;
+        const sourceGroupId = sourceRole.linkGroupId!;
+        rolesToUpdate.forEach(r => {
+            if (r.linkGroupId === targetGroupId) {
+                r.linkGroupId = sourceGroupId;
+            }
+        });
+        delete linkGroupsToUpdate[targetGroupId];
+    }
+
+    updateAppSettings({ customAdminRoles: rolesToUpdate, linkGroups: linkGroupsToUpdate });
+    setLinkingState(null);
+  };
+  
+  const handleUnlinkRole = (roleId: string, isDeleting = false) => {
+    const roleToUnlink = appSettings.customAdminRoles.find(r => r.id === roleId);
+    if (!roleToUnlink || !roleToUnlink.linkGroupId) return;
+
+    const groupId = roleToUnlink.linkGroupId;
+    const rolesInGroup = appSettings.customAdminRoles.filter(r => r.linkGroupId === groupId);
+
+    const rolesToUpdate = appSettings.customAdminRoles.map(r => r.id === roleId ? { ...r, linkGroupId: undefined } : r);
+    let linkGroupsToUpdate = { ...appSettings.linkGroups };
+
+    if (rolesInGroup.length <= 2) {
+        rolesInGroup.forEach(r => {
+            const role = rolesToUpdate.find(ru => ru.id === r.id);
+            if (role) role.linkGroupId = undefined;
+        });
+        delete linkGroupsToUpdate[groupId];
+    }
+    
+    updateAppSettings({ customAdminRoles: rolesToUpdate, linkGroups: linkGroupsToUpdate });
+    if (!isDeleting) toast({ title: 'Role Unlinked', description: `"${roleToUnlink.name}" has been unlinked from its group.` });
+  };
+  
+  const handleUpdateLinkGroup = (groupId: string, newGroup: LinkGroup) => {
+    const newLinkGroups = { ...appSettings.linkGroups, [groupId]: newGroup };
+    updateAppSettings({ linkGroups: newLinkGroups });
+  };
 
   const onDragEnd = (result: DropResult) => {
     const { source, destination } = result;
@@ -450,6 +541,11 @@ export default function AdminPage() {
                             users={users}
                             onUpdate={handleUpdateCustomRole}
                             onDelete={() => handleDeleteCustomRole(role.id)}
+                            onLink={handleLinkClick}
+                            linkGroup={role.linkGroupId ? appSettings.linkGroups[role.linkGroupId] : null}
+                            onUpdateLinkGroup={handleUpdateLinkGroup}
+                            onUnlink={handleUnlinkRole}
+                            isLinking={linkingState?.roleId === role.id}
                           />
                         </div>
                       )}
