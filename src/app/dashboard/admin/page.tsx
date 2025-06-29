@@ -9,55 +9,72 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { GoogleSymbol } from '@/components/icons/google-symbol';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
-// A generic component to manage assigning a role or status to a list of users.
-const RoleManager = ({
-  title,
-  description,
-  users,
-  onToggle,
-  roleCheck,
-}: {
-  title: string;
-  description: string;
-  users: User[];
-  onToggle: (user: User) => void;
-  roleCheck: (user: User) => boolean;
-}) => {
+
+// A card to display a user with a specific role.
+const UserRoleCard = ({ user, onRemove }: { user: User; onRemove: (user: User) => void }) => {
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-wrap gap-2 rounded-md border bg-muted/50 p-2 min-h-[56px]">
-          {users.map(user => {
-            const hasRole = roleCheck(user);
-            return (
-              <Badge
-                key={user.userId}
-                variant={hasRole ? 'default' : 'secondary'}
-                className={cn('gap-1.5 p-1 pl-2 cursor-pointer rounded-full', hasRole && 'shadow-md')}
-                onClick={() => onToggle(user)}
-              >
-                <Avatar className="h-5 w-5">
-                  <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
-                  <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                </Avatar>
-                <span className="font-medium">{user.displayName}</span>
-              </Badge>
-            );
-          })}
+      <CardContent className="p-4 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Avatar>
+            <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
+            <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+          </Avatar>
+          <div>
+            <p className="font-semibold">{user.displayName}</p>
+            <p className="text-sm text-muted-foreground">{user.email}</p>
+          </div>
         </div>
-        <p className="text-xs text-muted-foreground text-right pr-2 mt-2">Click user pills to toggle their status.</p>
+        <Button variant="ghost" size="icon" onClick={() => onRemove(user)} aria-label={`Remove role from ${user.displayName}`}>
+          <GoogleSymbol name="remove_circle_outline" className="text-destructive" />
+        </Button>
       </CardContent>
     </Card>
   );
 };
+
+// A button that opens a popover to add a user to a role.
+const AddUserToRoleButton = ({ usersToAdd, onAdd, roleName }: { usersToAdd: User[], onAdd: (user: User) => void, roleName: string }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleSelect = (user: User) => {
+    onAdd(user);
+    setIsOpen(false);
+  }
+  
+  return (
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" className="w-full border-dashed">
+          <GoogleSymbol name="add" className="mr-2" />
+          Assign {roleName}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="p-0 w-80">
+        <ScrollArea className="h-64">
+           <div className="p-1">
+            {usersToAdd.length > 0 ? usersToAdd.map(user => (
+              <div key={user.userId} onClick={() => handleSelect(user)} className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer">
+                <Avatar className="h-8 w-8"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0,2)}</AvatarFallback></Avatar>
+                <div>
+                  <p className="text-sm font-medium">{user.displayName}</p>
+                  <p className="text-xs text-muted-foreground">{user.email}</p>
+                </div>
+              </div>
+            )) : (
+              <p className="text-center text-sm text-muted-foreground p-4">All users are assigned.</p>
+            )}
+            </div>
+        </ScrollArea>
+      </PopoverContent>
+    </Popover>
+  )
+}
 
 export default function AdminPage() {
   const { toast } = useToast();
@@ -74,6 +91,12 @@ export default function AdminPage() {
   if (!isAdmin) {
     return null; // Navigation is filtered, so this prevents direct URL access.
   }
+
+  const adminUsers = useMemo(() => users.filter(u => u.isAdmin), [users]);
+  const serviceAdminUsers = useMemo(() => users.filter(u => u.roles?.includes('Service Admin')), [users]);
+  
+  const nonAdminUsers = useMemo(() => users.filter(u => !u.isAdmin), [users]);
+  const nonServiceAdminUsers = useMemo(() => users.filter(u => !u.roles?.includes('Service Admin')), [users]);
 
   const handleAdminToggle = (user: User) => {
     const action = () => {
@@ -125,21 +148,35 @@ export default function AdminPage() {
       <div className="flex flex-col gap-8">
         <h1 className="font-headline text-3xl font-semibold">Admin Management</h1>
         
-        <RoleManager
-            title="Manage Admins"
-            description="Assign or revoke Admin privileges. This is the highest level of access."
-            users={users}
-            onToggle={handleAdminToggle}
-            roleCheck={(user) => user.isAdmin}
-        />
-
-        <RoleManager
-            title="Manage Service Admins"
-            description="Assign or revoke Service Admin privileges for managing app-wide settings."
-            users={users}
-            onToggle={handleServiceAdminToggle}
-            roleCheck={(user) => user.roles?.includes('Service Admin') || false}
-        />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+          {/* Admins Column */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Admins</CardTitle>
+              <CardDescription>Assign or revoke Admin privileges. This is the highest level of access.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {adminUsers.map(user => (
+                <UserRoleCard key={user.userId} user={user} onRemove={handleAdminToggle} />
+              ))}
+              <AddUserToRoleButton usersToAdd={nonAdminUsers} onAdd={handleAdminToggle} roleName="Admin" />
+            </CardContent>
+          </Card>
+          
+          {/* Service Admins Column */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Service Admins</CardTitle>
+              <CardDescription>Assign or revoke Service Admin privileges for managing app-wide settings.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {serviceAdminUsers.map(user => (
+                <UserRoleCard key={user.userId} user={user} onRemove={handleServiceAdminToggle} />
+              ))}
+              <AddUserToRoleButton usersToAdd={nonServiceAdminUsers} onAdd={handleServiceAdminToggle} roleName="Service Admin" />
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       <Dialog open={is2faDialogOpen} onOpenChange={(isOpen) => !isOpen && close2faDialog()}>
