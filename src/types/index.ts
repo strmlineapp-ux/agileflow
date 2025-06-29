@@ -70,7 +70,7 @@ export interface BadgeCollection {
   name: string;
   icon: string;
   color: string;
-  viewMode: 'assorted' | 'scale' | 'list';
+  viewMode: 'assorted' | 'scale' | 'list' | 'detailed';
   badges: Badge[];
   description?: string;
   attachments?: Attachment[];
