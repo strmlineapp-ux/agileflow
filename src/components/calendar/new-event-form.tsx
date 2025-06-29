@@ -729,15 +729,18 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                                     return (
                                         <Badge
                                             key={role}
-                                            variant={user ? 'default' : 'secondary'}
-                                            style={user && roleInfo ? { backgroundColor: roleInfo.color, color: getContrastColor(roleInfo.color) } : {}}
-                                            className={cn("text-sm p-1 pl-3 rounded-full flex items-center gap-1", user && roleInfo && "border-transparent")}
+                                            variant="outline"
+                                            style={roleInfo ? { color: roleInfo.color, borderColor: roleInfo.color } : {}}
+                                            className={cn(
+                                                "text-sm p-1 pl-3 rounded-full flex items-center gap-1",
+                                                user ? "border-2" : "border-dashed"
+                                            )}
                                         >
                                             <Popover open={popoverOpen} onOpenChange={() => toggleRolePopover(role)}>
                                                 <PopoverTrigger asChild>
                                                     <span className="cursor-pointer">
                                                         {role}
-                                                        {user && <span className="font-normal mx-2 text-primary-foreground/80">/</span>}
+                                                        {user && <span className="font-normal mx-2 text-muted-foreground">/</span>}
                                                         {user && <span className="font-semibold">{user.displayName}</span>}
                                                     </span>
                                                 </PopoverTrigger>
@@ -767,7 +770,7 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                                             <button
                                                 type="button"
                                                 onClick={() => handleRemoveRequestedRole(role)}
-                                                className="h-4 w-4 rounded-full hover:bg-black/20 flex items-center justify-center"
+                                                className="h-4 w-4 rounded-full hover:bg-black/10 flex items-center justify-center"
                                                 aria-label={`Remove role ${role}`}
                                             >
                                                 <GoogleSymbol name="cancel" className="text-xs" />
