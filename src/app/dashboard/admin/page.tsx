@@ -106,7 +106,7 @@ const predefinedColors = [
 
 function CustomRoleCard({ 
   role,
-  index,
+  rank,
   users, 
   onUpdate, 
   onDelete, 
@@ -117,7 +117,7 @@ function CustomRoleCard({
   isLinking
 }: { 
   role: CustomAdminRole; 
-  index: number;
+  rank: number;
   users: User[]; 
   onUpdate: (updatedRole: CustomAdminRole) => void;
   onDelete: () => void;
@@ -206,7 +206,7 @@ function CustomRoleCard({
                                 style={{ backgroundColor: linkGroup.color }}
                                 aria-label="Edit link group"
                             >
-                                <GoogleSymbol name={linkGroup.icon} style={{ fontSize: '12px', color: getContrastColor(linkGroup.color) }}/>
+                                <GoogleSymbol name={linkGroup.icon} style={{ fontSize: '14px', color: getContrastColor(linkGroup.color) }}/>
                             </div>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-2">
@@ -285,7 +285,7 @@ function CustomRoleCard({
                                 style={{ backgroundColor: role.color }}
                             >
                                 <span className="text-xs font-bold" style={{ color: getContrastColor(role.color) }}>
-                                    {index + 1}
+                                    {rank}
                                 </span>
                             </div>
                         </PopoverTrigger>
@@ -355,6 +355,31 @@ export default function AdminPage() {
   
   // State for linking roles
   const [linkingState, setLinkingState] = useState<{ roleId: string } | null>(null);
+
+  const roleRanks = useMemo(() => {
+    const ranks = new Map<string, number>();
+    const computedRanks: number[] = [];
+    let currentRank = 1;
+
+    appSettings.customAdminRoles.forEach(role => {
+        let rank;
+        if (role.linkGroupId) {
+            if (ranks.has(role.linkGroupId)) {
+                rank = ranks.get(role.linkGroupId)!;
+            } else {
+                rank = currentRank;
+                ranks.set(role.linkGroupId, rank);
+                currentRank++;
+            }
+        } else {
+            rank = currentRank;
+            currentRank++;
+        }
+        computedRanks.push(rank);
+    });
+
+    return computedRanks;
+  }, [appSettings.customAdminRoles]);
 
 
   // This check must happen after all hooks are called.
@@ -591,7 +616,7 @@ export default function AdminPage() {
                         <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
                           <CustomRoleCard
                             role={role}
-                            index={index}
+                            rank={roleRanks[index]}
                             users={users}
                             onUpdate={handleUpdateCustomRole}
                             onDelete={() => handleDeleteCustomRole(role.id)}
@@ -646,3 +671,6 @@ export default function AdminPage() {
     
 
 
+
+
+    
