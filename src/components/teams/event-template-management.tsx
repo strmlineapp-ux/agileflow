@@ -232,8 +232,23 @@ export function EventTemplateManagement({ team }: { team: Team }) {
 
   return (
     <>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <div className="flex items-center gap-2">
+            <h2 className="text-2xl font-semibold tracking-tight">Event Templates</h2>
+            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={openAddDialog}>
+              <GoogleSymbol name="add_circle" className="text-xl" />
+              <span className="sr-only">New Template</span>
+            </Button>
+          </div>
+          <p className="text-muted-foreground">
+            Create reusable templates for common events, pre-filling requested roles to speed up event creation.
+          </p>
+        </div>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {templates.map(template => (
+        {templates.length > 0 ? (
+          templates.map(template => (
             <Card 
               key={template.id} 
               className="flex flex-col cursor-pointer hover:border-primary/50"
@@ -272,16 +287,12 @@ export function EventTemplateManagement({ team }: { team: Team }) {
                     </div>
                 </CardContent>
             </Card>
-          ))}
-          <button
-            onClick={openAddDialog}
-            className="flex items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 text-muted-foreground hover:border-primary hover:text-primary transition-colors min-h-[190px]"
-            >
-            <div className="flex flex-col items-center gap-2">
-                <GoogleSymbol name="add_circle" className="text-4xl" />
-                <span className="font-semibold">New Template</span>
-            </div>
-          </button>
+          ))
+        ) : (
+          <div className="col-span-3 flex items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 text-muted-foreground min-h-[190px]">
+            <p>No templates yet. Click the '+' button to add one.</p>
+          </div>
+        )}
       </div>
       
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
