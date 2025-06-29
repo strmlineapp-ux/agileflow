@@ -214,7 +214,7 @@ function BadgeDisplayItem({ badge, viewMode, isLink, linkColor, onEdit, onDelete
     );
 }
 
-function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInTeam, onUpdateCollection, onDeleteCollection, onAddBadge, onUpdateBadge, onDeleteBadge, onMoveBadge }: {
+function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInTeam, onUpdateCollection, onDeleteCollection, onAddBadge, onUpdateBadge, onDeleteBadge }: {
     collection: BadgeCollection;
     allBadgesInTeam: Badge[];
     allCollectionsInTeam: BadgeCollection[];
@@ -223,7 +223,6 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInTeam
     onAddBadge: (collectionId: string) => void;
     onUpdateBadge: (badgeData: Badge) => void;
     onDeleteBadge: (collectionId: string, badgeId: string) => void;
-    onMoveBadge: (badgeId: string, sourceCollectionId: string, destCollectionId: string, sourceIndex: number, destIndex: number) => void;
 }) {
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isEditingName, setIsEditingName] = useState(false);
@@ -286,8 +285,43 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInTeam
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                          <div className="relative">
-                            <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}><PopoverTrigger asChild><Button variant="ghost" size="icon" className="h-9 w-9 text-2xl" style={{ color: collection.color }}><GoogleSymbol name={collection.icon} /></Button></PopoverTrigger><PopoverContent className="w-80 p-0"><div className="p-2 border-b"><Input placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} /></div><ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={collection.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdateCollection(collection.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea></PopoverContent></Popover>
-                            <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}><PopoverTrigger asChild><div className="absolute -bottom-1 -right-0 h-4 w-4 rounded-full border-2 border-card cursor-pointer" style={{ backgroundColor: collection.color }} /></PopoverTrigger><PopoverContent className="w-auto p-2"><div className="grid grid-cols-8 gap-1">{predefinedColors.map(color => (<button key={color} className="h-6 w-6 rounded-full border" style={{ backgroundColor: color }} onClick={() => {onUpdateCollection(collection.id, { color }); setIsColorPopoverOpen(false);}}/>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={collection.color} onChange={(e) => onUpdateCollection(collection.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div></PopoverContent></Popover>
+                            <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
+                                <PopoverTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-9 w-9 text-2xl" style={{ color: collection.color }}>
+                                        <GoogleSymbol name={collection.icon} />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-80 p-0">
+                                    <div className="p-2 border-b">
+                                        <Input placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} />
+                                    </div>
+                                    <ScrollArea className="h-64">
+                                        <div className="grid grid-cols-6 gap-1 p-2">
+                                            {filteredIcons.slice(0, 300).map((iconName) => (
+                                                <Button key={iconName} variant={collection.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdateCollection(collection.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="text-2xl">
+                                                    <GoogleSymbol name={iconName} />
+                                                </Button>
+                                            ))}
+                                        </div>
+                                    </ScrollArea>
+                                </PopoverContent>
+                            </Popover>
+                            <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                                <PopoverTrigger asChild>
+                                    <div className="absolute -bottom-1 -right-0 h-4 w-4 rounded-full border-2 border-card cursor-pointer" style={{ backgroundColor: collection.color }} />
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-2">
+                                    <div className="grid grid-cols-8 gap-1">
+                                        {predefinedColors.map(color => (
+                                            <button key={color} className="h-6 w-6 rounded-full border" style={{ backgroundColor: color }} onClick={() => {onUpdateCollection(collection.id, { color }); setIsColorPopoverOpen(false);}}/>
+                                        ))}
+                                        <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
+                                            <GoogleSymbol name="colorize" className="text-muted-foreground" />
+                                            <Input type="color" value={collection.color} onChange={(e) => onUpdateCollection(collection.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/>
+                                        </div>
+                                    </div>
+                                </PopoverContent>
+                            </Popover>
                         </div>
                         <div className="flex items-center gap-1 flex-1 min-w-0">
                             {isEditingName ? (
@@ -483,23 +517,33 @@ export function BadgeManagement({ team }: { team: Team }) {
     };
     
     const onDragEnd = (result: DropResult) => {
-        const { source, destination, draggableId } = result;
-
+        const { source, destination, draggableId, type } = result;
+    
         if (!destination) return;
-
+    
+        // Handle reordering of collections
+        if (type === 'collection') {
+            const reorderedCollections = Array.from(team.badgeCollections);
+            const [moved] = reorderedCollections.splice(source.index, 1);
+            reorderedCollections.splice(destination.index, 0, moved);
+            updateTeam(team.id, { badgeCollections: reorderedCollections });
+            return;
+        }
+    
+        // Handle dragging badges
         const sourceCollection = team.badgeCollections.find(c => c.id === source.droppableId);
         const destCollection = team.badgeCollections.find(c => c.id === destination.droppableId);
-
+    
         if (!sourceCollection || !destCollection) return;
-
-        if (source.droppableId === destination.droppableId) { // Reorder
+    
+        if (source.droppableId === destination.droppableId) { // Reorder within same collection
             const reorderedIds = Array.from(sourceCollection.badgeIds);
             const [movedId] = reorderedIds.splice(source.index, 1);
             reorderedIds.splice(destination.index, 0, movedId);
-
+    
             const newCollections = team.badgeCollections.map(c => c.id === sourceCollection.id ? { ...c, badgeIds: reorderedIds } : c);
             updateTeam(team.id, { badgeCollections: newCollections });
-        } else { // Share
+        } else { // Share/move to a different collection
             if (destCollection.badgeIds.includes(draggableId)) {
                 toast({ variant: 'default', title: 'Already linked', description: 'This badge is already in the destination collection.'});
                 return;
@@ -526,22 +570,32 @@ export function BadgeManagement({ team }: { team: Team }) {
                 </div>
             </div>
             <DragDropContext onDragEnd={onDragEnd}>
-                <div className="space-y-6">
-                {(team.badgeCollections || []).map(collection => (
-                    <BadgeCollectionCard
-                        key={collection.id}
-                        collection={collection}
-                        allBadgesInTeam={team.allBadges}
-                        allCollectionsInTeam={team.badgeCollections}
-                        onUpdateCollection={handleUpdateCollection}
-                        onDeleteCollection={() => setCollectionToDelete(collection.id)}
-                        onAddBadge={handleAddBadge}
-                        onUpdateBadge={handleUpdateBadge}
-                        onDeleteBadge={handleDeleteBadge}
-                        onMoveBadge={()=>{}} // Drag and drop handles move now
-                    />
-                ))}
-                </div>
+                <StrictModeDroppable droppableId="collections-list" type="collection">
+                    {(provided) => (
+                        <div className="space-y-6" ref={provided.innerRef} {...provided.droppableProps}>
+                        {(team.badgeCollections || []).map((collection, index) => (
+                            <Draggable key={collection.id} draggableId={collection.id} index={index}>
+                                {(provided) => (
+                                    <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
+                                        <BadgeCollectionCard
+                                            key={collection.id}
+                                            collection={collection}
+                                            allBadgesInTeam={team.allBadges}
+                                            allCollectionsInTeam={team.badgeCollections}
+                                            onUpdateCollection={handleUpdateCollection}
+                                            onDeleteCollection={() => setCollectionToDelete(collection.id)}
+                                            onAddBadge={handleAddBadge}
+                                            onUpdateBadge={handleUpdateBadge}
+                                            onDeleteBadge={handleDeleteBadge}
+                                        />
+                                    </div>
+                                )}
+                            </Draggable>
+                        ))}
+                        {provided.placeholder}
+                        </div>
+                    )}
+                </StrictModeDroppable>
             </DragDropContext>
              <AlertDialog open={!!collectionToDelete} onOpenChange={(isOpen) => !isOpen && setCollectionToDelete(null)}>
                 <AlertDialogContent>
