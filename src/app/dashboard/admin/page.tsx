@@ -302,7 +302,7 @@ export default function AdminPage() {
                         defaultValue={appSettings.displayName}
                         onBlur={handleSaveName}
                         onKeyDown={handleNameKeyDown}
-                        className="h-auto p-0 text-2xl font-semibold leading-none tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                        className="font-body h-auto p-0 text-2xl font-semibold leading-none tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
                     />
                 ) : (
                     <CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer">
