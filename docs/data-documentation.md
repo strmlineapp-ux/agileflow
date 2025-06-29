@@ -75,9 +75,18 @@ This entity, `AppSettings`, holds global configuration data that allows for cust
 
 | Data Point | Description & Link to Services |
 | :--- | :--- |
-| `displayName: string` | **Internal.** An alias for the `Service Admin` role and its associated management pages. This allows organizations to use terminology they are more familiar with (e.g., "App Management", "Global Settings"). |
-| `icon: string` | **Internal.** The Google Symbol name for the icon associated with the `Service Admin` role. |
-| `serviceAdminColor?: string` | **Internal.** The hex color code for the badge on the `Service Admin` icon. |
+| `customAdminRoles: CustomAdminRole[]` | **Internal.** An array of objects defining custom administrative roles. This allows admins to create a hierarchy of roles between the system `Admin` and standard users. Each role has a name, icon, and color, which are editable on the Admin Management page. |
 | `calendarManagementLabel?: string` | **Internal.** An alias for the "Calendar Management" tab on the Service Delivery page. |
 | `teamManagementLabel?: string` | **Internal.** An alias for the "Team Management" tab on the Service Delivery page. |
 | `strategyLabel?: string` | **Internal.** An alias for the "Strategy" tab on the Service Delivery page. |
+
+### CustomAdminRole Entity
+A sub-entity of `AppSettings`, `CustomAdminRole` defines a single, dynamic administrative level.
+
+| Data Point | Description |
+| :--- | :--- |
+| `id: string` | **Internal.** A unique identifier for the custom role. |
+| `name: string` | **Internal.** The display name for the role (e.g., "Service Admin", "Service Admin+"). This is editable inline on the Admin Management page. |
+| `icon: string` | **Internal.** The Google Symbol name for the icon associated with the role. |
+| `color: string` | **Internal.** The hex color code for the icon's badge. |
+```

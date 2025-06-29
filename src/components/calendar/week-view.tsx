@@ -24,7 +24,7 @@ const isHoliday = (day: Date) => {
 const DEFAULT_HOUR_HEIGHT_PX = 60;
 
 export const WeekView = React.memo(({ date, containerRef, zoomLevel, onEasyBooking, onEventClick }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', onEasyBooking: (data: { startTime: Date, location?: string }) => void, onEventClick: (event: Event) => void }) => {
-    const { viewAsUser, events, calendars, users, teams } = useUser();
+    const { viewAsUser, events, calendars, users, teams, appSettings } = useUser();
     const [now, setNow] = useState<Date | null>(null);
     const nowMarkerRef = useRef<HTMLDivElement>(null);
     const [hourHeight, setHourHeight] = useState(DEFAULT_HOUR_HEIGHT_PX);
@@ -32,7 +32,7 @@ export const WeekView = React.memo(({ date, containerRef, zoomLevel, onEasyBooki
     const initialScrollPerformed = useRef(false);
     const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
     
-    const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars);
+    const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars, appSettings.customAdminRoles);
     const weekStart = useMemo(() => startOfWeek(date, { weekStartsOn: 1 }), [date]);
     const weekDays = useMemo(() => eachDayOfInterval({ start: weekStart, end: addDays(weekStart, 6) }), [weekStart]);
     const isCurrentWeek = useMemo(() => weekDays.some(isToday), [weekDays]);

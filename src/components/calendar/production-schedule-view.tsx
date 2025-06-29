@@ -318,7 +318,7 @@ ProductionScheduleLocationRow.displayName = 'ProductionScheduleLocationRow';
 
 
 export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLevel, onEasyBooking, onEventClick }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', onEasyBooking: (data: { startTime: Date, location?: string }) => void, onEventClick: (event: Event) => void }) => {
-    const { users, teams, viewAsUser, events, calendars, userStatusAssignments, setUserStatusAssignments } = useUser();
+    const { users, teams, viewAsUser, events, calendars, userStatusAssignments, setUserStatusAssignments, appSettings } = useUser();
 
     const [now, setNow] = useState<Date | null>(null);
     const [hourWidth, setHourWidth] = useState(DEFAULT_HOUR_WIDTH_PX);
@@ -339,8 +339,8 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
     const [addCheckPopoverOpen, setAddCheckPopoverOpen] = useState<Record<string, boolean>>({});
     const [checkSearchTerm, setCheckSearchTerm] = useState('');
     
-    const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars);
-    const managerialRoles = ["Admin", "Service Delivery Manager"];
+    const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars, appSettings.customAdminRoles);
+    const managerialRoles = ["Admin", ...appSettings.customAdminRoles.map(r => r.name)];
     const canManageStatus = viewAsUser.roles?.some(p => managerialRoles.includes(p));
 
     const timeFormatTimeline = viewAsUser.timeFormat === '24h' ? 'HH:mm' : 'h a';

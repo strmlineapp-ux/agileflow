@@ -101,18 +101,18 @@ type EventFormProps = {
   initialData?: Partial<z.infer<typeof formSchema>>;
 };
 
-const getDefaultCalendarId = (user: User, availableCalendars: SharedCalendar[]): string | undefined => {
+const getDefaultCalendarId = (user: User, availableCalendars: SharedCalendar[], customAdminRoles: any[]): string | undefined => {
     if (availableCalendars.length === 0) return undefined;
     const managedCalendar = availableCalendars.find(cal => cal.managers?.includes(user.userId));
     if (managedCalendar) return managedCalendar.id;
-    if (user.roles?.includes('Admin') || user.roles?.includes('Service Delivery Manager')) {
+    if (user.isAdmin || customAdminRoles.some(role => user.roles?.includes(role.name))) {
         return availableCalendars[0].id;
     }
     return undefined;
 };
 
 export function EventForm({ event, onFinished, initialData }: EventFormProps) {
-  const { realUser, viewAsUser, users, calendars, teams, addEvent, updateEvent, allBookableLocations, getEventStrategy, userStatusAssignments } = useUser();
+  const { realUser, viewAsUser, users, calendars, teams, addEvent, updateEvent, allBookableLocations, getEventStrategy, userStatusAssignments, appSettings } = useUser();
   const { toast } = useToast();
   
   const isEditing = !!event;
@@ -133,14 +133,14 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
   const [roleAssignments, setRoleAssignments] = React.useState<Record<string, { assignedUser: string | null; popoverOpen: boolean }>>({});
 
   const availableCalendars = React.useMemo(() => {
-    return calendars.filter(cal => canManageEventOnCalendar(viewAsUser, cal));
-  }, [calendars, viewAsUser]);
+    return calendars.filter(cal => canManageEventOnCalendar(viewAsUser, cal, appSettings.customAdminRoles));
+  }, [calendars, viewAsUser, appSettings.customAdminRoles]);
   
   const eventStrategy = React.useMemo(() => getEventStrategy(), [getEventStrategy]);
 
   const defaultCalendarId = React.useMemo(() => {
-    return getDefaultCalendarId(viewAsUser, availableCalendars);
-  }, [viewAsUser, availableCalendars]);
+    return getDefaultCalendarId(viewAsUser, availableCalendars, appSettings.customAdminRoles);
+  }, [viewAsUser, availableCalendars, appSettings.customAdminRoles]);
 
   const getDefaultPriority = React.useCallback(() => {
     if (!eventStrategy) return '';

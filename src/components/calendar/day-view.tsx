@@ -145,7 +145,7 @@ const DayViewLocationRow = React.memo(({
 DayViewLocationRow.displayName = 'DayViewLocationRow';
 
 export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, onEasyBooking, onEventClick }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', axisView: 'standard' | 'reversed', onEasyBooking: (data: { startTime: Date, location?: string }) => void, onEventClick: (event: Event) => void }) => {
-    const { viewAsUser, events, calendars, users, teams } = useUser();
+    const { viewAsUser, events, calendars, users, teams, appSettings } = useUser();
     const [now, setNow] = useState<Date | null>(null);
     const nowMarkerRef = useRef<HTMLDivElement>(null);
     const [collapsedLocations, setCollapsedLocations] = useState<Set<string>>(new Set());
@@ -154,7 +154,7 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
     const initialScrollPerformed = useRef(false);
     const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
 
-    const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars);
+    const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars, appSettings.customAdminRoles);
     const isViewingToday = useMemo(() => isSameDay(date, new Date()), [date]);
 
     const timeFormatTimeline = viewAsUser.timeFormat === '24h' ? 'HH:mm' : 'h a';

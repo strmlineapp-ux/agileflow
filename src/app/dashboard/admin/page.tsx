@@ -3,7 +3,7 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useUser } from '@/context/user-context';
-import { type User } from '@/types';
+import { type User, type CustomAdminRole } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,7 @@ import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { googleSymbolNames } from '@/lib/google-symbols';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle as UIAlertDialogTitle } from '@/components/ui/alert-dialog';
 
 
 // A card to display a user with a specific role.
@@ -77,6 +78,195 @@ const AddUserToRoleButton = ({ usersToAdd, onAdd, roleName }: { usersToAdd: User
   )
 }
 
+const predefinedColors = [
+    '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
+    '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6',
+    '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
+];
+
+function CustomRoleCard({ role, users, onUpdate, onDelete }: { role: CustomAdminRole; users: User[], onUpdate: (updatedRole: CustomAdminRole) => void, onDelete: () => void }) {
+    const { toast } = useToast();
+    const { updateUser } = useUser();
+    
+    // Popover States
+    const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
+    const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    
+    const [iconSearch, setIconSearch] = useState('');
+    const [isEditingName, setIsEditingName] = useState(false);
+    const nameInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (isEditingName && nameInputRef.current) {
+        nameInputRef.current.focus();
+        nameInputRef.current.select();
+        }
+    }, [isEditingName]);
+
+    const handleSaveName = () => {
+        const input = nameInputRef.current;
+        if (!input || !input.value.trim()) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Display name cannot be empty.' });
+        setIsEditingName(false);
+        return;
+        }
+        if (input.value.trim() !== role.name) {
+            onUpdate({ ...role, name: input.value.trim() });
+            toast({ title: 'Success', description: 'Role name updated.' });
+        }
+        setIsEditingName(false);
+    };
+
+    const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+        handleSaveName();
+        } else if (e.key === 'Escape') {
+        setIsEditingName(false);
+        }
+    };
+    
+    const filteredIcons = useMemo(() => {
+        if (!iconSearch) return googleSymbolNames;
+        return googleSymbolNames.filter(iconName =>
+            iconName.toLowerCase().includes(iconSearch.toLowerCase())
+        );
+    }, [iconSearch]);
+
+    const assignedUsers = useMemo(() => users.filter(u => u.roles?.includes(role.name)), [users, role.name]);
+    const unassignedUsers = useMemo(() => users.filter(u => !u.roles?.includes(role.name)), [users, role.name]);
+
+    const handleRoleToggle = (user: User) => {
+        const currentRoles = user.roles || [];
+        const hasRole = currentRoles.includes(role.name);
+        const newRoles = hasRole
+            ? currentRoles.filter(r => r !== role.name)
+            : [...currentRoles, role.name];
+
+        updateUser(user.userId, { roles: newRoles });
+        toast({ title: 'Success', description: `${user.displayName}'s role has been updated.` });
+    };
+
+    return (
+        <>
+        <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
+                    <PopoverTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-2xl text-muted-foreground hover:text-foreground">
+                          <GoogleSymbol name={role.icon} />
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80 p-0">
+                        <div className="p-2 border-b">
+                            <Input
+                                placeholder="Search icons..."
+                                value={iconSearch}
+                                onChange={(e) => setIconSearch(e.target.value)}
+                            />
+                        </div>
+                        <ScrollArea className="h-64">
+                            <div className="grid grid-cols-6 gap-1 p-2">
+                                {filteredIcons.slice(0, 300).map((iconName) => (
+                                    <Button
+                                        key={iconName}
+                                        variant={role.icon === iconName ? "default" : "ghost"}
+                                        size="icon"
+                                        onClick={() => { onUpdate({ ...role, icon: iconName }); setIsIconPopoverOpen(false); }}
+                                        className="text-2xl"
+                                    >
+                                        <GoogleSymbol name={iconName} />
+                                    </Button>
+                                ))}
+                            </div>
+                        </ScrollArea>
+                    </PopoverContent>
+                  </Popover>
+                   <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card cursor-pointer" aria-label="Change service admin color">
+                        <div
+                          className="h-full w-full rounded-full"
+                          style={{ backgroundColor: role.color }}
+                        />
+                      </div>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-2">
+                      <div className="grid grid-cols-8 gap-1">
+                        {predefinedColors.map(color => (
+                          <button
+                            key={color}
+                            className="h-6 w-6 rounded-full border"
+                            style={{ backgroundColor: color }}
+                            onClick={() => {
+                                onUpdate({ ...role, color: color });
+                                setIsColorPopoverOpen(false);
+                            }}
+                            aria-label={`Set color to ${color}`}
+                          />
+                        ))}
+                        <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
+                          <GoogleSymbol name="colorize" className="text-muted-foreground" />
+                          <Input
+                            type="color"
+                            value={role.color}
+                            onChange={(e) => onUpdate({ ...role, color: e.target.value })}
+                            className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"
+                            aria-label="Custom color picker"
+                          />
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                {isEditingName ? (
+                   <Input
+                        ref={nameInputRef}
+                        defaultValue={role.name}
+                        onBlur={handleSaveName}
+                        onKeyDown={handleNameKeyDown}
+                        className="font-body h-auto p-0 text-2xl font-semibold leading-none tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                    />
+                ) : (
+                    <CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer">
+                        {role.name}
+                    </CardTitle>
+                )}
+                <AddUserToRoleButton usersToAdd={unassignedUsers} onAdd={handleRoleToggle} roleName={role.name} />
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setIsDeleteDialogOpen(true)}>
+                    <GoogleSymbol name="delete" />
+                </Button>
+              </div>
+              <CardDescription>Assign or revoke {role.name} privileges for managing app-wide settings.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {assignedUsers.map(user => (
+                <UserRoleCard key={user.userId} user={user} onRemove={handleRoleToggle} />
+              ))}
+            </CardContent>
+          </Card>
+          <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <UIAlertDialogTitle>Are you absolutely sure?</UIAlertDialogTitle>
+                    <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete the "{role.name}" role level and unassign all users.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={onDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                        Continue
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </>
+    );
+}
+
 export default function AdminPage() {
   const { toast } = useToast();
   const { viewAsUser, users, updateUser, appSettings, updateAppSettings } = useUser();
@@ -85,59 +275,9 @@ export default function AdminPage() {
 
   // Dialog & Popover States
   const [is2faDialogOpen, setIs2faDialogOpen] = useState(false);
-  const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
-  const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
   
   const [on2faSuccess, setOn2faSuccess] = useState<(() => void) | null>(null);
   const [twoFactorCode, setTwoFactorCode] = useState('');
-  const [iconSearch, setIconSearch] = useState('');
-
-  const [isEditingName, setIsEditingName] = useState(false);
-  const nameInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (isEditingName && nameInputRef.current) {
-      nameInputRef.current.focus();
-      nameInputRef.current.select();
-    }
-  }, [isEditingName]);
-
-  const handleSaveName = () => {
-    const input = nameInputRef.current;
-    if (!input || !input.value.trim()) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Display name cannot be empty.' });
-      setIsEditingName(false);
-      return;
-    }
-    if (input.value.trim() !== appSettings.displayName) {
-      updateAppSettings({ displayName: input.value.trim() });
-      toast({ title: 'Success', description: 'Display name updated.' });
-    }
-    setIsEditingName(false);
-  };
-
-  const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleSaveName();
-    } else if (e.key === 'Escape') {
-      setIsEditingName(false);
-    }
-  };
-
-
-  const predefinedColors = [
-    '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
-    '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6',
-    '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
-  ];
-  
-  const filteredIcons = useMemo(() => {
-    if (!iconSearch) return googleSymbolNames;
-    return googleSymbolNames.filter(iconName =>
-        iconName.toLowerCase().includes(iconSearch.toLowerCase())
-    );
-  }, [iconSearch]);
-
 
   // This check must happen after all hooks are called.
   if (!isAdmin) {
@@ -145,10 +285,7 @@ export default function AdminPage() {
   }
 
   const adminUsers = useMemo(() => users.filter(u => u.isAdmin), [users]);
-  const serviceAdminUsers = useMemo(() => users.filter(u => u.roles?.includes('Service Admin')), [users]);
-  
   const nonAdminUsers = useMemo(() => users.filter(u => !u.isAdmin), [users]);
-  const nonServiceAdminUsers = useMemo(() => users.filter(u => !u.roles?.includes('Service Admin')), [users]);
 
   const handleAdminToggle = (user: User) => {
     const action = () => {
@@ -159,22 +296,6 @@ export default function AdminPage() {
     setIs2faDialogOpen(true);
   };
   
-  const handleServiceAdminToggle = (user: User) => {
-    const action = () => {
-        const currentRoles = user.roles || [];
-        const isServiceAdmin = currentRoles.includes('Service Admin');
-        const newRoles = isServiceAdmin
-          ? currentRoles.filter(role => role !== 'Service Admin')
-          : [...currentRoles, 'Service Admin'];
-
-        updateUser(user.userId, { roles: newRoles });
-        toast({ title: 'Success', description: `${user.displayName}'s Service Admin status has been updated.` });
-    };
-
-    setOn2faSuccess(() => action);
-    setIs2faDialogOpen(true);
-  };
-
   const handleVerify2fa = () => {
     // Mock 2FA code
     if (twoFactorCode === '123456') { 
@@ -196,9 +317,27 @@ export default function AdminPage() {
     setOn2faSuccess(null);
   };
 
-  const handleIconSelect = (newIcon: string) => {
-    updateAppSettings({ icon: newIcon });
-    setIsIconPopoverOpen(false);
+  const handleAddCustomRole = () => {
+    const newRoleName = `Service Admin${'+'.repeat(appSettings.customAdminRoles.length)}`;
+    const newRole: CustomAdminRole = {
+        id: crypto.randomUUID(),
+        name: newRoleName,
+        icon: 'add_moderator',
+        color: predefinedColors[appSettings.customAdminRoles.length % predefinedColors.length],
+    };
+    updateAppSettings({ customAdminRoles: [...appSettings.customAdminRoles, newRole] });
+    toast({ title: 'New Level Added', description: `"${newRoleName}" has been created.` });
+  };
+
+  const handleUpdateCustomRole = (updatedRole: CustomAdminRole) => {
+      const newRoles = appSettings.customAdminRoles.map(r => r.id === updatedRole.id ? updatedRole : r);
+      updateAppSettings({ customAdminRoles: newRoles });
+  }
+  
+  const handleDeleteCustomRole = (roleId: string) => {
+      const newRoles = appSettings.customAdminRoles.filter(r => r.id !== roleId);
+      updateAppSettings({ customAdminRoles: newRoles });
+      toast({ title: 'Success', description: 'Role level deleted.' });
   }
 
   return (
@@ -206,7 +345,7 @@ export default function AdminPage() {
       <div className="flex flex-col gap-8">
         <h1 className="font-headline text-3xl font-semibold">Admin Management</h1>
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 items-start">
           {/* Admins Column */}
           <Card>
             <CardHeader>
@@ -223,102 +362,25 @@ export default function AdminPage() {
             </CardContent>
           </Card>
           
-          {/* Service Admins Column */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <div className="relative">
-                  <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
-                    <PopoverTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-2xl text-muted-foreground hover:text-foreground">
-                          <GoogleSymbol name={appSettings.icon} />
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-80 p-0">
-                        <div className="p-2 border-b">
-                            <Input
-                                placeholder="Search icons..."
-                                value={iconSearch}
-                                onChange={(e) => setIconSearch(e.target.value)}
-                            />
-                        </div>
-                        <ScrollArea className="h-64">
-                            <div className="grid grid-cols-6 gap-1 p-2">
-                                {filteredIcons.slice(0, 300).map((iconName) => (
-                                    <Button
-                                        key={iconName}
-                                        variant={appSettings.icon === iconName ? "default" : "ghost"}
-                                        size="icon"
-                                        onClick={() => handleIconSelect(iconName)}
-                                        className="text-2xl"
-                                    >
-                                        <GoogleSymbol name={iconName} />
-                                    </Button>
-                                ))}
-                            </div>
-                        </ScrollArea>
-                    </PopoverContent>
-                  </Popover>
-                   <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                    <PopoverTrigger asChild>
-                      <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card cursor-pointer" aria-label="Change service admin color">
-                        <div
-                          className="h-full w-full rounded-full"
-                          style={{ backgroundColor: appSettings.serviceAdminColor || '#8B5CF6' }}
-                        />
-                      </div>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-2">
-                      <div className="grid grid-cols-8 gap-1">
-                        {predefinedColors.map(color => (
-                          <button
-                            key={color}
-                            className="h-6 w-6 rounded-full border"
-                            style={{ backgroundColor: color }}
-                            onClick={() => {
-                              updateAppSettings({ serviceAdminColor: color });
-                              setIsColorPopoverOpen(false);
-                            }}
-                            aria-label={`Set color to ${color}`}
-                          />
-                        ))}
-                        <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
-                          <GoogleSymbol name="colorize" className="text-muted-foreground" />
-                          <Input
-                            type="color"
-                            value={appSettings.serviceAdminColor || '#8B5CF6'}
-                            onChange={(e) => updateAppSettings({ serviceAdminColor: e.target.value })}
-                            className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"
-                            aria-label="Custom color picker"
-                          />
-                        </div>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                {isEditingName ? (
-                   <Input
-                        ref={nameInputRef}
-                        defaultValue={appSettings.displayName}
-                        onBlur={handleSaveName}
-                        onKeyDown={handleNameKeyDown}
-                        className="font-body h-auto p-0 text-2xl font-semibold leading-none tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                    />
-                ) : (
-                    <CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer">
-                        {appSettings.displayName}
-                    </CardTitle>
-                )}
-                <AddUserToRoleButton usersToAdd={nonServiceAdminUsers} onAdd={handleServiceAdminToggle} roleName={appSettings.displayName} />
-              </div>
-              <CardDescription>Assign or revoke {appSettings.displayName} privileges for managing app-wide settings.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {serviceAdminUsers.map(user => (
-                <UserRoleCard key={user.userId} user={user} onRemove={handleServiceAdminToggle} />
-              ))}
-            </CardContent>
-          </Card>
+          {appSettings.customAdminRoles.map(role => (
+              <CustomRoleCard
+                key={role.id}
+                role={role}
+                users={users}
+                onUpdate={handleUpdateCustomRole}
+                onDelete={() => handleDeleteCustomRole(role.id)}
+              />
+          ))}
+
+          <button
+            onClick={handleAddCustomRole}
+            className="flex items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 text-muted-foreground hover:border-primary hover:text-primary transition-colors h-full min-h-[200px]"
+            >
+            <div className="flex flex-col items-center gap-2">
+                <GoogleSymbol name="add_circle" className="text-4xl" />
+                <span className="font-semibold">Add New Level</span>
+            </div>
+            </button>
         </div>
       </div>
 

@@ -20,7 +20,8 @@ export function Sidebar() {
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const isAdmin = viewAsUser.isAdmin;
-  const isServiceAdmin = viewAsUser.roles?.includes('Service Admin');
+  const isServiceAdmin = appSettings.customAdminRoles.some(role => viewAsUser.roles?.includes(role.name));
+  const serviceAdminRole = appSettings.customAdminRoles[0];
 
   const userTeams = teams.filter(team => 
     isAdmin || team.teamAdmins?.includes(viewAsUser.userId)
@@ -31,7 +32,7 @@ export function Sidebar() {
     { href: '/dashboard/calendar', icon: 'calendar_month', label: 'Calendar', visible: true },
     { href: '/dashboard', icon: 'dashboard', label: 'Overview', visible: true },
     { href: '/dashboard/tasks', icon: 'checklist', label: 'Tasks', visible: true },
-    { href: '/dashboard/service-delivery', icon: appSettings.icon, label: appSettings.displayName, visible: isServiceAdmin || isAdmin },
+    { href: '/dashboard/service-delivery', icon: serviceAdminRole?.icon || 'business_center', label: serviceAdminRole?.name || 'Service Delivery', visible: isServiceAdmin || isAdmin },
   ];
 
   const teamNavItems = userTeams.map(team => ({

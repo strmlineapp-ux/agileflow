@@ -2,10 +2,15 @@
 
 import type React from 'react';
 
-export interface AppSettings {
-  displayName: string;
+export interface CustomAdminRole {
+  id: string;
+  name: string;
   icon: string;
-  serviceAdminColor?: string;
+  color: string;
+}
+
+export interface AppSettings {
+  customAdminRoles: CustomAdminRole[];
   calendarManagementLabel?: string;
   teamManagementLabel?: string;
   strategyLabel?: string;

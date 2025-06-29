@@ -3,9 +3,14 @@
 import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team, type PriorityStrategy, type AppSettings, type TeamRole } from '@/types';
 
 export const mockAppSettings: AppSettings = {
-  displayName: 'Service Admin',
-  icon: 'business_center',
-  serviceAdminColor: '#8B5CF6',
+  customAdminRoles: [
+    {
+      id: 'service-admin-main',
+      name: 'Service Admin',
+      icon: 'business_center',
+      color: '#8B5CF6',
+    },
+  ],
   calendarManagementLabel: 'Calendar Management',
   teamManagementLabel: 'Team Management',
   strategyLabel: 'Strategy',

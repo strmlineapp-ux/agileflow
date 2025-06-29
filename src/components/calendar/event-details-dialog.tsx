@@ -185,14 +185,14 @@ type EventDetailsDialogProps = {
 };
 
 export function EventDetailsDialog({ event, isOpen, onOpenChange }: EventDetailsDialogProps) {
-  const { viewAsUser, calendars } = useUser();
+  const { viewAsUser, calendars, appSettings } = useUser();
 
   if (!event) return null;
   
   const calendar = calendars.find(c => c.id === event.calendarId);
   if (!calendar) return null;
 
-  const canManage = canManageEventOnCalendar(viewAsUser, calendar);
+  const canManage = canManageEventOnCalendar(viewAsUser, calendar, appSettings.customAdminRoles);
   
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
