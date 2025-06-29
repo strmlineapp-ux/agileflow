@@ -93,6 +93,10 @@ export function StrategyManagement() {
                     <GoogleSymbol name="edit" className="text-lg" />
                     <span className="sr-only">Edit section title</span>
                 </Button>
+                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={openAddDialog}>
+                    <GoogleSymbol name="add_circle" className="text-xl" />
+                    <span className="sr-only">New Strategy</span>
+                </Button>
             </div>
             <p className="text-muted-foreground">
                 Define sets of priorities and apply them to different parts of the application.
@@ -137,15 +141,6 @@ export function StrategyManagement() {
                 </CardFooter>
             </Card>
           ))}
-          <button
-            onClick={openAddDialog}
-            className="flex items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 text-muted-foreground hover:border-primary hover:text-primary transition-colors min-h-[220px]"
-            >
-             <div className="flex flex-col items-center gap-2">
-                <GoogleSymbol name="add_circle" className="text-4xl" />
-                <span className="font-semibold">New Strategy</span>
-            </div>
-          </button>
       </div>
 
       {isFormOpen && (

@@ -165,6 +165,15 @@ export function CalendarManagement() {
 
   return (
     <>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
+            <h2 className="text-2xl font-semibold tracking-tight">Manage Calendars</h2>
+            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={openAddDialog}>
+                <GoogleSymbol name="add_circle" className="text-xl" />
+                <span className="sr-only">New Calendar</span>
+            </Button>
+        </div>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {calendars.map(calendar => {
           const calendarManagers = (calendar.managers || []).map(id => users.find(u => u.userId === id)).filter(Boolean) as User[];
@@ -265,15 +274,6 @@ export function CalendarManagement() {
             </Card>
           )
         })}
-        <button
-          onClick={openAddDialog}
-          className="flex items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 text-muted-foreground hover:border-primary hover:text-primary transition-colors min-h-[190px]"
-        >
-          <div className="flex flex-col items-center gap-2">
-            <GoogleSymbol name="add_circle" className="text-4xl" />
-            <span className="font-semibold">New Calendar</span>
-          </div>
-        </button>
       </div>
 
       {/* Add New Calendar Dialog */}

@@ -343,7 +343,13 @@ export default function AdminPage() {
   return (
     <>
       <div className="flex flex-col gap-8">
-        <h1 className="font-headline text-3xl font-semibold">Admin Management</h1>
+        <div className="flex items-center gap-2">
+            <h1 className="font-headline text-3xl font-semibold">Admin Management</h1>
+            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={handleAddCustomRole}>
+                <GoogleSymbol name="add_circle" className="text-2xl" />
+                <span className="sr-only">Add New Level</span>
+            </Button>
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 items-start">
           {/* Admins Column */}
@@ -371,16 +377,6 @@ export default function AdminPage() {
                 onDelete={() => handleDeleteCustomRole(role.id)}
               />
           ))}
-
-          <button
-            onClick={handleAddCustomRole}
-            className="flex items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 text-muted-foreground hover:border-primary hover:text-primary transition-colors h-full min-h-[200px]"
-            >
-            <div className="flex flex-col items-center gap-2">
-                <GoogleSymbol name="add_circle" className="text-4xl" />
-                <span className="font-semibold">Add New Level</span>
-            </div>
-            </button>
         </div>
       </div>
 
