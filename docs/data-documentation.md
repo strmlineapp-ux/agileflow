@@ -66,3 +66,18 @@ Not all user capabilities are stored directly as a field on the `User` object. M
 | **Absence Statuses** (e.g., `PTO`, `Sick`) | **Storage:** This data is **not stored on the `User` object**. It is managed in the `userStatusAssignments` state within the `UserContext`, which is a dictionary keyed by date (`YYYY-MM-DD`).<br>**Usage:** The `ProductionScheduleView` allows authorized managers to assign these statuses to users for specific days. The calendar then uses this data to visually indicate a user's availability. |
 | **Access to Pages** (e.g., `/admin`) | **Storage:** This is **not stored directly as data**. Access control is handled directly in the UI components.<br>**Usage:** Components like the `Sidebar` and the page layouts contain logic that checks the current user's `isAdmin` flag or `roles` array (e.g., `user.isAdmin`). If the required role is not present, the link or the entire page is not rendered. |
 | **Interaction Permissions** (e.g., editing an event, managing a team) | **Storage:** This is also **not stored directly**. Permissions are derived by combining user roles with the context of a specific data item.<br>**Usage:** The application uses helper functions (like `canManageEventOnCalendar`) that check if a user's `userId` is in a `Team`'s `teamAdmins` list or if the user has a system-level role like `Admin`. This determines whether UI elements like "Edit" buttons are displayed. |
+
+## Application-Wide Settings
+
+This entity, `AppSettings`, holds global configuration data that allows for customization of the application's terminology and appearance without altering the core codebase. These settings are managed on the **Admin Management** and **Service Delivery** pages.
+
+### AppSettings Data
+
+| Data Point | Description & Link to Services |
+| :--- | :--- |
+| `displayName: string` | **Internal.** An alias for the `Service Admin` role and its associated management pages. This allows organizations to use terminology they are more familiar with (e.g., "App Management", "Global Settings"). |
+| `icon: string` | **Internal.** The Google Symbol name for the icon associated with the `Service Admin` role. |
+| `serviceAdminColor?: string` | **Internal.** The hex color code for the badge on the `Service Admin` icon. |
+| `calendarManagementLabel?: string` | **Internal.** An alias for the "Calendar Management" tab on the Service Delivery page. |
+| `teamManagementLabel?: string` | **Internal.** An alias for the "Team Management" tab on the Service Delivery page. |
+| `strategyLabel?: string` | **Internal.** An alias for the "Strategy" tab on the Service Delivery page. |
