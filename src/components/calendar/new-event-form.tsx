@@ -397,21 +397,13 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
   const absencesForDay = dayKey && userStatusAssignments[dayKey] ? userStatusAssignments[dayKey] : [];
   
   const availableRolesToAdd = teamForSelectedCalendar?.roles.filter(r => !roleAssignments.hasOwnProperty(r.name)) || [];
+  const hasRequestedRoles = Object.keys(roleAssignments).length > 0;
 
   return (
     <>
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
-        <div className="flex items-center justify-end -mt-6 -mr-6 mb-4">
-            <Button type="button" variant="ghost" size="icon" onClick={onFinished} disabled={isLoading} aria-label="Discard changes">
-              <GoogleSymbol name="close" />
-            </Button>
-            <Button type="submit" variant="ghost" size="icon" disabled={isLoading} aria-label="Save changes">
-              <GoogleSymbol name="check" />
-            </Button>
-        </div>
-
-        <div className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">
+        <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
                 {availableCalendars.length > 1 && (
                 <FormField
@@ -542,6 +534,17 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                 )}
             </div>
 
+            <div className="flex items-center">
+                <Button type="button" variant="ghost" size="icon" onClick={onFinished} disabled={isLoading} aria-label="Discard changes">
+                <GoogleSymbol name="close" />
+                </Button>
+                <Button type="submit" variant="ghost" size="icon" disabled={isLoading} aria-label="Save changes">
+                <GoogleSymbol name="check" />
+                </Button>
+            </div>
+        </div>
+
+        <div className="space-y-4">
           <FormField
               control={form.control}
               name="title"
@@ -635,8 +638,8 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
             )}
           />
 
-            {Object.keys(roleAssignments).length > 0 && (
-              <div className="flex flex-wrap items-center gap-2">
+            {hasRequestedRoles && (
+              <div className="flex flex-wrap items-center gap-2 p-2 border-none">
                   {Object.entries(roleAssignments).map(([role, { assignedUser, popoverOpen }]) => {
                       const user = assignedUser ? users.find(u => u.userId === assignedUser) : null;
                       const roleInfo = teamForSelectedCalendar?.roles.find(r => r.name === role);
@@ -742,7 +745,7 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0 text-primary">
+                            <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0 text-muted-foreground hover:text-primary">
                               <GoogleSymbol name="attachment" className="text-xl" />
                             </Button>
                           </DropdownMenuTrigger>
@@ -810,7 +813,7 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <PopoverTrigger asChild>
-                                    <Button type="button" variant="ghost" size="icon" className="h-6 w-6 text-primary"><GoogleSymbol name="account_circle" className="text-xl" /></Button>
+                                    <Button type="button" variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary"><GoogleSymbol name="account_circle" className="text-xl" /></Button>
                                 </PopoverTrigger>
                             </TooltipTrigger>
                             <TooltipContent><p>Add Role Request</p></TooltipContent>
@@ -835,7 +838,7 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <PopoverTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-6 w-6 text-primary">
+                                    <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary">
                                         <GoogleSymbol name="group_add" className="text-xl" />
                                     </Button>
                                 </PopoverTrigger>
