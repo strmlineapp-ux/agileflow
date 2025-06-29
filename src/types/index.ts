@@ -79,7 +79,7 @@ export interface BadgeCollection {
   name: string;
   icon: string;
   color: string;
-  viewMode: 'assorted' | 'scale' | 'list';
+  viewMode: 'assorted' | 'detailed' | 'list';
   badgeIds: string[];
   description?: string;
   applications?: BadgeApplication[];
