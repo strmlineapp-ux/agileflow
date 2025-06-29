@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { type Team, type Badge, type BadgeCollection, type User, type BadgeApplication, type BadgeDetail } from '@/types';
+import { type Team, type Badge, type BadgeCollection, type User, type BadgeApplication } from '@/types';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { ScrollArea } from '../ui/scroll-area';
@@ -20,9 +20,6 @@ import { Textarea } from '../ui/textarea';
 import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProps } from 'react-beautiful-dnd';
 import { Separator } from '../ui/separator';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Calendar } from '@/components/ui/calendar';
-import { Avatar, AvatarImage, AvatarFallback } from '../ui/avatar';
-import { Dialog, DialogContent as DialogContentUI, DialogHeader as DialogHeaderUI, DialogTitle as DialogTitleUI } from '../ui/dialog';
 
 const predefinedColors = [
     '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
@@ -46,56 +43,16 @@ const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
   return <Droppable {...props}>{children}</Droppable>;
 };
 
-function DetailedBadgeCard({ 
-    badge,
-    onUpdateBadge, 
-    onDelete, 
-    isLink, 
-    linkColor, 
-    team, 
-    onFetchBadgeDetail, 
-    badgeDetail 
-}: { 
-    badge: Badge;
-    onUpdateBadge: (badgeData: Partial<Badge>) => void; 
-    onDelete: () => void; 
-    isLink: boolean; 
-    linkColor?: string;
-    team: Team;
-    onFetchBadgeDetail: (badgeId: string) => void;
-    badgeDetail: BadgeDetail | null;
-}) {
+function BadgeDisplayItem({ badge, viewMode, isLink, linkColor, onUpdateBadge, onDelete }: { badge: Badge; viewMode: BadgeCollection['viewMode']; isLink: boolean; linkColor?: string; onUpdateBadge: (badgeData: Partial<Badge>) => void; onDelete: () => void; }) {
     const { toast } = useToast();
-    const { users } = useUser();
-
-    // Local state for UI controls
+    const [isEditingName, setIsEditingName] = useState(false);
+    const nameInputRef = useRef<HTMLInputElement>(null);
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
     const [iconSearch, setIconSearch] = useState('');
-    const [isEditingName, setIsEditingName] = useState(false);
+    
     const [isEditingDescription, setIsEditingDescription] = useState(false);
-    const [isSchedulePopoverOpen, setIsSchedulePopoverOpen] = useState(false);
-    const [isUsersPopoverOpen, setIsUsersPopoverOpen] = useState(false);
-    const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
-    const [isCreatingMeetLink, setIsCreatingMeetLink] = useState(false);
-
-    // Form field state
-    const nameInputRef = useRef<HTMLInputElement>(null);
     const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
-    const [startDate, setStartDate] = useState(badgeDetail?.schedule?.startDate);
-    const [endDate, setEndDate] = useState(badgeDetail?.schedule?.endDate);
-    const [guestSearch, setGuestSearch] = useState('');
-    const [linkName, setLinkName] = useState('');
-    const [linkUrl, setLinkUrl] = useState('');
-
-    useEffect(() => {
-        onFetchBadgeDetail(badge.id);
-    }, [badge.id, onFetchBadgeDetail]);
-
-    useEffect(() => {
-        setStartDate(badgeDetail?.schedule?.startDate);
-        setEndDate(badgeDetail?.schedule?.endDate);
-    }, [badgeDetail]);
 
     useEffect(() => {
         if (isEditingName && nameInputRef.current) {
@@ -114,24 +71,24 @@ function DetailedBadgeCard({
     const handleSaveName = () => {
         const newName = nameInputRef.current?.value.trim();
         if (newName === '') {
-             toast({ variant: 'destructive', title: 'Error', description: 'Badge name cannot be empty.' });
+            toast({ variant: 'destructive', title: 'Error', description: 'Badge name cannot be empty.' });
         } else if (newName && newName !== badge.name) {
             onUpdateBadge({ name: newName });
-            toast({ title: 'Success', description: 'Badge name updated.'});
         }
         setIsEditingName(false);
     };
 
     const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') handleSaveName();
-        else if (e.key === 'Escape') setIsEditingName(false);
+        else if (e.key === 'Escape') {
+            setIsEditingName(false);
+        }
     };
-
+    
     const handleSaveDescription = () => {
         const newDescription = descriptionTextareaRef.current?.value.trim();
-        if (newDescription !== (badgeDetail?.description || '')) {
-            onUpdateBadge({ detail: { ...badgeDetail, description: newDescription } as BadgeDetail });
-            toast({ title: 'Success', description: 'Badge description updated.'});
+        if (newDescription !== badge.description) {
+            onUpdateBadge({ description: newDescription });
         }
         setIsEditingDescription(false);
     };
@@ -150,18 +107,9 @@ function DetailedBadgeCard({
         if (!iconSearch) return googleSymbolNames;
         return googleSymbolNames.filter(iconName => iconName.toLowerCase().includes(iconSearch.toLowerCase()));
     }, [iconSearch]);
-
-    const assignedUsers = badgeDetail?.assignedUsers || [];
-    const filteredGuests = users.filter(user => !assignedUsers.includes(user.userId));
-
-    const handleToggleUser = (user: User) => {
-        const newAssignedUsers = assignedUsers.includes(user.userId)
-            ? assignedUsers.filter(id => id !== user.userId)
-            : [...assignedUsers, user.userId];
-        onUpdateBadge({ detail: { ...badgeDetail, assignedUsers: newAssignedUsers } as BadgeDetail });
-    };
-
-    return (
+    
+    if (viewMode === 'detailed') {
+      return (
         <Card className="group">
             <CardHeader>
                 <div className="flex items-start justify-between">
@@ -207,104 +155,14 @@ function DetailedBadgeCard({
             </CardHeader>
             <CardContent className="space-y-4 pt-0">
                  {isEditingDescription ? (
-                    <Textarea ref={descriptionTextareaRef} defaultValue={badgeDetail?.description} onBlur={handleSaveDescription} onKeyDown={handleDescriptionKeyDown} />
+                    <Textarea ref={descriptionTextareaRef} defaultValue={badge.description} onBlur={handleSaveDescription} onKeyDown={handleDescriptionKeyDown} />
                  ) : (
                     <p className="text-sm text-muted-foreground cursor-text min-h-[20px]" onClick={() => setIsEditingDescription(true)}>
-                        {badgeDetail?.description || 'Click to add description.'}
+                        {badge.description || 'Click to add description.'}
                     </p>
                  )}
             </CardContent>
         </Card>
-    );
-}
-
-function BadgeDisplayItem({ badge, viewMode, isLink, linkColor, onUpdateBadge, onDelete, onFetchBadgeDetail, badgeDetail, team }: { 
-    badge: Badge; 
-    viewMode: BadgeCollection['viewMode']; 
-    isLink: boolean; 
-    linkColor?: string; 
-    onUpdateBadge: (badgeData: Partial<Badge>) => void; 
-    onDelete: () => void;
-    onFetchBadgeDetail: (badgeId: string) => void;
-    badgeDetail: BadgeDetail | null;
-    team: Team;
-}) {
-    const { toast } = useToast();
-    const [isEditingName, setIsEditingName] = useState(false);
-    const nameInputRef = useRef<HTMLInputElement>(null);
-    const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
-    const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
-    const [iconSearch, setIconSearch] = useState('');
-    
-    const [isEditingDescription, setIsEditingDescription] = useState(false);
-    const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
-
-    useEffect(() => {
-        if (isEditingName && nameInputRef.current) {
-            nameInputRef.current.focus();
-            nameInputRef.current.select();
-        }
-    }, [isEditingName]);
-
-    useEffect(() => {
-        if (isEditingDescription && descriptionTextareaRef.current) {
-            descriptionTextareaRef.current.focus();
-            descriptionTextareaRef.current.select();
-        }
-    }, [isEditingDescription]);
-
-    const handleSaveName = () => {
-        const newName = nameInputRef.current?.value.trim();
-        if (newName === '') {
-            toast({ variant: 'destructive', title: 'Error', description: 'Badge name cannot be empty.' });
-        } else if (newName && newName !== badge.name) {
-            onUpdateBadge({ name: newName });
-        }
-        setIsEditingName(false);
-    };
-
-    const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Enter') handleSaveName();
-        else if (e.key === 'Escape') {
-            setIsEditingName(false);
-        }
-    };
-    
-    const handleSaveDescription = () => {
-        const newDescription = descriptionTextareaRef.current?.value.trim();
-        if (newDescription !== (badgeDetail?.description || '')) {
-            onUpdateBadge({ detail: { ...badgeDetail, description: newDescription } as BadgeDetail });
-        }
-        setIsEditingDescription(false);
-    };
-    
-    const handleDescriptionKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-          e.preventDefault();
-          handleSaveDescription();
-        } else if (e.key === 'Escape') {
-          setIsEditingDescription(false);
-        }
-    };
-
-
-    const filteredIcons = useMemo(() => {
-        if (!iconSearch) return googleSymbolNames;
-        return googleSymbolNames.filter(iconName => iconName.toLowerCase().includes(iconSearch.toLowerCase()));
-    }, [iconSearch]);
-    
-    if (viewMode === 'detailed') {
-      return (
-        <DetailedBadgeCard
-            badge={badge}
-            onUpdateBadge={onUpdateBadge}
-            onDelete={onDelete}
-            isLink={isLink}
-            linkColor={linkColor}
-            team={team}
-            onFetchBadgeDetail={onFetchBadgeDetail}
-            badgeDetail={badgeDetail}
-        />
       );
     }
     
@@ -364,15 +222,15 @@ function BadgeDisplayItem({ badge, viewMode, isLink, linkColor, onUpdateBadge, o
                 {isEditingDescription ? (
                     <Textarea 
                         ref={descriptionTextareaRef}
-                        defaultValue={badgeDetail?.description}
+                        defaultValue={badge.description}
                         onBlur={handleSaveDescription}
                         onKeyDown={handleDescriptionKeyDown}
                         className="text-sm"
                         placeholder="Click to add a description."
                     />
                 ) : (
-                    <p className="text-sm text-muted-foreground cursor-text min-h-[20px]" onClick={() => { onFetchBadgeDetail(badge.id); setIsEditingDescription(true); }}>
-                        {badgeDetail?.description || 'Click to add a description.'}
+                    <p className="text-sm text-muted-foreground cursor-text min-h-[20px]" onClick={() => setIsEditingDescription(true)}>
+                        {badge.description || 'Click to add a description.'}
                     </p>
                 )}
             </div>
@@ -422,7 +280,7 @@ function BadgeDisplayItem({ badge, viewMode, isLink, linkColor, onUpdateBadge, o
     );
 }
 
-function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInTeam, onUpdateCollection, onDeleteCollection, onAddBadge, onUpdateBadge, onDeleteBadge, onFetchBadgeDetail, getBadgeDetail, team }: {
+function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInTeam, onUpdateCollection, onDeleteCollection, onAddBadge, onUpdateBadge, onDeleteBadge }: {
     collection: BadgeCollection;
     allBadgesInTeam: Badge[];
     allCollectionsInTeam: BadgeCollection[];
@@ -431,9 +289,6 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInTeam
     onAddBadge: (collectionId: string) => void;
     onUpdateBadge: (badgeData: Partial<Badge>) => void;
     onDeleteBadge: (collectionId: string, badgeId: string) => void;
-    onFetchBadgeDetail: (badgeId: string) => void;
-    getBadgeDetail: (badgeId: string) => BadgeDetail | null;
-    team: Team
 }) {
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isEditingName, setIsEditingName] = useState(false);
@@ -591,11 +446,8 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInTeam
                                             viewMode={collection.viewMode} 
                                             isLink={isLink} 
                                             linkColor={linkColor}
-                                            onUpdateBadge={onUpdateBadge}
+                                            onUpdateBadge={(data) => onUpdateBadge({ ...data, id: badge.id })}
                                             onDelete={() => onDeleteBadge(collection.id, badge.id)}
-                                            onFetchBadgeDetail={onFetchBadgeDetail}
-                                            getBadgeDetail={getBadgeDetail}
-                                            team={team}
                                         />
                                     </div>)}
                                 </Draggable>
@@ -615,27 +467,6 @@ export function BadgeManagement({ team }: { team: Team }) {
     const { toast } = useToast();
     
     const [collectionToDelete, setCollectionToDelete] = useState<string | null>(null);
-    const [badgeDetails, setBadgeDetails] = useState<Record<string, BadgeDetail | null>>({});
-
-    const handleFetchBadgeDetail = useCallback((badgeId: string) => {
-        // In a real app, this would be an API call.
-        // For now, we simulate it by checking if we already have the detail.
-        if (badgeDetails[badgeId]) return;
-
-        console.log(`Simulating fetch for badge detail: ${badgeId}`);
-        const badge = team.allBadges.find(b => b.id === badgeId);
-        if (badge?.detail) {
-            setBadgeDetails(prev => ({ ...prev, [badgeId]: badge.detail! }));
-        } else {
-            // Simulate an empty detail object for badges that don't have one yet.
-            setBadgeDetails(prev => ({ ...prev, [badgeId]: { description: '', assignedUsers: [] } }));
-        }
-    }, [team.allBadges, badgeDetails]);
-
-    const getBadgeDetail = useCallback((badgeId: string) => {
-        return badgeDetails[badgeId] || null;
-    }, [badgeDetails]);
-
 
     const handleUpdateCollection = (collectionId: string, newValues: Partial<Omit<BadgeCollection, 'id' | 'badgeIds'>>) => {
         const newCollections = team.badgeCollections.map(collection => 
@@ -827,40 +658,40 @@ export function BadgeManagement({ team }: { team: Team }) {
 
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <h2 className="text-2xl font-semibold tracking-tight">Badge Collections</h2>
-                    <StrictModeDroppable droppableId="duplicate-collection-zone" type="collection">
-                        {(provided, snapshot) => (
-                            <div
-                                ref={provided.innerRef}
-                                {...provided.droppableProps}
-                                className={cn(
-                                    "rounded-full transition-all",
-                                    snapshot.isDraggingOver && "ring-2 ring-primary ring-offset-2 bg-accent"
-                                )}
-                            >
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={handleAddCollection}>
-                                                <GoogleSymbol name="add_circle" className="text-xl" />
-                                                <span className="sr-only">New Collection or Drop to Duplicate</span>
-                                            </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                            <p>{snapshot.isDraggingOver ? 'Drop to Duplicate' : 'Add New Collection'}</p>
-                                        </TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                                <div style={{ display: 'none' }}>{provided.placeholder}</div>
-                            </div>
-                        )}
-                    </StrictModeDroppable>
+        <DragDropContext onDragEnd={onDragEnd}>
+            <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <h2 className="text-2xl font-semibold tracking-tight">Badge Collections</h2>
+                        <StrictModeDroppable droppableId="duplicate-collection-zone" type="collection">
+                            {(provided, snapshot) => (
+                                <div
+                                    ref={provided.innerRef}
+                                    {...provided.droppableProps}
+                                    className={cn(
+                                        "rounded-full transition-all",
+                                        snapshot.isDraggingOver && "ring-2 ring-primary ring-offset-2 bg-accent"
+                                    )}
+                                >
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={handleAddCollection}>
+                                                    <GoogleSymbol name="add_circle" className="text-xl" />
+                                                    <span className="sr-only">New Collection or Drop to Duplicate</span>
+                                                </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>{snapshot.isDraggingOver ? 'Drop to Duplicate' : 'Add New Collection'}</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                    <div style={{ display: 'none' }}>{provided.placeholder}</div>
+                                </div>
+                            )}
+                        </StrictModeDroppable>
+                    </div>
                 </div>
-            </div>
-            <DragDropContext onDragEnd={onDragEnd}>
                 <StrictModeDroppable droppableId="collections-list" type="collection">
                     {(provided) => (
                         <div className="flex flex-col gap-6" ref={provided.innerRef} {...provided.droppableProps}>
@@ -882,9 +713,6 @@ export function BadgeManagement({ team }: { team: Team }) {
                                             onAddBadge={handleAddBadge}
                                             onUpdateBadge={handleUpdateBadge}
                                             onDeleteBadge={handleDeleteBadge}
-                                            onFetchBadgeDetail={handleFetchBadgeDetail}
-                                            getBadgeDetail={getBadgeDetail}
-                                            team={team}
                                         />
                                     </div>
                                 )}
@@ -894,7 +722,7 @@ export function BadgeManagement({ team }: { team: Team }) {
                         </div>
                     )}
                 </StrictModeDroppable>
-            </DragDropContext>
+            </div>
              <AlertDialog open={!!collectionToDelete} onOpenChange={(isOpen) => !isOpen && setCollectionToDelete(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeaderUI>
@@ -909,6 +737,6 @@ export function BadgeManagement({ team }: { team: Team }) {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-        </div>
+        </DragDropContext>
     );
 }
