@@ -78,7 +78,7 @@ const AddUserToRoleButton = ({ usersToAdd, onAdd, roleName }: { usersToAdd: User
 
 export default function AdminPage() {
   const { toast } = useToast();
-  const { viewAsUser, users, updateUser } = useUser();
+  const { viewAsUser, users, updateUser, appSettings } = useUser();
   
   const isAdmin = useMemo(() => viewAsUser.isAdmin, [viewAsUser]);
 
@@ -170,6 +170,7 @@ export default function AdminPage() {
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2">
+                <GoogleSymbol name={appSettings.icon} className="text-2xl text-muted-foreground" />
                 <CardTitle>Service Admins</CardTitle>
                 <AddUserToRoleButton usersToAdd={nonServiceAdminUsers} onAdd={handleServiceAdminToggle} roleName="Service Admin" />
               </div>
