@@ -113,7 +113,7 @@ export default function AppManagementPage() {
                     defaultValue={appSettings.displayName}
                     onBlur={handleSaveName}
                     onKeyDown={handleNameKeyDown}
-                    className="h-auto p-0 font-headline text-3xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-b-2 focus-visible:border-primary"
+                    className="h-auto p-0 font-headline text-3xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
                 />
             ) : (
                 <h1 onClick={() => setIsEditingName(true)} className="font-headline text-3xl font-semibold cursor-pointer">
