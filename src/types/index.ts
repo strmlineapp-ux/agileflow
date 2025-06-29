@@ -16,12 +16,35 @@ export interface CustomAdminRole {
   teamAdmins?: string[];
 }
 
+export interface AppTab {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  componentKey: 'calendars' | 'teams' | 'team_members' | 'badges' | 'locations' | 'workstations' | 'templates';
+}
+
+export interface AppPage {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  path: string; // e.g., /dashboard/service-delivery or /dashboard/teams
+  isDynamic: boolean; // True for paths like /dashboard/teams/:teamId
+  associatedTabs: string[]; // Array of AppTab ids
+  access: {
+    users: string[]; // User IDs
+    teams: string[]; // Team IDs
+    roles: string[]; // CustomAdminRole names
+  };
+}
+
 export interface AppSettings {
   customAdminRoles: CustomAdminRole[];
   linkGroups: Record<string, LinkGroup>;
-  calendarManagementLabel?: string;
-  teamManagementLabel?: string;
-  strategyLabel?: string;
+  pages: AppPage[];
+  tabs: AppTab[];
+  strategyLabel?: string; // This is now legacy but kept for now.
 }
 
 export interface Attendee {
@@ -91,18 +114,13 @@ export interface Team {
   icon: string;
   members: string[]; // array of userIds
   teamAdmins?: string[]; // array of userIds who are admins for this team
-  managerRoleName?: string;
-  memberRoleName?: string;
   locationCheckManagers: string[]; // array of userIds who can manage check locations
-  checkManagersLabel?: string;
   allBadges: Badge[]; // The single source of truth for all badges in this team
   badgeCollections: BadgeCollection[]; // Groups of badges, containing badge IDs
   pinnedLocations: string[]; // array of location names
-  pinnedLocationsLabel?: string;
   checkLocations: string[]; // subset of pinnedLocations designated for daily checks
   locationAliases?: { [key:string]: string };
   workstations?: string[];
-  workstationsLabel?: string;
   eventTemplates?: EventTemplate[];
 }
 
@@ -127,8 +145,6 @@ export interface SharedCalendar {
   color: string;
   managers?: string[]; // array of userIds who can manage this calendar
   defaultEventTitle?: string;
-  managerRoleName?: string;
-  roleAssignmentsLabel?: string;
 }
 
 export type AttachmentType = 'drive' | 'docs' | 'sheets' | 'slides' | 'forms' | 'meet' | 'local' | 'link';

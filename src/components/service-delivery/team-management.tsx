@@ -100,7 +100,7 @@ export function TeamManagement() {
                         </CardHeader>
                         <CardContent className="flex-grow space-y-4">
                             <div>
-                                <p className="text-sm font-medium text-muted-foreground mb-2">{team.managerRoleName || 'Team Admins'}</p>
+                                <p className="text-sm font-medium text-muted-foreground mb-2">Team Admins</p>
                                 <div className="flex flex-wrap gap-2 min-h-[34px]">
                                 {teamAdmins.length > 0 ? (
                                     teamAdmins.map(user => (
@@ -113,7 +113,7 @@ export function TeamManagement() {
                                 </div>
                             </div>
                             <div>
-                                <p className="text-sm font-medium text-muted-foreground mb-2">{team.memberRoleName || 'Team Members'}</p>
+                                <p className="text-sm font-medium text-muted-foreground mb-2">Team Members</p>
                                  <div className="flex flex-wrap gap-2 min-h-[34px]">
                                 {teamMembers.length > 0 ? (
                                     teamMembers.map(user => (
@@ -178,8 +178,6 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
     const [icon, setIcon] = useState<string>(team?.icon || 'group');
     const [members, setMembers] = useState<string[]>(team?.members || []);
     const [teamAdmins, setTeamAdmins] = useState<string[]>(team?.teamAdmins || []);
-    const [managerRoleName, setManagerRoleName] = useState(team?.managerRoleName || '');
-    const [memberRoleName, setMemberRoleName] = useState(team?.memberRoleName || '');
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
     const [isMemberPopoverOpen, setIsMemberPopoverOpen] = useState(false);
     const [memberSearch, setMemberSearch] = useState('');
@@ -216,8 +214,6 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
             icon,
             members,
             teamAdmins,
-            managerRoleName,
-            memberRoleName,
         };
 
         if (team) { // Editing
@@ -226,11 +222,14 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
         } else { // Creating
             addTeam({
                 ...teamData,
-                roles: [],
+                locationCheckManagers: [],
+                allBadges: [],
+                badgeCollections: [],
                 pinnedLocations: [],
                 checkLocations: [],
                 locationAliases: {},
-                locationCheckManagers: [],
+                workstations: [],
+                eventTemplates: [],
             });
              toast({ title: "Success", description: `Team "${name}" created.` });
         }
@@ -331,25 +330,7 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
                             className="text-lg font-semibold flex-1 border-none focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-auto"
                         />
                     </div>
-                     <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Input
-                                id="manager-role-name"
-                                placeholder="Team Admin Label (e.g. Leads)"
-                                value={managerRoleName}
-                                onChange={(e) => setManagerRoleName(e.target.value)}
-                            />
-                        </div>
-                         <div className="space-y-2">
-                            <Input
-                                id="member-role-name"
-                                placeholder="Team Member Label (e.g. Crew)"
-                                value={memberRoleName}
-                                onChange={(e) => setMemberRoleName(e.target.value)}
-                            />
-                        </div>
-                    </div>
-
+                    
                     <div className="space-y-2">
                         <div className="flex items-start gap-2 rounded-md border bg-muted/50 p-2">
                            

@@ -2,9 +2,9 @@
 
 'use client';
 
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useUser } from '@/context/user-context';
-import { type User, type CustomAdminRole, type LinkGroup } from '@/types';
+import { type User, type CustomAdminRole, type LinkGroup, type AppPage, type AppTab } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +20,16 @@ import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableP
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn, getContrastColor } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+
+// #region Helper Components and Constants
+const predefinedColors = [
+    '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
+    '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6',
+    '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
+];
 
 // Wrapper to fix issues with react-beautiful-dnd and React 18 Strict Mode
 const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
@@ -37,8 +47,9 @@ const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
   return <Droppable {...props}>{children}</Droppable>;
 };
 
+// #endregion
 
-// A card to display a user with a specific role.
+// #region Roles Management Tab
 const UserRoleCard = ({ user, onRemove, isTeamAdmin, onSetTeamAdmin }: { user: User; onRemove: (user: User) => void; isTeamAdmin: boolean; onSetTeamAdmin: (user: User) => void; }) => {
   return (
     <Card 
@@ -70,7 +81,6 @@ const UserRoleCard = ({ user, onRemove, isTeamAdmin, onSetTeamAdmin }: { user: U
   );
 };
 
-// A button that opens a popover to add a user to a role.
 const AddUserToRoleButton = ({ usersToAdd, onAdd, roleName }: { usersToAdd: User[], onAdd: (user: User) => void, roleName: string }) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -107,12 +117,6 @@ const AddUserToRoleButton = ({ usersToAdd, onAdd, roleName }: { usersToAdd: User
     </Popover>
   )
 }
-
-const predefinedColors = [
-    '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
-    '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6',
-    '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
-];
 
 function CustomRoleCard({ 
   role,
@@ -355,40 +359,18 @@ function CustomRoleCard({
     );
 }
 
-const AdminPageSkeleton = () => (
-    <div className="flex flex-col gap-8">
-      <div className="flex items-center gap-2">
-        <Skeleton className="h-9 w-64" />
-        <Skeleton className="h-8 w-8 rounded-full" />
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 items-start">
-        <Skeleton className="h-64 w-full" />
-        <Skeleton className="h-64 w-full" />
-        <Skeleton className="h-64 w-full" />
-      </div>
-    </div>
-  );
-
-export default function AdminPage() {
+const RolesManagement = () => {
   const { toast } = useToast();
-  const { viewAsUser, users, updateUser, appSettings, updateAppSettings } = useUser();
-  
-  const isAdmin = useMemo(() => viewAsUser.isAdmin, [viewAsUser]);
-
-  // Dialog & Popover States
+  const { users, updateUser, appSettings, updateAppSettings } = useUser();
   const [is2faDialogOpen, setIs2faDialogOpen] = useState(false);
-  
   const [on2faSuccess, setOn2faSuccess] = useState<(() => void) | null>(null);
   const [twoFactorCode, setTwoFactorCode] = useState('');
-  
-  // State for linking roles
   const [linkingState, setLinkingState] = useState<{ roleId: string } | null>(null);
 
   const roleRanks = useMemo(() => {
     const ranks = new Map<string, number>();
     const computedRanks: number[] = [];
     let currentRank = 1;
-
     appSettings.customAdminRoles.forEach(role => {
         let rank;
         if (role.linkGroupId) {
@@ -405,15 +387,8 @@ export default function AdminPage() {
         }
         computedRanks.push(rank);
     });
-
     return computedRanks;
   }, [appSettings.customAdminRoles]);
-
-
-  // This check must happen after all hooks are called.
-  if (!isAdmin) {
-    return null; // Navigation is filtered, so this prevents direct URL access.
-  }
 
   const adminUsers = useMemo(() => users.filter(u => u.isAdmin), [users]);
   const nonAdminUsers = useMemo(() => users.filter(u => !u.isAdmin), [users]);
@@ -426,18 +401,13 @@ export default function AdminPage() {
     setOn2faSuccess(() => action);
     setIs2faDialogOpen(true);
   };
-  
+
   const handleVerify2fa = () => {
-    // Mock 2FA code
-    if (twoFactorCode === '123456') { 
+    if (twoFactorCode === '123456') {
       on2faSuccess?.();
       close2faDialog();
     } else {
-      toast({
-        variant: 'destructive',
-        title: 'Verification Failed',
-        description: 'The provided 2FA code is incorrect. Please try again.',
-      });
+      toast({ variant: 'destructive', title: 'Verification Failed', description: 'The provided 2FA code is incorrect. Please try again.' });
       setTwoFactorCode('');
     }
   };
@@ -465,7 +435,7 @@ export default function AdminPage() {
       const newRoles = appSettings.customAdminRoles.map(r => r.id === updatedRole.id ? updatedRole : r);
       updateAppSettings({ customAdminRoles: newRoles });
   }
-  
+
   const handleDeleteCustomRole = (roleId: string) => {
       const roleToUpdate = appSettings.customAdminRoles.find(r => r.id === roleId);
       if (roleToUpdate?.linkGroupId) {
@@ -481,20 +451,15 @@ export default function AdminPage() {
         setLinkingState({ roleId });
         return;
     }
-
     if (linkingState.roleId === roleId) {
-        setLinkingState(null); // Cancel linking
+        setLinkingState(null);
         return;
     }
-    
-    // Make mutable copies to update
     const rolesWithUpdatedLinks = appSettings.customAdminRoles.map(r => ({ ...r }));
     let linkGroupsToUpdate = { ...appSettings.linkGroups };
-
     const sourceRole = rolesWithUpdatedLinks.find(r => r.id === linkingState.roleId)!;
     const targetRole = rolesWithUpdatedLinks.find(r => r.id === roleId)!;
 
-    // This part assigns the correct linkGroupId based on the interaction
     if (!sourceRole.linkGroupId && !targetRole.linkGroupId) {
         const newGroupId = crypto.randomUUID();
         sourceRole.linkGroupId = newGroupId;
@@ -515,30 +480,22 @@ export default function AdminPage() {
         delete linkGroupsToUpdate[targetGroupId];
     }
     
-    // Now, reorder the array based on the new groups
     const reorderedRoles: CustomAdminRole[] = [];
     const processedRoleIds = new Set<string>();
-
     rolesWithUpdatedLinks.forEach(role => {
-        if (processedRoleIds.has(role.id)) {
-            return; // Already processed as part of a group
-        }
-
+        if (processedRoleIds.has(role.id)) return;
         if (role.linkGroupId) {
-            // Find all roles in the same group
             const groupRoles = rolesWithUpdatedLinks.filter(r => r.linkGroupId === role.linkGroupId);
             groupRoles.forEach(groupRole => {
                 reorderedRoles.push(groupRole);
                 processedRoleIds.add(groupRole.id);
             });
         } else {
-            // Role is not in a group
             reorderedRoles.push(role);
             processedRoleIds.add(role.id);
         }
     });
 
-    // Final update with reordered and updated roles
     updateAppSettings({ customAdminRoles: reorderedRoles, linkGroups: linkGroupsToUpdate });
     setLinkingState(null);
   };
@@ -564,7 +521,7 @@ export default function AdminPage() {
     updateAppSettings({ customAdminRoles: rolesToUpdate, linkGroups: linkGroupsToUpdate });
     if (!isDeleting) toast({ title: 'Role Unlinked', description: `"${roleToUnlink.name}" has been unlinked from its group.` });
   };
-  
+
   const handleUpdateLinkGroup = (groupId: string, newGroup: LinkGroup) => {
     const newLinkGroups = { ...appSettings.linkGroups, [groupId]: newGroup };
     updateAppSettings({ linkGroups: newLinkGroups });
@@ -572,23 +529,12 @@ export default function AdminPage() {
 
   const onDragEnd = (result: DropResult) => {
     const { source, destination } = result;
+    if (!destination || destination.index === 0) return;
 
-    if (!destination) {
-      return;
-    }
-
-    // Prevent dropping before the locked "Admins" card
-    if (destination.index === 0) {
-      return;
-    }
-
-    // Adjust indices because our state array (customAdminRoles) doesn't include the Admins card.
     const sourceIndex = source.index - 1;
     const destinationIndex = destination.index - 1;
     
-    if (sourceIndex === destinationIndex) {
-        return;
-    }
+    if (sourceIndex === destinationIndex) return;
 
     const reorderedRoles = Array.from(appSettings.customAdminRoles);
     const [movedRole] = reorderedRoles.splice(sourceIndex, 1);
@@ -599,11 +545,10 @@ export default function AdminPage() {
 
   return (
     <>
-      <div className="flex flex-col gap-8">
-        <div className="flex items-center gap-2">
-            <h1 className="font-headline text-3xl font-semibold">Admin Management</h1>
-            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={handleAddCustomRole}>
-                <GoogleSymbol name="add_circle" className="text-2xl" />
+        <div className="flex items-center gap-2 mb-8">
+            <h2 className="text-2xl font-semibold tracking-tight">Roles</h2>
+            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={handleAddCustomRole}>
+                <GoogleSymbol name="add_circle" className="text-xl" />
                 <span className="sr-only">Add New Level</span>
             </Button>
         </div>
@@ -616,7 +561,6 @@ export default function AdminPage() {
                   ref={provided.innerRef}
                   {...provided.droppableProps}
                 >
-                  {/* Draggable but disabled Admins Card */}
                   <Draggable draggableId="admins-card-static" index={0} isDragDisabled={true}>
                     {(provided) => (
                       <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
@@ -638,7 +582,6 @@ export default function AdminPage() {
                     )}
                   </Draggable>
                   
-                  {/* Draggable Custom Role Cards */}
                   {appSettings.customAdminRoles.map((role, index) => (
                     <Draggable key={role.id} draggableId={role.id} index={index + 1}>
                       {(provided) => (
@@ -664,33 +607,217 @@ export default function AdminPage() {
               )}
             </StrictModeDroppable>
           </DragDropContext>
-      </div>
-
-      <Dialog open={is2faDialogOpen} onOpenChange={(isOpen) => !isOpen && close2faDialog()}>
-        <DialogContent className="sm:max-w-md">
-          <div className="absolute top-4 right-4">
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleVerify2fa}>
-                  <GoogleSymbol name="check" className="text-xl" />
-                  <span className="sr-only">Verify & Change</span>
-              </Button>
-          </div>
-          <DialogHeader>
-            <DialogTitle>Two-Factor Authentication</DialogTitle>
-            <DialogDescription>
-              Enter the code from your authenticator app and click the checkmark to confirm the role change.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <Input
-              id="2fa-code"
-              value={twoFactorCode}
-              onChange={(e) => setTwoFactorCode(e.target.value)}
-              placeholder="123456"
-              onKeyDown={(e) => e.key === 'Enter' && handleVerify2fa()}
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
+          <Dialog open={is2faDialogOpen} onOpenChange={(isOpen) => !isOpen && close2faDialog()}>
+            <DialogContent className="sm:max-w-md">
+            <div className="absolute top-4 right-4"><Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleVerify2fa}><GoogleSymbol name="check" className="text-xl" /><span className="sr-only">Verify & Change</span></Button></div>
+            <DialogHeader><DialogTitle>Two-Factor Authentication</DialogTitle><DialogDescription>Enter the code from your authenticator app and click the checkmark to confirm the role change.</DialogDescription></DialogHeader>
+            <div className="grid gap-4 py-4"><Input id="2fa-code" value={twoFactorCode} onChange={(e) => setTwoFactorCode(e.target.value)} placeholder="123456" onKeyDown={(e) => e.key === 'Enter' && handleVerify2fa()}/></div>
+            </DialogContent>
+        </Dialog>
     </>
   );
 }
+// #endregion
+
+// #region Pages Management Tab
+const PagesManagement = () => {
+    const { appSettings, updateAppSettings, users, teams } = useUser();
+    const { toast } = useToast();
+    const [isEditingName, setIsEditingName] = useState<string | null>(null);
+    const nameInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (isEditingName && nameInputRef.current) {
+          nameInputRef.current.focus();
+          nameInputRef.current.select();
+        }
+    }, [isEditingName]);
+
+    const handleUpdatePage = useCallback((pageId: string, data: Partial<AppPage>) => {
+        const newPages = appSettings.pages.map(p => p.id === pageId ? { ...p, ...data } : p);
+        updateAppSettings({ pages: newPages });
+    }, [appSettings.pages, updateAppSettings]);
+
+    const handleSaveName = (pageId: string) => {
+        const newName = nameInputRef.current?.value.trim();
+        if (newName) {
+            handleUpdatePage(pageId, { name: newName });
+        }
+        setIsEditingName(null);
+    };
+
+    const handleAddPage = () => {
+        const newPage: AppPage = {
+            id: crypto.randomUUID(),
+            name: `New Page ${appSettings.pages.length + 1}`,
+            icon: 'web',
+            color: '#64748B',
+            path: '/dashboard/new-page',
+            isDynamic: false,
+            associatedTabs: [],
+            access: { users: [], teams: [], roles: [] }
+        };
+        updateAppSettings({ pages: [...appSettings.pages, newPage] });
+    };
+
+    const handleDeletePage = (pageId: string) => {
+        updateAppSettings({ pages: appSettings.pages.filter(p => p.id !== pageId) });
+        toast({ title: 'Page Deleted' });
+    };
+
+    return (
+        <div className="space-y-8">
+            <div className="flex items-center gap-2">
+                <h2 className="text-2xl font-semibold tracking-tight">Pages</h2>
+                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={handleAddPage}>
+                    <GoogleSymbol name="add_circle" className="text-xl" />
+                    <span className="sr-only">Add New Page</span>
+                </Button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {appSettings.pages.map(page => (
+                    <Card key={page.id}>
+                        <CardHeader>
+                            <div className="flex items-start justify-between">
+                                <div className="flex items-center gap-3">
+                                    {/* Icon/Color Picker */}
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="h-9 w-9 text-2xl" style={{ color: page.color }}>
+                                                <GoogleSymbol name={page.icon} />
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-2">
+                                            {/* Simplified Picker for brevity */}
+                                            <Input type="color" value={page.color} onChange={(e) => handleUpdatePage(page.id, { color: e.target.value })} />
+                                        </PopoverContent>
+                                    </Popover>
+                                    {isEditingName === page.id ? (
+                                        <Input ref={nameInputRef} defaultValue={page.name} onBlur={() => handleSaveName(page.id)} onKeyDown={(e) => e.key === 'Enter' && handleSaveName(page.id)} />
+                                    ) : (
+                                        <CardTitle className="cursor-pointer" onClick={() => setIsEditingName(page.id)}>{page.name}</CardTitle>
+                                    )}
+                                </div>
+                                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => handleDeletePage(page.id)}>
+                                    <GoogleSymbol name="delete" />
+                                </Button>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div>
+                                <h4 className="font-medium text-sm mb-2">Access Control</h4>
+                                <div className="flex gap-2">
+                                    <Popover>
+                                        <PopoverTrigger asChild><Button variant="outline" size="sm">Users ({page.access.users.length})</Button></PopoverTrigger>
+                                        <PopoverContent className="p-2"><p>User selection UI...</p></PopoverContent>
+                                    </Popover>
+                                    <Popover>
+                                        <PopoverTrigger asChild><Button variant="outline" size="sm">Teams ({page.access.teams.length})</Button></PopoverTrigger>
+                                        <PopoverContent className="p-2"><p>Team selection UI...</p></PopoverContent>
+                                    </Popover>
+                                    <Popover>
+                                        <PopoverTrigger asChild><Button variant="outline" size="sm">Roles ({page.access.roles.length})</Button></PopoverTrigger>
+                                        <PopoverContent className="p-2"><p>Role selection UI...</p></PopoverContent>
+                                    </Popover>
+                                </div>
+                            </div>
+                             <div>
+                                <h4 className="font-medium text-sm mb-2">Associated Tabs</h4>
+                                <Popover>
+                                    <PopoverTrigger asChild><Button variant="outline" size="sm">Manage Tabs ({page.associatedTabs.length})</Button></PopoverTrigger>
+                                    <PopoverContent className="p-2"><p>Tab selection UI...</p></PopoverContent>
+                                </Popover>
+                            </div>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+        </div>
+    );
+};
+// #endregion
+
+// #region Tabs Management Tab
+const TabsManagement = () => {
+    const { appSettings, updateAppSettings } = useUser();
+
+    const handleUpdateTab = useCallback((tabId: string, data: Partial<AppTab>) => {
+        const newTabs = appSettings.tabs.map(t => t.id === tabId ? { ...t, ...data } : t);
+        updateAppSettings({ tabs: newTabs });
+    }, [appSettings.tabs, updateAppSettings]);
+
+    return (
+        <div className="space-y-8">
+            <h2 className="text-2xl font-semibold tracking-tight">Tabs</h2>
+            <Card>
+                <CardContent className="p-0">
+                    <div className="divide-y">
+                        {appSettings.tabs.map(tab => (
+                            <div key={tab.id} className="flex items-center p-3 gap-4">
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-xl" style={{ color: tab.color }}>
+                                            <GoogleSymbol name={tab.icon} />
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-2">
+                                        <Input type="color" value={tab.color} onChange={(e) => handleUpdateTab(tab.id, { color: e.target.value })} />
+                                    </PopoverContent>
+                                </Popover>
+                                <Input value={tab.name} onChange={(e) => handleUpdateTab(tab.id, { name: e.target.value })} className="font-semibold" />
+                                <Badge variant="outline">{tab.componentKey}</Badge>
+                            </div>
+                        ))}
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+    );
+};
+// #endregion
+
+export default function AdminPage() {
+  const { viewAsUser, loading } = useUser();
+  
+  if (loading) {
+    return <AdminPageSkeleton />;
+  }
+
+  if (!viewAsUser.isAdmin) {
+    return null; // Navigation is filtered, so this prevents direct URL access.
+  }
+
+  return (
+    <div className="flex flex-col gap-8">
+      <h1 className="font-headline text-3xl font-semibold">Admin Management</h1>
+      <Tabs defaultValue="roles" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="roles">Roles</TabsTrigger>
+          <TabsTrigger value="pages">Pages</TabsTrigger>
+          <TabsTrigger value="tabs">Tabs</TabsTrigger>
+        </TabsList>
+        <TabsContent value="roles" className="mt-6">
+          <RolesManagement />
+        </TabsContent>
+        <TabsContent value="pages" className="mt-6">
+            <PagesManagement />
+        </TabsContent>
+        <TabsContent value="tabs" className="mt-6">
+            <TabsManagement />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+const AdminPageSkeleton = () => (
+    <div className="flex flex-col gap-8">
+      <Skeleton className="h-10 w-72" />
+      <Skeleton className="h-10 w-full" />
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 items-start">
+        <Skeleton className="h-64 w-full" />
+        <Skeleton className="h-64 w-full" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    </div>
+);

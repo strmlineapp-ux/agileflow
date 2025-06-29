@@ -30,7 +30,7 @@ import { Badge } from '../ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 
-type DialogType = 'name' | 'defaultTitle' | 'managerLabel' | 'roleLabel';
+type DialogType = 'name' | 'defaultTitle';
 
 const predefinedColors = [
     '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
@@ -73,12 +73,6 @@ export function CalendarManagement() {
       case 'defaultTitle':
         setTempValue(calendar.defaultEventTitle || '');
         break;
-      case 'managerLabel':
-        setTempValue(calendar.managerRoleName || '');
-        break;
-      case 'roleLabel':
-        setTempValue(calendar.roleAssignmentsLabel || '');
-        break;
     }
     setIsEditDialogOpen(true);
   };
@@ -105,8 +99,6 @@ export function CalendarManagement() {
       color: newCalendarColor,
       managers: [],
       defaultEventTitle: 'New Event',
-      managerRoleName: 'Shared Calendar Coordinators',
-      roleAssignmentsLabel: 'Role Assignments'
     });
     toast({ title: 'Success', description: 'Calendar added successfully.' });
     setIsAddDialogOpen(false);
@@ -126,12 +118,6 @@ export function CalendarManagement() {
             break;
         case 'defaultTitle':
             updateData.defaultEventTitle = tempValue;
-            break;
-        case 'managerLabel':
-            updateData.managerRoleName = tempValue;
-            break;
-        case 'roleLabel':
-            updateData.roleAssignmentsLabel = tempValue;
             break;
     }
 
@@ -157,8 +143,6 @@ export function CalendarManagement() {
       switch (dialogType) {
           case 'name': return 'Edit Calendar Name';
           case 'defaultTitle': return 'Edit Default Event Title';
-          case 'managerLabel': return 'Edit Manager Label';
-          case 'roleLabel': return 'Edit Role Assignments Label';
           default: return 'Edit';
       }
   }
@@ -240,35 +224,6 @@ export function CalendarManagement() {
                         </Button>
                       </div>
                       <p className="text-sm italic">{calendar.defaultEventTitle || 'Not set'}</p>
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-1 mb-2">
-                      <p className="text-sm font-medium text-muted-foreground">{calendar.managerRoleName || 'Shared Calendar Coordinators'}</p>
-                       <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => openEditDialog(calendar, 'managerLabel')}>
-                            <GoogleSymbol name="edit" className="text-base" />
-                            <span className="sr-only">Edit manager label</span>
-                        </Button>
-                    </div>
-                      <div className="flex flex-wrap gap-2 min-h-[34px]">
-                      {calendarManagers.length > 0 ? (
-                          calendarManagers.map(user => (
-                              <Badge key={user.userId} variant="secondary" className="gap-1.5 p-1 pl-2 rounded-full">
-                                  <Avatar className="h-5 w-5"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
-                                  <span className="font-medium">{user.displayName}</span>
-                              </Badge>
-                          ))
-                      ) : <p className="text-sm text-muted-foreground italic px-2">No managers assigned.</p>}
-                      </div>
-                  </div>
-                   <div>
-                      <div className="flex items-center gap-1 mb-1">
-                        <p className="text-sm font-medium text-muted-foreground">Role Assignments Label</p>
-                        <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => openEditDialog(calendar, 'roleLabel')}>
-                            <GoogleSymbol name="edit" className="text-base" />
-                            <span className="sr-only">Edit role assignments label</span>
-                        </Button>
-                      </div>
-                      <p className="text-sm italic">{calendar.roleAssignmentsLabel || 'Role Assignments'}</p>
                   </div>
               </CardContent>
             </Card>

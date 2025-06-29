@@ -2,170 +2,63 @@
 
 'use client';
 
-import { useState, useMemo, useRef, useEffect } from 'react';
+import React from 'react';
 import { useUser } from '@/context/user-context';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CalendarManagement } from '@/components/service-delivery/calendar-management';
 import { TeamManagement } from '@/components/service-delivery/team-management';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Skeleton } from '@/components/ui/skeleton';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { googleSymbolNames } from '@/lib/google-symbols';
-import { useToast } from '@/hooks/use-toast';
 
-const predefinedColors = [
-    '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
-    '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6',
-    '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
-];
+// This is a mapping from the componentKey in our AppTab model to the actual component to render.
+const componentMap: Record<string, React.ComponentType> = {
+  calendars: CalendarManagement,
+  teams: TeamManagement,
+};
 
-export default function AppManagementPage() {
-  const { viewAsUser, appSettings, updateAppSettings } = useUser();
-  const { toast } = useToast();
+// Define a unique identifier for this page
+const PAGE_ID = 'page-service-delivery';
 
-  const serviceAdminRole = appSettings.customAdminRoles[0];
+export default function ServiceDeliveryPage() {
+  const { appSettings } = useUser();
 
-  const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
-  const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
-  const [iconSearch, setIconSearch] = useState('');
-  const [isEditingName, setIsEditingName] = useState(false);
-  const nameInputRef = useRef<HTMLInputElement>(null);
+  const pageConfig = appSettings.pages.find(p => p.id === PAGE_ID);
   
-  const canAccessPage = viewAsUser.isAdmin || appSettings.customAdminRoles.some(role => viewAsUser.roles?.includes(role.name));
-  
-  useEffect(() => {
-    if (isEditingName && nameInputRef.current) {
-      nameInputRef.current.focus();
-      nameInputRef.current.select();
-    }
-  }, [isEditingName]);
-
-  const handleSaveName = () => {
-    const input = nameInputRef.current;
-    if (!input || !input.value.trim()) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Display name cannot be empty.' });
-      setIsEditingName(false);
-      return;
-    }
-    if (input.value.trim() !== serviceAdminRole.name) {
-      const newRoles = [...appSettings.customAdminRoles];
-      newRoles[0] = { ...newRoles[0], name: input.value.trim() };
-      updateAppSettings({ customAdminRoles: newRoles });
-      toast({ title: 'Success', description: 'Display name updated.' });
-    }
-    setIsEditingName(false);
-  };
-  
-  const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleSaveName();
-    } else if (e.key === 'Escape') {
-      setIsEditingName(false);
-    }
-  };
-
-  const filteredIcons = useMemo(() => {
-    if (!iconSearch) return googleSymbolNames;
-    return googleSymbolNames.filter(iconName =>
-        iconName.toLowerCase().includes(iconSearch.toLowerCase())
+  if (!pageConfig) {
+    // Optionally return a skeleton or a not-found message if the page config isn't available
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-1/3" />
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-64 w-full" />
+      </div>
     );
-  }, [iconSearch]);
-
-  if (!canAccessPage || !serviceAdminRole) {
-    return null; // Navigation is filtered, so this prevents direct URL access.
   }
 
-  const handleIconSelect = (newIcon: string) => {
-    const newRoles = [...appSettings.customAdminRoles];
-    newRoles[0] = { ...newRoles[0], icon: newIcon };
-    updateAppSettings({ customAdminRoles: newRoles });
-    setIsIconPopoverOpen(false);
-  }
-
-  const handleColorSelect = (newColor: string) => {
-    const newRoles = [...appSettings.customAdminRoles];
-    newRoles[0] = { ...newRoles[0], color: newColor };
-    updateAppSettings({ customAdminRoles: newRoles });
-    setIsColorPopoverOpen(false);
-  };
+  const pageTabs = appSettings.tabs.filter(t => pageConfig.associatedTabs.includes(t.id));
 
   return (
-    <>
-      <div className="flex flex-col gap-6">
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
-                <PopoverTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-10 w-10 text-3xl text-muted-foreground hover:text-foreground">
-                      <GoogleSymbol name={serviceAdminRole.icon} />
-                    </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-80 p-0">
-                    <div className="p-2 border-b">
-                        <Input
-                            placeholder="Search icons..."
-                            value={iconSearch}
-                            onChange={(e) => setIconSearch(e.target.value)}
-                        />
-                    </div>
-                    <ScrollArea className="h-64">
-                        <div className="grid grid-cols-6 gap-1 p-2">
-                            {filteredIcons.slice(0, 300).map((iconName) => (
-                                <Button
-                                    key={iconName}
-                                    variant={serviceAdminRole.icon === iconName ? "default" : "ghost"}
-                                    size="icon"
-                                    onClick={() => handleIconSelect(iconName)}
-                                    className="text-2xl"
-                                >
-                                    <GoogleSymbol name={iconName} />
-                                </Button>
-                            ))}
-                        </div>
-                    </ScrollArea>
-                </PopoverContent>
-            </Popover>
-            <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                <PopoverTrigger asChild><div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full border-2 border-card cursor-pointer" aria-label="Change role color"><div className="h-full w-full rounded-full" style={{ backgroundColor: serviceAdminRole.color }}/></div></PopoverTrigger>
-                <PopoverContent className="w-auto p-2">
-                    <div className="grid grid-cols-8 gap-1">
-                    {predefinedColors.map(color => (<button key={color} className="h-6 w-6 rounded-full border" style={{ backgroundColor: color }} onClick={() => handleColorSelect(color)} aria-label={`Set color to ${color}`}/>))}
-                    <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
-                        <GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={serviceAdminRole.color} onChange={(e) => handleColorSelect(e.target.value)} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" aria-label="Custom color picker"/>
-                    </div>
-                    </div>
-                </PopoverContent>
-            </Popover>
-          </div>
-            {isEditingName ? (
-                <Input
-                    ref={nameInputRef}
-                    defaultValue={serviceAdminRole.name}
-                    onBlur={handleSaveName}
-                    onKeyDown={handleNameKeyDown}
-                    className="h-auto p-0 font-headline text-3xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                />
-            ) : (
-                <h1 onClick={() => setIsEditingName(true)} className="font-headline text-3xl font-semibold cursor-pointer">
-                    {serviceAdminRole.name}
-                </h1>
-            )}
-        </div>
-        <Tabs defaultValue="calendars">
-          <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="calendars">{appSettings.calendarManagementLabel || 'Calendar Management'}</TabsTrigger>
-              <TabsTrigger value="teams">{appSettings.teamManagementLabel || 'Team Management'}</TabsTrigger>
-          </TabsList>
-          <TabsContent value="calendars" className="mt-4">
-              <CalendarManagement />
-          </TabsContent>
-          <TabsContent value="teams" className="mt-4">
-              <TeamManagement />
-          </TabsContent>
-        </Tabs>
+    <div className="flex flex-col gap-6">
+      <div className="flex items-center gap-3">
+        <GoogleSymbol name={pageConfig.icon} className="text-3xl" style={{color: pageConfig.color}} />
+        <h1 className="font-headline text-3xl font-semibold">{pageConfig.name}</h1>
       </div>
-    </>
+      
+      <Tabs defaultValue={pageTabs[0]?.id} className="w-full">
+        <TabsList className={`grid w-full grid-cols-${pageTabs.length}`}>
+          {pageTabs.map(tab => (
+            <TabsTrigger key={tab.id} value={tab.id}>{tab.name}</TabsTrigger>
+          ))}
+        </TabsList>
+        {pageTabs.map(tab => {
+          const ContentComponent = componentMap[tab.componentKey];
+          return (
+            <TabsContent key={tab.id} value={tab.id} className="mt-4">
+              {ContentComponent ? <ContentComponent /> : <div>Component for {tab.name} not found.</div>}
+            </TabsContent>
+          );
+        })}
+      </Tabs>
+    </div>
   );
 }

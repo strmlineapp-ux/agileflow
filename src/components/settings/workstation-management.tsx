@@ -22,9 +22,6 @@ export function WorkstationManagement({ team }: { team: Team }) {
   const [workstationToEdit, setWorkstationToEdit] = useState<string | null>(null);
   const [workstationToDelete, setWorkstationToDelete] = useState<string | null>(null);
   const [newWorkstationName, setNewWorkstationName] = useState('');
-  
-  const [isTitleEditDialogOpen, setIsTitleEditDialogOpen] = useState(false);
-  const [tempTitle, setTempTitle] = useState('');
 
   const teamWorkstations = team.workstations || [];
 
@@ -32,21 +29,6 @@ export function WorkstationManagement({ team }: { team: Team }) {
     updateTeam(team.id, { workstations: newWorkstations.sort() });
   };
   
-  const openTitleEditDialog = (currentTitle: string) => {
-    setTempTitle(currentTitle);
-    setIsTitleEditDialogOpen(true);
-  };
-  
-  const handleSaveTitle = () => {
-    if (!tempTitle.trim()) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Title cannot be empty.' });
-        return;
-    }
-    updateTeam(team.id, { workstationsLabel: tempTitle });
-    toast({ title: 'Success', description: 'Section title updated.' });
-    setIsTitleEditDialogOpen(false);
-  };
-
   const openAddDialog = () => {
     setWorkstationToEdit(null);
     setNewWorkstationName('');
@@ -97,11 +79,7 @@ export function WorkstationManagement({ team }: { team: Team }) {
           <div className="flex items-start justify-between">
             <div>
               <CardTitle className="flex items-center gap-2">
-                  {team.workstationsLabel || 'Manage Workstations'}
-                   <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openTitleEditDialog(team.workstationsLabel || 'Manage Workstations')}>
-                      <GoogleSymbol name="edit" className="text-lg" />
-                      <span className="sr-only">Edit section title</span>
-                  </Button>
+                  Manage Workstations
                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={openAddDialog}>
                     <GoogleSymbol name="add_circle" className="text-xl" />
                     <span className="sr-only">Add New Workstation</span>
@@ -171,28 +149,6 @@ export function WorkstationManagement({ team }: { team: Team }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <Dialog open={isTitleEditDialogOpen} onOpenChange={setIsTitleEditDialogOpen}>
-        <DialogContent className="max-w-md">
-            <div className="absolute top-4 right-4">
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSaveTitle}>
-                    <GoogleSymbol name="check" className="text-xl" />
-                    <span className="sr-only">Save title</span>
-                </Button>
-            </div>
-          <DialogHeader>
-            <DialogTitle>Edit Section Title</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-              <Input 
-                id="section-title" 
-                value={tempTitle} 
-                onChange={(e) => setTempTitle(e.target.value)} 
-                className="col-span-4"
-              />
-          </div>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }

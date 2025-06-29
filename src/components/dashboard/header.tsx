@@ -3,6 +3,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useMemo } from 'react';
 import {
   Sheet,
   SheetContent,
@@ -12,17 +13,40 @@ import { Button } from '@/components/ui/button';
 import { useUser } from '@/context/user-context';
 import { Badge } from '@/components/ui/badge';
 import { GoogleSymbol } from '../icons/google-symbol';
+import { type AppPage, type Team } from '@/types';
+
+const hasAccess = (user: User, page: AppPage, teams: Team[]): boolean => {
+    if (user.isAdmin) return true;
+    if (page.access.users.includes(user.userId)) return true;
+    if (page.access.roles.some(role => user.roles?.includes(role))) return true;
+
+    const userTeamIds = teams.filter(t => t.members.includes(user.userId)).map(t => t.id);
+    if (page.access.teams.some(teamId => userTeamIds.includes(teamId))) return true;
+    
+    return false;
+};
 
 export function Header() {
-  const { realUser, viewAsUser, teams, notifications, appSettings } = useUser();
+  const { realUser, viewAsUser, teams, notifications, appSettings, allRoles } = useUser();
   const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
   const unreadCount = notifications.filter((n) => !n.read).length;
   
-  const isAdmin = viewAsUser.isAdmin;
+  const visiblePages = useMemo(() => {
+    return appSettings.pages.filter(page => hasAccess(viewAsUser, page, teams));
+  }, [viewAsUser, appSettings.pages, teams]);
+  
+  const userManagedTeams = useMemo(() => {
+      if(viewAsUser.isAdmin || allRoles.some(r => viewAsUser.roles?.includes(r.name))) {
+          return teams;
+      }
+      return teams.filter(team => team.teamAdmins?.includes(viewAsUser.userId));
+  }, [viewAsUser, teams, allRoles]);
 
-  const userTeams = teams.filter(team => 
-    isAdmin || team.managers?.includes(viewAsUser.userId)
-  );
+  const mainNavItems = [
+    { href: '/dashboard/calendar', icon: 'calendar_month', label: 'Calendar' },
+    { href: '/dashboard', icon: 'dashboard', label: 'Overview' },
+    { href: '/dashboard/tasks', icon: 'checklist', label: 'Tasks' },
+  ];
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-card px-4 sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 sm:py-4">
@@ -59,36 +83,37 @@ export function Header() {
               </svg>
               <span className="sr-only">AgileFlow</span>
             </Link>
-            <Link href="/dashboard/calendar" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
-              <GoogleSymbol name="calendar_month" className="text-2xl" />
-              Calendar
-            </Link>
-            <Link href="/dashboard" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
-              <GoogleSymbol name="dashboard" className="text-2xl" />
-              Overview
-            </Link>
-            <Link href="/dashboard/tasks" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
-              <GoogleSymbol name="checklist" className="text-2xl" />
-              Tasks
-            </Link>
-            {isAdmin && (
-              <>
-                <Link href="/dashboard/admin" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
+            {mainNavItems.map(item => (
+                <Link key={item.href} href={item.href} className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
+                    <GoogleSymbol name={item.icon} className="text-2xl" />
+                    {item.label}
+                </Link>
+            ))}
+            {viewAsUser.isAdmin && (
+                 <Link href="/dashboard/admin" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
                     <GoogleSymbol name="shield_person" className="text-2xl" />
                     Admin
                 </Link>
-                <Link href="/dashboard/service-delivery" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
-                    <GoogleSymbol name={appSettings.icon} className="text-2xl" />
-                    {appSettings.displayName}
-                </Link>
-              </>
             )}
-            {userTeams.map(team => (
-              <Link key={team.id} href={`/dashboard/teams/${team.id}`} className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
-                <GoogleSymbol name={team.icon} className="text-2xl" />
-                {team.name}
-              </Link>
-            ))}
+
+            {/* Dynamic Pages */}
+            {visiblePages.map(page => {
+              if (page.isDynamic) {
+                  return userManagedTeams.map(team => (
+                    <Link key={`${page.id}-${team.id}`} href={`${page.path}/${team.id}`} className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
+                        <GoogleSymbol name={team.icon} className="text-2xl" />
+                        {team.name}
+                    </Link>
+                  ))
+              }
+              return (
+                <Link key={page.id} href={page.path} className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
+                    <GoogleSymbol name={page.icon} className="text-2xl" />
+                    {page.name}
+                </Link>
+              )
+            })}
+            
             <Link href="/dashboard/notifications" className="flex items-center justify-between gap-4 px-2.5 text-muted-foreground hover:text-foreground">
               <div className="flex items-center gap-4">
                 <GoogleSymbol name="notifications" className="text-2xl" />

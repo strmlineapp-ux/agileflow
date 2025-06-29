@@ -17,9 +17,6 @@ import { useToast } from '@/hooks/use-toast';
 
 export function LocationCheckManagerManagement({ team }: { team: Team }) {
   const { users, updateTeam } = useUser();
-  const { toast } = useToast();
-  const [isTitleEditDialogOpen, setIsTitleEditDialogOpen] = useState(false);
-  const [tempTitle, setTempTitle] = useState('');
   
   const assignableUsers = users; // Any user can be a location check manager
   const locationCheckManagers = new Set(team.locationCheckManagers || []);
@@ -33,32 +30,13 @@ export function LocationCheckManagerManagement({ team }: { team: Team }) {
     }
     updateTeam(team.id, { locationCheckManagers: Array.from(newManagers) });
   };
-  
-  const openTitleEditDialog = (currentTitle: string) => {
-    setTempTitle(currentTitle);
-    setIsTitleEditDialogOpen(true);
-  };
-  
-  const handleSaveTitle = () => {
-    if (!tempTitle.trim()) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Title cannot be empty.' });
-      return;
-    }
-    updateTeam(team.id, { checkManagersLabel: tempTitle });
-    toast({ title: 'Success', description: 'Section title updated.' });
-    setIsTitleEditDialogOpen(false);
-  };
 
   return (
     <>
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            {team.checkManagersLabel || 'Location Check Managers'}
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openTitleEditDialog(team.checkManagersLabel || 'Location Check Managers')}>
-              <GoogleSymbol name="edit" className="text-lg" />
-              <span className="sr-only">Edit section title</span>
-            </Button>
+            Location Check Managers
           </CardTitle>
           <CardDescription>
             Assign users who can manage daily check assignments on the Production Schedule for this team's locations.
@@ -89,28 +67,6 @@ export function LocationCheckManagerManagement({ team }: { team: Team }) {
           </p>
         </CardContent>
       </Card>
-      
-      <Dialog open={isTitleEditDialogOpen} onOpenChange={setIsTitleEditDialogOpen}>
-        <DialogContent className="max-w-md">
-            <div className="absolute top-4 right-4">
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSaveTitle}>
-                    <GoogleSymbol name="check" className="text-xl" />
-                    <span className="sr-only">Save title</span>
-                </Button>
-            </div>
-          <DialogHeader>
-            <UIDialogTitle>Edit Section Title</UIDialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-              <Input 
-                id="section-title" 
-                value={tempTitle} 
-                onChange={(e) => setTempTitle(e.target.value)} 
-                className="col-span-4"
-              />
-          </div>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }

@@ -1,6 +1,47 @@
 
 
-import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team, type AppSettings, type Badge, type BadgeCollection } from '@/types';
+import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team, type AppSettings, type Badge, type BadgeCollection, type AppTab, type AppPage } from '@/types';
+
+export const mockTabs: AppTab[] = [
+  { id: 'tab-calendars', name: 'Calendars', icon: 'calendar_month', color: '#3B82F6', componentKey: 'calendars' },
+  { id: 'tab-teams', name: 'Teams', icon: 'group', color: '#10B981', componentKey: 'teams' },
+  { id: 'tab-team-members', name: 'Members', icon: 'group', color: '#6366F1', componentKey: 'team_members' },
+  { id: 'tab-badges', name: 'Badges', icon: 'style', color: '#F97316', componentKey: 'badges' },
+  { id: 'tab-locations', name: 'Locations', icon: 'push_pin', color: '#A855F7', componentKey: 'locations' },
+  { id: 'tab-workstations', name: 'Workstations', icon: 'desktop_windows', color: '#D946EF', componentKey: 'workstations' },
+  { id: 'tab-templates', name: 'Templates', icon: 'file_copy', color: '#14B8A6', componentKey: 'templates' },
+];
+
+export const mockPages: AppPage[] = [
+    {
+        id: 'page-service-delivery',
+        name: 'Service Delivery',
+        icon: 'business_center',
+        color: '#8B5CF6',
+        path: '/dashboard/service-delivery',
+        isDynamic: false,
+        associatedTabs: ['tab-calendars', 'tab-teams'],
+        access: {
+            users: [],
+            teams: [],
+            roles: ['Service Admin']
+        }
+    },
+    {
+        id: 'page-team-management',
+        name: 'Team Management',
+        icon: 'group_work',
+        color: '#EC4899',
+        path: '/dashboard/teams',
+        isDynamic: true,
+        associatedTabs: ['tab-team-members', 'tab-badges', 'tab-locations', 'tab-workstations', 'tab-templates'],
+        access: {
+            users: [],
+            teams: ['studio-productions', 'live-events', 'productions'], // Grants access to members of these teams
+            roles: ['Service Admin']
+        }
+    }
+];
 
 export const mockAppSettings: AppSettings = {
   customAdminRoles: [
@@ -13,9 +54,8 @@ export const mockAppSettings: AppSettings = {
     },
   ],
   linkGroups: {},
-  calendarManagementLabel: 'Calendar Management',
-  teamManagementLabel: 'Team Management',
-  strategyLabel: 'Strategy',
+  pages: mockPages,
+  tabs: mockTabs,
 };
 
 export const mockUsers: User[] = [
@@ -127,10 +167,10 @@ export const mockUsers: User[] = [
 ];
 
 export const mockCalendars: SharedCalendar[] = [
-    { id: 'studio-productions', name: 'Studio Productions', color: '#FBBF24', managers: ['1', '6'], defaultEventTitle: 'New Production Studios Event', managerRoleName: 'Shared Calendar Coordinators', roleAssignmentsLabel: 'Role Assignments' },
-    { id: 'live-events', name: 'Live Events', color: '#3B82F6', managers: ['1', '2', '3'], defaultEventTitle: 'New Live Event', managerRoleName: 'Shared Calendar Coordinators', roleAssignmentsLabel: 'Role Assignments' },
-    { id: 'business', name: 'Business', color: '#64748B', managers: ['1', '2'], defaultEventTitle: 'New Event', managerRoleName: 'Shared Calendar Coordinators', roleAssignmentsLabel: 'Role Assignments' },
-    { id: 'post-production', name: 'Post-Production', color: '#F97316', managers: ['1', '2', '5'], defaultEventTitle: 'New Event Edit', managerRoleName: 'Shared Calendar Coordinators', roleAssignmentsLabel: 'Role Assignments' },
+    { id: 'studio-productions', name: 'Studio Productions', color: '#FBBF24', managers: ['1', '6'], defaultEventTitle: 'New Production Studios Event' },
+    { id: 'live-events', name: 'Live Events', color: '#3B82F6', managers: ['1', '2', '3'], defaultEventTitle: 'New Live Event' },
+    { id: 'business', name: 'Business', color: '#64748B', managers: ['1', '2'], defaultEventTitle: 'New Event' },
+    { id: 'post-production', name: 'Post-Production', color: '#F97316', managers: ['1', '2', '5'], defaultEventTitle: 'New Event Edit' },
 ];
 
 export const mockLocations: BookableLocation[] = [
@@ -227,10 +267,7 @@ export const mockTeams: Team[] = [
         icon: 'movie',
         members: ['1', '2', '6'],
         teamAdmins: ['1', '2'],
-        managerRoleName: 'Team Admins',
-        memberRoleName: 'Team Members',
         locationCheckManagers: ['1'],
-        checkManagersLabel: 'Location Check Managers',
         allBadges: [
             ...studioProdBadges,
             ...pScaleBadges,
@@ -248,11 +285,9 @@ export const mockTeams: Team[] = [
             badgeIds: studioProdBadges.map(b => b.id)
         }, pScaleCollection, starRatingCollection, effortScoreCollection],
         pinnedLocations: ['Studio'],
-        pinnedLocationsLabel: 'Pinned & Check Locations',
         checkLocations: [],
         locationAliases: {},
         workstations: ['EDIT 1', 'EDIT 2', 'EDIT 3', 'EDIT 4', 'Pro Tools Machine'],
-        workstationsLabel: 'Manage Workstations',
         eventTemplates: [
             { id: 'template-1', name: 'Basic Studio Shoot', icon: 'theaters', requestedRoles: ['Video Director', 'Edit Events'] },
             { id: 'template-2', name: 'Voice Over Record', icon: 'record_voice_over', requestedRoles: ['Post-Production'] }
@@ -264,14 +299,9 @@ export const mockTeams: Team[] = [
         icon: 'videocam',
         members: ['1', '2', '3', '4'],
         teamAdmins: ['1', '2'],
-        managerRoleName: 'Team Admins',
-        memberRoleName: 'Team Members',
         locationCheckManagers: ['2'],
-        checkManagersLabel: 'Location Check Managers',
         allBadges: [
             ...liveEventsBadges,
-            // Include shared badges here that are owned by other collections
-            // For now, let's just use the ones owned by this team
         ],
         badgeCollections: [{
             id: liveEventsCollectionId,
@@ -288,11 +318,9 @@ export const mockTeams: Team[] = [
             ]
         }],
         pinnedLocations: ['Auditorium', 'ACR', 'Event Space 1 (S2)', 'Event Space 2 (S2)', 'Event Space 3 (R7)', 'Event Space 4 (R7)', 'Training Room', 'Apgar', 'Locke'],
-        pinnedLocationsLabel: 'Pinned & Check Locations',
         checkLocations: ['Training Room', 'Apgar', 'Locke'],
         locationAliases: {},
         workstations: [],
-        workstationsLabel: 'Manage Workstations',
         eventTemplates: [
             { id: 'template-3', name: 'Standard Live Event', icon: 'podcasts', requestedRoles: ['TD', 'ES Operator', 'Camera', 'Audio'] },
             { id: 'template-4', name: 'Auditorium Presentation', icon: 'slideshow', requestedRoles: ['TD', 'Content Op'] }
@@ -304,18 +332,13 @@ export const mockTeams: Team[] = [
         icon: 'campaign',
         members: ['2', '3', '5'],
         teamAdmins: ['2'],
-        managerRoleName: 'Team Admins',
-        memberRoleName: 'Team Members',
         locationCheckManagers: [],
-        checkManagersLabel: 'Location Check Managers',
         allBadges: [],
         badgeCollections: [],
         pinnedLocations: [],
-        pinnedLocationsLabel: 'Pinned & Check Locations',
         checkLocations: [],
         locationAliases: {},
         workstations: [],
-        workstationsLabel: 'Manage Workstations',
         eventTemplates: [],
     }
 ];

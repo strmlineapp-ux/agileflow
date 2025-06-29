@@ -2,6 +2,7 @@
 
 'use client';
 
+import React from 'react';
 import { useParams } from 'next/navigation';
 import { useUser } from '@/context/user-context';
 import { PinnedLocationManagement } from '@/components/settings/pinned-location-management';
@@ -12,15 +13,24 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { WorkstationManagement } from '@/components/settings/workstation-management';
 import { EventTemplateManagement } from '@/components/teams/event-template-management';
 
+const componentMap: Record<string, React.ComponentType<{ team: any }>> = {
+  team_members: TeamMembersView,
+  badges: BadgeManagement,
+  locations: PinnedLocationManagement,
+  workstations: WorkstationManagement,
+  templates: EventTemplateManagement,
+};
+
+const PAGE_ID = 'page-team-management';
+
 export default function TeamPage() {
   const { teamId } = useParams();
-  const { viewAsUser, teams } = useUser();
+  const { viewAsUser, teams, appSettings } = useUser();
 
   const team = teams.find(t => t.id === teamId);
-  const isServiceAdmin = viewAsUser.roles?.includes('Service Admin') || viewAsUser.isAdmin;
+  const pageConfig = appSettings.pages.find(p => p.id === PAGE_ID);
   
-  if (!team) {
-    // This can happen if the teamId is invalid or data is loading.
+  if (!team || !pageConfig) {
     return (
       <div className="space-y-6">
           <Skeleton className="h-10 w-1/2" />
@@ -35,39 +45,32 @@ export default function TeamPage() {
   }
   
   const isTeamAdmin = team.teamAdmins?.includes(viewAsUser.userId);
-  const canViewPage = isServiceAdmin || isTeamAdmin;
+  const isServiceAdmin = appSettings.customAdminRoles.some(role => viewAsUser.roles?.includes(role.name));
+  const canViewPage = viewAsUser.isAdmin || isServiceAdmin || isTeamAdmin;
 
-  // This check must happen after all hooks are called.
   if (!canViewPage) {
      return null; // Navigation is filtered, so this prevents direct URL access.
   }
 
+  const pageTabs = appSettings.tabs.filter(t => pageConfig.associatedTabs.includes(t.id));
+
   return (
     <div className="flex flex-col gap-6">
       <h1 className="font-headline text-3xl font-semibold">{team.name} Team Management</h1>
-      <Tabs defaultValue="team" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="team">Team</TabsTrigger>
-            <TabsTrigger value="badges">Badges</TabsTrigger>
-            <TabsTrigger value="locations">Pinned Locations</TabsTrigger>
-            <TabsTrigger value="workstations">Workstations</TabsTrigger>
-            <TabsTrigger value="templates">Event Templates</TabsTrigger>
+      <Tabs defaultValue={pageTabs[0]?.id} className="w-full">
+        <TabsList className={`grid w-full grid-cols-${pageTabs.length}`}>
+            {pageTabs.map(tab => (
+              <TabsTrigger key={tab.id} value={tab.id}>{tab.name}</TabsTrigger>
+            ))}
         </TabsList>
-        <TabsContent value="team" className="mt-4">
-          <TeamMembersView team={team} />
-        </TabsContent>
-        <TabsContent value="badges" className="mt-4">
-          <BadgeManagement team={team} />
-        </TabsContent>
-        <TabsContent value="locations" className="mt-4">
-            <PinnedLocationManagement team={team} />
-        </TabsContent>
-        <TabsContent value="workstations" className="mt-4">
-            <WorkstationManagement team={team} />
-        </TabsContent>
-        <TabsContent value="templates" className="mt-4">
-            <EventTemplateManagement team={team} />
-        </TabsContent>
+        {pageTabs.map(tab => {
+          const ContentComponent = componentMap[tab.componentKey];
+          return (
+            <TabsContent key={tab.id} value={tab.id} className="mt-4">
+              {ContentComponent ? <ContentComponent team={team} /> : <div>Component for {tab.name} not found.</div>}
+            </TabsContent>
+          );
+        })}
       </Tabs>
     </div>
   );

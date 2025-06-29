@@ -24,10 +24,6 @@ export function PinnedLocationManagement({ team }: { team: Team }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddPopoverOpen, setIsAddPopoverOpen] = useState(false);
   
-  const [isTitleEditDialogOpen, setIsTitleEditDialogOpen] = useState(false);
-  const [editingTitleKey, setEditingTitleKey] = useState<keyof Team | null>(null);
-  const [tempTitle, setTempTitle] = useState('');
-
   const [isAliasDialogOpen, setIsAliasDialogOpen] = useState(false);
   const [editingLocationName, setEditingLocationName] = useState<string | null>(null);
   const [tempAlias, setTempAlias] = useState('');
@@ -42,24 +38,6 @@ export function PinnedLocationManagement({ team }: { team: Team }) {
       .filter(loc => loc.name.toLowerCase().includes(searchTerm.toLowerCase()));
   }, [locations, pinnedLocationNames, searchTerm]);
   
-  const openTitleEditDialog = (key: keyof Team, currentTitle: string) => {
-    setEditingTitleKey(key);
-    setTempTitle(currentTitle);
-    setIsTitleEditDialogOpen(true);
-  }
-
-  const handleSaveTitle = () => {
-    if (!editingTitleKey) return;
-    if (!tempTitle.trim()) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Title cannot be empty.' });
-        return;
-    }
-    updateTeam(team.id, { [editingTitleKey]: tempTitle });
-    toast({ title: 'Success', description: 'Section title updated.' });
-    setIsTitleEditDialogOpen(false);
-  };
-
-
   const handleOpenAliasDialog = (locationName: string) => {
     if (!canManage) return;
     setEditingLocationName(locationName);
@@ -136,11 +114,7 @@ export function PinnedLocationManagement({ team }: { team: Team }) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
               <GoogleSymbol name="push_pin" />
-              {team.pinnedLocationsLabel || 'Pinned & Check Locations'}
-               <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openTitleEditDialog('pinnedLocationsLabel', team.pinnedLocationsLabel || 'Pinned & Check Locations')}>
-                  <GoogleSymbol name="edit" className="text-lg" />
-                  <span className="sr-only">Edit section title</span>
-              </Button>
+              Pinned & Check Locations
                <Popover open={isAddPopoverOpen} onOpenChange={setIsAddPopoverOpen}>
                 <PopoverTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" disabled={!canManage}>
@@ -245,28 +219,6 @@ export function PinnedLocationManagement({ team }: { team: Team }) {
                 placeholder="Leave blank to use default name"
               />
             </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-      
-      <Dialog open={isTitleEditDialogOpen} onOpenChange={setIsTitleEditDialogOpen}>
-        <DialogContent className="max-w-md">
-            <div className="absolute top-4 right-4">
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSaveTitle}>
-                    <GoogleSymbol name="check" className="text-xl" />
-                    <span className="sr-only">Save title</span>
-                </Button>
-            </div>
-          <DialogHeader>
-            <DialogTitle>Edit Section Title</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-              <Input 
-                id="section-title" 
-                value={tempTitle} 
-                onChange={(e) => setTempTitle(e.target.value)} 
-                className="col-span-4"
-              />
           </div>
         </DialogContent>
       </Dialog>
