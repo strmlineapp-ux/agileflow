@@ -45,3 +45,19 @@ This pattern replaces large, card-style "Add New" buttons with a more compact an
 - **Placement:** Positioned directly adjacent to the title of the section or list it pertains to.
 - **Behavior:** Clicking the button initiates the process of adding a new item, typically by opening a dialog or form.
 - **Application:** Used for creating new items in a list or grid, such as adding a new team, calendar, priority strategy, or event template.
+
+## Visual & Theming Elements
+
+### Icons & Hover Effects
+
+- **Icon Set**: We exclusively use **Google Material Symbols** via the `<GoogleSymbol />` component. This ensures a consistent visual language.
+- **Hover Behavior**: The color of icons on hover is typically determined by their parent element. For example, an icon inside a `<Button variant="ghost">` will change to the primary theme color on hover because the button's text color changes, and the icon inherits that color. This creates a clean and predictable interaction.
+
+### Theming & Button Styles
+
+- **Multi-Theme Support**: The application supports multiple themes (`light`, `dark`, `high-visibility`, `firebase`), which are defined in `src/app/globals.css`. This allows users to choose their preferred visual mode.
+- **Primary Button Gradient**: Primary buttons have a special gradient effect on hover, which is unique to each theme. This provides a subtle but polished visual feedback for key actions.
+
+### Subtle Visual Cues
+
+- **Lunch Break Pattern**: A subtle diagonal line pattern is used in calendar views to visually block out the typical lunch period (12:00 - 14:30). This serves as a non-intrusive reminder to avoid scheduling meetings during that time.
