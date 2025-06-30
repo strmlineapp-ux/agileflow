@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProps } from 'react-beautiful-dnd';
+import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 // Wrapper to fix issues with react-beautiful-dnd and React 18 Strict Mode
 const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
@@ -96,7 +97,7 @@ function TeamCard({ team, allUsers, onUpdate, onDelete }: { team: Team, allUsers
                         <div className="relative">
                              <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                                 <PopoverTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-9 w-9 text-3xl" style={{ color: team.color }}>
+                                    <Button variant="ghost" size="icon" className="h-9 w-9 text-3xl">
                                         <GoogleSymbol name={team.icon} />
                                     </Button>
                                 </PopoverTrigger>
@@ -128,10 +129,17 @@ function TeamCard({ team, allUsers, onUpdate, onDelete }: { team: Team, allUsers
                             )}
                         </div>
                     </div>
-                     <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive" onClick={() => onDelete(team)}>
-                        <GoogleSymbol name="delete" className="text-lg"/>
-                        <span className="sr-only">Delete Team</span>
-                    </Button>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive" onClick={() => onDelete(team)}>
+                                    <GoogleSymbol name="delete" className="text-lg"/>
+                                    <span className="sr-only">Delete Team</span>
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Delete Team</TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
                 </div>
             </CardHeader>
             <CardContent className="flex-grow space-y-2">
@@ -247,7 +255,7 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
   };
 
   return (
-    <>
+    <DragDropContext onDragEnd={onDragEnd}>
         <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
                 {isEditingTitle ? (
@@ -255,53 +263,58 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
                 ) : (
                   <h2 className="text-2xl font-semibold tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
                 )}
-                <DragDropContext onDragEnd={onDragEnd}>
-                    <StrictModeDroppable droppableId="duplicate-team-zone">
-                        {(provided, snapshot) => (
-                            <div
-                                ref={provided.innerRef}
-                                {...provided.droppableProps}
-                                className={cn(
-                                    "rounded-full transition-all p-0.5",
-                                    snapshot.isDraggingOver && "ring-2 ring-primary ring-offset-2 bg-accent"
-                                )}
-                            >
-                                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={openAddDialog}>
-                                    <GoogleSymbol name="add_circle" className="text-xl" />
-                                    <span className="sr-only">New Team or Drop to Duplicate</span>
-                                </Button>
-                            </div>
-                        )}
-                    </StrictModeDroppable>
-                </DragDropContext>
+                <StrictModeDroppable droppableId="duplicate-team-zone">
+                    {(provided, snapshot) => (
+                        <div
+                            ref={provided.innerRef}
+                            {...provided.droppableProps}
+                            className={cn(
+                                "rounded-full transition-all p-0.5",
+                                snapshot.isDraggingOver && "ring-2 ring-primary ring-offset-2 bg-accent"
+                            )}
+                        >
+                             <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={openAddDialog}>
+                                            <GoogleSymbol name="add_circle" className="text-xl" />
+                                            <span className="sr-only">New Team or Drop to Duplicate</span>
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>{snapshot.isDraggingOver ? 'Drop to Duplicate' : 'Add New Team'}</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        </div>
+                    )}
+                </StrictModeDroppable>
             </div>
         </div>
-        <DragDropContext onDragEnd={onDragEnd}>
-            <StrictModeDroppable droppableId="teams-list">
-                {(provided) => (
-                     <div 
-                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                    >
-                        {teams.map((team, index) => (
-                             <Draggable key={team.id} draggableId={team.id} index={index}>
-                                {(provided) => (
-                                    <div
-                                        ref={provided.innerRef}
-                                        {...provided.draggableProps}
-                                        {...provided.dragHandleProps}
-                                    >
-                                        <TeamCard team={team} allUsers={users} onUpdate={handleUpdate} onDelete={openDeleteDialog} />
-                                    </div>
-                                )}
-                            </Draggable>
-                        ))}
-                        {provided.placeholder}
-                    </div>
-                )}
-            </StrictModeDroppable>
-        </DragDropContext>
+        <StrictModeDroppable droppableId="teams-list">
+            {(provided) => (
+                 <div 
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                >
+                    {teams.map((team, index) => (
+                         <Draggable key={team.id} draggableId={team.id} index={index}>
+                            {(provided) => (
+                                <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                >
+                                    <TeamCard team={team} allUsers={users} onUpdate={handleUpdate} onDelete={openDeleteDialog} />
+                                </div>
+                            )}
+                        </Draggable>
+                    ))}
+                    {provided.placeholder}
+                </div>
+            )}
+        </StrictModeDroppable>
 
       {isAddDialogOpen && (
           <AddTeamDialog 
@@ -328,7 +341,7 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </DragDropContext>
   );
 }
 
@@ -423,10 +436,10 @@ function AddTeamDialog({ isOpen, onClose, allUsers, addTeam }: AddTeamDialogProp
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-9 w-9"
+                                    className="h-9 w-9 text-2xl"
                                     style={{ color }}
                                 >
-                                    <GoogleSymbol name={icon} className="text-2xl" />
+                                    <GoogleSymbol name={icon} />
                                 </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-80 p-0">
