@@ -89,6 +89,21 @@ This pattern provides a fast, intuitive way for users to duplicate complex entit
     -   The new entity is typically placed immediately after the original in the list.
 -   **Application**: Used for duplicating Pages or other complex entities to serve as a starting point for a new configuration.
 
+---
+
+### 7. Interactive List Selection
+
+This pattern provides a clean alternative to checkboxes for selecting multiple items in a list, especially within a popover or compact space.
+
+-   **Trigger**: Clicking on an item within the list.
+-   **Interaction**:
+    -   Clicking an unselected item marks it as selected.
+    -   Clicking a selected item deselects it.
+-   **Visual Cues**:
+    -   **Selected State**: The item's text and/or icon changes to a distinct color. This can be the primary theme color or a color associated with the item itself (e.g., a team's brand color). The background might also receive a subtle `bg-accent` highlight.
+    -   **Unselected State**: The item is displayed in a default, muted state (e.g., `text-muted-foreground`).
+-   **Application**: Ideal for managing associations in popovers, such as assigning users, teams, or roles to a page, or associating tabs with a page.
+
 ## Visual & Theming Elements
 
 ### Icons & Hover Effects
@@ -96,6 +111,7 @@ This pattern provides a fast, intuitive way for users to duplicate complex entit
 - **Icon Set**: We exclusively use **Google Material Symbols** via the `<GoogleSymbol />` component. This ensures a consistent visual language.
 - **Hover Behavior**: The color of icons on hover is typically determined by their parent element. For example, an icon inside a `<Button variant="ghost">` will change to the primary theme color on hover because the button's text color changes, and the icon inherits that color. This creates a clean and predictable interaction.
 - **Destructive Actions**: Delete or other destructive action icons (like `delete`, `close`, `cancel`) are `text-muted-foreground` by default and become `text-destructive` on hover to provide a clear but not overwhelming visual warning.
+- **Tooltips for Clarity**: Icon-only buttons (those without visible text) should always be wrapped in a `<Tooltip>` to provide context on their function. This is crucial for accessibility and user experience.
 
 ### Theming & Button Styles
 

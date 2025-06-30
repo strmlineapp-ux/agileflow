@@ -15,13 +15,12 @@ import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { googleSymbolNames } from '@/lib/google-symbols';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle as UIAlertDialogTitle } from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProps } from 'react-beautiful-dnd';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn, getContrastColor } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -356,7 +355,7 @@ function CustomRoleCard({
           <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <UIAlertDialogTitle>Are you absolutely sure?</UIAlertDialogTitle>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                     <AlertDialogDescription>This action cannot be undone. This will permanently delete the "{role.name}" role level and unassign all users.</AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -580,7 +579,12 @@ const RolesManagement = () => {
                           <CardHeader>
                             <div className="flex items-center gap-2">
                               <CardTitle>Admins</CardTitle>
-                              <AddUserToRoleButton usersToAdd={nonAdminUsers} onAdd={handleAdminToggle} roleName="Admin" />
+                              <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild><AddUserToRoleButton usersToAdd={nonAdminUsers} onAdd={handleAdminToggle} roleName="Admin" /></TooltipTrigger>
+                                    <TooltipContent>Assign User</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
                             </div>
                             <CardDescription>Assign or revoke Admin privileges. This is the highest level of access.</CardDescription>
                           </CardHeader>
@@ -675,17 +679,54 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                         <TabsTrigger value="teams">Teams</TabsTrigger>
                         <TabsTrigger value="roles">Roles</TabsTrigger>
                     </TabsList>
-                    <div className="p-2 border-b">
-                      <Input placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-                    </div>
+                    
                     <TabsContent value="users" className="m-0">
-                        <ScrollArea className="h-64"><div className="p-1 space-y-1">{filteredUsers.map(user => <div key={user.userId} className="flex items-center gap-2 p-2 rounded-md text-sm cursor-pointer hover:bg-accent" onClick={() => handleToggle('users', user.userId)}><Checkbox checked={access.users.includes(user.userId)} readOnly/>{user.displayName}</div>)}</div></ScrollArea>
+                        {filteredUsers.length > 7 && (
+                          <div className="p-2 border-b">
+                            <Input placeholder="Search users..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                          </div>
+                        )}
+                        <ScrollArea className="h-64"><div className="p-1 space-y-1">{filteredUsers.map(user => {
+                          const isSelected = access.users.includes(user.userId);
+                          return (
+                            <div key={user.userId} className={cn("flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer hover:bg-accent", !isSelected && "text-muted-foreground")} style={{ color: isSelected ? 'hsl(var(--primary))' : undefined }} onClick={() => handleToggle('users', user.userId)}>
+                              <Avatar className="h-7 w-7"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0,2)}</AvatarFallback></Avatar>
+                              <span className="font-medium">{user.displayName}</span>
+                            </div>
+                          )
+                        })}</div></ScrollArea>
                     </TabsContent>
                     <TabsContent value="teams" className="m-0">
-                        <ScrollArea className="h-64"><div className="p-1 space-y-1">{filteredTeams.map(team => <div key={team.id} className="flex items-center gap-2 p-2 rounded-md text-sm cursor-pointer hover:bg-accent" onClick={() => handleToggle('teams', team.id)}><Checkbox checked={access.teams.includes(team.id)} readOnly/>{team.name}</div>)}</div></ScrollArea>
+                        {filteredTeams.length > 7 && (
+                           <div className="p-2 border-b">
+                             <Input placeholder="Search teams..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                           </div>
+                        )}
+                        <ScrollArea className="h-64"><div className="p-1 space-y-1">{filteredTeams.map(team => {
+                          const isSelected = access.teams.includes(team.id);
+                          return (
+                            <div key={team.id} className={cn("flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer hover:bg-accent", !isSelected && "text-muted-foreground")} style={{ color: isSelected ? team.color : undefined }} onClick={() => handleToggle('teams', team.id)}>
+                              <GoogleSymbol name={team.icon} className="text-xl" />
+                              <span className="font-medium">{team.name}</span>
+                            </div>
+                          )
+                        })}</div></ScrollArea>
                     </TabsContent>
                     <TabsContent value="roles" className="m-0">
-                        <ScrollArea className="h-64"><div className="p-1 space-y-1">{filteredRoles.map(role => <div key={role.id} className="flex items-center gap-2 p-2 rounded-md text-sm cursor-pointer hover:bg-accent" onClick={() => handleToggle('roles', role.name)}><Checkbox checked={access.roles.includes(role.name)} readOnly/>{role.name}</div>)}</div></ScrollArea>
+                        {filteredRoles.length > 7 && (
+                          <div className="p-2 border-b">
+                            <Input placeholder="Search roles..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                          </div>
+                        )}
+                        <ScrollArea className="h-64"><div className="p-1 space-y-1">{filteredRoles.map(role => {
+                          const isSelected = access.roles.includes(role.name);
+                          return (
+                            <div key={role.id} className={cn("flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer hover:bg-accent", !isSelected && "text-muted-foreground")} style={{ color: isSelected ? role.color : undefined }} onClick={() => handleToggle('roles', role.name)}>
+                              <GoogleSymbol name={role.icon} className="text-xl" />
+                              <span className="font-medium">{role.name}</span>
+                            </div>
+                          )
+                        })}</div></ScrollArea>
                     </TabsContent>
                 </Tabs>
             </PopoverContent>
@@ -1107,4 +1148,3 @@ const AdminPageSkeleton = () => (
       </div>
     </div>
 );
-
