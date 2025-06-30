@@ -1,4 +1,5 @@
 
+
 import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team, type AppSettings, type Badge, type BadgeCollection, type AppTab, type AppPage } from '@/types';
 
 export const mockTabs: AppTab[] = [
@@ -70,7 +71,7 @@ export const mockAppSettings: AppSettings = {
     },
   ],
   linkGroups: {},
-  teamLinkGroups: {},
+  teamShareGroups: {},
   pages: mockPages,
   tabs: mockTabs,
   strategyLabel: 'Priority Strategies',
@@ -287,7 +288,7 @@ export const mockTeams: Team[] = [
         name: 'Studio Productions',
         icon: 'movie',
         color: '#10B981',
-        linkedTeamIds: ['live-events'],
+        sharedTeamIds: ['live-events'],
         members: ['1', '2', '6'],
         teamAdmins: ['1', '2'],
         locationCheckManagers: ['1'],
@@ -323,7 +324,7 @@ export const mockTeams: Team[] = [
         name: 'Live Events',
         icon: 'videocam',
         color: '#3B82F6',
-        linkedTeamIds: [],
+        sharedTeamIds: [],
         members: ['1', '2', '3', '4'],
         teamAdmins: ['1', '2'],
         locationCheckManagers: ['2'],
@@ -358,7 +359,7 @@ export const mockTeams: Team[] = [
         name: 'Productions',
         icon: 'campaign',
         color: '#EC4899',
-        linkedTeamIds: [],
+        sharedTeamIds: [],
         members: ['2', '3', '5'],
         teamAdmins: ['2'],
         locationCheckManagers: [],

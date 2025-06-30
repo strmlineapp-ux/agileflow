@@ -57,23 +57,22 @@ This is the consistent reference pattern for allowing a user to change both an i
 - **Interaction:**
   - Clicking the main part of the button opens an icon picker popover.
   - Clicking the color swatch badge opens a color picker popover.
-- **Application:** Used for editing team role icons/colors, custom admin role icons/colors, and linked group icons/colors.
+- **Application:** Used for editing team role icons/colors, custom admin role icons/colors, and shared group icons/colors.
 
 ---
 
-### 5. Entity Linking & Sharing
+### 5. Entity Sharing
 
 This pattern describes how a single entity (like a Badge) can exist in multiple contexts (like different Badge Collections) while maintaining a single source of truth.
 
-- **Mechanism**: Implemented via drag-and-drop. Dragging an item from its "home" collection to another creates a shared link, not a copy.
+- **Mechanism**: Implemented via drag-and-drop or an explicit "Share" action. Dragging an item from its "home" collection to another creates a shared instance, not a copy.
 - **Visual Cues**:
-  - A linked item is visually distinguished by a `link` icon overlay on its main icon.
-  - The color of this link overlay is inherited from the badge's **original parent collection**, indicating its source.
-  - The original item (the source of truth) does not have this icon.
+  - A shared item is visually distinguished by a `download` icon overlay on its main icon.
+  - The original item (the source of truth) is marked with an `upload` icon overlay.
 - **Behavior**:
-  - Editing a linked item (e.g., changing its name, icon, or color) modifies the original item, and the changes are instantly reflected in all other places where it is linked.
-  - Deleting a *linked* item only removes the link from that specific context. The original and all other links remain untouched.
-  - Deleting the *original* item is a permanent action that removes the item and all of its links across the entire application.
+  - Editing a shared item (e.g., changing its name, icon, or color) modifies the original item, and the changes are instantly reflected in all other places where it is shared.
+  - Deleting a *shared* item only removes the share from that specific context. The original and all other shares remain untouched.
+  - Deleting the *original* item is a permanent action that removes the item and all of its shares across the entire application.
 - **Application**: Used for sharing Badges between Badge Collections.
 
 ---
@@ -126,4 +125,4 @@ This pattern provides a clean alternative to checkboxes for selecting multiple i
 - **Icon as Badge**: An icon displayed as a small, circular overlay on another element (e.g., an Avatar or another icon) to provide secondary information. The size of the icon within the badge should be large enough to be clearly identifiable while fitting neatly within its container.
     - **Appearance**: A circular badge (e.g., `h-5 w-5`) with a `border-2` of the parent element's background color (e.g., `border-card` or `border-background`) to create a "punched out" effect. The icon inside should be sized appropriately (e.g., `font-size: 14px` or similar, depending on container).
     - **Placement**: Typically positioned on the bottom-right or top-right corner of the parent element.
-    - **Application**: Used for displaying a user's role on their avatar, a linked group status on a role icon, or a `link` icon on a shared Badge.
+    - **Application**: Used for displaying a user's role on their avatar, a shared group status on a role icon, or a `share` icon on a shared Badge.

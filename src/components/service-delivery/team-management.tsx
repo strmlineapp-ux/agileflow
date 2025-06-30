@@ -56,23 +56,23 @@ function TeamCard({
     allUsers, 
     onUpdate, 
     onDelete, 
-    canLink,
-    onLink,
-    onUnlink,
-    isLinking,
-    linkGroup,
-    onUpdateLinkGroup
+    canShare,
+    onShare,
+    onUnshare,
+    isSharing,
+    shareGroup,
+    onUpdateShareGroup
 }: { 
     team: Team, 
     allUsers: User[], 
     onUpdate: (id: string, data: Partial<Team>) => void, 
     onDelete: (team: Team) => void,
-    canLink: boolean,
-    onLink: (teamId: string) => void,
-    onUnlink: (teamId: string) => void,
-    isLinking: boolean,
-    linkGroup: LinkGroup | null,
-    onUpdateLinkGroup: (groupId: string, newGroup: LinkGroup) => void;
+    canShare: boolean,
+    onShare: (teamId: string) => void,
+    onUnshare: (teamId: string) => void,
+    isSharing: boolean,
+    shareGroup: LinkGroup | null,
+    onUpdateShareGroup: (groupId: string, newGroup: LinkGroup) => void;
 }) {
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isEditingName, setIsEditingName] = useState(false);
@@ -80,9 +80,9 @@ function TeamCard({
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
     const [iconSearch, setIconSearch] = useState('');
     
-    const [isLinkPopoverOpen, setIsLinkPopoverOpen] = useState(false);
-    const [isLinkIconPopoverOpen, setIsLinkIconPopoverOpen] = useState(false);
-    const [isLinkColorPopoverOpen, setIsLinkColorPopoverOpen] = useState(false);
+    const [isSharePopoverOpen, setIsSharePopoverOpen] = useState(false);
+    const [isShareIconPopoverOpen, setIsShareIconPopoverOpen] = useState(false);
+    const [isShareColorPopoverOpen, setIsShareColorPopoverOpen] = useState(false);
 
     const teamMembers = team.members.map(id => allUsers.find(u => u.userId === id)).filter(Boolean) as User[];
     
@@ -117,29 +117,29 @@ function TeamCard({
     };
 
     return (
-        <Card className={cn("flex flex-col", isLinking && "ring-2 ring-primary ring-offset-2 ring-offset-background")}>
+        <Card className={cn("flex flex-col", isSharing && "ring-2 ring-primary ring-offset-2 ring-offset-background")}>
             <CardHeader>
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                         <div className="relative">
-                             {linkGroup && (
-                                <Popover open={isLinkPopoverOpen} onOpenChange={setIsLinkPopoverOpen}>
+                             {shareGroup && (
+                                <Popover open={isSharePopoverOpen} onOpenChange={setIsSharePopoverOpen}>
                                     <PopoverTrigger asChild>
                                         <div 
                                             className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full border-2 border-card cursor-pointer flex items-center justify-center z-10" 
-                                            style={{ backgroundColor: linkGroup.color }}
-                                            aria-label="Edit link group"
+                                            style={{ backgroundColor: shareGroup.color }}
+                                            aria-label="Edit share group"
                                         >
-                                            <GoogleSymbol name={linkGroup.icon} style={{ fontSize: '14px', color: getContrastColor(linkGroup.color) }}/>
+                                            <GoogleSymbol name={shareGroup.icon} style={{ fontSize: '14px', color: getContrastColor(shareGroup.color) }}/>
                                         </div>
                                     </PopoverTrigger>
                                     <PopoverContent className="w-auto p-2">
                                         <div className="flex items-center gap-2">
                                             <div className="relative">
-                                                <Popover open={isLinkIconPopoverOpen} onOpenChange={setIsLinkIconPopoverOpen}>
+                                                <Popover open={isShareIconPopoverOpen} onOpenChange={setIsShareIconPopoverOpen}>
                                                     <PopoverTrigger asChild>
                                                         <Button variant="ghost" size="icon" className="h-9 w-9 text-2xl text-muted-foreground hover:text-foreground">
-                                                            <GoogleSymbol name={linkGroup.icon} />
+                                                            <GoogleSymbol name={shareGroup.icon} />
                                                         </Button>
                                                     </PopoverTrigger>
                                                     <PopoverContent className="w-80 p-0">
@@ -151,9 +151,9 @@ function TeamCard({
                                                                 {filteredIcons.slice(0, 300).map((iconName) => (
                                                                     <Button
                                                                         key={iconName}
-                                                                        variant={linkGroup.icon === iconName ? "default" : "ghost"}
+                                                                        variant={shareGroup.icon === iconName ? "default" : "ghost"}
                                                                         size="icon"
-                                                                        onClick={() => { onUpdateLinkGroup(team.linkGroupId!, { ...linkGroup, icon: iconName }); setIsLinkIconPopoverOpen(false); }}
+                                                                        onClick={() => { onUpdateShareGroup(team.shareGroupId!, { ...shareGroup, icon: iconName }); setIsShareIconPopoverOpen(false); }}
                                                                         className="text-2xl"
                                                                     >
                                                                         <GoogleSymbol name={iconName} />
@@ -163,49 +163,59 @@ function TeamCard({
                                                         </ScrollArea>
                                                     </PopoverContent>
                                                 </Popover>
-                                                <Popover open={isLinkColorPopoverOpen} onOpenChange={setIsLinkColorPopoverOpen}>
+                                                <Popover open={isShareColorPopoverOpen} onOpenChange={setIsShareColorPopoverOpen}>
                                                     <PopoverTrigger asChild>
-                                                        <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-popover cursor-pointer" aria-label="Change link group color">
-                                                            <div className="h-full w-full rounded-full" style={{ backgroundColor: linkGroup.color }}/>
+                                                        <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-popover cursor-pointer" aria-label="Change share group color">
+                                                            <div className="h-full w-full rounded-full" style={{ backgroundColor: shareGroup.color }}/>
                                                         </div>
                                                     </PopoverTrigger>
                                                     <PopoverContent className="w-auto p-2">
                                                         <div className="grid grid-cols-8 gap-1">
                                                             {predefinedColors.map(color => (
-                                                                <button key={color} className="h-6 w-6 rounded-full border" style={{ backgroundColor: color }} onClick={() => { onUpdateLinkGroup(team.linkGroupId!, { ...linkGroup, color: color }); setIsLinkColorPopoverOpen(false); }}/>
+                                                                <button key={color} className="h-6 w-6 rounded-full border" style={{ backgroundColor: color }} onClick={() => { onUpdateShareGroup(team.shareGroupId!, { ...shareGroup, color: color }); setIsShareColorPopoverOpen(false); }}/>
                                                             ))}
                                                             <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
                                                                 <GoogleSymbol name="colorize" className="text-muted-foreground" />
-                                                                <Input type="color" value={linkGroup.color} onChange={(e) => onUpdateLinkGroup(team.linkGroupId!, { ...linkGroup, color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" aria-label="Custom color picker"/>
+                                                                <Input type="color" value={shareGroup.color} onChange={(e) => onUpdateShareGroup(team.shareGroupId!, { ...shareGroup, color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" aria-label="Custom color picker"/>
                                                             </div>
                                                         </div>
                                                     </PopoverContent>
                                                 </Popover>
                                             </div>
-                                            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-destructive" onClick={() => { onUnlink(team.id); setIsLinkPopoverOpen(false); }}>
+                                            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-destructive" onClick={() => { onUnshare(team.id); setIsSharePopoverOpen(false); }}>
                                                 <GoogleSymbol name="link_off" className="text-2xl" />
                                             </Button>
                                         </div>
                                     </PopoverContent>
                                 </Popover>
                             )}
-                             <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
-                                <PopoverTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-9 w-9 text-3xl">
-                                        <GoogleSymbol name={team.icon} />
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-80 p-0">
-                                    <div className="p-2 border-b"><Input placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} /></div>
-                                    <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={team.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(team.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
-                                </PopoverContent>
-                            </Popover>
-                            <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                                <PopoverTrigger asChild><div className="absolute -bottom-1 -right-0 h-4 w-4 rounded-full border-2 border-card cursor-pointer" style={{ backgroundColor: team.color }} /></PopoverTrigger>
-                                <PopoverContent className="w-auto p-2">
-                                <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdate(team.id, { color: c }); setIsColorPopoverOpen(false);}}/>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={team.color} onChange={(e) => onUpdate(team.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
-                                </PopoverContent>
-                            </Popover>
+                             <div className="relative">
+                                <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
+                                    <PopoverTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-9 w-9 text-3xl">
+                                            <GoogleSymbol name={team.icon} />
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-80 p-0">
+                                        <div className="p-2 border-b"><Input placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} /></div>
+                                        <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={team.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(team.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
+                                    </PopoverContent>
+                                </Popover>
+                                <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                                    <PopoverTrigger asChild>
+                                        <div className="absolute -bottom-1 -right-0 h-4 w-4 rounded-full border-2 border-card cursor-pointer" style={{ backgroundColor: team.color }} />
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-2">
+                                        <div className="grid grid-cols-8 gap-1">
+                                            {predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdate(team.id, { color: c }); setIsColorPopoverOpen(false);}}/>))}
+                                            <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
+                                                <GoogleSymbol name="colorize" className="text-muted-foreground" />
+                                                <Input type="color" value={team.color} onChange={(e) => onUpdate(team.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/>
+                                            </div>
+                                        </div>
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
                         </div>
                         <div className="flex-1 min-w-0">
                             {isEditingName ? (
@@ -224,15 +234,15 @@ function TeamCard({
                         </div>
                     </div>
                     <div className="flex items-center">
-                        {canLink && (
+                        {canShare && (
                             <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0 text-muted-foreground hover:text-primary" onClick={() => onLink(team.id)}>
-                                            <GoogleSymbol name="link" className="text-lg"/>
+                                        <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0 text-muted-foreground hover:text-primary" onClick={() => onShare(team.id)}>
+                                            <GoogleSymbol name="change_circle" className="text-lg"/>
                                         </Button>
                                     </TooltipTrigger>
-                                    <TooltipContent>Link Team</TooltipContent>
+                                    <TooltipContent>Share Team</TooltipContent>
                                 </Tooltip>
                             </TooltipProvider>
                         )}
@@ -293,8 +303,8 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
   
-  const [linkingState, setLinkingState] = useState<{ teamId: string } | null>(null);
-  const canLinkTeams = teams.length > 1;
+  const [sharingState, setSharingState] = useState<{ teamId: string } | null>(null);
+  const canShareTeams = teams.length > 1;
 
   useEffect(() => {
     if (isEditingTitle) titleInputRef.current?.focus();
@@ -343,78 +353,78 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
       const newTeamData: Omit<Team, 'id'> = {
           ...JSON.parse(JSON.stringify(sourceTeam)), // Deep copy
           name: newName,
-          linkGroupId: undefined, // Copies should not be linked
+          shareGroupId: undefined, // Copies should not be shared
       };
       addTeam(newTeamData);
       toast({ title: 'Success', description: `Team "${newName}" created.` });
   };
   
-  const handleLinkClick = (teamId: string) => {
-    if (!linkingState) {
-        setLinkingState({ teamId });
+  const handleShareClick = (teamId: string) => {
+    if (!sharingState) {
+        setSharingState({ teamId });
         return;
     }
-    if (linkingState.teamId === teamId) {
-        setLinkingState(null);
+    if (sharingState.teamId === teamId) {
+        setSharingState(null);
         return;
     }
 
     const teamsToUpdate = teams.map(t => ({ ...t }));
-    let linkGroupsToUpdate = { ...(appSettings.teamLinkGroups || {}) };
+    let shareGroupsToUpdate = { ...(appSettings.teamShareGroups || {}) };
     
-    const sourceTeam = teamsToUpdate.find(t => t.id === linkingState.teamId)!;
+    const sourceTeam = teamsToUpdate.find(t => t.id === sharingState.teamId)!;
     const targetTeam = teamsToUpdate.find(t => t.id === teamId)!;
 
-    if (!sourceTeam.linkGroupId && !targetTeam.linkGroupId) {
+    if (!sourceTeam.shareGroupId && !targetTeam.shareGroupId) {
         const newGroupId = crypto.randomUUID();
-        sourceTeam.linkGroupId = newGroupId;
-        targetTeam.linkGroupId = newGroupId;
-        linkGroupsToUpdate[newGroupId] = { icon: 'link', color: '#64748B' };
-    } else if (sourceTeam.linkGroupId && !targetTeam.linkGroupId) {
-        targetTeam.linkGroupId = sourceTeam.linkGroupId;
-    } else if (!sourceTeam.linkGroupId && targetTeam.linkGroupId) {
-        sourceTeam.linkGroupId = targetTeam.linkGroupId;
-    } else if (sourceTeam.linkGroupId !== targetTeam.linkGroupId) {
-        const targetGroupId = targetTeam.linkGroupId!;
-        const sourceGroupId = sourceTeam.linkGroupId!;
+        sourceTeam.shareGroupId = newGroupId;
+        targetTeam.shareGroupId = newGroupId;
+        shareGroupsToUpdate[newGroupId] = { icon: 'link', color: '#64748B' };
+    } else if (sourceTeam.shareGroupId && !targetTeam.shareGroupId) {
+        targetTeam.shareGroupId = sourceTeam.shareGroupId;
+    } else if (!sourceTeam.shareGroupId && targetTeam.shareGroupId) {
+        sourceTeam.shareGroupId = targetTeam.shareGroupId;
+    } else if (sourceTeam.shareGroupId !== targetTeam.shareGroupId) {
+        const targetGroupId = targetTeam.shareGroupId!;
+        const sourceGroupId = sourceTeam.shareGroupId!;
         teamsToUpdate.forEach(t => {
-            if (t.linkGroupId === targetGroupId) {
-                t.linkGroupId = sourceGroupId;
+            if (t.shareGroupId === targetGroupId) {
+                t.shareGroupId = sourceGroupId;
             }
         });
-        delete linkGroupsToUpdate[targetGroupId];
+        delete shareGroupsToUpdate[targetGroupId];
     }
     
     // This is a simple update, might need more complex logic for reordering if that becomes a feature
-    teamsToUpdate.forEach(updatedTeam => updateTeam(updatedTeam.id, { linkGroupId: updatedTeam.linkGroupId }));
-    updateAppSettings({ teamLinkGroups: linkGroupsToUpdate });
-    setLinkingState(null);
+    teamsToUpdate.forEach(updatedTeam => updateTeam(updatedTeam.id, { shareGroupId: updatedTeam.shareGroupId }));
+    updateAppSettings({ teamShareGroups: shareGroupsToUpdate });
+    setSharingState(null);
   };
   
-  const handleUnlinkTeam = (teamId: string) => {
-    const teamToUnlink = teams.find(t => t.id === teamId);
-    if (!teamToUnlink || !teamToUnlink.linkGroupId) return;
+  const handleUnshareTeam = (teamId: string) => {
+    const teamToUnshare = teams.find(t => t.id === teamId);
+    if (!teamToUnshare || !teamToUnshare.shareGroupId) return;
 
-    const groupId = teamToUnlink.linkGroupId;
-    const teamsInGroup = teams.filter(t => t.linkGroupId === groupId);
+    const groupId = teamToUnshare.shareGroupId;
+    const teamsInGroup = teams.filter(t => t.shareGroupId === groupId);
     
-    updateTeam(teamId, { linkGroupId: undefined });
+    updateTeam(teamId, { shareGroupId: undefined });
 
     if (teamsInGroup.length <= 2) {
         const remainingTeam = teamsInGroup.find(t => t.id !== teamId);
         if(remainingTeam) {
-            updateTeam(remainingTeam.id, { linkGroupId: undefined });
+            updateTeam(remainingTeam.id, { shareGroupId: undefined });
         }
-        const newLinkGroups = { ...(appSettings.teamLinkGroups || {}) };
-        delete newLinkGroups[groupId];
-        updateAppSettings({ teamLinkGroups: newLinkGroups });
+        const newShareGroups = { ...(appSettings.teamShareGroups || {}) };
+        delete newShareGroups[groupId];
+        updateAppSettings({ teamShareGroups: newShareGroups });
     }
-    toast({ title: 'Team Unlinked', description: `"${teamToUnlink.name}" has been unlinked from its group.` });
+    toast({ title: 'Team Unshared', description: `"${teamToUnshare.name}" has been unshared from its group.` });
   };
   
-  const handleUpdateLinkGroup = (groupId: string, newGroup: LinkGroup) => {
-    const newLinkGroups = { ...(appSettings.teamLinkGroups || {}), [groupId]: newGroup };
-    updateAppSettings({ teamLinkGroups: newLinkGroups });
+  const handleUpdateShareGroup = (groupId: string, newGroup: LinkGroup) => {
+    const newShareGroups = { ...(appSettings.teamShareGroups || {}), [groupId]: newGroup };
+    updateAppSettings({ teamShareGroups: newShareGroups });
   };
   
   const onDragEnd = (result: DropResult) => {
@@ -487,12 +497,12 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
                                         allUsers={users} 
                                         onUpdate={handleUpdate} 
                                         onDelete={openDeleteDialog}
-                                        canLink={canLinkTeams}
-                                        onLink={handleLinkClick}
-                                        onUnlink={handleUnlinkTeam}
-                                        isLinking={linkingState?.teamId === team.id}
-                                        linkGroup={team.linkGroupId ? appSettings.teamLinkGroups?.[team.linkGroupId] : null}
-                                        onUpdateLinkGroup={handleUpdateLinkGroup}
+                                        canShare={canShareTeams}
+                                        onShare={handleShareClick}
+                                        onUnshare={handleUnshareTeam}
+                                        isSharing={sharingState?.teamId === team.id}
+                                        shareGroup={team.shareGroupId ? appSettings.teamShareGroups?.[team.shareGroupId] : null}
+                                        onUpdateShareGroup={handleUpdateShareGroup}
                                     />
                                 </div>
                             )}

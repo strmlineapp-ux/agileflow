@@ -1,5 +1,6 @@
 
 
+
 import type React from 'react';
 
 export interface LinkGroup {
@@ -43,7 +44,7 @@ export interface AppPage {
 export interface AppSettings {
   customAdminRoles: CustomAdminRole[];
   linkGroups: Record<string, LinkGroup>;
-  teamLinkGroups?: Record<string, LinkGroup>;
+  teamShareGroups?: Record<string, LinkGroup>;
   pages: AppPage[];
   tabs: AppTab[];
   strategyLabel?: string;
@@ -116,8 +117,8 @@ export interface Team {
   name: string;
   icon: string;
   color: string;
-  linkGroupId?: string;
-  linkedTeamIds?: string[];
+  shareGroupId?: string;
+  sharedTeamIds?: string[];
   members: string[]; // array of userIds
   teamAdmins?: string[]; // array of userIds who are admins for this team
   locationCheckManagers: string[]; // array of userIds who can manage check locations

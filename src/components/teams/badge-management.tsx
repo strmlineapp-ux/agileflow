@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -43,7 +44,7 @@ const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
   return <Droppable {...props}>{children}</Droppable>;
 };
 
-function BadgeDisplayItem({ badge, viewMode, isLink, linkColor, onUpdateBadge, onDelete }: { badge: Badge; viewMode: BadgeCollection['viewMode']; isLink: boolean; linkColor?: string; onUpdateBadge: (badgeData: Partial<Badge>) => void; onDelete: () => void; }) {
+function BadgeDisplayItem({ badge, viewMode, isShared, onUpdateBadge, onDelete }: { badge: Badge; viewMode: BadgeCollection['viewMode']; isShared: boolean; onUpdateBadge: (badgeData: Partial<Badge>) => void; onDelete: () => void; }) {
     const { toast } = useToast();
     const [isEditingName, setIsEditingName] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
@@ -108,6 +109,8 @@ function BadgeDisplayItem({ badge, viewMode, isLink, linkColor, onUpdateBadge, o
         return googleSymbolNames.filter(iconName => iconName.toLowerCase().includes(iconSearch.toLowerCase()));
     }, [iconSearch]);
     
+    const shareStatusIcon = isShared ? 'download' : 'upload';
+    
     if (viewMode === 'detailed') {
       return (
         <Card className="group">
@@ -132,15 +135,12 @@ function BadgeDisplayItem({ badge, viewMode, isLink, linkColor, onUpdateBadge, o
                                 <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdateBadge({ color: c }); setIsColorPopoverOpen(false);}}/>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={badge.color} onChange={(e) => onUpdateBadge({ color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
                                 </PopoverContent>
                             </Popover>
-                            {isLink && (
-                                <div 
-                                    className="absolute -top-1 -right-1 h-5 w-5 rounded-full border-2 border-card flex items-center justify-center"
-                                    style={{ backgroundColor: linkColor }}
-                                    title="Shared Badge"
-                                >
-                                    <GoogleSymbol name="link" style={{ fontSize: '14px', color: getContrastColor(linkColor || '#000') }}/>
-                                </div>
-                            )}
+                            <div 
+                                className="absolute -top-1 -right-1 h-5 w-5 rounded-full border-2 border-card flex items-center justify-center bg-muted text-muted-foreground"
+                                title={isShared ? "Shared Badge" : "Owned Badge"}
+                            >
+                                <GoogleSymbol name={shareStatusIcon} style={{ fontSize: '14px' }}/>
+                            </div>
                         </div>
                         {isEditingName ? (
                             <Input ref={nameInputRef} defaultValue={badge.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>
@@ -185,15 +185,12 @@ function BadgeDisplayItem({ badge, viewMode, isLink, linkColor, onUpdateBadge, o
                 <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdateBadge({ color: c }); setIsColorPopoverOpen(false);}}/>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={badge.color} onChange={(e) => onUpdateBadge({ color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
                 </PopoverContent>
             </Popover>
-            {isLink && (
-                <div
-                    className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-card bg-muted flex items-center justify-center"
-                    style={{ backgroundColor: linkColor }}
-                    title="Shared Badge"
-                >
-                    <GoogleSymbol name="link" style={{fontSize: '12px', color: getContrastColor(linkColor || '#000')}}/>
-                </div>
-            )}
+            <div
+                className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-card bg-muted text-muted-foreground flex items-center justify-center"
+                title={isShared ? "Shared Badge" : "Owned Badge"}
+            >
+                <GoogleSymbol name={shareStatusIcon} style={{fontSize: '12px'}}/>
+            </div>
         </div>
     );
     
@@ -262,15 +259,12 @@ function BadgeDisplayItem({ badge, viewMode, isLink, linkColor, onUpdateBadge, o
                     <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdateBadge({ color: c }); setIsColorPopoverOpen(false);}}/>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={badge.color} onChange={(e) => onUpdateBadge({ color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
                     </PopoverContent>
                 </Popover>
-                {isLink && (
-                    <div
-                        className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-background flex items-center justify-center"
-                        style={{ backgroundColor: linkColor }}
-                        title="Shared Badge"
-                    >
-                        <GoogleSymbol name="link" style={{fontSize: '10px', color: getContrastColor(linkColor || '#000')}}/>
-                    </div>
-                )}
+                <div
+                    className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-background bg-muted text-muted-foreground flex items-center justify-center"
+                    title={isShared ? "Shared Badge" : "Owned Badge"}
+                >
+                    <GoogleSymbol name={shareStatusIcon} style={{fontSize: '10px'}}/>
+                </div>
             </div>
             {inlineNameEditor}
             <button type="button" onClick={onDelete} className="ml-1 h-5 w-5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full inline-flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" aria-label={`Delete ${badge.name}`}>
@@ -280,14 +274,13 @@ function BadgeDisplayItem({ badge, viewMode, isLink, linkColor, onUpdateBadge, o
     );
 }
 
-function BadgeCollectionCard({ collection, allBadgesInTeam, allCollections, isShared, onUpdateCollection, onDeleteCollection, onUnlinkCollection, onAddBadge, onUpdateBadge, onDeleteBadge }: {
+function BadgeCollectionCard({ collection, allBadgesInTeam, allCollections, isShared, onUpdateCollection, onDeleteCollection, onAddBadge, onUpdateBadge, onDeleteBadge }: {
     collection: BadgeCollection;
     allBadgesInTeam: Badge[];
     allCollections: BadgeCollection[];
     isShared: boolean;
     onUpdateCollection: (collectionId: string, newValues: Partial<Omit<BadgeCollection, 'id' | 'badgeIds'>>) => void;
     onDeleteCollection: (collectionId: string) => void;
-    onUnlinkCollection: (collectionId: string) => void;
     onAddBadge: (collectionId: string) => void;
     onUpdateBadge: (badgeData: Partial<Badge>) => void;
     onDeleteBadge: (collectionId: string, badgeId: string) => void;
@@ -338,6 +331,8 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollections, isSh
         onUpdateCollection(collection.id, { applications: newApplications });
     };
 
+    const shareStatusIcon = isShared ? 'download' : 'upload';
+
     return (
         <Card>
             <CardHeader>
@@ -378,14 +373,12 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollections, isSh
                                     </div>
                                 </PopoverContent>
                             </Popover>
-                            {isShared && (
-                                <div 
-                                    className="absolute -top-1 -right-1 h-5 w-5 rounded-full border-2 border-card flex items-center justify-center bg-muted"
-                                    title="Shared Collection"
-                                >
-                                    <GoogleSymbol name="link" style={{ fontSize: '14px', color: 'hsl(var(--muted-foreground))' }}/>
-                                </div>
-                            )}
+                             <div 
+                                className="absolute -top-1 -right-1 h-5 w-5 rounded-full border-2 border-card flex items-center justify-center bg-muted text-muted-foreground"
+                                title={isShared ? "Shared Collection" : "Owned Collection"}
+                            >
+                                <GoogleSymbol name={shareStatusIcon} style={{ fontSize: '14px' }}/>
+                            </div>
                         </div>
                         <div className="flex items-center gap-1 flex-1 min-w-0">
                             {isEditingName ? (
@@ -424,9 +417,9 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollections, isSh
                                 <DropdownMenuItem onClick={() => onUpdateCollection(collection.id, { viewMode: 'detailed' })}><GoogleSymbol name="view_comfy_alt" className="mr-2" />Detailed View</DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => onUpdateCollection(collection.id, { viewMode: 'list' })}><GoogleSymbol name="view_list" className="mr-2" />List View</DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => isShared ? onUnlinkCollection(collection.id) : onDeleteCollection(collection.id)} className="text-destructive focus:text-destructive">
+                                <DropdownMenuItem onClick={() => onDeleteCollection(collection.id)} className="text-destructive focus:text-destructive">
                                     <GoogleSymbol name={isShared ? 'link_off' : 'delete'} className="mr-2"/>
-                                    {isShared ? 'Unlink Collection' : 'Delete Collection'}
+                                    {isShared ? 'Unshare Collection' : 'Delete Collection'}
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
@@ -447,9 +440,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollections, isSh
                                 collection.viewMode === 'detailed' && "grid grid-cols-1 md:grid-cols-2 gap-4"
                             )}>
                             {collectionBadges.map((badge, index) => {
-                                const isLink = badge.ownerCollectionId !== collection.id;
-                                const ownerCollection = isLink ? allCollections.find(c => c.id === badge.ownerCollectionId) : undefined;
-                                const linkColor = ownerCollection?.color;
+                                const isSharedBadge = badge.ownerCollectionId !== collection.id;
 
                                 return (
                                 <Draggable key={badge.id} draggableId={badge.id} index={index}>
@@ -457,8 +448,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollections, isSh
                                         <BadgeDisplayItem 
                                             badge={badge} 
                                             viewMode={collection.viewMode} 
-                                            isLink={isLink} 
-                                            linkColor={linkColor}
+                                            isShared={isSharedBadge} 
                                             onUpdateBadge={(data) => onUpdateBadge({ ...data, id: badge.id })}
                                             onDelete={() => onDeleteBadge(collection.id, badge.id)}
                                         />
@@ -522,21 +512,14 @@ export function BadgeManagement({ team }: { team: Team }) {
     };
     
     const handleDeleteOrUnlinkCollection = (collectionId: string) => {
-        // Find collection across all teams to check ownership
-        let collectionOwnerTeamId: string | undefined;
-        for (const t of teams) {
-            const found = t.badgeCollections.find(c => c.id === collectionId);
-            if (found) {
-                collectionOwnerTeamId = t.id;
-                break;
-            }
-        }
-        
+        const collection = displayedCollections.find(c => c.id === collectionId);
+        if (!collection) return;
+
         // This handles unlinking
-        if (collectionOwnerTeamId !== team.id) {
+        if (collection.ownerTeamId !== team.id) {
             const newLinkedCollectionIds = (team.linkedCollectionIds || []).filter(id => id !== collectionId);
             updateTeam(team.id, { linkedCollectionIds: newLinkedCollectionIds });
-            toast({ title: 'Collection Unlinked' });
+            toast({ title: 'Collection Unshared' });
             return;
         }
 
@@ -667,8 +650,8 @@ export function BadgeManagement({ team }: { team: Team }) {
         });
     };
     
-    const allLinkedTeamIds = useMemo(() => {
-        const linkedIds = new Set<string>();
+    const allSharedTeamIds = useMemo(() => {
+        const sharedIds = new Set<string>();
         const teamsToSearch = [team.id];
         const processedTeams = new Set<string>();
         
@@ -679,13 +662,13 @@ export function BadgeManagement({ team }: { team: Team }) {
             processedTeams.add(currentTeamId);
             const currentTeam = teams.find(t => t.id === currentTeamId);
             if(currentTeam) {
-                (currentTeam.linkedTeamIds || []).forEach(id => {
-                    linkedIds.add(id);
+                (currentTeam.sharedTeamIds || []).forEach(id => {
+                    sharedIds.add(id);
                     teamsToSearch.push(id);
                 });
             }
         }
-        return Array.from(linkedIds);
+        return Array.from(sharedIds);
     }, [teams, team.id]);
 
     const onDragEnd = (result: DropResult) => {
@@ -719,7 +702,7 @@ export function BadgeManagement({ team }: { team: Team }) {
             updateTeam(team.id, { badgeCollections: newCollections });
         } else {
             if (destCollection.badgeIds.includes(draggableId)) {
-                toast({ variant: 'default', title: 'Already linked', description: 'This badge is already in the destination collection.'});
+                toast({ variant: 'default', title: 'Already shared', description: 'This badge is already in the destination collection.'});
                 return;
             }
             const newDestIds = Array.from(destCollection.badgeIds);
@@ -731,7 +714,7 @@ export function BadgeManagement({ team }: { team: Team }) {
         }
     };
 
-    const handleLinkCollection = (collectionId: string) => {
+    const handleShareCollection = (collectionId: string) => {
         const newLinkedIds = [...(team.linkedCollectionIds || []), collectionId];
         updateTeam(team.id, { linkedCollectionIds: newLinkedIds });
         toast({ title: 'Collection Shared' });
@@ -740,10 +723,10 @@ export function BadgeManagement({ team }: { team: Team }) {
     
     const allOtherCollections = useMemo(() => {
         return teams
-            .filter(t => allLinkedTeamIds.includes(t.id)) // Only show collections from linked teams
+            .filter(t => allSharedTeamIds.includes(t.id)) // Only show collections from shared teams
             .flatMap(t => t.badgeCollections.map(c => ({...c, teamName: t.name})))
             .filter(c => !(team.linkedCollectionIds || []).includes(c.id) && c.ownerTeamId !== team.id);
-    }, [teams, team, allLinkedTeamIds]);
+    }, [teams, team, allSharedTeamIds]);
     
     const linkedCollections = useMemo(() => {
         const linkedIds = new Set(team.linkedCollectionIds || []);
@@ -838,7 +821,6 @@ export function BadgeManagement({ team }: { team: Team }) {
                                             isShared={collection.ownerTeamId !== team.id}
                                             onUpdateCollection={handleUpdateCollection}
                                             onDeleteCollection={handleDeleteOrUnlinkCollection}
-                                            onUnlinkCollection={handleDeleteOrUnlinkCollection}
                                             onAddBadge={handleAddBadge}
                                             onUpdateBadge={handleUpdateBadge}
                                             onDeleteBadge={handleDeleteBadge}
@@ -872,7 +854,7 @@ export function BadgeManagement({ team }: { team: Team }) {
                     <ScrollArea className="h-96 -mx-6">
                         <div className="px-6">
                         {allOtherCollections.length > 0 ? allOtherCollections.map(collection => (
-                            <div key={collection.id} className="flex items-center justify-between p-2 rounded-md hover:bg-accent">
+                             <div key={collection.id} className="flex items-center p-2 rounded-md hover:bg-accent cursor-pointer" onClick={() => handleShareCollection(collection.id)}>
                                 <div className="flex items-center gap-2">
                                     <GoogleSymbol name={collection.icon} style={{color: collection.color}} />
                                     <div>
@@ -880,10 +862,9 @@ export function BadgeManagement({ team }: { team: Team }) {
                                         <p className="text-xs text-muted-foreground">from {collection.teamName}</p>
                                     </div>
                                 </div>
-                                <Button size="sm" onClick={() => handleLinkCollection(collection.id)}>Share</Button>
                             </div>
                         )) : (
-                            <p className="text-sm text-center text-muted-foreground p-8">No collections available from linked teams.</p>
+                            <p className="text-sm text-center text-muted-foreground p-8">No collections available from shared teams.</p>
                         )}
                         </div>
                     </ScrollArea>
