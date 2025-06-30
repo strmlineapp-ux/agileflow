@@ -18,7 +18,7 @@ export const mockPages: AppPage[] = [
     {
         id: 'page-admin-management',
         name: 'Admin Management',
-        icon: 'badge',
+        icon: 'admin_panel_settings',
         color: '#64748B',
         path: '/dashboard/admin',
         isDynamic: false,

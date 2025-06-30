@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -17,6 +18,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { GoogleSymbol } from "../icons/google-symbol";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email." }),
@@ -76,6 +78,7 @@ export function LoginForm() {
             )}
           />
           <Button type="submit" className="w-full font-bold" disabled={isLoading}>
+            {isLoading && <GoogleSymbol name="progress_activity" className="animate-spin" />}
             {isLoading ? 'Signing in...' : 'Sign In'}
           </Button>
         </form>

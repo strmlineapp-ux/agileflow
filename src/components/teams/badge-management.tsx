@@ -136,7 +136,7 @@ function BadgeDisplayItem({ badge, viewMode, isLink, linkColor, onUpdateBadge, o
                                 <div 
                                     className="absolute -top-1 -right-1 h-5 w-5 rounded-full border-2 border-card flex items-center justify-center"
                                     style={{ backgroundColor: linkColor }}
-                                    title="Linked Badge"
+                                    title="Shared Badge"
                                 >
                                     <GoogleSymbol name="link" style={{ fontSize: '14px', color: getContrastColor(linkColor || '#000') }}/>
                                 </div>
@@ -189,7 +189,7 @@ function BadgeDisplayItem({ badge, viewMode, isLink, linkColor, onUpdateBadge, o
                 <div
                     className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-card bg-muted flex items-center justify-center"
                     style={{ backgroundColor: linkColor }}
-                    title="Linked Badge"
+                    title="Shared Badge"
                 >
                     <GoogleSymbol name="link" style={{fontSize: '12px', color: getContrastColor(linkColor || '#000')}}/>
                 </div>
@@ -266,7 +266,7 @@ function BadgeDisplayItem({ badge, viewMode, isLink, linkColor, onUpdateBadge, o
                     <div
                         className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-background flex items-center justify-center"
                         style={{ backgroundColor: linkColor }}
-                        title="Linked Badge"
+                        title="Shared Badge"
                     >
                         <GoogleSymbol name="link" style={{fontSize: '10px', color: getContrastColor(linkColor || '#000')}}/>
                     </div>
@@ -480,8 +480,17 @@ export function BadgeManagement({ team }: { team: Team }) {
     const { toast } = useToast();
     
     const [collectionToDelete, setCollectionToDelete] = useState<string | null>(null);
-    const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
+    const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
+    
+    const [isSearching, setIsSearching] = useState(false);
+    const searchInputRef = useRef<HTMLInputElement>(null);
     const [searchTerm, setSearchTerm] = useState('');
+
+    useEffect(() => {
+        if (isSearching && searchInputRef.current) {
+            searchInputRef.current.focus();
+        }
+    }, [isSearching]);
 
     const handleUpdateCollection = (collectionId: string, newValues: Partial<Omit<BadgeCollection, 'id' | 'badgeIds'>>) => {
         const newCollections = team.badgeCollections.map(collection => 
@@ -692,17 +701,7 @@ export function BadgeManagement({ team }: { team: Team }) {
         }
 
         if (type === 'collection') {
-            if (source.droppableId === 'collections-list' && destination.droppableId === 'collections-list') {
-                const reorderedIds = displayedCollections.map(c => c.id);
-                const [movedId] = reorderedIds.splice(source.index, 1);
-                reorderedIds.splice(destination.index, 0, movedId);
-                
-                const newBadgeCollections = team.badgeCollections.slice().sort((a, b) => {
-                    return reorderedIds.indexOf(a.id) - reorderedIds.indexOf(b.id);
-                });
-                updateTeam(team.id, { badgeCollections: newBadgeCollections });
-
-            }
+            // Drag and drop reordering for collections is disabled for simplicity.
             return;
         }
     
@@ -735,8 +734,8 @@ export function BadgeManagement({ team }: { team: Team }) {
     const handleLinkCollection = (collectionId: string) => {
         const newLinkedIds = [...(team.linkedCollectionIds || []), collectionId];
         updateTeam(team.id, { linkedCollectionIds: newLinkedIds });
-        toast({ title: 'Collection Linked' });
-        setIsLinkDialogOpen(false);
+        toast({ title: 'Collection Shared' });
+        setIsShareDialogOpen(false);
     }
     
     const allOtherCollections = useMemo(() => {
@@ -753,22 +752,10 @@ export function BadgeManagement({ team }: { team: Team }) {
         return allCollectionsFromAllTeams.filter(c => linkedIds.has(c.id));
     }, [teams, team.linkedCollectionIds]);
 
-    const getSortKey = useCallback((collection: BadgeCollection) => {
-        return (collection.applications || []).sort().join(',');
-    }, []);
-
     const displayedCollections = useMemo(() => {
         const allVisibleCollections = [...team.badgeCollections, ...linkedCollections];
-        const filtered = allVisibleCollections.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
-        
-        return filtered.sort((a, b) => {
-            const sortKeyA = getSortKey(a);
-            const sortKeyB = getSortKey(b);
-            if (sortKeyA < sortKeyB) return -1;
-            if (sortKeyA > sortKeyB) return 1;
-            return a.name.localeCompare(b.name);
-        });
-    }, [team.badgeCollections, linkedCollections, searchTerm, getSortKey]);
+        return allVisibleCollections.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    }, [team.badgeCollections, linkedCollections, searchTerm]);
 
 
     return (
@@ -806,21 +793,30 @@ export function BadgeManagement({ team }: { team: Team }) {
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => setIsLinkDialogOpen(true)}>
-                                        <GoogleSymbol name="link" className="text-xl" />
-                                        <span className="sr-only">Link Collection</span>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => setIsShareDialogOpen(true)}>
+                                        <GoogleSymbol name="change_circle" className="text-xl" />
+                                        <span className="sr-only">Share Collection</span>
                                     </Button>
                                 </TooltipTrigger>
-                                <TooltipContent>Link Collection from another team</TooltipContent>
+                                <TooltipContent>Share Collection from another team</TooltipContent>
                             </Tooltip>
                         </TooltipProvider>
                     </div>
-                    <div className="w-64">
-                      <Input 
-                        placeholder="Search collections..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                      />
+                    <div className="flex items-center justify-end">
+                        <Button variant="ghost" size="icon" onClick={() => setIsSearching(true)} className={cn(isSearching && "hidden")}>
+                            <GoogleSymbol name="search" />
+                        </Button>
+                        <div className={cn("flex items-center gap-1", !isSearching && "hidden")}>
+                            <GoogleSymbol name="search" />
+                            <Input
+                                ref={searchInputRef}
+                                placeholder="Search collections..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                onBlur={() => { if (!searchTerm) setIsSearching(false); }}
+                                className="w-56 h-8 border-0 border-b rounded-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                            />
+                        </div>
                     </div>
                 </div>
                 <StrictModeDroppable droppableId="collections-list" type="collection">
@@ -870,9 +866,9 @@ export function BadgeManagement({ team }: { team: Team }) {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-            <Dialog open={isLinkDialogOpen} onOpenChange={setIsLinkDialogOpen}>
+            <Dialog open={isShareDialogOpen} onOpenChange={setIsShareDialogOpen}>
                 <DialogContentUI className="max-w-lg">
-                    <DialogTitle>Link a Collection</DialogTitle>
+                    <DialogTitle>Share a Collection</DialogTitle>
                     <ScrollArea className="h-96 -mx-6">
                         <div className="px-6">
                         {allOtherCollections.length > 0 ? allOtherCollections.map(collection => (
@@ -884,7 +880,7 @@ export function BadgeManagement({ team }: { team: Team }) {
                                         <p className="text-xs text-muted-foreground">from {collection.teamName}</p>
                                     </div>
                                 </div>
-                                <Button size="sm" onClick={() => handleLinkCollection(collection.id)}>Link</Button>
+                                <Button size="sm" onClick={() => handleLinkCollection(collection.id)}>Share</Button>
                             </div>
                         )) : (
                             <p className="text-sm text-center text-muted-foreground p-8">No collections available from linked teams.</p>
