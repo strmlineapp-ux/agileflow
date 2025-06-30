@@ -22,6 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Textarea } from '@/components/ui/textarea';
 
 // #region Helper Components and Constants
 const predefinedColors = [
@@ -328,7 +329,7 @@ function CustomRoleCard({
                 <div className="flex-1">
                     {isEditingName ? (<Input ref={nameInputRef} defaultValue={role.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="font-body h-auto p-0 text-2xl font-semibold leading-none tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>) : (<CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer">{role.name}</CardTitle>)}
                 </div>
-                <div className="flex items-center">
+                <div className="flex items-center gap-0">
                     <TooltipProvider>
                         <Tooltip><TooltipTrigger asChild><AddUserToRoleButton usersToAdd={unassignedUsers} onAdd={handleRoleToggle} roleName={role.name} /></TooltipTrigger><TooltipContent>Assign User</TooltipContent></Tooltip>
                         {canLink && <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => onLink(role.id)}><GoogleSymbol name="link" /></Button></TooltipTrigger><TooltipContent>Link Role</TooltipContent></Tooltip>}
@@ -1021,10 +1022,16 @@ function TabItem({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string, data: 
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
     const [iconSearch, setIconSearch] = useState('');
+    const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
+    const [isEditingDescription, setIsEditingDescription] = useState(false);
 
     useEffect(() => {
         if (isEditingName) nameInputRef.current?.focus();
     }, [isEditingName]);
+
+    useEffect(() => {
+        if (isEditingDescription) descriptionTextareaRef.current?.focus();
+    }, [isEditingDescription]);
 
     const handleSaveName = () => {
         const newName = nameInputRef.current?.value.trim();
@@ -1038,12 +1045,29 @@ function TabItem({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string, data: 
         if (e.key === 'Enter') handleSaveName();
         else if (e.key === 'Escape') setIsEditingName(false);
     };
+    
+    const handleSaveDescription = () => {
+        const newDescription = descriptionTextareaRef.current?.value.trim();
+        if (newDescription !== tab.description) {
+            onUpdate(tab.id, { description: newDescription });
+        }
+        setIsEditingDescription(false);
+    };
+
+    const handleDescriptionKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSaveDescription();
+        } else if (e.key === 'Escape') {
+            setIsEditingDescription(false);
+        }
+    };
 
     const filteredIcons = useMemo(() => googleSymbolNames.filter(icon => icon.toLowerCase().includes(iconSearch.toLowerCase())), [iconSearch]);
 
     return (
-        <div className="flex items-center p-3 gap-4">
-            <div className="relative">
+        <div className="flex items-start p-3 gap-4">
+            <div className="relative mt-1">
                 <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                     <PopoverTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-xl" style={{ color: tab.color }}>
@@ -1069,12 +1093,30 @@ function TabItem({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string, data: 
                     </PopoverContent>
                 </Popover>
             </div>
-            {isEditingName ? (
-              <Input ref={nameInputRef} defaultValue={tab.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
-            ) : (
-              <span className="font-semibold cursor-pointer flex-1" onClick={() => setIsEditingName(true)}>{tab.name}</span>
-            )}
-            <Badge variant="outline">{tab.componentKey}</Badge>
+            <div className="flex-1 space-y-1">
+                <div className="flex items-center justify-between">
+                     {isEditingName ? (
+                        <Input ref={nameInputRef} defaultValue={tab.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
+                    ) : (
+                        <span className="font-semibold cursor-pointer" onClick={() => setIsEditingName(true)}>{tab.name}</span>
+                    )}
+                    <Badge variant="outline">{tab.componentKey}</Badge>
+                </div>
+                {isEditingDescription ? (
+                    <Textarea 
+                        ref={descriptionTextareaRef}
+                        defaultValue={tab.description}
+                        onBlur={handleSaveDescription}
+                        onKeyDown={handleDescriptionKeyDown}
+                        className="text-sm"
+                        placeholder="Click to add a description."
+                    />
+                ) : (
+                    <p className="text-sm text-muted-foreground cursor-text min-h-[20px]" onClick={() => setIsEditingDescription(true)}>
+                        {tab.description || 'Click to add a description.'}
+                    </p>
+                )}
+            </div>
         </div>
     );
 }

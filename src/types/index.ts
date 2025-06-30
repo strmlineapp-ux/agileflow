@@ -19,6 +19,7 @@ export interface AppTab {
   name: string;
   icon: string;
   color: string;
+  description?: string;
   componentKey: 'calendars' | 'teams' | 'team_members' | 'badges' | 'locations' | 'workstations' | 'templates';
 }
 

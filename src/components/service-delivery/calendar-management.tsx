@@ -1,10 +1,8 @@
-
-
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useUser } from '@/context/user-context';
-import { type SharedCalendar, type User } from '@/types';
+import { type SharedCalendar } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,11 +24,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { GoogleSymbol } from '../icons/google-symbol';
-import { Badge } from '../ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
-
-type DialogType = 'name' | 'defaultTitle';
 
 const predefinedColors = [
     '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
@@ -38,20 +32,139 @@ const predefinedColors = [
     '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
 ];
 
+function CalendarCard({ calendar, onUpdate, onDelete }: { calendar: SharedCalendar; onUpdate: (id: string, data: Partial<SharedCalendar>) => void; onDelete: (calendar: SharedCalendar) => void; }) {
+  const [isEditingName, setIsEditingName] = useState(false);
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const titleInputRef = useRef<HTMLInputElement>(null);
+  const [openColorPopoverId, setOpenColorPopoverId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isEditingName) nameInputRef.current?.focus();
+  }, [isEditingName]);
+
+  useEffect(() => {
+    if (isEditingTitle) titleInputRef.current?.focus();
+  }, [isEditingTitle]);
+
+  const handleSaveName = () => {
+    const newName = nameInputRef.current?.value.trim();
+    if (newName && newName !== calendar.name) {
+      onUpdate(calendar.id, { name: newName });
+    }
+    setIsEditingName(false);
+  };
+
+  const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') handleSaveName();
+    else if (e.key === 'Escape') setIsEditingName(false);
+  };
+  
+  const handleSaveTitle = () => {
+    const newTitle = titleInputRef.current?.value.trim();
+    if (newTitle !== calendar.defaultEventTitle) {
+      onUpdate(calendar.id, { defaultEventTitle: newTitle });
+    }
+    setIsEditingTitle(false);
+  };
+
+  const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') handleSaveTitle();
+    else if (e.key === 'Escape') setIsEditingTitle(false);
+  };
+
+  const handleQuickColorChange = (newColor: string) => {
+    onUpdate(calendar.id, { color: newColor });
+  };
+
+  return (
+    <Card className="flex flex-col">
+      <CardHeader>
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-3">
+            <Popover open={openColorPopoverId === calendar.id} onOpenChange={(isOpen) => setOpenColorPopoverId(isOpen ? calendar.id : null)}>
+              <PopoverTrigger asChild>
+                <div className="h-4 w-4 rounded-full border shrink-0 cursor-pointer" style={{ backgroundColor: calendar.color }} />
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-2">
+                <div className="grid grid-cols-8 gap-1">
+                  {predefinedColors.map(color => (
+                    <button
+                      key={color}
+                      className="h-6 w-6 rounded-full border"
+                      style={{ backgroundColor: color }}
+                      onClick={() => {
+                        handleQuickColorChange(color);
+                        setOpenColorPopoverId(null);
+                      }}
+                      aria-label={`Set color to ${color}`}
+                    />
+                  ))}
+                  <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
+                    <GoogleSymbol name="colorize" className="text-muted-foreground" />
+                    <Input
+                      type="color"
+                      value={calendar.color}
+                      onChange={(e) => handleQuickColorChange(e.target.value)}
+                      className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"
+                      aria-label="Custom color picker"
+                    />
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+            {isEditingName ? (
+              <Input
+                ref={nameInputRef}
+                defaultValue={calendar.name}
+                onBlur={handleSaveName}
+                onKeyDown={handleNameKeyDown}
+                className="h-auto p-0 text-xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+              />
+            ) : (
+              <CardTitle className="text-xl cursor-pointer" onClick={() => setIsEditingName(true)}>
+                {calendar.name}
+              </CardTitle>
+            )}
+          </div>
+          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive -mr-4 -mt-2" onClick={() => onDelete(calendar)}>
+            <GoogleSymbol name="delete" />
+            <span className="sr-only">Delete Calendar</span>
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="flex-grow space-y-4">
+        <div>
+          <p className="text-sm font-medium text-muted-foreground mb-1">Default Event Title</p>
+          {isEditingTitle ? (
+            <Input
+              ref={titleInputRef}
+              defaultValue={calendar.defaultEventTitle}
+              onBlur={handleSaveTitle}
+              onKeyDown={handleTitleKeyDown}
+              className="text-sm italic"
+              placeholder="e.g., New Event"
+            />
+          ) : (
+            <p className="text-sm italic cursor-text" onClick={() => setIsEditingTitle(true)}>
+              {calendar.defaultEventTitle || 'Click to set'}
+            </p>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export function CalendarManagement() {
-  const { users, calendars, addCalendar, updateCalendar, deleteCalendar } = useUser();
+  const { calendars, addCalendar, updateCalendar, deleteCalendar } = useUser();
   const { toast } = useToast();
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isAddColorPopoverOpen, setIsAddColorPopoverOpen] = useState(false);
-  const [openColorPopoverId, setOpenColorPopoverId] = useState<string | null>(null);
-
-  // State for specific edit dialogs
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [dialogType, setDialogType] = useState<DialogType | null>(null);
+  
   const [editingCalendar, setEditingCalendar] = useState<SharedCalendar | null>(null);
-  const [tempValue, setTempValue] = useState('');
 
   // Add new calendar state
   const [newCalendarName, setNewCalendarName] = useState('');
@@ -63,32 +176,11 @@ export function CalendarManagement() {
     setIsAddDialogOpen(true);
   };
 
-  const openEditDialog = (calendar: SharedCalendar, type: DialogType) => {
-    setEditingCalendar(calendar);
-    setDialogType(type);
-    switch (type) {
-      case 'name':
-        setTempValue(calendar.name);
-        break;
-      case 'defaultTitle':
-        setTempValue(calendar.defaultEventTitle || '');
-        break;
-    }
-    setIsEditDialogOpen(true);
-  };
-  
   const openDeleteDialog = (calendar: SharedCalendar) => {
     setEditingCalendar(calendar);
     setIsDeleteDialogOpen(true);
   };
-
-  const closeEditDialog = () => {
-    setIsEditDialogOpen(false);
-    setEditingCalendar(null);
-    setDialogType(null);
-    setTempValue('');
-  };
-
+  
   const handleAddNewCalendar = async () => {
     if (!newCalendarName.trim()) {
       toast({ variant: 'destructive', title: 'Error', description: 'Calendar name is required.' });
@@ -104,26 +196,9 @@ export function CalendarManagement() {
     setIsAddDialogOpen(false);
   };
 
-  const handleSaveEdit = async () => {
-    if (!editingCalendar || dialogType === null) return;
-    if (tempValue.trim() === '') {
-        toast({ variant: 'destructive', title: 'Error', description: 'Value cannot be empty.' });
-        return;
-    }
-    
-    let updateData: Partial<SharedCalendar> = {};
-    switch (dialogType) {
-        case 'name':
-            updateData.name = tempValue;
-            break;
-        case 'defaultTitle':
-            updateData.defaultEventTitle = tempValue;
-            break;
-    }
-
-    await updateCalendar(editingCalendar.id, updateData);
+  const handleUpdate = async (calendarId: string, data: Partial<SharedCalendar>) => {
+    await updateCalendar(calendarId, data);
     toast({ title: 'Success', description: 'Calendar updated successfully.' });
-    closeEditDialog();
   };
 
   const handleDelete = async () => {
@@ -133,19 +208,6 @@ export function CalendarManagement() {
       setEditingCalendar(null);
     }
   };
-  
-  const handleQuickColorChange = (calendarId: string, newColor: string) => {
-    updateCalendar(calendarId, { color: newColor });
-  };
-  
-  const getDialogTitle = (): string => {
-      if (!dialogType) return '';
-      switch (dialogType) {
-          case 'name': return 'Edit Calendar Name';
-          case 'defaultTitle': return 'Edit Default Event Title';
-          default: return 'Edit';
-      }
-  }
 
   return (
     <>
@@ -159,76 +221,14 @@ export function CalendarManagement() {
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {calendars.map(calendar => {
-          const calendarManagers = (calendar.managers || []).map(id => users.find(u => u.userId === id)).filter(Boolean) as User[];
-          return (
-            <Card key={calendar.id} className="flex flex-col">
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                    <CardTitle className="flex items-center gap-3 text-xl">
-                        <Popover open={openColorPopoverId === calendar.id} onOpenChange={(isOpen) => setOpenColorPopoverId(isOpen ? calendar.id : null)}>
-                            <PopoverTrigger asChild>
-                                <div
-                                    className="h-4 w-4 rounded-full border shrink-0 cursor-pointer"
-                                    style={{ backgroundColor: calendar.color }}
-                                />
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-2">
-                                <div className="grid grid-cols-8 gap-1">
-                                    {predefinedColors.map(color => (
-                                        <button
-                                            key={color}
-                                            className="h-6 w-6 rounded-full border"
-                                            style={{ backgroundColor: color }}
-                                            onClick={() => {
-                                                handleQuickColorChange(calendar.id, color);
-                                                setOpenColorPopoverId(null);
-                                            }}
-                                            aria-label={`Set color to ${color}`}
-                                        />
-                                    ))}
-                                    <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
-                                        <GoogleSymbol name="colorize" className="text-muted-foreground" />
-                                        <Input
-                                            type="color"
-                                            value={calendar.color}
-                                            onChange={(e) => handleQuickColorChange(calendar.id, e.target.value)}
-                                            className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"
-                                            aria-label="Custom color picker"
-                                        />
-                                    </div>
-                                </div>
-                            </PopoverContent>
-                        </Popover>
-                        {calendar.name}
-                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openEditDialog(calendar, 'name')}>
-                            <GoogleSymbol name="edit" className="text-lg" />
-                            <span className="sr-only">Edit Calendar Name</span>
-                        </Button>
-                    </CardTitle>
-                    <div className="flex items-center -mr-4 -mt-2">
-                        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive" onClick={() => openDeleteDialog(calendar)}>
-                            <GoogleSymbol name="delete" />
-                            <span className="sr-only">Delete Calendar</span>
-                        </Button>
-                    </div>
-                </div>
-              </CardHeader>
-              <CardContent className="flex-grow space-y-4">
-                  <div>
-                      <div className="flex items-center gap-1 mb-1">
-                        <p className="text-sm font-medium text-muted-foreground">Default Event Title</p>
-                        <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => openEditDialog(calendar, 'defaultTitle')}>
-                            <GoogleSymbol name="edit" className="text-base" />
-                            <span className="sr-only">Edit default event title</span>
-                        </Button>
-                      </div>
-                      <p className="text-sm italic">{calendar.defaultEventTitle || 'Not set'}</p>
-                  </div>
-              </CardContent>
-            </Card>
-          )
-        })}
+        {calendars.map(calendar => (
+          <CalendarCard
+            key={calendar.id}
+            calendar={calendar}
+            onUpdate={handleUpdate}
+            onDelete={openDeleteDialog}
+          />
+        ))}
       </div>
 
       {/* Add New Calendar Dialog */}
@@ -282,29 +282,6 @@ export function CalendarManagement() {
         </DialogContent>
       </Dialog>
       
-      {/* Generic Edit Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={closeEditDialog}>
-        <DialogContent className="max-w-md">
-          <div className="absolute top-4 right-4">
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSaveEdit}>
-              <GoogleSymbol name="check" className="text-xl" />
-              <span className="sr-only">Save Changes</span>
-            </Button>
-          </div>
-          <DialogHeader>
-            <DialogTitle>{getDialogTitle()}</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 pt-4">
-            <Input
-              id="temp-value"
-              value={tempValue}
-              onChange={(e) => setTempValue(e.target.value)}
-              placeholder="Enter new value"
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
-
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

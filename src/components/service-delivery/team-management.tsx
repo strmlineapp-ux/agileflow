@@ -18,11 +18,9 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { googleSymbolNames } from '@/lib/google-symbols';
@@ -33,17 +31,14 @@ const predefinedColors = [
     '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
 ];
 
-function TeamCard({ team, users, onEdit }: { team: Team, users: User[], onEdit: (team: Team) => void }) {
+function TeamCard({ team, allUsers, onUpdate, onDelete }: { team: Team, allUsers: User[], onUpdate: (id: string, data: Partial<Team>) => void, onDelete: (team: Team) => void }) {
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isEditingName, setIsEditingName] = useState(false);
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
     const [iconSearch, setIconSearch] = useState('');
 
-    const { updateTeam, toast } = useUser();
-    
-    const teamAdmins = (team.teamAdmins || []).map(id => users.find(u => u.userId === id)).filter(Boolean) as User[];
-    const teamMembers = team.members.filter(m => !(team.teamAdmins || []).includes(m)).map(id => users.find(u => u.userId === id)).filter(Boolean) as User[];
+    const teamMembers = team.members.map(id => allUsers.find(u => u.userId === id)).filter(Boolean) as User[];
     
     const filteredIcons = useMemo(() => {
         if (!iconSearch) return googleSymbolNames;
@@ -57,8 +52,7 @@ function TeamCard({ team, users, onEdit }: { team: Team, users: User[], onEdit: 
     const handleSaveName = () => {
         const newName = nameInputRef.current?.value.trim();
         if (newName && newName !== team.name) {
-            updateTeam(team.id, { name: newName });
-            toast({ title: 'Success', description: `Team name updated to "${newName}".` });
+            onUpdate(team.id, { name: newName });
         }
         setIsEditingName(false);
     };
@@ -66,6 +60,14 @@ function TeamCard({ team, users, onEdit }: { team: Team, users: User[], onEdit: 
     const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') handleSaveName();
         else if (e.key === 'Escape') setIsEditingName(false);
+    };
+
+    const handleAdminToggle = (userId: string) => {
+        const currentAdmins = team.teamAdmins || [];
+        const newAdmins = currentAdmins.includes(userId)
+            ? currentAdmins.filter(id => id !== userId)
+            : [...currentAdmins, userId];
+        onUpdate(team.id, { teamAdmins: newAdmins });
     };
 
     return (
@@ -82,13 +84,13 @@ function TeamCard({ team, users, onEdit }: { team: Team, users: User[], onEdit: 
                                 </PopoverTrigger>
                                 <PopoverContent className="w-80 p-0">
                                     <div className="p-2 border-b"><Input placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} /></div>
-                                    <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={team.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { updateTeam(team.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
+                                    <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={team.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(team.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
                                 </PopoverContent>
                             </Popover>
                             <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
                                 <PopoverTrigger asChild><div className="absolute -bottom-1 -right-0 h-4 w-4 rounded-full border-2 border-card cursor-pointer" style={{ backgroundColor: team.color }} /></PopoverTrigger>
                                 <PopoverContent className="w-auto p-2">
-                                <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {updateTeam(team.id, { color: c }); setIsColorPopoverOpen(false);}}/>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={team.color} onChange={(e) => updateTeam(team.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
+                                <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdate(team.id, { color: c }); setIsColorPopoverOpen(false);}}/>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={team.color} onChange={(e) => onUpdate(team.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
                                 </PopoverContent>
                             </Popover>
                         </div>
@@ -108,38 +110,37 @@ function TeamCard({ team, users, onEdit }: { team: Team, users: User[], onEdit: 
                             )}
                         </div>
                     </div>
-                     <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => onEdit(team)}>
-                        <GoogleSymbol name="settings" className="text-lg"/>
-                        <span className="sr-only">Edit Team Members & Settings</span>
+                     <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive" onClick={() => onDelete(team)}>
+                        <GoogleSymbol name="delete" className="text-lg"/>
+                        <span className="sr-only">Delete Team</span>
                     </Button>
                 </div>
             </CardHeader>
-            <CardContent className="flex-grow space-y-4">
-                <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-2">Team Admins</p>
-                    <div className="flex flex-wrap gap-2 min-h-[34px]">
-                    {teamAdmins.length > 0 ? (
-                        teamAdmins.map(user => (
-                            <Badge key={user.userId} variant="secondary" className="gap-1.5 p-1 pl-2 rounded-full">
-                                <Avatar className="h-5 w-5"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
-                                <span className="font-medium">{user.displayName}</span>
-                            </Badge>
-                        ))
-                    ) : <p className="text-sm text-muted-foreground italic px-2">No admins assigned.</p>}
-                    </div>
-                </div>
-                <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-2">Team Members</p>
-                     <div className="flex flex-wrap gap-2 min-h-[34px]">
-                    {teamMembers.length > 0 ? (
-                        teamMembers.map(user => (
-                            <Badge key={user.userId} variant="secondary" className="gap-1.5 p-1 pl-2 rounded-full">
-                                <Avatar className="h-5 w-5"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
-                                <span className="font-medium">{user.displayName}</span>
-                            </Badge>
-                        ))
-                    ) : <p className="text-sm text-muted-foreground italic px-2">No other members.</p>}
-                    </div>
+            <CardContent className="flex-grow space-y-2">
+                <p className="text-sm font-medium text-muted-foreground">Members</p>
+                <div className="space-y-2">
+                    {teamMembers.map(user => (
+                        <Card 
+                            key={user.userId} 
+                            onClick={() => handleAdminToggle(user.userId)}
+                            className={cn(
+                                "p-2 cursor-pointer hover:bg-accent",
+                                (team.teamAdmins || []).includes(user.userId) && "ring-2 ring-primary"
+                            )}
+                        >
+                            <div className="flex items-center gap-3">
+                                <Avatar className="h-8 w-8">
+                                    <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
+                                    <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                    <p className="font-medium text-sm">{user.displayName}</p>
+                                    <p className="text-xs text-muted-foreground">{user.email}</p>
+                                </div>
+                            </div>
+                        </Card>
+                    ))}
+                    {teamMembers.length === 0 && <p className="text-sm text-muted-foreground italic text-center p-4">No members assigned.</p>}
                 </div>
             </CardContent>
         </Card>
@@ -150,37 +151,30 @@ export function TeamManagement() {
   const { users, teams, addTeam, updateTeam, deleteTeam } = useUser();
   const { toast } = useToast();
 
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
 
   const openAddDialog = () => {
-    setEditingTeam(null);
-    setIsFormOpen(true);
-  };
-
-  const openEditDialog = (team: Team) => {
-    setEditingTeam(team);
-    setIsFormOpen(true);
+    setIsAddDialogOpen(true);
   };
 
   const openDeleteDialog = (team: Team) => {
     setEditingTeam(team);
     setIsDeleteDialogOpen(true);
   };
-  
-  const closeForm = () => {
-      setIsFormOpen(false);
-      setEditingTeam(null);
-  }
+
+  const handleUpdate = async (teamId: string, data: Partial<Team>) => {
+    await updateTeam(teamId, data);
+  };
 
   const handleDelete = () => {
     if (!editingTeam) return;
     deleteTeam(editingTeam.id);
     toast({ title: 'Success', description: `Team "${editingTeam.name}" has been deleted.` });
     setIsDeleteDialogOpen(false);
-    closeForm(); // Also close form dialog if it was open
+    setEditingTeam(null);
   };
 
   return (
@@ -196,19 +190,16 @@ export function TeamManagement() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {teams.map(team => (
-                <TeamCard key={team.id} team={team} users={users} onEdit={openEditDialog} />
+                <TeamCard key={team.id} team={team} allUsers={users} onUpdate={handleUpdate} onDelete={openDeleteDialog} />
             ))}
         </div>
 
-      {isFormOpen && (
-          <TeamFormDialog 
-            isOpen={isFormOpen}
-            onClose={closeForm}
-            team={editingTeam}
+      {isAddDialogOpen && (
+          <AddTeamDialog 
+            isOpen={isAddDialogOpen}
+            onClose={() => setIsAddDialogOpen(false)}
             allUsers={users}
             addTeam={addTeam}
-            updateTeam={updateTeam}
-            onDeleteRequest={openDeleteDialog}
           />
       )}
 
@@ -232,22 +223,18 @@ export function TeamManagement() {
   );
 }
 
-type TeamFormDialogProps = {
+type AddTeamDialogProps = {
     isOpen: boolean;
     onClose: () => void;
-    team: Team | null;
     allUsers: User[];
     addTeam: (teamData: Omit<Team, 'id'>) => Promise<void>;
-    updateTeam: (teamId: string, teamData: Partial<Team>) => Promise<void>;
-    onDeleteRequest: (team: Team) => void;
 };
 
-function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, onDeleteRequest }: TeamFormDialogProps) {
-    const [name, setName] = useState(team?.name || '');
-    const [icon, setIcon] = useState<string>(team?.icon || 'group');
-    const [color, setColor] = useState<string>(team?.color || '#64748B');
-    const [members, setMembers] = useState<string[]>(team?.members || []);
-    const [teamAdmins, setTeamAdmins] = useState<string[]>(team?.teamAdmins || []);
+function AddTeamDialog({ isOpen, onClose, allUsers, addTeam }: AddTeamDialogProps) {
+    const [name, setName] = useState('');
+    const [icon, setIcon] = useState<string>('group');
+    const [color, setColor] = useState<string>('#64748B');
+    const [members, setMembers] = useState<string[]>([]);
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
     const [isMemberPopoverOpen, setIsMemberPopoverOpen] = useState(false);
@@ -256,22 +243,7 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
     const { toast } = useToast();
 
     const handleMemberToggleInPopover = (userId: string, isChecked: boolean) => {
-        setMembers(prev => {
-            const updatedMembers = isChecked ? [...prev, userId] : prev.filter(id => id !== userId);
-            // If a user is removed from members, also remove them from admins
-            if (!isChecked) {
-                setTeamAdmins(currentAdmins => currentAdmins.filter(id => id !== userId));
-            }
-            return updatedMembers;
-        });
-    };
-
-    const handleAdminToggle = (userId: string) => {
-        setTeamAdmins(prev => 
-            prev.includes(userId) 
-                ? prev.filter(id => id !== userId) 
-                : [...prev, userId]
-        );
+        setMembers(prev => isChecked ? [...prev, userId] : prev.filter(id => id !== userId));
     };
 
     const handleSave = () => {
@@ -285,26 +257,18 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
             icon,
             color,
             members,
-            teamAdmins,
+            teamAdmins: [],
+            locationCheckManagers: [],
+            allBadges: [],
+            badgeCollections: [],
+            pinnedLocations: [],
+            checkLocations: [],
+            locationAliases: {},
+            workstations: [],
+            eventTemplates: [],
         };
-
-        if (team) { // Editing
-            updateTeam(team.id, teamData);
-            toast({ title: "Success", description: `Team "${name}" updated.` });
-        } else { // Creating
-            addTeam({
-                ...teamData,
-                locationCheckManagers: [],
-                allBadges: [],
-                badgeCollections: [],
-                pinnedLocations: [],
-                checkLocations: [],
-                locationAliases: {},
-                workstations: [],
-                eventTemplates: [],
-            });
-             toast({ title: "Success", description: `Team "${name}" created.` });
-        }
+        addTeam(teamData);
+        toast({ title: "Success", description: `Team "${name}" created.` });
         onClose();
     };
 
@@ -326,18 +290,7 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <DialogContent className="max-w-md">
-                 <div className="absolute top-4 right-4 flex items-center gap-1">
-                    {team && (
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                            onClick={() => onDeleteRequest(team)}
-                        >
-                            <GoogleSymbol name="delete" className="text-xl" />
-                            <span className="sr-only">Delete team</span>
-                        </Button>
-                    )}
+                 <div className="absolute top-4 right-4">
                     <Button 
                         variant="ghost" 
                         size="icon" 
@@ -349,8 +302,8 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
                     </Button>
                 </div>
                 <DialogHeader>
-                    <DialogTitle>{team ? 'Edit Team' : 'New Team'}</DialogTitle>
-                    <DialogDescription>Manage the team's name, icon, and members.</DialogDescription>
+                    <DialogTitle>New Team</DialogTitle>
+                    <DialogDescription>Create a new team and assign its initial members.</DialogDescription>
                 </DialogHeader>
 
                 <div className="grid gap-6 pt-2">
@@ -377,7 +330,7 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
                                     </div>
                                     <ScrollArea className="h-64">
                                     <div className="grid grid-cols-6 gap-1 p-2">
-                                        {filteredIcons.slice(0, 300).map((iconName) => ( // limit to 300 for performance
+                                        {filteredIcons.slice(0, 300).map((iconName) => (
                                         <Button
                                             key={iconName}
                                             variant={icon === iconName ? "default" : "ghost"}
@@ -410,40 +363,37 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
                             placeholder="Team Name"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            className="text-lg font-semibold flex-1 border-none focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-auto"
+                            className="text-lg font-semibold flex-1"
                         />
                     </div>
                     
                     <div className="space-y-2">
-                        <div className="flex items-start gap-2 rounded-md border bg-muted/50 p-2">
-                           
-                            <Popover open={isMemberPopoverOpen} onOpenChange={setIsMemberPopoverOpen}>
-                                <PopoverTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 mt-1">
-                                        <GoogleSymbol name="add_circle" className="text-2xl" />
-                                        <span className="sr-only">Add or remove members</span>
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-[300px] p-0" align="start">
-                                    <div className="p-2">
-                                        <Input
-                                        placeholder="Search users..."
-                                        value={memberSearch}
-                                        onChange={(e) => setMemberSearch(e.target.value)}
-                                        />
-                                    </div>
-                                    <ScrollArea className="h-48">
-                                        <div className="p-1">
-                                        {filteredUsers.map(user => (
-                                            <div
-                                                key={user.userId}
-                                                onClick={() => handleMemberToggleInPopover(user.userId, !members.includes(user.userId))}
-                                                className="flex cursor-pointer items-center gap-2 rounded-md p-2 hover:bg-accent"
-                                            >
-                                            <Checkbox
-                                                checked={members.includes(user.userId)}
-                                                readOnly
-                                            />
+                        <Popover open={isMemberPopoverOpen} onOpenChange={setIsMemberPopoverOpen}>
+                            <PopoverTrigger asChild>
+                                <Button variant="outline" className="w-full justify-start">
+                                    <GoogleSymbol name="group_add" className="mr-2" />
+                                    {members.length > 0 ? `${members.length} members selected` : 'Select Members'}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[300px] p-0" align="start">
+                                <div className="p-2">
+                                    <Input
+                                    placeholder="Search users..."
+                                    value={memberSearch}
+                                    onChange={(e) => setMemberSearch(e.target.value)}
+                                    />
+                                </div>
+                                <ScrollArea className="h-48">
+                                    <div className="p-1">
+                                    {filteredUsers.map(user => (
+                                        <div
+                                            key={user.userId}
+                                            onClick={() => handleMemberToggleInPopover(user.userId, !members.includes(user.userId))}
+                                            className="flex cursor-pointer items-center gap-2 rounded-md p-2 hover:bg-accent"
+                                        >
+                                            <div className={cn("w-4 h-4 rounded-sm border border-primary flex items-center justify-center", members.includes(user.userId) && "bg-primary text-primary-foreground")}>
+                                                {members.includes(user.userId) && <GoogleSymbol name="check" className="text-xs" />}
+                                            </div>
                                             <Avatar className="h-8 w-8">
                                                 <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
                                                 <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
@@ -452,40 +402,12 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
                                                 <p className="text-sm font-medium">{user.displayName}</p>
                                                 <p className="text-xs text-muted-foreground">{user.email}</p>
                                             </div>
-                                            </div>
-                                        ))}
                                         </div>
-                                    </ScrollArea>
-                                </PopoverContent>
-                            </Popover>
-
-                            <div className="flex min-h-[40px] flex-wrap items-center gap-2 flex-1">
-                                {members.length > 0 ? (
-                                members.map(userId => {
-                                    const user = allUsers.find(u => u.userId === userId);
-                                    if (!user) return null;
-                                    const isAdmin = teamAdmins.includes(userId);
-                                    return (
-                                    <Badge 
-                                        key={user.userId} 
-                                        variant={isAdmin ? 'default' : 'secondary'}
-                                        className={cn("gap-1.5 p-1 pl-2 cursor-pointer rounded-full", isAdmin && "shadow-md")}
-                                        onClick={() => handleAdminToggle(userId)}
-                                    >
-                                        <Avatar className="h-5 w-5">
-                                            <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
-                                            <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                                        </Avatar>
-                                        <span className="font-medium">{user.displayName}</span>
-                                    </Badge>
-                                    );
-                                })
-                                ) : (
-                                <p className="w-full text-center text-sm text-muted-foreground">No members yet. Click '+' to add.</p>
-                                )}
-                            </div>
-                        </div>
-                         <p className="text-xs text-muted-foreground text-right pr-2">Click member pills to toggle Team Admin status.</p>
+                                    ))}
+                                    </div>
+                                </ScrollArea>
+                            </PopoverContent>
+                        </Popover>
                     </div>
                 </div>
             </DialogContent>
