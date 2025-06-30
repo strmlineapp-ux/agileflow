@@ -1,8 +1,9 @@
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useUser } from '@/context/user-context';
-import { type Team, type User } from '@/types';
+import { type Team, type User, type AppTab } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -24,6 +25,23 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { googleSymbolNames } from '@/lib/google-symbols';
+import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProps } from 'react-beautiful-dnd';
+
+// Wrapper to fix issues with react-beautiful-dnd and React 18 Strict Mode
+const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
+  const [enabled, setEnabled] = useState(false);
+  useEffect(() => {
+    const animation = requestAnimationFrame(() => setEnabled(true));
+    return () => {
+      cancelAnimationFrame(animation);
+      setEnabled(false);
+    };
+  }, []);
+  if (!enabled) {
+    return null;
+  }
+  return <Droppable {...props}>{children}</Droppable>;
+};
 
 const predefinedColors = [
     '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
@@ -147,14 +165,34 @@ function TeamCard({ team, allUsers, onUpdate, onDelete }: { team: Team, allUsers
     );
 }
 
-export function TeamManagement() {
-  const { users, teams, addTeam, updateTeam, deleteTeam } = useUser();
+export function TeamManagement({ tab }: { tab: AppTab }) {
+  const { users, teams, addTeam, updateTeam, deleteTeam, updateAppTab } = useUser();
   const { toast } = useToast();
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
+
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const titleInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isEditingTitle) titleInputRef.current?.focus();
+  }, [isEditingTitle]);
+
+  const handleSaveTitle = () => {
+    const newName = titleInputRef.current?.value.trim();
+    if (newName && newName !== tab.name) {
+      updateAppTab(tab.id, { name: newName });
+    }
+    setIsEditingTitle(false);
+  };
+  
+  const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') handleSaveTitle();
+    else if (e.key === 'Escape') setIsEditingTitle(false);
+  };
 
   const openAddDialog = () => {
     setIsAddDialogOpen(true);
@@ -176,23 +214,94 @@ export function TeamManagement() {
     setIsDeleteDialogOpen(false);
     setEditingTeam(null);
   };
+  
+  const handleDuplicateTeam = (sourceTeam: Team) => {
+    const newName = `${sourceTeam.name} (Copy)`;
+    if (teams.some(t => t.name === newName)) {
+        toast({ variant: 'destructive', title: 'Error', description: `A team named "${newName}" already exists.` });
+        return;
+    }
+    const newTeamData: Omit<Team, 'id'> = {
+        ...JSON.parse(JSON.stringify(sourceTeam)), // Deep copy
+        name: newName,
+    };
+    addTeam(newTeamData);
+    toast({ title: 'Success', description: `Team "${newName}" created.` });
+  };
+  
+  const onDragEnd = (result: DropResult) => {
+      const { source, destination, draggableId } = result;
+      if (!destination) return;
+  
+      if (destination.droppableId === 'duplicate-team-zone') {
+          const teamToDuplicate = teams.find(t => t.id === draggableId);
+          if (teamToDuplicate) {
+            handleDuplicateTeam(teamToDuplicate);
+          }
+          return;
+      }
+  
+      if (source.droppableId === 'teams-list' && destination.droppableId === 'teams-list') {
+          // Reordering logic would go here if needed in the future
+      }
+  };
 
   return (
     <>
         <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
-                <h2 className="text-2xl font-semibold tracking-tight">Manage Teams</h2>
-                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={openAddDialog}>
-                    <GoogleSymbol name="add_circle" className="text-xl" />
-                    <span className="sr-only">New Team</span>
-                </Button>
+                {isEditingTitle ? (
+                  <Input ref={titleInputRef} defaultValue={tab.name} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
+                ) : (
+                  <h2 className="text-2xl font-semibold tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
+                )}
+                <DragDropContext onDragEnd={onDragEnd}>
+                    <StrictModeDroppable droppableId="duplicate-team-zone">
+                        {(provided, snapshot) => (
+                            <div
+                                ref={provided.innerRef}
+                                {...provided.droppableProps}
+                                className={cn(
+                                    "rounded-full transition-all p-0.5",
+                                    snapshot.isDraggingOver && "ring-2 ring-primary ring-offset-2 bg-accent"
+                                )}
+                            >
+                                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={openAddDialog}>
+                                    <GoogleSymbol name="add_circle" className="text-xl" />
+                                    <span className="sr-only">New Team or Drop to Duplicate</span>
+                                </Button>
+                            </div>
+                        )}
+                    </StrictModeDroppable>
+                </DragDropContext>
             </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {teams.map(team => (
-                <TeamCard key={team.id} team={team} allUsers={users} onUpdate={handleUpdate} onDelete={openDeleteDialog} />
-            ))}
-        </div>
+        <DragDropContext onDragEnd={onDragEnd}>
+            <StrictModeDroppable droppableId="teams-list">
+                {(provided) => (
+                     <div 
+                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                    >
+                        {teams.map((team, index) => (
+                             <Draggable key={team.id} draggableId={team.id} index={index}>
+                                {(provided) => (
+                                    <div
+                                        ref={provided.innerRef}
+                                        {...provided.draggableProps}
+                                        {...provided.dragHandleProps}
+                                    >
+                                        <TeamCard team={team} allUsers={users} onUpdate={handleUpdate} onDelete={openDeleteDialog} />
+                                    </div>
+                                )}
+                            </Draggable>
+                        ))}
+                        {provided.placeholder}
+                    </div>
+                )}
+            </StrictModeDroppable>
+        </DragDropContext>
 
       {isAddDialogOpen && (
           <AddTeamDialog 

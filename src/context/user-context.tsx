@@ -3,7 +3,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
-import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge } from '@/types';
+import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab } from '@/types';
 import { mockUsers as initialUsers, mockCalendars as initialCalendars, mockEvents as initialEvents, mockLocations as initialLocations, mockTeams, mockAppSettings } from '@/lib/mock-data';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
@@ -43,6 +43,7 @@ interface UserContextType {
   getPriorityDisplay: (badgeId: string) => { label: React.ReactNode, description?: string, color: string, icon?: string } | undefined;
   appSettings: AppSettings;
   updateAppSettings: (settings: Partial<AppSettings>) => Promise<void>;
+  updateAppTab: (tabId: string, tabData: Partial<AppTab>) => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | null>(null);
@@ -244,6 +245,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setAppSettings(current => ({ ...current, ...settings }));
   }, []);
 
+  const updateAppTab = useCallback(async (tabId: string, tabData: Partial<AppTab>) => {
+    await simulateApi();
+    setAppSettings(current => {
+      const newTabs = current.tabs.map(t => t.id === tabId ? { ...t, ...tabData } : t);
+      return { ...current, tabs: newTabs };
+    });
+  }, []);
+
   const linkGoogleCalendar = useCallback(async (userId: string) => {
     const provider = new GoogleAuthProvider();
     provider.addScope('https://www.googleapis.com/auth/calendar.readonly');
@@ -308,13 +317,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     getPriorityDisplay,
     appSettings,
     updateAppSettings,
+    updateAppTab,
   }), [
     loading, realUser, viewAsUser, users, allBadges, allRoles, teams, notifications, userStatusAssignments,
     calendars, events, locations, allBookableLocations, appSettings,
     addTeam, updateTeam, deleteTeam, setNotifications, setUserStatusAssignments, addUser,
     updateUser, linkGoogleCalendar, addCalendar, updateCalendar, deleteCalendar,
     addEvent, updateEvent, addLocation, deleteLocation,
-    getPriorityDisplay, updateAppSettings
+    getPriorityDisplay, updateAppSettings, updateAppTab
   ]);
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

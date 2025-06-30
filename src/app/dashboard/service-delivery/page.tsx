@@ -9,9 +9,10 @@ import { CalendarManagement } from '@/components/service-delivery/calendar-manag
 import { TeamManagement } from '@/components/service-delivery/team-management';
 import { Skeleton } from '@/components/ui/skeleton';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
+import { type AppTab } from '@/types';
 
 // This is a mapping from the componentKey in our AppTab model to the actual component to render.
-const componentMap: Record<string, React.ComponentType> = {
+const componentMap: Record<string, React.ComponentType<{ tab: AppTab }>> = {
   calendars: CalendarManagement,
   teams: TeamManagement,
 };
@@ -54,7 +55,7 @@ export default function ServiceDeliveryPage() {
           const ContentComponent = componentMap[tab.componentKey];
           return (
             <TabsContent key={tab.id} value={tab.id} className="mt-4">
-              {ContentComponent ? <ContentComponent /> : <div>Component for {tab.name} not found.</div>}
+              {ContentComponent ? <ContentComponent tab={tab} /> : <div>Component for {tab.name} not found.</div>}
             </TabsContent>
           );
         })}

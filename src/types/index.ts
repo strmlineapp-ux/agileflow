@@ -1,3 +1,4 @@
+
 import type React from 'react';
 
 export interface LinkGroup {
@@ -142,6 +143,7 @@ export type CalendarId = string;
 export interface SharedCalendar {
   id: CalendarId;
   name: string;
+  icon: string;
   color: string;
   managers?: string[]; // array of userIds who can manage this calendar
   defaultEventTitle?: string;
