@@ -20,7 +20,7 @@ import { Textarea } from '../ui/textarea';
 import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProps } from 'react-beautiful-dnd';
 import { Separator } from '../ui/separator';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Dialog, DialogTitle, DialogContent as DialogContentUI, DialogDescription as DialogDescriptionUI } from '@/components/ui/dialog';
+import { Dialog, DialogTitle, DialogContent as DialogContentUI, DialogDescription as DialogDescriptionUI, DialogHeader } from '@/components/ui/dialog';
 import { Badge as UiBadge } from '@/components/ui/badge';
 
 const predefinedColors = [
