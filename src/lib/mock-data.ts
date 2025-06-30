@@ -19,7 +19,7 @@ export const mockPages: AppPage[] = [
     {
         id: 'page-admin-management',
         name: 'Admin Management',
-        icon: 'admin_panel_settings',
+        icon: 'badge',
         color: '#64748B',
         path: '/dashboard/admin',
         isDynamic: false,
@@ -308,7 +308,7 @@ export const mockTeams: Team[] = [
             description: 'Badges related to the full pipeline of audio and video creation, from directing to post-production.',
             badgeIds: studioProdBadges.map(b => b.id)
         }, pScaleCollection, starRatingCollection, effortScoreCollection],
-        linkedCollectionIds: [],
+        sharedCollectionIds: [],
         pinnedLocations: ['Studio'],
         checkLocations: [],
         locationAliases: {},
@@ -343,7 +343,7 @@ export const mockTeams: Team[] = [
                 ...liveEventsBadges.map(b => b.id),
             ]
         }],
-        linkedCollectionIds: [studioProdCollectionId],
+        sharedCollectionIds: [studioProdCollectionId],
         pinnedLocations: ['Auditorium', 'ACR', 'Event Space 1 (S2)', 'Event Space 2 (S2)', 'Event Space 3 (R7)', 'Event Space 4 (R7)', 'Training Room', 'Apgar', 'Locke'],
         checkLocations: ['Training Room', 'Apgar', 'Locke'],
         locationAliases: {},
@@ -364,7 +364,7 @@ export const mockTeams: Team[] = [
         locationCheckManagers: [],
         allBadges: [],
         badgeCollections: [],
-        linkedCollectionIds: [],
+        sharedCollectionIds: [],
         pinnedLocations: [],
         checkLocations: [],
         locationAliases: {},

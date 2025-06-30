@@ -106,12 +106,22 @@ function TeamCard({
         onUpdate(team.id, { teamAdmins: newAdmins });
     };
 
+    const isSharedWithOtherTeams = team.sharedTeamIds && team.sharedTeamIds.length > 0;
+
     return (
         <Card className={cn("flex flex-col", isSharing && "ring-2 ring-primary ring-offset-2 ring-offset-background")}>
             <CardHeader>
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                          <div className="relative">
+                            {isSharedWithOtherTeams && (
+                                <div 
+                                    className="absolute -top-1 -right-1 h-5 w-5 rounded-full border-2 border-card flex items-center justify-center bg-muted text-muted-foreground"
+                                    title="This team shares resources with other teams"
+                                >
+                                    <GoogleSymbol name="change_circle" style={{ fontSize: '14px' }}/>
+                                </div>
+                            )}
                             <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                                 <PopoverTrigger asChild>
                                     <Button variant="ghost" size="icon" className="h-9 w-9 text-3xl">
@@ -464,7 +474,7 @@ function AddTeamDialog({ isOpen, onClose, allUsers, addTeam }: AddTeamDialogProp
             locationCheckManagers: [],
             allBadges: [],
             badgeCollections: [],
-            linkedCollectionIds: [],
+            sharedCollectionIds: [],
             pinnedLocations: [],
             checkLocations: [],
             locationAliases: {},

@@ -121,7 +121,7 @@ export interface Team {
   locationCheckManagers: string[]; // array of userIds who can manage check locations
   allBadges: Badge[]; // The single source of truth for all badges in this team
   badgeCollections: BadgeCollection[]; // Groups of badges, containing badge IDs
-  linkedCollectionIds?: string[];
+  sharedCollectionIds?: string[];
   pinnedLocations: string[]; // array of location names
   checkLocations: string[]; // subset of pinnedLocations designated for daily checks
   locationAliases?: { [key:string]: string };

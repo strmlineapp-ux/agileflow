@@ -81,13 +81,13 @@ This pattern describes how a single entity (like a Badge or Badge Collection) ca
 
 This pattern provides a fast, intuitive way for users to duplicate complex entities using a drag-and-drop gesture, significantly speeding up configuration workflows.
 
--   **Trigger**: Dragging a configured entity (e.g., a "Page" card).
+-   **Trigger**: Dragging a configured entity (e.g., a "Page" card, "Calendar" card, or "Badge").
 -   **Interaction**: A designated "Add New" icon or button acts as a drop zone. While an entity is being dragged, this drop zone becomes highlighted (e.g., with a colored ring) to indicate it can accept a drop.
 -   **Behavior**:
     -   Dropping the entity onto the zone creates a deep, independent copy of the original.
     -   The new entity is given a new unique ID and a modified name (e.g., with `(Copy)` appended) to distinguish it from the original.
     -   The new entity is typically placed immediately after the original in the list.
--   **Application**: Used for duplicating Pages or other complex entities to serve as a starting point for a new configuration.
+-   **Application**: Used for duplicating Pages, Calendars, Teams, and Badges to serve as a starting point for a new configuration.
 
 ---
 
