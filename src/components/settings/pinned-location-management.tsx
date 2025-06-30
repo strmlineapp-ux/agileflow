@@ -1,13 +1,13 @@
 
 
-"use client";
+'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useUser } from '@/context/user-context';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { type Team } from '@/types';
+import { type Team, type AppTab } from '@/types';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -17,8 +17,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { LocationCheckManagerManagement } from '../teams/location-check-manager-management';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 
-export function PinnedLocationManagement({ team }: { team: Team }) {
-  const { viewAsUser, locations, updateTeam } = useUser();
+export function PinnedLocationManagement({ team, tab }: { team: Team, tab: AppTab }) {
+  const { viewAsUser, locations, updateTeam, updateAppTab } = useUser();
   const { toast } = useToast();
   
   const [searchTerm, setSearchTerm] = useState('');
@@ -27,10 +27,30 @@ export function PinnedLocationManagement({ team }: { team: Team }) {
   const [isAliasDialogOpen, setIsAliasDialogOpen] = useState(false);
   const [editingLocationName, setEditingLocationName] = useState<string | null>(null);
   const [tempAlias, setTempAlias] = useState('');
+  
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const titleInputRef = useRef<HTMLInputElement>(null);
 
   const pinnedLocationNames = team.pinnedLocations || [];
   const checkLocationNames = new Set(team.checkLocations || []);
   const canManage = viewAsUser.isAdmin || team.teamAdmins?.includes(viewAsUser.userId);
+
+  useEffect(() => {
+    if (isEditingTitle) titleInputRef.current?.focus();
+  }, [isEditingTitle]);
+
+  const handleSaveTitle = () => {
+    const newName = titleInputRef.current?.value.trim();
+    if (newName && newName !== tab.name) {
+      updateAppTab(tab.id, { name: newName });
+    }
+    setIsEditingTitle(false);
+  };
+  
+  const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') handleSaveTitle();
+    else if (e.key === 'Escape') setIsEditingTitle(false);
+  };
 
   const availableToPin = useMemo(() => {
     return locations
@@ -109,6 +129,21 @@ export function PinnedLocationManagement({ team }: { team: Team }) {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center gap-2 mb-6">
+          {isEditingTitle ? (
+              <Input
+                  ref={titleInputRef}
+                  defaultValue={tab.name}
+                  onBlur={handleSaveTitle}
+                  onKeyDown={handleTitleKeyDown}
+                  className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+              />
+          ) : (
+              <h2 className="text-2xl font-semibold tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>
+                  {tab.name}
+              </h2>
+          )}
+      </div>
       <LocationCheckManagerManagement team={team} />
       <Card>
         <CardHeader>

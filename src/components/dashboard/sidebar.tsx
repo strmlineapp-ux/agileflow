@@ -31,7 +31,6 @@ export function Sidebar() {
   }, [viewAsUser, teams, allRoles]);
 
   const mainNavItems = [
-    { href: '/dashboard/admin', icon: 'shield_person', label: 'Admin', visible: viewAsUser.isAdmin },
     { href: '/dashboard/calendar', icon: 'calendar_month', label: 'Calendar', visible: true },
     { href: '/dashboard', icon: 'dashboard', label: 'Overview', visible: true },
     { href: '/dashboard/tasks', icon: 'checklist', label: 'Tasks', visible: true },

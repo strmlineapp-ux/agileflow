@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useUser } from '@/context/user-context';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { type Team, type EventTemplate } from '@/types';
+import { type Team, type EventTemplate, type AppTab } from '@/types';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { Badge } from '../ui/badge';
 import { Popover, PopoverTrigger, PopoverContent } from '../ui/popover';
@@ -177,8 +177,8 @@ function EventTemplateForm({
 }
 
 
-export function EventTemplateManagement({ team }: { team: Team }) {
-  const { updateTeam } = useUser();
+export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab }) {
+  const { updateTeam, updateAppTab } = useUser();
   const { toast } = useToast();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -186,8 +186,28 @@ export function EventTemplateManagement({ team }: { team: Team }) {
 
   const [editingTemplate, setEditingTemplate] = useState<EventTemplate | null>(null);
   const [templateToDelete, setTemplateToDelete] = useState<EventTemplate | null>(null);
+
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const titleInputRef = useRef<HTMLInputElement>(null);
   
   const templates = team.eventTemplates || [];
+  
+  useEffect(() => {
+    if (isEditingTitle) titleInputRef.current?.focus();
+  }, [isEditingTitle]);
+
+  const handleSaveTitle = () => {
+    const newName = titleInputRef.current?.value.trim();
+    if (newName && newName !== tab.name) {
+      updateAppTab(tab.id, { name: newName });
+    }
+    setIsEditingTitle(false);
+  };
+  
+  const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') handleSaveTitle();
+    else if (e.key === 'Escape') setIsEditingTitle(false);
+  };
 
   const openAddDialog = () => {
     setEditingTemplate(null);
@@ -235,7 +255,19 @@ export function EventTemplateManagement({ team }: { team: Team }) {
       <div className="flex items-center justify-between mb-6">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-2xl font-semibold tracking-tight">Event Templates</h2>
+            {isEditingTitle ? (
+                <Input
+                    ref={titleInputRef}
+                    defaultValue={tab.name}
+                    onBlur={handleSaveTitle}
+                    onKeyDown={handleTitleKeyDown}
+                    className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                />
+            ) : (
+                <h2 className="text-2xl font-semibold tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>
+                    {tab.name}
+                </h2>
+            )}
             <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={openAddDialog}>
               <GoogleSymbol name="add_circle" className="text-xl" />
               <span className="sr-only">New Template</span>

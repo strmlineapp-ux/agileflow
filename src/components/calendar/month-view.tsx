@@ -19,7 +19,7 @@ const isHoliday = (day: Date) => {
 
 export const MonthView = React.memo(({ date, containerRef, onEventClick }: { date: Date; containerRef: React.RefObject<HTMLDivElement>; onEventClick: (event: Event) => void; }) => {
     const todayRef = useRef<HTMLDivElement>(null);
-    const { events, calendars, getPriorityDisplay, getEventStrategy } = useUser();
+    const { events, calendars, getPriorityDisplay } = useUser();
 
     const firstDayOfMonth = startOfMonth(date);
     const lastDayOfMonth = endOfMonth(date);
@@ -32,8 +32,6 @@ export const MonthView = React.memo(({ date, containerRef, onEventClick }: { dat
         });
         return map;
     }, [calendars]);
-
-    const eventStrategy = getEventStrategy();
 
     useEffect(() => {
         if (isSameMonth(date, new Date()) && todayRef.current && containerRef.current) {
@@ -100,9 +98,8 @@ export const MonthView = React.memo(({ date, containerRef, onEventClick }: { dat
                     {dayEvents.map(event => {
                          const calendarColors = calendarColorMap[event.calendarId];
                          const priorityInfo = getPriorityDisplay(event.priority);
-                         const usePriorityColor = eventStrategy && eventStrategy.type !== 'symbol' && priorityInfo;
                          
-                         const badgeStyle = usePriorityColor 
+                         const badgeStyle = priorityInfo 
                             ? { backgroundColor: priorityInfo.color, color: getContrastColor(priorityInfo.color) }
                             : { backgroundColor: calendarColors?.bg, color: calendarColors?.text };
 
@@ -123,7 +120,7 @@ export const MonthView = React.memo(({ date, containerRef, onEventClick }: { dat
                 </div>
             </div>
         )
-    }, [getEventsForDay, onEventClick, calendarColorMap, getPriorityDisplay, eventStrategy, startingDayIndex]);
+    }, [getEventsForDay, onEventClick, calendarColorMap, getPriorityDisplay, startingDayIndex]);
 
     let dayCells: React.ReactNode[] = [];
     if (showWeekends) {

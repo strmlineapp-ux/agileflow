@@ -928,7 +928,7 @@ const PagesManagement = ({ tab }: { tab: AppTab }) => {
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const titleInputRef = useRef<HTMLInputElement>(null);
 
-    const lockedPageIds = ['page-admin-management', 'page-service-delivery', 'page-team-management'];
+    const lockedPageIds = ['page-admin-management'];
     const adminPageConfig = appSettings.pages.find(p => p.id === 'page-admin-management');
     const otherPages = appSettings.pages.filter(p => p.id !== 'page-admin-management');
 

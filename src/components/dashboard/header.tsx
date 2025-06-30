@@ -77,12 +77,6 @@ export function Header() {
                     {item.label}
                 </Link>
             ))}
-            {viewAsUser.isAdmin && (
-                 <Link href="/dashboard/admin" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
-                    <GoogleSymbol name="shield_person" className="text-2xl" />
-                    Admin
-                </Link>
-            )}
 
             {/* Dynamic Pages */}
             {visiblePages.map(page => {
