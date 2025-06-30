@@ -1,4 +1,5 @@
 
+
 import type React from 'react';
 
 export interface LinkGroup {
@@ -21,7 +22,7 @@ export interface AppTab {
   icon: string;
   color: string;
   description?: string;
-  componentKey: 'calendars' | 'teams' | 'team_members' | 'badges' | 'locations' | 'workstations' | 'templates';
+  componentKey: 'calendars' | 'teams' | 'team_members' | 'badges' | 'locations' | 'workstations' | 'templates' | 'roles' | 'pages' | 'tabs';
 }
 
 export interface AppPage {
@@ -99,6 +100,7 @@ export type BadgeApplication = 'users' | 'events' | 'tasks' | 'badges';
 
 export interface BadgeCollection {
   id: string;
+  ownerTeamId: string;
   name: string;
   icon: string;
   color: string;
@@ -118,6 +120,7 @@ export interface Team {
   locationCheckManagers: string[]; // array of userIds who can manage check locations
   allBadges: Badge[]; // The single source of truth for all badges in this team
   badgeCollections: BadgeCollection[]; // Groups of badges, containing badge IDs
+  linkedCollectionIds?: string[];
   pinnedLocations: string[]; // array of location names
   checkLocations: string[]; // subset of pinnedLocations designated for daily checks
   locationAliases?: { [key:string]: string };

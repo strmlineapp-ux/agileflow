@@ -1,5 +1,3 @@
-
-
 import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team, type AppSettings, type Badge, type BadgeCollection, type AppTab, type AppPage } from '@/types';
 
 export const mockTabs: AppTab[] = [
@@ -232,6 +230,7 @@ const pScaleBadges: Badge[] = [
 ];
 const pScaleCollection: BadgeCollection = {
     id: pScaleCollectionId,
+    ownerTeamId: 'studio-productions',
     name: 'P# Scale',
     icon: 'rule',
     color: '#94A3B8',
@@ -251,6 +250,7 @@ const starRatingBadges: Badge[] = [
 ];
 const starRatingCollection: BadgeCollection = {
     id: starRatingCollectionId,
+    ownerTeamId: 'studio-productions',
     name: 'Star Rating',
     icon: 'stars',
     color: '#FBBF24',
@@ -268,6 +268,7 @@ const effortScoreBadges: Badge[] = [
 ];
 const effortScoreCollection: BadgeCollection = {
     id: effortScoreCollectionId,
+    ownerTeamId: 'studio-productions',
     name: 'Effort Score',
     icon: 'speed',
     color: '#888888',
@@ -294,6 +295,7 @@ export const mockTeams: Team[] = [
         ],
         badgeCollections: [{
             id: studioProdCollectionId,
+            ownerTeamId: 'studio-productions',
             name: 'Audio & Video Production',
             icon: 'video_settings',
             color: '#10B981',
@@ -302,6 +304,7 @@ export const mockTeams: Team[] = [
             description: 'Badges related to the full pipeline of audio and video creation, from directing to post-production.',
             badgeIds: studioProdBadges.map(b => b.id)
         }, pScaleCollection, starRatingCollection, effortScoreCollection],
+        linkedCollectionIds: [],
         pinnedLocations: ['Studio'],
         checkLocations: [],
         locationAliases: {},
@@ -324,6 +327,7 @@ export const mockTeams: Team[] = [
         ],
         badgeCollections: [{
             id: liveEventsCollectionId,
+            ownerTeamId: 'live-events',
             name: 'Skills',
             icon: 'palette',
             color: '#64748B',
@@ -336,6 +340,7 @@ export const mockTeams: Team[] = [
                 'badge-audio',  // Linked from studio productions
             ]
         }],
+        linkedCollectionIds: [],
         pinnedLocations: ['Auditorium', 'ACR', 'Event Space 1 (S2)', 'Event Space 2 (S2)', 'Event Space 3 (R7)', 'Event Space 4 (R7)', 'Training Room', 'Apgar', 'Locke'],
         checkLocations: ['Training Room', 'Apgar', 'Locke'],
         locationAliases: {},
@@ -355,6 +360,7 @@ export const mockTeams: Team[] = [
         locationCheckManagers: [],
         allBadges: [],
         badgeCollections: [],
+        linkedCollectionIds: [],
         pinnedLocations: [],
         checkLocations: [],
         locationAliases: {},

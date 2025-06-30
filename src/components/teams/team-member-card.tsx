@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { type User, type Team } from '@/types';
 import { useUser } from '@/context/user-context';
 import { useToast } from '@/hooks/use-toast';
@@ -19,6 +19,13 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
   
   const canManageRoles = viewAsUser.isAdmin || team.teamAdmins?.includes(viewAsUser.userId);
   const teamBadgeNames = team.allBadges.map(b => b.name);
+
+  const userAssignableBadges = useMemo(() => {
+    const userBadgeCollectionIds = new Set(
+        team.badgeCollections.filter(c => c.applications?.includes('users')).map(c => c.id)
+    );
+    return team.allBadges.filter(b => userBadgeCollectionIds.has(b.ownerCollectionId));
+  }, [team.badgeCollections, team.allBadges]);
 
   const handleToggleRole = async (badgeName: string) => {
     if (!canManageRoles) {
@@ -62,7 +69,7 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
           <div className="mt-4 space-y-2">
             <h4 className="text-sm font-medium">Team Badges</h4>
             <div className="flex flex-wrap gap-1.5 min-h-[24px] rounded-md border p-2 bg-muted/20">
-              {team.allBadges.length > 0 ? team.allBadges.map(badge => {
+              {userAssignableBadges.length > 0 ? userAssignableBadges.map(badge => {
                 const isAssigned = (member.roles || []).includes(badge.name);
                 return (
                   <TooltipProvider key={badge.id}>
@@ -89,7 +96,7 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
                   </TooltipProvider>
                 )
               }) : (
-                <p className="text-xs text-muted-foreground italic w-full text-center">No badges configured for this team.</p>
+                <p className="text-xs text-muted-foreground italic w-full text-center">No user-assignable badges configured for this team.</p>
               )}
             </div>
           </div>
