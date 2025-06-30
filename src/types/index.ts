@@ -43,6 +43,7 @@ export interface AppPage {
 export interface AppSettings {
   customAdminRoles: CustomAdminRole[];
   linkGroups: Record<string, LinkGroup>;
+  teamLinkGroups?: Record<string, LinkGroup>;
   pages: AppPage[];
   tabs: AppTab[];
   strategyLabel?: string; // This is now legacy but kept for now.
@@ -115,6 +116,7 @@ export interface Team {
   name: string;
   icon: string;
   color: string;
+  linkGroupId?: string;
   members: string[]; // array of userIds
   teamAdmins?: string[]; // array of userIds who are admins for this team
   locationCheckManagers: string[]; // array of userIds who can manage check locations

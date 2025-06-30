@@ -331,7 +331,7 @@ function CustomRoleCard({
                 <div className="flex-1">
                     {isEditingName ? (<Input ref={nameInputRef} defaultValue={role.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 text-2xl font-semibold leading-none tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>) : (<CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer">{role.name}</CardTitle>)}
                 </div>
-                <div className="flex items-center">
+                <div className={cn("flex items-center", !canLink && "gap-0")}>
                     <TooltipProvider>
                         <Tooltip><TooltipTrigger asChild><AddUserToRoleButton usersToAdd={unassignedUsers} onAdd={handleRoleToggle} roleName={role.name} /></TooltipTrigger><TooltipContent>Assign User</TooltipContent></Tooltip>
                         {canLink && <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => onLink(role.id)}><GoogleSymbol name="link" /></Button></TooltipTrigger><TooltipContent>Link Role</TooltipContent></Tooltip>}
@@ -714,7 +714,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                         <ScrollArea className="h-64"><div className="p-1 space-y-1">{filteredUsers.map(user => {
                           const isSelected = access.users.includes(user.userId);
                           return (
-                            <div key={user.userId} className={cn("flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer", !isSelected && "text-muted-foreground")} style={{ color: isSelected ? 'hsl(var(--primary))' : undefined }} onClick={() => handleToggle('users', user.userId)}>
+                            <div key={user.userId} className="flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer" style={{ color: isSelected ? 'hsl(var(--primary))' : undefined }} onClick={() => handleToggle('users', user.userId)}>
                               <Avatar className="h-7 w-7"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0,2)}</AvatarFallback></Avatar>
                               <span className="font-medium">{user.displayName}</span>
                             </div>
@@ -730,7 +730,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                         <ScrollArea className="h-64"><div className="p-1 space-y-1">{filteredTeams.map(team => {
                           const isSelected = access.teams.includes(team.id);
                           return (
-                            <div key={team.id} className={cn("flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer", !isSelected && "text-muted-foreground")} style={{ color: isSelected ? team.color : undefined }} onClick={() => handleToggle('teams', team.id)}>
+                            <div key={team.id} className="flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer" style={{ color: isSelected ? team.color : undefined }} onClick={() => handleToggle('teams', team.id)}>
                               <GoogleSymbol name={team.icon} className="text-xl" />
                               <span className="font-medium">{team.name}</span>
                             </div>
@@ -746,7 +746,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                         <ScrollArea className="h-64"><div className="p-1 space-y-1">{filteredRoles.map(role => {
                           const isSelected = access.roles.includes(role.name);
                           return (
-                            <div key={role.id} className={cn("flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer", !isSelected && "text-muted-foreground")} style={{ color: isSelected ? role.color : undefined }} onClick={() => handleToggle('roles', role.name)}>
+                            <div key={role.id} className="flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer" style={{ color: isSelected ? role.color : undefined }} onClick={() => handleToggle('roles', role.name)}>
                               <GoogleSymbol name={role.icon} className="text-xl" />
                               <span className="font-medium">{role.name}</span>
                             </div>
@@ -793,10 +793,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
               return (
                 <div 
                     key={tab.id} 
-                    className={cn(
-                        "flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer",
-                        !isAssociated && "text-muted-foreground"
-                    )}
+                    className="flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer"
                     style={{ color: isAssociated ? tab.color : undefined }}
                     onClick={() => handleToggle(tab.id)}
                 >
@@ -813,7 +810,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
 }
 
 
-function PageCard({ page, onUpdate, onDelete }: { page: AppPage; onUpdate: (id: string, data: Partial<AppPage>) => void; onDelete: (id: string) => void; }) {
+function PageCard({ page, onUpdate, onDelete, isLocked = false }: { page: AppPage; onUpdate: (id: string, data: Partial<AppPage>) => void; onDelete: (id: string) => void; isLocked?: boolean; }) {
     const [isEditingName, setIsEditingName] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
@@ -876,20 +873,26 @@ function PageCard({ page, onUpdate, onDelete }: { page: AppPage; onUpdate: (id: 
                             ) : (
                                 <CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer">{page.name}</CardTitle>
                             )}
-                            <PageAccessControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
-                            <PageTabsControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
+                            {!isLocked && (
+                                <>
+                                    <PageAccessControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
+                                    <PageTabsControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
+                                </>
+                            )}
                         </div>
                     </div>
-                     <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => onDelete(page.id)}>
-                                    <GoogleSymbol name="delete" />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent><p>Delete Page</p></TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
+                    {!isLocked && (
+                         <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => onDelete(page.id)}>
+                                        <GoogleSymbol name="delete" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent><p>Delete Page</p></TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    )}
                 </div>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -914,6 +917,9 @@ const PagesManagement = ({ tab }: { tab: AppTab }) => {
     const { toast } = useToast();
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const titleInputRef = useRef<HTMLInputElement>(null);
+
+    const adminPageConfig = appSettings.pages.find(p => p.id === 'page-admin-management');
+    const otherPages = appSettings.pages.filter(p => p.id !== 'page-admin-management');
 
     useEffect(() => {
         if (isEditingTitle) titleInputRef.current?.focus();
@@ -987,10 +993,10 @@ const PagesManagement = ({ tab }: { tab: AppTab }) => {
         if (source.droppableId === 'pages-list' && destination.droppableId === 'pages-list') {
             if (source.index === destination.index) return;
 
-            const reorderedPages = Array.from(appSettings.pages);
+            const reorderedPages = Array.from(otherPages);
             const [movedPage] = reorderedPages.splice(source.index, 1);
             reorderedPages.splice(destination.index, 0, movedPage);
-            updateAppSettings({ pages: reorderedPages });
+            updateAppSettings({ pages: [adminPageConfig!, ...reorderedPages] });
         }
     };
 
@@ -1030,34 +1036,44 @@ const PagesManagement = ({ tab }: { tab: AppTab }) => {
                         )}
                     </StrictModeDroppable>
                 </div>
-                <StrictModeDroppable droppableId="pages-list">
-                    {(provided) => (
-                        <div 
-                            className="grid grid-cols-1 md:grid-cols-2 gap-6"
-                            ref={provided.innerRef}
-                            {...provided.droppableProps}
-                        >
-                            {appSettings.pages.map((page, index) => (
-                                <Draggable key={page.id} draggableId={page.id} index={index}>
-                                    {(provided) => (
-                                        <div 
-                                            ref={provided.innerRef} 
-                                            {...provided.draggableProps} 
-                                            {...provided.dragHandleProps}
-                                        >
-                                            <PageCard
-                                                page={page}
-                                                onUpdate={handleUpdatePage}
-                                                onDelete={handleDeletePage}
-                                            />
-                                        </div>
-                                    )}
-                                </Draggable>
-                            ))}
-                            {provided.placeholder}
-                        </div>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {adminPageConfig && (
+                        <PageCard
+                            page={adminPageConfig}
+                            onUpdate={handleUpdatePage}
+                            onDelete={handleDeletePage}
+                            isLocked
+                        />
                     )}
-                </StrictModeDroppable>
+                    <StrictModeDroppable droppableId="pages-list">
+                        {(provided) => (
+                            <div 
+                                className="contents"
+                                ref={provided.innerRef}
+                                {...provided.droppableProps}
+                            >
+                                {otherPages.map((page, index) => (
+                                    <Draggable key={page.id} draggableId={page.id} index={index}>
+                                        {(provided) => (
+                                            <div 
+                                                ref={provided.innerRef} 
+                                                {...provided.draggableProps} 
+                                                {...provided.dragHandleProps}
+                                            >
+                                                <PageCard
+                                                    page={page}
+                                                    onUpdate={handleUpdatePage}
+                                                    onDelete={handleDeletePage}
+                                                />
+                                            </div>
+                                        )}
+                                    </Draggable>
+                                ))}
+                                {provided.placeholder}
+                            </div>
+                        )}
+                    </StrictModeDroppable>
+                </div>
             </div>
         </DragDropContext>
     );

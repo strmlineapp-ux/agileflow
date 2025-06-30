@@ -69,6 +69,7 @@ export const mockAppSettings: AppSettings = {
     },
   ],
   linkGroups: {},
+  teamLinkGroups: {},
   pages: mockPages,
   tabs: mockTabs,
 };
