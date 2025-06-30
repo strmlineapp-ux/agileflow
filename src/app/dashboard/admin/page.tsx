@@ -1,3 +1,5 @@
+
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -327,9 +329,9 @@ function CustomRoleCard({
                   </div>
                 </div>
                 <div className="flex-1">
-                    {isEditingName ? (<Input ref={nameInputRef} defaultValue={role.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="font-body h-auto p-0 text-2xl font-semibold leading-none tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>) : (<CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer">{role.name}</CardTitle>)}
+                    {isEditingName ? (<Input ref={nameInputRef} defaultValue={role.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 text-2xl font-semibold leading-none tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>) : (<CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer">{role.name}</CardTitle>)}
                 </div>
-                <div className="flex items-center gap-0">
+                <div className="flex items-center">
                     <TooltipProvider>
                         <Tooltip><TooltipTrigger asChild><AddUserToRoleButton usersToAdd={unassignedUsers} onAdd={handleRoleToggle} roleName={role.name} /></TooltipTrigger><TooltipContent>Assign User</TooltipContent></Tooltip>
                         {canLink && <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => onLink(role.id)}><GoogleSymbol name="link" /></Button></TooltipTrigger><TooltipContent>Link Role</TooltipContent></Tooltip>}
@@ -367,13 +369,33 @@ function CustomRoleCard({
     );
 }
 
-const RolesManagement = () => {
+const RolesManagement = ({ tab }: { tab: AppTab }) => {
   const { toast } = useToast();
-  const { users, updateUser, appSettings, updateAppSettings } = useUser();
+  const { users, updateUser, appSettings, updateAppSettings, updateAppTab } = useUser();
   const [is2faDialogOpen, setIs2faDialogOpen] = useState(false);
   const [on2faSuccess, setOn2faSuccess] = useState<(() => void) | null>(null);
   const [twoFactorCode, setTwoFactorCode] = useState('');
   const [linkingState, setLinkingState] = useState<{ roleId: string } | null>(null);
+  
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const titleInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isEditingTitle) titleInputRef.current?.focus();
+  }, [isEditingTitle]);
+
+  const handleSaveTitle = () => {
+    const newName = titleInputRef.current?.value.trim();
+    if (newName && newName !== tab.name) {
+      updateAppTab(tab.id, { name: newName });
+    }
+    setIsEditingTitle(false);
+  };
+  
+  const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') handleSaveTitle();
+    else if (e.key === 'Escape') setIsEditingTitle(false);
+  };
   
   const canLinkRoles = appSettings.customAdminRoles.length > 1;
 
@@ -556,7 +578,11 @@ const RolesManagement = () => {
   return (
     <>
         <div className="flex items-center gap-2 mb-8">
-            <h2 className="text-2xl font-semibold tracking-tight">Roles</h2>
+            {isEditingTitle ? (
+              <Input ref={titleInputRef} defaultValue={tab.name} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
+            ) : (
+              <h2 className="text-2xl font-semibold tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
+            )}
             <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={handleAddCustomRole}>
                 <GoogleSymbol name="add_circle" className="text-xl" />
                 <span className="sr-only">Add New Level</span>
@@ -846,7 +872,7 @@ function PageCard({ page, onUpdate, onDelete }: { page: AppPage; onUpdate: (id: 
                         </div>
                         <div className="flex items-center gap-1">
                             {isEditingName ? (
-                                <Input ref={nameInputRef} defaultValue={page.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>
+                                <Input ref={nameInputRef} defaultValue={page.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 text-2xl font-semibold leading-none tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>
                             ) : (
                                 <CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer">{page.name}</CardTitle>
                             )}
@@ -883,9 +909,28 @@ function PageCard({ page, onUpdate, onDelete }: { page: AppPage; onUpdate: (id: 
     );
 }
 
-const PagesManagement = () => {
-    const { appSettings, updateAppSettings } = useUser();
+const PagesManagement = ({ tab }: { tab: AppTab }) => {
+    const { appSettings, updateAppSettings, updateAppTab } = useUser();
     const { toast } = useToast();
+    const [isEditingTitle, setIsEditingTitle] = useState(false);
+    const titleInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (isEditingTitle) titleInputRef.current?.focus();
+    }, [isEditingTitle]);
+
+    const handleSaveTitle = () => {
+        const newName = titleInputRef.current?.value.trim();
+        if (newName && newName !== tab.name) {
+            updateAppTab(tab.id, { name: newName });
+        }
+        setIsEditingTitle(false);
+    };
+
+    const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') handleSaveTitle();
+        else if (e.key === 'Escape') setIsEditingTitle(false);
+    };
 
     const handleUpdatePage = useCallback((pageId: string, data: Partial<AppPage>) => {
         const newPages = appSettings.pages.map(p => p.id === pageId ? { ...p, ...data } : p);
@@ -953,7 +998,11 @@ const PagesManagement = () => {
         <DragDropContext onDragEnd={onDragEnd}>
             <div className="space-y-8">
                 <div className="flex items-center gap-2">
-                    <h2 className="text-2xl font-semibold tracking-tight">Pages</h2>
+                    {isEditingTitle ? (
+                        <Input ref={titleInputRef} defaultValue={tab.name} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
+                    ) : (
+                        <h2 className="text-2xl font-semibold tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
+                    )}
                     <StrictModeDroppable droppableId="duplicate-page-zone">
                         {(provided, snapshot) => (
                             <div 
@@ -1121,8 +1170,27 @@ function TabItem({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string, data: 
     );
 }
 
-const TabsManagement = () => {
-    const { appSettings, updateAppSettings } = useUser();
+const TabsManagement = ({ tab }: { tab: AppTab }) => {
+    const { appSettings, updateAppSettings, updateAppTab } = useUser();
+    const [isEditingTitle, setIsEditingTitle] = useState(false);
+    const titleInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (isEditingTitle) titleInputRef.current?.focus();
+    }, [isEditingTitle]);
+
+    const handleSaveTitle = () => {
+        const newName = titleInputRef.current?.value.trim();
+        if (newName && newName !== tab.name) {
+            updateAppTab(tab.id, { name: newName });
+        }
+        setIsEditingTitle(false);
+    };
+
+    const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') handleSaveTitle();
+        else if (e.key === 'Escape') setIsEditingTitle(false);
+    };
 
     const handleUpdateTab = useCallback((tabId: string, data: Partial<AppTab>) => {
         const newTabs = appSettings.tabs.map(t => t.id === tabId ? { ...t, ...data } : t);
@@ -1131,7 +1199,13 @@ const TabsManagement = () => {
 
     return (
         <div className="space-y-8">
-            <h2 className="text-2xl font-semibold tracking-tight">Tabs</h2>
+            <div className="flex items-center gap-2">
+              {isEditingTitle ? (
+                  <Input ref={titleInputRef} defaultValue={tab.name} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
+              ) : (
+                  <h2 className="text-2xl font-semibold tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
+              )}
+            </div>
             <Card>
                 <CardContent className="p-0">
                     <div className="divide-y">
@@ -1146,35 +1220,49 @@ const TabsManagement = () => {
 };
 // #endregion
 
+const componentMap: Record<string, React.ComponentType<{ tab: AppTab }>> = {
+  roles: RolesManagement,
+  pages: PagesManagement,
+  tabs: TabsManagement,
+};
+
+const PAGE_ID = 'page-admin-management';
+
 export default function AdminPage() {
-  const { viewAsUser, loading } = useUser();
+  const { viewAsUser, loading, appSettings } = useUser();
   
   if (loading) {
     return <AdminPageSkeleton />;
   }
 
-  if (!viewAsUser.isAdmin) {
+  const pageConfig = appSettings.pages.find(p => p.id === PAGE_ID);
+
+  if (!viewAsUser.isAdmin || !pageConfig) {
     return null; // Navigation is filtered, so this prevents direct URL access.
   }
 
+  const pageTabs = appSettings.tabs.filter(t => pageConfig.associatedTabs.includes(t.id));
+
   return (
     <div className="flex flex-col gap-8">
-      <h1 className="font-headline text-3xl font-semibold">Admin Management</h1>
-      <Tabs defaultValue="roles" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="roles">Roles</TabsTrigger>
-          <TabsTrigger value="pages">Pages</TabsTrigger>
-          <TabsTrigger value="tabs">Tabs</TabsTrigger>
+      <div className="flex items-center gap-3">
+        <GoogleSymbol name={pageConfig.icon} className="text-3xl" style={{color: pageConfig.color}} />
+        <h1 className="font-headline text-3xl font-semibold">{pageConfig.name}</h1>
+      </div>
+      <Tabs defaultValue={pageTabs[0]?.id} className="w-full">
+        <TabsList className={`grid w-full grid-cols-${pageTabs.length}`}>
+          {pageTabs.map(tab => (
+            <TabsTrigger key={tab.id} value={tab.id}>{tab.name}</TabsTrigger>
+          ))}
         </TabsList>
-        <TabsContent value="roles" className="mt-6">
-          <RolesManagement />
-        </TabsContent>
-        <TabsContent value="pages" className="mt-6">
-            <PagesManagement />
-        </TabsContent>
-        <TabsContent value="tabs" className="mt-6">
-            <TabsManagement />
-        </TabsContent>
+        {pageTabs.map(tab => {
+          const ContentComponent = componentMap[tab.componentKey];
+          return (
+            <TabsContent key={tab.id} value={tab.id} className="mt-6">
+              {ContentComponent ? <ContentComponent tab={tab} /> : <div>Component for {tab.name} not found.</div>}
+            </TabsContent>
+          );
+        })}
       </Tabs>
     </div>
   );

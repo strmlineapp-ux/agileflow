@@ -1,4 +1,5 @@
 
+
 # AgileFlow: Design System & UI Patterns
 
 This document outlines the established UI patterns and design choices that ensure a consistent and intuitive user experience across the AgileFlow application. These patterns serve as a guide for both current and future development.
@@ -14,8 +15,8 @@ This pattern allows for seamless, direct text editing within the main applicatio
 - **Trigger:** Clicking directly on a text element (e.g., a section title, a role name).
 - **Interaction:**
     - The text element transforms into an input field.
-    - The input field perfectly matches the font, size, and weight of the original text, ensuring no visual layout shift.
-    - There is no underline or other distracting styling on the input field.
+    - The input field must be styled to perfectly match the font, size, weight, and color of the original text element it replaces.
+    - **Crucially, the input must have a transparent background and no borders or box-shadow**, ensuring it blends seamlessly into the UI.
 - **Behavior:**
     - Typing modifies the text value.
     - Clicking anywhere outside the input field (`onBlur`) or pressing 'Enter' saves the changes and reverts the input back to a standard text element.

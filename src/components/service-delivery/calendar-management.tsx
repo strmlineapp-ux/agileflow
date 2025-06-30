@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -103,7 +104,7 @@ function CalendarCard({ calendar, onUpdate, onDelete }: { calendar: SharedCalend
              <div className="relative">
                 <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                     <PopoverTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-9 w-9 text-3xl" style={{ color: calendar.color }}>
+                        <Button variant="ghost" size="icon" className="h-9 w-9 text-3xl">
                             <GoogleSymbol name={calendar.icon} />
                         </Button>
                     </PopoverTrigger>
@@ -154,11 +155,11 @@ function CalendarCard({ calendar, onUpdate, onDelete }: { calendar: SharedCalend
               defaultValue={calendar.defaultEventTitle}
               onBlur={handleSaveTitle}
               onKeyDown={handleTitleKeyDown}
-              className="text-sm italic"
-              placeholder="e.g., New Event"
+              className="h-auto p-0 text-sm italic border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+              placeholder="Click to set default title"
             />
           ) : (
-            <p className="text-sm italic cursor-text" onClick={() => setIsEditingTitle(true)}>
+            <p className="text-sm italic cursor-text min-h-[20px]" onClick={() => setIsEditingTitle(true)}>
               {calendar.defaultEventTitle || 'Click to set default title'}
             </p>
           )}

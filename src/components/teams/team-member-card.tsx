@@ -3,69 +3,48 @@
 'use client';
 
 import { useState } from 'react';
-import { type User, type Team, type Badge } from '@/types';
+import { type User, type Team } from '@/types';
 import { useUser } from '@/context/user-context';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
 import { Badge as UiBadge } from '@/components/ui/badge';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
 export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
-  const { viewAsUser, updateUser, allRoles } = useUser();
+  const { viewAsUser, updateUser } = useUser();
   const { toast } = useToast();
   
-  const [isRolesDialogOpen, setIsRolesDialogOpen] = useState(false);
-  const [tempRoles, setTempRoles] = useState<string[]>([]);
-
   const canManageRoles = viewAsUser.isAdmin || team.teamAdmins?.includes(viewAsUser.userId);
-
   const teamBadgeNames = team.allBadges.map(b => b.name);
-  const otherRolesForMember = (member.roles || []).filter(roleName => !teamBadgeNames.includes(roleName));
 
-  const handleOpenRolesDialog = () => {
-    setTempRoles(member.roles || []);
-    setIsRolesDialogOpen(true);
-  };
+  const handleToggleRole = async (badgeName: string) => {
+    if (!canManageRoles) {
+        toast({
+            variant: 'destructive',
+            title: 'Permission Denied',
+            description: 'You do not have permission to change badges for this team.'
+        });
+        return;
+    }
 
-  const closeRolesDialog = () => {
-    setIsRolesDialogOpen(false);
-  };
-  
-  const handleToggleRole = (roleToToggle: string) => {
-    setTempRoles(prev => {
-        const newRoles = new Set(prev);
-        if (newRoles.has(roleToToggle)) {
-            newRoles.delete(roleToToggle);
-        } else {
-            newRoles.add(roleToToggle);
-        }
-        return Array.from(newRoles);
-    });
-  };
-  
-  const handleSaveRoles = async () => {
+    const currentBadges = new Set(member.roles?.filter(r => teamBadgeNames.includes(r)) || []);
+    if (currentBadges.has(badgeName)) {
+        currentBadges.delete(badgeName);
+    } else {
+        currentBadges.add(badgeName);
+    }
+    
     const nonTeamRoles = (member.roles || []).filter(role => !teamBadgeNames.includes(role));
-    const newTeamRoles = tempRoles.filter(role => teamBadgeNames.includes(role));
-
-    const finalRoles = [...new Set([...nonTeamRoles, ...newTeamRoles])];
+    const finalRoles = [...new Set([...nonTeamRoles, ...Array.from(currentBadges)])];
 
     await updateUser(member.userId, { roles: finalRoles });
     toast({
-        title: 'Badges Updated',
+        title: 'Badge Updated',
         description: `Badges for ${member.displayName} have been updated.`
     });
-    closeRolesDialog();
   }
 
   return (
@@ -81,103 +60,41 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
         <CardContent>
           <p className="text-sm text-muted-foreground">{member.title}</p>
           <div className="mt-4 space-y-2">
-            <div className="flex items-center gap-1">
-                <h4 className="text-sm font-medium">Team Badges</h4>
-                {canManageRoles && (
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleOpenRolesDialog}>
-                        <GoogleSymbol name="edit" className="text-base" />
-                        <span className="sr-only">Edit badges for {member.displayName}</span>
-                    </Button>
-                )}
-            </div>
-            <div className="flex flex-wrap gap-1 min-h-[24px]">
-              {(member.roles && member.roles.length > 0) ? (
-                (member.roles || []).filter(roleName => teamBadgeNames.includes(roleName)).map(roleName => {
-                    const roleInfo = allRoles.find(r => r.name === roleName);
-                    return (
+            <h4 className="text-sm font-medium">Team Badges</h4>
+            <div className="flex flex-wrap gap-1.5 min-h-[24px] rounded-md border p-2 bg-muted/20">
+              {team.allBadges.length > 0 ? team.allBadges.map(badge => {
+                const isAssigned = (member.roles || []).includes(badge.name);
+                return (
+                  <TooltipProvider key={badge.id}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
                         <UiBadge
-                            key={roleName}
-                            variant="outline"
-                            style={roleInfo ? { color: roleInfo.color, borderColor: roleInfo.color } : {}}
+                            variant={'outline'}
+                            style={isAssigned ? { color: badge.color, borderColor: badge.color } : {}}
                             className={cn(
-                                "rounded-full gap-1.5 pl-2",
-                                !roleInfo && "opacity-50"
+                                'gap-1.5 p-1 px-3 rounded-full text-sm',
+                                isAssigned ? 'border-2' : 'border-dashed opacity-50',
+                                canManageRoles && 'cursor-pointer'
                             )}
+                            onClick={() => canManageRoles && handleToggleRole(badge.name)}
                         >
-                            {roleInfo && <GoogleSymbol name={roleInfo.icon} className="text-sm" />}
-                            <span>{roleName}</span>
+                            <GoogleSymbol name={badge.icon} className="text-base" />
+                            {badge.name}
                         </UiBadge>
-                    )
-                })
-              ) : (
-                <p className="text-xs text-muted-foreground italic">No badges assigned.</p>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {canManageRoles ? (isAssigned ? 'Click to unassign' : 'Click to assign') : badge.description || badge.name}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )
+              }) : (
+                <p className="text-xs text-muted-foreground italic w-full text-center">No badges configured for this team.</p>
               )}
             </div>
           </div>
         </CardContent>
       </Card>
-      
-      <Dialog open={isRolesDialogOpen} onOpenChange={(isOpen) => !isOpen && closeRolesDialog()}>
-        <DialogContent className="max-w-md">
-            <div className="absolute top-4 right-4">
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSaveRoles}>
-                    <GoogleSymbol name="check" className="text-xl" />
-                    <span className="sr-only">Save Roles</span>
-                </Button>
-            </div>
-            <DialogHeader>
-                <DialogTitle>Edit Badges for {member.displayName}</DialogTitle>
-                <DialogDescription>Assign or remove badges specific to the {team.name} team.</DialogDescription>
-            </DialogHeader>
-            <div className="py-2">
-                <div className="flex flex-wrap gap-2 rounded-md border bg-muted/50 p-2 min-h-[56px]">
-                    {team.allBadges.map(badge => {
-                        const isAssigned = tempRoles.includes(badge.name);
-                        return (
-                        <UiBadge
-                            key={badge.id}
-                            variant={'outline'}
-                            style={isAssigned ? { color: badge.color, borderColor: badge.color } : {}}
-                            className={cn(
-                                'gap-1.5 p-1 px-3 cursor-pointer rounded-full text-sm',
-                                isAssigned ? 'border-2' : 'border-dashed'
-                            )}
-                            onClick={() => handleToggleRole(badge.name)}
-                        >
-                            <GoogleSymbol name={badge.icon} className="text-base" />
-                            {badge.name}
-                        </UiBadge>
-                        );
-                    })}
-
-                    {team.allBadges.length > 0 && otherRolesForMember.length > 0 && (
-                        <div className="w-full my-1 border-t"></div>
-                    )}
-
-                    {otherRolesForMember.map(role => (
-                        <TooltipProvider key={role}>
-                            <Tooltip>
-                                <TooltipTrigger>
-                                     <UiBadge
-                                        variant={'outline'}
-                                        className={cn('gap-1.5 p-1 px-3 rounded-full text-sm opacity-50 cursor-not-allowed')}
-                                    >
-                                        {role}
-                                    </UiBadge>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>This role is managed by another team or is a system role.</p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    ))}
-                </div>
-                 <p className="text-xs text-muted-foreground text-right pr-2 mt-2">
-                    Click a pill to toggle the badge.
-                </p>
-            </div>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }
