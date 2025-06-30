@@ -4,7 +4,7 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useUser } from '@/context/user-context';
-import { type Team, type User, type AppTab, type LinkGroup } from '@/types';
+import { type Team, type User, type AppTab } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -23,7 +23,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { cn, getContrastColor } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProps } from 'react-beautiful-dnd';
@@ -58,10 +58,7 @@ function TeamCard({
     onDelete, 
     canShare,
     onShare,
-    onUnshare,
     isSharing,
-    shareGroup,
-    onUpdateShareGroup
 }: { 
     team: Team, 
     allUsers: User[], 
@@ -69,10 +66,7 @@ function TeamCard({
     onDelete: (team: Team) => void,
     canShare: boolean,
     onShare: (teamId: string) => void,
-    onUnshare: (teamId: string) => void,
     isSharing: boolean,
-    shareGroup: LinkGroup | null,
-    onUpdateShareGroup: (groupId: string, newGroup: LinkGroup) => void;
 }) {
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isEditingName, setIsEditingName] = useState(false);
@@ -80,10 +74,6 @@ function TeamCard({
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
     const [iconSearch, setIconSearch] = useState('');
     
-    const [isSharePopoverOpen, setIsSharePopoverOpen] = useState(false);
-    const [isShareIconPopoverOpen, setIsShareIconPopoverOpen] = useState(false);
-    const [isShareColorPopoverOpen, setIsShareColorPopoverOpen] = useState(false);
-
     const teamMembers = team.members.map(id => allUsers.find(u => u.userId === id)).filter(Boolean) as User[];
     
     const filteredIcons = useMemo(() => {
@@ -121,101 +111,29 @@ function TeamCard({
             <CardHeader>
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="relative">
-                             {shareGroup && (
-                                <Popover open={isSharePopoverOpen} onOpenChange={setIsSharePopoverOpen}>
-                                    <PopoverTrigger asChild>
-                                        <div 
-                                            className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full border-2 border-card cursor-pointer flex items-center justify-center z-10" 
-                                            style={{ backgroundColor: shareGroup.color }}
-                                            aria-label="Edit share group"
-                                        >
-                                            <GoogleSymbol name={shareGroup.icon} style={{ fontSize: '14px', color: getContrastColor(shareGroup.color) }}/>
-                                        </div>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-2">
-                                        <div className="flex items-center gap-2">
-                                            <div className="relative">
-                                                <Popover open={isShareIconPopoverOpen} onOpenChange={setIsShareIconPopoverOpen}>
-                                                    <PopoverTrigger asChild>
-                                                        <Button variant="ghost" size="icon" className="h-9 w-9 text-2xl text-muted-foreground hover:text-foreground">
-                                                            <GoogleSymbol name={shareGroup.icon} />
-                                                        </Button>
-                                                    </PopoverTrigger>
-                                                    <PopoverContent className="w-80 p-0">
-                                                        <div className="p-2 border-b">
-                                                            <Input placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} />
-                                                        </div>
-                                                        <ScrollArea className="h-64">
-                                                            <div className="grid grid-cols-6 gap-1 p-2">
-                                                                {filteredIcons.slice(0, 300).map((iconName) => (
-                                                                    <Button
-                                                                        key={iconName}
-                                                                        variant={shareGroup.icon === iconName ? "default" : "ghost"}
-                                                                        size="icon"
-                                                                        onClick={() => { onUpdateShareGroup(team.shareGroupId!, { ...shareGroup, icon: iconName }); setIsShareIconPopoverOpen(false); }}
-                                                                        className="text-2xl"
-                                                                    >
-                                                                        <GoogleSymbol name={iconName} />
-                                                                    </Button>
-                                                                ))}
-                                                            </div>
-                                                        </ScrollArea>
-                                                    </PopoverContent>
-                                                </Popover>
-                                                <Popover open={isShareColorPopoverOpen} onOpenChange={setIsShareColorPopoverOpen}>
-                                                    <PopoverTrigger asChild>
-                                                        <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-popover cursor-pointer" aria-label="Change share group color">
-                                                            <div className="h-full w-full rounded-full" style={{ backgroundColor: shareGroup.color }}/>
-                                                        </div>
-                                                    </PopoverTrigger>
-                                                    <PopoverContent className="w-auto p-2">
-                                                        <div className="grid grid-cols-8 gap-1">
-                                                            {predefinedColors.map(color => (
-                                                                <button key={color} className="h-6 w-6 rounded-full border" style={{ backgroundColor: color }} onClick={() => { onUpdateShareGroup(team.shareGroupId!, { ...shareGroup, color: color }); setIsShareColorPopoverOpen(false); }}/>
-                                                            ))}
-                                                            <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
-                                                                <GoogleSymbol name="colorize" className="text-muted-foreground" />
-                                                                <Input type="color" value={shareGroup.color} onChange={(e) => onUpdateShareGroup(team.shareGroupId!, { ...shareGroup, color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" aria-label="Custom color picker"/>
-                                                            </div>
-                                                        </div>
-                                                    </PopoverContent>
-                                                </Popover>
-                                            </div>
-                                            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-destructive" onClick={() => { onUnshare(team.id); setIsSharePopoverOpen(false); }}>
-                                                <GoogleSymbol name="link_off" className="text-2xl" />
-                                            </Button>
-                                        </div>
-                                    </PopoverContent>
-                                </Popover>
-                            )}
-                             <div className="relative">
-                                <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
-                                    <PopoverTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="h-9 w-9 text-3xl">
-                                            <GoogleSymbol name={team.icon} />
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-80 p-0">
-                                        <div className="p-2 border-b"><Input placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} /></div>
-                                        <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={team.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(team.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
-                                    </PopoverContent>
-                                </Popover>
-                                <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                                    <PopoverTrigger asChild>
-                                        <div className="absolute -bottom-1 -right-0 h-4 w-4 rounded-full border-2 border-card cursor-pointer" style={{ backgroundColor: team.color }} />
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-2">
-                                        <div className="grid grid-cols-8 gap-1">
-                                            {predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdate(team.id, { color: c }); setIsColorPopoverOpen(false);}}/>))}
-                                            <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
-                                                <GoogleSymbol name="colorize" className="text-muted-foreground" />
-                                                <Input type="color" value={team.color} onChange={(e) => onUpdate(team.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/>
-                                            </div>
-                                        </div>
-                                    </PopoverContent>
-                                </Popover>
-                            </div>
+                         <div className="relative">
+                            <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
+                                <PopoverTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-9 w-9 text-3xl">
+                                        <GoogleSymbol name={team.icon} />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-80 p-0">
+                                    <div className="p-2 border-b"><Input placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} /></div>
+                                    <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={team.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(team.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
+                                </PopoverContent>
+                            </Popover>
+                            <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                                <PopoverTrigger asChild>
+                                    <div className="absolute -bottom-1 -right-0 h-4 w-4 rounded-full border-2 border-card cursor-pointer" style={{ backgroundColor: team.color }} />
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-2">
+                                    <div className="grid grid-cols-8 gap-1">
+                                        {predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdate(team.id, { color: c }); setIsColorPopoverOpen(false);}}/>))}
+                                        <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={team.color} onChange={(e) => onUpdate(team.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div>
+                                    </div>
+                                </PopoverContent>
+                            </Popover>
                         </div>
                         <div className="flex-1 min-w-0">
                             {isEditingName ? (
@@ -292,7 +210,7 @@ function TeamCard({
 }
 
 export function TeamManagement({ tab }: { tab: AppTab }) {
-  const { users, teams, addTeam, updateTeam, deleteTeam, updateAppTab, appSettings, updateAppSettings } = useUser();
+  const { users, teams, addTeam, updateTeam, deleteTeam, updateAppTab } = useUser();
   const { toast } = useToast();
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -352,8 +270,7 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
       }
       const newTeamData: Omit<Team, 'id'> = {
           ...JSON.parse(JSON.stringify(sourceTeam)), // Deep copy
-          name: newName,
-          shareGroupId: undefined, // Copies should not be shared
+          sharedTeamIds: [], // Copies should not be shared
       };
       addTeam(newTeamData);
       toast({ title: 'Success', description: `Team "${newName}" created.` });
@@ -365,66 +282,36 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
         return;
     }
     if (sharingState.teamId === teamId) {
-        setSharingState(null);
+        setSharingState(null); // Clicked the same team again, cancel sharing mode
         return;
     }
 
-    const teamsToUpdate = teams.map(t => ({ ...t }));
-    let shareGroupsToUpdate = { ...(appSettings.teamShareGroups || {}) };
-    
-    const sourceTeam = teamsToUpdate.find(t => t.id === sharingState.teamId)!;
-    const targetTeam = teamsToUpdate.find(t => t.id === teamId)!;
+    const sourceTeam = teams.find(t => t.id === sharingState.teamId)!;
+    const targetTeam = teams.find(t => t.id === teamId)!;
 
-    if (!sourceTeam.shareGroupId && !targetTeam.shareGroupId) {
-        const newGroupId = crypto.randomUUID();
-        sourceTeam.shareGroupId = newGroupId;
-        targetTeam.shareGroupId = newGroupId;
-        shareGroupsToUpdate[newGroupId] = { icon: 'link', color: '#64748B' };
-    } else if (sourceTeam.shareGroupId && !targetTeam.shareGroupId) {
-        targetTeam.shareGroupId = sourceTeam.shareGroupId;
-    } else if (!sourceTeam.shareGroupId && targetTeam.shareGroupId) {
-        sourceTeam.shareGroupId = targetTeam.shareGroupId;
-    } else if (sourceTeam.shareGroupId !== targetTeam.shareGroupId) {
-        const targetGroupId = targetTeam.shareGroupId!;
-        const sourceGroupId = sourceTeam.shareGroupId!;
-        teamsToUpdate.forEach(t => {
-            if (t.shareGroupId === targetGroupId) {
-                t.shareGroupId = sourceGroupId;
-            }
-        });
-        delete shareGroupsToUpdate[targetGroupId];
+    // Toggle sharing status
+    const sourceShared = new Set(sourceTeam.sharedTeamIds || []);
+    const targetShared = new Set(targetTeam.sharedTeamIds || []);
+
+    let isNowSharing;
+
+    if (sourceShared.has(targetTeam.id)) {
+        // Unshare
+        sourceShared.delete(targetTeam.id);
+        targetShared.delete(sourceTeam.id);
+        isNowSharing = false;
+    } else {
+        // Share
+        sourceShared.add(targetTeam.id);
+        targetShared.add(sourceTeam.id);
+        isNowSharing = true;
     }
     
-    // This is a simple update, might need more complex logic for reordering if that becomes a feature
-    teamsToUpdate.forEach(updatedTeam => updateTeam(updatedTeam.id, { shareGroupId: updatedTeam.shareGroupId }));
-    updateAppSettings({ teamShareGroups: shareGroupsToUpdate });
+    updateTeam(sourceTeam.id, { sharedTeamIds: Array.from(sourceShared) });
+    updateTeam(targetTeam.id, { sharedTeamIds: Array.from(targetShared) });
+    
+    toast({ title: isNowSharing ? 'Teams Shared' : 'Teams Unshared', description: `Sharing status between "${sourceTeam.name}" and "${targetTeam.name}" has been updated.` });
     setSharingState(null);
-  };
-  
-  const handleUnshareTeam = (teamId: string) => {
-    const teamToUnshare = teams.find(t => t.id === teamId);
-    if (!teamToUnshare || !teamToUnshare.shareGroupId) return;
-
-    const groupId = teamToUnshare.shareGroupId;
-    const teamsInGroup = teams.filter(t => t.shareGroupId === groupId);
-    
-    updateTeam(teamId, { shareGroupId: undefined });
-
-    if (teamsInGroup.length <= 2) {
-        const remainingTeam = teamsInGroup.find(t => t.id !== teamId);
-        if(remainingTeam) {
-            updateTeam(remainingTeam.id, { shareGroupId: undefined });
-        }
-        const newShareGroups = { ...(appSettings.teamShareGroups || {}) };
-        delete newShareGroups[groupId];
-        updateAppSettings({ teamShareGroups: newShareGroups });
-    }
-    toast({ title: 'Team Unshared', description: `"${teamToUnshare.name}" has been unshared from its group.` });
-  };
-  
-  const handleUpdateShareGroup = (groupId: string, newGroup: LinkGroup) => {
-    const newShareGroups = { ...(appSettings.teamShareGroups || {}), [groupId]: newGroup };
-    updateAppSettings({ teamShareGroups: newShareGroups });
   };
   
   const onDragEnd = (result: DropResult) => {
@@ -499,10 +386,7 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
                                         onDelete={openDeleteDialog}
                                         canShare={canShareTeams}
                                         onShare={handleShareClick}
-                                        onUnshare={handleUnshareTeam}
                                         isSharing={sharingState?.teamId === team.id}
-                                        shareGroup={team.shareGroupId ? appSettings.teamShareGroups?.[team.shareGroupId] : null}
-                                        onUpdateShareGroup={handleUpdateShareGroup}
                                     />
                                 </div>
                             )}

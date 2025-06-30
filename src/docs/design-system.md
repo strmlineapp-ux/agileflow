@@ -63,17 +63,17 @@ This is the consistent reference pattern for allowing a user to change both an i
 
 ### 5. Entity Sharing
 
-This pattern describes how a single entity (like a Badge) can exist in multiple contexts (like different Badge Collections) while maintaining a single source of truth.
+This pattern describes how a single entity (like a Badge or Badge Collection) can exist in multiple contexts while maintaining a single source of truth.
 
-- **Mechanism**: Implemented via drag-and-drop or an explicit "Share" action. Dragging an item from its "home" collection to another creates a shared instance, not a copy.
+- **Mechanism**: Implemented via an explicit "Share" action. This creates a shared instance, not a copy.
 - **Visual Cues**:
-  - A shared item is visually distinguished by a `download` icon overlay on its main icon.
-  - The original item (the source of truth) is marked with an `upload` icon overlay.
+  - **Owned & Shared Item**: An item that was created in the current context but is also being used in another context is marked with an `upload` icon overlay. This indicates it is the "source of truth." An owned item that is *not* shared anywhere else does not get an icon.
+  - **Shared-to-You Item**: An item that was created in another context and is being used here is marked with a `downloading` icon overlay.
 - **Behavior**:
-  - Editing a shared item (e.g., changing its name, icon, or color) modifies the original item, and the changes are instantly reflected in all other places where it is shared.
-  - Deleting a *shared* item only removes the share from that specific context. The original and all other shares remain untouched.
+  - Editing a shared item (e.g., changing its name or icon) modifies the original "source of truth" item, and the changes are instantly reflected in all other places where it is shared.
+  - Deleting a *shared-to-you* item only removes the share from that specific context. The original and all other shares remain untouched.
   - Deleting the *original* item is a permanent action that removes the item and all of its shares across the entire application.
-- **Application**: Used for sharing Badges between Badge Collections.
+- **Application**: Used for sharing Badge Collections between Teams.
 
 ---
 
@@ -100,7 +100,7 @@ This pattern provides a clean alternative to checkboxes for selecting multiple i
     -   Clicking an unselected item marks it as selected.
     -   Clicking a selected item deselects it.
 -   **Visual Cues**:
-    -   **Selected State**: The item's text and/or icon changes to a distinct color. This can be the primary theme color or a color associated with the item itself (e.g., a team's brand color).
+    -   **Selected State**: The item's text and/or icon changes to a distinct color. This can be the primary theme color or a color associated with the item itself (e.g., a team's brand color). The background does not change.
     -   **Unselected State**: The item is displayed in a default, muted state (e.g., `text-muted-foreground`).
     -   There is no background color change on hover, providing a cleaner, less "busy" interaction.
 -   **Application**: Ideal for managing associations in popovers, such as assigning users, teams, or roles to a page, or associating tabs with a page.
@@ -112,7 +112,7 @@ This pattern provides a clean alternative to checkboxes for selecting multiple i
 - **Icon Set**: We exclusively use **Google Material Symbols** via the `<GoogleSymbol />` component. This ensures a consistent visual language.
 - **Hover Behavior**: The color of icons on hover is typically determined by their parent element. For example, an icon inside a `<Button variant="ghost">` will change to the primary theme color on hover because the button's text color changes, and the icon inherits that color. This creates a clean and predictable interaction.
 - **Destructive Actions**: Delete or other destructive action icons (like `delete`, `close`, `cancel`) are `text-muted-foreground` by default and become `text-destructive` on hover to provide a clear but not overwhelming visual warning.
-- **Tooltips for Clarity**: Icon-only buttons (those without visible text) should always be wrapped in a `<Tooltip>` to provide context on their function. This is crucial for accessibility and user experience.
+- **Tooltips for Clarity**: Icon-only buttons (those without visible text) must always be wrapped in a `<Tooltip>` to provide context on their function. This is crucial for accessibility and user experience.
 
 ### Theming & Button Styles
 
