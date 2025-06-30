@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -681,7 +679,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                     </TabsList>
                     
                     <TabsContent value="users" className="m-0">
-                        {filteredUsers.length > 7 && (
+                        {filteredUsers.length > 6 && (
                           <div className="p-2 border-b">
                             <Input placeholder="Search users..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                           </div>
@@ -689,7 +687,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                         <ScrollArea className="h-64"><div className="p-1 space-y-1">{filteredUsers.map(user => {
                           const isSelected = access.users.includes(user.userId);
                           return (
-                            <div key={user.userId} className={cn("flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer hover:bg-accent", !isSelected && "text-muted-foreground")} style={{ color: isSelected ? 'hsl(var(--primary))' : undefined }} onClick={() => handleToggle('users', user.userId)}>
+                            <div key={user.userId} className={cn("flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer", !isSelected && "text-muted-foreground")} style={{ color: isSelected ? 'hsl(var(--primary))' : undefined }} onClick={() => handleToggle('users', user.userId)}>
                               <Avatar className="h-7 w-7"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0,2)}</AvatarFallback></Avatar>
                               <span className="font-medium">{user.displayName}</span>
                             </div>
@@ -705,7 +703,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                         <ScrollArea className="h-64"><div className="p-1 space-y-1">{filteredTeams.map(team => {
                           const isSelected = access.teams.includes(team.id);
                           return (
-                            <div key={team.id} className={cn("flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer hover:bg-accent", !isSelected && "text-muted-foreground")} style={{ color: isSelected ? team.color : undefined }} onClick={() => handleToggle('teams', team.id)}>
+                            <div key={team.id} className={cn("flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer", !isSelected && "text-muted-foreground")} style={{ color: isSelected ? team.color : undefined }} onClick={() => handleToggle('teams', team.id)}>
                               <GoogleSymbol name={team.icon} className="text-xl" />
                               <span className="font-medium">{team.name}</span>
                             </div>
@@ -721,7 +719,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                         <ScrollArea className="h-64"><div className="p-1 space-y-1">{filteredRoles.map(role => {
                           const isSelected = access.roles.includes(role.name);
                           return (
-                            <div key={role.id} className={cn("flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer hover:bg-accent", !isSelected && "text-muted-foreground")} style={{ color: isSelected ? role.color : undefined }} onClick={() => handleToggle('roles', role.name)}>
+                            <div key={role.id} className={cn("flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer", !isSelected && "text-muted-foreground")} style={{ color: isSelected ? role.color : undefined }} onClick={() => handleToggle('roles', role.name)}>
                               <GoogleSymbol name={role.icon} className="text-xl" />
                               <span className="font-medium">{role.name}</span>
                             </div>
@@ -769,7 +767,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
                 <div 
                     key={tab.id} 
                     className={cn(
-                        "flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer hover:bg-accent",
+                        "flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer",
                         !isAssociated && "text-muted-foreground"
                     )}
                     style={{ color: isAssociated ? tab.color : undefined }}
@@ -921,10 +919,13 @@ const PagesManagement = () => {
         if (destination.droppableId === 'duplicate-page-zone') {
             const pageToDuplicate = appSettings.pages.find(p => p.id === draggableId);
             if (pageToDuplicate) {
+                const newName = `${pageToDuplicate.name} (Copy)`;
+                const newPath = `/dashboard/${newName.toLowerCase().replace(/[\s()]+/g, '-').replace(/^-+|-+$/g, '')}`;
                 const newPage: AppPage = {
                     ...JSON.parse(JSON.stringify(pageToDuplicate)), // Deep copy
                     id: crypto.randomUUID(),
-                    name: `${pageToDuplicate.name} (Copy)`,
+                    name: newName,
+                    path: newPath,
                 };
                 // Insert the new page right after the original one
                 const originalIndex = appSettings.pages.findIndex(p => p.id === draggableId);

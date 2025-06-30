@@ -1,4 +1,3 @@
-
 # AgileFlow: Design System & UI Patterns
 
 This document outlines the established UI patterns and design choices that ensure a consistent and intuitive user experience across the AgileFlow application. These patterns serve as a guide for both current and future development.
@@ -100,8 +99,9 @@ This pattern provides a clean alternative to checkboxes for selecting multiple i
     -   Clicking an unselected item marks it as selected.
     -   Clicking a selected item deselects it.
 -   **Visual Cues**:
-    -   **Selected State**: The item's text and/or icon changes to a distinct color. This can be the primary theme color or a color associated with the item itself (e.g., a team's brand color). The background might also receive a subtle `bg-accent` highlight.
+    -   **Selected State**: The item's text and/or icon changes to a distinct color. This can be the primary theme color or a color associated with the item itself (e.g., a team's brand color).
     -   **Unselected State**: The item is displayed in a default, muted state (e.g., `text-muted-foreground`).
+    -   There is no background color change on hover, providing a cleaner, less "busy" interaction.
 -   **Application**: Ideal for managing associations in popovers, such as assigning users, teams, or roles to a page, or associating tabs with a page.
 
 ## Visual & Theming Elements

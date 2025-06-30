@@ -1,5 +1,3 @@
-
-
 import type React from 'react';
 
 export interface LinkGroup {
@@ -112,6 +110,7 @@ export interface Team {
   id: string;
   name: string;
   icon: string;
+  color: string;
   members: string[]; // array of userIds
   teamAdmins?: string[]; // array of userIds who are admins for this team
   locationCheckManagers: string[]; // array of userIds who can manage check locations

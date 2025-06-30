@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -28,6 +26,12 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { googleSymbolNames } from '@/lib/google-symbols';
+
+const predefinedColors = [
+    '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
+    '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6',
+    '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
+];
 
 export function TeamManagement() {
   const { users, teams, addTeam, updateTeam, deleteTeam } = useUser();
@@ -87,7 +91,7 @@ export function TeamManagement() {
                         <CardHeader>
                             <div className="flex items-start justify-between">
                                 <div className="flex items-center gap-3">
-                                    <GoogleSymbol name={team.icon} className="text-3xl text-muted-foreground" />
+                                    <GoogleSymbol name={team.icon} className="text-3xl" style={{ color: team.color }} />
                                     <CardTitle className="text-xl flex items-center gap-2">
                                         {team.name}
                                         <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openEditDialog(team)}>
@@ -176,9 +180,11 @@ type TeamFormDialogProps = {
 function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, onDeleteRequest }: TeamFormDialogProps) {
     const [name, setName] = useState(team?.name || '');
     const [icon, setIcon] = useState<string>(team?.icon || 'group');
+    const [color, setColor] = useState<string>(team?.color || '#64748B');
     const [members, setMembers] = useState<string[]>(team?.members || []);
     const [teamAdmins, setTeamAdmins] = useState<string[]>(team?.teamAdmins || []);
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
+    const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
     const [isMemberPopoverOpen, setIsMemberPopoverOpen] = useState(false);
     const [memberSearch, setMemberSearch] = useState('');
     const [iconSearch, setIconSearch] = useState('');
@@ -212,6 +218,7 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
         const teamData = {
             name,
             icon,
+            color,
             members,
             teamAdmins,
         };
@@ -283,44 +290,61 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
 
                 <div className="grid gap-6 pt-2">
                     <div className="flex items-center gap-2">
-                        <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
-                            <PopoverTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-9 w-9"
-                            >
-                                <GoogleSymbol name={icon} className="text-2xl text-muted-foreground" />
-                            </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-80 p-0">
-                                <div className="p-2 border-b">
-                                    <Input 
-                                        placeholder="Search icons..."
-                                        value={iconSearch}
-                                        onChange={(e) => setIconSearch(e.target.value)}
-                                    />
+                        <div className="relative">
+                            <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
+                                <PopoverTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-9 w-9"
+                                    style={{ color }}
+                                >
+                                    <GoogleSymbol name={icon} className="text-2xl" />
+                                </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-80 p-0">
+                                    <div className="p-2 border-b">
+                                        <Input 
+                                            placeholder="Search icons..."
+                                            value={iconSearch}
+                                            onChange={(e) => setIconSearch(e.target.value)}
+                                        />
+                                    </div>
+                                    <ScrollArea className="h-64">
+                                    <div className="grid grid-cols-6 gap-1 p-2">
+                                        {filteredIcons.slice(0, 300).map((iconName) => ( // limit to 300 for performance
+                                        <Button
+                                            key={iconName}
+                                            variant={icon === iconName ? "default" : "ghost"}
+                                            size="icon"
+                                            onClick={() => {
+                                            setIcon(iconName);
+                                            setIsIconPopoverOpen(false);
+                                            }}
+                                            className="text-2xl"
+                                        >
+                                            <GoogleSymbol name={iconName} />
+                                        </Button>
+                                        ))}
+                                    </div>
+                                    </ScrollArea>
+                                </PopoverContent>
+                            </Popover>
+                            <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                                <PopoverTrigger asChild>
+                                    <div className="absolute -bottom-1 -right-0 h-4 w-4 rounded-full border-2 border-card cursor-pointer" style={{ backgroundColor: color }} />
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-2">
+                                <div className="grid grid-cols-8 gap-1">
+                                    {predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {setColor(c); setIsColorPopoverOpen(false);}}/>))}
+                                    <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
+                                        <GoogleSymbol name="colorize" className="text-muted-foreground" />
+                                        <Input type="color" value={color} onChange={(e) => setColor(e.target.value)} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/>
+                                    </div>
                                 </div>
-                                <ScrollArea className="h-64">
-                                <div className="grid grid-cols-6 gap-1 p-2">
-                                    {filteredIcons.slice(0, 300).map((iconName) => ( // limit to 300 for performance
-                                    <Button
-                                        key={iconName}
-                                        variant={icon === iconName ? "default" : "ghost"}
-                                        size="icon"
-                                        onClick={() => {
-                                        setIcon(iconName);
-                                        setIsIconPopoverOpen(false);
-                                        }}
-                                        className="text-2xl"
-                                    >
-                                        <GoogleSymbol name={iconName} />
-                                    </Button>
-                                    ))}
-                                </div>
-                                </ScrollArea>
-                            </PopoverContent>
-                        </Popover>
+                                </PopoverContent>
+                            </Popover>
+                        </div>
                         
                         <Input
                             id="team-name"
@@ -386,7 +410,7 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
                                     <Badge 
                                         key={user.userId} 
                                         variant={isAdmin ? 'default' : 'secondary'}
-                                        className={cn("gap-1.5 p-1 pl-2 cursor-pointer", isAdmin && "shadow-md")}
+                                        className={cn("gap-1.5 p-1 pl-2 cursor-pointer rounded-full", isAdmin && "shadow-md")}
                                         onClick={() => handleAdminToggle(userId)}
                                     >
                                         <Avatar className="h-5 w-5">
