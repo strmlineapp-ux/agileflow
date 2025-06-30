@@ -44,7 +44,7 @@ This is a minimal, title-less popover for quick, focused editing actions, typica
   - The popover appears without a header or title.
   - It contains icon-only buttons for its actions.
   - Actions are arranged horizontally. Common actions include an icon picker, a color picker (as a badge on the icon picker), and a cancel/delete/unlink action.
-- **Application:** Used for editing linked group properties.
+- **Application:** Used for editing shared group properties.
 
 ---
 
@@ -66,14 +66,14 @@ This pattern describes how a single entity (like a Badge or Badge Collection) ca
 
 - **Mechanism**: Implemented via drag-and-drop or an explicit "Share" action. This creates a shared instance, not a copy.
 - **Visual Cues**:
-  - **Owned & Shared Item**: An item that was created in the current context but is also being used in another context (e.g., a badge owned by Team A shared to Team B) is marked with an `upload` icon overlay. This indicates it is the "source of truth."
-  - **Internally Linked Item**: An item that is used in multiple places within the same context (e.g., a badge appearing in two collections within the same Team) is marked with a `change_circle` icon overlay on its linked instances.
-  - **Shared-to-You Item**: An item that was created in another context and is being used here is marked with a `downloading` icon overlay.
+  - **Owned & Shared Item (`upload`)**: An item that was created in the current context but is also being used in at least one other external context (e.g., a badge owned by Team A shared to Team B) is marked with an `upload` icon overlay. This indicates it is the "source of truth."
+  - **Internally Linked Item (`change_circle`)**: An item that is used in multiple places within the *same* context (e.g., a badge appearing in two collections within the same Team) is marked with a `change_circle` icon overlay on its linked instances. The original instance does not get this icon unless it is also shared externally.
+  - **Shared-to-You Item (`downloading`)**: An item that was created in another context and is being used here is marked with a `downloading` icon overlay.
   - **Owned and Not Shared/Linked**: An item that is owned and exists only in its original location does not get an icon.
 - **Behavior**:
   - Editing a shared or linked item (e.g., changing its name or icon) modifies the original "source of truth" item, and the changes are instantly reflected in all other places where it is used.
   - Deleting a *shared-to-you* or *internally linked* item only removes that specific instance. The original and all other shares/links remain untouched.
-  - Deleting the *original* item is a permanent action that removes the item and all of its shares/links across the entire application.
+  - Deleting the *original* item is a permanent action that removes the item and all of its shares/links across the entire application. A confirmation dialog should be shown for this action.
 - **Application**: Used for sharing Badges and Badge Collections between Teams.
 
 ---
@@ -111,7 +111,10 @@ This pattern provides a clean alternative to checkboxes for selecting multiple i
 ### Icons & Hover Effects
 
 - **Icon Set**: We exclusively use **Google Material Symbols** via the `<GoogleSymbol />` component. This ensures a consistent visual language. The font library is a variable font, which means we can adjust its properties.
-- **Filled Icons**: To use the filled style of an icon, pass the `filled` prop to the component: `<GoogleSymbol name="star" filled />`.
+- **Icon Styles**: The application loads the `Outlined`, `Rounded`, and `Sharp` styles from Google's library. You can specify which one to use with the `variant` prop. The `Outlined` style is the default.
+  - `<GoogleSymbol name="star" variant="rounded" />`
+  - `<GoogleSymbol name="star" variant="sharp" />`
+- **Filled Icons**: To use the filled style of an icon, pass the `filled` prop to the component: `<GoogleSymbol name="star" filled />`. This works with any of the three main styles.
 - **Hover Behavior**: The color of icons on hover is typically determined by their parent element. For example, an icon inside a `<Button variant="ghost">` will change to the primary theme color on hover because the button's text color changes, and the icon inherits that color. This creates a clean and predictable interaction.
 - **Destructive Actions**: Delete or other destructive action icons (like `delete`, `close`, `cancel`) are `text-muted-foreground` by default and become `text-destructive` on hover to provide a clear but not overwhelming visual warning.
 - **Tooltips for Clarity**: Icon-only buttons (those without visible text) must always be wrapped in a `<Tooltip>` to provide context on their function. This is crucial for accessibility and user experience.
