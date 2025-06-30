@@ -1,3 +1,4 @@
+
 import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team, type AppSettings, type Badge, type BadgeCollection, type AppTab, type AppPage } from '@/types';
 
 export const mockTabs: AppTab[] = [
@@ -8,7 +9,7 @@ export const mockTabs: AppTab[] = [
   { id: 'tab-locations', name: 'Locations', icon: 'push_pin', color: '#A855F7', componentKey: 'locations', description: 'Manage pinned locations and check-in points for the team schedule.' },
   { id: 'tab-workstations', name: 'Workstations', icon: 'desktop_windows', color: '#D946EF', componentKey: 'workstations', description: 'Configure bookable workstations and edit machines for the team.' },
   { id: 'tab-templates', name: 'Templates', icon: 'file_copy', color: '#14B8A6', componentKey: 'templates', description: 'Create reusable event templates with pre-filled badge requests.' },
-  { id: 'tab-admin-roles', name: 'Roles', icon: 'shield_person', color: '#8B5CF6', componentKey: 'roles', description: 'Manage high-level administrative roles and their permissions.' },
+  { id: 'tab-admin-roles', name: 'Roles', icon: 'admin_panel_settings', color: '#8B5CF6', componentKey: 'roles', description: 'Manage high-level administrative roles and their permissions.' },
   { id: 'tab-admin-pages', name: 'Pages', icon: 'web', color: '#EC4899', componentKey: 'pages', description: 'Configure application pages, their navigation, and access controls.' },
   { id: 'tab-admin-tabs', name: 'Tabs', icon: 'tab', color: '#EF4444', componentKey: 'tabs', description: 'Manage the properties of reusable tabs that appear on pages.' },
 ];
@@ -17,7 +18,7 @@ export const mockPages: AppPage[] = [
     {
         id: 'page-admin-management',
         name: 'Admin Management',
-        icon: 'admin_panel_settings',
+        icon: 'badge',
         color: '#64748B',
         path: '/dashboard/admin',
         isDynamic: false,
@@ -72,6 +73,7 @@ export const mockAppSettings: AppSettings = {
   teamLinkGroups: {},
   pages: mockPages,
   tabs: mockTabs,
+  strategyLabel: 'Priority Strategies',
 };
 
 export const mockUsers: User[] = [
@@ -285,6 +287,7 @@ export const mockTeams: Team[] = [
         name: 'Studio Productions',
         icon: 'movie',
         color: '#10B981',
+        linkedTeamIds: ['live-events'],
         members: ['1', '2', '6'],
         teamAdmins: ['1', '2'],
         locationCheckManagers: ['1'],
@@ -320,6 +323,7 @@ export const mockTeams: Team[] = [
         name: 'Live Events',
         icon: 'videocam',
         color: '#3B82F6',
+        linkedTeamIds: [],
         members: ['1', '2', '3', '4'],
         teamAdmins: ['1', '2'],
         locationCheckManagers: ['2'],
@@ -337,11 +341,9 @@ export const mockTeams: Team[] = [
             description: 'General skills and roles for live event execution.',
             badgeIds: [
                 ...liveEventsBadges.map(b => b.id),
-                'badge-camera', // Linked from studio productions
-                'badge-audio',  // Linked from studio productions
             ]
         }],
-        linkedCollectionIds: [],
+        linkedCollectionIds: [studioProdCollectionId],
         pinnedLocations: ['Auditorium', 'ACR', 'Event Space 1 (S2)', 'Event Space 2 (S2)', 'Event Space 3 (R7)', 'Event Space 4 (R7)', 'Training Room', 'Apgar', 'Locke'],
         checkLocations: ['Training Room', 'Apgar', 'Locke'],
         locationAliases: {},
@@ -356,6 +358,7 @@ export const mockTeams: Team[] = [
         name: 'Productions',
         icon: 'campaign',
         color: '#EC4899',
+        linkedTeamIds: [],
         members: ['2', '3', '5'],
         teamAdmins: ['2'],
         locationCheckManagers: [],

@@ -19,8 +19,13 @@ export function Sidebar() {
   const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
   const unreadCount = notifications.filter((n) => !n.read).length;
 
+  const adminPage = useMemo(() => {
+    const page = appSettings.pages.find(p => p.id === 'page-admin-management');
+    return page && hasAccess(viewAsUser, page, teams, appSettings.customAdminRoles) ? page : null;
+  }, [viewAsUser, appSettings.pages, teams, appSettings.customAdminRoles]);
+
   const visiblePages = useMemo(() => {
-    return appSettings.pages.filter(page => hasAccess(viewAsUser, page, teams, appSettings.customAdminRoles));
+    return appSettings.pages.filter(page => page.id !== 'page-admin-management' && hasAccess(viewAsUser, page, teams, appSettings.customAdminRoles));
   }, [viewAsUser, appSettings.pages, teams, appSettings.customAdminRoles]);
   
   const userManagedTeams = useMemo(() => {
@@ -52,6 +57,24 @@ export function Sidebar() {
           <span className="sr-only">AgileFlow</span>
         </Link>
         <TooltipProvider>
+          {adminPage && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link
+                  href={adminPage.path}
+                  className={cn(
+                    'relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
+                    pathname.startsWith(adminPage.path) && 'bg-accent text-accent-foreground'
+                  )}
+                >
+                  <GoogleSymbol name={adminPage.icon} className="text-2xl" />
+                  <span className="sr-only">{adminPage.name}</span>
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="right">{adminPage.name}</TooltipContent>
+            </Tooltip>
+          )}
+
           {mainNavItems.map((item) => (
            item.visible && (
             <Tooltip key={item.href}>

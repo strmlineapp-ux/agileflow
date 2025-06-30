@@ -19,8 +19,13 @@ export function Header() {
   const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
   const unreadCount = notifications.filter((n) => !n.read).length;
   
+  const adminPage = useMemo(() => {
+    const page = appSettings.pages.find(p => p.id === 'page-admin-management');
+    return page && hasAccess(viewAsUser, page, teams, appSettings.customAdminRoles) ? page : null;
+  }, [viewAsUser, appSettings.pages, teams, appSettings.customAdminRoles]);
+  
   const visiblePages = useMemo(() => {
-    return appSettings.pages.filter(page => hasAccess(viewAsUser, page, teams, appSettings.customAdminRoles));
+    return appSettings.pages.filter(page => page.id !== 'page-admin-management' && hasAccess(viewAsUser, page, teams, appSettings.customAdminRoles));
   }, [viewAsUser, appSettings.pages, teams, appSettings.customAdminRoles]);
   
   const userManagedTeams = useMemo(() => {
@@ -71,6 +76,14 @@ export function Header() {
               </svg>
               <span className="sr-only">AgileFlow</span>
             </Link>
+
+            {adminPage && (
+              <Link href={adminPage.path} className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
+                <GoogleSymbol name={adminPage.icon} className="text-2xl" />
+                {adminPage.name}
+              </Link>
+            )}
+
             {mainNavItems.map(item => (
                 <Link key={item.href} href={item.href} className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
                     <GoogleSymbol name={item.icon} className="text-2xl" />

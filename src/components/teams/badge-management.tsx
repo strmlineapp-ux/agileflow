@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -482,6 +481,7 @@ export function BadgeManagement({ team }: { team: Team }) {
     
     const [collectionToDelete, setCollectionToDelete] = useState<string | null>(null);
     const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
 
     const handleUpdateCollection = (collectionId: string, newValues: Partial<Omit<BadgeCollection, 'id' | 'badgeIds'>>) => {
         const newCollections = team.badgeCollections.map(collection => 
@@ -516,7 +516,8 @@ export function BadgeManagement({ team }: { team: Team }) {
         // Find collection across all teams to check ownership
         let collectionOwnerTeamId: string | undefined;
         for (const t of teams) {
-            if (t.badgeCollections.some(c => c.id === collectionId)) {
+            const found = t.badgeCollections.find(c => c.id === collectionId);
+            if (found) {
                 collectionOwnerTeamId = t.id;
                 break;
             }
@@ -656,6 +657,27 @@ export function BadgeManagement({ team }: { team: Team }) {
             description: `"${newCollection.name}" has been created.`,
         });
     };
+    
+    const allLinkedTeamIds = useMemo(() => {
+        const linkedIds = new Set<string>();
+        const teamsToSearch = [team.id];
+        const processedTeams = new Set<string>();
+        
+        while(teamsToSearch.length > 0) {
+            const currentTeamId = teamsToSearch.pop()!;
+            if(processedTeams.has(currentTeamId)) continue;
+            
+            processedTeams.add(currentTeamId);
+            const currentTeam = teams.find(t => t.id === currentTeamId);
+            if(currentTeam) {
+                (currentTeam.linkedTeamIds || []).forEach(id => {
+                    linkedIds.add(id);
+                    teamsToSearch.push(id);
+                });
+            }
+        }
+        return Array.from(linkedIds);
+    }, [teams, team.id]);
 
     const onDragEnd = (result: DropResult) => {
         const { source, destination, draggableId, type } = result;
@@ -719,21 +741,34 @@ export function BadgeManagement({ team }: { team: Team }) {
     
     const allOtherCollections = useMemo(() => {
         return teams
-            .filter(t => t.id !== team.id)
+            .filter(t => allLinkedTeamIds.includes(t.id)) // Only show collections from linked teams
             .flatMap(t => t.badgeCollections.map(c => ({...c, teamName: t.name})))
-            .filter(c => !(team.linkedCollectionIds || []).includes(c.id));
-    }, [teams, team]);
+            .filter(c => !(team.linkedCollectionIds || []).includes(c.id) && c.ownerTeamId !== team.id);
+    }, [teams, team, allLinkedTeamIds]);
     
     const linkedCollections = useMemo(() => {
         const linkedIds = new Set(team.linkedCollectionIds || []);
-        return teams
-            .flatMap(t => t.badgeCollections)
-            .filter(c => linkedIds.has(c.id));
+        if (linkedIds.size === 0) return [];
+        const allCollectionsFromAllTeams = teams.flatMap(t => t.badgeCollections);
+        return allCollectionsFromAllTeams.filter(c => linkedIds.has(c.id));
     }, [teams, team.linkedCollectionIds]);
 
+    const getSortKey = useCallback((collection: BadgeCollection) => {
+        return (collection.applications || []).sort().join(',');
+    }, []);
+
     const displayedCollections = useMemo(() => {
-        return [...team.badgeCollections, ...linkedCollections];
-    }, [team.badgeCollections, linkedCollections]);
+        const allVisibleCollections = [...team.badgeCollections, ...linkedCollections];
+        const filtered = allVisibleCollections.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
+        
+        return filtered.sort((a, b) => {
+            const sortKeyA = getSortKey(a);
+            const sortKeyB = getSortKey(b);
+            if (sortKeyA < sortKeyB) return -1;
+            if (sortKeyA > sortKeyB) return 1;
+            return a.name.localeCompare(b.name);
+        });
+    }, [team.badgeCollections, linkedCollections, searchTerm, getSortKey]);
 
 
     return (
@@ -779,6 +814,13 @@ export function BadgeManagement({ team }: { team: Team }) {
                                 <TooltipContent>Link Collection from another team</TooltipContent>
                             </Tooltip>
                         </TooltipProvider>
+                    </div>
+                    <div className="w-64">
+                      <Input 
+                        placeholder="Search collections..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                      />
                     </div>
                 </div>
                 <StrictModeDroppable droppableId="collections-list" type="collection">
@@ -845,7 +887,7 @@ export function BadgeManagement({ team }: { team: Team }) {
                                 <Button size="sm" onClick={() => handleLinkCollection(collection.id)}>Link</Button>
                             </div>
                         )) : (
-                            <p className="text-sm text-center text-muted-foreground p-8">No other collections available to link.</p>
+                            <p className="text-sm text-center text-muted-foreground p-8">No collections available from linked teams.</p>
                         )}
                         </div>
                     </ScrollArea>

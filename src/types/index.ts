@@ -46,7 +46,7 @@ export interface AppSettings {
   teamLinkGroups?: Record<string, LinkGroup>;
   pages: AppPage[];
   tabs: AppTab[];
-  strategyLabel?: string; // This is now legacy but kept for now.
+  strategyLabel?: string;
 }
 
 export interface Attendee {
@@ -117,6 +117,7 @@ export interface Team {
   icon: string;
   color: string;
   linkGroupId?: string;
+  linkedTeamIds?: string[];
   members: string[]; // array of userIds
   teamAdmins?: string[]; // array of userIds who are admins for this team
   locationCheckManagers: string[]; // array of userIds who can manage check locations

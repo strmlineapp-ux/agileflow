@@ -1,11 +1,9 @@
 
-
 'use client';
 
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useUser } from '@/context/user-context';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { type Team, type AppTab } from '@/types';
 import { GoogleSymbol } from '../icons/google-symbol';
@@ -15,7 +13,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { LocationCheckManagerManagement } from '../teams/location-check-manager-management';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 
 export function PinnedLocationManagement({ team, tab }: { team: Team, tab: AppTab }) {
   const { viewAsUser, locations, updateTeam, updateAppTab } = useUser();
@@ -24,9 +21,8 @@ export function PinnedLocationManagement({ team, tab }: { team: Team, tab: AppTa
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddPopoverOpen, setIsAddPopoverOpen] = useState(false);
   
-  const [isAliasDialogOpen, setIsAliasDialogOpen] = useState(false);
-  const [editingLocationName, setEditingLocationName] = useState<string | null>(null);
-  const [tempAlias, setTempAlias] = useState('');
+  const [editingAlias, setEditingAlias] = useState<string | null>(null);
+  const aliasInputRef = useRef<HTMLInputElement>(null);
   
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
@@ -38,6 +34,13 @@ export function PinnedLocationManagement({ team, tab }: { team: Team, tab: AppTa
   useEffect(() => {
     if (isEditingTitle) titleInputRef.current?.focus();
   }, [isEditingTitle]);
+
+  useEffect(() => {
+    if (editingAlias && aliasInputRef.current) {
+      aliasInputRef.current.focus();
+      aliasInputRef.current.select();
+    }
+  }, [editingAlias]);
 
   const handleSaveTitle = () => {
     const newName = titleInputRef.current?.value.trim();
@@ -58,31 +61,30 @@ export function PinnedLocationManagement({ team, tab }: { team: Team, tab: AppTa
       .filter(loc => loc.name.toLowerCase().includes(searchTerm.toLowerCase()));
   }, [locations, pinnedLocationNames, searchTerm]);
   
-  const handleOpenAliasDialog = (locationName: string) => {
-    if (!canManage) return;
-    setEditingLocationName(locationName);
-    setTempAlias(team.locationAliases?.[locationName] || '');
-    setIsAliasDialogOpen(true);
-  };
-
   const handleSaveAlias = () => {
-    if (!editingLocationName) return;
+    if (!editingAlias) return;
+
+    const newAlias = aliasInputRef.current?.value || '';
 
     const newAliases = { ...(team.locationAliases || {}) };
-    if (tempAlias.trim()) {
-      newAliases[editingLocationName] = tempAlias.trim();
+    if (newAlias.trim()) {
+      newAliases[editingAlias] = newAlias.trim();
     } else {
-      delete newAliases[editingLocationName];
+      delete newAliases[editingAlias];
     }
 
     updateTeam(team.id, { locationAliases: newAliases });
     toast({
       title: 'Alias Updated',
-      description: `Display name for "${editingLocationName}" has been updated.`,
+      description: `Display name for "${editingAlias}" has been updated.`,
     });
-    setIsAliasDialogOpen(false);
+    setEditingAlias(null);
   };
 
+  const handleAliasKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') handleSaveAlias();
+    else if (e.key === 'Escape') setEditingAlias(null);
+  };
   
   const handlePinLocation = (locationName: string) => {
     if (!canManage) return;
@@ -182,7 +184,7 @@ export function PinnedLocationManagement({ team, tab }: { team: Team, tab: AppTa
               </Popover>
           </CardTitle>
           <CardDescription>
-            Manage locations pinned to this team's schedule. Click a pill to toggle its "check" status. Use the edit icon to set a custom display name.
+            Manage locations pinned to this team's schedule. Click a pill to toggle its "check" status. Click the text to set a custom display name.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -191,72 +193,57 @@ export function PinnedLocationManagement({ team, tab }: { team: Team, tab: AppTa
               {pinnedLocationNames.length > 0 ? pinnedLocationNames.map(name => {
                 const alias = team.locationAliases?.[name];
                 return (
-                  <Badge 
+                  <div 
                     key={name}
-                    variant={checkLocationNames.has(name) ? "default" : "secondary"}
                     className={cn(
-                      "rounded-full group text-base py-1 pl-3 pr-1 cursor-pointer",
-                      checkLocationNames.has(name) && "shadow-md"
+                      "group relative flex items-center gap-2 text-sm rounded-full border p-1 pl-3",
+                      checkLocationNames.has(name) ? "border-primary text-primary-foreground bg-primary" : "bg-secondary text-secondary-foreground"
                     )}
-                    onClick={() => handleToggleCheckLocation(name)}
-                    >
-                    <span className="font-medium mr-1" title={alias ? name : undefined}>
-                      {alias || name}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); handleOpenAliasDialog(name); }}
-                      className="mr-1 h-4 w-4 hover:bg-primary/20 rounded-full inline-flex items-center justify-center opacity-50 group-hover:opacity-100 transition-opacity"
-                      aria-label={`Edit alias for ${name}`}
-                    >
-                      <GoogleSymbol name="edit" className="text-sm" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); handleUnpinLocation(name); }}
-                      className="h-4 w-4 hover:bg-destructive/20 rounded-full inline-flex items-center justify-center opacity-50 group-hover:opacity-100 transition-opacity"
-                      aria-label={`Unpin ${name}`}
-                    >
-                      <GoogleSymbol name="cancel" className="text-sm" />
-                    </button>
-                  </Badge>
+                  >
+                    {editingAlias === name ? (
+                      <Input
+                        ref={aliasInputRef}
+                        defaultValue={alias || name}
+                        onBlur={handleSaveAlias}
+                        onKeyDown={handleAliasKeyDown}
+                        className="h-5 p-0 bg-transparent"
+                      />
+                    ) : (
+                      <span className="cursor-pointer" onClick={() => canManage && setEditingAlias(name)} title={alias ? name : undefined}>
+                        {alias || name}
+                      </span>
+                    )}
+
+                    <div className='flex items-center gap-0.5'>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className={cn("h-5 w-5 rounded-full shrink-0", checkLocationNames.has(name) ? 'hover:bg-primary-foreground/20' : 'hover:bg-secondary-foreground/10' )}
+                        onClick={() => canManage && handleToggleCheckLocation(name)}
+                      >
+                        <GoogleSymbol name={checkLocationNames.has(name) ? 'check_circle' : 'circle'} className="text-sm" />
+                        <span className="sr-only">Toggle Check Location</span>
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className={cn("h-5 w-5 rounded-full shrink-0", checkLocationNames.has(name) ? 'hover:bg-primary-foreground/20' : 'hover:bg-secondary-foreground/10' )}
+                        onClick={() => canManage && handleUnpinLocation(name)}
+                      >
+                        <GoogleSymbol name="cancel" className="text-sm" />
+                        <span className="sr-only">Unpin Location</span>
+                      </Button>
+                    </div>
+                  </div>
                 );
               }) : (
                 <p className="p-2 text-sm text-muted-foreground w-full text-center">No locations pinned.</p>
               )}
             </div>
-            <p className="text-xs text-muted-foreground text-right">Click a pill to toggle its "check" status.</p>
+            <p className="text-xs text-muted-foreground text-right">Click a location to toggle its "check" status.</p>
           </div>
         </CardContent>
       </Card>
-      
-      <Dialog open={isAliasDialogOpen} onOpenChange={setIsAliasDialogOpen}>
-        <DialogContent>
-            <div className="absolute top-4 right-4">
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSaveAlias}>
-                    <GoogleSymbol name="check" className="text-xl" />
-                    <span className="sr-only">Save alias</span>
-                </Button>
-            </div>
-          <DialogHeader>
-            <DialogTitle>Edit Display Name</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-              <p className="text-sm text-muted-foreground">
-                Set a custom display name for <strong>{editingLocationName}</strong> for this team.
-              </p>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Input 
-                id="alias" 
-                value={tempAlias} 
-                onChange={(e) => setTempAlias(e.target.value)} 
-                className="col-span-4"
-                placeholder="Leave blank to use default name"
-              />
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
