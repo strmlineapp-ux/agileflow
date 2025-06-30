@@ -328,10 +328,16 @@ function CustomRoleCard({
                     </Popover>
                   </div>
                 </div>
-                {isEditingName ? (<Input ref={nameInputRef} defaultValue={role.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="font-body h-auto p-0 text-2xl font-semibold leading-none tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>) : (<CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer">{role.name}</CardTitle>)}
-                <AddUserToRoleButton usersToAdd={unassignedUsers} onAdd={handleRoleToggle} roleName={role.name} />
-                {canLink && <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => onLink(role.id)}><GoogleSymbol name="link" /></Button>}
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setIsDeleteDialogOpen(true)}><GoogleSymbol name="delete" /></Button>
+                <div className="flex-1">
+                    {isEditingName ? (<Input ref={nameInputRef} defaultValue={role.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="font-body h-auto p-0 text-2xl font-semibold leading-none tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>) : (<CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer">{role.name}</CardTitle>)}
+                </div>
+                <div className="flex items-center">
+                    <TooltipProvider>
+                        <Tooltip><TooltipTrigger asChild><AddUserToRoleButton usersToAdd={unassignedUsers} onAdd={handleRoleToggle} roleName={role.name} /></TooltipTrigger><TooltipContent>Assign User</TooltipContent></Tooltip>
+                        {canLink && <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => onLink(role.id)}><GoogleSymbol name="link" /></Button></TooltipTrigger><TooltipContent>Link Role</TooltipContent></Tooltip>}
+                        <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setIsDeleteDialogOpen(true)}><GoogleSymbol name="delete" /></Button></TooltipTrigger><TooltipContent>Delete Role</TooltipContent></Tooltip>
+                    </TooltipProvider>
+                </div>
               </div>
               <CardDescription>Assign or revoke {role.name} privileges for managing app-wide settings.</CardDescription>
             </CardHeader>
@@ -652,9 +658,16 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
 
     return (
         <Popover open={isOpen} onOpenChange={setIsOpen}>
-            <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7"><GoogleSymbol name="group_add" /></Button>
-            </PopoverTrigger>
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <PopoverTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-7 w-7"><GoogleSymbol name="group_add" /></Button>
+                        </PopoverTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent><p>Manage Page Access</p></TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
             <PopoverContent className="w-80 p-0">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                     <TabsList className="grid w-full grid-cols-3">
@@ -695,19 +708,37 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
   
   return (
     <Popover>
-      <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-7 w-7"><GoogleSymbol name="layers" /></Button>
-      </PopoverTrigger>
+        <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <PopoverTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-7 w-7"><GoogleSymbol name="layers" /></Button>
+                    </PopoverTrigger>
+                </TooltipTrigger>
+                <TooltipContent><p>Manage Associated Tabs</p></TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
       <PopoverContent className="w-80 p-0">
         <div className="p-2 border-b"><Label>Associated Tabs</Label></div>
         <ScrollArea className="h-64">
           <div className="p-1 space-y-1">
-            {appSettings.tabs.map(tab => (
-              <div key={tab.id} className="flex items-center gap-2 p-2 rounded-md text-sm cursor-pointer hover:bg-accent" onClick={() => handleToggle(tab.id)}>
-                <Checkbox checked={(page.associatedTabs || []).includes(tab.id)} readOnly />
-                <span>{tab.name}</span>
-              </div>
-            ))}
+            {appSettings.tabs.map(tab => {
+              const isAssociated = (page.associatedTabs || []).includes(tab.id);
+              return (
+                <div 
+                    key={tab.id} 
+                    className={cn(
+                        "flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer hover:bg-accent",
+                        !isAssociated && "text-muted-foreground"
+                    )}
+                    style={{ color: isAssociated ? tab.color : undefined }}
+                    onClick={() => handleToggle(tab.id)}
+                >
+                    <GoogleSymbol name={tab.icon} className="text-xl" />
+                    <span className="font-medium">{tab.name}</span>
+                </div>
+              );
+            })}
           </div>
         </ScrollArea>
       </PopoverContent>
@@ -717,7 +748,6 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
 
 
 function PageCard({ page, onUpdate, onDelete }: { page: AppPage; onUpdate: (id: string, data: Partial<AppPage>) => void; onDelete: (id: string) => void; }) {
-    const { toast } = useToast();
     const [isEditingName, setIsEditingName] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
@@ -751,7 +781,7 @@ function PageCard({ page, onUpdate, onDelete }: { page: AppPage; onUpdate: (id: 
                         <div className="relative">
                             <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                                 <PopoverTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-9 w-9 text-2xl" style={{ color: page.color }}>
+                                    <Button variant="ghost" size="icon" className="h-9 w-9 text-2xl">
                                         <GoogleSymbol name={page.icon} />
                                     </Button>
                                 </PopoverTrigger>
@@ -784,18 +814,24 @@ function PageCard({ page, onUpdate, onDelete }: { page: AppPage; onUpdate: (id: 
                             <PageTabsControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
                         </div>
                     </div>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => onDelete(page.id)}>
-                        <GoogleSymbol name="delete" />
-                    </Button>
+                     <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => onDelete(page.id)}>
+                                    <GoogleSymbol name="delete" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent><p>Delete Page</p></TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
                 </div>
             </CardHeader>
             <CardContent className="space-y-4">
                 <div>
                     <h4 className="font-medium text-sm mb-2">Details</h4>
                     <CardDescription>
-                        This page is shown in the sidebar for users or team admins you grant access to.
-                        When associating with a Team, only Team Admins get access. 
-                        When associating with a Service Admin role, only users designated as Team Admins for that role get access.
+                        When associated with a Team, only Team Admins of that team can access the page.
+                        When associated with a Service Admin role, only users designated as Team Admins for that role can access it.
                     </CardDescription>
                     <div className="flex gap-2 text-sm text-muted-foreground mt-2">
                         <Badge variant="outline">{page.path}</Badge>
@@ -1071,3 +1107,4 @@ const AdminPageSkeleton = () => (
       </div>
     </div>
 );
+
