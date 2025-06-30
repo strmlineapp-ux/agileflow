@@ -679,7 +679,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                     </TabsList>
                     
                     <TabsContent value="users" className="m-0">
-                        {filteredUsers.length > 6 && (
+                        {filteredUsers.length > 5 && (
                           <div className="p-2 border-b">
                             <Input placeholder="Search users..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                           </div>

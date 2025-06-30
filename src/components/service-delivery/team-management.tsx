@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useUser } from '@/context/user-context';
 import { type Team, type User } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,6 +32,119 @@ const predefinedColors = [
     '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6',
     '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
 ];
+
+function TeamCard({ team, users, onEdit }: { team: Team, users: User[], onEdit: (team: Team) => void }) {
+    const nameInputRef = useRef<HTMLInputElement>(null);
+    const [isEditingName, setIsEditingName] = useState(false);
+    const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
+    const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
+    const [iconSearch, setIconSearch] = useState('');
+
+    const { updateTeam, toast } = useUser();
+    
+    const teamAdmins = (team.teamAdmins || []).map(id => users.find(u => u.userId === id)).filter(Boolean) as User[];
+    const teamMembers = team.members.filter(m => !(team.teamAdmins || []).includes(m)).map(id => users.find(u => u.userId === id)).filter(Boolean) as User[];
+    
+    const filteredIcons = useMemo(() => {
+        if (!iconSearch) return googleSymbolNames;
+        return googleSymbolNames.filter(name => name.toLowerCase().includes(iconSearch.toLowerCase()));
+    }, [iconSearch]);
+
+    useEffect(() => {
+        if (isEditingName) nameInputRef.current?.focus();
+    }, [isEditingName]);
+
+    const handleSaveName = () => {
+        const newName = nameInputRef.current?.value.trim();
+        if (newName && newName !== team.name) {
+            updateTeam(team.id, { name: newName });
+            toast({ title: 'Success', description: `Team name updated to "${newName}".` });
+        }
+        setIsEditingName(false);
+    };
+
+    const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') handleSaveName();
+        else if (e.key === 'Escape') setIsEditingName(false);
+    };
+
+    return (
+        <Card className="flex flex-col">
+            <CardHeader>
+                <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="relative">
+                             <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
+                                <PopoverTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-9 w-9 text-3xl" style={{ color: team.color }}>
+                                        <GoogleSymbol name={team.icon} />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-80 p-0">
+                                    <div className="p-2 border-b"><Input placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} /></div>
+                                    <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={team.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { updateTeam(team.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
+                                </PopoverContent>
+                            </Popover>
+                            <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                                <PopoverTrigger asChild><div className="absolute -bottom-1 -right-0 h-4 w-4 rounded-full border-2 border-card cursor-pointer" style={{ backgroundColor: team.color }} /></PopoverTrigger>
+                                <PopoverContent className="w-auto p-2">
+                                <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {updateTeam(team.id, { color: c }); setIsColorPopoverOpen(false);}}/>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={team.color} onChange={(e) => updateTeam(team.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
+                                </PopoverContent>
+                            </Popover>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            {isEditingName ? (
+                                <Input
+                                    ref={nameInputRef}
+                                    defaultValue={team.name}
+                                    onBlur={handleSaveName}
+                                    onKeyDown={handleNameKeyDown}
+                                    className="h-auto p-0 text-xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                                />
+                            ) : (
+                                <CardTitle className="text-xl cursor-pointer truncate" onClick={() => setIsEditingName(true)}>
+                                    {team.name}
+                                </CardTitle>
+                            )}
+                        </div>
+                    </div>
+                     <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => onEdit(team)}>
+                        <GoogleSymbol name="settings" className="text-lg"/>
+                        <span className="sr-only">Edit Team Members & Settings</span>
+                    </Button>
+                </div>
+            </CardHeader>
+            <CardContent className="flex-grow space-y-4">
+                <div>
+                    <p className="text-sm font-medium text-muted-foreground mb-2">Team Admins</p>
+                    <div className="flex flex-wrap gap-2 min-h-[34px]">
+                    {teamAdmins.length > 0 ? (
+                        teamAdmins.map(user => (
+                            <Badge key={user.userId} variant="secondary" className="gap-1.5 p-1 pl-2 rounded-full">
+                                <Avatar className="h-5 w-5"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
+                                <span className="font-medium">{user.displayName}</span>
+                            </Badge>
+                        ))
+                    ) : <p className="text-sm text-muted-foreground italic px-2">No admins assigned.</p>}
+                    </div>
+                </div>
+                <div>
+                    <p className="text-sm font-medium text-muted-foreground mb-2">Team Members</p>
+                     <div className="flex flex-wrap gap-2 min-h-[34px]">
+                    {teamMembers.length > 0 ? (
+                        teamMembers.map(user => (
+                            <Badge key={user.userId} variant="secondary" className="gap-1.5 p-1 pl-2 rounded-full">
+                                <Avatar className="h-5 w-5"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
+                                <span className="font-medium">{user.displayName}</span>
+                            </Badge>
+                        ))
+                    ) : <p className="text-sm text-muted-foreground italic px-2">No other members.</p>}
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+    );
+}
 
 export function TeamManagement() {
   const { users, teams, addTeam, updateTeam, deleteTeam } = useUser();
@@ -82,57 +195,9 @@ export function TeamManagement() {
             </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {teams.map(team => {
-                const teamAdmins = (team.teamAdmins || []).map(id => users.find(u => u.userId === id)).filter(Boolean) as User[];
-                const teamMembers = team.members.filter(m => !(team.teamAdmins || []).includes(m)).map(id => users.find(u => u.userId === id)).filter(Boolean) as User[];
-
-                return (
-                    <Card key={team.id} className="flex flex-col">
-                        <CardHeader>
-                            <div className="flex items-start justify-between">
-                                <div className="flex items-center gap-3">
-                                    <GoogleSymbol name={team.icon} className="text-3xl" style={{ color: team.color }} />
-                                    <CardTitle className="text-xl flex items-center gap-2">
-                                        {team.name}
-                                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openEditDialog(team)}>
-                                            <GoogleSymbol name="edit" className="text-lg"/>
-                                            <span className="sr-only">Edit Team</span>
-                                        </Button>
-                                    </CardTitle>
-                                </div>
-                            </div>
-                        </CardHeader>
-                        <CardContent className="flex-grow space-y-4">
-                            <div>
-                                <p className="text-sm font-medium text-muted-foreground mb-2">Team Admins</p>
-                                <div className="flex flex-wrap gap-2 min-h-[34px]">
-                                {teamAdmins.length > 0 ? (
-                                    teamAdmins.map(user => (
-                                        <Badge key={user.userId} variant="secondary" className="gap-1.5 p-1 pl-2 rounded-full">
-                                            <Avatar className="h-5 w-5"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
-                                            <span className="font-medium">{user.displayName}</span>
-                                        </Badge>
-                                    ))
-                                ) : <p className="text-sm text-muted-foreground italic px-2">No admins assigned.</p>}
-                                </div>
-                            </div>
-                            <div>
-                                <p className="text-sm font-medium text-muted-foreground mb-2">Team Members</p>
-                                 <div className="flex flex-wrap gap-2 min-h-[34px]">
-                                {teamMembers.length > 0 ? (
-                                    teamMembers.map(user => (
-                                        <Badge key={user.userId} variant="secondary" className="gap-1.5 p-1 pl-2 rounded-full">
-                                            <Avatar className="h-5 w-5"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
-                                            <span className="font-medium">{user.displayName}</span>
-                                        </Badge>
-                                    ))
-                                ) : <p className="text-sm text-muted-foreground italic px-2">No other members.</p>}
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                );
-            })}
+            {teams.map(team => (
+                <TeamCard key={team.id} team={team} users={users} onEdit={openEditDialog} />
+            ))}
         </div>
 
       {isFormOpen && (
@@ -335,13 +400,7 @@ function TeamFormDialog({ isOpen, onClose, team, allUsers, addTeam, updateTeam, 
                                     <div className="absolute -bottom-1 -right-0 h-4 w-4 rounded-full border-2 border-card cursor-pointer" style={{ backgroundColor: color }} />
                                 </PopoverTrigger>
                                 <PopoverContent className="w-auto p-2">
-                                <div className="grid grid-cols-8 gap-1">
-                                    {predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {setColor(c); setIsColorPopoverOpen(false);}}/>))}
-                                    <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
-                                        <GoogleSymbol name="colorize" className="text-muted-foreground" />
-                                        <Input type="color" value={color} onChange={(e) => setColor(e.target.value)} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/>
-                                    </div>
-                                </div>
+                                <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {setColor(c); setIsColorPopoverOpen(false);}}/>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={color} onChange={(e) => setColor(e.target.value)} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
                                 </PopoverContent>
                             </Popover>
                         </div>
