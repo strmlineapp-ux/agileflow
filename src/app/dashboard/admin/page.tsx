@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -761,6 +760,10 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
 
 function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: Partial<AppPage>) => void }) {
   const { appSettings } = useUser();
+
+  const calendarTabId = appSettings.tabs.find(t => t.componentKey === 'calendars')?.id;
+  const teamsTabId = appSettings.tabs.find(t => t.componentKey === 'teams')?.id;
+  const isServiceDeliveryPage = page.id === 'page-service-delivery';
   
   const handleToggle = (tabId: string) => {
     const currentIds = new Set(page.associatedTabs || []);
@@ -790,12 +793,19 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
           <div className="p-1 space-y-1">
             {appSettings.tabs.map(tab => {
               const isAssociated = (page.associatedTabs || []).includes(tab.id);
+              const isLockedTab = isServiceDeliveryPage && (tab.id === calendarTabId || tab.id === teamsTabId);
+              const finalIsAssociated = isLockedTab || isAssociated;
+
               return (
                 <div 
                     key={tab.id} 
-                    className="flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer"
-                    style={{ color: isAssociated ? tab.color : undefined }}
-                    onClick={() => handleToggle(tab.id)}
+                    className={cn(
+                      "flex items-center gap-3 p-2 rounded-md text-sm",
+                      !isLockedTab && "cursor-pointer",
+                      isLockedTab && "cursor-not-allowed opacity-75"
+                    )}
+                    style={{ color: finalIsAssociated ? tab.color : undefined }}
+                    onClick={!isLockedTab ? () => handleToggle(tab.id) : undefined}
                 >
                     <GoogleSymbol name={tab.icon} className="text-xl" />
                     <span className="font-medium">{tab.name}</span>
@@ -918,6 +928,7 @@ const PagesManagement = ({ tab }: { tab: AppTab }) => {
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const titleInputRef = useRef<HTMLInputElement>(null);
 
+    const lockedPageIds = ['page-admin-management', 'page-service-delivery', 'page-team-management'];
     const adminPageConfig = appSettings.pages.find(p => p.id === 'page-admin-management');
     const otherPages = appSettings.pages.filter(p => p.id !== 'page-admin-management');
 
@@ -992,11 +1003,13 @@ const PagesManagement = ({ tab }: { tab: AppTab }) => {
         // Handle reordering
         if (source.droppableId === 'pages-list' && destination.droppableId === 'pages-list') {
             if (source.index === destination.index) return;
+            
+            const reorderablePages = appSettings.pages.filter(p => !lockedPageIds.includes(p.id));
+            const [movedPage] = reorderablePages.splice(source.index, 1);
+            reorderablePages.splice(destination.index, 0, movedPage);
 
-            const reorderedPages = Array.from(otherPages);
-            const [movedPage] = reorderedPages.splice(source.index, 1);
-            reorderedPages.splice(destination.index, 0, movedPage);
-            updateAppSettings({ pages: [adminPageConfig!, ...reorderedPages] });
+            const lockedPages = appSettings.pages.filter(p => lockedPageIds.includes(p.id));
+            updateAppSettings({ pages: [...lockedPages, ...reorderablePages] });
         }
     };
 
@@ -1053,7 +1066,7 @@ const PagesManagement = ({ tab }: { tab: AppTab }) => {
                                 {...provided.droppableProps}
                             >
                                 {otherPages.map((page, index) => (
-                                    <Draggable key={page.id} draggableId={page.id} index={index}>
+                                    <Draggable key={page.id} draggableId={page.id} index={index} isDragDisabled={lockedPageIds.includes(page.id)}>
                                         {(provided) => (
                                             <div 
                                                 ref={provided.innerRef} 
@@ -1064,6 +1077,7 @@ const PagesManagement = ({ tab }: { tab: AppTab }) => {
                                                     page={page}
                                                     onUpdate={handleUpdatePage}
                                                     onDelete={handleDeletePage}
+                                                    isLocked={lockedPageIds.includes(page.id)}
                                                 />
                                             </div>
                                         )}

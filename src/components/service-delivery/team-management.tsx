@@ -1,9 +1,10 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useUser } from '@/context/user-context';
-import { type Team, type User, type AppTab } from '@/types';
+import { type Team, type User, type AppTab, type LinkGroup } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -22,7 +23,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { cn } from '@/lib/utils';
+import { cn, getContrastColor } from '@/lib/utils';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProps } from 'react-beautiful-dnd';
@@ -50,12 +51,38 @@ const predefinedColors = [
     '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
 ];
 
-function TeamCard({ team, allUsers, onUpdate, onDelete }: { team: Team, allUsers: User[], onUpdate: (id: string, data: Partial<Team>) => void, onDelete: (team: Team) => void }) {
+function TeamCard({ 
+    team, 
+    allUsers, 
+    onUpdate, 
+    onDelete, 
+    canLink,
+    onLink,
+    onUnlink,
+    isLinking,
+    linkGroup,
+    onUpdateLinkGroup
+}: { 
+    team: Team, 
+    allUsers: User[], 
+    onUpdate: (id: string, data: Partial<Team>) => void, 
+    onDelete: (team: Team) => void,
+    canLink: boolean,
+    onLink: (teamId: string) => void,
+    onUnlink: (teamId: string) => void,
+    isLinking: boolean,
+    linkGroup: LinkGroup | null,
+    onUpdateLinkGroup: (groupId: string, newGroup: LinkGroup) => void;
+}) {
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isEditingName, setIsEditingName] = useState(false);
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
     const [iconSearch, setIconSearch] = useState('');
+    
+    const [isLinkPopoverOpen, setIsLinkPopoverOpen] = useState(false);
+    const [isLinkIconPopoverOpen, setIsLinkIconPopoverOpen] = useState(false);
+    const [isLinkColorPopoverOpen, setIsLinkColorPopoverOpen] = useState(false);
 
     const teamMembers = team.members.map(id => allUsers.find(u => u.userId === id)).filter(Boolean) as User[];
     
@@ -90,11 +117,78 @@ function TeamCard({ team, allUsers, onUpdate, onDelete }: { team: Team, allUsers
     };
 
     return (
-        <Card className="flex flex-col">
+        <Card className={cn("flex flex-col", isLinking && "ring-2 ring-primary ring-offset-2 ring-offset-background")}>
             <CardHeader>
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                         <div className="relative">
+                             {linkGroup && (
+                                <Popover open={isLinkPopoverOpen} onOpenChange={setIsLinkPopoverOpen}>
+                                    <PopoverTrigger asChild>
+                                        <div 
+                                            className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full border-2 border-card cursor-pointer flex items-center justify-center z-10" 
+                                            style={{ backgroundColor: linkGroup.color }}
+                                            aria-label="Edit link group"
+                                        >
+                                            <GoogleSymbol name={linkGroup.icon} style={{ fontSize: '14px', color: getContrastColor(linkGroup.color) }}/>
+                                        </div>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-2">
+                                        <div className="flex items-center gap-2">
+                                            <div className="relative">
+                                                <Popover open={isLinkIconPopoverOpen} onOpenChange={setIsLinkIconPopoverOpen}>
+                                                    <PopoverTrigger asChild>
+                                                        <Button variant="ghost" size="icon" className="h-9 w-9 text-2xl text-muted-foreground hover:text-foreground">
+                                                            <GoogleSymbol name={linkGroup.icon} />
+                                                        </Button>
+                                                    </PopoverTrigger>
+                                                    <PopoverContent className="w-80 p-0">
+                                                        <div className="p-2 border-b">
+                                                            <Input placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} />
+                                                        </div>
+                                                        <ScrollArea className="h-64">
+                                                            <div className="grid grid-cols-6 gap-1 p-2">
+                                                                {filteredIcons.slice(0, 300).map((iconName) => (
+                                                                    <Button
+                                                                        key={iconName}
+                                                                        variant={linkGroup.icon === iconName ? "default" : "ghost"}
+                                                                        size="icon"
+                                                                        onClick={() => { onUpdateLinkGroup(team.linkGroupId!, { ...linkGroup, icon: iconName }); setIsLinkIconPopoverOpen(false); }}
+                                                                        className="text-2xl"
+                                                                    >
+                                                                        <GoogleSymbol name={iconName} />
+                                                                    </Button>
+                                                                ))}
+                                                            </div>
+                                                        </ScrollArea>
+                                                    </PopoverContent>
+                                                </Popover>
+                                                <Popover open={isLinkColorPopoverOpen} onOpenChange={setIsLinkColorPopoverOpen}>
+                                                    <PopoverTrigger asChild>
+                                                        <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-popover cursor-pointer" aria-label="Change link group color">
+                                                            <div className="h-full w-full rounded-full" style={{ backgroundColor: linkGroup.color }}/>
+                                                        </div>
+                                                    </PopoverTrigger>
+                                                    <PopoverContent className="w-auto p-2">
+                                                        <div className="grid grid-cols-8 gap-1">
+                                                            {predefinedColors.map(color => (
+                                                                <button key={color} className="h-6 w-6 rounded-full border" style={{ backgroundColor: color }} onClick={() => { onUpdateLinkGroup(team.linkGroupId!, { ...linkGroup, color: color }); setIsLinkColorPopoverOpen(false); }}/>
+                                                            ))}
+                                                            <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
+                                                                <GoogleSymbol name="colorize" className="text-muted-foreground" />
+                                                                <Input type="color" value={linkGroup.color} onChange={(e) => onUpdateLinkGroup(team.linkGroupId!, { ...linkGroup, color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" aria-label="Custom color picker"/>
+                                                            </div>
+                                                        </div>
+                                                    </PopoverContent>
+                                                </Popover>
+                                            </div>
+                                            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-destructive" onClick={() => { onUnlink(team.id); setIsLinkPopoverOpen(false); }}>
+                                                <GoogleSymbol name="link_off" className="text-2xl" />
+                                            </Button>
+                                        </div>
+                                    </PopoverContent>
+                                </Popover>
+                            )}
                              <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                                 <PopoverTrigger asChild>
                                     <Button variant="ghost" size="icon" className="h-9 w-9 text-3xl">
@@ -129,17 +223,31 @@ function TeamCard({ team, allUsers, onUpdate, onDelete }: { team: Team, allUsers
                             )}
                         </div>
                     </div>
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive" onClick={() => onDelete(team)}>
-                                    <GoogleSymbol name="delete" className="text-lg"/>
-                                    <span className="sr-only">Delete Team</span>
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Delete Team</TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
+                    <div className="flex items-center">
+                        {canLink && (
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0 text-muted-foreground hover:text-primary" onClick={() => onLink(team.id)}>
+                                            <GoogleSymbol name="link" className="text-lg"/>
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Link Team</TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        )}
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive" onClick={() => onDelete(team)}>
+                                        <GoogleSymbol name="delete" className="text-lg"/>
+                                        <span className="sr-only">Delete Team</span>
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Delete Team</TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    </div>
                 </div>
             </CardHeader>
             <CardContent className="flex-grow space-y-2">
@@ -174,7 +282,7 @@ function TeamCard({ team, allUsers, onUpdate, onDelete }: { team: Team, allUsers
 }
 
 export function TeamManagement({ tab }: { tab: AppTab }) {
-  const { users, teams, addTeam, updateTeam, deleteTeam, updateAppTab } = useUser();
+  const { users, teams, addTeam, updateTeam, deleteTeam, updateAppTab, appSettings, updateAppSettings } = useUser();
   const { toast } = useToast();
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -184,6 +292,9 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
 
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
+  
+  const [linkingState, setLinkingState] = useState<{ teamId: string } | null>(null);
+  const canLinkTeams = teams.length > 1;
 
   useEffect(() => {
     if (isEditingTitle) titleInputRef.current?.focus();
@@ -224,17 +335,86 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
   };
   
   const handleDuplicateTeam = (sourceTeam: Team) => {
-    const newName = `${sourceTeam.name} (Copy)`;
-    if (teams.some(t => t.name === newName)) {
-        toast({ variant: 'destructive', title: 'Error', description: `A team named "${newName}" already exists.` });
+      const newName = `${sourceTeam.name} (Copy)`;
+      if (teams.some(t => t.name === newName)) {
+          toast({ variant: 'destructive', title: 'Error', description: `A team named "${newName}" already exists.` });
+          return;
+      }
+      const newTeamData: Omit<Team, 'id'> = {
+          ...JSON.parse(JSON.stringify(sourceTeam)), // Deep copy
+          name: newName,
+          linkGroupId: undefined, // Copies should not be linked
+      };
+      addTeam(newTeamData);
+      toast({ title: 'Success', description: `Team "${newName}" created.` });
+  };
+  
+  const handleLinkClick = (teamId: string) => {
+    if (!linkingState) {
+        setLinkingState({ teamId });
         return;
     }
-    const newTeamData: Omit<Team, 'id'> = {
-        ...JSON.parse(JSON.stringify(sourceTeam)), // Deep copy
-        name: newName,
-    };
-    addTeam(newTeamData);
-    toast({ title: 'Success', description: `Team "${newName}" created.` });
+    if (linkingState.teamId === teamId) {
+        setLinkingState(null);
+        return;
+    }
+
+    const teamsToUpdate = teams.map(t => ({ ...t }));
+    let linkGroupsToUpdate = { ...(appSettings.teamLinkGroups || {}) };
+    
+    const sourceTeam = teamsToUpdate.find(t => t.id === linkingState.teamId)!;
+    const targetTeam = teamsToUpdate.find(t => t.id === teamId)!;
+
+    if (!sourceTeam.linkGroupId && !targetTeam.linkGroupId) {
+        const newGroupId = crypto.randomUUID();
+        sourceTeam.linkGroupId = newGroupId;
+        targetTeam.linkGroupId = newGroupId;
+        linkGroupsToUpdate[newGroupId] = { icon: 'link', color: '#64748B' };
+    } else if (sourceTeam.linkGroupId && !targetTeam.linkGroupId) {
+        targetTeam.linkGroupId = sourceTeam.linkGroupId;
+    } else if (!sourceTeam.linkGroupId && targetTeam.linkGroupId) {
+        sourceTeam.linkGroupId = targetTeam.linkGroupId;
+    } else if (sourceTeam.linkGroupId !== targetTeam.linkGroupId) {
+        const targetGroupId = targetTeam.linkGroupId!;
+        const sourceGroupId = sourceTeam.linkGroupId!;
+        teamsToUpdate.forEach(t => {
+            if (t.linkGroupId === targetGroupId) {
+                t.linkGroupId = sourceGroupId;
+            }
+        });
+        delete linkGroupsToUpdate[targetGroupId];
+    }
+    
+    // This is a simple update, might need more complex logic for reordering if that becomes a feature
+    teamsToUpdate.forEach(updatedTeam => updateTeam(updatedTeam.id, { linkGroupId: updatedTeam.linkGroupId }));
+    updateAppSettings({ teamLinkGroups: linkGroupsToUpdate });
+    setLinkingState(null);
+  };
+  
+  const handleUnlinkTeam = (teamId: string) => {
+    const teamToUnlink = teams.find(t => t.id === teamId);
+    if (!teamToUnlink || !teamToUnlink.linkGroupId) return;
+
+    const groupId = teamToUnlink.linkGroupId;
+    const teamsInGroup = teams.filter(t => t.linkGroupId === groupId);
+    
+    updateTeam(teamId, { linkGroupId: undefined });
+
+    if (teamsInGroup.length <= 2) {
+        const remainingTeam = teamsInGroup.find(t => t.id !== teamId);
+        if(remainingTeam) {
+            updateTeam(remainingTeam.id, { linkGroupId: undefined });
+        }
+        const newLinkGroups = { ...(appSettings.teamLinkGroups || {}) };
+        delete newLinkGroups[groupId];
+        updateAppSettings({ teamLinkGroups: newLinkGroups });
+    }
+    toast({ title: 'Team Unlinked', description: `"${teamToUnlink.name}" has been unlinked from its group.` });
+  };
+  
+  const handleUpdateLinkGroup = (groupId: string, newGroup: LinkGroup) => {
+    const newLinkGroups = { ...(appSettings.teamLinkGroups || {}), [groupId]: newGroup };
+    updateAppSettings({ teamLinkGroups: newLinkGroups });
   };
   
   const onDragEnd = (result: DropResult) => {
@@ -247,10 +427,6 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
             handleDuplicateTeam(teamToDuplicate);
           }
           return;
-      }
-  
-      if (source.droppableId === 'teams-list' && destination.droppableId === 'teams-list') {
-          // Reordering logic would go here if needed in the future
       }
   };
 
@@ -306,7 +482,18 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
                                     {...provided.draggableProps}
                                     {...provided.dragHandleProps}
                                 >
-                                    <TeamCard team={team} allUsers={users} onUpdate={handleUpdate} onDelete={openDeleteDialog} />
+                                    <TeamCard 
+                                        team={team} 
+                                        allUsers={users} 
+                                        onUpdate={handleUpdate} 
+                                        onDelete={openDeleteDialog}
+                                        canLink={canLinkTeams}
+                                        onLink={handleLinkClick}
+                                        onUnlink={handleUnlinkTeam}
+                                        isLinking={linkingState?.teamId === team.id}
+                                        linkGroup={team.linkGroupId ? appSettings.teamLinkGroups?.[team.linkGroupId] : null}
+                                        onUpdateLinkGroup={handleUpdateLinkGroup}
+                                    />
                                 </div>
                             )}
                         </Draggable>
@@ -383,6 +570,7 @@ function AddTeamDialog({ isOpen, onClose, allUsers, addTeam }: AddTeamDialogProp
             locationCheckManagers: [],
             allBadges: [],
             badgeCollections: [],
+            linkedCollectionIds: [],
             pinnedLocations: [],
             checkLocations: [],
             locationAliases: {},

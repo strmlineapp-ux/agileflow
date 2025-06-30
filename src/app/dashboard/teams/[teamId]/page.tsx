@@ -13,8 +13,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { WorkstationManagement } from '@/components/settings/workstation-management';
 import { EventTemplateManagement } from '@/components/teams/event-template-management';
 import { Input } from '@/components/ui/input';
+import { AppTab } from '@/types';
 
-const componentMap: Record<string, React.ComponentType<{ team: any }>> = {
+const componentMap: Record<string, React.ComponentType<{ team: any, tab: AppTab }>> = {
   team_members: TeamMembersView,
   badges: BadgeManagement,
   locations: PinnedLocationManagement,
@@ -108,7 +109,7 @@ export default function TeamPage() {
           const ContentComponent = componentMap[tab.componentKey];
           return (
             <TabsContent key={tab.id} value={tab.id} className="mt-4">
-              {ContentComponent ? <ContentComponent team={team} /> : <div>Component for {tab.name} not found.</div>}
+              {ContentComponent ? <ContentComponent team={team} tab={tab} /> : <div>Component for {tab.name} not found.</div>}
             </TabsContent>
           );
         })}
