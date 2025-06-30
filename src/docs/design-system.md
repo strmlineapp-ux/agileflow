@@ -1,5 +1,4 @@
 
-
 # AgileFlow: Design System & UI Patterns
 
 This document outlines the established UI patterns and design choices that ensure a consistent and intuitive user experience across the AgileFlow application. These patterns serve as a guide for both current and future development.
@@ -61,19 +60,21 @@ This is the consistent reference pattern for allowing a user to change both an i
 
 ---
 
-### 5. Entity Sharing
+### 5. Entity Sharing & Linking
 
 This pattern describes how a single entity (like a Badge or Badge Collection) can exist in multiple contexts while maintaining a single source of truth.
 
-- **Mechanism**: Implemented via an explicit "Share" action. This creates a shared instance, not a copy.
+- **Mechanism**: Implemented via drag-and-drop or an explicit "Share" action. This creates a shared instance, not a copy.
 - **Visual Cues**:
-  - **Owned & Shared Item**: An item that was created in the current context but is also being used in another context is marked with an `upload` icon overlay. This indicates it is the "source of truth." An owned item that is *not* shared anywhere else does not get an icon.
+  - **Owned & Shared Item**: An item that was created in the current context but is also being used in another context (e.g., a badge owned by Team A shared to Team B) is marked with an `upload` icon overlay. This indicates it is the "source of truth."
+  - **Internally Linked Item**: An item that is used in multiple places within the same context (e.g., a badge appearing in two collections within the same Team) is marked with a `change_circle` icon overlay on its linked instances.
   - **Shared-to-You Item**: An item that was created in another context and is being used here is marked with a `downloading` icon overlay.
+  - **Owned and Not Shared/Linked**: An item that is owned and exists only in its original location does not get an icon.
 - **Behavior**:
-  - Editing a shared item (e.g., changing its name or icon) modifies the original "source of truth" item, and the changes are instantly reflected in all other places where it is shared.
-  - Deleting a *shared-to-you* item only removes the share from that specific context. The original and all other shares remain untouched.
-  - Deleting the *original* item is a permanent action that removes the item and all of its shares across the entire application.
-- **Application**: Used for sharing Badge Collections between Teams.
+  - Editing a shared or linked item (e.g., changing its name or icon) modifies the original "source of truth" item, and the changes are instantly reflected in all other places where it is used.
+  - Deleting a *shared-to-you* or *internally linked* item only removes that specific instance. The original and all other shares/links remain untouched.
+  - Deleting the *original* item is a permanent action that removes the item and all of its shares/links across the entire application.
+- **Application**: Used for sharing Badges and Badge Collections between Teams.
 
 ---
 
@@ -109,7 +110,8 @@ This pattern provides a clean alternative to checkboxes for selecting multiple i
 
 ### Icons & Hover Effects
 
-- **Icon Set**: We exclusively use **Google Material Symbols** via the `<GoogleSymbol />` component. This ensures a consistent visual language.
+- **Icon Set**: We exclusively use **Google Material Symbols** via the `<GoogleSymbol />` component. This ensures a consistent visual language. The font library is a variable font, which means we can adjust its properties.
+- **Filled Icons**: To use the filled style of an icon, pass the `filled` prop to the component: `<GoogleSymbol name="star" filled />`.
 - **Hover Behavior**: The color of icons on hover is typically determined by their parent element. For example, an icon inside a `<Button variant="ghost">` will change to the primary theme color on hover because the button's text color changes, and the icon inherits that color. This creates a clean and predictable interaction.
 - **Destructive Actions**: Delete or other destructive action icons (like `delete`, `close`, `cancel`) are `text-muted-foreground` by default and become `text-destructive` on hover to provide a clear but not overwhelming visual warning.
 - **Tooltips for Clarity**: Icon-only buttons (those without visible text) must always be wrapped in a `<Tooltip>` to provide context on their function. This is crucial for accessibility and user experience.

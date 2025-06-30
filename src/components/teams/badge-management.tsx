@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -20,7 +19,7 @@ import { Textarea } from '../ui/textarea';
 import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProps } from 'react-beautiful-dnd';
 import { Separator } from '../ui/separator';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Dialog, DialogTitle as UIDialogTitle, DialogContent as DialogContentUI, DialogDescription as UIDialogDescription, DialogHeader as UIDialogHeader } from '@/components/ui/dialog';
+import { Dialog, DialogTitle as UIDialogTitle, DialogContent as DialogContentUI, DialogDescription as UIDialogDescription, DialogHeader } from '@/components/ui/dialog';
 import { Badge as UiBadge } from '@/components/ui/badge';
 
 const predefinedColors = [
@@ -45,7 +44,7 @@ const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
   return <Droppable {...props}>{children}</Droppable>;
 };
 
-function BadgeDisplayItem({ badge, viewMode, isOwned, onUpdateBadge, onDelete }: { badge: Badge; viewMode: BadgeCollection['viewMode']; isOwned: boolean; onUpdateBadge: (badgeData: Partial<Badge>) => void; onDelete: () => void; }) {
+function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collectionId, teamId }: { badge: Badge; viewMode: BadgeCollection['viewMode']; onUpdateBadge: (badgeData: Partial<Badge>) => void; onDelete: () => void; collectionId: string; teamId: string; }) {
     const { toast } = useToast();
     const { teams } = useUser();
     const [isEditingName, setIsEditingName] = useState(false);
@@ -110,22 +109,52 @@ function BadgeDisplayItem({ badge, viewMode, isOwned, onUpdateBadge, onDelete }:
         return googleSymbolNames.filter(iconName => iconName.toLowerCase().includes(iconSearch.toLowerCase()));
     }, [iconSearch]);
     
-    const isBadgeShared = useMemo(() => {
-        for (const t of teams) {
-            for (const c of t.badgeCollections) {
-                // If this collection is NOT the badge's owner collection, but contains the badge, it's shared.
-                if (c.id !== badge.ownerCollectionId && c.badgeIds.includes(badge.id)) {
-                    return true;
-                }
-            }
+    const badgeOwnerTeamId = useMemo(() => {
+      for (const t of teams) {
+        if (t.allBadges.some(b => b.id === badge.id && b.ownerCollectionId === badge.ownerCollectionId)) {
+          return t.id;
         }
-        return false;
-    }, [teams, badge.id, badge.ownerCollectionId]);
+      }
+      return null;
+    }, [teams, badge]);
 
-    const showUploadIcon = isOwned && isBadgeShared;
-    const showDownloadIcon = !isOwned;
-    const shareStatusIcon = showUploadIcon ? 'upload' : 'downloading';
+    const isOwnedByMyTeam = badgeOwnerTeamId === teamId;
     
+    // Is this badge shared to any OTHER team?
+    const isSharedToOtherTeams = useMemo(() => {
+        return teams.some(t => {
+            if (t.id === badgeOwnerTeamId) return false; // Not another team
+            return t.badgeCollections.some(c => c.badgeIds.includes(badge.id));
+        });
+    }, [teams, badge.id, badgeOwnerTeamId]);
+
+    // Is this badge present in more than one collection within the current team?
+    const isLinkedInternally = useMemo(() => {
+        const currentTeam = teams.find(t => t.id === teamId);
+        if (!currentTeam) return false;
+        const count = currentTeam.badgeCollections.reduce((acc, c) => acc + (c.badgeIds.includes(badge.id) ? 1 : 0), 0);
+        return count > 1;
+    }, [teams, badge.id, teamId]);
+
+    const isThisTheOriginalInstance = badge.ownerCollectionId === collectionId;
+
+    let shareIcon: string | null = null;
+    let shareIconTitle: string = '';
+
+    if (isOwnedByMyTeam) {
+        if (isSharedToOtherTeams && isThisTheOriginalInstance) {
+            shareIcon = 'upload';
+            shareIconTitle = 'Owned by this team and shared';
+        } else if (isLinkedInternally && !isThisTheOriginalInstance) {
+            shareIcon = 'change_circle';
+            shareIconTitle = 'Linked from another collection in this team';
+        }
+    } else {
+        shareIcon = 'downloading';
+        shareIconTitle = 'Shared from another team';
+    }
+
+
     if (viewMode === 'detailed') {
       return (
         <Card className="group">
@@ -150,12 +179,12 @@ function BadgeDisplayItem({ badge, viewMode, isOwned, onUpdateBadge, onDelete }:
                                 <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdateBadge({ color: c }); setIsColorPopoverOpen(false);}}/>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={badge.color} onChange={(e) => onUpdateBadge({ color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
                                 </PopoverContent>
                             </Popover>
-                            {(showUploadIcon || showDownloadIcon) && (
+                            {shareIcon && (
                                 <div 
                                     className="absolute -top-1 -right-1 h-5 w-5 rounded-full border-2 border-card flex items-center justify-center bg-muted text-muted-foreground"
-                                    title={isOwned ? "Owned Badge" : "Shared Badge"}
+                                    title={shareIconTitle}
                                 >
-                                    <GoogleSymbol name={shareStatusIcon} style={{ fontSize: '14px' }}/>
+                                    <GoogleSymbol name={shareIcon} style={{ fontSize: '14px' }}/>
                                 </div>
                             )}
                         </div>
@@ -202,12 +231,12 @@ function BadgeDisplayItem({ badge, viewMode, isOwned, onUpdateBadge, onDelete }:
                 <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdateBadge({ color: c }); setIsColorPopoverOpen(false);}}/>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={badge.color} onChange={(e) => onUpdateBadge({ color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
                 </PopoverContent>
             </Popover>
-            {(showUploadIcon || showDownloadIcon) && (
+            {shareIcon && (
                 <div
                     className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-card bg-muted text-muted-foreground flex items-center justify-center"
-                    title={isOwned ? "Owned Badge" : "Shared Badge"}
+                    title={shareIconTitle}
                 >
-                    <GoogleSymbol name={shareStatusIcon} style={{fontSize: '12px'}}/>
+                    <GoogleSymbol name={shareIcon} style={{fontSize: '12px'}}/>
                 </div>
             )}
         </div>
@@ -278,12 +307,12 @@ function BadgeDisplayItem({ badge, viewMode, isOwned, onUpdateBadge, onDelete }:
                     <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdateBadge({ color: c }); setIsColorPopoverOpen(false);}}/>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={badge.color} onChange={(e) => onUpdateBadge({ color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
                     </PopoverContent>
                 </Popover>
-                {(showUploadIcon || showDownloadIcon) && (
+                {shareIcon && (
                     <div
                         className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-background bg-muted text-muted-foreground flex items-center justify-center"
-                        title={isOwned ? "Owned Badge" : "Shared Badge"}
+                        title={shareIconTitle}
                     >
-                        <GoogleSymbol name={shareStatusIcon} style={{fontSize: '10px'}}/>
+                        <GoogleSymbol name={shareIcon} style={{fontSize: '10px'}}/>
                     </div>
                 )}
             </div>
@@ -357,9 +386,13 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInAllT
     const isSharedToThisTeam = !isOwned;
     const isSharedFromThisTeam = isOwned && teams.some(t => t.id !== teamId && (t.sharedCollectionIds || []).includes(collection.id));
 
-    const showUploadIcon = isSharedFromThisTeam;
-    const showDownloadIcon = isSharedToThisTeam;
-    const shareStatusIcon = showUploadIcon ? 'upload' : 'downloading';
+    let shareIcon: string | null = null;
+
+    if (isSharedFromThisTeam) {
+        shareIcon = 'upload';
+    } else if (isSharedToThisTeam) {
+        shareIcon = 'downloading';
+    }
     
     return (
         <Card>
@@ -401,12 +434,12 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInAllT
                                     </div>
                                 </PopoverContent>
                             </Popover>
-                            {(showUploadIcon || showDownloadIcon) && (
+                            {shareIcon && (
                                 <div 
                                     className="absolute -top-1 -right-1 h-5 w-5 rounded-full border-2 border-card flex items-center justify-center bg-muted text-muted-foreground"
                                     title={isOwned ? "Owned Collection" : "Shared Collection"}
                                 >
-                                    <GoogleSymbol name={shareStatusIcon} style={{ fontSize: '14px' }}/>
+                                    <GoogleSymbol name={shareIcon} style={{ fontSize: '14px' }}/>
                                 </div>
                             )}
                         </div>
@@ -488,25 +521,20 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInAllT
                                 collection.viewMode === 'list' && "flex flex-col gap-1",
                                 collection.viewMode === 'detailed' && "grid grid-cols-1 md:grid-cols-2 gap-4"
                             )}>
-                            {collectionBadges.map((badge, index) => {
-                                 const allCollectionsFromAllTeams = teams.flatMap(t => t.badgeCollections);
-                                 const ownerCollection = allCollectionsFromAllTeams.find(c => c.id === badge.ownerCollectionId);
-                                 const isOwnedByThisTeam = ownerCollection?.ownerTeamId === teamId;
-
-                                return (
-                                <Draggable key={badge.id} draggableId={badge.id} index={index}>
+                            {collectionBadges.map((badge, index) => (
+                                <Draggable key={`${badge.id}::${collection.id}`} draggableId={`${badge.id}::${collection.id}`} index={index}>
                                     {(provided) => (<div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
                                         <BadgeDisplayItem 
                                             badge={badge} 
                                             viewMode={collection.viewMode} 
-                                            isOwned={isOwnedByThisTeam}
                                             onUpdateBadge={(data) => onUpdateBadge({ ...data, id: badge.id })}
                                             onDelete={() => onDeleteBadge(collection.id, badge.id)}
+                                            collectionId={collection.id}
+                                            teamId={teamId}
                                         />
                                     </div>)}
                                 </Draggable>
-                                );
-                            })}
+                                ))}
                             {provided.placeholder}
                         </div>
                     )}
@@ -552,10 +580,10 @@ function ShareCollectionDialog({ isOpen, onClose, team, teams, onShareCollection
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContentUI className="max-w-3xl">
-                <UIDialogHeader>
+                <DialogHeader>
                     <UIDialogTitle>Share a Collection</UIDialogTitle>
                     <UIDialogDescription>Select a collection from a shared team to make its badges available to the "{team.name}" team.</UIDialogDescription>
-                </UIDialogHeader>
+                </DialogHeader>
                 <ScrollArea className="h-[60vh] -mx-6">
                     <div className="px-6 py-2 space-y-4">
                     {Object.keys(groupedSharedCollections).length > 0 ? (
@@ -579,17 +607,12 @@ function ShareCollectionDialog({ isOpen, onClose, team, teams, onShareCollection
                                         <CardContent>
                                             <div className="flex flex-wrap gap-1 min-h-[28px] items-center">
                                             {collection.badges.slice(0, 5).map(badge => (
-                                                <TooltipProvider key={badge.id}>
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <div className="p-1">
-                                                                <GoogleSymbol name={badge.icon} style={{ color: badge.color }} className="text-xl" />
-                                                            </div>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>{badge.name}</TooltipContent>
-                                                    </Tooltip>
-                                                </TooltipProvider>
+                                                <UiBadge key={badge.id} variant="outline" style={{ color: badge.color, borderColor: badge.color }} className="gap-1 rounded-full text-xs">
+                                                    <GoogleSymbol name={badge.icon} className="text-sm" />
+                                                    <span className="font-normal">{badge.name}</span>
+                                                </UiBadge>
                                             ))}
+                                            {collection.badges.length > 5 && <UiBadge variant="outline" className="rounded-full text-xs">... and more</UiBadge>}
                                             </div>
                                         </CardContent>
                                         </Card>
@@ -814,10 +837,12 @@ export function BadgeManagement({ team }: { team: Team }) {
             return;
         }
 
+        const badgeId = draggableId.split('::')[0];
+
         if (destination.droppableId.startsWith('duplicate-badge-zone:')) {
             const collectionId = destination.droppableId.split(':')[1];
             const allBadgesFromAllTeams = teams.flatMap(t => t.allBadges);
-            const sourceBadge = allBadgesFromAllTeams.find(b => b.id === draggableId);
+            const sourceBadge = allBadgesFromAllTeams.find(b => b.id === badgeId);
   
             if (sourceBadge && collectionId) {
                 const newBadge = {
@@ -858,12 +883,12 @@ export function BadgeManagement({ team }: { team: Team }) {
             const newCollections = team.badgeCollections.map(c => c.id === sourceCollection.id ? { ...c, badgeIds: reorderedIds } : c);
             updateTeam(team.id, { badgeCollections: newCollections });
         } else {
-            if (destCollection.badgeIds.includes(draggableId)) {
+            if (destCollection.badgeIds.includes(badgeId)) {
                 toast({ variant: 'default', title: 'Already shared', description: 'This badge is already in the destination collection.'});
                 return;
             }
             const newDestIds = Array.from(destCollection.badgeIds);
-            newDestIds.splice(destination.index, 0, draggableId);
+            newDestIds.splice(destination.index, 0, badgeId);
             
             const newCollections = team.badgeCollections.map(c => c.id === destCollection.id ? { ...c, badgeIds: newDestIds } : c);
             updateTeam(team.id, { badgeCollections: newCollections });
