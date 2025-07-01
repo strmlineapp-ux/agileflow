@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { LoginForm } from '@/components/auth/login-form';
 import Logo from '@/components/icons/logo';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
 export default function LoginPage() {
   return (
@@ -10,8 +10,6 @@ export default function LoginPage() {
         <Card className="shadow-2xl">
           <CardHeader className="items-center text-center">
             <Logo className="mb-4" />
-            <CardTitle className="font-headline text-3xl">Welcome Back</CardTitle>
-            <CardDescription>Sign in to continue to AgileFlow</CardDescription>
           </CardHeader>
           <CardContent>
             <LoginForm />
