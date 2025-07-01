@@ -145,7 +145,7 @@ export function LoginForm() {
           )}
         />
         
-        <div className="space-y-1 pt-1">
+        <div className="space-y-0.5 pt-1">
           <Button variant="ghost" type="button" disabled={isLoading} className="w-full justify-center text-muted-foreground hover:text-primary hover:bg-transparent">
               <svg role="img" viewBox="0 0 24 24" className="mr-2 h-4 w-4">
               <path
@@ -156,7 +156,7 @@ export function LoginForm() {
               Sign in with Google
           </Button>
 
-          <div className="w-2/3 mx-auto py-1">
+          <div className="w-5/6 mx-auto py-1">
             <Separator />
           </div>
 
