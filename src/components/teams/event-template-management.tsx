@@ -39,7 +39,7 @@ function EventTemplateForm({
   const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
   const [iconSearch, setIconSearch] = useState('');
   
-  const availableBadges = team.badgeCollections.flatMap(c => c.badges).filter(badge => !requestedRoles.includes(badge.name) && badge.name.toLowerCase().includes(roleSearch.toLowerCase()));
+  const availableBadges = (team.allBadges || []).filter(badge => !requestedRoles.includes(badge.name) && badge.name.toLowerCase().includes(roleSearch.toLowerCase()));
 
   const filteredIcons = googleSymbolNames.filter(iconName =>
     iconName.toLowerCase().includes(iconSearch.toLowerCase())
