@@ -14,7 +14,7 @@ export const googleSymbolNames = [
   "add_ic_call", "add_link", "add_location", "add_location_alt", "add_moderator",
   "add_photo_alternate", "add_reaction", "add_road", "add_shopping_cart",
   "add_task", "add_to_drive", "add_to_home_screen", "add_to_photos",
-  "add_to_queue", "add_box", "adjust", "admin_panel_settings", "ads_click",
+  "add_to_queue", "adjust", "admin_panel_settings", "ads_click",
   "agriculture", "air", "airline_seat_flat", "airline_seat_flat_angled",
   "airline_seat_individual_suite", "airline_seat_legroom_extra",
   "airline_seat_legroom_normal", "airline_seat_legroom_reduced",
