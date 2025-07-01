@@ -340,7 +340,7 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
     const [checkSearchTerm, setCheckSearchTerm] = useState('');
     
     const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars, appSettings.customAdminRoles);
-    const managerialRoles = ["Admin", ...appSettings.customAdminRoles.map(r => r.name)];
+    const managerialRoles = ["Admin", ...appSettings.adminGroups.map(r => r.name)];
     const canManageStatus = viewAsUser.roles?.some(p => managerialRoles.includes(p));
 
     const timeFormatTimeline = viewAsUser.timeFormat === '24h' ? 'HH:mm' : 'h a';
@@ -408,7 +408,7 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
             
             const allCheckLocationsForDay = [...new Set(teamsWithPinnedLocationsForDay.flatMap(t => t.checkLocations || []))];
             
-            const allPinnedLocations = [...new Set(teamsWithPinnedLocationsForDay.flatMap(t => t.pinnedLocations))].sort();
+            const allPinnedLocations = [...new Set(teamsWithPinnedLocationsForDay.flatMap(t => t.pinnedLocations || []))].sort();
 
             const gridLocations = allPinnedLocations.filter(loc => !allCheckLocationsForDay.includes(loc));
             
@@ -734,4 +734,5 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
     );
 });
 ProductionScheduleView.displayName = 'ProductionScheduleView';
+
 
