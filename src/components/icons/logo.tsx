@@ -1,3 +1,4 @@
+
 import { cn } from '@/lib/utils';
 
 const Logo = ({ className }: { className?: string }) => {
@@ -9,7 +10,7 @@ const Logo = ({ className }: { className?: string }) => {
         viewBox="0 0 24 24"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="text-accent"
+        className=""
       >
         <path
           d="M12 2L2 7L12 12L22 7L12 2Z"
@@ -33,7 +34,7 @@ const Logo = ({ className }: { className?: string }) => {
           strokeLinejoin="round"
         />
       </svg>
-      <span className="font-headline text-2xl font-semibold text-foreground">AgileFlow</span>
+      <span className="font-headline text-2xl font-semibold">AgileFlow</span>
     </div>
   );
 };
