@@ -1,8 +1,7 @@
 
-
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useUser } from '@/context/user-context';
 import { type SharedCalendar, type AppTab } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
