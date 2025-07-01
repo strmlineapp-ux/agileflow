@@ -16,7 +16,7 @@ export interface AppTab {
   icon: string;
   color: string;
   description?: string;
-  componentKey: 'calendars' | 'teams' | 'team_members' | 'badges' | 'locations' | 'workstations' | 'templates' | 'adminGroups' | 'pages' | 'tabs';
+  componentKey: 'calendars' | 'teams' | 'team_members' | 'badges' | 'locations' | 'workstations' | 'templates' | 'adminGroups' | 'pages' | 'tabs' | 'strategy';
 }
 
 export interface AppPage {
@@ -39,6 +39,8 @@ export interface AppSettings {
   pages: AppPage[];
   tabs: AppTab[];
   strategyLabel?: string;
+  calendarManagementLabel?: string;
+  teamManagementLabel?: string;
 }
 
 export interface Attendee {
@@ -108,7 +110,6 @@ export interface Team {
   name: string;
   icon: string;
   color: string;
-  sharedTeamIds?: string[];
   members: string[]; // array of userIds
   teamAdmins?: string[]; // array of userIds who are admins for this team
   locationCheckManagers: string[]; // array of userIds who can manage check locations

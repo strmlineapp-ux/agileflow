@@ -2,37 +2,33 @@
 
 'use client';
 
-import React, { useState, useMemo, useRef } from 'react';
-import { useUser } from '@/context/user-context';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CalendarManagement } from '@/components/service-delivery/calendar-management';
-import { TeamManagement } from '@/components/service-delivery/team-management';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useState, useMemo, useRef } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { TaskList } from '@/components/tasks/task-list';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
-import { type AppTab, type AppPage } from '@/types';
-import { Button } from '@/components/ui/button';
+import { useUser } from '@/context/user-context';
+import { type AppPage } from '@/types';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { googleSymbolNames } from '@/lib/google-symbols';
-import { StrategyManagement } from '@/components/service-delivery/strategy-management';
 
+const PAGE_ID = 'page-overview';
 
-// This is a mapping from the componentKey in our AppTab model to the actual component to render.
-const componentMap: Record<string, React.ComponentType<{ tab: AppTab }>> = {
-  calendars: CalendarManagement,
-  teams: TeamManagement,
-  strategy: StrategyManagement,
-};
+const stats = [
+  { title: 'Active Tasks', value: '12', icon: 'checklist' },
+  { title: 'Due this week', value: '5', icon: 'schedule' },
+  { title: 'Completed', value: '28', icon: 'check_circle' },
+  { title: 'Team Members', value: '8', icon: 'group' },
+];
 
-// Define a unique identifier for this page
-const PAGE_ID = 'page-service-delivery';
-
-export default function ServiceDeliveryPage() {
+export default function DashboardPage() {
   const { appSettings, updateAppSettings, loading } = useUser();
-
-  const pageConfig = appSettings.pages.find(p => p.id === PAGE_ID);
   
+  const pageConfig = appSettings.pages.find(p => p.id === PAGE_ID);
+
   // Header Editing State
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
@@ -46,7 +42,7 @@ export default function ServiceDeliveryPage() {
     const newPages = appSettings.pages.map(p => p.id === PAGE_ID ? { ...p, ...data } : p);
     updateAppSettings({ pages: newPages });
   };
-
+  
   const handleSaveTitle = () => {
     const newName = titleInputRef.current?.value.trim();
     if (newName && pageConfig && newName !== pageConfig.name) {
@@ -58,16 +54,22 @@ export default function ServiceDeliveryPage() {
   const filteredIcons = useMemo(() => googleSymbolNames.filter(icon => icon.toLowerCase().includes(iconSearch.toLowerCase())), [iconSearch]);
 
   if (loading || !pageConfig) {
-    return (
-      <div className="space-y-6">
-        <Skeleton className="h-10 w-1/3" />
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-64 w-full" />
-      </div>
-    );
+      return (
+        <div className="flex flex-col gap-6">
+          <Skeleton className="h-9 w-64" />
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Skeleton className="h-24" />
+            <Skeleton className="h-24" />
+            <Skeleton className="h-24" />
+            <Skeleton className="h-24" />
+          </div>
+          <div>
+            <Skeleton className="h-8 w-48 mb-4" />
+            <Skeleton className="h-64" />
+          </div>
+        </div>
+      );
   }
-
-  const pageTabs = appSettings.tabs.filter(t => pageConfig.associatedTabs.includes(t.id));
 
   return (
     <div className="flex flex-col gap-6">
@@ -96,22 +98,24 @@ export default function ServiceDeliveryPage() {
           <h1 className="font-headline text-3xl font-semibold cursor-pointer" onClick={() => setIsEditingTitle(true)}>{pageConfig.name}</h1>
         )}
       </div>
-      
-      <Tabs defaultValue={pageTabs[0]?.id} className="w-full">
-        <TabsList className={`grid w-full grid-cols-${pageTabs.length}`}>
-          {pageTabs.map(tab => (
-            <TabsTrigger key={tab.id} value={tab.id}>{tab.name}</TabsTrigger>
-          ))}
-        </TabsList>
-        {pageTabs.map(tab => {
-          const ContentComponent = componentMap[tab.componentKey];
-          return (
-            <TabsContent key={tab.id} value={tab.id} className="mt-4">
-              {ContentComponent ? <ContentComponent tab={tab} /> : <div>Component for {tab.name} not found.</div>}
-            </TabsContent>
-          );
-        })}
-      </Tabs>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {stats.map((stat) => (
+          <Card key={stat.title}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
+              <GoogleSymbol name={stat.icon} className="text-muted-foreground text-2xl" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stat.value}</div>
+              <p className="text-xs text-muted-foreground">this month</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      <div>
+        <h2 className="font-headline text-2xl font-semibold mb-4">Recent Tasks</h2>
+        <TaskList limit={5} />
+      </div>
     </div>
   );
 }

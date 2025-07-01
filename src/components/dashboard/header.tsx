@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import Link from 'next/link';
@@ -19,21 +20,25 @@ export function Header() {
   const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
   const unreadCount = notifications.filter((n) => !n.read).length;
   
-  const adminPage = useMemo(() => {
-    const page = appSettings.pages.find(p => p.id === 'page-admin-management');
-    return page && hasAccess(viewAsUser, page, teams, appSettings.adminGroups) ? page : null;
-  }, [viewAsUser, appSettings.pages, teams, appSettings.adminGroups]);
-  
   const dynamicPage = useMemo(() => {
-    return appSettings.pages.find(page => page.isDynamic && hasAccess(viewAsUser, page, teams, appSettings.adminGroups));
-  }, [viewAsUser, appSettings.pages, teams, appSettings.adminGroups]);
+    return appSettings.pages.find(page => page.isDynamic);
+  }, [appSettings.pages]);
 
-  const staticPages = useMemo(() => {
-    return appSettings.pages.filter(page => 
+  const { adminPage, staticPages, teamManagementPage } = useMemo(() => {
+    const adminPage = appSettings.pages.find(p => p.id === 'page-admin-management');
+    const teamManagementPage = appSettings.pages.find(p => p.id === 'page-team-management');
+    const staticPages = appSettings.pages.filter(page => 
         !page.isDynamic &&
-        page.id !== 'page-admin-management' && 
+        page.id !== 'page-admin-management' &&
+        page.id !== 'page-team-management' &&
         hasAccess(viewAsUser, page, teams, appSettings.adminGroups)
     );
+
+    return {
+        adminPage: adminPage && hasAccess(viewAsUser, adminPage, teams, appSettings.adminGroups) ? adminPage : null,
+        staticPages,
+        teamManagementPage: teamManagementPage && hasAccess(viewAsUser, teamManagementPage, teams, appSettings.adminGroups) ? teamManagementPage : null,
+    };
   }, [viewAsUser, appSettings.pages, teams, appSettings.adminGroups]);
 
   const userManagedTeams = useMemo(() => {
@@ -100,8 +105,8 @@ export function Header() {
                 </Link>
             ))}
 
-            {dynamicPage && userManagedTeams.map(team => (
-              <Link key={`${dynamicPage.id}-${team.id}`} href={`${dynamicPage.path}/${team.id}`} className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
+            {teamManagementPage && userManagedTeams.map(team => (
+              <Link key={`${teamManagementPage.id}-${team.id}`} href={`${teamManagementPage.path}/${team.id}`} className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
                   <GoogleSymbol name={team.icon} className="text-2xl" />
                   {team.name}
               </Link>

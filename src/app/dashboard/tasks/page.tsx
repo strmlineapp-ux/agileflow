@@ -55,14 +55,17 @@ export default function TasksPage() {
       <div className="flex items-center gap-3">
         <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
           <PopoverTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-9 w-9 text-3xl shrink-0" style={{ color: pageConfig.color }}>
+            <Button variant="ghost" size="icon" className="h-9 w-9 text-3xl shrink-0">
               <GoogleSymbol name={pageConfig.icon} />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-80 p-0">
             <div className="flex items-center gap-1 p-2 border-b">
                 {!isSearchingIcons ? ( <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => setIsSearchingIcons(true)}> <GoogleSymbol name="search" /> </Button> ) : (
-                    <div className="flex items-center gap-1 w-full"> <GoogleSymbol name="search" className="text-muted-foreground text-xl" /> <input ref={iconSearchInputRef} placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} onBlur={() => !iconSearch && setIsSearchingIcons(false)} className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0" /> </div>
+                    <div className="flex items-center gap-1 w-full">
+                        <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                        <input ref={iconSearchInputRef} placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} onBlur={() => !iconSearch && setIsSearchingIcons(false)} className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0" />
+                    </div>
                 )}
             </div>
             <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={pageConfig.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { updatePage({ icon: iconName }); setIsIconPopoverOpen(false);}} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>

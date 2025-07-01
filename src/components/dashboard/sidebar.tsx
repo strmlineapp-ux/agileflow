@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import Link from 'next/link';
@@ -19,21 +20,25 @@ export function Sidebar() {
   const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const adminPage = useMemo(() => {
-    const page = appSettings.pages.find(p => p.id === 'page-admin-management');
-    return page && hasAccess(viewAsUser, page, teams, appSettings.adminGroups) ? page : null;
-  }, [viewAsUser, appSettings.pages, teams, appSettings.adminGroups]);
-
   const dynamicPage = useMemo(() => {
-    return appSettings.pages.find(page => page.isDynamic && hasAccess(viewAsUser, page, teams, appSettings.adminGroups));
-  }, [viewAsUser, appSettings.pages, teams, appSettings.adminGroups]);
+    // There should only be one dynamic page type, find it.
+    return appSettings.pages.find(page => page.isDynamic);
+  }, [appSettings.pages]);
 
-  const staticPages = useMemo(() => {
-    return appSettings.pages.filter(page => 
+  const { adminPage, staticPages } = useMemo(() => {
+    const adminPage = appSettings.pages.find(p => p.id === 'page-admin-management');
+    
+    // Filter out dynamic and admin pages to get the static list for the main nav
+    const staticPages = appSettings.pages.filter(page => 
         !page.isDynamic &&
         page.id !== 'page-admin-management' && 
         hasAccess(viewAsUser, page, teams, appSettings.adminGroups)
     );
+
+    return {
+        adminPage: adminPage && hasAccess(viewAsUser, adminPage, teams, appSettings.adminGroups) ? adminPage : null,
+        staticPages
+    };
   }, [viewAsUser, appSettings.pages, teams, appSettings.adminGroups]);
   
   const userManagedTeams = useMemo(() => {

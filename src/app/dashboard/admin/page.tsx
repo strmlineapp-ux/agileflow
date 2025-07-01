@@ -10,21 +10,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { googleSymbolNames } from '@/lib/google-symbols';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProps } from 'react-beautiful-dnd';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn, getContrastColor } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Textarea } from '@/components/ui/textarea';
+import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 // #region Helper Components and Constants
 const predefinedColors = [
@@ -303,18 +301,23 @@ function AdminGroupCard({
               ))}
             </CardContent>
           </Card>
-          <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                    <AlertDialogDescription>This action cannot be undone. This will permanently delete the "{group.name}" group and unassign all users.</AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={onDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Continue</AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+            <DialogContent className="sm:max-w-md p-0">
+                <DialogHeader className="p-6 pb-4">
+                    <div className="flex items-start justify-between">
+                        <DialogTitle>Delete "{group.name}"?</DialogTitle>
+                        <DialogClose asChild>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 -mr-2 -mt-2 text-destructive" onClick={onDelete}>
+                                <GoogleSymbol name="delete" className="text-xl" />
+                            </Button>
+                        </DialogClose>
+                    </div>
+                    <DialogDescription>
+                        This will permanently delete the group and unassign all users. This action cannot be undone.
+                    </DialogDescription>
+                </DialogHeader>
+            </DialogContent>
+          </Dialog>
         </>
     );
 }
@@ -684,6 +687,8 @@ function PageCard({ page, onUpdate, onDelete, isLocked = false }: { page: AppPag
     const [isSearchingIcons, setIsSearchingIcons] = useState(false);
     const [iconSearch, setIconSearch] = useState('');
     const iconSearchInputRef = useRef<HTMLInputElement>(null);
+    
+    const controlsHidden = ['page-calendar', 'page-notifications', 'page-settings'].includes(page.id);
 
     useEffect(() => {
         if (isEditingName) nameInputRef.current?.focus();
@@ -770,7 +775,7 @@ function PageCard({ page, onUpdate, onDelete, isLocked = false }: { page: AppPag
                             ) : (
                                 <CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer">{page.name}</CardTitle>
                             )}
-                            {!isLocked && (
+                            {!isLocked && !controlsHidden && (
                                 <>
                                     <PageAccessControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
                                     <PageTabsControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
@@ -816,8 +821,15 @@ const PagesManagement = ({ tab }: { tab: AppTab }) => {
     const titleInputRef = useRef<HTMLInputElement>(null);
 
     const lockedPageIds = ['page-admin-management'];
-    const adminPageConfig = appSettings.pages.find(p => p.id === 'page-admin-management');
-    const otherPages = appSettings.pages.filter(p => p.id !== 'page-admin-management');
+    const pinnedPageIds = ['page-notifications', 'page-settings'];
+
+    const { adminPageConfig, unpinnedPages, pinnedPages } = useMemo(() => {
+        const adminPageConfig = appSettings.pages.find(p => p.id === 'page-admin-management');
+        const otherPages = appSettings.pages.filter(p => p.id !== 'page-admin-management');
+        const pinnedPages = otherPages.filter(p => pinnedPageIds.includes(p.id)).sort((a, b) => pinnedPageIds.indexOf(a.id) - pinnedPageIds.indexOf(b.id));
+        const unpinnedPages = otherPages.filter(p => !pinnedPageIds.includes(p.id));
+        return { adminPageConfig, unpinnedPages, pinnedPages };
+    }, [appSettings.pages]);
 
     useEffect(() => {
         if (isEditingTitle) titleInputRef.current?.focus();
@@ -891,12 +903,13 @@ const PagesManagement = ({ tab }: { tab: AppTab }) => {
         if (source.droppableId === 'pages-list' && destination.droppableId === 'pages-list') {
             if (source.index === destination.index) return;
             
-            const reorderablePages = appSettings.pages.filter(p => !lockedPageIds.includes(p.id));
+            const reorderablePages = appSettings.pages.filter(p => !lockedPageIds.includes(p.id) && !pinnedPageIds.includes(p.id));
             const [movedPage] = reorderablePages.splice(source.index, 1);
             reorderablePages.splice(destination.index, 0, movedPage);
 
             const lockedPages = appSettings.pages.filter(p => lockedPageIds.includes(p.id));
-            updateAppSettings({ pages: [...lockedPages, ...reorderablePages] });
+            const finalPinnedPages = appSettings.pages.filter(p => pinnedPageIds.includes(p.id)).sort((a, b) => pinnedPageIds.indexOf(a.id) - pinnedPageIds.indexOf(b.id));
+            updateAppSettings({ pages: [...lockedPages, ...reorderablePages, ...finalPinnedPages] });
         }
     };
 
@@ -952,8 +965,8 @@ const PagesManagement = ({ tab }: { tab: AppTab }) => {
                                 ref={provided.innerRef}
                                 {...provided.droppableProps}
                             >
-                                {otherPages.map((page, index) => (
-                                    <Draggable key={page.id} draggableId={page.id} index={index} isDragDisabled={lockedPageIds.includes(page.id)}>
+                                {unpinnedPages.map((page, index) => (
+                                    <Draggable key={page.id} draggableId={page.id} index={index}>
                                         {(provided) => (
                                             <div 
                                                 ref={provided.innerRef} 
@@ -964,7 +977,6 @@ const PagesManagement = ({ tab }: { tab: AppTab }) => {
                                                     page={page}
                                                     onUpdate={handleUpdatePage}
                                                     onDelete={handleDeletePage}
-                                                    isLocked={lockedPageIds.includes(page.id)}
                                                 />
                                             </div>
                                         )}
@@ -974,6 +986,15 @@ const PagesManagement = ({ tab }: { tab: AppTab }) => {
                             </div>
                         )}
                     </StrictModeDroppable>
+                    {pinnedPages.map((page) => (
+                        <PageCard
+                            key={page.id}
+                            page={page}
+                            onUpdate={handleUpdatePage}
+                            onDelete={handleDeletePage}
+                            isLocked
+                        />
+                    ))}
                 </div>
             </div>
         </DragDropContext>
@@ -1198,7 +1219,7 @@ export default function AdminPage() {
   return (
     <div className="flex flex-col gap-8">
       <div className="flex items-center gap-3">
-        <GoogleSymbol name={pageConfig.icon} className="text-3xl" style={{color: pageConfig.color}} />
+        <GoogleSymbol name={pageConfig.icon} className="text-3xl" />
         <h1 className="font-headline text-3xl font-semibold">{pageConfig.name}</h1>
       </div>
       <Tabs defaultValue={pageTabs[0]?.id} className="w-full">
