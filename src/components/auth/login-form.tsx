@@ -29,6 +29,7 @@ export function LoginForm() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [isEditingEmail, setIsEditingEmail] = React.useState(false);
   const [isEditingPassword, setIsEditingPassword] = React.useState(false);
+  const passwordInputRef = React.useRef<HTMLInputElement>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -37,6 +38,20 @@ export function LoginForm() {
       password: "",
     },
   });
+
+  React.useEffect(() => {
+    if (isEditingPassword) {
+      passwordInputRef.current?.focus();
+    }
+  }, [isEditingPassword]);
+
+  const handleEmailKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === 'Tab') {
+      e.preventDefault();
+      setIsEditingEmail(false);
+      setIsEditingPassword(true);
+    }
+  };
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
@@ -65,6 +80,7 @@ export function LoginForm() {
                                 {...field}
                                 onBlur={() => setIsEditingEmail(false)}
                                 autoFocus
+                                onKeyDown={handleEmailKeyDown}
                                 className="h-auto p-0 border-0 shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
                                 placeholder="Email"
                             />
@@ -91,6 +107,7 @@ export function LoginForm() {
                             <GoogleSymbol name="lock" className="text-muted-foreground" />
                             <Input
                                 {...field}
+                                ref={passwordInputRef}
                                 type="password"
                                 onBlur={() => setIsEditingPassword(false)}
                                 autoFocus

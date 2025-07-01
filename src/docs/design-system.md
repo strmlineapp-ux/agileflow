@@ -41,18 +41,37 @@ This pattern provides a clean, minimal interface for search functionality, espec
 
 ---
 
-### 3. Integrated Add Button
+### 3. Text-based Inputs
+
+This pattern transforms standard form inputs into minimalist, text-like elements, creating a cleaner and more compact interface. It is primarily used for authentication forms.
+
+-   **Appearance**:
+    -   Initially, the input appears as plain text (a placeholder, like "Email" or "Password") next to an icon. It has no visible border or background.
+    -   It uses a muted color to indicate it's an interactive, but unfocused, element.
+-   **Interaction**:
+    -   Clicking on the text or icon transforms the element into a live input field.
+    -   The icon remains visible, and the placeholder text is replaced by the user's cursor.
+    -   The input field itself remains borderless and transparent to maintain the clean aesthetic.
+-   **Behavior**:
+    -   Standard input behavior applies once focused.
+    -   Pressing 'Enter' or 'Tab' in one field (e.g., Email) should seamlessly transition focus to the next logical field (e.g., Password) without requiring an extra click.
+    -   Losing focus (`onBlur`) without entering any text will revert the element to its initial placeholder state.
+-   **Application**: Used for the login and sign-up forms to create a more modern and less cluttered user experience.
+
+---
+
+### 4. Integrated Add Button
 
 This pattern replaces large, card-style "Add New" buttons with a more compact and contextually relevant control.
 
 - **Appearance:** A circular button containing a plus (`+`) or `add_circle` icon.
 - **Placement:** Positioned directly adjacent to the title of the section or list it pertains to.
-- **Behavior:** Clicking the button initiates the process of adding a new item, typically by opening a dialog or form, or by creating a new default item directly in the list.
+- **Behavior:** Clicking the button initiates the process of adding a new item, typically by opening a dialog or form, or by creating a new default item directly in the list. A prime example is on the "Calendar Management" page, where clicking the "Add" button instantly creates a new calendar card in the list without an intermediary dialog.
 - **Application:** Used for creating new items in a list or grid, such as adding a new team, calendar, priority strategy, or a badge to a collection.
 
 ---
 
-### 4. Icon & Color Editing Flow
+### 5. Icon & Color Editing Flow
 
 This is the consistent reference pattern for allowing a user to change both an icon and its color.
 
@@ -64,7 +83,7 @@ This is the consistent reference pattern for allowing a user to change both an i
 
 ---
 
-### 5. Entity Sharing & Linking
+### 6. Entity Sharing & Linking
 
 This pattern describes how a single entity (like a Badge or Badge Collection) can exist in multiple contexts while maintaining a single source of truth.
 
@@ -84,7 +103,7 @@ This pattern describes how a single entity (like a Badge or Badge Collection) ca
 
 ---
 
-### 6. Drag-to-Duplicate
+### 7. Drag-to-Duplicate
 
 This pattern provides a fast, intuitive way for users to duplicate complex entities using a drag-and-drop gesture, significantly speeding up configuration workflows.
 
@@ -98,7 +117,7 @@ This pattern provides a fast, intuitive way for users to duplicate complex entit
 
 ---
 
-### 7. Compact Deletion Dialog
+### 8. Compact Deletion Dialog
 
 When a destructive action requires user confirmation (like deleting a shared resource), this pattern provides a minimal, focused dialog.
 
