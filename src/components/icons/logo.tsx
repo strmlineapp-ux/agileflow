@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 
 const Logo = ({ className, iconClassName }: { className?: string; iconClassName?: string; }) => {
   return (
-    <div className={cn("flex items-center gap-2 text-xl font-bold text-foreground", className)}>
+    <div className={cn("flex items-center gap-2 text-xl", className)}>
       <svg
         width="24"
         height="24"
@@ -34,7 +34,7 @@ const Logo = ({ className, iconClassName }: { className?: string; iconClassName?
           strokeLinejoin="round"
         />
       </svg>
-      <span className="font-headline text-2xl font-semibold">AgileFlow</span>
+      <span className="font-headline text-2xl">AgileFlow</span>
     </div>
   );
 };
