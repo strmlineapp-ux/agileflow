@@ -12,11 +12,21 @@ export const GoogleSymbol = React.forwardRef<
     className?: string; 
     filled?: boolean;
     variant?: GoogleSymbolVariant;
+    weight?: number;
   } & React.HTMLAttributes<HTMLSpanElement>
->(({ name, className, filled, variant = 'outlined', ...props }, ref) => {
-  const style = { ...props.style };
+>(({ name, className, filled, variant = 'outlined', weight = 100, ...props }, ref) => {
+  const style: React.CSSProperties & { fontVariationSettings?: string } = { ...props.style };
+  
+  const settings = [];
   if (filled) {
-    style.fontVariationSettings = `'FILL' 1`;
+    settings.push(`'FILL' 1`);
+  }
+  if (weight) {
+      settings.push(`'wght' ${weight}`);
+  }
+
+  if (settings.length > 0) {
+    style.fontVariationSettings = settings.join(', ');
   }
   
   const variantClass = `material-symbols-${variant}`;

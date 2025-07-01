@@ -115,6 +115,9 @@
   body {
     @apply bg-background text-foreground;
   }
+  .font-headline {
+      @apply font-light;
+  }
 }
 
 @layer utilities {
