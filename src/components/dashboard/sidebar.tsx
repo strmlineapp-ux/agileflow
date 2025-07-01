@@ -15,25 +15,25 @@ import { hasAccess } from '@/lib/permissions';
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { realUser, viewAsUser, setViewAsUser, users, teams, notifications, appSettings, allRoles } = useUser();
+  const { realUser, viewAsUser, setViewAsUser, users, teams, notifications, appSettings, allRolesAndBadges } = useUser();
   const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const adminPage = useMemo(() => {
     const page = appSettings.pages.find(p => p.id === 'page-admin-management');
-    return page && hasAccess(viewAsUser, page, teams, appSettings.customAdminRoles) ? page : null;
-  }, [viewAsUser, appSettings.pages, teams, appSettings.customAdminRoles]);
+    return page && hasAccess(viewAsUser, page, teams, appSettings.adminGroups) ? page : null;
+  }, [viewAsUser, appSettings.pages, teams, appSettings.adminGroups]);
 
   const visiblePages = useMemo(() => {
-    return appSettings.pages.filter(page => page.id !== 'page-admin-management' && hasAccess(viewAsUser, page, teams, appSettings.customAdminRoles));
-  }, [viewAsUser, appSettings.pages, teams, appSettings.customAdminRoles]);
+    return appSettings.pages.filter(page => page.id !== 'page-admin-management' && hasAccess(viewAsUser, page, teams, appSettings.adminGroups));
+  }, [viewAsUser, appSettings.pages, teams, appSettings.adminGroups]);
   
   const userManagedTeams = useMemo(() => {
-      if(viewAsUser.isAdmin || allRoles.some(r => viewAsUser.roles?.includes(r.name))) {
+      if(viewAsUser.isAdmin || appSettings.adminGroups.some(r => viewAsUser.roles?.includes(r.name))) {
           return teams;
       }
       return teams.filter(team => team.teamAdmins?.includes(viewAsUser.userId));
-  }, [viewAsUser, teams, allRoles]);
+  }, [viewAsUser, teams, appSettings.adminGroups]);
 
   const mainNavItems = [
     { href: '/dashboard/calendar', icon: 'calendar_month', label: 'Calendar', visible: true },
@@ -181,7 +181,7 @@ export function Sidebar() {
                     <div className="flex flex-wrap gap-1">
                         {(viewAsUser.roles && viewAsUser.roles.length > 0) ? (
                             viewAsUser.roles.map(roleName => {
-                                const roleInfo = allRoles.find(r => r.name === roleName);
+                                const roleInfo = allRolesAndBadges.find(r => r.name === roleName);
                                 return (
                                     <Badge
                                         key={roleName}

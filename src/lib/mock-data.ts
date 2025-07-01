@@ -1,6 +1,6 @@
 
 
-import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team, type AppSettings, type Badge, type BadgeCollection, type AppTab, type AppPage } from '@/types';
+import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team, type AppSettings, type Badge, type BadgeCollection, type AppTab, type AppPage, type AdminGroup } from '@/types';
 
 export const mockTabs: AppTab[] = [
   { id: 'tab-calendars', name: 'Calendars', icon: 'calendar_month', color: '#3B82F6', componentKey: 'calendars', description: 'Manage shared calendars, colors, and default settings.' },
@@ -10,7 +10,7 @@ export const mockTabs: AppTab[] = [
   { id: 'tab-locations', name: 'Locations', icon: 'push_pin', color: '#A855F7', componentKey: 'locations', description: 'Manage pinned locations and check-in points for the team schedule.' },
   { id: 'tab-workstations', name: 'Workstations', icon: 'desktop_windows', color: '#D946EF', componentKey: 'workstations', description: 'Configure bookable workstations and edit machines for the team.' },
   { id: 'tab-templates', name: 'Templates', icon: 'file_copy', color: '#14B8A6', componentKey: 'templates', description: 'Create reusable event templates with pre-filled badge requests.' },
-  { id: 'tab-admin-roles', name: 'Roles', icon: 'admin_panel_settings', color: '#8B5CF6', componentKey: 'roles', description: 'Manage high-level administrative roles and their permissions.' },
+  { id: 'tab-admin-roles', name: 'Admin Groups', icon: 'admin_panel_settings', color: '#8B5CF6', componentKey: 'roles', description: 'Manage high-level administrative groups and their permissions.' },
   { id: 'tab-admin-pages', name: 'Pages', icon: 'web', color: '#EC4899', componentKey: 'pages', description: 'Configure application pages, their navigation, and access controls.' },
   { id: 'tab-admin-tabs', name: 'Tabs', icon: 'tab', color: '#EF4444', componentKey: 'tabs', description: 'Manage the properties of reusable tabs that appear on pages.' },
 ];
@@ -27,7 +27,7 @@ export const mockPages: AppPage[] = [
         access: {
             users: [],
             teams: [],
-            roles: ['Admin'] // This should likely be a check for the isAdmin flag
+            adminGroups: ['Admin'] // This should likely be a check for the isAdmin flag
         }
     },
     {
@@ -41,7 +41,7 @@ export const mockPages: AppPage[] = [
         access: {
             users: [],
             teams: [],
-            roles: ['Service Admin']
+            adminGroups: ['Service Admin']
         }
     },
     {
@@ -55,13 +55,13 @@ export const mockPages: AppPage[] = [
         access: {
             users: [],
             teams: ['studio-productions', 'live-events', 'productions'], // Grants access to members of these teams
-            roles: ['Service Admin']
+            adminGroups: ['Service Admin']
         }
     }
 ];
 
 export const mockAppSettings: AppSettings = {
-  customAdminRoles: [
+  adminGroups: [
     {
       id: 'service-admin-main',
       name: 'Service Admin',

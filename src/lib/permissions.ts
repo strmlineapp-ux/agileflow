@@ -1,17 +1,17 @@
 
 
-import { type User, type AppPage, type SharedCalendar, type Team, type CustomAdminRole } from '@/types';
+import { type User, type AppPage, type SharedCalendar, type Team, type AdminGroup } from '@/types';
 
 /**
  * Checks if a user has permission to manage events (create, edit, delete) on a specific calendar.
  * @param user The user object.
  * @param calendar The calendar object.
- * @param customAdminRoles The list of custom admin roles from app settings.
+ * @param adminGroups The list of admin groups from app settings.
  * @returns `true` if the user has permission, `false` otherwise.
  */
-export const canManageEventOnCalendar = (user: User, calendar: SharedCalendar, customAdminRoles: CustomAdminRole[]): boolean => {
+export const canManageEventOnCalendar = (user: User, calendar: SharedCalendar, adminGroups: AdminGroup[]): boolean => {
     // Admin and Service Admin roles have universal access to manage all calendars
-    if (user.isAdmin || customAdminRoles.some(role => user.roles?.includes(role.name))) {
+    if (user.isAdmin || adminGroups.some(group => user.roles?.includes(group.name))) {
         return true;
     }
 
@@ -28,12 +28,12 @@ export const canManageEventOnCalendar = (user: User, calendar: SharedCalendar, c
  * This determines if the "New Event" button should be visible.
  * @param user The user object.
  * @param allCalendars All available calendars in the system.
- * @param customAdminRoles The list of custom admin roles from app settings.
+ * @param adminGroups The list of admin groups from app settings.
  * @returns `true` if the user has any event creation permissions, `false` otherwise.
  */
-export const canCreateAnyEvent = (user: User, allCalendars: SharedCalendar[], customAdminRoles: CustomAdminRole[]): boolean => {
+export const canCreateAnyEvent = (user: User, allCalendars: SharedCalendar[], adminGroups: AdminGroup[]): boolean => {
     // If Admin or Service Admin, they can always create events as long as there's a calendar.
-    if (user.isAdmin || customAdminRoles.some(role => user.roles?.includes(role.name))) {
+    if (user.isAdmin || adminGroups.some(group => user.roles?.includes(group.name))) {
         return allCalendars.length > 0;
     }
 
@@ -63,10 +63,10 @@ export const getAllUserRoles = (user: User, teams: Team[]): string[] => {
  * @param user The user to check.
  * @param page The page configuration.
  * @param teams The list of all teams.
- * @param customAdminRoles The list of all custom admin roles.
+ * @param adminGroups The list of all admin groups.
  * @returns `true` if the user has access, `false` otherwise.
  */
-export const hasAccess = (user: User, page: AppPage, teams: Team[], customAdminRoles: CustomAdminRole[]): boolean => {
+export const hasAccess = (user: User, page: AppPage, teams: Team[], adminGroups: AdminGroup[]): boolean => {
     // System admin has universal access
     if (user.isAdmin) return true;
 
@@ -80,8 +80,8 @@ export const hasAccess = (user: User, page: AppPage, teams: Team[], customAdminR
     if (userIsTeamAdminForPage) return true;
 
     // Role-based access: grants access ONLY if the user is a Team Admin of an associated Service Admin group
-    const userIsRoleAdminForPage = customAdminRoles.some(role =>
-        page.access.roles.includes(role.name) && (role.teamAdmins || []).includes(user.userId)
+    const userIsRoleAdminForPage = adminGroups.some(group =>
+        page.access.adminGroups.includes(group.name) && (group.teamAdmins || []).includes(user.userId)
     );
     if (userIsRoleAdminForPage) return true;
     

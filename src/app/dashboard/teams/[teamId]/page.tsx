@@ -75,7 +75,7 @@ export default function TeamPage() {
   }
   
   const isTeamAdmin = team.teamAdmins?.includes(viewAsUser.userId);
-  const isServiceAdmin = appSettings.customAdminRoles.some(role => viewAsUser.roles?.includes(role.name));
+  const isServiceAdmin = appSettings.adminGroups.some(group => viewAsUser.roles?.includes(group.name));
   const canViewPage = viewAsUser.isAdmin || isServiceAdmin || isTeamAdmin;
 
   if (!canViewPage) {

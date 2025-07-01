@@ -57,7 +57,18 @@ function CalendarCard({ calendar, onUpdate, onDelete }: { calendar: SharedCalend
   
   const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
   const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
+  
+  const [isSearching, setIsSearching] = useState(false);
   const [iconSearch, setIconSearch] = useState('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isSearching) searchInputRef.current?.focus();
+  }, [isSearching]);
+
+  const handleBlurSearch = () => {
+    if (!iconSearch) setIsSearching(false);
+  }
 
   const filteredIcons = googleSymbolNames.filter(name => name.toLowerCase().includes(iconSearch.toLowerCase()));
 
@@ -108,7 +119,25 @@ function CalendarCard({ calendar, onUpdate, onDelete }: { calendar: SharedCalend
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-80 p-0">
-                        <div className="p-2 border-b"><Input placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} /></div>
+                        <div className="flex items-center gap-1 p-2 border-b">
+                            {!isSearching ? (
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => setIsSearching(true)}>
+                                <GoogleSymbol name="search" />
+                            </Button>
+                            ) : (
+                            <>
+                                <GoogleSymbol name="search" className="text-muted-foreground text-xl pl-2" />
+                                <Input
+                                    ref={searchInputRef}
+                                    placeholder="Search..."
+                                    value={iconSearch}
+                                    onChange={(e) => setIconSearch(e.target.value)}
+                                    onBlur={handleBlurSearch}
+                                    className="h-8 border-0 shadow-none focus-visible:ring-0 bg-transparent p-0"
+                                />
+                            </>
+                            )}
+                        </div>
                         <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={calendar.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(calendar.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
                     </PopoverContent>
                 </Popover>
@@ -183,7 +212,10 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
   const [newCalendarName, setNewCalendarName] = useState('');
   const [newCalendarIcon, setNewCalendarIcon] = useState('calendar_month');
   const [newCalendarColor, setNewCalendarColor] = useState('#3B82F6');
-  const [iconSearch, setIconSearch] = useState('');
+  
+  const [isAddIconSearching, setIsAddIconSearching] = useState(false);
+  const [addIconSearch, setAddIconSearch] = useState('');
+  const addSearchInputRef = useRef<HTMLInputElement>(null);
   
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
@@ -204,8 +236,16 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
     if (e.key === 'Enter') handleSaveTitle();
     else if (e.key === 'Escape') setIsEditingTitle(false);
   };
+  
+  useEffect(() => {
+    if (isAddIconSearching) addSearchInputRef.current?.focus();
+  }, [isAddIconSearching]);
 
-  const filteredIcons = googleSymbolNames.filter(name => name.toLowerCase().includes(iconSearch.toLowerCase()));
+  const handleAddBlurSearch = () => {
+    if (!addIconSearch) setIsAddIconSearching(false);
+  }
+
+  const filteredIcons = googleSymbolNames.filter(name => name.toLowerCase().includes(addIconSearch.toLowerCase()));
 
   const openAddDialog = () => {
     setNewCalendarName('');
@@ -367,7 +407,25 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                                 </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-80 p-0">
-                                <div className="p-2 border-b"><Input placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} /></div>
+                                <div className="flex items-center gap-1 p-2 border-b">
+                                    {!isAddIconSearching ? (
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => setIsAddIconSearching(true)}>
+                                        <GoogleSymbol name="search" />
+                                    </Button>
+                                    ) : (
+                                    <>
+                                        <GoogleSymbol name="search" className="text-muted-foreground text-xl pl-2" />
+                                        <Input
+                                            ref={addSearchInputRef}
+                                            placeholder="Search..."
+                                            value={addIconSearch}
+                                            onChange={(e) => setAddIconSearch(e.target.value)}
+                                            onBlur={handleAddBlurSearch}
+                                            className="h-8 border-0 shadow-none focus-visible:ring-0 bg-transparent p-0"
+                                        />
+                                    </>
+                                    )}
+                                </div>
                                 <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={newCalendarIcon === iconName ? "default" : "ghost"} size="icon" onClick={() => { setNewCalendarIcon(iconName); setIsAddIconPopoverOpen(false);}} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
                             </PopoverContent>
                         </Popover>

@@ -3,7 +3,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
-import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab } from '@/types';
+import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type AdminGroup } from '@/types';
 import { mockUsers as initialUsers, mockCalendars as initialCalendars, mockEvents as initialEvents, mockLocations as initialLocations, mockTeams, mockAppSettings } from '@/lib/mock-data';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
@@ -17,7 +17,7 @@ interface UserContextType {
   setViewAsUser: (userId: string) => void;
   users: User[];
   allBadges: Badge[];
-  allRoles: { name: string; icon: string; color: string; }[];
+  allRolesAndBadges: { name: string; icon: string; color: string; }[];
   teams: Team[];
   addTeam: (teamData: Omit<Team, 'id'>) => Promise<void>;
   updateTeam: (teamId: string, teamData: Partial<Team>) => Promise<void>;
@@ -87,11 +87,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     return Array.from(badgesMap.values());
   }, [teams]);
 
-  const allRoles = useMemo(() => {
+  const allRolesAndBadges = useMemo(() => {
     const combined = new Map<string, { name: string; icon: string; color: string; }>();
 
-    appSettings.customAdminRoles.forEach(role => {
-      combined.set(role.name, role);
+    appSettings.adminGroups.forEach(group => {
+      combined.set(group.name, group);
     });
 
     allBadges.forEach(badge => {
@@ -101,7 +101,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     });
 
     return Array.from(combined.values());
-  }, [appSettings.customAdminRoles, allBadges]);
+  }, [appSettings.adminGroups, allBadges]);
 
   const realUser = useMemo(() => users.find(u => u.userId === REAL_USER_ID)!, [users]);
   const viewAsUser = useMemo(() => users.find(u => u.userId === viewAsUserId) || realUser, [users, viewAsUserId, realUser]);
@@ -291,7 +291,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setViewAsUser: setViewAsUserId,
     users,
     allBadges,
-    allRoles,
+    allRolesAndBadges,
     teams,
     addTeam,
     updateTeam,
@@ -319,7 +319,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     updateAppSettings,
     updateAppTab,
   }), [
-    loading, realUser, viewAsUser, users, allBadges, allRoles, teams, notifications, userStatusAssignments,
+    loading, realUser, viewAsUser, users, allBadges, allRolesAndBadges, teams, notifications, userStatusAssignments,
     calendars, events, locations, allBookableLocations, appSettings,
     addTeam, updateTeam, deleteTeam, setNotifications, setUserStatusAssignments, addUser,
     updateUser, linkGoogleCalendar, addCalendar, updateCalendar, deleteCalendar,

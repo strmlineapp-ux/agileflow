@@ -2,7 +2,7 @@
 
 import type React from 'react';
 
-export interface CustomAdminRole {
+export interface AdminGroup {
   id: string;
   name:string;
   icon: string;
@@ -30,12 +30,12 @@ export interface AppPage {
   access: {
     users: string[]; // User IDs
     teams: string[]; // Team IDs
-    roles: string[]; // CustomAdminRole names
+    adminGroups: string[]; // AdminGroup names
   };
 }
 
 export interface AppSettings {
-  customAdminRoles: CustomAdminRole[];
+  adminGroups: AdminGroup[];
   pages: AppPage[];
   tabs: AppTab[];
   strategyLabel?: string;
@@ -60,7 +60,7 @@ export interface User {
   location?: string;
   phone?: string;
   title?: string;
-  roles?: string[]; // Contains names of CustomAdminRoles and Badge names
+  roles?: string[]; // Contains names of AdminGroups and Badge names
   directReports?: string[];
   theme?: 'light' | 'dark' | 'high-visibility' | 'firebase';
   defaultCalendarView?: 'month' | 'week' | 'day' | 'production-schedule';
