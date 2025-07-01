@@ -318,20 +318,30 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     );
     
     const inlineNameEditor = isEditingName ? (
-        <Input 
-            ref={nameInputRef}
-            defaultValue={badge.name}
-            onBlur={handleSaveName}
-            onKeyDown={handleNameKeyDown}
-            className={cn(
-                "h-auto p-0 font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0",
-                viewMode === 'list' && 'text-base',
-                viewMode === 'assorted' && 'text-xs'
-            )}
-        />
+      <Input
+        ref={nameInputRef}
+        defaultValue={badge.name}
+        onMouseDown={(e) => e.stopPropagation()}
+        onBlur={handleSaveName}
+        onKeyDown={handleNameKeyDown}
+        className={cn(
+          "h-auto p-0 font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0",
+          viewMode === 'list' && 'text-base',
+          viewMode === 'assorted' && 'text-xs'
+        )}
+      />
     ) : (
-        <span className={cn("font-semibold cursor-text", viewMode === 'assorted' && 'text-xs')} onClick={() => setIsEditingName(true)}>{badge.name}</span>
+      <span
+        className={cn("font-semibold cursor-text", viewMode === 'assorted' && 'text-xs')}
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsEditingName(true);
+        }}
+      >
+        {badge.name}
+      </span>
     );
+
 
     if (viewMode === 'list') {
       return (
@@ -557,7 +567,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInAllT
                  {collection.description && <CardDescription className="pt-2">{collection.description}</CardDescription>}
             </CardHeader>
             <CardContent>
-                <StrictModeDroppable droppableId={collection.id} type="badge" isDropDisabled={false}>
+                <StrictModeDroppable droppableId={collection.id} type="badge" isDropDisabled={isSharedToThisTeam}>
                     {(provided) => (
                          <div
                             ref={provided.innerRef}
@@ -569,7 +579,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInAllT
                                 collection.viewMode === 'detailed' && "grid grid-cols-1 md:grid-cols-2 gap-4"
                             )}>
                             {collectionBadges.map((badge, index) => (
-                                <Draggable key={`${badge.id}::${collection.id}`} draggableId={`${badge.id}::${collection.id}`} index={index} isDragDisabled={false}>
+                                <Draggable key={`${badge.id}::${collection.id}`} draggableId={`${badge.id}::${collection.id}`} index={index} isDragDisabled={isSharedToThisTeam}>
                                     {(provided) => (<div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
                                         <BadgeDisplayItem 
                                             badge={badge} 
