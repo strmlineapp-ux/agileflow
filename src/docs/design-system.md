@@ -24,7 +24,23 @@ This pattern allows for seamless, direct text editing within the main applicatio
 
 ---
 
-### 2. Integrated Add Button
+### 2. Compact Search Input
+
+This pattern provides a clean, minimal interface for search functionality, especially in UIs where space is a consideration or a full search bar is not always needed.
+
+- **Trigger:** Clicking a search icon (`search`).
+- **Interaction:**
+  - The icon is replaced by an inline search input field, often with the search icon now appearing inside the input's bounds.
+  - The input field appears without a full border, typically just an underline, to maintain a minimal look.
+  - The input field automatically gains focus.
+- **Behavior:**
+  - Typing into the field filters the relevant content on the page in real-time.
+  - Clicking outside the input (`onBlur`) when it is empty will cause it to revert back to the simple search icon. If the field contains text, it remains visible.
+- **Application:** Used for filtering lists of icons, badges, or other filterable content.
+
+---
+
+### 3. Integrated Add Button
 
 This pattern replaces large, card-style "Add New" buttons with a more compact and contextually relevant control.
 
@@ -35,7 +51,7 @@ This pattern replaces large, card-style "Add New" buttons with a more compact an
 
 ---
 
-### 3. Compact Edit Popover
+### 4. Compact Edit Popover
 
 This is a minimal, title-less popover for quick, focused editing actions, typically for an icon and its associated color. This is the reference to follow for any popover that will only feature an icon picker, a color picker, and a cancel/delete/unlink action.
 
@@ -48,7 +64,7 @@ This is a minimal, title-less popover for quick, focused editing actions, typica
 
 ---
 
-### 4. Icon & Color Editing Flow
+### 5. Icon & Color Editing Flow
 
 This is the consistent reference pattern for allowing a user to change both an icon and its color.
 
@@ -60,25 +76,27 @@ This is the consistent reference pattern for allowing a user to change both an i
 
 ---
 
-### 5. Entity Sharing & Linking
+### 6. Entity Sharing & Linking
 
 This pattern describes how a single entity (like a Badge or Badge Collection) can exist in multiple contexts while maintaining a single source of truth.
 
 - **Mechanism**: Implemented via drag-and-drop or an explicit "Share" action. This creates a shared instance, not a copy.
 - **Visual Cues**:
-  - **Owned & Shared Item (`upload`)**: An item that was created in the current context but is also being used in at least one other external context (e.g., a badge owned by Team A shared to Team B) is marked with an `upload` icon overlay. This indicates it is the "source of truth."
-  - **Internally Linked Item (`change_circle`)**: An item that is used in multiple places within the *same* context (e.g., a badge appearing in two collections within the same Team) is marked with a `change_circle` icon overlay on its linked instances. The original instance does not get this icon unless it is also shared externally.
-  - **Shared-to-You Item (`downloading`)**: An item that was created in another context and is being used here is marked with a `downloading` icon overlay.
+  - **Owned & Shared Externally (`upload`)**: An item created by the current team but also being used in at least one other team is marked with an `upload` icon overlay. This indicates it is the "source of truth." **The color of this icon badge matches the owner team's color.**
+  - **Internally Linked (`change_circle`)**: An item that is used in multiple places within the *same* team (e.g., a badge appearing in two collections) is marked with a `change_circle` icon overlay on its linked instances. The original instance does not get this icon unless it is also shared externally. **The color of this icon badge matches the owner team's color.**
+  - **Shared-to-You (`downloading`)**: An item created in another team and being used in the current context is marked with a `downloading` icon overlay. **The color of this icon badge matches the source team's color.**
   - **Owned and Not Shared/Linked**: An item that is owned and exists only in its original location does not get an icon.
 - **Behavior**:
   - Editing a shared or linked item (e.g., changing its name or icon) modifies the original "source of truth" item, and the changes are instantly reflected in all other places where it is used.
-  - Deleting a *shared-to-you* or *internally linked* item only removes that specific instance. The original and all other shares/links remain untouched.
-  - Deleting the *original* item is a permanent action that removes the item and all of its shares/links across the entire application. A confirmation dialog should be shown for this action.
+  - **Smart Deletion**: Deleting an item follows contextual rules:
+    - Deleting a *shared-to-you* or *internally linked* instance only removes that specific instance. The action is immediate and confirmed with a toaster notification.
+    - Deleting the *original, shared* item (i.e., an item that is currently linked elsewhere) will trigger a confirmation dialog to prevent accidental removal of a widely-used resource.
+    - Deleting an *original, un-shared* item is immediate and confirmed with a toaster notification.
 - **Application**: Used for sharing Badges and Badge Collections between Teams.
 
 ---
 
-### 6. Drag-to-Duplicate
+### 7. Drag-to-Duplicate
 
 This pattern provides a fast, intuitive way for users to duplicate complex entities using a drag-and-drop gesture, significantly speeding up configuration workflows.
 
@@ -92,7 +110,7 @@ This pattern provides a fast, intuitive way for users to duplicate complex entit
 
 ---
 
-### 7. Interactive List Selection
+### 8. Interactive List Selection
 
 This pattern provides a clean alternative to checkboxes for selecting multiple items in a list, especially within a popover or compact space.
 
@@ -123,6 +141,14 @@ This pattern provides a clean alternative to checkboxes for selecting multiple i
 
 - **Multi-Theme Support**: The application supports multiple themes (`light`, `dark`, `high-visibility`, `firebase`), which are defined in `src/app/globals.css`. This allows users to choose their preferred visual mode.
 - **Primary Button Gradient**: Primary buttons have a special gradient effect on hover, which is unique to each theme. This provides a subtle but polished visual feedback for key actions.
+
+### User Notifications
+
+- **Toaster Notifications**: Used for providing brief, non-blocking feedback for user actions (e.g., "Badge Deleted").
+    - **Appearance**: Simple, clean, and without a close button.
+    - **Behavior**:
+        - Automatically dismisses after a short period (e.g., 2 seconds).
+        - Can be dismissed instantly by clicking anywhere on the notification.
 
 ### Subtle Visual Cues
 

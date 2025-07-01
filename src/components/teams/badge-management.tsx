@@ -45,14 +45,100 @@ const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
   return <Droppable {...props}>{children}</Droppable>;
 };
 
+function CompactSearchIconPicker({
+  icon,
+  color,
+  onUpdateIcon,
+}: {
+  icon: string;
+  color?: string;
+  onUpdateIcon: (iconName: string) => void;
+}) {
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [iconSearch, setIconSearch] = useState('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isSearching && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [isSearching]);
+
+  const filteredIcons = useMemo(() => {
+    if (!iconSearch) return googleSymbolNames;
+    return googleSymbolNames.filter(name => name.toLowerCase().includes(iconSearch.toLowerCase()));
+  }, [iconSearch]);
+
+  const handleBlurSearch = () => {
+    if (!iconSearch) {
+      setIsSearching(false);
+    }
+  };
+
+  return (
+    <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9 text-3xl"
+          style={color ? { color } : {}}
+        >
+          <GoogleSymbol name={icon} />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-80 p-0">
+        <div className="flex items-center gap-1 p-2 border-b">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground"
+            onClick={() => setIsSearching(true)}
+          >
+            <GoogleSymbol name="search" />
+          </Button>
+          {isSearching && (
+            <Input
+              ref={searchInputRef}
+              placeholder="Search icons..."
+              value={iconSearch}
+              onChange={(e) => setIconSearch(e.target.value)}
+              onBlur={handleBlurSearch}
+              className="h-8 border-0 shadow-none focus-visible:ring-0"
+            />
+          )}
+        </div>
+        <ScrollArea className="h-64">
+          <div className="grid grid-cols-6 gap-1 p-2">
+            {filteredIcons.slice(0, 300).map((iconName) => (
+              <Button
+                key={iconName}
+                variant={icon === iconName ? "default" : "ghost"}
+                size="icon"
+                onClick={() => {
+                  onUpdateIcon(iconName);
+                  setIsPopoverOpen(false);
+                }}
+                className="text-2xl"
+              >
+                <GoogleSymbol name={iconName} />
+              </Button>
+            ))}
+          </div>
+        </ScrollArea>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+
 function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collectionId, teamId }: { badge: Badge; viewMode: BadgeCollection['viewMode']; onUpdateBadge: (badgeData: Partial<Badge>) => void; onDelete: () => void; collectionId: string; teamId: string; }) {
     const { toast } = useToast();
     const { teams } = useUser();
     const [isEditingName, setIsEditingName] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
-    const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
-    const [iconSearch, setIconSearch] = useState('');
     
     const [isEditingDescription, setIsEditingDescription] = useState(false);
     const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -104,62 +190,53 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
           setIsEditingDescription(false);
         }
     };
-
-    const filteredIcons = useMemo(() => {
-        if (!iconSearch) return googleSymbolNames;
-        return googleSymbolNames.filter(iconName => iconName.toLowerCase().includes(iconSearch.toLowerCase()));
-    }, [iconSearch]);
     
-    const badgeOwnerTeamId = useMemo(() => {
-      for (const t of teams) {
-        if (t.allBadges.some(b => b.id === badge.id && b.ownerCollectionId === badge.ownerCollectionId)) {
-          return t.id;
+    const ownerTeam = useMemo(() => {
+        for (const t of teams) {
+          if (t.allBadges.some(b => b.id === badge.id)) {
+            const foundBadge = t.allBadges.find(b => b.id === badge.id)!;
+            const collectionOwner = t.badgeCollections.find(c => c.id === foundBadge.ownerCollectionId);
+            if (collectionOwner) {
+                return t;
+            }
+          }
         }
-      }
-      return null;
-    }, [teams, badge]);
-
-    const isOwnedByMyTeam = badgeOwnerTeamId === teamId;
+        return teams.find(t => t.id === teamId);
+    }, [teams, badge, teamId]);
+    
     const isThisTheOriginalInstance = badge.ownerCollectionId === collectionId;
+    const isOwnedByMyTeam = ownerTeam?.id === teamId;
 
     const isSharedToOtherTeams = useMemo(() => {
-        if (!isOwnedByMyTeam || !isThisTheOriginalInstance) return false;
+        if (!isOwnedByMyTeam) return false;
         return teams.some(t => {
             if (t.id === teamId) return false; // Not another team
-            return t.sharedCollectionIds?.some(sharedId => {
-                const sourceTeam = teams.find(st => st.id === badgeOwnerTeamId);
-                const sharedCollection = sourceTeam?.badgeCollections.find(c => c.id === sharedId);
-                return sharedCollection?.badgeIds.includes(badge.id);
-            }) || t.badgeCollections.some(c => {
-                const sourceBadge = teams.flatMap(st => st.allBadges).find(b => b.id === badge.id);
-                return c.badgeIds.includes(badge.id) && sourceBadge?.ownerCollectionId !== c.id
-            });
+            return t.badgeCollections.some(c => c.badgeIds.includes(badge.id));
         });
-    }, [teams, badge.id, isOwnedByMyTeam, isThisTheOriginalInstance, badgeOwnerTeamId, teamId]);
+    }, [teams, badge.id, isOwnedByMyTeam, teamId]);
     
     const isLinkedInternally = useMemo(() => {
+        if (!isOwnedByMyTeam) return false;
         const currentTeam = teams.find(t => t.id === teamId);
         if (!currentTeam) return false;
         const count = currentTeam.badgeCollections.reduce((acc, c) => acc + (c.badgeIds.includes(badge.id) ? 1 : 0), 0);
         return count > 1;
-    }, [teams, badge.id, teamId]);
+    }, [teams, badge.id, teamId, isOwnedByMyTeam]);
 
     let shareIcon: string | null = null;
     let shareIconTitle: string = '';
+    let shareIconColor = ownerTeam?.color;
 
     if (!isOwnedByMyTeam) {
         shareIcon = 'downloading';
-        shareIconTitle = 'Shared from another team';
+        shareIconTitle = `Shared from ${ownerTeam?.name || 'another team'}`;
     } else { // isOwnedByMyTeam
-        if (!isThisTheOriginalInstance) {
-            shareIcon = 'change_circle';
-            shareIconTitle = 'Linked from another collection in this team';
-        } else { // Is the original instance
-            if (isSharedToOtherTeams) {
-                shareIcon = 'upload';
-                shareIconTitle = 'Owned by this team and shared externally';
-            }
-            // No icon if it's the original, owned, and not shared externally
+        if (!isThisTheOriginalInstance && isLinkedInternally) {
+             shareIcon = 'change_circle';
+             shareIconTitle = 'Linked from another collection in this team';
+        } else if (isSharedToOtherTeams) {
+            shareIcon = 'upload';
+            shareIconTitle = 'Owned by this team and shared externally';
         }
     }
 
@@ -171,17 +248,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                          <div className="relative">
-                            <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
-                                <PopoverTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-9 w-9 text-3xl" style={{ color: badge.color }}>
-                                        <GoogleSymbol name={badge.icon} />
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-80 p-0">
-                                    <div className="p-2 border-b"><Input placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} /></div>
-                                    <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={badge.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdateBadge({ icon: iconName }); setIsIconPopoverOpen(false);}} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
-                                </PopoverContent>
-                            </Popover>
+                            <CompactSearchIconPicker icon={badge.icon} color={badge.color} onUpdateIcon={(icon) => onUpdateBadge({ icon })} />
                              <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
                                 <PopoverTrigger asChild><div className="absolute -bottom-1 -right-0 h-5 w-5 rounded-full border-2 border-card cursor-pointer" style={{ backgroundColor: badge.color }} /></PopoverTrigger>
                                 <PopoverContent className="w-auto p-2">
@@ -190,8 +257,9 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                             </Popover>
                             {shareIcon && (
                                 <div 
-                                    className="absolute -top-1 -right-1 h-5 w-5 rounded-full border-2 border-card flex items-center justify-center bg-muted text-muted-foreground"
+                                    className="absolute -top-1 -right-1 h-5 w-5 rounded-full border-2 border-card flex items-center justify-center text-white"
                                     title={shareIconTitle}
+                                    style={{ backgroundColor: shareIconColor }}
                                 >
                                     <GoogleSymbol name={shareIcon} style={{ fontSize: '14px' }}/>
                                 </div>
@@ -223,17 +291,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     
     const sharedIconAndColorEditor = (
         <div className="relative">
-            <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
-                <PopoverTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-2xl" style={{ color: badge.color }}>
-                        <GoogleSymbol name={badge.icon} />
-                    </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-80 p-0">
-                    <div className="p-2 border-b"><Input placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} /></div>
-                    <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={badge.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdateBadge({ icon: iconName }); setIsIconPopoverOpen(false);}} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
-                </PopoverContent>
-            </Popover>
+            <CompactSearchIconPicker icon={badge.icon} color={badge.color} onUpdateIcon={(icon) => onUpdateBadge({ icon })} />
              <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
                 <PopoverTrigger asChild><div className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-muted cursor-pointer" style={{ backgroundColor: badge.color }} /></PopoverTrigger>
                 <PopoverContent className="w-auto p-2">
@@ -242,8 +300,9 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
             </Popover>
             {shareIcon && (
                 <div
-                    className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-card bg-muted text-muted-foreground flex items-center justify-center"
+                    className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-card text-white flex items-center justify-center"
                     title={shareIconTitle}
+                    style={{ backgroundColor: shareIconColor }}
                 >
                     <GoogleSymbol name={shareIcon} style={{fontSize: '12px'}}/>
                 </div>
@@ -299,17 +358,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     return (
         <div className="group relative inline-flex items-center gap-2 rounded-full border-2 p-1 pr-2" style={{ borderColor: badge.color, color: badge.color }}>
             <div className="relative">
-                 <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
-                    <PopoverTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-6 w-6 text-base" style={{ color: 'inherit' }}>
-                           <GoogleSymbol name={badge.icon} />
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-80 p-0">
-                        <div className="p-2 border-b"><Input placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} /></div>
-                        <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={badge.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdateBadge({ icon: iconName }); setIsIconPopoverOpen(false);}} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
-                    </PopoverContent>
-                </Popover>
+                <CompactSearchIconPicker icon={badge.icon} color="inherit" onUpdateIcon={(icon) => onUpdateBadge({ icon })} />
                  <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
                     <PopoverTrigger asChild><div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border border-background cursor-pointer" style={{ backgroundColor: badge.color }} /></PopoverTrigger>
                     <PopoverContent className="w-auto p-2">
@@ -318,8 +367,9 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                 </Popover>
                 {shareIcon && (
                     <div
-                        className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-background bg-muted text-muted-foreground flex items-center justify-center"
+                        className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-background text-white flex items-center justify-center"
                         title={shareIconTitle}
+                        style={{ backgroundColor: shareIconColor }}
                     >
                         <GoogleSymbol name={shareIcon} style={{fontSize: '10px'}}/>
                     </div>
@@ -348,15 +398,8 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInAllT
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isEditingName, setIsEditingName] = useState(false);
     
-    const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
-    const [iconSearch, setIconSearch] = useState('');
     
-    const filteredIcons = useMemo(() => {
-        if (!iconSearch) return googleSymbolNames;
-        return googleSymbolNames.filter(iconName => iconName.toLowerCase().includes(iconSearch.toLowerCase()));
-    }, [iconSearch]);
-
     useEffect(() => {
         if (isEditingName && nameInputRef.current) { nameInputRef.current.focus(); nameInputRef.current.select(); }
     }, [isEditingName]);
@@ -394,9 +437,11 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInAllT
     const isOwned = collection.ownerTeamId === teamId;
     const isSharedToThisTeam = !isOwned;
     const isSharedFromThisTeam = isOwned && teams.some(t => t.id !== teamId && (t.sharedCollectionIds || []).includes(collection.id));
+    const ownerTeam = teams.find(t => t.id === collection.ownerTeamId);
 
     let shareIcon: string | null = null;
     let shareIconTitle: string = '';
+    let shareIconColor = ownerTeam?.color;
 
     if (isSharedFromThisTeam) {
         shareIcon = 'upload';
@@ -412,27 +457,11 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInAllT
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                          <div className="relative">
-                            <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
-                                <PopoverTrigger asChild disabled={isSharedToThisTeam}>
-                                    <Button variant="ghost" size="icon" className={cn("h-9 w-9 text-2xl", isSharedToThisTeam && "cursor-not-allowed")} style={{ color: collection.color }}>
-                                        <GoogleSymbol name={collection.icon} />
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-80 p-0">
-                                    <div className="p-2 border-b">
-                                        <Input placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} />
-                                    </div>
-                                    <ScrollArea className="h-64">
-                                        <div className="grid grid-cols-6 gap-1 p-2">
-                                            {filteredIcons.slice(0, 300).map((iconName) => (
-                                                <Button key={iconName} variant={collection.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdateCollection(collection.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="text-2xl">
-                                                    <GoogleSymbol name={iconName} />
-                                                </Button>
-                                            ))}
-                                        </div>
-                                    </ScrollArea>
-                                </PopoverContent>
-                            </Popover>
+                            <CompactSearchIconPicker 
+                                icon={collection.icon} 
+                                color={collection.color} 
+                                onUpdateIcon={(icon) => onUpdateCollection(collection.id, { icon })}
+                            />
                             <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
                                 <PopoverTrigger asChild disabled={isSharedToThisTeam}>
                                     <div className={cn("absolute -bottom-1 -right-0 h-4 w-4 rounded-full border-2 border-card", isSharedToThisTeam ? "cursor-not-allowed" : "cursor-pointer")} style={{ backgroundColor: collection.color }} />
@@ -448,8 +477,9 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInAllT
                             </Popover>
                             {shareIcon && (
                                 <div 
-                                    className="absolute -top-1 -right-1 h-5 w-5 rounded-full border-2 border-card flex items-center justify-center bg-muted text-muted-foreground"
+                                    className="absolute -top-1 -right-1 h-5 w-5 rounded-full border-2 border-card flex items-center justify-center text-white"
                                     title={shareIconTitle}
+                                    style={{ backgroundColor: shareIconColor }}
                                 >
                                     <GoogleSymbol name={shareIcon} style={{ fontSize: '14px' }}/>
                                 </div>
@@ -462,7 +492,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInAllT
                                 <CardTitle onClick={() => !isSharedToThisTeam && setIsEditingName(true)} className={cn(!isSharedToThisTeam && "cursor-pointer", "truncate")}>{collection.name}</CardTitle>
                             )}
                             {!isSharedToThisTeam && (
-                                 <StrictModeDroppable droppableId={`duplicate-badge-zone:${collection.id}`} type="badge" isDropDisabled={isSharedToThisTeam}>
+                                 <StrictModeDroppable droppableId={`duplicate-badge-zone:${collection.id}`} type="badge" isDropDisabled={false}>
                                      {(provided, snapshot) => (
                                         <div
                                             ref={provided.innerRef}
@@ -522,7 +552,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInAllT
                  {collection.description && <CardDescription className="pt-2">{collection.description}</CardDescription>}
             </CardHeader>
             <CardContent>
-                <StrictModeDroppable droppableId={collection.id} type="badge" isDropDisabled={isSharedToThisTeam}>
+                <StrictModeDroppable droppableId={collection.id} type="badge">
                     {(provided) => (
                          <div
                             ref={provided.innerRef}
@@ -534,7 +564,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInAllT
                                 collection.viewMode === 'detailed' && "grid grid-cols-1 md:grid-cols-2 gap-4"
                             )}>
                             {collectionBadges.map((badge, index) => (
-                                <Draggable key={`${badge.id}::${collection.id}`} draggableId={`${badge.id}::${collection.id}`} index={index} isDragDisabled={isSharedToThisTeam}>
+                                <Draggable key={`${badge.id}::${collection.id}`} draggableId={`${badge.id}::${collection.id}`} index={index}>
                                     {(provided) => (<div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
                                         <BadgeDisplayItem 
                                             badge={badge} 
@@ -759,29 +789,8 @@ export function BadgeManagement({ team }: { team: Team }) {
         const newAllBadges = team.allBadges.map(b => b.id === badgeData.id ? {...b, ...badgeData} : b);
         updateTeam(team.id, { allBadges: newAllBadges });
     };
-
-    const handleDeleteBadge = (collectionId: string, badgeId: string) => {
-        const badge = team.allBadges.find(b => b.id === badgeId);
-        if (!badge) return;
-
-        if (badge.ownerCollectionId === collectionId) {
-            setBadgeToDelete({ collectionId, badgeId });
-        } else {
-            const newCollections = team.badgeCollections.map(c => {
-                if (c.id === collectionId) {
-                    return { ...c, badgeIds: c.badgeIds.filter(id => id !== badgeId) };
-                }
-                return c;
-            });
-            updateTeam(team.id, { badgeCollections: newCollections });
-            toast({ title: 'Badge Unlinked', description: `"${badge.name}" was unlinked from this collection.` });
-        }
-    };
     
-    const confirmDeleteBadge = () => {
-        if (!badgeToDelete) return;
-        const { collectionId, badgeId } = badgeToDelete;
-        
+    const confirmDeleteBadge = (badgeId: string) => {
         const badge = team.allBadges.find(b => b.id === badgeId);
         if (!badge) return;
 
@@ -795,6 +804,40 @@ export function BadgeManagement({ team }: { team: Team }) {
         toast({ title: 'Badge Deleted', description: `"${badge.name}" was permanently deleted.` });
         setBadgeToDelete(null);
     };
+
+
+    const handleDeleteBadge = (collectionId: string, badgeId: string) => {
+        const badge = allBadgesAvailableToTeam.find(b => b.id === badgeId);
+        if (!badge) return;
+
+        const isOriginalOwner = badge.ownerCollectionId === collectionId;
+        
+        let linkCount = 0;
+        teams.forEach(t => {
+            t.badgeCollections.forEach(c => {
+                if (c.badgeIds.includes(badgeId)) {
+                    linkCount++;
+                }
+            });
+        });
+        const isShared = linkCount > 1;
+
+        if (isOriginalOwner && isShared) {
+            setBadgeToDelete({ collectionId, badgeId });
+        } else if (!isOriginalOwner) {
+            const newCollections = team.badgeCollections.map(c => {
+                if (c.id === collectionId) {
+                    return { ...c, badgeIds: c.badgeIds.filter(id => id !== badgeId) };
+                }
+                return c;
+            });
+            updateTeam(team.id, { badgeCollections: newCollections });
+            toast({ title: 'Badge Unlinked' });
+        } else {
+            confirmDeleteBadge(badgeId);
+        }
+    };
+    
     
     const handleDuplicateCollection = (sourceCollectionId: string) => {
         let sourceCollection;
@@ -875,7 +918,7 @@ export function BadgeManagement({ team }: { team: Team }) {
                 const newAllBadges = [...team.allBadges, newBadge];
                 const newCollections = team.badgeCollections.map(c => {
                     if (c.id === collectionId) {
-                        return { ...c, badgeIds: [...c.badgeIds, newBadge.id] };
+                        return { ...c, badgeIds: [...newBadge.id, ...c.badgeIds] };
                     }
                     return c;
                 });
@@ -941,10 +984,30 @@ export function BadgeManagement({ team }: { team: Team }) {
 
     const allBadgesAvailableToTeam = useMemo(() => {
         const allBadgesFromAllTeams = teams.flatMap(t => t.allBadges);
-        const ownedBadgeIds = new Set(team.allBadges.map(b => b.id));
-        const sharedBadges = allBadgesFromAllTeams.filter(b => !ownedBadgeIds.has(b.id));
-        return [...team.allBadges, ...sharedBadges];
-    }, [team.allBadges, teams]);
+        const badgeMap = new Map<string, Badge>();
+        
+        // Add all badges owned by the current team
+        team.allBadges.forEach(b => badgeMap.set(b.id, b));
+        
+        // Add badges from shared collections
+        const sharedCollectionIds = new Set(team.sharedCollectionIds || []);
+        teams.forEach(t => {
+            if (t.id !== team.id) {
+                t.badgeCollections.forEach(c => {
+                    if (sharedCollectionIds.has(c.id)) {
+                        c.badgeIds.forEach(badgeId => {
+                            if (!badgeMap.has(badgeId)) {
+                                const badge = allBadgesFromAllTeams.find(b => b.id === badgeId);
+                                if (badge) badgeMap.set(badge.id, badge);
+                            }
+                        })
+                    }
+                })
+            }
+        });
+
+        return Array.from(badgeMap.values());
+    }, [team.allBadges, team.sharedCollectionIds, teams]);
 
 
     return (
@@ -1066,7 +1129,7 @@ export function BadgeManagement({ team }: { team: Team }) {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={confirmDeleteBadge} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete Badge</AlertDialogAction>
+                        <AlertDialogAction onClick={() => confirmDeleteBadge(badgeToDelete!.badgeId)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete Badge</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
