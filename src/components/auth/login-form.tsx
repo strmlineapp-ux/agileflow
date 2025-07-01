@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 import { Button } from "@/components/ui/button";
 import {
@@ -17,15 +18,22 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { GoogleSymbol } from "../icons/google-symbol";
+import { cn } from "@/lib/utils";
+import { Separator } from "../ui/separator";
 
 const formSchema = z.object({
-  email: z.string().email({ message: "Please enter a valid email." }),
-  password: z.string().min(1, { message: "Password is required." }),
+  email: z.string().email(),
+  password: z.string().min(1),
 });
 
 export function LoginForm() {
   const router = useRouter();
   const [isLoading, setIsLoading] = React.useState(false);
+  const [isEmailEditing, setIsEmailEditing] = React.useState(false);
+  const [isPasswordEditing, setIsPasswordEditing] = React.useState(false);
+
+  const emailInputRef = React.useRef<HTMLInputElement>(null);
+  const passwordInputRef = React.useRef<HTMLInputElement>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -35,7 +43,15 @@ export function LoginForm() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  React.useEffect(() => {
+    if (isEmailEditing) emailInputRef.current?.focus();
+  }, [isEmailEditing]);
+
+  React.useEffect(() => {
+    if (isPasswordEditing) passwordInputRef.current?.focus();
+  }, [isPasswordEditing]);
+
+  const onSubmit = (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
     console.log(values);
     // Simulate API call
@@ -43,38 +59,98 @@ export function LoginForm() {
       setIsLoading(false);
       router.push('/dashboard/calendar');
     }, 1000);
-  }
+  };
+  
+  const handleEmailKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === 'Tab') {
+      e.preventDefault();
+      const emailValue = form.getValues('email');
+      form.trigger('email').then(isValid => {
+        if (isValid) {
+          setIsEmailEditing(false);
+          setIsPasswordEditing(true);
+        }
+      });
+    }
+  };
+
+  const handlePasswordKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      form.handleSubmit(onSubmit)();
+    }
+  };
 
   return (
     <div className="grid gap-4">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4">
-           <FormField
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
             control={form.control}
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormControl>
-                  <Input placeholder="Email" {...field} />
-                </FormControl>
-                <FormMessage />
+                <div
+                  className={cn("flex items-center gap-2 w-full text-left text-muted-foreground transition-colors p-2 h-10",
+                    !isEmailEditing && "cursor-text hover:text-primary/80"
+                  )}
+                  onClick={() => !isEmailEditing && setIsEmailEditing(true)}
+                >
+                  <GoogleSymbol name="email" className="text-xl" />
+                  {isEmailEditing ? (
+                    <FormControl>
+                      <Input
+                        {...field}
+                        ref={emailInputRef}
+                        onBlur={() => setIsEmailEditing(false)}
+                        onKeyDown={handleEmailKeyDown}
+                        className="h-auto p-0 border-0 shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground"
+                        placeholder="Email"
+                      />
+                    </FormControl>
+                  ) : (
+                    <span className="flex-1 text-sm">{field.value || 'Email'}</span>
+                  )}
+                </div>
+                <FormMessage className="pl-8" />
               </FormItem>
             )}
           />
+
           <FormField
             control={form.control}
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormControl>
-                  <Input type="password" placeholder="Password" {...field} />
-                </FormControl>
-                <FormMessage />
+                <div
+                  className={cn("flex items-center gap-2 w-full text-left text-muted-foreground transition-colors p-2 h-10",
+                    !isPasswordEditing && "cursor-text hover:text-primary/80"
+                  )}
+                  onClick={() => !isPasswordEditing && setIsPasswordEditing(true)}
+                >
+                  <GoogleSymbol name="lock" className="text-xl" />
+                  {isPasswordEditing ? (
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="password"
+                        ref={passwordInputRef}
+                        onBlur={() => setIsPasswordEditing(false)}
+                        onKeyDown={handlePasswordKeyDown}
+                        className="h-auto p-0 border-0 shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground"
+                        placeholder="Password"
+                      />
+                    </FormControl>
+                  ) : (
+                     <span className="flex-1 text-sm">{field.value ? '••••••••' : 'Password'}</span>
+                  )}
+                </div>
+                <FormMessage className="pl-8" />
               </FormItem>
             )}
           />
-
-          <Button variant="outline" type="button" disabled={isLoading}>
+          <div className="pt-2" />
+          <Button variant="outline" type="button" disabled={isLoading} className="w-full">
             <svg role="img" viewBox="0 0 24 24" className="mr-2 h-4 w-4">
               <path
                 fill="currentColor"
@@ -83,9 +159,22 @@ export function LoginForm() {
             </svg>
             Sign in with Google
           </Button>
+
           <Button type="submit" disabled={isLoading} className="w-full">
-            {isLoading ? 'Signing in...' : 'Sign In'}
+            {isLoading ? <GoogleSymbol name="progress_activity" className="animate-spin" /> : 'Sign In'}
           </Button>
+
+          <div className="relative py-2">
+            <Separator />
+          </div>
+
+          <div className="text-center">
+            <Button asChild variant="ghost" className="text-sm font-semibold text-muted-foreground hover:text-primary">
+              <Link href="/signup">
+                Sign up
+              </Link>
+            </Button>
+          </div>
         </form>
       </Form>
     </div>

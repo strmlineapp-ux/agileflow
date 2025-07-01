@@ -1,9 +1,6 @@
-import Link from 'next/link';
 import { LoginForm } from '@/components/auth/login-form';
 import Logo from '@/components/icons/logo';
-import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { GoogleSymbol } from '@/components/icons/google-symbol';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
 export default function LoginPage() {
   return (
@@ -16,14 +13,6 @@ export default function LoginPage() {
           <CardContent>
             <LoginForm />
           </CardContent>
-          <CardFooter className="flex justify-center">
-            <Button asChild variant="ghost" className="text-sm font-semibold text-muted-foreground hover:text-primary">
-              <Link href="/signup">
-                <GoogleSymbol name="person_add" />
-                Sign up
-              </Link>
-            </Button>
-          </CardFooter>
         </Card>
       </div>
     </main>
