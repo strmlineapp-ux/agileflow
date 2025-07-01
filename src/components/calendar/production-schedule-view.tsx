@@ -191,14 +191,14 @@ const ProductionScheduleLocationRow = React.memo(({
     const canManageThisLocation = useMemo(() => {
         if (viewAsUser.roles?.includes('Admin')) return true;
         return teams.some(team => 
-            team.pinnedLocations.includes(location) && 
-            team.locationCheckManagers?.includes(viewAsUser.userId)
+            (team.pinnedLocations || []).includes(location) && 
+            (team.locationCheckManagers || []).includes(viewAsUser.userId)
         );
     }, [viewAsUser, teams, location]);
 
     const dailyCheckUsers = useMemo(() => {
-        const teamsWithLocation = teams.filter(t => t.pinnedLocations.includes(location));
-        const userIds = new Set(teamsWithLocation.flatMap(t => t.members));
+        const teamsWithLocation = teams.filter(t => t.pinnedLocations?.includes(location));
+        const userIds = new Set(teamsWithLocation.flatMap(t => t.members || []));
         return users.filter(u => userIds.has(u.userId));
     }, [teams, users, location]);
     
@@ -585,7 +585,7 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
 
                 const tempChecksForDaySet = tempDailyChecks[dayIso] || new Set();
                 
-                const allChecksToRender = Array.from(new Set([...allCheckLocationsForDay, ...Array.from(tempChecksForDaySet)])).sort();
+                const allChecksToRender = Array.from(new Set([...(allCheckLocationsForDay || []), ...Array.from(tempChecksForDaySet)])).sort();
 
                 const availableLocationsForTempCheck = allPinnedLocationsFromAllTeams
                     .filter(loc => !allChecksToRender.includes(loc))
@@ -600,7 +600,7 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
                                         const assignedUserId = dailyCheckAssignments[dayIso]?.[location];
                                         const assignedUser = users.find(u => u.userId === assignedUserId);
                                         const canManageThisCheckLocation = viewAsUser.roles?.includes('Admin') || teams.some(t =>
-                                            t.checkLocations.includes(location) && (t.locationCheckManagers || []).includes(viewAsUser.userId)
+                                            (t.checkLocations || []).includes(location) && (t.locationCheckManagers || []).includes(viewAsUser.userId)
                                         );
                                         const isTempCheck = tempChecksForDaySet.has(location);
 
@@ -612,7 +612,7 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
                                             </>
                                         );
                                         
-                                        const dailyCheckUsers = users.filter(user => teams.some(t => t.checkLocations.includes(location) && (t.locationCheckManagers || []).includes(viewAsUser.userId) && (t.members || []).includes(user.userId) ));
+                                        const dailyCheckUsers = users.filter(user => teams.some(t => (t.checkLocations || []).includes(location) && (t.locationCheckManagers || []).includes(viewAsUser.userId) && (t.members || []).includes(user.userId) ));
 
                                         const pill = canManageThisCheckLocation ? (
                                             <Popover key={location}><PopoverTrigger asChild><Button variant={assignedUser ? "secondary" : "outline"} size="sm" className={cn("rounded-full h-8", isTempCheck && "border-dashed")}>{pillContent}</Button></PopoverTrigger>
@@ -693,7 +693,7 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
                                     {!isDayCollapsed && (
                                         <CardContent className="p-0 relative">
                                             <div className="absolute inset-y-0 lunch-break-pattern z-0 pointer-events-none" style={{ left: `${LOCATION_LABEL_WIDTH_PX + 12 * hourWidth}px`, width: `${2.5 * hourWidth}px` }} title="Lunch Break" />
-                                            {gridLocations.map((location, index) => (
+                                            {(gridLocations || []).map((location, index) => (
                                                 <ProductionScheduleLocationRow
                                                     key={location}
                                                     day={day}
@@ -734,5 +734,6 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
     );
 });
 ProductionScheduleView.displayName = 'ProductionScheduleView';
+
 
 

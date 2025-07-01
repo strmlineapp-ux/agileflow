@@ -26,7 +26,7 @@ import { GoogleSymbol } from '../icons/google-symbol';
 import { Badge } from '../ui/badge';
 
 export function UserManagement() {
-    const { realUser, users, updateUser, linkGoogleCalendar, allRoles, teams } = useUser();
+    const { realUser, users, updateUser, linkGoogleCalendar, allRolesAndBadges, teams } = useUser();
     
     // State for editing user contact
     const [editingContactUser, setEditingContactUser] = useState<User | null>(null);
@@ -77,7 +77,7 @@ export function UserManagement() {
                                 <TableHead className="w-[48px]" />
                                 <TableHead>User</TableHead>
                                 <TableHead>Title</TableHead>
-                                <TableHead>Roles</TableHead>
+                                <TableHead>Roles & Badges</TableHead>
                                 <TableHead><span className="sr-only">Actions</span></TableHead>
                             </TableRow>
                         </TableHeader>
@@ -136,7 +136,7 @@ export function UserManagement() {
                                             {canSeeRoles && (
                                                 <div className="flex flex-wrap gap-1">
                                                 {rolesToDisplay.map(role => {
-                                                    const roleInfo = allRoles.find(r => r.name === role);
+                                                    const roleInfo = allRolesAndBadges.find(r => r.name === role);
                                                     return (
                                                         <Badge
                                                             key={role}
