@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -79,75 +80,73 @@ export function LoginForm() {
   };
 
   return (
-    <div className="grid gap-4">
+    <div className="grid gap-2">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <div className="flex items-center gap-2">
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem className="flex-1">
-                  <div
-                    className={cn("flex items-center gap-2 w-full text-left text-muted-foreground transition-colors p-2 h-10",
-                      !isEmailEditing && "cursor-text hover:text-primary/80"
-                    )}
-                    onClick={() => !isEmailEditing && setIsEmailEditing(true)}
-                  >
-                    <GoogleSymbol name="email" className="text-lg" />
-                    {isEmailEditing ? (
-                      <FormControl>
-                        <Input
-                          {...field}
-                          ref={emailInputRef}
-                          onBlur={() => setIsEmailEditing(false)}
-                          onKeyDown={handleEmailKeyDown}
-                          className="h-auto p-0 border-0 shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground"
-                          placeholder="Email"
-                        />
-                      </FormControl>
-                    ) : (
-                      <span className="flex-1 text-sm">{field.value || 'Email'}</span>
-                    )}
-                  </div>
-                </FormItem>
-              )}
-            />
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <div
+                  className={cn("flex items-center gap-2 w-full text-left text-muted-foreground transition-colors p-2 h-10",
+                    !isEmailEditing && "cursor-text hover:text-primary/80"
+                  )}
+                  onClick={() => !isEmailEditing && setIsEmailEditing(true)}
+                >
+                  <GoogleSymbol name="email" className="text-lg" />
+                  {isEmailEditing ? (
+                    <FormControl>
+                      <Input
+                        {...field}
+                        ref={emailInputRef}
+                        onBlur={() => setIsEmailEditing(false)}
+                        onKeyDown={handleEmailKeyDown}
+                        className="h-auto p-0 border-0 shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground"
+                        placeholder="Email"
+                      />
+                    </FormControl>
+                  ) : (
+                    <span className="flex-1 text-sm">{field.value || 'Email'}</span>
+                  )}
+                </div>
+              </FormItem>
+            )}
+          />
 
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem className="flex-1">
-                  <div
-                    className={cn("flex items-center gap-2 w-full text-left text-muted-foreground transition-colors p-2 h-10",
-                      !isPasswordEditing && "cursor-text hover:text-primary/80"
-                    )}
-                    onClick={() => !isPasswordEditing && setIsPasswordEditing(true)}
-                  >
-                    <GoogleSymbol name="lock" className="text-lg" />
-                    {isPasswordEditing ? (
-                      <FormControl>
-                        <Input
-                          {...field}
-                          type="password"
-                          ref={passwordInputRef}
-                          onBlur={() => setIsPasswordEditing(false)}
-                          onKeyDown={handlePasswordKeyDown}
-                          className="h-auto p-0 border-0 shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground"
-                          placeholder="Password"
-                        />
-                      </FormControl>
-                    ) : (
-                      <span className="flex-1 text-sm">{field.value ? '••••••••' : 'Password'}</span>
-                    )}
-                  </div>
-                </FormItem>
-              )}
-            />
-          </div>
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <div
+                  className={cn("flex items-center gap-2 w-full text-left text-muted-foreground transition-colors p-2 h-10",
+                    !isPasswordEditing && "cursor-text hover:text-primary/80"
+                  )}
+                  onClick={() => !isPasswordEditing && setIsPasswordEditing(true)}
+                >
+                  <GoogleSymbol name="lock" className="text-lg" />
+                  {isPasswordEditing ? (
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="password"
+                        ref={passwordInputRef}
+                        onBlur={() => setIsPasswordEditing(false)}
+                        onKeyDown={handlePasswordKeyDown}
+                        className="h-auto p-0 border-0 shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground"
+                        placeholder="Password"
+                      />
+                    </FormControl>
+                  ) : (
+                    <span className="flex-1 text-sm">{field.value ? '••••••••' : 'Password'}</span>
+                  )}
+                </div>
+              </FormItem>
+            )}
+          />
           
-          <div className="space-y-3 pt-2">
+          <div className="space-y-2 pt-1">
             <Button variant="ghost" type="button" disabled={isLoading} className="w-full justify-center text-muted-foreground hover:text-primary hover:bg-transparent">
                 <svg role="img" viewBox="0 0 24 24" className="mr-2 h-4 w-4">
                 <path
