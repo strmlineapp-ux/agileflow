@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { type Priority, type PriorityStrategy, type PriorityStrategyApplication, PriorityStrategyType } from '@/types';
 import { useUser } from '@/context/user-context';
 import { useToast } from '@/hooks/use-toast';
@@ -49,12 +49,26 @@ export function PriorityStrategyForm({ isOpen, onClose, strategy }: PriorityStra
   
   // States for icon picker
   const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
-  const [iconSearch, setIconSearch] = useState('');
   const [isSymbolColorPopoverOpen, setIsSymbolColorPopoverOpen] = useState(false);
   const [openIntervalColorPopoverIndex, setOpenIntervalColorPopoverIndex] = useState<number | null>(null);
 
+  const [isSearchingIcons, setIsSearchingIcons] = useState(false);
+  const [iconSearch, setIconSearch] = useState('');
+  const iconSearchInputRef = useRef<HTMLInputElement>(null);
+
   const { toast } = useToast();
   
+  useEffect(() => {
+    if (!isIconPopoverOpen) {
+        setIsSearchingIcons(false);
+        setIconSearch('');
+    }
+  }, [isIconPopoverOpen]);
+  
+  useEffect(() => {
+    if (isSearchingIcons) iconSearchInputRef.current?.focus();
+  }, [isSearchingIcons]);
+
   const filteredIcons = useMemo(() => {
     if (!iconSearch) return googleSymbolNames;
     return googleSymbolNames.filter(iconName =>
@@ -306,12 +320,24 @@ export function PriorityStrategyForm({ isOpen, onClose, strategy }: PriorityStra
                                   </Button>
                               </PopoverTrigger>
                               <PopoverContent className="w-80 p-0">
-                                  <div className="p-2 border-b">
-                                      <Input
-                                          placeholder="Search icons..."
-                                          value={iconSearch}
-                                          onChange={(e) => setIconSearch(e.target.value)}
-                                      />
+                                  <div className="flex items-center gap-1 p-2 border-b">
+                                      {!isSearchingIcons ? (
+                                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => setIsSearchingIcons(true)}>
+                                              <GoogleSymbol name="search" />
+                                          </Button>
+                                      ) : (
+                                          <>
+                                              <GoogleSymbol name="search" className="text-muted-foreground text-xl pl-2" />
+                                              <Input
+                                                  ref={iconSearchInputRef}
+                                                  placeholder="Search..."
+                                                  value={iconSearch}
+                                                  onChange={(e) => setIconSearch(e.target.value)}
+                                                  onBlur={() => !iconSearch && setIsSearchingIcons(false)}
+                                                  className="h-8 border-0 shadow-none focus-visible:ring-0 bg-transparent p-0"
+                                              />
+                                          </>
+                                      )}
                                   </div>
                                   <ScrollArea className="h-64">
                                       <div className="grid grid-cols-6 gap-1 p-2">

@@ -62,6 +62,13 @@ function CompactSearchIconPicker({
       searchInputRef.current.focus();
     }
   }, [isSearching]);
+  
+  useEffect(() => {
+      if (!isPopoverOpen) {
+          setIsSearching(false);
+          setIconSearch('');
+      }
+  }, [isPopoverOpen]);
 
   const filteredIcons = useMemo(() => {
     if (!iconSearch) return googleSymbolNames;
@@ -99,10 +106,10 @@ function CompactSearchIconPicker({
               </Button>
            ) : (
              <>
-                <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                <GoogleSymbol name="search" className="text-muted-foreground text-xl pl-2" />
                 <Input
                   ref={searchInputRef}
-                  placeholder="Search icons..."
+                  placeholder="Search..."
                   value={iconSearch}
                   onChange={(e) => setIconSearch(e.target.value)}
                   onBlur={handleBlurSearch}
@@ -549,7 +556,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInAllT
                  {collection.description && <CardDescription className="pt-2">{collection.description}</CardDescription>}
             </CardHeader>
             <CardContent>
-                <StrictModeDroppable droppableId={collection.id} type="badge" isDropDisabled={!!isSharedToThisTeam}>
+                <StrictModeDroppable droppableId={collection.id} type="badge" isDropDisabled={isSharedToThisTeam}>
                     {(provided) => (
                          <div
                             ref={provided.innerRef}

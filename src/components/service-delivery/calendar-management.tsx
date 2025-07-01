@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useUser } from '@/context/user-context';
 import { type SharedCalendar, type AppTab } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -62,6 +62,13 @@ function CalendarCard({ calendar, onUpdate, onDelete }: { calendar: SharedCalend
   const [iconSearch, setIconSearch] = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    if (!isIconPopoverOpen) {
+        setIsSearching(false);
+        setIconSearch('');
+    }
+  }, [isIconPopoverOpen]);
+  
   useEffect(() => {
     if (isSearching) searchInputRef.current?.focus();
   }, [isSearching]);
@@ -236,6 +243,13 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
     if (e.key === 'Enter') handleSaveTitle();
     else if (e.key === 'Escape') setIsEditingTitle(false);
   };
+  
+  useEffect(() => {
+    if (!isAddIconPopoverOpen) {
+        setIsAddIconSearching(false);
+        setAddIconSearch('');
+    }
+  }, [isAddIconPopoverOpen]);
   
   useEffect(() => {
     if (isAddIconSearching) addSearchInputRef.current?.focus();

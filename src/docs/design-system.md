@@ -32,12 +32,12 @@ This pattern provides a clean, minimal interface for search functionality, espec
 - **Trigger:** Clicking a search icon (`search`).
 - **Interaction:**
   - The search icon is replaced by an inline search input field, with the search icon now appearing inside the input's bounds to maintain context.
-  - The input field appears without a full border, typically just an underline or a transparent background, to maintain a minimal look.
+  - The input field appears with a transparent background and no borders or box-shadow, to maintain a minimal, "inline text" look.
   - The input field automatically gains focus.
 - **Behavior:**
   - Typing into the field filters the relevant content on the page in real-time.
   - Clicking outside the input (`onBlur`) when it is empty will cause it to revert back to the simple search icon. If the field contains text, it remains visible.
-- **Application:** Used for filtering lists of icons, users, or other filterable content within popovers.
+- **Application:** Used for filtering lists of icons, users, or other filterable content within popovers and other compact spaces.
 
 ---
 
@@ -143,4 +143,3 @@ When a destructive action requires user confirmation (like deleting a shared res
     - **Appearance**: A circular badge (e.g., `h-5 w-5`) with a `border-2` of the parent element's background color (e.g., `border-card` or `border-background`) to create a "punched out" effect. The icon inside should be sized appropriately (e.g., `font-size: 14px` or similar, depending on container).
     - **Placement**: Typically positioned on the bottom-right or top-right corner of the parent element.
     - **Application**: Used for displaying a user's admin group on their avatar, a shared group status on a role icon, or a `share` icon on a shared Badge.
-
