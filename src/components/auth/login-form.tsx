@@ -19,6 +19,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { GoogleSymbol } from "../icons/google-symbol";
 import { cn } from "@/lib/utils";
+import { Separator } from "../ui/separator";
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -148,8 +149,8 @@ export function LoginForm() {
             )}
           />
           
-          <div className="space-y-2 pt-2">
-            <Button variant="outline" type="button" disabled={isLoading} className="w-full">
+          <div className="space-y-3 pt-2">
+            <Button variant="ghost" type="button" disabled={isLoading} className="w-full text-muted-foreground hover:text-primary">
                 <svg role="img" viewBox="0 0 24 24" className="mr-2 h-4 w-4">
                 <path
                     fill="currentColor"
@@ -158,17 +159,25 @@ export function LoginForm() {
                 </svg>
                 Sign in with Google
             </Button>
-            <Button type="submit" disabled={isLoading} className="w-full">
-                {isLoading ? <GoogleSymbol name="progress_activity" className="animate-spin" /> : 'Sign In'}
-            </Button>
-          </div>
-          
-          <div className="text-center">
-            <Button asChild variant="ghost" className="text-sm font-semibold text-muted-foreground hover:text-primary">
-              <Link href="/signup">
-                Sign up
-              </Link>
-            </Button>
+
+            <Separator className="my-2" />
+
+            <div className="flex justify-between items-center">
+                <Button asChild variant="ghost" className="text-sm font-normal text-muted-foreground hover:text-primary">
+                    <Link href="/signup">
+                        <GoogleSymbol name="person_add" />
+                        Sign up
+                    </Link>
+                </Button>
+                <Button type="submit" variant="ghost" className="text-sm font-normal text-muted-foreground hover:text-primary" disabled={isLoading}>
+                    {isLoading ? <GoogleSymbol name="progress_activity" className="animate-spin" /> : (
+                        <>
+                            <GoogleSymbol name="login" />
+                            <span>Sign In</span>
+                        </>
+                    )}
+                </Button>
+            </div>
           </div>
         </form>
       </Form>

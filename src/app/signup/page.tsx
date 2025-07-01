@@ -5,6 +5,7 @@ import Logo from '@/components/icons/logo';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
+import { Separator } from '@/components/ui/separator';
 
 export default function SignUpPage() {
   return (
@@ -19,8 +20,9 @@ export default function SignUpPage() {
           <CardContent>
             <SignUpForm />
           </CardContent>
-          <CardFooter className="flex justify-center">
-             <Button asChild variant="ghost" className="text-sm font-semibold text-muted-foreground hover:text-primary">
+          <CardFooter className="flex flex-col gap-4">
+             <Separator />
+             <Button asChild variant="ghost" className="text-sm font-normal text-muted-foreground hover:text-primary">
                 <Link href="/login">
                     <GoogleSymbol name="login" />
                     Sign in
