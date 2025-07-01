@@ -131,35 +131,28 @@ export default function CalendarPage() {
       <Tabs defaultValue={realUser.defaultCalendarView || 'day'} value={view} onValueChange={(v) => setView(v as any)} className="flex h-full flex-col">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 shrink-0">
           <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={goToToday}>Today</Button>
-              <Button variant="outline" size="icon" onClick={handlePrev}>
-                  <GoogleSymbol name="chevron_left" />
-              </Button>
-              <Button variant="outline" size="icon" onClick={handleNext}>
-                  <GoogleSymbol name="chevron_right" />
-              </Button>
-              <h1 className="font-headline text-2xl font-semibold ml-4 flex items-baseline gap-3">{title}</h1>
+            <div className="flex items-center gap-1">
+                <Button variant="outline" size="icon" onClick={handlePrev}><GoogleSymbol name="chevron_left" /></Button>
+                <Button variant="outline" size="sm" onClick={goToToday}>Today</Button>
+                <Button variant="outline" size="icon" onClick={handleNext}><GoogleSymbol name="chevron_right" /></Button>
+            </div>
+            <h1 className="font-headline text-2xl font-semibold ml-4 flex items-baseline gap-3">{title}</h1>
+            {userCanCreateEvent && (
+              <Dialog open={isNewEventOpen} onOpenChange={setIsNewEventOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+                    <GoogleSymbol name="add_circle" className="text-2xl" />
+                    <span className="sr-only">New Event</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-xl">
+                  <EventForm onFinished={closeNewEventDialog} initialData={initialEventData} />
+                </DialogContent>
+              </Dialog>
+            )}
           </div>
           <div className="flex items-center gap-2">
               <TooltipProvider>
-                {userCanCreateEvent && (
-                  <Dialog open={isNewEventOpen} onOpenChange={setIsNewEventOpen}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <DialogTrigger asChild>
-                          <Button size="icon">
-                            <GoogleSymbol name="add_circle" />
-                            <span className="sr-only">New Event</span>
-                          </Button>
-                        </DialogTrigger>
-                      </TooltipTrigger>
-                      <TooltipContent>New Event</TooltipContent>
-                    </Tooltip>
-                    <DialogContent className="sm:max-w-xl">
-                      <EventForm onFinished={closeNewEventDialog} initialData={initialEventData} />
-                    </DialogContent>
-                  </Dialog>
-                )}
                 {(view === 'production-schedule' || view === 'day' || view === 'week') && (
                   <Tooltip>
                     <TooltipTrigger asChild>

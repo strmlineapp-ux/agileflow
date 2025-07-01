@@ -70,7 +70,6 @@ export const mockAppSettings: AppSettings = {
       teamAdmins: [],
     },
   ],
-  linkGroups: {},
   pages: mockPages,
   tabs: mockTabs,
   strategyLabel: 'Priority Strategies',

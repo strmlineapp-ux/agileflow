@@ -1,4 +1,5 @@
 
+
 # AgileFlow: Design System & UI Patterns
 
 This document outlines the established UI patterns and design choices that ensure a consistent and intuitive user experience across the AgileFlow application. These patterns serve as a guide for both current and future development.
@@ -30,13 +31,13 @@ This pattern provides a clean, minimal interface for search functionality, espec
 
 - **Trigger:** Clicking a search icon (`search`).
 - **Interaction:**
-  - The icon is replaced by an inline search input field, often with the search icon now appearing inside the input's bounds.
-  - The input field appears without a full border, typically just an underline, to maintain a minimal look.
+  - The search icon is replaced by an inline search input field, with the search icon now appearing inside the input's bounds to maintain context.
+  - The input field appears without a full border, typically just an underline or a transparent background, to maintain a minimal look.
   - The input field automatically gains focus.
 - **Behavior:**
   - Typing into the field filters the relevant content on the page in real-time.
   - Clicking outside the input (`onBlur`) when it is empty will cause it to revert back to the simple search icon. If the field contains text, it remains visible.
-- **Application:** Used for filtering lists of icons, badges, or other filterable content.
+- **Application:** Used for filtering lists of icons, users, or other filterable content within popovers.
 
 ---
 
@@ -51,32 +52,19 @@ This pattern replaces large, card-style "Add New" buttons with a more compact an
 
 ---
 
-### 4. Compact Edit Popover
-
-This is a minimal, title-less popover for quick, focused editing actions, typically for an icon and its associated color. This is the reference to follow for any popover that will only feature an icon picker, a color picker, and a cancel/delete/unlink action.
-
-- **Trigger:** An icon button, often with a color badge overlay (see "Icon & Color Editing Flow").
-- **Interaction:**
-  - The popover appears without a header or title.
-  - It contains icon-only buttons for its actions.
-  - Actions are arranged horizontally. Common actions include an icon picker, a color picker (as a badge on the icon picker), and a cancel/delete/unlink action.
-- **Application:** Used for editing shared group properties.
-
----
-
-### 5. Icon & Color Editing Flow
+### 4. Icon & Color Editing Flow
 
 This is the consistent reference pattern for allowing a user to change both an icon and its color.
 
 - **Trigger:** A single, interactive unit composed of a primary icon button and a smaller color swatch badge overlaid on its corner.
 - **Interaction:**
-  - Clicking the main part of the button opens an icon picker popover.
+  - Clicking the main part of the button opens an icon picker popover. This popover uses the **Compact Search Input** pattern for filtering.
   - Clicking the color swatch badge opens a color picker popover.
 - **Application:** Used for editing team role icons/colors, custom admin role icons/colors, and shared group icons/colors.
 
 ---
 
-### 6. Entity Sharing & Linking
+### 5. Entity Sharing & Linking
 
 This pattern describes how a single entity (like a Badge or Badge Collection) can exist in multiple contexts while maintaining a single source of truth.
 
@@ -96,7 +84,7 @@ This pattern describes how a single entity (like a Badge or Badge Collection) ca
 
 ---
 
-### 7. Drag-to-Duplicate
+### 6. Drag-to-Duplicate
 
 This pattern provides a fast, intuitive way for users to duplicate complex entities using a drag-and-drop gesture, significantly speeding up configuration workflows.
 
@@ -110,19 +98,17 @@ This pattern provides a fast, intuitive way for users to duplicate complex entit
 
 ---
 
-### 8. Interactive List Selection
+### 7. Compact Deletion Dialog
 
-This pattern provides a clean alternative to checkboxes for selecting multiple items in a list, especially within a popover or compact space.
+When a destructive action requires user confirmation (like deleting a shared resource), this pattern provides a minimal, focused dialog.
 
--   **Trigger**: Clicking on an item within the list.
--   **Interaction**:
-    -   Clicking an unselected item marks it as selected.
-    -   Clicking a selected item deselects it.
--   **Visual Cues**:
-    -   **Selected State**: The item's text and/or icon changes to a distinct color. This can be the primary theme color or a color associated with the item itself (e.g., a team's brand color). The background does not change.
-    -   **Unselected State**: The item is displayed in a default, muted state (e.g., `text-muted-foreground`).
-    -   There is no background color change on hover, providing a cleaner, less "busy" interaction.
--   **Application**: Ideal for managing associations in popovers, such as assigning users, teams, or roles to a page, or associating tabs with a page.
+- **Appearance**: A compact, title-less dialog.
+- **Interaction**:
+    - The primary action (e.g., delete) is represented by an icon-only button in the header.
+    - A brief, descriptive text explains the consequences of the action.
+    - There are no footer buttons.
+- **Behavior**: Clicking outside the dialog or pressing 'Escape' cancels the operation. Clicking the action icon confirms it.
+- **Application**: Used for confirming the deletion of shared Badges or Badge Collections.
 
 ## Visual & Theming Elements
 

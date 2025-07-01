@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { type Team, type Badge, type BadgeCollection, type User, type BadgeApplication } from '@/types';
+import { type Team, type Badge, type BadgeCollection, type User, type BadgeApplication, type AppTab } from '@/types';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { ScrollArea } from '../ui/scroll-area';
@@ -88,24 +88,28 @@ function CompactSearchIconPicker({
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0">
         <div className="flex items-center gap-1 p-2 border-b">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-muted-foreground"
-            onClick={() => setIsSearching(true)}
-          >
-            <GoogleSymbol name="search" />
-          </Button>
-          {isSearching && (
-            <Input
-              ref={searchInputRef}
-              placeholder="Search icons..."
-              value={iconSearch}
-              onChange={(e) => setIconSearch(e.target.value)}
-              onBlur={handleBlurSearch}
-              className="h-8 border-0 shadow-none focus-visible:ring-0"
-            />
-          )}
+           {!isSearching ? (
+             <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground"
+                onClick={() => setIsSearching(true)}
+              >
+                <GoogleSymbol name="search" />
+              </Button>
+           ) : (
+             <>
+                <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                <Input
+                  ref={searchInputRef}
+                  placeholder="Search icons..."
+                  value={iconSearch}
+                  onChange={(e) => setIconSearch(e.target.value)}
+                  onBlur={handleBlurSearch}
+                  className="h-8 border-0 shadow-none focus-visible:ring-0 bg-transparent p-0"
+                />
+             </>
+           )}
         </div>
         <ScrollArea className="h-64">
           <div className="grid grid-cols-6 gap-1 p-2">
@@ -150,7 +154,6 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
 
     useEffect(() => {
         if (isEditingDescription && descriptionTextareaRef.current) {
-            descriptionTextareaRef.current.focus();
             descriptionTextareaRef.current.select();
         }
     }, [isEditingDescription]);
@@ -225,17 +228,15 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     let shareIconTitle: string = '';
     let shareIconColor = ownerTeam?.color;
 
-    if (!isOwnedByMyTeam) {
+    if (isSharedToOtherTeams) {
+        shareIcon = 'upload';
+        shareIconTitle = `Owned by this team and shared externally`;
+    } else if (!isOwnedByMyTeam) {
         shareIcon = 'downloading';
         shareIconTitle = `Shared from ${ownerTeam?.name || 'another team'}`;
-    } else { // isOwnedByMyTeam is true
-        if (isSharedToOtherTeams) {
-            shareIcon = 'upload';
-            shareIconTitle = 'Owned by this team and shared externally';
-        } else if (isLinkedInternally && !isThisTheOriginalInstance) {
-            shareIcon = 'change_circle';
-            shareIconTitle = 'Linked from another collection in this team';
-        }
+    } else if (isLinkedInternally && !isThisTheOriginalInstance) {
+        shareIcon = 'change_circle';
+        shareIconTitle = 'Linked from another collection in this team';
     }
 
 
@@ -354,15 +355,9 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     
     // Assorted View
     return (
-        <div className="group relative inline-flex items-center gap-1 rounded-full border-2 p-0.5 pl-1 pr-2.5" style={{ borderColor: badge.color, color: badge.color }}>
+        <div className="group relative inline-flex items-center gap-1 rounded-full border-2 p-0.5 pl-1.5 pr-1.5 h-7" style={{ borderColor: badge.color, color: badge.color }}>
             <div className="relative">
-                <CompactSearchIconPicker icon={badge.icon} color="inherit" onUpdateIcon={(icon) => onUpdateBadge({ icon })} />
-                 <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                    <PopoverTrigger asChild><div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border border-background cursor-pointer" style={{ backgroundColor: badge.color }} /></PopoverTrigger>
-                    <PopoverContent className="w-auto p-2">
-                    <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdateBadge({ color: c }); setIsColorPopoverOpen(false);}}/>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={badge.color} onChange={(e) => onUpdateBadge({ color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
-                    </PopoverContent>
-                </Popover>
+                <GoogleSymbol name={badge.icon} style={{color: badge.color}} className="text-base" />
                 {shareIcon && (
                     <div
                         className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-background text-white flex items-center justify-center"
@@ -434,9 +429,13 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInAllT
 
     const isOwned = collection.ownerTeamId === teamId;
     const isSharedToThisTeam = !isOwned;
-    const isSharedFromThisTeam = isOwned && teams.some(t => t.id !== teamId && (t.sharedCollectionIds || []).includes(collection.id));
     const ownerTeam = teams.find(t => t.id === collection.ownerTeamId);
-
+    
+    const isSharedFromThisTeam = useMemo(() => {
+        if (!isOwned) return false;
+        return teams.some(t => t.id !== teamId && (t.sharedCollectionIds || []).includes(collection.id));
+    }, [teams, collection.id, teamId, isOwned]);
+    
     let shareIcon: string | null = null;
     let shareIconTitle: string = '';
     let shareIconColor = ownerTeam?.color;
@@ -446,7 +445,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInAllT
         shareIconTitle = 'Owned by this team and shared externally';
     } else if (isSharedToThisTeam) {
         shareIcon = 'downloading';
-        shareIconTitle = 'Shared from another team';
+        shareIconTitle = `Shared from ${ownerTeam?.name || 'another team'}`;
     }
     
     return (
@@ -490,7 +489,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInAllT
                                 <CardTitle onClick={() => !isSharedToThisTeam && setIsEditingName(true)} className={cn(!isSharedToThisTeam && "cursor-pointer", "truncate")}>{collection.name}</CardTitle>
                             )}
                             {!isSharedToThisTeam && (
-                                 <StrictModeDroppable droppableId={`duplicate-badge-zone:${collection.id}`} type="badge" isDropDisabled={false}>
+                                 <StrictModeDroppable droppableId={`duplicate-badge-zone:${collection.id}`} type="badge" isDropDisabled={!!isSharedToThisTeam}>
                                      {(provided, snapshot) => (
                                         <div
                                             ref={provided.innerRef}
@@ -550,14 +549,14 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInAllT
                  {collection.description && <CardDescription className="pt-2">{collection.description}</CardDescription>}
             </CardHeader>
             <CardContent>
-                <StrictModeDroppable droppableId={collection.id} type="badge">
+                <StrictModeDroppable droppableId={collection.id} type="badge" isDropDisabled={!!isSharedToThisTeam}>
                     {(provided) => (
                          <div
                             ref={provided.innerRef}
                             {...provided.droppableProps}
                             className={cn(
                                 "min-h-[60px] rounded-md border-2 border-dashed border-transparent p-2",
-                                collection.viewMode === 'assorted' && "flex flex-wrap gap-2",
+                                collection.viewMode === 'assorted' && "flex flex-wrap gap-2 items-start",
                                 collection.viewMode === 'list' && "flex flex-col gap-1",
                                 collection.viewMode === 'detailed' && "grid grid-cols-1 md:grid-cols-2 gap-4"
                             )}>
@@ -673,8 +672,8 @@ function ShareCollectionDialog({ isOpen, onClose, team, teams, onShareCollection
     );
 }
 
-export function BadgeManagement({ team }: { team: Team }) {
-    const { teams, updateTeam } = useUser();
+export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
+    const { teams, updateTeam, updateAppTab } = useUser();
     const { toast } = useToast();
     
     const [collectionToDelete, setCollectionToDelete] = useState<string | null>(null);
@@ -684,6 +683,26 @@ export function BadgeManagement({ team }: { team: Team }) {
     const [isSearching, setIsSearching] = useState(false);
     const searchInputRef = useRef<HTMLInputElement>(null);
     const [searchTerm, setSearchTerm] = useState('');
+    
+    const [isEditingTitle, setIsEditingTitle] = useState(false);
+    const titleInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (isEditingTitle) titleInputRef.current?.focus();
+    }, [isEditingTitle]);
+
+    const handleSaveTitle = () => {
+        const newName = titleInputRef.current?.value.trim();
+        if (newName && newName !== tab.name) {
+            updateAppTab(tab.id, { name: newName });
+        }
+        setIsEditingTitle(false);
+    };
+
+    const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') handleSaveTitle();
+        else if (e.key === 'Escape') setIsEditingTitle(false);
+    };
 
     useEffect(() => {
         if (isSearching && searchInputRef.current) {
@@ -840,10 +859,24 @@ export function BadgeManagement({ team }: { team: Team }) {
     const handleDeleteBadge = useCallback((collectionId: string, badgeId: string) => {
         const badge = allBadgesAvailableToTeam.find(b => b.id === badgeId);
         if (!badge) return;
-
+    
         const isOriginalInstance = badge.ownerCollectionId === collectionId;
-
-        if (!isOriginalInstance) {
+    
+        // Check how many places this badge is used (linked or original)
+        let linkCount = 0;
+        teams.forEach(t => {
+            t.badgeCollections.forEach(c => {
+                if (c.badgeIds.includes(badgeId)) {
+                    linkCount++;
+                }
+            });
+        });
+    
+        if (isOriginalInstance && linkCount > 1) {
+            // It's the original and it's linked elsewhere. Show dialog.
+            setBadgeToDelete({ collectionId, badgeId });
+        } else if (!isOriginalInstance) {
+            // It's just a link. Remove it without confirmation.
             const newCollections = team.badgeCollections.map(c => {
                 if (c.id === collectionId) {
                     return { ...c, badgeIds: c.badgeIds.filter(id => id !== badgeId) };
@@ -853,22 +886,10 @@ export function BadgeManagement({ team }: { team: Team }) {
             updateTeam(team.id, { badgeCollections: newCollections });
             toast({ title: 'Badge Unlinked' });
         } else {
-            let linkCount = 0;
-            teams.forEach(t => {
-                t.badgeCollections.forEach(c => {
-                    if (c.badgeIds.includes(badgeId)) {
-                        linkCount++;
-                    }
-                });
-            });
-
-            if (linkCount > 1) {
-                setBadgeToDelete({ collectionId, badgeId });
-            } else {
-                confirmPermanentDelete(badgeId);
-            }
+            // It's the original and not linked anywhere else. Delete permanently.
+            confirmPermanentDelete(badgeId);
         }
-    }, [allBadgesAvailableToTeam, teams, team.id, team.badgeCollections, updateTeam, toast, confirmPermanentDelete]);
+    }, [allBadgesAvailableToTeam, teams, team.badgeCollections, updateTeam, toast, confirmPermanentDelete]);
     
     
     const handleDuplicateCollection = (sourceCollectionId: string) => {
@@ -969,6 +990,11 @@ export function BadgeManagement({ team }: { team: Team }) {
         const destCollection = displayedCollections.find(c => c.id === destination.droppableId);
     
         if (!sourceCollection || !destCollection) return;
+        
+        // Prevent dropping into a shared collection
+        if (destCollection.ownerTeamId !== team.id) {
+            return;
+        }
     
         if (source.droppableId === destination.droppableId) {
             const reorderedIds = Array.from(sourceCollection.badgeIds);
@@ -1021,9 +1047,23 @@ export function BadgeManagement({ team }: { team: Team }) {
     return (
         <DragDropContext onDragEnd={onDragEnd}>
             <div className="space-y-6">
+                 <div className="flex items-center gap-2">
+                    {isEditingTitle ? (
+                        <Input
+                            ref={titleInputRef}
+                            defaultValue={tab.name}
+                            onBlur={handleSaveTitle}
+                            onKeyDown={handleTitleKeyDown}
+                            className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                        />
+                    ) : (
+                        <h2 className="text-2xl font-semibold tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>
+                            {tab.name}
+                        </h2>
+                    )}
+                </div>
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <h2 className="text-2xl font-semibold tracking-tight">Badge Collections</h2>
                         <StrictModeDroppable droppableId="duplicate-collection-zone" type="collection">
                             {(provided, snapshot) => (
                                 <div
@@ -1114,45 +1154,33 @@ export function BadgeManagement({ team }: { team: Team }) {
                 </StrictModeDroppable>
             </div>
             <Dialog open={!!collectionToDelete} onOpenChange={(isOpen) => !isOpen && setCollectionToDelete(null)}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Are you absolutely sure?</DialogTitle>
+                 <DialogContent className="sm:max-w-md p-0">
+                    <DialogHeader className="p-6 pb-4">
+                       <div className="flex items-start justify-between">
+                            <DialogTitle>Are you absolutely sure?</DialogTitle>
+                             <Button variant="ghost" size="icon" className="h-9 w-9 -mr-2 -mt-2 text-destructive" onClick={() => { if (collectionToDelete) confirmDeleteCollection(); }}>
+                                <GoogleSymbol name="delete" className="text-xl" />
+                             </Button>
+                       </div>
                         <DialogDescription>
                         This action cannot be undone. This will permanently delete the collection and all badges it owns.
                         </DialogDescription>
                     </DialogHeader>
-                     <div className="flex justify-end gap-2 mt-4">
-                        <DialogClose asChild>
-                            <Button variant="ghost" size="icon"><GoogleSymbol name="close" /></Button>
-                        </DialogClose>
-                        <Button variant="destructive" size="icon" onClick={() => {
-                            if (collectionToDelete) confirmDeleteCollection();
-                        }}>
-                            <GoogleSymbol name="delete" />
-                        </Button>
-                    </div>
                 </DialogContent>
             </Dialog>
              <Dialog open={!!badgeToDelete} onOpenChange={(isOpen) => !isOpen && setBadgeToDelete(null)}>
-                <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Delete Badge?</DialogTitle>
+                 <DialogContent className="sm:max-w-md p-0">
+                    <DialogHeader className="p-6 pb-4">
+                        <div className="flex items-start justify-between">
+                            <DialogTitle>Delete Shared Badge?</DialogTitle>
+                             <Button variant="ghost" size="icon" className="h-9 w-9 -mr-2 -mt-2 text-destructive" onClick={() => { if (badgeToDelete) confirmPermanentDelete(badgeToDelete.badgeId); }}>
+                                <GoogleSymbol name="delete" className="text-xl" />
+                             </Button>
+                        </div>
                         <DialogDescription>
                             This badge is shared. Deleting it will remove it from all collections and teams. This action cannot be undone.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="flex justify-end gap-2 mt-4">
-                        <DialogClose asChild>
-                            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setBadgeToDelete(null)}>
-                                <GoogleSymbol name="close" className="text-xl" />
-                            </Button>
-                        </DialogClose>
-                        <Button variant="destructive" size="icon" className="h-9 w-9" onClick={() => {
-                            if (badgeToDelete) confirmPermanentDelete(badgeToDelete.badgeId);
-                        }}>
-                            <GoogleSymbol name="delete" className="text-xl" />
-                        </Button>
-                    </div>
                 </DialogContent>
             </Dialog>
             <ShareCollectionDialog

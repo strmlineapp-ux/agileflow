@@ -2,17 +2,11 @@
 
 import type React from 'react';
 
-export interface LinkGroup {
-  icon: string;
-  color: string;
-}
-
 export interface CustomAdminRole {
   id: string;
   name:string;
   icon: string;
   color: string;
-  linkGroupId?: string;
   teamAdmins?: string[];
 }
 
@@ -42,7 +36,6 @@ export interface AppPage {
 
 export interface AppSettings {
   customAdminRoles: CustomAdminRole[];
-  linkGroups: Record<string, LinkGroup>;
   pages: AppPage[];
   tabs: AppTab[];
   strategyLabel?: string;

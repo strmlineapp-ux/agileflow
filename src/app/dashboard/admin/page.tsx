@@ -123,26 +123,14 @@ function CustomRoleCard({
   role,
   rank,
   users, 
-  canLink,
   onUpdate, 
-  onDelete, 
-  onLink,
-  linkGroup,
-  onUpdateLinkGroup,
-  onUnlink,
-  isLinking
+  onDelete
 }: { 
   role: CustomAdminRole; 
   rank: number;
   users: User[]; 
-  canLink: boolean;
   onUpdate: (updatedRole: CustomAdminRole) => void;
   onDelete: () => void;
-  onLink: (roleId: string) => void;
-  linkGroup: LinkGroup | null;
-  onUpdateLinkGroup: (groupId: string, newGroup: LinkGroup) => void;
-  onUnlink: (roleId: string) => void;
-  isLinking: boolean;
 }) {
     const { toast } = useToast();
     const { updateUser } = useUser();
@@ -150,9 +138,6 @@ function CustomRoleCard({
     // Popover States
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
-    const [isLinkPopoverOpen, setIsLinkPopoverOpen] = useState(false);
-    const [isLinkIconPopoverOpen, setIsLinkIconPopoverOpen] = useState(false);
-    const [isLinkColorPopoverOpen, setIsLinkColorPopoverOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     
     const [iconSearch, setIconSearch] = useState('');
@@ -221,77 +206,10 @@ function CustomRoleCard({
 
     return (
         <>
-        <Card className={cn(isLinking && "ring-2 ring-primary ring-offset-2 ring-offset-background")}>
+        <Card>
             <CardHeader>
               <div className="flex items-center gap-2">
                 <div className="relative">
-                  {linkGroup && (
-                    <Popover open={isLinkPopoverOpen} onOpenChange={setIsLinkPopoverOpen}>
-                        <PopoverTrigger asChild>
-                            <div 
-                                className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full border-2 border-card cursor-pointer flex items-center justify-center z-10" 
-                                style={{ backgroundColor: linkGroup.color }}
-                                aria-label="Edit link group"
-                            >
-                                <GoogleSymbol name={linkGroup.icon} style={{ fontSize: '14px', color: getContrastColor(linkGroup.color) }}/>
-                            </div>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-2">
-                            <div className="flex items-center gap-2">
-                                <div className="relative">
-                                    <Popover open={isLinkIconPopoverOpen} onOpenChange={setIsLinkIconPopoverOpen}>
-                                        <PopoverTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="h-9 w-9 text-2xl text-muted-foreground hover:text-foreground">
-                                                <GoogleSymbol name={linkGroup.icon} />
-                                            </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-80 p-0">
-                                            <div className="p-2 border-b">
-                                                <Input placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} />
-                                            </div>
-                                            <ScrollArea className="h-64">
-                                                <div className="grid grid-cols-6 gap-1 p-2">
-                                                    {filteredIcons.slice(0, 300).map((iconName) => (
-                                                        <Button
-                                                            key={iconName}
-                                                            variant={linkGroup.icon === iconName ? "default" : "ghost"}
-                                                            size="icon"
-                                                            onClick={() => { onUpdateLinkGroup(role.linkGroupId!, { ...linkGroup, icon: iconName }); setIsLinkIconPopoverOpen(false); }}
-                                                            className="text-2xl"
-                                                        >
-                                                            <GoogleSymbol name={iconName} />
-                                                        </Button>
-                                                    ))}
-                                                </div>
-                                            </ScrollArea>
-                                        </PopoverContent>
-                                    </Popover>
-                                    <Popover open={isLinkColorPopoverOpen} onOpenChange={setIsLinkColorPopoverOpen}>
-                                        <PopoverTrigger asChild>
-                                            <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-popover cursor-pointer" aria-label="Change link group color">
-                                                <div className="h-full w-full rounded-full" style={{ backgroundColor: linkGroup.color }}/>
-                                            </div>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-auto p-2">
-                                            <div className="grid grid-cols-8 gap-1">
-                                                {predefinedColors.map(color => (
-                                                    <button key={color} className="h-6 w-6 rounded-full border" style={{ backgroundColor: color }} onClick={() => { onUpdateLinkGroup(role.linkGroupId!, { ...linkGroup, color: color }); setIsLinkColorPopoverOpen(false); }}/>
-                                                ))}
-                                                <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
-                                                    <GoogleSymbol name="colorize" className="text-muted-foreground" />
-                                                    <Input type="color" value={linkGroup.color} onChange={(e) => onUpdateLinkGroup(role.linkGroupId!, { ...linkGroup, color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" aria-label="Custom color picker"/>
-                                                </div>
-                                            </div>
-                                        </PopoverContent>
-                                    </Popover>
-                                </div>
-                                <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-destructive" onClick={() => { onUnlink(role.id); setIsLinkPopoverOpen(false); }}>
-                                    <GoogleSymbol name="link_off" className="text-2xl" />
-                                </Button>
-                            </div>
-                        </PopoverContent>
-                    </Popover>
-                  )}
                   <div className="relative">
                     <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                         <PopoverTrigger asChild>
@@ -330,10 +248,9 @@ function CustomRoleCard({
                 <div className="flex-1">
                     {isEditingName ? (<Input ref={nameInputRef} defaultValue={role.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 text-2xl font-semibold leading-none tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>) : (<CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer">{role.name}</CardTitle>)}
                 </div>
-                <div className={cn("flex items-center", !canLink && "gap-0")}>
+                <div className="flex items-center">
                     <TooltipProvider>
                         <Tooltip><TooltipTrigger asChild><AddUserToRoleButton usersToAdd={unassignedUsers} onAdd={handleRoleToggle} roleName={role.name} /></TooltipTrigger><TooltipContent>Assign User</TooltipContent></Tooltip>
-                        {canLink && <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => onLink(role.id)}><GoogleSymbol name="link" /></Button></TooltipTrigger><TooltipContent>Link Role</TooltipContent></Tooltip>}
                         <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setIsDeleteDialogOpen(true)}><GoogleSymbol name="delete" /></Button></TooltipTrigger><TooltipContent>Delete Role</TooltipContent></Tooltip>
                     </TooltipProvider>
                 </div>
@@ -374,7 +291,6 @@ const RolesManagement = ({ tab }: { tab: AppTab }) => {
   const [is2faDialogOpen, setIs2faDialogOpen] = useState(false);
   const [on2faSuccess, setOn2faSuccess] = useState<(() => void) | null>(null);
   const [twoFactorCode, setTwoFactorCode] = useState('');
-  const [linkingState, setLinkingState] = useState<{ roleId: string } | null>(null);
   
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
@@ -396,31 +312,6 @@ const RolesManagement = ({ tab }: { tab: AppTab }) => {
     else if (e.key === 'Escape') setIsEditingTitle(false);
   };
   
-  const canLinkRoles = appSettings.customAdminRoles.length > 1;
-
-  const roleRanks = useMemo(() => {
-    const ranks = new Map<string, number>();
-    const computedRanks: number[] = [];
-    let currentRank = 1;
-    appSettings.customAdminRoles.forEach(role => {
-        let rank;
-        if (role.linkGroupId) {
-            if (ranks.has(role.linkGroupId)) {
-                rank = ranks.get(role.linkGroupId)!;
-            } else {
-                rank = currentRank;
-                ranks.set(role.linkGroupId, rank);
-                currentRank++;
-            }
-        } else {
-            rank = currentRank;
-            currentRank++;
-        }
-        computedRanks.push(rank);
-    });
-    return computedRanks;
-  }, [appSettings.customAdminRoles]);
-
   const adminUsers = useMemo(() => users.filter(u => u.isAdmin), [users]);
   const nonAdminUsers = useMemo(() => users.filter(u => !u.isAdmin), [users]);
 
@@ -468,95 +359,10 @@ const RolesManagement = ({ tab }: { tab: AppTab }) => {
   }
 
   const handleDeleteCustomRole = (roleId: string) => {
-      const roleToUpdate = appSettings.customAdminRoles.find(r => r.id === roleId);
-      if (roleToUpdate?.linkGroupId) {
-        handleUnlinkRole(roleId, true);
-      }
       const newRoles = appSettings.customAdminRoles.filter(r => r.id !== roleId);
       updateAppSettings({ customAdminRoles: newRoles });
       toast({ title: 'Success', description: 'Role level deleted.' });
   }
-
-  const handleLinkClick = (roleId: string) => {
-    if (!linkingState) {
-        setLinkingState({ roleId });
-        return;
-    }
-    if (linkingState.roleId === roleId) {
-        setLinkingState(null);
-        return;
-    }
-    const rolesWithUpdatedLinks = appSettings.customAdminRoles.map(r => ({ ...r }));
-    let linkGroupsToUpdate = { ...appSettings.linkGroups };
-    const sourceRole = rolesWithUpdatedLinks.find(r => r.id === linkingState.roleId)!;
-    const targetRole = rolesWithUpdatedLinks.find(r => r.id === roleId)!;
-
-    if (!sourceRole.linkGroupId && !targetRole.linkGroupId) {
-        const newGroupId = crypto.randomUUID();
-        sourceRole.linkGroupId = newGroupId;
-        targetRole.linkGroupId = newGroupId;
-        linkGroupsToUpdate[newGroupId] = { icon: 'link', color: '#64748B' };
-    } else if (sourceRole.linkGroupId && !targetRole.linkGroupId) {
-        targetRole.linkGroupId = sourceRole.linkGroupId;
-    } else if (!sourceRole.linkGroupId && targetRole.linkGroupId) {
-        sourceRole.linkGroupId = targetRole.linkGroupId;
-    } else if (sourceRole.linkGroupId !== targetRole.linkGroupId) {
-        const targetGroupId = targetRole.linkGroupId!;
-        const sourceGroupId = sourceRole.linkGroupId!;
-        rolesWithUpdatedLinks.forEach(r => {
-            if (r.linkGroupId === targetGroupId) {
-                r.linkGroupId = sourceGroupId;
-            }
-        });
-        delete linkGroupsToUpdate[targetGroupId];
-    }
-    
-    const reorderedRoles: CustomAdminRole[] = [];
-    const processedRoleIds = new Set<string>();
-    rolesWithUpdatedLinks.forEach(role => {
-        if (processedRoleIds.has(role.id)) return;
-        if (role.linkGroupId) {
-            const groupRoles = rolesWithUpdatedLinks.filter(r => r.linkGroupId === role.linkGroupId);
-            groupRoles.forEach(groupRole => {
-                reorderedRoles.push(groupRole);
-                processedRoleIds.add(groupRole.id);
-            });
-        } else {
-            reorderedRoles.push(role);
-            processedRoleIds.add(role.id);
-        }
-    });
-
-    updateAppSettings({ customAdminRoles: reorderedRoles, linkGroups: linkGroupsToUpdate });
-    setLinkingState(null);
-  };
-  
-  const handleUnlinkRole = (roleId: string, isDeleting = false) => {
-    const roleToUnlink = appSettings.customAdminRoles.find(r => r.id === roleId);
-    if (!roleToUnlink || !roleToUnlink.linkGroupId) return;
-
-    const groupId = roleToUnlink.linkGroupId;
-    const rolesInGroup = appSettings.customAdminRoles.filter(r => r.linkGroupId === groupId);
-
-    const rolesToUpdate = appSettings.customAdminRoles.map(r => r.id === roleId ? { ...r, linkGroupId: undefined } : r);
-    let linkGroupsToUpdate = { ...appSettings.linkGroups };
-
-    if (rolesInGroup.length <= 2) {
-        rolesInGroup.forEach(r => {
-            const role = rolesToUpdate.find(ru => ru.id === r.id);
-            if (role) role.linkGroupId = undefined;
-        });
-        delete linkGroupsToUpdate[groupId];
-    }
-    
-    updateAppSettings({ customAdminRoles: rolesToUpdate, linkGroups: linkGroupsToUpdate });
-    if (!isDeleting) toast({ title: 'Role Unlinked', description: `"${roleToUnlink.name}" has been unlinked from its group.` });
-  };
-
-  const handleUpdateLinkGroup = (groupId: string, newGroup: LinkGroup) => {
-    const newLinkGroups = { ...appSettings.linkGroups, [groupId]: newGroup };
-    updateAppSettings({ linkGroups: newLinkGroups });
-  };
 
   const onDragEnd = (result: DropResult) => {
     const { source, destination } = result;
@@ -628,16 +434,10 @@ const RolesManagement = ({ tab }: { tab: AppTab }) => {
                         <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
                           <CustomRoleCard
                             role={role}
-                            rank={roleRanks[index]}
+                            rank={index + 1}
                             users={users}
-                            canLink={canLinkRoles}
                             onUpdate={handleUpdateCustomRole}
                             onDelete={() => handleDeleteCustomRole(role.id)}
-                            onLink={handleLinkClick}
-                            linkGroup={role.linkGroupId ? appSettings.linkGroups[role.linkGroupId] : null}
-                            onUpdateLinkGroup={handleUpdateLinkGroup}
-                            onUnlink={handleUnlinkRole}
-                            isLinking={linkingState?.roleId === role.id}
                           />
                         </div>
                       )}
@@ -667,6 +467,16 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [activeTab, setActiveTab] = useState("users");
+    const [isSearching, setIsSearching] = useState(false);
+    const searchInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (isSearching) searchInputRef.current?.focus();
+    }, [isSearching]);
+
+    const handleBlurSearch = () => {
+        if (!searchTerm) setIsSearching(false);
+    }
 
     const access = page.access;
 
@@ -683,6 +493,28 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
     const filteredUsers = useMemo(() => users.filter(u => u.displayName.toLowerCase().includes(searchTerm.toLowerCase())), [users, searchTerm]);
     const filteredTeams = useMemo(() => teams.filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase())), [teams, searchTerm]);
     const filteredRoles = useMemo(() => appSettings.customAdminRoles.filter(r => r.name.toLowerCase().includes(searchTerm.toLowerCase())), [appSettings.customAdminRoles, searchTerm]);
+
+    const renderSearchControl = () => (
+         <div className="p-2 border-b">
+            {!isSearching ? (
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => setIsSearching(true)}>
+                    <GoogleSymbol name="search" />
+                </Button>
+            ) : (
+                <div className="flex items-center gap-1">
+                    <GoogleSymbol name="search" className="text-muted-foreground" />
+                    <Input
+                        ref={searchInputRef}
+                        placeholder="Search..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onBlur={handleBlurSearch}
+                        className="h-8 border-0 shadow-none focus-visible:ring-0 bg-transparent p-0"
+                    />
+                </div>
+            )}
+        </div>
+    );
 
     return (
         <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -705,11 +537,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                     </TabsList>
                     
                     <TabsContent value="users" className="m-0">
-                        {filteredUsers.length > 5 && (
-                          <div className="p-2 border-b">
-                            <Input placeholder="Search users..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-                          </div>
-                        )}
+                        {renderSearchControl()}
                         <ScrollArea className="h-64"><div className="p-1 space-y-1">{filteredUsers.map(user => {
                           const isSelected = access.users.includes(user.userId);
                           return (
@@ -721,11 +549,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                         })}</div></ScrollArea>
                     </TabsContent>
                     <TabsContent value="teams" className="m-0">
-                        {filteredTeams.length > 7 && (
-                           <div className="p-2 border-b">
-                             <Input placeholder="Search teams..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-                           </div>
-                        )}
+                        {renderSearchControl()}
                         <ScrollArea className="h-64"><div className="p-1 space-y-1">{filteredTeams.map(team => {
                           const isSelected = access.teams.includes(team.id);
                           return (
@@ -737,11 +561,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                         })}</div></ScrollArea>
                     </TabsContent>
                     <TabsContent value="roles" className="m-0">
-                        {filteredRoles.length > 7 && (
-                          <div className="p-2 border-b">
-                            <Input placeholder="Search roles..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-                          </div>
-                        )}
+                        {renderSearchControl()}
                         <ScrollArea className="h-64"><div className="p-1 space-y-1">{filteredRoles.map(role => {
                           const isSelected = access.roles.includes(role.name);
                           return (
