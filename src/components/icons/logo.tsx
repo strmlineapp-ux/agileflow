@@ -1,7 +1,7 @@
 
 import { cn } from '@/lib/utils';
 
-const Logo = ({ className }: { className?: string }) => {
+const Logo = ({ className, iconClassName }: { className?: string; iconClassName?: string; }) => {
   return (
     <div className={cn("flex items-center gap-2 text-xl font-bold text-foreground", className)}>
       <svg
@@ -10,7 +10,7 @@ const Logo = ({ className }: { className?: string }) => {
         viewBox="0 0 24 24"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className=""
+        className={cn(iconClassName)}
       >
         <path
           d="M12 2L2 7L12 12L22 7L12 2Z"

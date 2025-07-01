@@ -9,7 +9,10 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <Card className="shadow-2xl">
           <CardHeader className="items-center text-center">
-            <Logo className="mb-4 cursor-pointer text-muted-foreground transition-colors hover:text-primary" />
+            <Logo
+              className="mb-4 text-card-foreground"
+              iconClassName="text-primary"
+            />
           </CardHeader>
           <CardContent>
             <LoginForm />
