@@ -1,4 +1,3 @@
-
 import { cn } from '@/lib/utils';
 
 const Logo = ({ className, iconClassName }: { className?: string; iconClassName?: string; }) => {
