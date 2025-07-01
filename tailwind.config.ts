@@ -20,6 +20,9 @@ export default {
         body: ['"PT Sans"', 'sans-serif'],
         headline: ['"Space Grotesk"', 'sans-serif'],
       },
+      fontWeight: {
+          light: '300',
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

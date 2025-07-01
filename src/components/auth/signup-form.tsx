@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/context/user-context";
 import { GoogleSymbol } from "../icons/google-symbol";
+import { cn } from "@/lib/utils";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email." }),
@@ -28,6 +29,8 @@ export function SignUpForm() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = React.useState(false);
   const [isEditingEmail, setIsEditingEmail] = React.useState(false);
+  const emailInputRef = React.useRef<HTMLInputElement>(null);
+
   const { notifications, setNotifications } = useUser();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -36,6 +39,11 @@ export function SignUpForm() {
       email: "",
     },
   });
+  
+  React.useEffect(() => {
+    if (isEditingEmail) emailInputRef.current?.focus();
+  }, [isEditingEmail]);
+
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
@@ -70,6 +78,13 @@ export function SignUpForm() {
       router.push('/login');
     }, 1500);
   }
+  
+  const handleEmailKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      form.handleSubmit(onSubmit)();
+    }
+  };
 
   return (
     <div className="grid gap-6">
@@ -80,26 +95,29 @@ export function SignUpForm() {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormControl>
-                    {isEditingEmail ? (
-                        <div className="flex items-center gap-2">
-                            <GoogleSymbol name="email" className="text-muted-foreground" />
-                            <Input
-                                {...field}
-                                onBlur={() => setIsEditingEmail(false)}
-                                autoFocus
-                                className="h-auto p-0 border-0 shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                                placeholder="name@example.com"
-                            />
-                        </div>
-                    ) : (
-                        <button type="button" onClick={() => setIsEditingEmail(true)} className="flex items-center gap-2 w-full text-left text-muted-foreground hover:text-primary/80 transition-colors">
-                            <GoogleSymbol name="email" />
-                            <span className="flex-1">{field.value || 'Email'}</span>
-                        </button>
-                    )}
-                </FormControl>
-                <FormMessage />
+                 <div
+                  className={cn("flex items-center gap-2 w-full text-left text-muted-foreground transition-colors p-2 h-10",
+                    !isEditingEmail && "cursor-text hover:text-primary/80"
+                  )}
+                  onClick={() => !isEditingEmail && setIsEditingEmail(true)}
+                >
+                  <GoogleSymbol name="email" className="text-lg" />
+                  {isEditingEmail ? (
+                    <FormControl>
+                      <Input
+                        {...field}
+                        ref={emailInputRef}
+                        onBlur={() => setIsEditingEmail(false)}
+                        onKeyDown={handleEmailKeyDown}
+                        className="h-auto p-0 border-0 shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground"
+                        placeholder="name@example.com"
+                      />
+                    </FormControl>
+                  ) : (
+                    <span className="flex-1 text-sm">{field.value || 'name@example.com'}</span>
+                  )}
+                </div>
+                <FormMessage className="pl-8" />
               </FormItem>
             )}
           />

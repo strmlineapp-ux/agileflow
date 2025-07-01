@@ -8,6 +8,7 @@ import {
   ToastProvider,
   ToastTitle,
   ToastViewport,
+  ToastClose
 } from "@/components/ui/toast"
 
 export function Toaster() {
@@ -17,7 +18,7 @@ export function Toaster() {
     <ToastProvider>
       {toasts.map(function ({ id, title, description, action, ...props }) {
         return (
-          <Toast key={id} {...props} onClick={() => dismiss(id)}>
+          <Toast key={id} {...props}>
             <div className="grid gap-1">
               {title && <ToastTitle>{title}</ToastTitle>}
               {description && (
@@ -25,6 +26,7 @@ export function Toaster() {
               )}
             </div>
             {action}
+            <ToastClose onClick={() => dismiss(id)} />
           </Toast>
         )
       })}
