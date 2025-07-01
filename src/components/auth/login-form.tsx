@@ -111,7 +111,7 @@ export function LoginForm() {
                     <span className="flex-1 text-sm">{field.value || 'Email'}</span>
                   )}
                 </div>
-                <FormMessage className="pl-8" />
+                
               </FormItem>
             )}
           />
@@ -144,7 +144,7 @@ export function LoginForm() {
                      <span className="flex-1 text-sm">{field.value ? '••••••••' : 'Password'}</span>
                   )}
                 </div>
-                <FormMessage className="pl-8" />
+                
               </FormItem>
             )}
           />

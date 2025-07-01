@@ -118,7 +118,7 @@ export function SignUpForm() {
                     <span className="flex-1 text-sm">{field.value || 'name@example.com'}</span>
                   )}
                 </div>
-                <FormMessage className="pl-8" />
+                
               </FormItem>
             )}
           />

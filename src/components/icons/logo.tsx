@@ -2,7 +2,7 @@ import { cn } from '@/lib/utils';
 
 const Logo = ({ className }: { className?: string }) => {
   return (
-    <div className={cn("flex items-center gap-2 text-xl font-bold text-primary", className)}>
+    <div className={cn("flex items-center gap-2 text-xl font-bold text-foreground", className)}>
       <svg
         width="24"
         height="24"
