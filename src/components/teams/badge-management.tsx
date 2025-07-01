@@ -105,17 +105,17 @@ function CompactSearchIconPicker({
                 <GoogleSymbol name="search" />
               </Button>
            ) : (
-             <>
-                <GoogleSymbol name="search" className="text-muted-foreground text-xl pl-2" />
-                <Input
-                  ref={searchInputRef}
-                  placeholder="Search..."
-                  value={iconSearch}
-                  onChange={(e) => setIconSearch(e.target.value)}
-                  onBlur={handleBlurSearch}
-                  className="h-8 border-0 shadow-none focus-visible:ring-0 bg-transparent p-0"
-                />
-             </>
+            <div className="flex items-center gap-1 w-full">
+              <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+              <input
+                ref={searchInputRef}
+                placeholder="Search icons..."
+                value={iconSearch}
+                onChange={(e) => setIconSearch(e.target.value)}
+                onBlur={handleBlurSearch}
+                className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+              />
+            </div>
            )}
         </div>
         <ScrollArea className="h-64">
@@ -556,7 +556,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInAllT
                  {collection.description && <CardDescription className="pt-2">{collection.description}</CardDescription>}
             </CardHeader>
             <CardContent>
-                <StrictModeDroppable droppableId={collection.id} type="badge" isDropDisabled={isSharedToThisTeam}>
+                <StrictModeDroppable droppableId={collection.id} type="badge" isDropDisabled={false}>
                     {(provided) => (
                          <div
                             ref={provided.innerRef}

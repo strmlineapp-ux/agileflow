@@ -72,9 +72,22 @@ function TeamCard({
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
     const [iconSearch, setIconSearch] = useState('');
+    const [isSearchingIcons, setIsSearchingIcons] = useState(false);
+    const iconSearchInputRef = useRef<HTMLInputElement>(null);
     
     const teamMembers = team.members.map(id => allUsers.find(u => u.userId === id)).filter(Boolean) as User[];
     
+     useEffect(() => {
+        if (!isIconPopoverOpen) {
+            setIsSearchingIcons(false);
+            setIconSearch('');
+        }
+    }, [isIconPopoverOpen]);
+
+    useEffect(() => {
+        if (isSearchingIcons) iconSearchInputRef.current?.focus();
+    }, [isSearchingIcons]);
+
     const filteredIcons = useMemo(() => {
         if (!iconSearch) return googleSymbolNames;
         return googleSymbolNames.filter(name => name.toLowerCase().includes(iconSearch.toLowerCase()));
@@ -128,7 +141,25 @@ function TeamCard({
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-80 p-0">
-                                    <div className="p-2 border-b"><Input placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} /></div>
+                                    <div className="flex items-center gap-1 p-2 border-b">
+                                        {!isSearchingIcons ? (
+                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => setIsSearchingIcons(true)}>
+                                                <GoogleSymbol name="search" />
+                                            </Button>
+                                        ) : (
+                                            <div className="flex items-center gap-1 w-full">
+                                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                                                <input
+                                                    ref={iconSearchInputRef}
+                                                    placeholder="Search icons..."
+                                                    value={iconSearch}
+                                                    onChange={(e) => setIconSearch(e.target.value)}
+                                                    onBlur={() => !iconSearch && setIsSearchingIcons(false)}
+                                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
                                     <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={team.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(team.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
                                 </PopoverContent>
                             </Popover>
@@ -452,7 +483,20 @@ function AddTeamDialog({ isOpen, onClose, allUsers, addTeam }: AddTeamDialogProp
     const [isMemberPopoverOpen, setIsMemberPopoverOpen] = useState(false);
     const [memberSearch, setMemberSearch] = useState('');
     const [iconSearch, setIconSearch] = useState('');
+    const [isSearchingIcons, setIsSearchingIcons] = useState(false);
+    const iconSearchInputRef = useRef<HTMLInputElement>(null);
     const { toast } = useToast();
+
+    useEffect(() => {
+        if (!isIconPopoverOpen) {
+            setIsSearchingIcons(false);
+            setIconSearch('');
+        }
+    }, [isIconPopoverOpen]);
+
+    useEffect(() => {
+        if (isSearchingIcons) iconSearchInputRef.current?.focus();
+    }, [isSearchingIcons]);
 
     const handleMemberToggleInPopover = (userId: string, isChecked: boolean) => {
         setMembers(prev => isChecked ? [...prev, userId] : prev.filter(id => id !== userId));
@@ -534,12 +578,24 @@ function AddTeamDialog({ isOpen, onClose, allUsers, addTeam }: AddTeamDialogProp
                                 </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-80 p-0">
-                                    <div className="p-2 border-b">
-                                        <Input 
-                                            placeholder="Search icons..."
-                                            value={iconSearch}
-                                            onChange={(e) => setIconSearch(e.target.value)}
-                                        />
+                                    <div className="flex items-center gap-1 p-2 border-b">
+                                        {!isSearchingIcons ? (
+                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => setIsSearchingIcons(true)}>
+                                                <GoogleSymbol name="search" />
+                                            </Button>
+                                        ) : (
+                                            <div className="flex items-center gap-1 w-full">
+                                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                                                <input
+                                                    ref={iconSearchInputRef}
+                                                    placeholder="Search icons..."
+                                                    value={iconSearch}
+                                                    onChange={(e) => setIconSearch(e.target.value)}
+                                                    onBlur={() => !iconSearch && setIsSearchingIcons(false)}
+                                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                                                />
+                                            </div>
+                                        )}
                                     </div>
                                     <ScrollArea className="h-64">
                                     <div className="grid grid-cols-6 gap-1 p-2">

@@ -132,17 +132,17 @@ function CalendarCard({ calendar, onUpdate, onDelete }: { calendar: SharedCalend
                                 <GoogleSymbol name="search" />
                             </Button>
                             ) : (
-                            <>
-                                <GoogleSymbol name="search" className="text-muted-foreground text-xl pl-2" />
-                                <Input
+                             <div className="flex items-center gap-1 w-full">
+                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                                <input
                                     ref={searchInputRef}
-                                    placeholder="Search..."
+                                    placeholder="Search icons..."
                                     value={iconSearch}
                                     onChange={(e) => setIconSearch(e.target.value)}
                                     onBlur={handleBlurSearch}
-                                    className="h-8 border-0 shadow-none focus-visible:ring-0 bg-transparent p-0"
+                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
                                 />
-                            </>
+                            </div>
                             )}
                         </div>
                         <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={calendar.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(calendar.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
@@ -427,17 +427,17 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                                         <GoogleSymbol name="search" />
                                     </Button>
                                     ) : (
-                                    <>
-                                        <GoogleSymbol name="search" className="text-muted-foreground text-xl pl-2" />
-                                        <Input
+                                    <div className="flex items-center gap-1 w-full">
+                                        <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                                        <input
                                             ref={addSearchInputRef}
-                                            placeholder="Search..."
+                                            placeholder="Search icons..."
                                             value={addIconSearch}
                                             onChange={(e) => setAddIconSearch(e.target.value)}
                                             onBlur={handleAddBlurSearch}
-                                            className="h-8 border-0 shadow-none focus-visible:ring-0 bg-transparent p-0"
+                                            className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
                                         />
-                                    </>
+                                    </div>
                                     )}
                                 </div>
                                 <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={newCalendarIcon === iconName ? "default" : "ghost"} size="icon" onClick={() => { setNewCalendarIcon(iconName); setIsAddIconPopoverOpen(false);}} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>

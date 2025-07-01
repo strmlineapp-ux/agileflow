@@ -239,17 +239,17 @@ function AdminGroupCard({
                                         <GoogleSymbol name="search" />
                                     </Button>
                                 ) : (
-                                    <>
-                                        <GoogleSymbol name="search" className="text-muted-foreground text-xl pl-2" />
-                                        <Input
+                                    <div className="flex items-center gap-1 w-full">
+                                        <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                                        <input
                                             ref={iconSearchInputRef}
-                                            placeholder="Search..."
+                                            placeholder="Search icons..."
                                             value={iconSearch}
                                             onChange={(e) => setIconSearch(e.target.value)}
                                             onBlur={() => !iconSearch && setIsSearchingIcons(false)}
-                                            className="h-8 border-0 shadow-none focus-visible:ring-0 bg-transparent p-0"
+                                            className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
                                         />
-                                    </>
+                                    </div>
                                 )}
                             </div>
                             <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={group.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate({ ...group, icon: iconName }); setIsIconPopoverOpen(false); }} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
@@ -536,13 +536,13 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
             ) : (
                 <div className="flex items-center gap-1">
                     <GoogleSymbol name="search" className="text-muted-foreground" />
-                    <Input
+                    <input
                         ref={searchInputRef}
                         placeholder="Search..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         onBlur={handleBlurSearch}
-                        className="h-8 border-0 shadow-none focus-visible:ring-0 bg-transparent p-0"
+                        className="h-8 border-0 shadow-none focus-visible:ring-0 bg-transparent p-0 text-sm"
                     />
                 </div>
             )}
@@ -733,17 +733,17 @@ function PageCard({ page, onUpdate, onDelete, isLocked = false }: { page: AppPag
                                                 <GoogleSymbol name="search" />
                                             </Button>
                                         ) : (
-                                            <>
-                                                <GoogleSymbol name="search" className="text-muted-foreground text-xl pl-2" />
-                                                <Input
+                                            <div className="flex items-center gap-1 w-full">
+                                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                                                <input
                                                     ref={iconSearchInputRef}
-                                                    placeholder="Search..."
+                                                    placeholder="Search icons..."
                                                     value={iconSearch}
                                                     onChange={(e) => setIconSearch(e.target.value)}
                                                     onBlur={() => !iconSearch && setIsSearchingIcons(false)}
-                                                    className="h-8 border-0 shadow-none focus-visible:ring-0 bg-transparent p-0"
+                                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
                                                 />
-                                            </>
+                                            </div>
                                         )}
                                     </div>
                                   <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={page.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(page.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
@@ -1063,17 +1063,17 @@ function TabItem({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string, data: 
                                     <GoogleSymbol name="search" />
                                 </Button>
                             ) : (
-                                <>
-                                    <GoogleSymbol name="search" className="text-muted-foreground text-xl pl-2" />
-                                    <Input
+                                <div className="flex items-center gap-1 w-full">
+                                    <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                                    <input
                                         ref={iconSearchInputRef}
-                                        placeholder="Search..."
+                                        placeholder="Search icons..."
                                         value={iconSearch}
                                         onChange={(e) => setIconSearch(e.target.value)}
                                         onBlur={() => !iconSearch && setIsSearchingIcons(false)}
-                                        className="h-8 border-0 shadow-none focus-visible:ring-0 bg-transparent p-0"
+                                        className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
                                     />
-                                </>
+                                </div>
                             )}
                         </div>
                         <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={tab.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(tab.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
