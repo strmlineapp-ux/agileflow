@@ -3,7 +3,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { type Priority, type PriorityStrategy, type PriorityStrategyApplication, PriorityStrategyType } from '@/types';
+import { type Priority, type PriorityStrategy, type PriorityStrategyApplication, type PriorityStrategyType } from '@/types';
 import { useUser } from '@/context/user-context';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';

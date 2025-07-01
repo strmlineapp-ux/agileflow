@@ -16,7 +16,7 @@ export interface AppTab {
   icon: string;
   color: string;
   description?: string;
-  componentKey: 'calendars' | 'teams' | 'team_members' | 'badges' | 'locations' | 'workstations' | 'templates' | 'roles' | 'pages' | 'tabs';
+  componentKey: 'calendars' | 'teams' | 'team_members' | 'badges' | 'locations' | 'workstations' | 'templates' | 'adminGroups' | 'pages' | 'tabs';
 }
 
 export interface AppPage {
@@ -199,3 +199,46 @@ export interface BookableLocation {
   id: string;
   name: string;
 }
+
+// Represents a named tier of priority (e.g., P0, P1, P2).
+export interface Priority {
+  id: string;
+  label: string;
+  description?: string;
+  color: string;
+  shape: 'rounded-md' | 'rounded-full';
+}
+
+// Represents a strategy for displaying priority based on a symbol (e.g., star rating).
+export interface SymbolPriority {
+  icon: string;
+  max: number;
+  color: string;
+}
+
+// Represents a strategy for displaying priority based on a numerical scale (e.g., 1-100).
+export interface ScalePriority {
+  min: number;
+  max: number;
+  intervals: {
+    label: string;
+    from: number;
+    to: number;
+    color: string;
+  }[];
+}
+
+export type PriorityStrategyApplication = 'events' | 'tasks';
+
+export type PriorityStrategyType = 'tier' | 'symbol' | 'scale';
+
+export type PriorityStrategy = {
+  id: string;
+  name: string;
+  description: string;
+  applications: PriorityStrategyApplication[];
+} & (
+  | { type: 'tier'; priorities: Priority[] }
+  | { type: 'symbol'; icon: string; max: number; color: string }
+  | { type: 'scale'; min: number; max: number; intervals: { label: string, from: number, to: number, color: string }[] }
+);

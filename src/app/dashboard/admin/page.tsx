@@ -3,7 +3,7 @@
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useUser } from '@/context/user-context';
-import { type User, type AdminGroup, type LinkGroup, type AppPage, type AppTab, type Team } from '@/types';
+import { type User, type AdminGroup, type AppPage, type AppTab, type Team } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -534,17 +534,17 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                     <GoogleSymbol name="search" />
                 </Button>
             ) : (
-                <div className="flex items-center gap-1">
-                    <GoogleSymbol name="search" className="text-muted-foreground" />
-                    <input
-                        ref={searchInputRef}
-                        placeholder="Search..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        onBlur={handleBlurSearch}
-                        className="h-8 border-0 shadow-none focus-visible:ring-0 bg-transparent p-0 text-sm"
-                    />
-                </div>
+                <div className="flex items-center gap-1 w-full">
+                  <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                  <input
+                      ref={searchInputRef}
+                      placeholder="Search..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onBlur={handleBlurSearch}
+                      className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                  />
+              </div>
             )}
         </div>
     );
