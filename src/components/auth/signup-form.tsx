@@ -122,7 +122,7 @@ export function SignUpForm() {
               </FormItem>
             )}
           />
-          <Button type="submit" variant="ghost" className="font-normal text-muted-foreground hover:text-primary" disabled={isLoading}>
+          <Button type="submit" variant="ghost" className="font-normal text-muted-foreground hover:text-primary hover:bg-transparent" disabled={isLoading}>
             <GoogleSymbol name="send" />
             {isLoading ? 'Submitting...' : 'Request Access'}
           </Button>

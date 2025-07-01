@@ -150,7 +150,7 @@ export function LoginForm() {
           />
           
           <div className="space-y-3 pt-2">
-            <Button variant="ghost" type="button" disabled={isLoading} className="w-full text-muted-foreground hover:text-primary">
+            <Button variant="ghost" type="button" disabled={isLoading} className="w-full justify-start text-muted-foreground hover:text-primary hover:bg-transparent">
                 <svg role="img" viewBox="0 0 24 24" className="mr-2 h-4 w-4">
                 <path
                     fill="currentColor"
@@ -163,13 +163,13 @@ export function LoginForm() {
             <Separator className="my-2" />
 
             <div className="flex justify-between items-center">
-                <Button asChild variant="ghost" className="text-sm font-normal text-muted-foreground hover:text-primary">
+                <Button asChild variant="ghost" className="text-sm font-normal text-muted-foreground hover:text-primary hover:bg-transparent">
                     <Link href="/signup">
                         <GoogleSymbol name="person_add" />
                         Sign up
                     </Link>
                 </Button>
-                <Button type="submit" variant="ghost" className="text-sm font-normal text-muted-foreground hover:text-primary" disabled={isLoading}>
+                <Button type="submit" variant="ghost" className="text-sm font-normal text-muted-foreground hover:text-primary hover:bg-transparent" disabled={isLoading}>
                     {isLoading ? <GoogleSymbol name="progress_activity" className="animate-spin" /> : (
                         <>
                             <GoogleSymbol name="login" />

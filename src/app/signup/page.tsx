@@ -22,7 +22,7 @@ export default function SignUpPage() {
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
              <Separator />
-             <Button asChild variant="ghost" className="text-sm font-normal text-muted-foreground hover:text-primary">
+             <Button asChild variant="ghost" className="text-sm font-normal text-muted-foreground hover:text-primary hover:bg-transparent">
                 <Link href="/login">
                     <GoogleSymbol name="login" />
                     Sign in
