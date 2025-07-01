@@ -13,7 +13,7 @@ export default function LoginPage() {
               iconClassName="text-primary"
             />
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 pt-0">
             <LoginForm />
           </CardContent>
         </Card>
