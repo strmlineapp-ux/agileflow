@@ -14,7 +14,6 @@ import {
   FormControl,
   FormField,
   FormItem,
-  FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { GoogleSymbol } from "../icons/google-symbol";
@@ -111,7 +110,6 @@ export function LoginForm() {
                     <span className="flex-1 text-sm">{field.value || 'Email'}</span>
                   )}
                 </div>
-                
               </FormItem>
             )}
           />
@@ -144,7 +142,6 @@ export function LoginForm() {
                      <span className="flex-1 text-sm">{field.value ? '••••••••' : 'Password'}</span>
                   )}
                 </div>
-                
               </FormItem>
             )}
           />

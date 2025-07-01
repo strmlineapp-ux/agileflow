@@ -7,7 +7,26 @@ This document outlines the established UI patterns and design choices that ensur
 
 ---
 
-### 1. Inline Editor
+### 1. Text-based Inputs
+
+This pattern transforms standard form inputs into minimalist, text-like elements, creating a cleaner and more compact interface. It is primarily used for authentication forms.
+
+-   **Appearance**:
+    -   Initially, the input appears as plain text (a placeholder, like "Email" or "Password") next to an icon. It has no visible border or background.
+    -   It uses a muted color to indicate it's an interactive, but unfocused, element.
+-   **Interaction**:
+    -   Clicking on the text or icon transforms the element into a live input field.
+    -   The icon remains visible, and the placeholder text is replaced by the user's cursor.
+    -   The input field itself remains borderless and transparent to maintain the clean aesthetic.
+-   **Behavior**:
+    -   Standard input behavior applies once focused.
+    -   Pressing 'Enter' or 'Tab' in one field (e.g., Email) should seamlessly transition focus to the next logical field (e.g., Password) without requiring an extra click.
+    -   Losing focus (`onBlur`) without entering any text will revert the element to its initial placeholder state.
+-   **Application**: Used for the login and sign-up forms to create a more modern and less cluttered user experience.
+
+---
+
+### 2. Inline Editor
 
 This pattern allows for seamless, direct text editing within the main application layout, avoiding disruptive dialog boxes or popovers for simple text changes.
 
@@ -24,7 +43,7 @@ This pattern allows for seamless, direct text editing within the main applicatio
 
 ---
 
-### 2. Integrated Add Button
+### 3. Integrated Add Button
 
 This pattern replaces large, card-style "Add New" buttons with a more compact and contextually relevant control.
 
@@ -35,7 +54,7 @@ This pattern replaces large, card-style "Add New" buttons with a more compact an
 
 ---
 
-### 3. Compact Edit Popover
+### 4. Compact Edit Popover
 
 This is a minimal, title-less popover for quick, focused editing actions, typically for an icon and its associated color. This is the reference to follow for any popover that will only feature an icon picker, a color picker, and a cancel/delete/unlink action.
 
@@ -48,7 +67,7 @@ This is a minimal, title-less popover for quick, focused editing actions, typica
 
 ---
 
-### 4. Icon & Color Editing Flow
+### 5. Icon & Color Editing Flow
 
 This is the consistent reference pattern for allowing a user to change both an icon and its color.
 
@@ -60,7 +79,7 @@ This is the consistent reference pattern for allowing a user to change both an i
 
 ---
 
-### 5. Entity Linking & Sharing
+### 6. Entity Linking & Sharing
 
 This pattern describes how a single entity (like a Badge) can exist in multiple contexts (like different Badge Collections) while maintaining a single source of truth.
 
@@ -77,7 +96,7 @@ This pattern describes how a single entity (like a Badge) can exist in multiple 
 
 ---
 
-### 6. Drag-to-Duplicate
+### 7. Drag-to-Duplicate
 
 This pattern provides a fast, intuitive way for users to duplicate complex entities using a drag-and-drop gesture, significantly speeding up configuration workflows.
 
@@ -91,6 +110,11 @@ This pattern provides a fast, intuitive way for users to duplicate complex entit
 
 ## Visual & Theming Elements
 
+### Fonts
+The application uses two Google Fonts to create a clear and modern typographic hierarchy:
+*   **Space Grotesk**: Used for all major headlines and titles, such as the main "AgileFlow" logo.
+*   **PT Sans**: Used for all body copy, UI text, labels, and input fields.
+
 ### Icons & Hover Effects
 
 - **Icon Set**: We exclusively use **Google Material Symbols** via the `<GoogleSymbol />` component. This ensures a consistent visual language.
@@ -102,6 +126,8 @@ This pattern provides a fast, intuitive way for users to duplicate complex entit
 
 - **Multi-Theme Support**: The application supports multiple themes (`light`, `dark`, `high-visibility`, `firebase`), which are defined in `src/app/globals.css`. This allows users to choose their preferred visual mode.
 - **Primary Button Gradient**: Primary buttons have a special gradient effect on hover, which is unique to each theme. This provides a subtle but polished visual feedback for key actions.
+- **Text-based Button Hover**: For text-based buttons (like those on the login page), the hover and focus state is indicated *only* by the text color changing to the primary theme color. No background color is applied.
+- **Focus Outline**: The default browser focus outline has been replaced with a subtle, `0.25px` ring that appears directly on the element's border. This provides a clean, minimal, and non-intrusive focus indicator that aligns with the app's elegant aesthetic.
 
 ### Subtle Visual Cues
 
