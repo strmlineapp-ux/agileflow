@@ -14,14 +14,12 @@ import { ScrollArea } from '../ui/scroll-area';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '../ui/dropdown-menu';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription as AlertDialogDescriptionUI, AlertDialogFooter } from '@/components/ui/alert-dialog';
 import { Textarea } from '../ui/textarea';
 import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProps } from 'react-beautiful-dnd';
 import { Separator } from '../ui/separator';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Dialog, DialogTitle as UIDialogTitle, DialogContent as DialogContentUI, DialogDescription as UIDialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogTitle, DialogContent, DialogDescription, DialogHeader, DialogClose } from '@/components/ui/dialog';
 import { Badge as UiBadge } from '@/components/ui/badge';
-import { DialogHeader } from '../ui/dialog';
 
 const predefinedColors = [
     '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
@@ -230,13 +228,13 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     if (!isOwnedByMyTeam) {
         shareIcon = 'downloading';
         shareIconTitle = `Shared from ${ownerTeam?.name || 'another team'}`;
-    } else { // isOwnedByMyTeam
-        if (!isThisTheOriginalInstance && isLinkedInternally) {
-             shareIcon = 'change_circle';
-             shareIconTitle = 'Linked from another collection in this team';
-        } else if (isSharedToOtherTeams) {
+    } else { // isOwnedByMyTeam is true
+        if (isSharedToOtherTeams) {
             shareIcon = 'upload';
             shareIconTitle = 'Owned by this team and shared externally';
+        } else if (isLinkedInternally && !isThisTheOriginalInstance) {
+            shareIcon = 'change_circle';
+            shareIconTitle = 'Linked from another collection in this team';
         }
     }
 
@@ -319,11 +317,11 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
             className={cn(
                 "h-auto p-0 font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0",
                 viewMode === 'list' && 'text-base',
-                viewMode === 'assorted' && 'text-sm'
+                viewMode === 'assorted' && 'text-xs'
             )}
         />
     ) : (
-        <span className={cn("font-semibold cursor-text", viewMode === 'assorted' && 'text-sm')} onClick={() => setIsEditingName(true)}>{badge.name}</span>
+        <span className={cn("font-semibold cursor-text", viewMode === 'assorted' && 'text-xs')} onClick={() => setIsEditingName(true)}>{badge.name}</span>
     );
 
     if (viewMode === 'list') {
@@ -356,7 +354,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     
     // Assorted View
     return (
-        <div className="group relative inline-flex items-center gap-2 rounded-full border-2 p-1 pr-2" style={{ borderColor: badge.color, color: badge.color }}>
+        <div className="group relative inline-flex items-center gap-1 rounded-full border-2 p-0.5 pl-1 pr-2.5" style={{ borderColor: badge.color, color: badge.color }}>
             <div className="relative">
                 <CompactSearchIconPicker icon={badge.icon} color="inherit" onUpdateIcon={(icon) => onUpdateBadge({ icon })} />
                  <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
@@ -564,7 +562,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInAllT
                                 collection.viewMode === 'detailed' && "grid grid-cols-1 md:grid-cols-2 gap-4"
                             )}>
                             {collectionBadges.map((badge, index) => (
-                                <Draggable key={`${badge.id}::${collection.id}`} draggableId={`${badge.id}::${collection.id}`} index={index}>
+                                <Draggable key={`${badge.id}::${collection.id}`} draggableId={`${badge.id}::${collection.id}`} index={index} isDragDisabled={false}>
                                     {(provided) => (<div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
                                         <BadgeDisplayItem 
                                             badge={badge} 
@@ -621,10 +619,10 @@ function ShareCollectionDialog({ isOpen, onClose, team, teams, onShareCollection
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContentUI className="max-w-3xl">
+            <DialogContent className="max-w-3xl">
                 <DialogHeader>
-                    <UIDialogTitle>Share a Collection</UIDialogTitle>
-                    <UIDialogDescription>Select a collection from a shared team to make its badges available to the "{team.name}" team.</UIDialogDescription>
+                    <DialogTitle>Share a Collection</DialogTitle>
+                    <DialogDescription>Select a collection from a shared team to make its badges available to the "{team.name}" team.</DialogDescription>
                 </DialogHeader>
                 <ScrollArea className="h-[60vh] -mx-6">
                     <div className="px-6 py-2 space-y-4">
@@ -670,7 +668,7 @@ function ShareCollectionDialog({ isOpen, onClose, team, teams, onShareCollection
                     )}
                     </div>
                 </ScrollArea>
-            </DialogContentUI>
+            </DialogContent>
         </Dialog>
     );
 }
@@ -765,7 +763,6 @@ export function BadgeManagement({ team }: { team: Team }) {
         setCollectionToDelete(null);
     };
 
-
     const handleAddBadge = (collectionId: string) => {
         const badgeCount = team.allBadges.length;
         const newBadge: Badge = {
@@ -789,42 +786,64 @@ export function BadgeManagement({ team }: { team: Team }) {
         const newAllBadges = team.allBadges.map(b => b.id === badgeData.id ? {...b, ...badgeData} : b);
         updateTeam(team.id, { allBadges: newAllBadges });
     };
-    
-    const confirmDeleteBadge = (badgeId: string) => {
-        const badge = team.allBadges.find(b => b.id === badgeId);
-        if (!badge) return;
 
-        const newAllBadges = team.allBadges.filter(b => b.id !== badgeId);
-        const newCollections = team.badgeCollections.map(c => ({
-            ...c,
-            badgeIds: c.badgeIds.filter(id => id !== badgeId)
-        }));
+    const allBadgesAvailableToTeam = useMemo(() => {
+        const allBadgesFromAllTeams = teams.flatMap(t => t.allBadges);
+        const badgeMap = new Map<string, Badge>();
         
-        updateTeam(team.id, { allBadges: newAllBadges, badgeCollections: newCollections });
-        toast({ title: 'Badge Deleted', description: `"${badge.name}" was permanently deleted.` });
-        setBadgeToDelete(null);
-    };
+        // Add all badges owned by the current team
+        team.allBadges.forEach(b => badgeMap.set(b.id, b));
+        
+        // Add badges from shared collections
+        const sharedCollectionIds = new Set(team.sharedCollectionIds || []);
+        teams.forEach(t => {
+            if (t.id !== team.id) {
+                t.badgeCollections.forEach(c => {
+                    if (sharedCollectionIds.has(c.id)) {
+                        c.badgeIds.forEach(badgeId => {
+                            if (!badgeMap.has(badgeId)) {
+                                const badge = allBadgesFromAllTeams.find(b => b.id === badgeId);
+                                if (badge) badgeMap.set(badge.id, badge);
+                            }
+                        })
+                    }
+                })
+            }
+        });
 
+        return Array.from(badgeMap.values());
+    }, [team.allBadges, team.sharedCollectionIds, teams]);
 
-    const handleDeleteBadge = (collectionId: string, badgeId: string) => {
+    const confirmPermanentDelete = useCallback((badgeId: string) => {
+        const badgeToDelete = allBadgesAvailableToTeam.find(b => b.id === badgeId);
+        if (!badgeToDelete) return;
+
+        // For each team, filter out the badge from allBadges and from all badgeCollections
+        teams.forEach(t => {
+            const teamHasBadge = t.allBadges.some(b => b.id === badgeId);
+            const teamHasLinks = t.badgeCollections.some(c => c.badgeIds.includes(badgeId));
+            
+            if (teamHasBadge || teamHasLinks) {
+                const newAllBadges = t.allBadges.filter(b => b.id !== badgeId);
+                const newCollections = t.badgeCollections.map(c => ({
+                    ...c,
+                    badgeIds: c.badgeIds.filter(id => id !== badgeId),
+                }));
+                updateTeam(t.id, { allBadges: newAllBadges, badgeCollections: newCollections });
+            }
+        });
+
+        toast({ title: 'Badge Deleted', description: `"${badgeToDelete.name}" was permanently deleted.` });
+        if (badgeToDelete) setBadgeToDelete(null); // Close dialog if open
+    }, [allBadgesAvailableToTeam, teams, toast, updateTeam]);
+
+    const handleDeleteBadge = useCallback((collectionId: string, badgeId: string) => {
         const badge = allBadgesAvailableToTeam.find(b => b.id === badgeId);
         if (!badge) return;
 
-        const isOriginalOwner = badge.ownerCollectionId === collectionId;
-        
-        let linkCount = 0;
-        teams.forEach(t => {
-            t.badgeCollections.forEach(c => {
-                if (c.badgeIds.includes(badgeId)) {
-                    linkCount++;
-                }
-            });
-        });
-        const isShared = linkCount > 1;
+        const isOriginalInstance = badge.ownerCollectionId === collectionId;
 
-        if (isOriginalOwner && isShared) {
-            setBadgeToDelete({ collectionId, badgeId });
-        } else if (!isOriginalOwner) {
+        if (!isOriginalInstance) {
             const newCollections = team.badgeCollections.map(c => {
                 if (c.id === collectionId) {
                     return { ...c, badgeIds: c.badgeIds.filter(id => id !== badgeId) };
@@ -834,9 +853,22 @@ export function BadgeManagement({ team }: { team: Team }) {
             updateTeam(team.id, { badgeCollections: newCollections });
             toast({ title: 'Badge Unlinked' });
         } else {
-            confirmDeleteBadge(badgeId);
+            let linkCount = 0;
+            teams.forEach(t => {
+                t.badgeCollections.forEach(c => {
+                    if (c.badgeIds.includes(badgeId)) {
+                        linkCount++;
+                    }
+                });
+            });
+
+            if (linkCount > 1) {
+                setBadgeToDelete({ collectionId, badgeId });
+            } else {
+                confirmPermanentDelete(badgeId);
+            }
         }
-    };
+    }, [allBadgesAvailableToTeam, teams, team.id, team.badgeCollections, updateTeam, toast, confirmPermanentDelete]);
     
     
     const handleDuplicateCollection = (sourceCollectionId: string) => {
@@ -946,11 +978,14 @@ export function BadgeManagement({ team }: { team: Team }) {
             const newCollections = team.badgeCollections.map(c => c.id === sourceCollection.id ? { ...c, badgeIds: reorderedIds } : c);
             updateTeam(team.id, { badgeCollections: newCollections });
         } else {
-            if (destCollection.badgeIds.includes(badgeId)) {
+            const newDestIds = Array.from(destCollection.badgeIds);
+            const badgeIsAlreadyInDest = newDestIds.includes(badgeId);
+
+            if (badgeIsAlreadyInDest) {
                 toast({ variant: 'default', title: 'Already shared', description: 'This badge is already in the destination collection.'});
                 return;
             }
-            const newDestIds = Array.from(destCollection.badgeIds);
+
             newDestIds.splice(destination.index, 0, badgeId);
             
             const newCollections = team.badgeCollections.map(c => c.id === destCollection.id ? { ...c, badgeIds: newDestIds } : c);
@@ -981,33 +1016,6 @@ export function BadgeManagement({ team }: { team: Team }) {
     const allCollectionsFromAllTeams = useMemo(() => {
         return teams.flatMap(t => t.badgeCollections || []);
     }, [teams]);
-
-    const allBadgesAvailableToTeam = useMemo(() => {
-        const allBadgesFromAllTeams = teams.flatMap(t => t.allBadges);
-        const badgeMap = new Map<string, Badge>();
-        
-        // Add all badges owned by the current team
-        team.allBadges.forEach(b => badgeMap.set(b.id, b));
-        
-        // Add badges from shared collections
-        const sharedCollectionIds = new Set(team.sharedCollectionIds || []);
-        teams.forEach(t => {
-            if (t.id !== team.id) {
-                t.badgeCollections.forEach(c => {
-                    if (sharedCollectionIds.has(c.id)) {
-                        c.badgeIds.forEach(badgeId => {
-                            if (!badgeMap.has(badgeId)) {
-                                const badge = allBadgesFromAllTeams.find(b => b.id === badgeId);
-                                if (badge) badgeMap.set(badge.id, badge);
-                            }
-                        })
-                    }
-                })
-            }
-        });
-
-        return Array.from(badgeMap.values());
-    }, [team.allBadges, team.sharedCollectionIds, teams]);
 
 
     return (
@@ -1105,34 +1113,48 @@ export function BadgeManagement({ team }: { team: Team }) {
                     )}
                 </StrictModeDroppable>
             </div>
-             <AlertDialog open={!!collectionToDelete} onOpenChange={(isOpen) => !isOpen && setCollectionToDelete(null)}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                        <AlertDialogDescriptionUI>
+            <Dialog open={!!collectionToDelete} onOpenChange={(isOpen) => !isOpen && setCollectionToDelete(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Are you absolutely sure?</DialogTitle>
+                        <DialogDescription>
                         This action cannot be undone. This will permanently delete the collection and all badges it owns.
-                        </AlertDialogDescriptionUI>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={confirmDeleteCollection} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Continue</AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
-             <AlertDialog open={!!badgeToDelete} onOpenChange={(isOpen) => !isOpen && setBadgeToDelete(null)}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure you want to delete this badge?</AlertDialogTitle>
-                        <AlertDialogDescriptionUI>
-                        This action is permanent and cannot be undone. Deleting this badge will remove it from all collections and teams.
-                        </AlertDialogDescriptionUI>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => confirmDeleteBadge(badgeToDelete!.badgeId)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete Badge</AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+                        </DialogDescription>
+                    </DialogHeader>
+                     <div className="flex justify-end gap-2 mt-4">
+                        <DialogClose asChild>
+                            <Button variant="ghost" size="icon"><GoogleSymbol name="close" /></Button>
+                        </DialogClose>
+                        <Button variant="destructive" size="icon" onClick={() => {
+                            if (collectionToDelete) confirmDeleteCollection();
+                        }}>
+                            <GoogleSymbol name="delete" />
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+             <Dialog open={!!badgeToDelete} onOpenChange={(isOpen) => !isOpen && setBadgeToDelete(null)}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Delete Badge?</DialogTitle>
+                        <DialogDescription>
+                            This badge is shared. Deleting it will remove it from all collections and teams. This action cannot be undone.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex justify-end gap-2 mt-4">
+                        <DialogClose asChild>
+                            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setBadgeToDelete(null)}>
+                                <GoogleSymbol name="close" className="text-xl" />
+                            </Button>
+                        </DialogClose>
+                        <Button variant="destructive" size="icon" className="h-9 w-9" onClick={() => {
+                            if (badgeToDelete) confirmPermanentDelete(badgeToDelete.badgeId);
+                        }}>
+                            <GoogleSymbol name="delete" className="text-xl" />
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
             <ShareCollectionDialog
                 isOpen={isShareDialogOpen}
                 onClose={() => setIsShareDialogOpen(false)}
