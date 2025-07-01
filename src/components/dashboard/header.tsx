@@ -24,22 +24,24 @@ export function Header() {
     return page && hasAccess(viewAsUser, page, teams, appSettings.adminGroups) ? page : null;
   }, [viewAsUser, appSettings.pages, teams, appSettings.adminGroups]);
   
-  const visiblePages = useMemo(() => {
-    return appSettings.pages.filter(page => page.id !== 'page-admin-management' && hasAccess(viewAsUser, page, teams, appSettings.adminGroups));
+  const dynamicPage = useMemo(() => {
+    return appSettings.pages.find(page => page.isDynamic && hasAccess(viewAsUser, page, teams, appSettings.adminGroups));
   }, [viewAsUser, appSettings.pages, teams, appSettings.adminGroups]);
-  
+
+  const staticPages = useMemo(() => {
+    return appSettings.pages.filter(page => 
+        !page.isDynamic &&
+        page.id !== 'page-admin-management' && 
+        hasAccess(viewAsUser, page, teams, appSettings.adminGroups)
+    );
+  }, [viewAsUser, appSettings.pages, teams, appSettings.adminGroups]);
+
   const userManagedTeams = useMemo(() => {
       if(viewAsUser.isAdmin || appSettings.adminGroups.some(r => viewAsUser.roles?.includes(r.name))) {
           return teams;
       }
       return teams.filter(team => team.teamAdmins?.includes(viewAsUser.userId));
   }, [viewAsUser, teams, appSettings.adminGroups]);
-
-  const mainNavItems = [
-    { href: '/dashboard/calendar', icon: 'calendar_month', label: 'Calendar' },
-    { href: '/dashboard', icon: 'dashboard', label: 'Overview' },
-    { href: '/dashboard/tasks', icon: 'checklist', label: 'Tasks' },
-  ];
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-card px-4 sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 sm:py-4">
@@ -84,42 +86,26 @@ export function Header() {
               </Link>
             )}
 
-            {mainNavItems.map(item => (
-                <Link key={item.href} href={item.href} className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
-                    <GoogleSymbol name={item.icon} className="text-2xl" />
-                    {item.label}
+            {staticPages.map(page => (
+                <Link key={page.id} href={page.path} className="flex items-center justify-between gap-4 px-2.5 text-muted-foreground hover:text-foreground">
+                  <div className="flex items-center gap-4">
+                    <GoogleSymbol name={page.icon} className="text-2xl" />
+                    {page.name}
+                  </div>
+                  {page.id === 'page-notifications' && unreadCount > 0 && (
+                    <Badge variant="default" className="flex h-5 w-5 items-center justify-center rounded-full p-0">
+                      {unreadCount}
+                    </Badge>
+                  )}
                 </Link>
             ))}
 
-            {/* Dynamic Pages */}
-            {visiblePages.map(page => {
-              if (page.isDynamic) {
-                  return userManagedTeams.map(team => (
-                    <Link key={`${page.id}-${team.id}`} href={`${page.path}/${team.id}`} className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
-                        <GoogleSymbol name={team.icon} className="text-2xl" />
-                        {team.name}
-                    </Link>
-                  ))
-              }
-              return (
-                <Link key={page.id} href={page.path} className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
-                    <GoogleSymbol name={page.icon} className="text-2xl" />
-                    {page.name}
-                </Link>
-              )
-            })}
-            
-            <Link href="/dashboard/notifications" className="flex items-center justify-between gap-4 px-2.5 text-muted-foreground hover:text-foreground">
-              <div className="flex items-center gap-4">
-                <GoogleSymbol name="notifications" className="text-2xl" />
-                Notifications
-              </div>
-              {unreadCount > 0 && (
-                <Badge variant="default" className="flex h-5 w-5 items-center justify-center rounded-full p-0">
-                  {unreadCount}
-                </Badge>
-              )}
-            </Link>
+            {dynamicPage && userManagedTeams.map(team => (
+              <Link key={`${dynamicPage.id}-${team.id}`} href={`${dynamicPage.path}/${team.id}`} className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
+                  <GoogleSymbol name={team.icon} className="text-2xl" />
+                  {team.name}
+              </Link>
+            ))}
           </nav>
         </SheetContent>
       </Sheet>

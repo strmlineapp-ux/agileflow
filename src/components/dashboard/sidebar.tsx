@@ -24,8 +24,16 @@ export function Sidebar() {
     return page && hasAccess(viewAsUser, page, teams, appSettings.adminGroups) ? page : null;
   }, [viewAsUser, appSettings.pages, teams, appSettings.adminGroups]);
 
-  const visiblePages = useMemo(() => {
-    return appSettings.pages.filter(page => page.id !== 'page-admin-management' && hasAccess(viewAsUser, page, teams, appSettings.adminGroups));
+  const dynamicPage = useMemo(() => {
+    return appSettings.pages.find(page => page.isDynamic && hasAccess(viewAsUser, page, teams, appSettings.adminGroups));
+  }, [viewAsUser, appSettings.pages, teams, appSettings.adminGroups]);
+
+  const staticPages = useMemo(() => {
+    return appSettings.pages.filter(page => 
+        !page.isDynamic &&
+        page.id !== 'page-admin-management' && 
+        hasAccess(viewAsUser, page, teams, appSettings.adminGroups)
+    );
   }, [viewAsUser, appSettings.pages, teams, appSettings.adminGroups]);
   
   const userManagedTeams = useMemo(() => {
@@ -34,16 +42,6 @@ export function Sidebar() {
       }
       return teams.filter(team => team.teamAdmins?.includes(viewAsUser.userId));
   }, [viewAsUser, teams, appSettings.adminGroups]);
-
-  const mainNavItems = [
-    { href: '/dashboard/calendar', icon: 'calendar_month', label: 'Calendar', visible: true },
-    { href: '/dashboard', icon: 'dashboard', label: 'Overview', visible: true },
-    { href: '/dashboard/tasks', icon: 'checklist', label: 'Tasks', visible: true },
-  ];
-
-  const bottomNavItems = [
-    { href: '/dashboard/notifications', icon: 'notifications', label: 'Notifications', visible: true },
-  ];
   
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-14 flex-col border-r bg-card sm:flex">
@@ -75,79 +73,40 @@ export function Sidebar() {
             </Tooltip>
           )}
 
-          {mainNavItems.map((item) => (
-           item.visible && (
-            <Tooltip key={item.href}>
+          {staticPages.map((page) => (
+            <Tooltip key={page.id}>
               <TooltipTrigger asChild>
                 <Link
-                  href={item.href}
+                  href={page.path}
                   className={cn(
                     'relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
-                    pathname.startsWith(item.href) && item.href !== '/dashboard' && 'bg-accent text-accent-foreground',
-                    pathname === '/dashboard' && item.href === '/dashboard' && 'bg-accent text-accent-foreground'
+                    pathname.startsWith(page.path) && page.path !== '/dashboard' && 'bg-accent text-accent-foreground',
+                    pathname === '/dashboard' && page.path === '/dashboard' && 'bg-accent text-accent-foreground'
                   )}
                 >
-                  <GoogleSymbol name={item.icon} className="text-2xl" />
-                  <span className="sr-only">{item.label}</span>
-                </Link>
-              </TooltipTrigger>
-              <TooltipContent side="right">{item.label}</TooltipContent>
-            </Tooltip>
-           )
-          ))}
-
-          {/* Dynamic Pages */}
-          {visiblePages.map(page => {
-              if (page.isDynamic) {
-                  return userManagedTeams.map(team => (
-                    <Tooltip key={`${page.id}-${team.id}`}>
-                        <TooltipTrigger asChild>
-                            <Link href={`${page.path}/${team.id}`} className={cn('relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8', pathname.startsWith(`${page.path}/${team.id}`) && 'bg-accent text-accent-foreground' )}>
-                                <GoogleSymbol name={team.icon} className="text-2xl" />
-                                <span className="sr-only">{team.name}</span>
-                            </Link>
-                        </TooltipTrigger>
-                        <TooltipContent side="right">{page.name}: {team.name}</TooltipContent>
-                    </Tooltip>
-                  ))
-              }
-              return (
-                <Tooltip key={page.id}>
-                    <TooltipTrigger asChild>
-                        <Link href={page.path} className={cn('relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8', pathname.startsWith(page.path) && 'bg-accent text-accent-foreground' )}>
-                            <GoogleSymbol name={page.icon} className="text-2xl" />
-                            <span className="sr-only">{page.name}</span>
-                        </Link>
-                    </TooltipTrigger>
-                    <TooltipContent side="right">{page.name}</TooltipContent>
-                </Tooltip>
-              )
-          })}
-
-
-          {bottomNavItems.map((item) => (
-           item.visible && (
-            <Tooltip key={item.href}>
-              <TooltipTrigger asChild>
-                <Link
-                  href={item.href}
-                  className={cn(
-                    'relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
-                    pathname.startsWith(item.href) && 'bg-accent text-accent-foreground'
-                  )}
-                >
-                  <GoogleSymbol name={item.icon} className="text-2xl" />
-                  {item.href === '/dashboard/notifications' && unreadCount > 0 && (
+                  <GoogleSymbol name={page.icon} className="text-2xl" />
+                  {page.id === 'page-notifications' && unreadCount > 0 && (
                     <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary p-0 text-xs text-primary-foreground">
                       {unreadCount}
                     </span>
                   )}
-                  <span className="sr-only">{item.label}</span>
+                  <span className="sr-only">{page.name}</span>
                 </Link>
               </TooltipTrigger>
-              <TooltipContent side="right">{item.label}</TooltipContent>
+              <TooltipContent side="right">{page.name}</TooltipContent>
             </Tooltip>
-           )
+          ))}
+
+          {dynamicPage && userManagedTeams.map(team => (
+            <Tooltip key={`${dynamicPage.id}-${team.id}`}>
+                <TooltipTrigger asChild>
+                    <Link href={`${dynamicPage.path}/${team.id}`} className={cn('relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8', pathname.startsWith(`${dynamicPage.path}/${team.id}`) && 'bg-accent text-accent-foreground' )}>
+                        <GoogleSymbol name={team.icon} className="text-2xl" />
+                        <span className="sr-only">{team.name}</span>
+                    </Link>
+                </TooltipTrigger>
+                <TooltipContent side="right">{dynamicPage.name}: {team.name}</TooltipContent>
+            </Tooltip>
           ))}
         </TooltipProvider>
       </nav>
