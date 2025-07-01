@@ -127,21 +127,7 @@ export function LoginForm() {
             )}
           />
 
-          <div className="flex flex-col items-center gap-2 pt-2">
-            <Button variant="ghost" type="submit" disabled={isLoading} className="font-semibold text-muted-foreground hover:text-primary">
-              <GoogleSymbol name="login" />
-              {isLoading ? 'Signing in...' : 'Sign In'}
-            </Button>
-
-            <div className="relative w-full">
-              <div className="absolute inset-0 flex items-center">
-                <Separator />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">Or</span>
-              </div>
-            </div>
-
+          <div className="flex items-center justify-between pt-2">
             <Button variant="ghost" type="button" disabled={isLoading} className="font-semibold text-muted-foreground hover:text-primary">
               <svg role="img" viewBox="0 0 24 24" className="mr-2 h-4 w-4">
                 <path
@@ -150,6 +136,10 @@ export function LoginForm() {
                 ></path>
               </svg>
               Sign in with Google
+            </Button>
+            <Button variant="ghost" type="submit" disabled={isLoading} className="font-semibold text-muted-foreground hover:text-primary">
+              <GoogleSymbol name="login" />
+              {isLoading ? 'Signing in...' : 'Sign In'}
             </Button>
           </div>
         </form>

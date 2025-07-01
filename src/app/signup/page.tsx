@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { SignUpForm } from '@/components/auth/signup-form';
 import Logo from '@/components/icons/logo';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 
@@ -19,15 +19,15 @@ export default function SignUpPage() {
           <CardContent>
             <SignUpForm />
           </CardContent>
+          <CardFooter className="flex justify-center">
+             <Button asChild variant="ghost" className="text-sm font-semibold text-muted-foreground hover:text-primary">
+                <Link href="/login">
+                    <GoogleSymbol name="login" />
+                    Sign in
+                </Link>
+              </Button>
+          </CardFooter>
         </Card>
-        <div className="mt-4 text-center">
-           <Button asChild variant="ghost" className="text-sm font-semibold text-muted-foreground hover:text-primary">
-              <Link href="/login">
-                  <GoogleSymbol name="login" />
-                  Sign in
-              </Link>
-            </Button>
-        </div>
       </div>
     </main>
   );
