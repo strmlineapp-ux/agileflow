@@ -2,10 +2,10 @@ import { cn } from '@/lib/utils';
 
 const Logo = ({ className, iconClassName }: { className?: string; iconClassName?: string; }) => {
   return (
-    <div className={cn("flex items-center gap-2 text-xl", className)}>
+    <div className={cn("flex items-center gap-2 text-lg", className)}>
       <svg
-        width="24"
-        height="24"
+        width="18"
+        height="18"
         viewBox="0 0 24 24"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
@@ -33,7 +33,7 @@ const Logo = ({ className, iconClassName }: { className?: string; iconClassName?
           strokeLinejoin="round"
         />
       </svg>
-      <span className="font-headline text-2xl">AgileFlow</span>
+      <span className="font-headline text-xl">AgileFlow</span>
     </div>
   );
 };

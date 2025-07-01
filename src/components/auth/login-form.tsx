@@ -120,12 +120,11 @@ export function LoginForm() {
             render={({ field }) => (
               <FormItem className="flex-1">
                 <div
-                  className={cn("flex items-center gap-2 w-full text-left text-muted-foreground transition-colors p-2 h-10",
+                  className={cn("flex items-center justify-end gap-2 w-full text-right text-muted-foreground transition-colors p-2 h-10",
                     !isPasswordEditing && "cursor-text hover:text-primary/80"
                   )}
                   onClick={() => !isPasswordEditing && setIsPasswordEditing(true)}
                 >
-                  <GoogleSymbol name="lock" className="text-lg" />
                   {isPasswordEditing ? (
                     <FormControl>
                       <Input
@@ -134,20 +133,21 @@ export function LoginForm() {
                         ref={passwordInputRef}
                         onBlur={() => setIsPasswordEditing(false)}
                         onKeyDown={handlePasswordKeyDown}
-                        className="h-auto p-0 border-0 shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground"
+                        className="h-auto p-0 border-0 shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground text-right"
                         placeholder="Password"
                       />
                     </FormControl>
                   ) : (
                     <span className="flex-1 text-sm">{field.value ? '••••••••' : 'Password'}</span>
                   )}
+                  <GoogleSymbol name="lock" className="text-lg" />
                 </div>
               </FormItem>
             )}
           />
         </div>
         
-        <div className="space-y-1 pt-2">
+        <div className="space-y-1 pt-1">
           <Button variant="ghost" type="button" disabled={isLoading} className="w-full justify-center text-muted-foreground hover:text-primary hover:bg-transparent">
               <svg role="img" viewBox="0 0 24 24" className="mr-2 h-4 w-4">
               <path
@@ -158,7 +158,7 @@ export function LoginForm() {
               Sign in with Google
           </Button>
 
-          <div className="w-1/3 mx-auto py-1">
+          <div className="w-2/3 mx-auto py-1">
             <Separator />
           </div>
 

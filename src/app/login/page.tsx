@@ -9,7 +9,7 @@ export default function LoginPage() {
         <Card className="shadow-2xl">
           <CardHeader className="items-center text-center">
             <Logo
-              className="mb-4 text-muted-foreground"
+              className="mb-2 text-muted-foreground"
               iconClassName="text-primary"
             />
           </CardHeader>
