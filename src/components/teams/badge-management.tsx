@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -284,7 +285,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
             </CardHeader>
             <CardContent className="space-y-4 pt-0">
                  {isEditingDescription ? (
-                    <Textarea ref={descriptionTextareaRef} defaultValue={badge.description} onBlur={handleSaveDescription} onKeyDown={handleDescriptionKeyDown} />
+                    <Textarea ref={descriptionTextareaRef} defaultValue={badge.description} onBlur={handleSaveDescription} onKeyDown={handleDescriptionKeyDown} className="p-0 text-sm text-muted-foreground border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 resize-none" />
                  ) : (
                     <p className="text-sm text-muted-foreground cursor-text min-h-[20px]" onClick={() => setIsEditingDescription(true)}>
                         {badge.description || 'Click to add description.'}
@@ -344,7 +345,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                         defaultValue={badge.description}
                         onBlur={handleSaveDescription}
                         onKeyDown={handleDescriptionKeyDown}
-                        className="text-sm"
+                        className="p-0 text-sm text-muted-foreground border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 resize-none"
                         placeholder="Click to add a description."
                     />
                 ) : (
@@ -362,9 +363,9 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     
     // Assorted View
     return (
-        <div className="group relative inline-flex items-center gap-1 rounded-full border-2 p-0.5 pl-1.5 pr-1.5 h-7" style={{ borderColor: badge.color, color: badge.color }}>
-            <div className="relative">
-                <GoogleSymbol name={badge.icon} style={{color: badge.color}} className="text-base" />
+        <div className="group relative inline-flex items-center gap-1.5 rounded-full border-2 py-1 px-2" style={{ borderColor: badge.color, color: badge.color }}>
+            <div className="relative flex items-center justify-center">
+                <GoogleSymbol name={badge.icon} style={{color: badge.color}} className="text-sm" />
                 {shareIcon && (
                     <div
                         className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-background text-white flex items-center justify-center"

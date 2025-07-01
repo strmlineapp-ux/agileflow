@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useRef, useEffect } from 'react';
@@ -206,7 +207,7 @@ export function PinnedLocationManagement({ team, tab }: { team: Team, tab: AppTa
                         defaultValue={alias || name}
                         onBlur={handleSaveAlias}
                         onKeyDown={handleAliasKeyDown}
-                        className="h-5 p-0 bg-transparent"
+                        className="h-5 p-0 bg-transparent border-0 shadow-none focus-visible:ring-0"
                       />
                     ) : (
                       <span className="cursor-pointer" onClick={() => canManage && setEditingAlias(name)} title={alias ? name : undefined}>

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useRef, useMemo, useCallback } from 'react';
@@ -14,12 +15,19 @@ import { canCreateAnyEvent } from '@/lib/permissions';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { EventForm } from '@/components/calendar/new-event-form';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
-import { type Event } from '@/types';
+import { type Event, type AppPage } from '@/types';
 import { EventDetailsDialog } from '@/components/calendar/event-details-dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { googleSymbolNames } from '@/lib/google-symbols';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const PAGE_ID = 'page-calendar';
 
 export default function CalendarPage() {
-  const { realUser, viewAsUser, calendars, appSettings } = useUser();
+  const { realUser, viewAsUser, calendars, appSettings, updateAppSettings, loading } = useUser();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'month' | 'week' | 'day' | 'production-schedule'>(realUser.defaultCalendarView || 'day');
   const [zoomLevel, setZoomLevel] = useState<'normal' | 'fit'>('normal');
@@ -32,6 +40,16 @@ export default function CalendarPage() {
   const dayViewContainerRef = useRef<HTMLDivElement>(null);
   const weekViewContainerRef = useRef<HTMLDivElement>(null);
   const productionScheduleViewContainerRef = useRef<HTMLDivElement>(null);
+  
+  const pageConfig = appSettings.pages.find(p => p.id === PAGE_ID);
+  
+  // Header Editing State
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
+  const [isSearchingIcons, setIsSearchingIcons] = useState(false);
+  const [iconSearch, setIconSearch] = useState('');
+  const titleInputRef = useRef<HTMLInputElement>(null);
+  const iconSearchInputRef = useRef<HTMLInputElement>(null);
   
   const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars, appSettings.customAdminRoles);
 
@@ -86,35 +104,26 @@ export default function CalendarPage() {
     setIsNewEventOpen(true);
   }, [userCanCreateEvent, viewAsUser.easyBooking]);
   
-  const title = useMemo(() => {
+  const dateRange = useMemo(() => {
     if (view === 'month') {
       return format(currentDate, 'MMMM yyyy');
     }
-    
     if (view === 'day') {
       return format(currentDate, 'MMMM d, yyyy');
     }
-    
-    // Logic for 'week' and 'production-schedule'
     const weekNumber = getWeek(currentDate, { weekStartsOn: 1 });
     const start = startOfWeek(currentDate, { weekStartsOn: 1 });
     const end = addDays(start, 6);
-    let dateRange;
+    let range;
 
     if (format(start, 'yyyy') !== format(end, 'yyyy')) {
-      dateRange = `${format(start, 'MMM d, yyyy')} – ${format(end, 'MMM d, yyyy')}`;
+      range = `${format(start, 'MMM d, yyyy')} – ${format(end, 'MMM d, yyyy')}`;
     } else if (format(start, 'MMMM') !== format(end, 'MMMM')) {
-      dateRange = `${format(start, 'MMM d')} – ${format(end, 'MMM d, yyyy')}`;
+      range = `${format(start, 'MMM d')} – ${format(end, 'MMM d, yyyy')}`;
     } else {
-      dateRange = `${format(start, 'd')}–${format(end, 'd')} ${format(end, 'MMMM, yyyy')}`;
+      range = `${format(start, 'd')}–${format(end, 'd')} ${format(end, 'MMMM, yyyy')}`;
     }
-    
-    return (
-      <>
-        <span>Week {weekNumber}</span>
-        <span className="text-xl text-muted-foreground">{dateRange}</span>
-      </>
-    );
+    return `Week ${weekNumber} · ${range}`;
   }, [view, currentDate]);
 
   const closeNewEventDialog = useCallback(() => {
@@ -125,18 +134,54 @@ export default function CalendarPage() {
   const onEventClick = useCallback((event: Event) => {
     setSelectedEvent(event);
   }, []);
+  
+  const updatePage = (data: Partial<AppPage>) => {
+    if (!pageConfig) return;
+    const newPages = appSettings.pages.map(p => p.id === PAGE_ID ? { ...p, ...data } : p);
+    updateAppSettings({ pages: newPages });
+  };
+  
+  const handleSaveTitle = () => {
+    const newName = titleInputRef.current?.value.trim();
+    if (newName && pageConfig && newName !== pageConfig.name) {
+      updatePage({ name: newName });
+    }
+    setIsEditingTitle(false);
+  };
+  
+  const filteredIcons = useMemo(() => googleSymbolNames.filter(icon => icon.toLowerCase().includes(iconSearch.toLowerCase())), [iconSearch]);
+
+  if (loading || !pageConfig) {
+      return <Skeleton className="h-full w-full" />
+  }
 
   return (
     <>
       <Tabs defaultValue={realUser.defaultCalendarView || 'day'} value={view} onValueChange={(v) => setView(v as any)} className="flex h-full flex-col">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 shrink-0">
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1">
-                <Button variant="outline" size="icon" onClick={handlePrev}><GoogleSymbol name="chevron_left" /></Button>
-                <Button variant="outline" size="sm" onClick={goToToday}>Today</Button>
-                <Button variant="outline" size="icon" onClick={handleNext}><GoogleSymbol name="chevron_right" /></Button>
+            <div className="flex items-center gap-3">
+                <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-9 w-9 text-3xl shrink-0" style={{ color: pageConfig.color }}>
+                      <GoogleSymbol name={pageConfig.icon} />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80 p-0">
+                    <div className="flex items-center gap-1 p-2 border-b">
+                        {!isSearchingIcons ? ( <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => setIsSearchingIcons(true)}> <GoogleSymbol name="search" /> </Button> ) : (
+                            <div className="flex items-center gap-1 w-full"> <GoogleSymbol name="search" className="text-muted-foreground text-xl" /> <input ref={iconSearchInputRef} placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} onBlur={() => !iconSearch && setIsSearchingIcons(false)} className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0" /> </div>
+                        )}
+                    </div>
+                    <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={pageConfig.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { updatePage({ icon: iconName }); setIsIconPopoverOpen(false);}} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
+                  </PopoverContent>
+                </Popover>
+                {isEditingTitle ? (
+                  <Input ref={titleInputRef} defaultValue={pageConfig.name} onBlur={handleSaveTitle} onKeyDown={(e) => e.key === 'Enter' ? handleSaveTitle() : e.key === 'Escape' && setIsEditingTitle(false)} className="h-auto p-0 font-headline text-3xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
+                ) : (
+                  <h1 className="font-headline text-3xl font-semibold cursor-pointer" onClick={() => setIsEditingTitle(true)}>{pageConfig.name}</h1>
+                )}
             </div>
-            <h1 className="font-headline text-2xl font-semibold ml-4 flex items-baseline gap-3">{title}</h1>
             {userCanCreateEvent && (
               <Dialog open={isNewEventOpen} onOpenChange={setIsNewEventOpen}>
                 <DialogTrigger asChild>
@@ -150,6 +195,14 @@ export default function CalendarPage() {
                 </DialogContent>
               </Dialog>
             )}
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 border-r pr-2">
+                <Button variant="outline" size="icon" onClick={handlePrev}><GoogleSymbol name="chevron_left" /></Button>
+                <Button variant="outline" size="sm" onClick={goToToday}>Today</Button>
+                <Button variant="outline" size="icon" onClick={handleNext}><GoogleSymbol name="chevron_right" /></Button>
+            </div>
+            <p className="text-muted-foreground text-sm font-medium">{dateRange}</p>
           </div>
           <div className="flex items-center gap-2">
               <TooltipProvider>

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -428,7 +429,7 @@ const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
         </div>
         
         <DragDropContext onDragEnd={onDragEnd}>
-            <StrictModeDroppable droppableId="admin-roles-list">
+            <StrictModeDroppable droppableId="admin-groups-list">
               {(provided) => (
                 <div 
                   className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 items-start"
@@ -1108,7 +1109,7 @@ function TabItem({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string, data: 
                         defaultValue={tab.description}
                         onBlur={handleSaveDescription}
                         onKeyDown={handleDescriptionKeyDown}
-                        className="text-sm"
+                        className="p-0 text-sm text-muted-foreground border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 resize-none"
                         placeholder="Click to add a description."
                     />
                 ) : (

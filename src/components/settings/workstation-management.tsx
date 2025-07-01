@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -147,7 +148,7 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
                         defaultValue={ws}
                         onBlur={handleSaveEdit}
                         onKeyDown={handleEditKeyDown}
-                        className="h-5 p-0 bg-transparent text-sm"
+                        className="h-5 p-0 bg-transparent text-sm border-0 shadow-none focus-visible:ring-0"
                     />
                 ) : (
                     <span className="font-medium text-sm cursor-text" onClick={() => setEditingWorkstation(ws)}>
