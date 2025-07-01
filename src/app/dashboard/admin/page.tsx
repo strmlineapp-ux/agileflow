@@ -3,7 +3,7 @@
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useUser } from '@/context/user-context';
-import { type User, type CustomAdminRole, type LinkGroup, type AppPage, type AppTab, type Team } from '@/types';
+import { type User, type AdminGroup, type LinkGroup, type AppPage, type AppTab, type Team } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -50,8 +50,8 @@ const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
 
 // #endregion
 
-// #region Roles Management Tab
-const UserRoleCard = ({ user, onRemove, isTeamAdmin, onSetTeamAdmin }: { user: User; onRemove: (user: User) => void; isTeamAdmin: boolean; onSetTeamAdmin: (user: User) => void; }) => {
+// #region Admin Groups Management Tab
+const UserAssignmentCard = ({ user, onRemove, isTeamAdmin, onSetTeamAdmin }: { user: User; onRemove: (user: User) => void; isTeamAdmin: boolean; onSetTeamAdmin: (user: User) => void; }) => {
   return (
     <Card 
         className={cn("transition-all", isTeamAdmin && "ring-2 ring-primary")}
@@ -72,7 +72,7 @@ const UserRoleCard = ({ user, onRemove, isTeamAdmin, onSetTeamAdmin }: { user: U
             variant="ghost" 
             size="icon" 
             onClick={(e) => { e.stopPropagation(); onRemove(user); }} 
-            aria-label={`Remove role from ${user.displayName}`}
+            aria-label={`Remove user from this group`}
             className="text-muted-foreground hover:text-destructive"
         >
           <GoogleSymbol name="cancel" />
@@ -82,7 +82,7 @@ const UserRoleCard = ({ user, onRemove, isTeamAdmin, onSetTeamAdmin }: { user: U
   );
 };
 
-const AddUserToRoleButton = ({ usersToAdd, onAdd, roleName }: { usersToAdd: User[], onAdd: (user: User) => void, roleName: string }) => {
+const AddUserToGroupButton = ({ usersToAdd, onAdd, groupName }: { usersToAdd: User[], onAdd: (user: User) => void, groupName: string }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleSelect = (user: User) => {
@@ -95,7 +95,7 @@ const AddUserToRoleButton = ({ usersToAdd, onAdd, roleName }: { usersToAdd: User
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon" className="h-8 w-8">
             <GoogleSymbol name="add_circle" className="text-2xl" />
-            <span className="sr-only">Assign {roleName}</span>
+            <span className="sr-only">Assign user to {groupName}</span>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="p-0 w-80">
@@ -119,17 +119,17 @@ const AddUserToRoleButton = ({ usersToAdd, onAdd, roleName }: { usersToAdd: User
   )
 }
 
-function CustomRoleCard({ 
-  role,
+function AdminGroupCard({ 
+  group,
   rank,
   users, 
   onUpdate, 
   onDelete
 }: { 
-  role: CustomAdminRole; 
+  group: AdminGroup; 
   rank: number;
   users: User[]; 
-  onUpdate: (updatedRole: CustomAdminRole) => void;
+  onUpdate: (updatedGroup: AdminGroup) => void;
   onDelete: () => void;
 }) {
     const { toast } = useToast();
@@ -158,9 +158,9 @@ function CustomRoleCard({
           setIsEditingName(false);
           return;
         }
-        if (input.value.trim() !== role.name) {
-            onUpdate({ ...role, name: input.value.trim() });
-            toast({ title: 'Success', description: 'Role name updated.' });
+        if (input.value.trim() !== group.name) {
+            onUpdate({ ...group, name: input.value.trim() });
+            toast({ title: 'Success', description: 'Group name updated.' });
         }
         setIsEditingName(false);
     };
@@ -180,27 +180,27 @@ function CustomRoleCard({
         );
     }, [iconSearch]);
 
-    const assignedUsers = useMemo(() => users.filter(u => u.roles?.includes(role.name)), [users, role.name]);
-    const unassignedUsers = useMemo(() => users.filter(u => !u.roles?.includes(role.name)), [users, role.name]);
+    const assignedUsers = useMemo(() => users.filter(u => u.roles?.includes(group.name)), [users, group.name]);
+    const unassignedUsers = useMemo(() => users.filter(u => !u.roles?.includes(group.name)), [users, group.name]);
 
-    const handleRoleToggle = (user: User) => {
+    const handleGroupToggle = (user: User) => {
         const currentRoles = user.roles || [];
-        const hasRole = currentRoles.includes(role.name);
+        const hasRole = currentRoles.includes(group.name);
         const newRoles = hasRole
-            ? currentRoles.filter(r => r !== role.name)
-            : [...currentRoles, role.name];
+            ? currentRoles.filter(r => r !== group.name)
+            : [...currentRoles, group.name];
 
         updateUser(user.userId, { roles: newRoles });
-        toast({ title: 'Success', description: `${user.displayName}'s role has been updated.` });
+        toast({ title: 'Success', description: `${user.displayName}'s group assignment has been updated.` });
     };
 
     const handleSetTeamAdmin = (userToUpdate: User) => {
-        const currentAdmins = role.teamAdmins || [];
+        const currentAdmins = group.teamAdmins || [];
         const isAlreadyAdmin = currentAdmins.includes(userToUpdate.userId);
         const newAdmins = isAlreadyAdmin
             ? currentAdmins.filter(id => id !== userToUpdate.userId)
             : [...currentAdmins, userToUpdate.userId];
-        onUpdate({ ...role, teamAdmins: newAdmins });
+        onUpdate({ ...group, teamAdmins: newAdmins });
     };
 
 
@@ -214,12 +214,12 @@ function CustomRoleCard({
                     <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                         <PopoverTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-9 w-9 text-2xl text-muted-foreground hover:text-foreground">
-                            <GoogleSymbol name={role.icon} />
+                            <GoogleSymbol name={group.icon} />
                             </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-80 p-0">
                             <div className="p-2 border-b"><Input placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} /></div>
-                            <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={role.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate({ ...role, icon: iconName }); setIsIconPopoverOpen(false); }} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
+                            <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={group.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate({ ...group, icon: iconName }); setIsIconPopoverOpen(false); }} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
                         </PopoverContent>
                     </Popover>
                     <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
@@ -227,18 +227,18 @@ function CustomRoleCard({
                             <div 
                                 className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full border-2 border-card cursor-pointer flex items-center justify-center" 
                                 aria-label="Change service admin color"
-                                style={{ backgroundColor: role.color }}
+                                style={{ backgroundColor: group.color }}
                             >
-                                <span className="text-xs font-bold" style={{ color: getContrastColor(role.color) }}>
+                                <span className="text-xs font-bold" style={{ color: getContrastColor(group.color) }}>
                                     {rank}
                                 </span>
                             </div>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-2">
                         <div className="grid grid-cols-8 gap-1">
-                            {predefinedColors.map(color => (<button key={color} className="h-6 w-6 rounded-full border" style={{ backgroundColor: color }} onClick={() => { onUpdate({ ...role, color: color }); setIsColorPopoverOpen(false); }} aria-label={`Set color to ${color}`}/>))}
+                            {predefinedColors.map(color => (<button key={color} className="h-6 w-6 rounded-full border" style={{ backgroundColor: color }} onClick={() => { onUpdate({ ...group, color: color }); setIsColorPopoverOpen(false); }} aria-label={`Set color to ${color}`}/>))}
                             <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
-                            <GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={role.color} onChange={(e) => onUpdate({ ...role, color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" aria-label="Custom color picker"/>
+                            <GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={group.color} onChange={(e) => onUpdate({ ...group, color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" aria-label="Custom color picker"/>
                             </div>
                         </div>
                         </PopoverContent>
@@ -246,24 +246,24 @@ function CustomRoleCard({
                   </div>
                 </div>
                 <div className="flex-1">
-                    {isEditingName ? (<Input ref={nameInputRef} defaultValue={role.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 text-2xl font-semibold leading-none tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>) : (<CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer">{role.name}</CardTitle>)}
+                    {isEditingName ? (<Input ref={nameInputRef} defaultValue={group.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 text-2xl font-semibold leading-none tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>) : (<CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer">{group.name}</CardTitle>)}
                 </div>
                 <div className="flex items-center">
                     <TooltipProvider>
-                        <Tooltip><TooltipTrigger asChild><AddUserToRoleButton usersToAdd={unassignedUsers} onAdd={handleRoleToggle} roleName={role.name} /></TooltipTrigger><TooltipContent>Assign User</TooltipContent></Tooltip>
-                        <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setIsDeleteDialogOpen(true)}><GoogleSymbol name="delete" /></Button></TooltipTrigger><TooltipContent>Delete Role</TooltipContent></Tooltip>
+                        <Tooltip><TooltipTrigger asChild><AddUserToGroupButton usersToAdd={unassignedUsers} onAdd={handleGroupToggle} groupName={group.name} /></TooltipTrigger><TooltipContent>Assign User</TooltipContent></Tooltip>
+                        <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setIsDeleteDialogOpen(true)}><GoogleSymbol name="delete" /></Button></TooltipTrigger><TooltipContent>Delete Group</TooltipContent></Tooltip>
                     </TooltipProvider>
                 </div>
               </div>
-              <CardDescription>Assign or revoke {role.name} privileges for managing app-wide settings.</CardDescription>
+              <CardDescription>Assign or revoke {group.name} privileges for managing app-wide settings.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {assignedUsers.map(user => (
-                <UserRoleCard 
+                <UserAssignmentCard 
                     key={user.userId} 
                     user={user} 
-                    onRemove={handleRoleToggle}
-                    isTeamAdmin={(role.teamAdmins || []).includes(user.userId)}
+                    onRemove={handleGroupToggle}
+                    isTeamAdmin={(group.teamAdmins || []).includes(user.userId)}
                     onSetTeamAdmin={handleSetTeamAdmin}
                 />
               ))}
@@ -273,7 +273,7 @@ function CustomRoleCard({
             <AlertDialogContent>
                 <AlertDialogHeader>
                     <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                    <AlertDialogDescription>This action cannot be undone. This will permanently delete the "{role.name}" role level and unassign all users.</AlertDialogDescription>
+                    <AlertDialogDescription>This action cannot be undone. This will permanently delete the "{group.name}" group and unassign all users.</AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -285,7 +285,7 @@ function CustomRoleCard({
     );
 }
 
-const RolesManagement = ({ tab }: { tab: AppTab }) => {
+const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
   const { toast } = useToast();
   const { users, updateUser, appSettings, updateAppSettings, updateAppTab } = useUser();
   const [is2faDialogOpen, setIs2faDialogOpen] = useState(false);
@@ -340,28 +340,28 @@ const RolesManagement = ({ tab }: { tab: AppTab }) => {
     setOn2faSuccess(null);
   };
 
-  const handleAddCustomRole = () => {
-    const newRoleName = `Service Admin${'+'.repeat(appSettings.customAdminRoles.length)}`;
-    const newRole: CustomAdminRole = {
+  const handleAddAdminGroup = () => {
+    const newGroupName = `Service Admin${'+'.repeat(appSettings.adminGroups.length)}`;
+    const newGroup: AdminGroup = {
         id: crypto.randomUUID(),
-        name: newRoleName,
+        name: newGroupName,
         icon: 'add_moderator',
-        color: predefinedColors[appSettings.customAdminRoles.length % predefinedColors.length],
+        color: predefinedColors[appSettings.adminGroups.length % predefinedColors.length],
         teamAdmins: [],
     };
-    updateAppSettings({ customAdminRoles: [...appSettings.customAdminRoles, newRole] });
-    toast({ title: 'New Level Added', description: `"${newRoleName}" has been created.` });
+    updateAppSettings({ adminGroups: [...appSettings.adminGroups, newGroup] });
+    toast({ title: 'New Group Added', description: `"${newGroupName}" has been created.` });
   };
 
-  const handleUpdateCustomRole = (updatedRole: CustomAdminRole) => {
-      const newRoles = appSettings.customAdminRoles.map(r => r.id === updatedRole.id ? updatedRole : r);
-      updateAppSettings({ customAdminRoles: newRoles });
+  const handleUpdateAdminGroup = (updatedGroup: AdminGroup) => {
+      const newGroups = appSettings.adminGroups.map(g => g.id === updatedGroup.id ? updatedGroup : g);
+      updateAppSettings({ adminGroups: newGroups });
   }
 
-  const handleDeleteCustomRole = (roleId: string) => {
-      const newRoles = appSettings.customAdminRoles.filter(r => r.id !== roleId);
-      updateAppSettings({ customAdminRoles: newRoles });
-      toast({ title: 'Success', description: 'Role level deleted.' });
+  const handleDeleteAdminGroup = (groupId: string) => {
+      const newGroups = appSettings.adminGroups.filter(g => g.id !== groupId);
+      updateAppSettings({ adminGroups: newGroups });
+      toast({ title: 'Success', description: 'Admin group deleted.' });
   }
 
   const onDragEnd = (result: DropResult) => {
@@ -373,11 +373,11 @@ const RolesManagement = ({ tab }: { tab: AppTab }) => {
     
     if (sourceIndex === destinationIndex) return;
 
-    const reorderedRoles = Array.from(appSettings.customAdminRoles);
-    const [movedRole] = reorderedRoles.splice(sourceIndex, 1);
-    reorderedRoles.splice(destinationIndex, 0, movedRole);
+    const reorderedGroups = Array.from(appSettings.adminGroups);
+    const [movedGroup] = reorderedGroups.splice(sourceIndex, 1);
+    reorderedGroups.splice(destinationIndex, 0, movedGroup);
 
-    updateAppSettings({ customAdminRoles: reorderedRoles });
+    updateAppSettings({ adminGroups: reorderedGroups });
   };
 
   return (
@@ -388,9 +388,9 @@ const RolesManagement = ({ tab }: { tab: AppTab }) => {
             ) : (
               <h2 className="text-2xl font-semibold tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
             )}
-            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={handleAddCustomRole}>
+            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={handleAddAdminGroup}>
                 <GoogleSymbol name="add_circle" className="text-xl" />
-                <span className="sr-only">Add New Level</span>
+                <span className="sr-only">Add New Group</span>
             </Button>
         </div>
         
@@ -411,7 +411,7 @@ const RolesManagement = ({ tab }: { tab: AppTab }) => {
                               <CardTitle>Admins</CardTitle>
                               <TooltipProvider>
                                 <Tooltip>
-                                    <TooltipTrigger asChild><AddUserToRoleButton usersToAdd={nonAdminUsers} onAdd={handleAdminToggle} roleName="Admin" /></TooltipTrigger>
+                                    <TooltipTrigger asChild><AddUserToGroupButton usersToAdd={nonAdminUsers} onAdd={handleAdminToggle} groupName="Admin" /></TooltipTrigger>
                                     <TooltipContent>Assign User</TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
@@ -420,7 +420,7 @@ const RolesManagement = ({ tab }: { tab: AppTab }) => {
                           </CardHeader>
                           <CardContent className="space-y-4">
                             {adminUsers.map(user => (
-                              <UserRoleCard key={user.userId} user={user} onRemove={handleAdminToggle} isTeamAdmin={false} onSetTeamAdmin={() => {}} />
+                              <UserAssignmentCard key={user.userId} user={user} onRemove={handleAdminToggle} isTeamAdmin={false} onSetTeamAdmin={() => {}} />
                             ))}
                           </CardContent>
                         </Card>
@@ -428,16 +428,16 @@ const RolesManagement = ({ tab }: { tab: AppTab }) => {
                     )}
                   </Draggable>
                   
-                  {appSettings.customAdminRoles.map((role, index) => (
-                    <Draggable key={role.id} draggableId={role.id} index={index + 1}>
+                  {appSettings.adminGroups.map((group, index) => (
+                    <Draggable key={group.id} draggableId={group.id} index={index + 1}>
                       {(provided) => (
                         <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
-                          <CustomRoleCard
-                            role={role}
+                          <AdminGroupCard
+                            group={group}
                             rank={index + 1}
                             users={users}
-                            onUpdate={handleUpdateCustomRole}
-                            onDelete={() => handleDeleteCustomRole(role.id)}
+                            onUpdate={handleUpdateAdminGroup}
+                            onDelete={() => handleDeleteAdminGroup(group.id)}
                           />
                         </div>
                       )}
@@ -480,7 +480,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
 
     const access = page.access;
 
-    const handleToggle = (type: 'users' | 'teams' | 'roles', id: string) => {
+    const handleToggle = (type: 'users' | 'teams' | 'adminGroups', id: string) => {
         const currentIds = new Set(access[type] || []);
         if (currentIds.has(id)) {
             currentIds.delete(id);
@@ -492,7 +492,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
 
     const filteredUsers = useMemo(() => users.filter(u => u.displayName.toLowerCase().includes(searchTerm.toLowerCase())), [users, searchTerm]);
     const filteredTeams = useMemo(() => teams.filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase())), [teams, searchTerm]);
-    const filteredRoles = useMemo(() => appSettings.customAdminRoles.filter(r => r.name.toLowerCase().includes(searchTerm.toLowerCase())), [appSettings.customAdminRoles, searchTerm]);
+    const filteredGroups = useMemo(() => appSettings.adminGroups.filter(r => r.name.toLowerCase().includes(searchTerm.toLowerCase())), [appSettings.adminGroups, searchTerm]);
 
     const renderSearchControl = () => (
          <div className="p-2 border-b">
@@ -533,7 +533,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                     <TabsList className="grid w-full grid-cols-3">
                         <TabsTrigger value="users">Users</TabsTrigger>
                         <TabsTrigger value="teams">Teams</TabsTrigger>
-                        <TabsTrigger value="roles">Roles</TabsTrigger>
+                        <TabsTrigger value="groups">Groups</TabsTrigger>
                     </TabsList>
                     
                     <TabsContent value="users" className="m-0">
@@ -560,14 +560,14 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                           )
                         })}</div></ScrollArea>
                     </TabsContent>
-                    <TabsContent value="roles" className="m-0">
+                    <TabsContent value="groups" className="m-0">
                         {renderSearchControl()}
-                        <ScrollArea className="h-64"><div className="p-1 space-y-1">{filteredRoles.map(role => {
-                          const isSelected = access.roles.includes(role.name);
+                        <ScrollArea className="h-64"><div className="p-1 space-y-1">{filteredGroups.map(group => {
+                          const isSelected = access.adminGroups.includes(group.name);
                           return (
-                            <div key={role.id} className="flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer" style={{ color: isSelected ? role.color : undefined }} onClick={() => handleToggle('roles', role.name)}>
-                              <GoogleSymbol name={role.icon} className="text-xl" />
-                              <span className="font-medium">{role.name}</span>
+                            <div key={group.id} className="flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer" style={{ color: isSelected ? group.color : undefined }} onClick={() => handleToggle('adminGroups', group.name)}>
+                              <GoogleSymbol name={group.icon} className="text-xl" />
+                              <span className="font-medium">{group.name}</span>
                             </div>
                           )
                         })}</div></ScrollArea>
@@ -730,7 +730,7 @@ function PageCard({ page, onUpdate, onDelete, isLocked = false }: { page: AppPag
                     <h4 className="font-medium text-sm mb-2">Details</h4>
                     <CardDescription>
                         When associated with a Team, only Team Admins of that team can access the page.
-                        When associated with a Service Admin role, only users designated as Team Admins for that role can access it.
+                        When associated with a Service Admin group, only users designated as Team Admins for that group can access it.
                     </CardDescription>
                     <div className="flex gap-2 text-sm text-muted-foreground mt-2">
                         <Badge variant="outline">{page.path}</Badge>
@@ -783,7 +783,7 @@ const PagesManagement = ({ tab }: { tab: AppTab }) => {
             path: '/dashboard/new-page',
             isDynamic: false,
             associatedTabs: [],
-            access: { users: [], teams: [], roles: [] }
+            access: { users: [], teams: [], adminGroups: [] }
         };
         updateAppSettings({ pages: [...appSettings.pages, newPage] });
     };
@@ -1071,7 +1071,7 @@ const TabsManagement = ({ tab }: { tab: AppTab }) => {
 // #endregion
 
 const componentMap: Record<string, React.ComponentType<{ tab: AppTab }>> = {
-  roles: RolesManagement,
+  adminGroups: AdminGroupsManagement,
   pages: PagesManagement,
   tabs: TabsManagement,
 };
