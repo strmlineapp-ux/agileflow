@@ -17,18 +17,54 @@ export const mockTabs: AppTab[] = [
 
 export const mockPages: AppPage[] = [
     {
-        id: 'page-admin-management',
-        name: 'Admin Management',
-        icon: 'shield',
-        color: '#64748B',
-        path: '/dashboard/admin',
+        id: 'page-overview',
+        name: 'Overview',
+        icon: 'dashboard',
+        color: '#F97316',
+        path: '/dashboard',
         isDynamic: false,
-        associatedTabs: ['tab-admin-roles', 'tab-admin-pages', 'tab-admin-tabs'],
-        access: {
-            users: [],
-            teams: [],
-            adminGroups: ['Admin'] // This should likely be a check for the isAdmin flag
-        }
+        associatedTabs: [],
+        access: { users: [], teams: [], adminGroups: [] }
+    },
+    {
+        id: 'page-calendar',
+        name: 'Calendar',
+        icon: 'calendar_month',
+        color: '#0EA5E9',
+        path: '/dashboard/calendar',
+        isDynamic: false,
+        associatedTabs: [],
+        access: { users: [], teams: [], adminGroups: [] }
+    },
+    {
+        id: 'page-tasks',
+        name: 'Tasks',
+        icon: 'checklist',
+        color: '#10B981',
+        path: '/dashboard/tasks',
+        isDynamic: false,
+        associatedTabs: [],
+        access: { users: [], teams: [], adminGroups: [] }
+    },
+    {
+        id: 'page-notifications',
+        name: 'Notifications',
+        icon: 'notifications',
+        color: '#3B82F6',
+        path: '/dashboard/notifications',
+        isDynamic: false,
+        associatedTabs: [],
+        access: { users: [], teams: [], adminGroups: [] }
+    },
+    {
+        id: 'page-settings',
+        name: 'Settings',
+        icon: 'settings',
+        color: '#64748B',
+        path: '/dashboard/settings',
+        isDynamic: false,
+        associatedTabs: [],
+        access: { users: [], teams: [], adminGroups: [] }
     },
     {
         id: 'page-service-delivery',
@@ -54,10 +90,24 @@ export const mockPages: AppPage[] = [
         associatedTabs: ['tab-team-members', 'tab-badges', 'tab-locations', 'tab-workstations', 'tab-templates'],
         access: {
             users: [],
-            teams: ['studio-productions', 'live-events', 'productions'], // Grants access to members of these teams
+            teams: ['studio-productions', 'live-events', 'productions'],
             adminGroups: ['Service Admin']
         }
-    }
+    },
+    {
+        id: 'page-admin-management',
+        name: 'Admin Management',
+        icon: 'shield',
+        color: '#64748B',
+        path: '/dashboard/admin',
+        isDynamic: false,
+        associatedTabs: ['tab-admin-roles', 'tab-admin-pages', 'tab-admin-tabs'],
+        access: {
+            users: [],
+            teams: [],
+            adminGroups: [] // Access is controlled by isAdmin flag in permissions
+        }
+    },
 ];
 
 export const mockAppSettings: AppSettings = {

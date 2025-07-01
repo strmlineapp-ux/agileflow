@@ -70,6 +70,20 @@ export const hasAccess = (user: User, page: AppPage, teams: Team[], adminGroups:
     // System admin has universal access
     if (user.isAdmin) return true;
 
+    // Check for pages with no specific restrictions (accessible to all authenticated users)
+    const hasNoRestrictions =
+        page.access.users.length === 0 &&
+        page.access.teams.length === 0 &&
+        page.access.adminGroups.length === 0;
+
+    if (hasNoRestrictions) {
+        // Exception for Admin Management page, which should only be for admins.
+        if (page.id === 'page-admin-management') {
+            return user.isAdmin;
+        }
+        return true;
+    }
+
     // Direct user assignment always grants access
     if (page.access.users.includes(user.userId)) return true;
 
