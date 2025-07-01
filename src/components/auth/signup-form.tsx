@@ -12,12 +12,12 @@ import {
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/context/user-context";
+import { GoogleSymbol } from "../icons/google-symbol";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email." }),
@@ -27,6 +27,7 @@ export function SignUpForm() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = React.useState(false);
+  const [isEditingEmail, setIsEditingEmail] = React.useState(false);
   const { notifications, setNotifications } = useUser();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -73,21 +74,37 @@ export function SignUpForm() {
   return (
     <div className="grid gap-6">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 text-center">
           <FormField
             control={form.control}
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input placeholder="name@example.com" {...field} />
+                    {isEditingEmail ? (
+                        <div className="flex items-center gap-2">
+                            <GoogleSymbol name="email" className="text-muted-foreground" />
+                            <Input
+                                {...field}
+                                onBlur={() => setIsEditingEmail(false)}
+                                autoFocus
+                                className="h-auto p-0 border-0 shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                                placeholder="name@example.com"
+                            />
+                        </div>
+                    ) : (
+                        <button type="button" onClick={() => setIsEditingEmail(true)} className="flex items-center gap-2 w-full text-left text-muted-foreground hover:text-primary/80 transition-colors">
+                            <GoogleSymbol name="email" />
+                            <span className="flex-1">{field.value || 'Email'}</span>
+                        </button>
+                    )}
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full font-bold" disabled={isLoading}>
+          <Button type="submit" variant="ghost" className="font-bold text-muted-foreground hover:text-primary" disabled={isLoading}>
+            <GoogleSymbol name="send" />
             {isLoading ? 'Submitting...' : 'Request Access'}
           </Button>
         </form>

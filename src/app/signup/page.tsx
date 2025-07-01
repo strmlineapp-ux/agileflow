@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { SignUpForm } from '@/components/auth/signup-form';
 import Logo from '@/components/icons/logo';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { GoogleSymbol } from '@/components/icons/google-symbol';
 
 export default function SignUpPage() {
   return (
@@ -12,18 +14,20 @@ export default function SignUpPage() {
           <CardHeader className="items-center text-center">
             <Logo className="mb-4" />
             <CardTitle className="font-headline text-3xl">Request Access</CardTitle>
-            <CardDescription>Fill in your details to request access to AgileFlow.</CardDescription>
+            <CardDescription>Enter your email to request access to AgileFlow.</CardDescription>
           </CardHeader>
           <CardContent>
             <SignUpForm />
           </CardContent>
         </Card>
-        <p className="mt-4 text-center text-sm text-muted-foreground">
-          Already have an account?{' '}
-          <Link href="/login" className="font-semibold text-primary underline-offset-4 hover:underline">
-            Sign in
-          </Link>
-        </p>
+        <div className="mt-4 text-center">
+           <Button asChild variant="ghost" className="text-sm font-semibold text-muted-foreground hover:text-primary">
+              <Link href="/login">
+                  <GoogleSymbol name="login" />
+                  Sign in
+              </Link>
+            </Button>
+        </div>
       </div>
     </main>
   );

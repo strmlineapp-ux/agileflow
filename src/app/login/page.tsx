@@ -2,11 +2,13 @@ import Link from 'next/link';
 import { LoginForm } from '@/components/auth/login-form';
 import Logo from '@/components/icons/logo';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { GoogleSymbol } from '@/components/icons/google-symbol';
 
 export default function LoginPage() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-sm">
         <Card className="shadow-2xl">
           <CardHeader className="items-center text-center">
             <Logo className="mb-4" />
@@ -15,12 +17,14 @@ export default function LoginPage() {
             <LoginForm />
           </CardContent>
         </Card>
-        <p className="mt-4 text-center text-sm text-muted-foreground">
-          Don't have an account?{' '}
-          <Link href="/signup" className="font-semibold text-primary underline-offset-4 hover:underline">
-            Sign up
-          </Link>
-        </p>
+        <div className="mt-4 text-center">
+          <Button asChild variant="ghost" className="text-sm font-semibold text-muted-foreground hover:text-primary">
+            <Link href="/signup">
+              <GoogleSymbol name="person_add" />
+              Sign up
+            </Link>
+          </Button>
+        </div>
       </div>
     </main>
   );
