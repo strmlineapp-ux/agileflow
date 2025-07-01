@@ -140,9 +140,13 @@ function AdminGroupCard({
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     
-    const [iconSearch, setIconSearch] = useState('');
     const [isEditingName, setIsEditingName] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
+
+    // Icon Search State
+    const [isSearchingIcons, setIsSearchingIcons] = useState(false);
+    const [iconSearch, setIconSearch] = useState('');
+    const iconSearchInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (isEditingName && nameInputRef.current) {
@@ -150,6 +154,17 @@ function AdminGroupCard({
           nameInputRef.current.select();
         }
     }, [isEditingName]);
+    
+    useEffect(() => {
+        if (!isIconPopoverOpen) {
+            setIsSearchingIcons(false);
+            setIconSearch('');
+        }
+    }, [isIconPopoverOpen]);
+
+    useEffect(() => {
+        if (isSearchingIcons) iconSearchInputRef.current?.focus();
+    }, [isSearchingIcons]);
 
     const handleSaveName = () => {
         const input = nameInputRef.current;
@@ -218,7 +233,25 @@ function AdminGroupCard({
                             </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-80 p-0">
-                            <div className="p-2 border-b"><Input placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} /></div>
+                            <div className="flex items-center gap-1 p-2 border-b">
+                                {!isSearchingIcons ? (
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => setIsSearchingIcons(true)}>
+                                        <GoogleSymbol name="search" />
+                                    </Button>
+                                ) : (
+                                    <>
+                                        <GoogleSymbol name="search" className="text-muted-foreground text-xl pl-2" />
+                                        <Input
+                                            ref={iconSearchInputRef}
+                                            placeholder="Search..."
+                                            value={iconSearch}
+                                            onChange={(e) => setIconSearch(e.target.value)}
+                                            onBlur={() => !iconSearch && setIsSearchingIcons(false)}
+                                            className="h-8 border-0 shadow-none focus-visible:ring-0 bg-transparent p-0"
+                                        />
+                                    </>
+                                )}
+                            </div>
                             <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={group.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate({ ...group, icon: iconName }); setIsIconPopoverOpen(false); }} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
                         </PopoverContent>
                     </Popover>
@@ -645,11 +678,26 @@ function PageCard({ page, onUpdate, onDelete, isLocked = false }: { page: AppPag
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
+    
+    // Icon Search State
+    const [isSearchingIcons, setIsSearchingIcons] = useState(false);
     const [iconSearch, setIconSearch] = useState('');
+    const iconSearchInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (isEditingName) nameInputRef.current?.focus();
     }, [isEditingName]);
+
+    useEffect(() => {
+        if (!isIconPopoverOpen) {
+            setIsSearchingIcons(false);
+            setIconSearch('');
+        }
+    }, [isIconPopoverOpen]);
+
+    useEffect(() => {
+        if (isSearchingIcons) iconSearchInputRef.current?.focus();
+    }, [isSearchingIcons]);
 
     const handleSaveName = () => {
         const newName = nameInputRef.current?.value.trim();
@@ -679,7 +727,25 @@ function PageCard({ page, onUpdate, onDelete, isLocked = false }: { page: AppPag
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-80 p-0">
-                                  <div className="p-2 border-b"><Input placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} /></div>
+                                    <div className="flex items-center gap-1 p-2 border-b">
+                                        {!isSearchingIcons ? (
+                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => setIsSearchingIcons(true)}>
+                                                <GoogleSymbol name="search" />
+                                            </Button>
+                                        ) : (
+                                            <>
+                                                <GoogleSymbol name="search" className="text-muted-foreground text-xl pl-2" />
+                                                <Input
+                                                    ref={iconSearchInputRef}
+                                                    placeholder="Search..."
+                                                    value={iconSearch}
+                                                    onChange={(e) => setIconSearch(e.target.value)}
+                                                    onBlur={() => !iconSearch && setIsSearchingIcons(false)}
+                                                    className="h-8 border-0 shadow-none focus-visible:ring-0 bg-transparent p-0"
+                                                />
+                                            </>
+                                        )}
+                                    </div>
                                   <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={page.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(page.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
                                 </PopoverContent>
                             </Popover>
@@ -920,7 +986,12 @@ function TabItem({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string, data: 
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
+    
+    // Icon Search State
+    const [isSearchingIcons, setIsSearchingIcons] = useState(false);
     const [iconSearch, setIconSearch] = useState('');
+    const iconSearchInputRef = useRef<HTMLInputElement>(null);
+
     const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
     const [isEditingDescription, setIsEditingDescription] = useState(false);
 
@@ -931,6 +1002,18 @@ function TabItem({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string, data: 
     useEffect(() => {
         if (isEditingDescription) descriptionTextareaRef.current?.focus();
     }, [isEditingDescription]);
+    
+    useEffect(() => {
+        if (!isIconPopoverOpen) {
+            setIsSearchingIcons(false);
+            setIconSearch('');
+        }
+    }, [isIconPopoverOpen]);
+
+    useEffect(() => {
+        if (isSearchingIcons) iconSearchInputRef.current?.focus();
+    }, [isSearchingIcons]);
+
 
     const handleSaveName = () => {
         const newName = nameInputRef.current?.value.trim();
@@ -974,7 +1057,25 @@ function TabItem({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string, data: 
                         </Button>
                     </PopoverTrigger>
                      <PopoverContent className="w-80 p-0">
-                        <div className="p-2 border-b"><Input placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} /></div>
+                        <div className="flex items-center gap-1 p-2 border-b">
+                            {!isSearchingIcons ? (
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => setIsSearchingIcons(true)}>
+                                    <GoogleSymbol name="search" />
+                                </Button>
+                            ) : (
+                                <>
+                                    <GoogleSymbol name="search" className="text-muted-foreground text-xl pl-2" />
+                                    <Input
+                                        ref={iconSearchInputRef}
+                                        placeholder="Search..."
+                                        value={iconSearch}
+                                        onChange={(e) => setIconSearch(e.target.value)}
+                                        onBlur={() => !iconSearch && setIsSearchingIcons(false)}
+                                        className="h-8 border-0 shadow-none focus-visible:ring-0 bg-transparent p-0"
+                                    />
+                                </>
+                            )}
+                        </div>
                         <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={tab.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(tab.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
                     </PopoverContent>
                 </Popover>
