@@ -20,33 +20,42 @@ export function Sidebar() {
   const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const dynamicPage = useMemo(() => {
-    // There should only be one dynamic page type, find it.
-    return appSettings.pages.find(page => page.isDynamic);
-  }, [appSettings.pages]);
-
-  const { adminPage, staticPages } = useMemo(() => {
-    const adminPage = appSettings.pages.find(p => p.id === 'page-admin-management');
-    
-    // Filter out dynamic and admin pages to get the static list for the main nav
-    const staticPages = appSettings.pages.filter(page => 
-        !page.isDynamic &&
-        page.id !== 'page-admin-management' && 
-        hasAccess(viewAsUser, page, teams, appSettings.adminGroups)
-    );
-
-    return {
-        adminPage: adminPage && hasAccess(viewAsUser, adminPage, teams, appSettings.adminGroups) ? adminPage : null,
-        staticPages
-    };
-  }, [viewAsUser, appSettings.pages, teams, appSettings.adminGroups]);
-  
   const userManagedTeams = useMemo(() => {
-      if(viewAsUser.isAdmin || appSettings.adminGroups.some(r => viewAsUser.roles?.includes(r.name))) {
-          return teams;
-      }
-      return teams.filter(team => team.teamAdmins?.includes(viewAsUser.userId));
+    if(viewAsUser.isAdmin || appSettings.adminGroups.some(r => viewAsUser.roles?.includes(r.name))) {
+        return teams;
+    }
+    return teams.filter(team => team.teamAdmins?.includes(viewAsUser.userId));
   }, [viewAsUser, teams, appSettings.adminGroups]);
+  
+  const orderedNavItems = useMemo(() => {
+    return appSettings.pages
+        .map(page => {
+            if (!hasAccess(viewAsUser, page, teams, appSettings.adminGroups)) {
+                return null;
+            }
+            if (page.isDynamic) {
+                // For the team management page, create a link for each team the user manages
+                return userManagedTeams.map(team => ({
+                    id: `${page.id}-${team.id}`,
+                    path: `${page.path}/${team.id}`,
+                    icon: team.icon,
+                    name: team.name,
+                    tooltip: `${page.name}: ${team.name}`,
+                    isPage: false,
+                }));
+            }
+            return {
+                id: page.id,
+                path: page.path,
+                icon: page.icon,
+                name: page.name,
+                tooltip: page.name,
+                isPage: true,
+            };
+        })
+        .flat()
+        .filter(Boolean);
+  }, [appSettings.pages, viewAsUser, teams, userManagedTeams]);
   
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-14 flex-col border-r bg-card sm:flex">
@@ -60,59 +69,36 @@ export function Sidebar() {
           <span className="sr-only">AgileFlow</span>
         </Link>
         <TooltipProvider>
-          {adminPage && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Link
-                  href={adminPage.path}
-                  className={cn(
-                    'relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
-                    pathname.startsWith(adminPage.path) && 'bg-accent text-accent-foreground'
-                  )}
-                >
-                  <GoogleSymbol name={adminPage.icon} className="text-2xl" />
-                  <span className="sr-only">{adminPage.name}</span>
-                </Link>
-              </TooltipTrigger>
-              <TooltipContent side="right">{adminPage.name}</TooltipContent>
-            </Tooltip>
-          )}
+          {orderedNavItems.map((item) => {
+              if (!item) return null;
+              const isNotifications = item.id === 'page-notifications';
+              const isActive = item.isPage 
+                  ? pathname === item.path || (item.path !== '/dashboard' && pathname.startsWith(item.path))
+                  : pathname.startsWith(item.path);
 
-          {staticPages.map((page) => (
-            <Tooltip key={page.id}>
-              <TooltipTrigger asChild>
-                <Link
-                  href={page.path}
-                  className={cn(
-                    'relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
-                    pathname.startsWith(page.path) && page.path !== '/dashboard' && 'bg-accent text-accent-foreground',
-                    pathname === '/dashboard' && page.path === '/dashboard' && 'bg-accent text-accent-foreground'
-                  )}
-                >
-                  <GoogleSymbol name={page.icon} className="text-2xl" />
-                  {page.id === 'page-notifications' && unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary p-0 text-xs text-primary-foreground">
-                      {unreadCount}
-                    </span>
-                  )}
-                  <span className="sr-only">{page.name}</span>
-                </Link>
-              </TooltipTrigger>
-              <TooltipContent side="right">{page.name}</TooltipContent>
-            </Tooltip>
-          ))}
-
-          {dynamicPage && userManagedTeams.map(team => (
-            <Tooltip key={`${dynamicPage.id}-${team.id}`}>
-                <TooltipTrigger asChild>
-                    <Link href={`${dynamicPage.path}/${team.id}`} className={cn('relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8', pathname.startsWith(`${dynamicPage.path}/${team.id}`) && 'bg-accent text-accent-foreground' )}>
-                        <GoogleSymbol name={team.icon} className="text-2xl" />
-                        <span className="sr-only">{team.name}</span>
+              return (
+                <Tooltip key={item.id}>
+                  <TooltipTrigger asChild>
+                    <Link
+                      href={item.path}
+                      className={cn(
+                        'relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-primary md:h-8 md:w-8',
+                        isActive && 'bg-accent text-primary'
+                      )}
+                    >
+                      <GoogleSymbol name={item.icon} className="text-2xl" />
+                      {isNotifications && unreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary p-0 text-xs text-primary-foreground">
+                          {unreadCount}
+                        </span>
+                      )}
+                      <span className="sr-only">{item.name}</span>
                     </Link>
-                </TooltipTrigger>
-                <TooltipContent side="right">{dynamicPage.name}: {team.name}</TooltipContent>
-            </Tooltip>
-          ))}
+                  </TooltipTrigger>
+                  <TooltipContent side="right">{item.tooltip}</TooltipContent>
+                </Tooltip>
+              );
+          })}
         </TooltipProvider>
       </nav>
       <nav className="mt-auto flex flex-col items-center gap-4 px-2 py-4">

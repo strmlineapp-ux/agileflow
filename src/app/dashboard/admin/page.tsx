@@ -50,7 +50,7 @@ const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
 // #endregion
 
 // #region Admin Groups Management Tab
-const UserAssignmentCard = ({ user, onRemove, isTeamAdmin, onSetTeamAdmin }: { user: User; onRemove: (user: User) => void; isTeamAdmin: boolean; onSetTeamAdmin: (user: User) => void; }) => {
+const UserAssignmentCard = ({ user, onRemove, isTeamAdmin, onSetTeamAdmin, canRemove = true }: { user: User; onRemove: (user: User) => void; isTeamAdmin: boolean; onSetTeamAdmin: (user: User) => void; canRemove?: boolean; }) => {
   return (
     <Card 
         className={cn("transition-all border", isTeamAdmin ? "border-primary" : "border-transparent")}
@@ -67,15 +67,23 @@ const UserAssignmentCard = ({ user, onRemove, isTeamAdmin, onSetTeamAdmin }: { u
             <p className="text-sm text-muted-foreground">{user.email}</p>
           </div>
         </div>
-        <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={(e) => { e.stopPropagation(); onRemove(user); }} 
-            aria-label={`Remove user from this group`}
-            className="text-muted-foreground hover:text-destructive"
-        >
-          <GoogleSymbol name="cancel" />
-        </Button>
+        <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={(e) => { e.stopPropagation(); if (canRemove) onRemove(user); }} 
+                        aria-label={`Remove user from this group`}
+                        className="text-muted-foreground hover:text-destructive"
+                        disabled={!canRemove}
+                    >
+                      <GoogleSymbol name="cancel" />
+                    </Button>
+                </TooltipTrigger>
+                {!canRemove && <TooltipContent><p>Cannot remove the last administrator.</p></TooltipContent>}
+            </Tooltip>
+        </TooltipProvider>
       </CardContent>
     </Card>
   );
@@ -306,11 +314,9 @@ function AdminGroupCard({
                 <DialogHeader className="p-6 pb-4">
                     <div className="flex items-start justify-between">
                         <DialogTitle>Delete "{group.name}"?</DialogTitle>
-                        <DialogClose asChild>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 -mr-2 -mt-2 text-destructive" onClick={onDelete}>
-                                <GoogleSymbol name="delete" className="text-xl" />
-                            </Button>
-                        </DialogClose>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 -mr-2 -mt-2 text-destructive" onClick={onDelete}>
+                            <GoogleSymbol name="delete" className="text-xl" />
+                        </Button>
                     </div>
                     <DialogDescription>
                         This will permanently delete the group and unassign all users. This action cannot be undone.
@@ -353,6 +359,15 @@ const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
   const nonAdminUsers = useMemo(() => users.filter(u => !u.isAdmin), [users]);
 
   const handleAdminToggle = (user: User) => {
+    if (user.isAdmin && adminUsers.length <= 1) {
+        toast({
+            variant: 'destructive',
+            title: 'Cannot Remove Last Admin',
+            description: 'The system must have at least one administrator.',
+        });
+        return;
+    }
+
     const action = () => {
       updateUser(user.userId, { isAdmin: !user.isAdmin });
       toast({ title: 'Success', description: `${user.displayName}'s admin status has been updated.` });
@@ -457,7 +472,14 @@ const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                           </CardHeader>
                           <CardContent className="space-y-4">
                             {adminUsers.map(user => (
-                              <UserAssignmentCard key={user.userId} user={user} onRemove={handleAdminToggle} isTeamAdmin={false} onSetTeamAdmin={() => {}} />
+                              <UserAssignmentCard 
+                                key={user.userId} 
+                                user={user} 
+                                onRemove={handleAdminToggle} 
+                                isTeamAdmin={false} 
+                                onSetTeamAdmin={() => {}} 
+                                canRemove={adminUsers.length > 1}
+                              />
                             ))}
                           </CardContent>
                         </Card>

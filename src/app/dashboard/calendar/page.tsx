@@ -201,9 +201,9 @@ export default function CalendarPage() {
           </div>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1 border-r pr-2">
-                <Button variant="outline" size="icon" onClick={handlePrev}><GoogleSymbol name="chevron_left" /></Button>
-                <Button variant="outline" size="sm" onClick={goToToday}>Today</Button>
-                <Button variant="outline" size="icon" onClick={handleNext}><GoogleSymbol name="chevron_right" /></Button>
+                <Button variant="ghost" size="icon" onClick={handlePrev}><GoogleSymbol name="chevron_left" /></Button>
+                <Button variant="ghost" size="sm" onClick={goToToday}>Today</Button>
+                <Button variant="ghost" size="icon" onClick={handleNext}><GoogleSymbol name="chevron_right" /></Button>
             </div>
             <p className="text-muted-foreground text-sm font-medium">{dateRange}</p>
           </div>
@@ -212,7 +212,7 @@ export default function CalendarPage() {
                 {(view === 'production-schedule' || view === 'day' || view === 'week') && (
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="outline" size="icon" onClick={() => setZoomLevel(zoomLevel === 'normal' ? 'fit' : 'normal')}>
+                      <Button variant="ghost" size="icon" onClick={() => setZoomLevel(zoomLevel === 'normal' ? 'fit' : 'normal')}>
                           {zoomLevel === 'normal' ? <GoogleSymbol name="close_fullscreen" /> : <GoogleSymbol name="open_in_full" />}
                           <span className="sr-only">{zoomLevel === 'normal' ? 'Fit to view' : 'Reset view'}</span>
                       </Button>
@@ -223,7 +223,7 @@ export default function CalendarPage() {
                 {view === 'day' && (
                   <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button variant="outline" size="icon" onClick={() => setDayViewAxis(dayViewAxis === 'standard' ? 'reversed' : 'standard')}>
+                        <Button variant="ghost" size="icon" onClick={() => setDayViewAxis(dayViewAxis === 'standard' ? 'reversed' : 'standard')}>
                             <GoogleSymbol name="swap_horiz" />
                             <span className="sr-only">{dayViewAxis === 'standard' ? 'Switch to reversed axis view' : 'Switch to standard view'}</span>
                         </Button>

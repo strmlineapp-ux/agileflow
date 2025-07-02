@@ -76,7 +76,7 @@ export default function DashboardPage() {
       <div className="flex items-center gap-3">
         <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
           <PopoverTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-9 w-9 text-3xl shrink-0" style={{ color: pageConfig.color }}>
+            <Button variant="ghost" size="icon" className="h-9 w-9 text-3xl shrink-0">
               <GoogleSymbol name={pageConfig.icon} />
             </Button>
           </PopoverTrigger>
