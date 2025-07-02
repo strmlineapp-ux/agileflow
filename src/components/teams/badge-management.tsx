@@ -153,7 +153,6 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     const [isEditingDescription, setIsEditingDescription] = useState(false);
     const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
     
-    // Determine ownership status
     const ownerTeam = useMemo(() => {
         for (const t of teams) {
           if (t.allBadges.some(b => b.id === badge.id)) {
@@ -168,20 +167,11 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     }, [teams, badge, teamId]);
     
     const isThisTheOriginalInstance = badge.ownerCollectionId === collectionId;
-    const isOwnedByMyTeam = ownerTeam?.id === teamId; // Use this for permission check
+    const isOwnedByMyTeam = ownerTeam?.id === teamId;
 
-    // This effect ensures the local state updates if the prop changes
     useEffect(() => {
         setCurrentName(badge.name);
     }, [badge.name]);
-
-    // This effect focuses the input when editing starts
-    useEffect(() => {
-        if (isEditingName && nameInputRef.current) {
-            nameInputRef.current.focus();
-            nameInputRef.current.select();
-        }
-    }, [isEditingName]);
 
     useEffect(() => {
         if (isEditingDescription && descriptionTextareaRef.current) {
@@ -189,23 +179,37 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
         }
     }, [isEditingDescription]);
 
-    // Centralized save logic
-    const handleSaveName = () => {
-        const newName = currentName.trim();
+    const handleSaveName = useCallback(() => {
+        const newName = nameInputRef.current?.value.trim() || '';
         if (newName === '') {
             toast({ variant: 'destructive', title: 'Error', description: 'Badge name cannot be empty.' });
-            setCurrentName(badge.name); // Revert to original name
+            setCurrentName(badge.name); 
         } else if (newName && newName !== badge.name) {
             onUpdateBadge({ name: newName });
         }
         setIsEditingName(false);
-    };
+    }, [badge.name, onUpdateBadge, toast]);
 
-    // Keyboard controls for the input
+    useEffect(() => {
+        if (isEditingName) {
+            const handleClickOutside = (event: MouseEvent) => {
+                if (nameInputRef.current && !nameInputRef.current.contains(event.target as Node)) {
+                    handleSaveName();
+                }
+            };
+            document.addEventListener('mousedown', handleClickOutside);
+            nameInputRef.current?.focus();
+            nameInputRef.current?.select();
+            return () => {
+                document.removeEventListener('mousedown', handleClickOutside);
+            };
+        }
+    }, [isEditingName, handleSaveName]);
+    
     const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') handleSaveName();
         else if (e.key === 'Escape') {
-            setCurrentName(badge.name); // Revert on escape
+            setCurrentName(badge.name);
             setIsEditingName(false);
         }
     };
@@ -230,7 +234,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     const isSharedToOtherTeams = useMemo(() => {
         if (!isOwnedByMyTeam) return false;
         return teams.some(t => {
-            if (t.id === teamId) return false; // Not another team
+            if (t.id === teamId) return false;
             return t.badgeCollections.some(c => c.badgeIds.includes(badge.id));
         });
     }, [teams, badge.id, isOwnedByMyTeam, teamId]);
@@ -288,9 +292,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                 ref={nameInputRef}
                                 value={currentName}
                                 onChange={(e) => setCurrentName(e.target.value)}
-                                onBlur={handleSaveName}
                                 onKeyDown={handleNameKeyDown}
-                                onMouseDown={(e) => e.stopPropagation()}
                                 className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
                             />
                         ) : (
@@ -351,9 +353,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
         ref={nameInputRef}
         value={currentName}
         onChange={(e) => setCurrentName(e.target.value)}
-        onBlur={handleSaveName}
         onKeyDown={handleNameKeyDown}
-        onMouseDown={(e) => e.stopPropagation()}
         className={cn(
           "h-auto p-0 font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0",
           viewMode === 'list' && 'text-base',
@@ -600,7 +600,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInAllT
                  {collection.description && <CardDescription className="pt-2">{collection.description}</CardDescription>}
             </CardHeader>
             <CardContent>
-                <StrictModeDroppable droppableId={collection.id} type="badge" isDropDisabled={isSharedToThisTeam}>
+                <StrictModeDroppable droppableId={collection.id} type="badge">
                     {(provided) => (
                          <div
                             ref={provided.innerRef}
@@ -612,7 +612,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInAllT
                                 collection.viewMode === 'detailed' && "grid grid-cols-1 md:grid-cols-2 gap-4"
                             )}>
                             {collectionBadges.map((badge, index) => (
-                                <Draggable key={`${badge.id}::${collection.id}`} draggableId={`${badge.id}::${collection.id}`} index={index}>
+                                <Draggable key={`${badge.id}::${collection.id}`} draggableId={`${badge.id}::${collection.id}`} index={index} isDragDisabled={isSharedToThisTeam}>
                                     {(provided) => (<div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
                                         <BadgeDisplayItem 
                                             badge={badge} 
@@ -794,7 +794,6 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
         const collection = displayedCollections.find(c => c.id === collectionId);
         if (!collection) return;
 
-        // This handles unlinking
         if (collection.ownerTeamId !== team.id) {
             const newSharedCollectionIds = (team.sharedCollectionIds || []).filter(id => id !== collectionId);
             updateTeam(team.id, { sharedCollectionIds: newSharedCollectionIds });
@@ -802,7 +801,6 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
             return;
         }
 
-        // This handles opening the confirmation dialog for permanent deletion
         setCollectionToDelete(collectionId);
     };
 
@@ -812,16 +810,13 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
         const collection = team.badgeCollections.find(c => c.id === collectionToDelete);
         if (!collection) return;
 
-        // 1. Remove the collection itself from the owner team
         const newCollections = team.badgeCollections.filter(c => c.id !== collectionToDelete);
         
-        // 2. Find and remove all badges owned by this collection
         const ownedBadgeIds = new Set(team.allBadges.filter(b => b.ownerCollectionId === collectionToDelete).map(b => b.id));
         const newAllBadges = team.allBadges.filter(b => !ownedBadgeIds.has(b.id));
 
         updateTeam(team.id, { badgeCollections: newCollections, allBadges: newAllBadges });
 
-        // 3. Remove links from all other teams
         teams.forEach(otherTeam => {
             if (otherTeam.id !== team.id && otherTeam.sharedCollectionIds?.includes(collectionToDelete)) {
                 const newSharedIds = otherTeam.sharedCollectionIds.filter(id => id !== collectionToDelete);
@@ -861,10 +856,8 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
         const allBadgesFromAllTeams = teams.flatMap(t => t.allBadges);
         const badgeMap = new Map<string, Badge>();
         
-        // Add all badges owned by the current team
         team.allBadges.forEach(b => badgeMap.set(b.id, b));
         
-        // Add badges from shared collections
         const sharedCollectionIds = new Set(team.sharedCollectionIds || []);
         teams.forEach(t => {
             if (t.id !== team.id) {
@@ -888,7 +881,6 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
         const badgeToDelete = allBadgesAvailableToTeam.find(b => b.id === badgeId);
         if (!badgeToDelete) return;
 
-        // For each team, filter out the badge from allBadges and from all badgeCollections
         teams.forEach(t => {
             const teamHasBadge = t.allBadges.some(b => b.id === badgeId);
             const teamHasLinks = t.badgeCollections.some(c => c.badgeIds.includes(badgeId));
@@ -904,7 +896,7 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
         });
 
         toast({ title: 'Badge Deleted', description: `"${badgeToDelete.name}" was permanently deleted.` });
-        if (badgeToDelete) setBadgeToDelete(null); // Close dialog if open
+        if (badgeToDelete) setBadgeToDelete(null);
     }, [allBadgesAvailableToTeam, teams, toast, updateTeam]);
 
     const handleDeleteBadge = useCallback((collectionId: string, badgeId: string) => {
@@ -913,7 +905,6 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
     
         const isOriginalInstance = badge.ownerCollectionId === collectionId;
     
-        // Check how many places this badge is used (linked or original)
         let linkCount = 0;
         teams.forEach(t => {
             t.badgeCollections.forEach(c => {
@@ -924,10 +915,8 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
         });
     
         if (isOriginalInstance && linkCount > 1) {
-            // It's the original and it's linked elsewhere. Show dialog.
             setBadgeToDelete({ collectionId, badgeId });
         } else if (!isOriginalInstance) {
-            // It's just a link. Remove it without confirmation.
             const newCollections = team.badgeCollections.map(c => {
                 if (c.id === collectionId) {
                     return { ...c, badgeIds: c.badgeIds.filter(id => id !== badgeId) };
@@ -937,7 +926,6 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
             updateTeam(team.id, { badgeCollections: newCollections });
             toast({ title: 'Badge Unlinked' });
         } else {
-            // It's the original and not linked anywhere else. Delete permanently.
             confirmPermanentDelete(badgeId);
         }
     }, [allBadgesAvailableToTeam, teams, team.badgeCollections, updateTeam, toast, confirmPermanentDelete]);
@@ -1042,7 +1030,6 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
     
         if (!sourceCollection || !destCollection) return;
         
-        // Prevent dropping into a shared collection
         if (destCollection.ownerTeamId !== team.id) {
             return;
         }
