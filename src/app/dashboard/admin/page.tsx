@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -48,13 +49,17 @@ const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
 // #endregion
 
 // #region Admin Groups Management Tab
-const UserAssignmentCard = ({ user, onRemove, isGroupAdmin, onSetGroupAdmin, canRemove = true }: { user: User; onRemove: (user: User) => void; isGroupAdmin: boolean; onSetGroupAdmin: (user: User) => void; canRemove?: boolean; }) => {
+const UserAssignmentCard = ({ user, onRemove, isGroupAdmin, onSetGroupAdmin, canRemove = true }: { user: User; onRemove: (user: User) => void; isGroupAdmin: boolean; onSetGroupAdmin?: (user: User) => void; canRemove?: boolean; }) => {
   return (
     <Card 
-        className={cn("transition-all", isGroupAdmin && "ring-2 ring-primary")}
-        onClick={() => onSetGroupAdmin(user)}
+        className={cn(
+            "transition-all", 
+            onSetGroupAdmin && isGroupAdmin && "ring-2 ring-primary",
+            onSetGroupAdmin && "cursor-pointer"
+        )}
+        onClick={onSetGroupAdmin ? () => onSetGroupAdmin(user) : undefined}
     >
-      <CardContent className="p-4 flex items-center justify-between cursor-pointer">
+      <CardContent className="p-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Avatar>
             <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
@@ -73,13 +78,13 @@ const UserAssignmentCard = ({ user, onRemove, isGroupAdmin, onSetGroupAdmin, can
                     variant="ghost" 
                     size="icon" 
                     onClick={(e) => { e.stopPropagation(); onRemove(user); }} 
-                    aria-label={`Remove user from this group`}
+                    aria-label={`Remove user`}
                     className="text-muted-foreground hover:text-destructive"
                 >
                   <GoogleSymbol name="cancel" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent><p>Remove from Group</p></TooltipContent>
+              <TooltipContent><p>Remove user</p></TooltipContent>
             </Tooltip>
           </TooltipProvider>
         )}
@@ -475,7 +480,6 @@ const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                                 user={user} 
                                 onRemove={handleAdminToggle}
                                 isGroupAdmin={false}
-                                onSetGroupAdmin={() => {}}
                                 canRemove={adminUsers.length > 1}
                               />
                             ))}
@@ -1144,7 +1148,7 @@ function TabItem({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string, data: 
             <div className="flex-1 space-y-1">
                 <div className="flex items-center justify-between">
                      {isEditingName ? (
-                        <Input ref={nameInputRef} defaultValue={tab.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
+                        <Input ref={nameInputRef} defaultValue={tab.name} onBlur={handleSaveName} onKeyDown={handleKeyDown} className="h-auto p-0 font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
                     ) : (
                         <span className="font-semibold cursor-pointer" onClick={() => setIsEditingName(true)}>{tab.name}</span>
                     )}
@@ -1281,3 +1285,5 @@ const AdminPageSkeleton = () => (
       </div>
     </div>
 );
+
+    
