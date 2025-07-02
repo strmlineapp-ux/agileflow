@@ -53,7 +53,7 @@ const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
 const UserAssignmentCard = ({ user, onRemove, isTeamAdmin, onSetTeamAdmin }: { user: User; onRemove: (user: User) => void; isTeamAdmin: boolean; onSetTeamAdmin: (user: User) => void; }) => {
   return (
     <Card 
-        className={cn("transition-all", isTeamAdmin && "ring-2 ring-primary")}
+        className={cn("transition-all border", isTeamAdmin ? "border-primary" : "border-transparent")}
         onClick={() => onSetTeamAdmin(user)}
     >
       <CardContent className="p-4 flex items-center justify-between cursor-pointer">
@@ -1223,9 +1223,9 @@ export default function AdminPage() {
         <h1 className="font-headline text-3xl font-semibold">{pageConfig.name}</h1>
       </div>
       <Tabs defaultValue={pageTabs[0]?.id} className="w-full">
-        <TabsList className={`grid w-full grid-cols-${pageTabs.length}`}>
+        <TabsList className="flex w-full">
           {pageTabs.map(tab => (
-            <TabsTrigger key={tab.id} value={tab.id}>{tab.name}</TabsTrigger>
+            <TabsTrigger key={tab.id} value={tab.id} className="flex-1">{tab.name}</TabsTrigger>
           ))}
         </TabsList>
         {pageTabs.map(tab => {

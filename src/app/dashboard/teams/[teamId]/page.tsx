@@ -137,9 +137,9 @@ export default function TeamPage() {
             )}
         </div>
       <Tabs defaultValue={pageTabs[0]?.id} className="w-full">
-        <TabsList className={`grid w-full grid-cols-${pageTabs.length}`}>
+        <TabsList className="flex w-full">
             {pageTabs.map(tab => (
-              <TabsTrigger key={tab.id} value={tab.id}>{tab.name}</TabsTrigger>
+              <TabsTrigger key={tab.id} value={tab.id} className="flex-1">{tab.name}</TabsTrigger>
             ))}
         </TabsList>
         {pageTabs.map(tab => {

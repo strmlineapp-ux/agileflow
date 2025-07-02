@@ -390,9 +390,7 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
                                 className="absolute top-0 bottom-0 z-20 pointer-events-none"
                                 style={{ left: `${LOCATION_LABEL_WIDTH_PX + calculateCurrentTimePosition()}px` }}
                             >
-                                <div className="relative w-0.5 h-full bg-primary">
-                                    <div className="absolute -top-1.5 -left-[5px] h-3 w-3 rounded-full bg-primary border-2 border-background"></div>
-                                </div>
+                                <div className="w-px h-full bg-primary"></div>
                             </div>
                         )}
                     </CardContent>
@@ -503,12 +501,10 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
                                 {isViewingToday && now && (
                                     <div 
                                         ref={nowMarkerRef}
-                                        className="absolute w-full z-10"
+                                        className="absolute w-full z-10 pointer-events-none"
                                         style={{ top: `${calculateCurrentTimePosition()}px` }}
                                     >
-                                        <div className="relative h-0.5 bg-primary">
-                                            <div className="absolute -left-1.5 -top-[5px] h-3 w-3 rounded-full bg-primary border-2 border-background"></div>
-                                        </div>
+                                        <div className="relative h-px bg-primary"></div>
                                     </div>
                                 )}
                             </div>

@@ -284,12 +284,10 @@ export const WeekView = React.memo(({ date, containerRef, zoomLevel, onEasyBooki
                                     {isToday(day) && now && (
                                         <div 
                                             ref={nowMarkerRef}
-                                            className="absolute w-full z-10"
+                                            className="absolute w-full z-10 pointer-events-none"
                                             style={{ top: `${calculateCurrentTimePosition()}px` }}
                                         >
-                                            <div className="relative h-0.5 bg-primary">
-                                                <div className="absolute -left-1.5 -top-[5px] h-3 w-3 rounded-full bg-primary border-2 border-background"></div>
-                                            </div>
+                                            <div className="relative h-px bg-primary"></div>
                                         </div>
                                     )}
                                 </div>

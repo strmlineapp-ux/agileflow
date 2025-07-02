@@ -24,10 +24,10 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Dialog, DialogHeader, DialogTitle, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogHeader, DialogTitle, DialogContent, DialogDescription, DialogClose } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PriorityBadge } from './priority-badge';
-import { Separator } from '@/components/ui/separator';
+import { Separator } from '../ui/separator';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { Badge as UiBadge } from '../ui/badge';
 import { ScrollArea } from '../ui/scroll-area';
@@ -112,7 +112,7 @@ const getDefaultCalendarId = (user: User, availableCalendars: SharedCalendar[], 
 };
 
 export function EventForm({ event, onFinished, initialData }: EventFormProps) {
-  const { realUser, viewAsUser, users, calendars, teams, addEvent, updateEvent, allBookableLocations, getPriorityDisplay, userStatusAssignments, appSettings } = useUser();
+  const { realUser, viewAsUser, users, calendars, teams, addEvent, updateEvent, deleteEvent, allBookableLocations, getPriorityDisplay, userStatusAssignments, appSettings } = useUser();
   const { toast } = useToast();
   
   const isEditing = !!event;
@@ -122,6 +122,7 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
   const [guestSearch, setGuestSearch] = React.useState('');
   const [isGuestPopoverOpen, setIsGuestPopoverOpen] = React.useState(false);
   const [isLinkDialogOpen, setIsLinkDialogOpen] = React.useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
   const [linkName, setLinkName] = React.useState('');
   const [linkUrl, setLinkUrl] = React.useState('');
   const [isAddRolePopoverOpen, setIsAddRolePopoverOpen] = React.useState(false);
@@ -380,6 +381,14 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
       setIsLoading(false);
     }
   }, [isEditing, event, roleAssignments, addEvent, updateEvent, realUser.userId, onFinished, toast, form]);
+  
+  const handleDelete = async () => {
+    if (!event) return;
+    await deleteEvent(event.eventId);
+    toast({ title: 'Event Deleted' });
+    setIsDeleteDialogOpen(false);
+    onFinished();
+  };
 
   const dayKey = eventDate ? startOfDay(eventDate).toISOString() : null;
   const absencesForDay = dayKey && userStatusAssignments[dayKey] ? userStatusAssignments[dayKey] : [];
@@ -498,6 +507,11 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
             </div>
 
             <div className="flex items-center">
+                {isEditing && (
+                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setIsDeleteDialogOpen(true)} disabled={isLoading}>
+                      <GoogleSymbol name="delete"/>
+                    </Button>
+                )}
                 <Button type="button" variant="ghost" size="icon" onClick={onFinished} disabled={isLoading} aria-label="Discard changes">
                 <GoogleSymbol name="close" />
                 </Button>
@@ -879,10 +893,6 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
     <Dialog open={isLinkDialogOpen} onOpenChange={setIsLinkDialogOpen}>
         <DialogContent className="max-w-md">
             <div className="absolute top-4 right-4 flex items-center gap-1">
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setIsLinkDialogOpen(false)}>
-                    <GoogleSymbol name="close" className="text-xl" />
-                    <span className="sr-only">Cancel</span>
-                </Button>
                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleAddLink}>
                     <GoogleSymbol name="check" className="text-xl" />
                     <span className="sr-only">Add Link</span>
@@ -896,6 +906,24 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                 <Input placeholder="Display Name (e.g., Project Website)" value={linkName} onChange={(e) => setLinkName(e.target.value)} />
             </div>
         </DialogContent>
+    </Dialog>
+    
+    <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <DialogContent className="sm:max-w-md p-0">
+        <DialogHeader className="p-6 pb-4">
+            <div className="flex items-start justify-between">
+                <DialogTitle>Delete "{event?.title}"?</DialogTitle>
+                <DialogClose asChild>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 -mr-2 -mt-2 text-destructive" onClick={handleDelete}>
+                        <GoogleSymbol name="delete" className="text-xl" />
+                    </Button>
+                </DialogClose>
+            </div>
+            <DialogDescription>
+                This will permanently delete the event. This action cannot be undone.
+            </DialogDescription>
+        </DialogHeader>
+      </DialogContent>
     </Dialog>
     </>
   );

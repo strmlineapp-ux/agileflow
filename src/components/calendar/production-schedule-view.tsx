@@ -287,7 +287,7 @@ const ProductionScheduleLocationRow = React.memo(({
                                                                     className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full flex items-center justify-center"
                                                                     style={{ backgroundColor: roleColor, color: getContrastColor(roleColor || '#ffffff') }}
                                                                 >
-                                                                    <GoogleSymbol name={roleIcon} style={{fontSize: '10px'}} />
+                                                                    <GoogleSymbol name={roleIcon} style={{fontSize: '10px'}}/>
                                                                 </div>
                                                             )}
                                                         </div>
@@ -713,7 +713,7 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
                                                     onEventClick={onEventClick}
                                                 />
                                             ))}
-                                            {isDayToday && now && <div ref={nowMarkerRef} className="absolute top-0 bottom-0 z-20 pointer-events-none" style={{ left: `${LOCATION_LABEL_WIDTH_PX + calculateCurrentTimePosition()}px` }}><div className="relative w-0.5 h-full bg-primary"><div className="absolute -top-1.5 -left-[5px] h-3 w-3 rounded-full bg-primary border-2 border-background"></div></div></div>}
+                                            {isDayToday && now && <div ref={nowMarkerRef} className="absolute top-0 bottom-0 z-20 pointer-events-none" style={{ left: `${LOCATION_LABEL_WIDTH_PX + calculateCurrentTimePosition()}px` }}><div className="relative w-px h-full bg-primary"></div></div>}
                                         </CardContent>
                                     )}
                                 </div>
@@ -734,6 +734,4 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
     );
 });
 ProductionScheduleView.displayName = 'ProductionScheduleView';
-
-
 
