@@ -52,12 +52,15 @@ const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
 const UserAssignmentCard = ({ user, onRemove, isGroupAdmin, onSetGroupAdmin, canRemove = true }: { user: User; onRemove: (user: User) => void; isGroupAdmin: boolean; onSetGroupAdmin?: (user: User) => void; canRemove?: boolean; }) => {
   return (
     <Card 
+        tabIndex={onSetGroupAdmin ? 0 : -1}
+        role={onSetGroupAdmin ? "button" : undefined}
         className={cn(
-            "transition-all", 
-            onSetGroupAdmin && isGroupAdmin && "ring-2 ring-primary",
+            "transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50",
+            onSetGroupAdmin && isGroupAdmin && "ring-1 ring-ring/50",
             onSetGroupAdmin && "cursor-pointer"
         )}
         onClick={onSetGroupAdmin ? () => onSetGroupAdmin(user) : undefined}
+        onKeyDown={onSetGroupAdmin ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSetGroupAdmin(user); } } : undefined}
     >
       <CardContent className="p-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -1148,7 +1151,7 @@ function TabItem({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string, data: 
             <div className="flex-1 space-y-1">
                 <div className="flex items-center justify-between">
                      {isEditingName ? (
-                        <Input ref={nameInputRef} defaultValue={tab.name} onBlur={handleSaveName} onKeyDown={handleKeyDown} className="h-auto p-0 font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
+                        <Input ref={nameInputRef} defaultValue={tab.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
                     ) : (
                         <span className="font-semibold cursor-pointer" onClick={() => setIsEditingName(true)}>{tab.name}</span>
                     )}
@@ -1285,5 +1288,3 @@ const AdminPageSkeleton = () => (
       </div>
     </div>
 );
-
-    
