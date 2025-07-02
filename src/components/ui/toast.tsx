@@ -1,10 +1,8 @@
-
 "use client"
 
 import * as React from "react"
 import * as ToastPrimitives from "@radix-ui/react-toast"
 import { cva, type VariantProps } from "class-variance-authority"
-import { GoogleSymbol } from "../icons/google-symbol"
 
 import { cn } from "@/lib/utils"
 
@@ -84,7 +82,6 @@ const ToastClose = React.forwardRef<
     toast-close=""
     {...props}
   >
-    <GoogleSymbol name="close" />
   </ToastPrimitives.Close>
 ))
 ToastClose.displayName = ToastPrimitives.Close.displayName

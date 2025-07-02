@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -53,7 +51,7 @@ const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
 const UserAssignmentCard = ({ user, onRemove, isTeamAdmin, onSetTeamAdmin, canRemove = true }: { user: User; onRemove: (user: User) => void; isTeamAdmin: boolean; onSetTeamAdmin: (user: User) => void; canRemove?: boolean; }) => {
   return (
     <Card 
-        className={cn("transition-all border", isTeamAdmin ? "border-primary" : "border-transparent")}
+        className={cn("transition-all border-2", isTeamAdmin ? "border-primary" : "border-transparent")}
         onClick={() => onSetTeamAdmin(user)}
     >
       <CardContent className="p-4 flex items-center justify-between cursor-pointer">
@@ -67,7 +65,7 @@ const UserAssignmentCard = ({ user, onRemove, isTeamAdmin, onSetTeamAdmin, canRe
             <p className="text-sm text-muted-foreground">{user.email}</p>
           </div>
         </div>
-        {canRemove ? (
+        {canRemove && (
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -84,7 +82,7 @@ const UserAssignmentCard = ({ user, onRemove, isTeamAdmin, onSetTeamAdmin, canRe
               <TooltipContent><p>Remove from Admins</p></TooltipContent>
             </Tooltip>
           </TooltipProvider>
-        ) : null}
+        )}
       </CardContent>
     </Card>
   );
@@ -315,9 +313,11 @@ function AdminGroupCard({
                 <DialogHeader className="p-6 pb-4">
                     <div className="flex items-start justify-between">
                         <DialogTitle>Delete "{group.name}"?</DialogTitle>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 -mr-2 -mt-2 text-destructive" onClick={onDelete}>
-                            <GoogleSymbol name="delete" className="text-xl" />
-                        </Button>
+                        <DialogClose asChild>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 -mr-2 -mt-2 text-destructive" onClick={onDelete}>
+                                <GoogleSymbol name="delete" className="text-xl" />
+                            </Button>
+                        </DialogClose>
                     </div>
                     <DialogDescription>
                         This will permanently delete the group and unassign all users. This action cannot be undone.
