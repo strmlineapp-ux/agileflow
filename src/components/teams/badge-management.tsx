@@ -191,13 +191,13 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
 
     useEffect(() => {
         if (!isEditingName) return;
-
+    
         const handleClickOutside = (event: MouseEvent) => {
             if (nameInputRef.current && !nameInputRef.current.contains(event.target as Node)) {
                 handleSaveName();
             }
         };
-
+    
         document.addEventListener('mousedown', handleClickOutside);
         nameInputRef.current?.focus();
         nameInputRef.current?.select();
@@ -616,7 +616,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInAllT
                                 collection.viewMode === 'detailed' && "grid grid-cols-1 md:grid-cols-2 gap-4"
                             )}>
                             {collectionBadges.map((badge, index) => (
-                                <Draggable key={`${badge.id}::${collection.id}`} draggableId={`${badge.id}::${collection.id}`} index={index} isDragDisabled={isSharedToThisTeam}>
+                                <Draggable key={`${badge.id}::${collection.id}`} draggableId={`${badge.id}::${collection.id}`} index={index}>
                                     {(provided) => (<div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
                                         <BadgeDisplayItem 
                                             badge={badge} 
@@ -1235,3 +1235,5 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
         </DragDropContext>
     );
 }
+
+    
