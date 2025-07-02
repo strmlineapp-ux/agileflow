@@ -166,7 +166,6 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
         return teams.find(t => t.id === teamId);
     }, [teams, badge, teamId]);
     
-    const isThisTheOriginalInstance = badge.ownerCollectionId === collectionId;
     const isOwnedByMyTeam = ownerTeam?.id === teamId;
 
     useEffect(() => {
@@ -191,19 +190,21 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     }, [badge.name, onUpdateBadge, toast]);
 
     useEffect(() => {
-        if (isEditingName) {
-            const handleClickOutside = (event: MouseEvent) => {
-                if (nameInputRef.current && !nameInputRef.current.contains(event.target as Node)) {
-                    handleSaveName();
-                }
-            };
-            document.addEventListener('mousedown', handleClickOutside);
-            nameInputRef.current?.focus();
-            nameInputRef.current?.select();
-            return () => {
-                document.removeEventListener('mousedown', handleClickOutside);
-            };
-        }
+        if (!isEditingName) return;
+
+        const handleClickOutside = (event: MouseEvent) => {
+            if (nameInputRef.current && !nameInputRef.current.contains(event.target as Node)) {
+                handleSaveName();
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        nameInputRef.current?.focus();
+        nameInputRef.current?.select();
+        
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
     }, [isEditingName, handleSaveName]);
     
     const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -239,6 +240,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
         });
     }, [teams, badge.id, isOwnedByMyTeam, teamId]);
     
+    const isThisTheOriginalInstance = badge.ownerCollectionId === collectionId;
     const isLinkedInternally = useMemo(() => {
         if (!isOwnedByMyTeam) return false;
         const currentTeam = teams.find(t => t.id === teamId);
@@ -291,6 +293,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                             <Input
                                 ref={nameInputRef}
                                 value={currentName}
+                                onMouseDown={(e) => e.stopPropagation()}
                                 onChange={(e) => setCurrentName(e.target.value)}
                                 onKeyDown={handleNameKeyDown}
                                 className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -352,6 +355,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
       <Input
         ref={nameInputRef}
         value={currentName}
+        onMouseDown={(e) => e.stopPropagation()}
         onChange={(e) => setCurrentName(e.target.value)}
         onKeyDown={handleNameKeyDown}
         className={cn(
@@ -600,7 +604,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInAllT
                  {collection.description && <CardDescription className="pt-2">{collection.description}</CardDescription>}
             </CardHeader>
             <CardContent>
-                <StrictModeDroppable droppableId={collection.id} type="badge">
+                <StrictModeDroppable droppableId={collection.id} type="badge" isDropDisabled={isSharedToThisTeam}>
                     {(provided) => (
                          <div
                             ref={provided.innerRef}
