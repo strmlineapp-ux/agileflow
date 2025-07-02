@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -147,11 +146,16 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     const { toast } = useToast();
     const { teams } = useUser();
     const [isEditingName, setIsEditingName] = useState(false);
+    const [currentName, setCurrentName] = useState(badge.name);
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
     
     const [isEditingDescription, setIsEditingDescription] = useState(false);
     const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
+    
+    useEffect(() => {
+        setCurrentName(badge.name);
+    }, [badge.name]);
 
     useEffect(() => {
         if (isEditingName && nameInputRef.current) {
@@ -167,9 +171,10 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     }, [isEditingDescription]);
 
     const handleSaveName = () => {
-        const newName = nameInputRef.current?.value.trim();
+        const newName = currentName.trim();
         if (newName === '') {
             toast({ variant: 'destructive', title: 'Error', description: 'Badge name cannot be empty.' });
+            setCurrentName(badge.name); // Revert to original name
         } else if (newName && newName !== badge.name) {
             onUpdateBadge({ name: newName });
         }
@@ -179,6 +184,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') handleSaveName();
         else if (e.key === 'Escape') {
+            setCurrentName(badge.name); // Revert on escape
             setIsEditingName(false);
         }
     };
@@ -273,7 +279,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                             )}
                         </div>
                         {isEditingName ? (
-                            <Input ref={nameInputRef} defaultValue={badge.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>
+                            <Input ref={nameInputRef} value={currentName} onChange={(e) => setCurrentName(e.target.value)} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>
                         ) : (
                             <CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer">{badge.name}</CardTitle>
                         )}
@@ -320,7 +326,8 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     const inlineNameEditor = isEditingName ? (
       <Input
         ref={nameInputRef}
-        defaultValue={badge.name}
+        value={currentName}
+        onChange={(e) => setCurrentName(e.target.value)}
         onBlur={handleSaveName}
         onKeyDown={handleNameKeyDown}
         className={cn(
@@ -578,7 +585,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInAllT
                                 collection.viewMode === 'detailed' && "grid grid-cols-1 md:grid-cols-2 gap-4"
                             )}>
                             {collectionBadges.map((badge, index) => (
-                                <Draggable key={`${badge.id}::${collection.id}`} draggableId={`${badge.id}::${collection.id}`} index={index} isDragDisabled={isSharedToThisTeam}>
+                                <Draggable key={`${badge.id}::${collection.id}`} draggableId={`${badge.id}::${collection.id}`} index={index}>
                                     {(provided) => (<div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
                                         <BadgeDisplayItem 
                                             badge={badge} 
