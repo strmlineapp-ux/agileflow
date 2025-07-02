@@ -222,27 +222,29 @@ function TeamCard({
                 <p className="text-sm font-medium text-muted-foreground">Members</p>
                 <div className="space-y-2">
                     {teamMembers.map(user => (
-                        <Card 
+                        <Card
                             key={user.userId}
                             tabIndex={0}
                             role="button"
                             onClick={() => handleAdminToggle(user.userId)}
                             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleAdminToggle(user.userId); } }}
                             className={cn(
-                                "p-2 cursor-pointer hover:bg-accent transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50",
+                                "transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50",
                                 (team.teamAdmins || []).includes(user.userId) && "ring-1 ring-primary"
                             )}
                         >
-                            <div className="flex items-center gap-3">
-                                <Avatar className="h-8 w-8">
-                                    <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
-                                    <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                                </Avatar>
-                                <div>
-                                    <p className="font-medium text-sm">{user.displayName}</p>
-                                    <p className="text-xs text-muted-foreground">{user.email}</p>
+                            <CardContent className="p-2">
+                                <div className="flex items-center gap-3">
+                                    <Avatar className="h-8 w-8">
+                                        <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
+                                        <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                        <p className="font-medium text-sm">{user.displayName}</p>
+                                        <p className="text-xs text-muted-foreground">{user.email}</p>
+                                    </div>
                                 </div>
-                            </div>
+                            </CardContent>
                         </Card>
                     ))}
                     {teamMembers.length === 0 && <p className="text-sm text-muted-foreground italic text-center p-4">No members assigned.</p>}
@@ -684,3 +686,5 @@ function AddTeamDialog({ isOpen, onClose, allUsers, addTeam }: AddTeamDialogProp
         </Dialog>
     );
 }
+
+    
