@@ -193,14 +193,14 @@ export function UserManagement() {
                                             onValueChange={(theme) => updateUser(realUser.userId, { theme: theme as any })}
                                             className="w-full"
                                         >
-                                            <TabsList className="grid w-full grid-cols-4 h-auto gap-1">
+                                            <TabsList className="flex w-full">
                                                 {THEME_OPTIONS.map((theme) => (
                                                 <TabsTrigger
                                                     key={theme.name}
                                                     value={theme.name}
-                                                    className="flex-col h-auto p-2 gap-1"
+                                                    className="flex-1 gap-2"
                                                 >
-                                                    <GoogleSymbol name={theme.icon} className="text-xl" />
+                                                    <GoogleSymbol name={theme.icon} className="text-lg" />
                                                     <span>{theme.label}</span>
                                                 </TabsTrigger>
                                                 ))}
