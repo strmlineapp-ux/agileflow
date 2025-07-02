@@ -94,7 +94,7 @@ export function Sidebar() {
                       href={item.path}
                       className={cn(
                         'relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-primary md:h-8 md:w-8',
-                        isActive && 'bg-accent text-primary'
+                        isActive && 'text-primary'
                       )}
                     >
                       <GoogleSymbol name={item.icon} className="text-2xl" />
