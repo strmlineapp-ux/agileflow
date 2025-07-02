@@ -1,4 +1,5 @@
 
+
 # AgileFlow: Design System & UI Patterns
 
 This document outlines the established UI patterns and design choices that ensure a consistent and intuitive user experience across the AgileFlow application. These patterns serve as a guide for both current and future development.
@@ -7,7 +8,16 @@ This document outlines the established UI patterns and design choices that ensur
 
 ---
 
-### 1. Inline Editor
+### 1. Card & Content Padding
+The application favors a compact, information-dense layout. Card components are the primary building block for displaying content.
+
+-   **Gold Standard**: The login form (`/login`) serves as the ideal example of "perfect" padding. It has a larger header area and tighter content padding (`p-2`) which makes the card feel like a single, cohesive unit.
+-   **Global Default**: To align with this, the global default `CardContent` padding has been reduced from `p-6` to a tighter `p-4`. This affects all cards in the app, creating a more consistent look.
+-   **Contextual Overrides**: Specific components may use even tighter padding (like `p-2` or `p-0` for lists and grids) when it enhances clarity and aligns with the compact design philosophy.
+
+---
+
+### 2. Inline Editor
 This pattern allows for seamless, direct text editing within the main application layout, avoiding disruptive dialog boxes or popovers for simple text changes.
 
 - **Trigger:** Clicking directly on a text element (e.g., a section title, a badge name).
@@ -23,7 +33,7 @@ This pattern allows for seamless, direct text editing within the main applicatio
 
 ---
 
-### 2. Compact Search Input
+### 3. Compact Search Input
 This pattern provides a clean, minimal interface for search functionality, especially in UIs where space is a consideration or a full search bar is not always needed.
 
 - **Trigger:** Clicking a search icon (`search`).
@@ -38,7 +48,7 @@ This pattern provides a clean, minimal interface for search functionality, espec
 
 ---
 
-### 3. Text-based Inputs
+### 4. Text-based Inputs
 This pattern transforms standard form inputs into minimalist, text-like elements, creating a cleaner and more compact interface. It is primarily used for authentication forms.
 
 -   **Appearance**:
@@ -56,7 +66,7 @@ This pattern transforms standard form inputs into minimalist, text-like elements
 
 ---
 
-### 4. Integrated Add Button
+### 5. Integrated Add Button
 This pattern replaces large, card-style "Add New" buttons with a more compact and contextually relevant control.
 
 - **Appearance:** A circular button containing a plus (`+`) or `add_circle` icon.
@@ -66,7 +76,7 @@ This pattern replaces large, card-style "Add New" buttons with a more compact an
 
 ---
 
-### 5. Icon & Color Editing Flow
+### 6. Icon & Color Editing Flow
 This is the consistent reference pattern for allowing a user to change both an icon and its color.
 
 - **Trigger:** A single, interactive unit composed of a primary icon button and a smaller color swatch badge overlaid on its corner.
@@ -77,7 +87,7 @@ This is the consistent reference pattern for allowing a user to change both an i
 
 ---
 
-### 6. Entity Sharing & Linking
+### 7. Entity Sharing & Linking
 This pattern describes how a single entity (like a Badge or Badge Collection) can exist in multiple contexts while maintaining a single source of truth.
 
 - **Mechanism**: Implemented via an explicit "Share" action to link teams, or by dragging a badge into a new collection to create a linked instance. This creates a shared instance, not a copy.
@@ -96,7 +106,7 @@ This pattern describes how a single entity (like a Badge or Badge Collection) ca
 
 ---
 
-### 7. Drag-to-Duplicate
+### 8. Drag-to-Duplicate
 This pattern provides a fast, intuitive way for users to duplicate complex entities using a drag-and-drop gesture, significantly speeding up configuration workflows.
 
 -   **Trigger**: Dragging a configured entity (e.g., a "Page" card, "Calendar" card, or "Badge").
@@ -109,7 +119,7 @@ This pattern provides a fast, intuitive way for users to duplicate complex entit
 
 ---
 
-### 8. Compact Deletion Dialog
+### 9. Compact Deletion Dialog
 When a destructive action requires user confirmation (like deleting a shared resource), the standard `AlertDialog` component is used.
 
 - **Appearance**: A modal dialog centered on the screen, overlaying the content.
@@ -121,7 +131,7 @@ When a destructive action requires user confirmation (like deleting a shared res
 
 ---
 
-### 9. Icon Tabs for Page Navigation
+### 10. Icon Tabs for Page Navigation
 - **Description**: For primary navigation within a page (e.g., switching between "Admin Groups" and "Pages" on the Admin Management screen), tabs should be clear, full-width, and provide strong visual cues.
 - **Appearance**:
   - Each tab trigger includes both an icon and a text label.

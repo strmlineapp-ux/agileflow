@@ -56,13 +56,13 @@ const UserAssignmentCard = ({ user, onRemove, isGroupAdmin, onSetGroupAdmin, can
         role={onSetGroupAdmin ? "button" : undefined}
         className={cn(
             "transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50",
-            onSetGroupAdmin && isGroupAdmin && "ring-1 ring-ring/50",
+            onSetGroupAdmin && isGroupAdmin && "ring-1 ring-primary",
             onSetGroupAdmin && "cursor-pointer"
         )}
         onClick={onSetGroupAdmin ? () => onSetGroupAdmin(user) : undefined}
         onKeyDown={onSetGroupAdmin ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSetGroupAdmin(user); } } : undefined}
     >
-      <CardContent className="p-4 flex items-center justify-between">
+      <CardContent className="p-2 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Avatar>
             <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
@@ -830,7 +830,7 @@ function PageCard({ page, onUpdate, onDelete, isLocked = false }: { page: AppPag
                     )}
                 </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent>
                 <div>
                   <h4 className="font-medium text-sm mb-2">Details</h4>
                   <CardDescription>

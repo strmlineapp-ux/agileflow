@@ -218,7 +218,7 @@ function TeamCard({
                     </div>
                 </div>
             </CardHeader>
-            <CardContent className="flex-grow space-y-2">
+            <CardContent className="space-y-2">
                 <p className="text-sm font-medium text-muted-foreground">Members</p>
                 <div className="space-y-2">
                     {teamMembers.map(user => (

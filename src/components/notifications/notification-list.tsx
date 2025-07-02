@@ -63,7 +63,7 @@ export function NotificationList() {
       <CardContent className="p-0">
         <div className="divide-y divide-border">
           {notifications.map((notification) => (
-            <div key={notification.id} className={cn('flex items-start gap-4 p-4', !notification.read && 'bg-accent/20')}>
+            <div key={notification.id} className={cn('flex items-start gap-4 p-3', !notification.read && 'bg-accent/20')}>
               <Avatar className="h-10 w-10 border">
                  <AvatarImage src={notification.user.avatarUrl} alt={notification.user.displayName} data-ai-hint="user avatar" />
                 <AvatarFallback>{notification.user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>

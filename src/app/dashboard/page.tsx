@@ -102,7 +102,7 @@ export default function DashboardPage() {
               <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
               <GoogleSymbol name={stat.icon} className="text-muted-foreground text-2xl" />
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 pt-0">
               <div className="text-2xl font-bold">{stat.value}</div>
               <p className="text-xs text-muted-foreground">this month</p>
             </CardContent>
