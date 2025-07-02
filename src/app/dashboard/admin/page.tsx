@@ -474,8 +474,8 @@ const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                                 key={user.userId} 
                                 user={user} 
                                 onRemove={handleAdminToggle}
-                                isGroupAdmin={true} // Admins are implicitly group admins of everything
-                                onSetGroupAdmin={() => {}} // No-op, cannot change
+                                isGroupAdmin={false}
+                                onSetGroupAdmin={() => {}}
                                 canRemove={adminUsers.length > 1}
                               />
                             ))}
