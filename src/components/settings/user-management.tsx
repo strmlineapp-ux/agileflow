@@ -22,6 +22,7 @@ import { GoogleSymbol } from '../icons/google-symbol';
 import { Badge } from '../ui/badge';
 import { Label } from '../ui/label';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
+import { Tabs, TabsList, TabsTrigger } from '../ui/tabs';
 
 const InlineSelectEditor = ({
   value,
@@ -89,10 +90,10 @@ export function UserManagement() {
     };
 
     const THEME_OPTIONS = [
-      { name: 'light', label: 'Light' },
-      { name: 'dark', label: 'Dark' },
-      { name: 'high-visibility', label: 'High Visibility' },
-      { name: 'firebase', label: 'Firebase' }
+      { name: 'light', label: 'Light', icon: 'light_mode' },
+      { name: 'dark', label: 'Dark', icon: 'dark_mode' },
+      { name: 'high-visibility', label: 'High Visibility', icon: 'visibility' },
+      { name: 'firebase', label: 'Firebase', icon: 'local_fire_department' }
     ];
 
     return (
@@ -185,20 +186,26 @@ export function UserManagement() {
                                 </div>
                                 {isCurrentUser && (
                                   <>
-                                    <div className="space-y-1">
+                                    <div className="space-y-1 md:col-span-2">
                                         <Label className="text-xs text-muted-foreground">Theme</Label>
-                                        <div className="flex items-center gap-2">
-                                          {THEME_OPTIONS.map(theme => (
-                                            <Button 
-                                              key={theme.name}
-                                              variant={realUser.theme === theme.name ? 'secondary' : 'ghost'}
-                                              size="sm"
-                                              onClick={() => updateUser(realUser.userId, { theme: theme.name as any })}
-                                            >
-                                              {theme.label}
-                                            </Button>
-                                          ))}
-                                        </div>
+                                        <Tabs
+                                            value={realUser.theme || 'light'}
+                                            onValueChange={(theme) => updateUser(realUser.userId, { theme: theme as any })}
+                                            className="w-full"
+                                        >
+                                            <TabsList className="grid w-full grid-cols-4 h-auto p-1">
+                                                {THEME_OPTIONS.map((theme) => (
+                                                <TabsTrigger
+                                                    key={theme.name}
+                                                    value={theme.name}
+                                                    className="flex-col h-auto py-2 gap-1 text-xs"
+                                                >
+                                                    <GoogleSymbol name={theme.icon} className="text-lg" />
+                                                    <span>{theme.label}</span>
+                                                </TabsTrigger>
+                                                ))}
+                                            </TabsList>
+                                        </Tabs>
                                     </div>
                                     <div className="space-y-1">
                                       <Label className="text-xs text-muted-foreground">Default Calendar View</Label>
