@@ -23,6 +23,62 @@ import { Badge } from '../ui/badge';
 import { Label } from '../ui/label';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 import { Tabs, TabsList, TabsTrigger } from '../ui/tabs';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+
+const THEME_OPTIONS = [
+  { name: 'light', label: 'Light', icon: 'light_mode', defaultPrimary: '#6B8CC3' },
+  { name: 'dark', label: 'Dark', icon: 'dark_mode', defaultPrimary: '#D98242' },
+];
+
+const PREDEFINED_COLORS = [
+    '#6B8CC3', '#D98242', '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
+    '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6',
+    '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
+];
+
+function ColorPicker({ user, onColorChange }: { user: User; onColorChange: (color: string) => void; }) {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  const activeTheme = THEME_OPTIONS.find(t => t.name === (user.theme || 'light')) || THEME_OPTIONS[0];
+  const displayColor = user.primaryColor || activeTheme.defaultPrimary;
+
+  return (
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          className="h-10 w-10 p-0"
+          style={{ backgroundColor: displayColor }}
+        />
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-2">
+        <div className="grid grid-cols-8 gap-1">
+          {PREDEFINED_COLORS.map(color => (
+            <button
+              key={color}
+              className="h-6 w-6 rounded-full border"
+              style={{ backgroundColor: color }}
+              onClick={() => {
+                onColorChange(color);
+                setIsOpen(false);
+              }}
+            />
+          ))}
+          <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
+            <GoogleSymbol name="colorize" className="text-muted-foreground" />
+            <Input
+              type="color"
+              value={displayColor}
+              onChange={(e) => onColorChange(e.target.value)}
+              className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"
+            />
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 
 const InlineSelectEditor = ({
   value,
@@ -88,13 +144,6 @@ export function UserManagement() {
         setEditingContactUser(null);
         toast({ title: 'Success', description: 'Contact number updated.' });
     };
-
-    const THEME_OPTIONS = [
-      { name: 'light', label: 'Light', icon: 'light_mode' },
-      { name: 'dark', label: 'Dark', icon: 'dark_mode' },
-      { name: 'high-visibility', label: 'High Visibility', icon: 'visibility' },
-      { name: 'firebase', label: 'Firebase', icon: 'local_fire_department' }
-    ];
 
     return (
         <>
@@ -184,16 +233,20 @@ export function UserManagement() {
                                         )}
                                     </div>
                                 </div>
-                                {isCurrentUser && (
-                                  <>
-                                    <div className="space-y-1">
-                                        <Label className="text-xs text-muted-foreground">Theme</Label>
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <ColorPicker
+                                            user={realUser}
+                                            onColorChange={(color) => updateUser(realUser.userId, { primaryColor: color })}
+                                        />
                                         <Tabs
                                             value={realUser.theme || 'light'}
-                                            onValueChange={(theme) => updateUser(realUser.userId, { theme: theme as any })}
+                                            onValueChange={(theme) => {
+                                                updateUser(realUser.userId, { theme: theme as any, primaryColor: undefined });
+                                            }}
                                             className="w-full"
                                         >
-                                            <TabsList className="grid w-full grid-cols-4">
+                                            <TabsList className="grid w-full grid-cols-2">
                                                 {THEME_OPTIONS.map((theme) => (
                                                 <TabsTrigger
                                                     key={theme.name}
@@ -207,6 +260,9 @@ export function UserManagement() {
                                             </TabsList>
                                         </Tabs>
                                     </div>
+                                </div>
+                                {isCurrentUser && (
+                                  <>
                                     <div className="space-y-1">
                                       <Label className="text-xs text-muted-foreground">Default Calendar View</Label>
                                       <InlineSelectEditor

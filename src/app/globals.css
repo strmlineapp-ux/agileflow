@@ -55,57 +55,6 @@
     --ring: 28 54% 55%;
     --lunch-break-opacity: 0.15;
   }
-
-  .high-visibility {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 5%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 5%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 5%;
-    --primary: 210 90% 55%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 220 15% 94%;
-    --secondary-foreground: 220 10% 10%;
-    --muted: 220 15% 96%;
-    --muted-foreground: 220 10% 45%;
-    --accent: 180 80% 50%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-    --warning: 48 96% 53%;
-    --warning-foreground: 48 100% 5%;
-    --border: 220 15% 88%;
-    --input: 220 15% 88%;
-    --ring: 210 90% 55%;
-    --lunch-break-opacity: 0.25;
-  }
-
-  .firebase {
-    --background: 0 0% 8%;
-    --foreground: 0 0% 67%;
-    --card: 0 0% 12%;
-    --card-foreground: 0 0% 67%;
-    --popover: 0 0% 12%;
-    --popover-foreground: 0 0% 67%;
-    --primary: 284 61% 49%;
-    --primary-foreground: 284 61% 95%;
-    --secondary: 28 96% 55%;
-    --secondary-foreground: 28 96% 10%;
-    --muted: 0 0% 18%;
-    --muted-foreground: 0 0% 47%;
-    --accent: 43 97% 73%;
-    --accent-foreground: 43 97% 15%;
-    --destructive: 0 75% 55%;
-    --destructive-foreground: 0 0% 100%;
-    --warning: 43 97% 73%;
-    --warning-foreground: 43 97% 15%;
-    --border: 0 0% 18%;
-    --input: 0 0% 20%;
-    --ring: 28 96% 55%;
-    --radius: 0.5rem;
-    --lunch-break-opacity: 0.1;
-  }
 }
 
 @layer base {
@@ -135,8 +84,7 @@
 @layer components {
   /* Common setup for buttons in all themes */
   .light .bg-primary, 
-  .dark .bg-primary, 
-  .firebase .bg-primary {
+  .dark .bg-primary {
     border-width: 1px;
     border-style: solid;
     border-color: hsl(var(--primary));
@@ -163,17 +111,6 @@
     background: linear-gradient(-113deg, hsl(var(--primary)), hsl(var(--accent))) border-box;
   }
   .dark .bg-primary:focus-visible {
-    outline: 2px solid hsl(var(--ring));
-    outline-offset: 2px;
-  }
-  
-  /* Firebase Theme Gradient Effect */
-  .firebase .bg-primary:hover,
-  .firebase .bg-primary:focus-visible {
-    border-color: transparent;
-    background: linear-gradient(-113deg, hsl(43, 97%, 73%), hsl(28, 96%, 55%), hsl(337, 67%, 50%), hsl(284, 61%, 49%), hsl(79, 91%, 213%)) border-box;
-  }
-  .firebase .bg-primary:focus-visible {
     outline: 2px solid hsl(var(--ring));
     outline-offset: 2px;
   }

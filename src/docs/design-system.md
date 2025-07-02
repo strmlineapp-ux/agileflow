@@ -155,7 +155,7 @@ When a destructive action requires user confirmation (like deleting a shared res
 
 ### Theming & Button Styles
 
-- **Multi-Theme Support**: The application supports multiple themes (`light`, `dark`, `high-visibility`, `firebase`), which are defined in `src/app/globals.css`. This allows users to choose their preferred visual mode.
+- **Multi-Theme Support**: The application supports `light` and `dark` themes. This allows users to choose their preferred visual mode. A user can also select a custom primary color to override the theme's default.
 - **Primary Button Gradient**: Primary buttons have a special gradient effect on hover, which is unique to each theme. This provides a subtle but polished visual feedback for key actions.
 - **Text-based Button Hover**: For text-based buttons (like those on the login page), the hover and focus state is indicated *only* by the text color changing to the primary theme color. No background color is applied.
 

@@ -1,3 +1,4 @@
+
 # AgileFlow User Manual
 
 Welcome to AgileFlow, your team's central hub for managing tasks, scheduling events, and coordinating production workflows. This guide will walk you through the key features of the app.
@@ -70,7 +71,7 @@ The **Notifications** page keeps you informed.
 
 ### 7.1 User Preferences
 Access your preferences by clicking your avatar in the bottom-left corner of the sidebar.
-- **Change Colour Scheme**: Choose between `light`, `dark`, `high-visibility`, and `firebase` themes.
+- **Change Colour Scheme**: Choose between `light` and `dark` themes. You can also select a custom primary color to override the theme's default.
 - **Set Default Calendar View**: Select which calendar view you want to see when you log in.
 - **Set Time Format**: Choose between 12-hour and 24-hour time display.
 - **Enable Easy Booking**: Toggle the quick-create event feature.

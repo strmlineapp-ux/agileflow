@@ -9,6 +9,7 @@ import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
+import { hexToHsl } from '@/lib/utils';
 
 interface UserContextType {
   loading: boolean;
@@ -276,13 +277,23 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const root = window.document.documentElement;
-    root.classList.remove('light', 'dark', 'high-visibility', 'firebase');
-    if (viewAsUser.theme) {
-      root.classList.add(viewAsUser.theme);
+    root.classList.remove('light', 'dark');
+    
+    const currentTheme = viewAsUser.theme || 'light';
+    root.classList.add(currentTheme);
+    
+    if (viewAsUser.primaryColor) {
+      const hslColor = hexToHsl(viewAsUser.primaryColor);
+      if (hslColor) {
+        root.style.setProperty('--primary', hslColor);
+        root.style.setProperty('--ring', hslColor);
+      }
     } else {
-      root.classList.add('light'); // default
+      // If no custom color, remove the style property to revert to the CSS default
+      root.style.removeProperty('--primary');
+      root.style.removeProperty('--ring');
     }
-  }, [viewAsUser.theme]);
+  }, [viewAsUser.theme, viewAsUser.primaryColor]);
   
   const value = useMemo(() => ({
     loading,
