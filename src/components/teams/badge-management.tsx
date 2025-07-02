@@ -321,7 +321,6 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
       <Input
         ref={nameInputRef}
         defaultValue={badge.name}
-        onMouseDown={(e) => e.stopPropagation()}
         onBlur={handleSaveName}
         onKeyDown={handleNameKeyDown}
         className={cn(

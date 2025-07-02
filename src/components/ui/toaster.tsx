@@ -8,7 +8,6 @@ import {
   ToastProvider,
   ToastTitle,
   ToastViewport,
-  ToastClose
 } from "@/components/ui/toast"
 
 export function Toaster() {
@@ -33,5 +32,3 @@ export function Toaster() {
     </ToastProvider>
   )
 }
-
-    
