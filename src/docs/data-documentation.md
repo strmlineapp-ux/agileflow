@@ -75,12 +75,15 @@ This entity, `AppSettings`, holds global configuration data that allows for cust
 
 ### AppSettings Data
 
-| Data Point | Description & Link to Services |
+| Data Point | Description |
 | :--- | :--- |
-| `adminGroups: AdminGroup[]` | **Internal.** An array of objects defining custom administrative groups. This allows admins to create a hierarchy between the system `Admin` and standard users. Each group has a name, icon, and color, which are editable on the Admin Management page. |
-| `calendarManagementLabel?: string` | **Internal.** An alias for the "Calendar Management" tab on the Service Delivery page. |
-| `teamManagementLabel?: string` | **Internal.** An alias for the "Team Management" tab on the Service Delivery page. |
-| `strategyLabel?: string` | **Internal.** An alias for the "Strategy" tab on the Service Delivery page. |
+| `adminGroups: AdminGroup[]` | An array of objects defining custom administrative groups. This allows admins to create a hierarchy between the system `Admin` and standard users. Each group has a name, icon, and color, which are editable on the Admin Management page. |
+| `pages: AppPage[]` | An array of objects defining the application's pages, including their navigation properties (name, icon, path) and access control rules. |
+| `tabs: AppTab[]` | An array of objects defining reusable tabs that can be associated with different pages. |
+| `strategyLabel?: string` | An alias for the "Priority Strategies" section on the Service Delivery page. |
+| `calendarManagementLabel?: string` | An alias for the "Calendar Management" tab on the Service delivery page. |
+| `teamManagementLabel?: string` | An alias for the "Team Management" tab on the Service Delivery page. |
+
 
 ### AdminGroup Entity
 A sub-entity of `AppSettings`, `AdminGroup` defines a single, dynamic administrative level.
@@ -91,7 +94,6 @@ A sub-entity of `AppSettings`, `AdminGroup` defines a single, dynamic administra
 | `name: string` | **Internal.** The display name for the group (e.g., "Service Admin", "Service Admin+"). This is editable inline on the Admin Management page. |
 | `icon: string` | **Internal.** The Google Symbol name for the icon associated with the group. |
 | `color: string` | **Internal.** The hex color code for the icon's badge. |
-| `teamAdmins?: string[]` | **Internal.** An array of `userId`s for users who have been designated as a "Team Admin" for this specific group. This is managed on the Admin Management page. |
 
 ## Team Entity
 
@@ -106,21 +108,32 @@ The `Team` entity groups users together and defines a set of team-specific confi
 | `icon: string` | The Google Symbol name for the team's icon. |
 | `members: string[]` | An array of `userId`s for all members of the team. |
 | `teamAdmins: string[]` | A subset of `members` who have administrative privileges for this team. |
-| `badgeCollections: BadgeCollection[]` | An array of collections, which group the team's functional **Badges**. For now, there is one collection per team: "Skills". |
+| `allBadges: Badge[]` | The single source of truth for all `Badge` objects **owned** by this team. |
+| `badgeCollections: BadgeCollection[]` | An array of collections, which group the team's badges. |
+| `sharedTeamIds?: string[]` | An array of `teamId`s for other teams that this team shares resources with. |
+| `sharedCollectionIds?: string[]` | An array of `collectionId`s for Badge Collections that are shared *into* this team from another team. |
 
 ### BadgeCollection Entity
-A sub-entity of `Team`, this groups related Badges together.
+A sub-entity of `Team`, this groups related Badges together. It can be owned by the team or shared from another.
 
 | Data Point | Description |
 | :--- | :--- |
+| `id: string` | A unique identifier for the collection. |
+| `ownerTeamId: string` | The `teamId` of the team that owns the source of truth for this collection. |
 | `name: string` | The name of the collection (e.g., "Skills"). |
-| `badges: Badge[]` | An array of `Badge` objects belonging to this collection. |
+| `icon: string` | The Google Symbol name for the collection's icon. |
+| `color: string` | The hex color for the collection's icon. |
+| `badgeIds: string[]` | An array of `badgeId`s belonging to this collection. This can include badges owned by this team or linked from other shared collections. |
+| `applications?: BadgeApplication[]` | Defines where badges from this collection can be applied (e.g., 'users', 'events'). |
 
 ### Badge Entity
-This represents a specific, functional role or skill within a team.
+This represents a specific, functional role or skill within a team. The single source of truth for a badge is stored in the `allBadges` array of its owner's `Team` object.
 
 | Data Point | Description |
 | :--- | :--- |
+| `id: string` | A unique identifier for the badge. |
+| `ownerCollectionId: string` | The `collectionId` of the badge's original, "source-of-truth" collection. |
 | `name: string` | The display name for the badge (e.g., "Camera", "Audio"). |
 | `icon: string` | The Google Symbol name for the badge's icon. |
 | `color: string` | The hex color code for the badge's icon and outline. |
+| `description?: string` | An optional description shown in tooltips. |

@@ -16,7 +16,7 @@ This pattern allows for seamless, direct text editing within the main applicatio
     - **Crucially, the input must have a transparent background and no borders or box-shadow**, ensuring it blends seamlessly into the UI.
 - **Behavior:**
     - Typing modifies the text value.
-    - Clicking anywhere outside the input field (`onBlur`) or pressing 'Enter' saves the changes and reverts the input back to a standard text element. A global event listener is used to robustly capture the "click away" event without conflicting with other UI libraries.
+    - Clicking anywhere outside the input field or pressing 'Enter' saves the changes and reverts the input back to a standard text element. A global event listener is used to robustly capture the "click away" event without conflicting with other UI libraries.
     - Pressing 'Escape' cancels the edit without saving.
 - **Application:** Used for editing entity names, labels, and other simple text fields directly in the UI.
 

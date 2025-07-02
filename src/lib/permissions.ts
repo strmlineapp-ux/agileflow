@@ -93,11 +93,9 @@ export const hasAccess = (user: User, page: AppPage, teams: Team[], adminGroups:
     );
     if (userIsTeamAdminForPage) return true;
 
-    // Role-based access: grants access ONLY if the user is a Team Admin of an associated Service Admin group
-    const userIsRoleAdminForPage = adminGroups.some(group =>
-        page.access.adminGroups.includes(group.name) && (group.teamAdmins || []).includes(user.userId)
-    );
-    if (userIsRoleAdminForPage) return true;
+    // Role-based access: grants access if the user is a member of any associated Admin Group
+    const userIsInAdminGroupForPage = page.access.adminGroups.some(groupName => (user.roles || []).includes(groupName));
+    if (userIsInAdminGroupForPage) return true;
     
     // Default to no access
     return false;

@@ -48,13 +48,10 @@ const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
 // #endregion
 
 // #region Admin Groups Management Tab
-const UserAssignmentCard = ({ user, onRemove, isTeamAdmin, onSetTeamAdmin, canRemove = true }: { user: User; onRemove: (user: User) => void; isTeamAdmin: boolean; onSetTeamAdmin: (user: User) => void; canRemove?: boolean; }) => {
+const UserAssignmentCard = ({ user, onRemove, canRemove = true }: { user: User; onRemove: (user: User) => void; canRemove?: boolean; }) => {
   return (
-    <Card 
-        className={cn("transition-all border-2", isTeamAdmin ? "border-primary" : "border-transparent")}
-        onClick={() => onSetTeamAdmin(user)}
-    >
-      <CardContent className="p-4 flex items-center justify-between cursor-pointer">
+    <Card className="transition-all">
+      <CardContent className="p-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Avatar>
             <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
@@ -215,16 +212,6 @@ function AdminGroupCard({
         toast({ title: 'Success', description: `${user.displayName}'s group assignment has been updated.` });
     };
 
-    const handleSetTeamAdmin = (userToUpdate: User) => {
-        const currentAdmins = group.teamAdmins || [];
-        const isAlreadyAdmin = currentAdmins.includes(userToUpdate.userId);
-        const newAdmins = isAlreadyAdmin
-            ? currentAdmins.filter(id => id !== userToUpdate.userId)
-            : [...currentAdmins, userToUpdate.userId];
-        onUpdate({ ...group, teamAdmins: newAdmins });
-    };
-
-
     return (
         <>
         <Card>
@@ -302,8 +289,6 @@ function AdminGroupCard({
                     key={user.userId} 
                     user={user} 
                     onRemove={handleGroupToggle}
-                    isTeamAdmin={(group.teamAdmins || []).includes(user.userId)}
-                    onSetTeamAdmin={handleSetTeamAdmin}
                 />
               ))}
             </CardContent>
@@ -397,7 +382,6 @@ const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
         name: newGroupName,
         icon: 'add_moderator',
         color: predefinedColors[appSettings.adminGroups.length % predefinedColors.length],
-        teamAdmins: [],
     };
     updateAppSettings({ adminGroups: [...appSettings.adminGroups, newGroup] });
     toast({ title: 'New Group Added', description: `"${newGroupName}" has been created.` });
@@ -473,9 +457,7 @@ const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                               <UserAssignmentCard 
                                 key={user.userId} 
                                 user={user} 
-                                onRemove={handleAdminToggle} 
-                                isTeamAdmin={false} 
-                                onSetTeamAdmin={() => {}} 
+                                onRemove={handleAdminToggle}
                                 canRemove={adminUsers.length > 1}
                               />
                             ))}
@@ -825,15 +807,15 @@ function PageCard({ page, onUpdate, onDelete, isLocked = false }: { page: AppPag
             </CardHeader>
             <CardContent className="space-y-4">
                 <div>
-                    <h4 className="font-medium text-sm mb-2">Details</h4>
-                    <CardDescription>
-                        When associated with a Team, only Team Admins of that team can access the page.
-                        When associated with a Service Admin group, only users designated as Team Admins for that group can access it.
-                    </CardDescription>
-                    <div className="flex gap-2 text-sm text-muted-foreground mt-2">
-                        <Badge variant="outline">{page.path}</Badge>
-                        {page.isDynamic && <Badge variant="outline">Dynamic</Badge>}
-                    </div>
+                  <h4 className="font-medium text-sm mb-2">Details</h4>
+                  <CardDescription>
+                      When associated with a Team, only Team Admins of that team can access the page.
+                      When associated with an Admin Group, only members of that group can access it.
+                  </CardDescription>
+                  <div className="flex gap-2 text-sm text-muted-foreground mt-2">
+                      <Badge variant="outline">{page.path}</Badge>
+                      {page.isDynamic && <Badge variant="outline">Dynamic</Badge>}
+                  </div>
                 </div>
             </CardContent>
         </Card>

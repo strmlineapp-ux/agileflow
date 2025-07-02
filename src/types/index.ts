@@ -5,7 +5,6 @@ export interface AdminGroup {
   name:string;
   icon: string;
   color: string;
-  teamAdmins?: string[];
 }
 
 export interface AppTab {
