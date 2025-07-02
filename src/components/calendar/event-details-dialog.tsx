@@ -14,7 +14,7 @@ import { GoogleSymbol } from '../icons/google-symbol';
 import { cn, getContrastColor } from '@/lib/utils';
 import { ScrollArea } from '../ui/scroll-area';
 import { canManageEventOnCalendar } from '@/lib/permissions';
-import { Tooltip, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from '../ui/tooltip';
 import { EventForm } from './new-event-form';
 import { type AttachmentType } from '@/types';
 

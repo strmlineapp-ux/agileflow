@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -18,7 +17,8 @@ import { Textarea } from '../ui/textarea';
 import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProps } from 'react-beautiful-dnd';
 import { Separator } from '../ui/separator';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Dialog, DialogTitle, DialogContent, DialogDescription, DialogHeader, DialogClose } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle as UIDialogTitle } from '@/components/ui/dialog';
 import { Badge as UiBadge } from '@/components/ui/badge';
 
 const predefinedColors = [
@@ -616,7 +616,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInAllT
                                 collection.viewMode === 'detailed' && "grid grid-cols-1 md:grid-cols-2 gap-4"
                             )}>
                             {collectionBadges.map((badge, index) => (
-                                <Draggable key={`${badge.id}::${collection.id}`} draggableId={`${badge.id}::${collection.id}`} index={index}>
+                                <Draggable key={`${badge.id}::${collection.id}`} draggableId={`${badge.id}::${collection.id}`} index={index} isDragDisabled={isSharedToThisTeam}>
                                     {(provided) => (<div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
                                         <BadgeDisplayItem 
                                             badge={badge} 
@@ -675,7 +675,7 @@ function ShareCollectionDialog({ isOpen, onClose, team, teams, onShareCollection
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="max-w-3xl">
                 <DialogHeader>
-                    <DialogTitle>Share a Collection</DialogTitle>
+                    <UIDialogTitle>Share a Collection</UIDialogTitle>
                     <DialogDescription>Select a collection from a shared team to make its badges available to the "{team.name}" team.</DialogDescription>
                 </DialogHeader>
                 <ScrollArea className="h-[60vh] -mx-6">
@@ -1195,36 +1195,34 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
                     )}
                 </StrictModeDroppable>
             </div>
-            <Dialog open={!!collectionToDelete} onOpenChange={(isOpen) => !isOpen && setCollectionToDelete(null)}>
-                 <DialogContent className="sm:max-w-md p-0">
-                    <DialogHeader className="p-6 pb-4">
-                       <div className="flex items-start justify-between">
-                            <DialogTitle>Are you absolutely sure?</DialogTitle>
-                             <Button variant="ghost" size="icon" className="h-9 w-9 -mr-2 -mt-2 text-destructive" onClick={() => { if (collectionToDelete) confirmDeleteCollection(); }}>
-                                <GoogleSymbol name="delete" className="text-xl" />
-                             </Button>
-                       </div>
-                        <DialogDescription>
+            <AlertDialog open={!!collectionToDelete} onOpenChange={(isOpen) => !isOpen && setCollectionToDelete(null)}>
+                 <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
                         This action cannot be undone. This will permanently delete the collection and all badges it owns.
-                        </DialogDescription>
-                    </DialogHeader>
-                </DialogContent>
-            </Dialog>
-             <Dialog open={!!badgeToDelete} onOpenChange={(isOpen) => !isOpen && setBadgeToDelete(null)}>
-                 <DialogContent className="sm:max-w-md p-0">
-                    <DialogHeader className="p-6 pb-4">
-                        <div className="flex items-start justify-between">
-                            <DialogTitle>Delete Shared Badge?</DialogTitle>
-                             <Button variant="ghost" size="icon" className="h-9 w-9 -mr-2 -mt-2 text-destructive" onClick={() => { if (badgeToDelete) confirmPermanentDelete(badgeToDelete.badgeId); }}>
-                                <GoogleSymbol name="delete" className="text-xl" />
-                             </Button>
-                        </div>
-                        <DialogDescription>
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmDeleteCollection}>Continue</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+            <AlertDialog open={!!badgeToDelete} onOpenChange={(isOpen) => !isOpen && setBadgeToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Shared Badge?</AlertDialogTitle>
+                        <AlertDialogDescription>
                             This badge is shared. Deleting it will remove it from all collections and teams. This action cannot be undone.
-                        </DialogDescription>
-                    </DialogHeader>
-                </DialogContent>
-            </Dialog>
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => { if (badgeToDelete) confirmPermanentDelete(badgeToDelete.badgeId); }}>Continue</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
             <ShareCollectionDialog
                 isOpen={isShareDialogOpen}
                 onClose={() => setIsShareDialogOpen(false)}
