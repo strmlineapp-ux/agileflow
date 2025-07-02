@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useUser } from '@/context/user-context';
 import { type SharedCalendar, type AppTab } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,7 +15,7 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialogTitle as UIAlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -205,7 +205,7 @@ function CalendarCard({ calendar, onUpdate, onDelete }: { calendar: SharedCalend
 }
 
 export function CalendarManagement({ tab }: { tab: AppTab }) {
-  const { calendars, addCalendar, updateCalendar, deleteCalendar, updateAppTab } = useUser();
+  const { calendars, addCalendar, updateCalendar, deleteCalendar, updateAppTab, appSettings } = useUser();
   const { toast } = useToast();
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -226,6 +226,8 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
   
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
+  
+  const title = appSettings.calendarManagementLabel || tab.name;
 
   useEffect(() => {
     if (isEditingTitle) titleInputRef.current?.focus();
@@ -233,7 +235,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
 
   const handleSaveTitle = () => {
     const newName = titleInputRef.current?.value.trim();
-    if (newName && newName !== tab.name) {
+    if (newName && newName !== title) {
       updateAppTab(tab.id, { name: newName });
     }
     setIsEditingTitle(false);
@@ -335,40 +337,38 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-            {isEditingTitle ? (
-              <Input ref={titleInputRef} defaultValue={tab.name} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
-            ) : (
-              <h2 className="text-2xl font-semibold tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
-            )}
-            <StrictModeDroppable droppableId="duplicate-calendar-zone">
-                {(provided, snapshot) => (
-                    <div
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                        className={cn(
-                            "rounded-full transition-all p-0.5",
-                            snapshot.isDraggingOver && "ring-2 ring-primary ring-offset-2 bg-accent"
-                        )}
-                    >
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                     <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={openAddDialog}>
-                                        <GoogleSymbol name="add_circle" className="text-xl" />
-                                        <span className="sr-only">New Calendar or Drop to Duplicate</span>
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>{snapshot.isDraggingOver ? 'Drop to Duplicate' : 'Add New Calendar'}</p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    </div>
-                )}
-            </StrictModeDroppable>
-        </div>
+      <div className="flex items-center gap-2 mb-6">
+          {isEditingTitle ? (
+            <Input ref={titleInputRef} defaultValue={title} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
+          ) : (
+            <h3 className="text-2xl font-semibold tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{title}</h3>
+          )}
+          <StrictModeDroppable droppableId="duplicate-calendar-zone">
+              {(provided, snapshot) => (
+                  <div
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                      className={cn(
+                          "rounded-full transition-all p-0.5",
+                          snapshot.isDraggingOver && "ring-2 ring-primary ring-offset-2 bg-accent"
+                      )}
+                  >
+                      <TooltipProvider>
+                          <Tooltip>
+                              <TooltipTrigger asChild>
+                                   <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={openAddDialog}>
+                                      <GoogleSymbol name="add_circle" className="text-xl" />
+                                      <span className="sr-only">New Calendar or Drop to Duplicate</span>
+                                  </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                  <p>{snapshot.isDraggingOver ? 'Drop to Duplicate' : 'Add New Calendar'}</p>
+                              </TooltipContent>
+                          </Tooltip>
+                      </TooltipProvider>
+                  </div>
+              )}
+          </StrictModeDroppable>
       </div>
       <StrictModeDroppable droppableId="calendars-list">
           {(provided) => (
@@ -459,7 +459,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <UIAlertDialogTitle>Are you absolutely sure?</UIAlertDialogTitle>
             <AlertDialogDescription>
               This action cannot be undone. This will permanently delete the "{editingCalendar?.name}" calendar. All events on this calendar will also be removed.
             </AlertDialogDescription>

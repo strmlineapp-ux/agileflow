@@ -1,23 +1,22 @@
 
-
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useUser } from '@/context/user-context';
-import { type PriorityStrategy } from '@/types';
+import { type PriorityStrategy, type AppTab } from '@/types';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { PriorityStrategyForm } from './priority-strategy-form';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle as UIAlertDialogTitle } from '../ui/alert-dialog';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { PriorityBadge } from '../calendar/priority-badge';
 import { cn } from '@/lib/utils';
-import { Dialog, DialogContent, DialogHeader, DialogTitle as UIDialogTitle } from '../ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Input } from '../ui/input';
 
-export function StrategyManagement() {
+export function StrategyManagement({ tab }: { tab: AppTab }) {
   const { appSettings, updateAppSettings, priorityStrategies, deletePriorityStrategy } = useUser();
   const { toast } = useToast();
 
@@ -25,9 +24,27 @@ export function StrategyManagement() {
   const [editingStrategy, setEditingStrategy] = useState<PriorityStrategy | null>(null);
   const [strategyToDelete, setStrategyToDelete] = useState<PriorityStrategy | null>(null);
   
-  const [isTitleDialogOpen, setIsTitleDialogOpen] = useState(false);
-  const [tempTitle, setTempTitle] = useState(appSettings.strategyLabel || '');
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const titleInputRef = useRef<HTMLInputElement>(null);
+  
+  const title = appSettings.strategyLabel || tab.name;
 
+  useEffect(() => {
+    if (isEditingTitle) titleInputRef.current?.focus();
+  }, [isEditingTitle]);
+
+  const handleSaveTitle = () => {
+    const newName = titleInputRef.current?.value.trim();
+    if (newName && newName !== title) {
+      updateAppSettings({ strategyLabel: newName });
+    }
+    setIsEditingTitle(false);
+  };
+  
+  const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') handleSaveTitle();
+    else if (e.key === 'Escape') setIsEditingTitle(false);
+  };
 
   const openAddDialog = () => {
     setEditingStrategy(null);
@@ -55,16 +72,6 @@ export function StrategyManagement() {
       setStrategyToDelete(null);
   }
 
-  const handleSaveTitle = () => {
-    if (!tempTitle.trim()) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Title cannot be empty.' });
-        return;
-    }
-    updateAppSettings({ strategyLabel: tempTitle });
-    toast({ title: 'Success', description: 'Section title updated.' });
-    setIsTitleDialogOpen(false);
-  };
-
   const renderPriorityPreview = (strategy: PriorityStrategy) => {
     switch (strategy.type) {
       case 'tier':
@@ -85,23 +92,16 @@ export function StrategyManagement() {
 
   return (
     <>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-            <div className="flex items-center gap-2">
-                <h2 className="text-2xl font-semibold tracking-tight">{appSettings.strategyLabel || 'Priority Strategies'}</h2>
-                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setTempTitle(appSettings.strategyLabel || 'Priority Strategies'); setIsTitleDialogOpen(true); }}>
-                    <GoogleSymbol name="edit" className="text-lg" />
-                    <span className="sr-only">Edit section title</span>
-                </Button>
-                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={openAddDialog}>
-                    <GoogleSymbol name="add_circle" className="text-xl" />
-                    <span className="sr-only">New Strategy</span>
-                </Button>
-            </div>
-            <p className="text-muted-foreground">
-                Define sets of priorities and apply them to different parts of the application.
-            </p>
-        </div>
+      <div className="flex items-center gap-2 mb-6">
+          {isEditingTitle ? (
+            <Input ref={titleInputRef} defaultValue={title} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
+          ) : (
+            <h3 className="text-2xl font-semibold tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{title}</h3>
+          )}
+          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={openAddDialog}>
+              <GoogleSymbol name="add_circle" className="text-xl" />
+              <span className="sr-only">New Strategy</span>
+          </Button>
       </div>
 
        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -154,7 +154,7 @@ export function StrategyManagement() {
       <AlertDialog open={!!strategyToDelete} onOpenChange={() => setStrategyToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <UIAlertDialogTitle>Are you absolutely sure?</UIAlertDialogTitle>
             <AlertDialogDescription>
               This action cannot be undone. This will permanently delete the "{strategyToDelete?.name}" strategy and all of its priorities.
             </AlertDialogDescription>
@@ -167,28 +167,6 @@ export function StrategyManagement() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <Dialog open={isTitleDialogOpen} onOpenChange={setIsTitleDialogOpen}>
-        <DialogContent className="max-w-md">
-            <div className="absolute top-4 right-4">
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSaveTitle}>
-                    <GoogleSymbol name="check" className="text-xl" />
-                    <span className="sr-only">Save title</span>
-                </Button>
-            </div>
-          <DialogHeader>
-            <UIDialogTitle>Edit Section Title</UIDialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-              <Input 
-                id="section-title" 
-                value={tempTitle} 
-                onChange={(e) => setTempTitle(e.target.value)} 
-                className="col-span-4"
-              />
-          </div>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }

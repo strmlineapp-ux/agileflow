@@ -369,40 +369,38 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-        <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2">
-                {isEditingTitle ? (
-                  <Input ref={titleInputRef} defaultValue={tab.name} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
-                ) : (
-                  <h2 className="text-2xl font-semibold tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
+        <div className="flex items-center gap-2 mb-6">
+            {isEditingTitle ? (
+              <Input ref={titleInputRef} defaultValue={tab.name} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
+            ) : (
+              <h2 className="text-2xl font-semibold tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
+            )}
+            <StrictModeDroppable droppableId="duplicate-team-zone">
+                {(provided, snapshot) => (
+                    <div
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                        className={cn(
+                            "rounded-full transition-all p-0.5",
+                            snapshot.isDraggingOver && "ring-2 ring-primary ring-offset-2 bg-accent"
+                        )}
+                    >
+                         <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={openAddDialog}>
+                                        <GoogleSymbol name="add_circle" className="text-xl" />
+                                        <span className="sr-only">New Team or Drop to Duplicate</span>
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>{snapshot.isDraggingOver ? 'Drop to Duplicate' : 'Add New Team'}</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    </div>
                 )}
-                <StrictModeDroppable droppableId="duplicate-team-zone">
-                    {(provided, snapshot) => (
-                        <div
-                            ref={provided.innerRef}
-                            {...provided.droppableProps}
-                            className={cn(
-                                "rounded-full transition-all p-0.5",
-                                snapshot.isDraggingOver && "ring-2 ring-primary ring-offset-2 bg-accent"
-                            )}
-                        >
-                             <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={openAddDialog}>
-                                            <GoogleSymbol name="add_circle" className="text-xl" />
-                                            <span className="sr-only">New Team or Drop to Duplicate</span>
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p>{snapshot.isDraggingOver ? 'Drop to Duplicate' : 'Add New Team'}</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                        </div>
-                    )}
-                </StrictModeDroppable>
-            </div>
+            </StrictModeDroppable>
         </div>
         <StrictModeDroppable droppableId="teams-list">
             {(provided) => (

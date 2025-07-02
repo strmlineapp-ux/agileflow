@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -252,80 +251,89 @@ export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab
 
   return (
     <>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <div className="flex items-center gap-2">
-            {isEditingTitle ? (
-                <Input
-                    ref={titleInputRef}
-                    defaultValue={tab.name}
-                    onBlur={handleSaveTitle}
-                    onKeyDown={handleTitleKeyDown}
-                    className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                />
-            ) : (
-                <h2 className="text-2xl font-semibold tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>
-                    {tab.name}
-                </h2>
-            )}
-            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={openAddDialog}>
-              <GoogleSymbol name="add_circle" className="text-xl" />
-              <span className="sr-only">New Template</span>
-            </Button>
-          </div>
-          <p className="text-muted-foreground">
-            Create reusable templates for common events, pre-filling requested roles to speed up event creation.
-          </p>
-        </div>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {templates.length > 0 ? (
-          templates.map(template => (
-            <Card 
-              key={template.id} 
-              className="flex flex-col cursor-pointer hover:border-primary/50"
-              onClick={() => openEditDialog(template)}
-            >
-                <CardHeader>
-                    <div className="flex items-start justify-between">
-                         <CardTitle>
-                            <Badge className="text-base py-1 px-3 gap-2">
-                                <GoogleSymbol name={template.icon} />
-                                {template.name}
-                            </Badge>
-                        </CardTitle>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="-mr-4 -mt-2 text-destructive hover:text-destructive"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openDeleteDialog(template);
-                          }}
-                        >
-                            <GoogleSymbol name="delete" />
-                            <span className="sr-only">Delete {template.name}</span>
-                        </Button>
-                    </div>
-                </CardHeader>
-                <CardContent className="flex-grow">
-                    <p className="text-sm font-medium text-muted-foreground mb-2">Requested Badges</p>
-                    <div className="flex flex-wrap gap-1 min-h-[24px]">
-                      {template.requestedRoles.length > 0 ? (
-                        template.requestedRoles.map(role => <Badge key={role} variant="secondary" className="rounded-full">{role}</Badge>)
-                      ) : (
-                        <p className="text-xs text-muted-foreground italic">No badges requested.</p>
-                      )}
-                    </div>
-                </CardContent>
-            </Card>
-          ))
+      <div className="flex items-center gap-2 mb-6">
+        {isEditingTitle ? (
+            <Input
+                ref={titleInputRef}
+                defaultValue={tab.name}
+                onBlur={handleSaveTitle}
+                onKeyDown={handleTitleKeyDown}
+                className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+            />
         ) : (
-          <div className="col-span-3 flex items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 text-muted-foreground min-h-[190px]">
-            <p>No templates yet. Click the '+' button to add one.</p>
-          </div>
+            <h2 className="text-2xl font-semibold tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>
+                {tab.name}
+            </h2>
         )}
       </div>
+      <Card>
+        <CardHeader>
+            <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                      Event Templates
+                       <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={openAddDialog}>
+                        <GoogleSymbol name="add_circle" className="text-xl" />
+                        <span className="sr-only">New Template</span>
+                      </Button>
+                  </CardTitle>
+                  <CardDescription>
+                    Create reusable templates for common events, pre-filling requested roles to speed up event creation.
+                  </CardDescription>
+                </div>
+            </div>
+        </CardHeader>
+        <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {templates.length > 0 ? (
+              templates.map(template => (
+                <Card 
+                  key={template.id} 
+                  className="flex flex-col cursor-pointer hover:border-primary/50"
+                  onClick={() => openEditDialog(template)}
+                >
+                    <CardHeader>
+                        <div className="flex items-start justify-between">
+                             <CardTitle>
+                                <Badge className="text-base py-1 px-3 gap-2">
+                                    <GoogleSymbol name={template.icon} />
+                                    {template.name}
+                                </Badge>
+                            </CardTitle>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="-mr-4 -mt-2 text-destructive hover:text-destructive"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openDeleteDialog(template);
+                              }}
+                            >
+                                <GoogleSymbol name="delete" />
+                                <span className="sr-only">Delete {template.name}</span>
+                            </Button>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="flex-grow">
+                        <p className="text-sm font-medium text-muted-foreground mb-2">Requested Badges</p>
+                        <div className="flex flex-wrap gap-1 min-h-[24px]">
+                          {template.requestedRoles.length > 0 ? (
+                            template.requestedRoles.map(role => <Badge key={role} variant="secondary" className="rounded-full">{role}</Badge>)
+                          ) : (
+                            <p className="text-xs text-muted-foreground italic">No badges requested.</p>
+                          )}
+                        </div>
+                    </CardContent>
+                </Card>
+              ))
+            ) : (
+              <div className="col-span-3 flex items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 text-muted-foreground min-h-[150px]">
+                <p>No templates yet. Click the '+' button to add one.</p>
+              </div>
+            )}
+            </div>
+        </CardContent>
+      </Card>
       
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent>

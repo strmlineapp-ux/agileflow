@@ -1,11 +1,9 @@
 
-
 'use client';
 
-import { useState, Fragment } from 'react';
+import { useState, Fragment, useRef } from 'react';
 import { type User, type Team } from '@/types';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,36 +15,68 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/context/user-context';
-import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { Checkbox } from '@/components/ui/checkbox';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { Badge } from '../ui/badge';
+import { Label } from '../ui/label';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
+
+const InlineSelectEditor = ({
+  value,
+  onSave,
+  options,
+  placeholder,
+}: {
+  value: string;
+  onSave: (newValue: string) => void;
+  options: { value: string; label: string }[];
+  placeholder: string;
+}) => {
+  const [isEditing, setIsEditing] = useState(false);
+
+  if (isEditing) {
+    return (
+      <Select
+        defaultValue={value}
+        onValueChange={(newValue) => {
+          onSave(newValue);
+          setIsEditing(false);
+        }}
+        onOpenChange={(isOpen) => !isOpen && setIsEditing(false)}
+        defaultOpen
+      >
+        <SelectTrigger className="h-8 w-[180px] text-sm">
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map(option => (
+            <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    );
+  }
+
+  const currentLabel = options.find(opt => opt.value === value)?.label || placeholder;
+
+  return (
+    <Button variant="ghost" className="h-8 justify-start p-2 text-sm" onClick={() => setIsEditing(true)}>
+      {currentLabel}
+    </Button>
+  );
+};
 
 export function UserManagement() {
-    const { realUser, users, updateUser, linkGoogleCalendar, allRolesAndBadges, teams } = useUser();
+    const { realUser, users, updateUser, linkGoogleCalendar, allRolesAndBadges } = useUser();
     
     // State for editing user contact
     const [editingContactUser, setEditingContactUser] = useState<User | null>(null);
     const [phone, setPhone] = useState('');
 
-    const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
     const { toast } = useToast();
    
-    const toggleRow = (userId: string) => {
-        setExpandedRows(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(userId)) {
-                newSet.delete(userId);
-            } else {
-                newSet.add(userId);
-            }
-            return newSet;
-        });
-    };
-
     const handleSavePhone = async () => {
         if (!editingContactUser) return;
         if (editingContactUser.userId !== realUser.userId) {
@@ -58,209 +88,177 @@ export function UserManagement() {
         toast({ title: 'Success', description: 'Contact number updated.' });
     };
 
-    const canViewRoles = (targetUser: User): boolean => {
-        if (realUser.isAdmin) return true;
-        const managedTeamIds = teams.filter(t => t.teamAdmins?.includes(realUser.userId)).map(t => t.id);
-        const userIsInManagedTeam = teams.some(t => managedTeamIds.includes(t.id) && t.members.includes(targetUser.userId));
-        return userIsInManagedTeam;
-    }
+    const THEME_OPTIONS = [
+      { name: 'light', label: 'Light' },
+      { name: 'dark', label: 'Dark' },
+      { name: 'high-visibility', label: 'High Visibility' },
+      { name: 'firebase', label: 'Firebase' }
+    ];
 
     return (
         <>
-            <Card>
-                <CardHeader>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="w-[48px]" />
-                                <TableHead>User</TableHead>
-                                <TableHead>Title</TableHead>
-                                <TableHead>Roles & Badges</TableHead>
-                                <TableHead><span className="sr-only">Actions</span></TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {users.map(user => {
-                                 const rolesToDisplay = (user.roles || []).filter(r => r !== 'Admin');
-                                 const canSeeRoles = user.userId === realUser.userId || canViewRoles(user);
-                                return (
-                                <Fragment key={user.userId}>
-                                    <TableRow>
-                                        <TableCell>
-                                            <Button variant="ghost" size="icon" onClick={() => toggleRow(user.userId)}>
-                                                {expandedRows.has(user.userId) ? <GoogleSymbol name="expand_more" /> : <GoogleSymbol name="chevron_right" />}
-                                                <span className="sr-only">Toggle row</span>
-                                            </Button>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex items-center gap-3">
-                                                <TooltipProvider>
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            {user.userId === realUser.userId && !user.googleCalendarLinked ? (
-                                                                <Button variant="ghost" className="relative h-10 w-10 p-0 rounded-full" onClick={() => linkGoogleCalendar(user.userId)}>
-                                                                    <Avatar className="h-10 w-10">
-                                                                        <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
-                                                                        <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                                                                    </Avatar>
-                                                                    <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full bg-gray-400 ring-2 ring-card" />
-                                                                </Button>
-                                                            ) : (
-                                                                <div className="relative">
-                                                                    <Avatar>
-                                                                        <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
-                                                                        <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                                                                    </Avatar>
-                                                                    <span className={cn(
-                                                                        "absolute bottom-0 right-0 block h-3 w-3 rounded-full ring-2 ring-card",
-                                                                        user.googleCalendarLinked ? "bg-green-500" : "bg-gray-400"
-                                                                    )} />
-                                                                </div>
-                                                            )}
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>
-                                                            <p>Google Calendar: {user.googleCalendarLinked ? 'Connected' : user.userId === realUser.userId ? 'Click to connect' : 'Not Connected'}</p>
-                                                        </TooltipContent>
-                                                    </Tooltip>
-                                                </TooltipProvider>
-                                                <div>
-                                                    <p className="font-medium">{user.displayName}</p>
-                                                    <p className="text-sm text-muted-foreground">{user.email}</p>
-                                                </div>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>{user.title}</TableCell>
-                                         <TableCell>
-                                            {canSeeRoles && (
-                                                <div className="flex flex-wrap gap-1">
-                                                {rolesToDisplay.map(role => {
-                                                    const roleInfo = allRolesAndBadges.find(r => r.name === role);
-                                                    return (
-                                                        <Badge
-                                                            key={role}
-                                                            variant="outline"
-                                                            style={roleInfo ? { color: roleInfo.color, borderColor: roleInfo.color } : {}}
-                                                            className="rounded-full gap-1 text-xs py-0.5 px-2"
-                                                        >
-                                                            {roleInfo && <GoogleSymbol name={roleInfo.icon} className="text-sm" />}
-                                                            <span>{role}</span>
-                                                        </Badge>
-                                                    );
-                                                })}
-                                                </div>
-                                            )}
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            {user.userId === realUser.userId && (
-                                                <Popover>
-                                                    <PopoverTrigger asChild>
-                                                        <Button variant="ghost" size="icon">
-                                                            <GoogleSymbol name="palette" />
-                                                            <span className="sr-only">Change preferences</span>
-                                                        </Button>
-                                                    </PopoverTrigger>
-                                                    <PopoverContent className="w-80">
-                                                        <div className="grid gap-4">
-                                                            <div className="space-y-2">
-                                                                <h4 className="font-medium leading-none">Preferences</h4>
-                                                                <p className="text-sm text-muted-foreground">
-                                                                    Set your personal display and interaction settings.
-                                                                </p>
-                                                            </div>
-                                                            <div className="grid gap-4">
-                                                                <Select
-                                                                    value={realUser.theme || 'light'}
-                                                                    onValueChange={(value) => updateUser(realUser.userId, { theme: value as any })}
-                                                                >
-                                                                    <SelectTrigger id="color-scheme" className="w-full">
-                                                                        <SelectValue placeholder="Select Colour Scheme" />
-                                                                    </SelectTrigger>
-                                                                    <SelectContent>
-                                                                        <SelectItem value="light">Light</SelectItem>
-                                                                        <SelectItem value="dark">Dark</SelectItem>
-                                                                        <SelectItem value="high-visibility">High Visibility</SelectItem>
-                                                                        <SelectItem value="firebase">Firebase</SelectItem>
-                                                                    </SelectContent>
-                                                                </Select>
-                                                                <Select
-                                                                    value={realUser.defaultCalendarView || 'day'}
-                                                                    onValueChange={(value) => updateUser(realUser.userId, { defaultCalendarView: value as any })}
-                                                                >
-                                                                    <SelectTrigger id="calendar-view" className="w-full">
-                                                                        <SelectValue placeholder="Select Default View" />
-                                                                    </SelectTrigger>
-                                                                    <SelectContent>
-                                                                        <SelectItem value="month">Month</SelectItem>
-                                                                        <SelectItem value="week">Week</SelectItem>
-                                                                        <SelectItem value="day">Day</SelectItem>
-                                                                        <SelectItem value="production-schedule">Production Schedule</SelectItem>
-                                                                    </SelectContent>
-                                                                </Select>
-                                                                <Select
-                                                                    value={realUser.timeFormat || '12h'}
-                                                                    onValueChange={(value) => updateUser(realUser.userId, { timeFormat: value as any })}
-                                                                >
-                                                                    <SelectTrigger id="time-format" className="w-full">
-                                                                        <SelectValue placeholder="Select Time Format" />
-                                                                    </SelectTrigger>
-                                                                    <SelectContent>
-                                                                        <SelectItem value="12h">12-Hour</SelectItem>
-                                                                        <SelectItem value="24h">24-Hour</SelectItem>
-                                                                    </SelectContent>
-                                                                </Select>
-                                                                <div className="flex items-center space-x-2">
-                                                                    <Checkbox
-                                                                        id="easy-booking"
-                                                                        checked={realUser.easyBooking}
-                                                                        onCheckedChange={(checked) => updateUser(realUser.userId, { easyBooking: !!checked })}
-                                                                    />
-                                                                    <label
-                                                                        htmlFor="easy-booking"
-                                                                        className="text-sm font-normal text-muted-foreground cursor-pointer"
-                                                                    >
-                                                                        Click empty calendar slots to quickly create events.
-                                                                    </label>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </PopoverContent>
-                                                </Popover>
-                                            )}
-                                        </TableCell>
-                                    </TableRow>
-                                    {expandedRows.has(user.userId) && (
-                                        <TableRow className="bg-muted/50 hover:bg-muted/50">
-                                            <TableCell />
-                                            <TableCell colSpan={4}>
-                                                <div className="p-4">
-                                                    <p className="font-medium text-sm mb-2">Details</p>
-                                                    <div>
-                                                        <div className="flex items-center gap-2 mb-1">
-                                                            <p className="text-xs text-muted-foreground">Contact</p>
-                                                            {user.userId === realUser.userId && (
-                                                                <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => {
-                                                                    setEditingContactUser(user);
-                                                                    setPhone(user.phone || '');
-                                                                }}>
-                                                                    <GoogleSymbol name="edit" className="text-base" />
-                                                                    <span className="sr-only">Edit phone number</span>
-                                                                </Button>
-                                                            )}
-                                                        </div>
-                                                        {user.phone ? <p className="text-sm">{user.phone}</p> : <p className="text-sm text-muted-foreground italic">Not provided</p>}
-                                                    </div>
-                                                </div>
-                                            </TableCell>
-                                        </TableRow>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {users.map(user => {
+              const isCurrentUser = user.userId === realUser.userId;
+              return (
+                <Card key={user.userId}>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    {isCurrentUser && !user.googleCalendarLinked ? (
+                                        <Button variant="ghost" className="relative h-12 w-12 p-0 rounded-full" onClick={(e) => { e.stopPropagation(); linkGoogleCalendar(user.userId); }}>
+                                            <Avatar className="h-12 w-12">
+                                                <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
+                                                <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                            </Avatar>
+                                            <span className="absolute bottom-0 right-0 block h-3.5 w-3.5 rounded-full bg-gray-400 ring-2 ring-card" />
+                                        </Button>
+                                    ) : (
+                                        <div className="relative">
+                                            <Avatar className="h-12 w-12">
+                                                <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
+                                                <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                            </Avatar>
+                                            <span className={cn(
+                                                "absolute bottom-0 right-0 block h-3.5 w-3.5 rounded-full ring-2 ring-card",
+                                                user.googleCalendarLinked ? "bg-green-500" : "bg-gray-400"
+                                            )} />
+                                        </div>
                                     )}
-                                </Fragment>
-                            )})}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Google Calendar: {user.googleCalendarLinked ? 'Connected' : isCurrentUser ? 'Click to connect' : 'Not Connected'}</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                        <div>
+                            <p className="font-semibold text-lg">{user.displayName}</p>
+                            <p className="text-sm text-muted-foreground">{user.email}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                       <Label className="text-xs text-muted-foreground">Title</Label>
+                       <p className="text-sm font-medium">{user.title || <span className="italic text-muted-foreground">Not provided</span>}</p>
+                    </div>
+                    <div className="mt-4 space-y-2">
+                      <Label className="text-xs text-muted-foreground">Roles & Badges</Label>
+                      <div className="flex flex-wrap gap-1 min-h-[24px]">
+                        {(user.roles || []).map(role => {
+                          const roleInfo = allRolesAndBadges.find(r => r.name === role);
+                          return (
+                            <Badge
+                              key={role}
+                              variant="outline"
+                              style={roleInfo ? { color: roleInfo.color, borderColor: roleInfo.color } : {}}
+                              className="rounded-full gap-1 text-xs py-0.5 px-2"
+                            >
+                              {roleInfo && <GoogleSymbol name={roleInfo.icon} className="text-sm" />}
+                              <span>{role}</span>
+                            </Badge>
+                          );
+                        })}
+                        {(user.roles || []).length === 0 && <p className="text-xs text-muted-foreground italic">No roles assigned</p>}
+                      </div>
+                    </div>
+                  </CardContent>
+                  <CardFooter className="p-0">
+                    <Accordion type="single" collapsible className="w-full px-4">
+                      <AccordionItem value="details" className="border-b-0">
+                        <AccordionTrigger className="py-2 text-sm text-muted-foreground">
+                          Details
+                        </AccordionTrigger>
+                        <AccordionContent>
+                           <div className="p-2 pt-0 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                                <div>
+                                    <Label className="text-xs text-muted-foreground">Contact</Label>
+                                    <div className="flex items-center gap-2">
+                                        {user.phone ? <p className="text-sm">{user.phone}</p> : <p className="text-sm text-muted-foreground italic">Not provided</p>}
+                                        {isCurrentUser && (
+                                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => {
+                                                setEditingContactUser(user);
+                                                setPhone(user.phone || '');
+                                            }}>
+                                                <GoogleSymbol name="edit" className="text-base" />
+                                                <span className="sr-only">Edit phone number</span>
+                                            </Button>
+                                        )}
+                                    </div>
+                                </div>
+                                {isCurrentUser && (
+                                  <>
+                                    <div className="space-y-1">
+                                        <Label className="text-xs text-muted-foreground">Theme</Label>
+                                        <div className="flex items-center gap-2">
+                                          {THEME_OPTIONS.map(theme => (
+                                            <Button 
+                                              key={theme.name}
+                                              variant={realUser.theme === theme.name ? 'secondary' : 'ghost'}
+                                              size="sm"
+                                              onClick={() => updateUser(realUser.userId, { theme: theme.name as any })}
+                                            >
+                                              {theme.label}
+                                            </Button>
+                                          ))}
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-muted-foreground">Default Calendar View</Label>
+                                      <InlineSelectEditor
+                                        value={realUser.defaultCalendarView || 'day'}
+                                        onSave={(newValue) => updateUser(realUser.userId, { defaultCalendarView: newValue as any})}
+                                        options={[
+                                            { value: "month", label: "Month" },
+                                            { value: "week", label: "Week" },
+                                            { value: "day", label: "Day" },
+                                            { value: "production-schedule", label: "Production Schedule" },
+                                        ]}
+                                        placeholder="Select Default View"
+                                      />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-muted-foreground">Time Format</Label>
+                                      <InlineSelectEditor
+                                        value={realUser.timeFormat || '12h'}
+                                        onSave={(newValue) => updateUser(realUser.userId, { timeFormat: newValue as any})}
+                                        options={[
+                                            { value: "12h", label: "12-Hour" },
+                                            { value: "24h", label: "24-Hour" },
+                                        ]}
+                                        placeholder="Select Time Format"
+                                      />
+                                    </div>
+                                    <div className="space-y-1 self-end">
+                                        <TooltipProvider>
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <Button variant="ghost" onClick={() => updateUser(realUser.userId, { easyBooking: !realUser.easyBooking })} className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
+                                                  <GoogleSymbol name={realUser.easyBooking ? 'toggle_on' : 'toggle_off'} className="text-2xl" />
+                                                  <span className="text-sm">Easy Booking</span>
+                                              </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                              <p>Click empty calendar slots to quickly create events.</p>
+                                            </TooltipContent>
+                                          </Tooltip>
+                                        </TooltipProvider>
+                                    </div>
+                                  </>
+                                )}
+                             </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
+                  </CardFooter>
+                </Card>
+              )
+            })}
+          </div>
 
             <Dialog open={!!editingContactUser} onOpenChange={(isOpen) => !isOpen && setEditingContactUser(null)}>
                 <DialogContent>
