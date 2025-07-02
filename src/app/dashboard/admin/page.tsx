@@ -67,23 +67,24 @@ const UserAssignmentCard = ({ user, onRemove, isTeamAdmin, onSetTeamAdmin, canRe
             <p className="text-sm text-muted-foreground">{user.email}</p>
           </div>
         </div>
-        <TooltipProvider>
+        {canRemove ? (
+          <TooltipProvider>
             <Tooltip>
-                <TooltipTrigger asChild>
-                    <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={(e) => { e.stopPropagation(); if (canRemove) onRemove(user); }} 
-                        aria-label={`Remove user from this group`}
-                        className="text-muted-foreground hover:text-destructive"
-                        disabled={!canRemove}
-                    >
-                      <GoogleSymbol name="cancel" />
-                    </Button>
-                </TooltipTrigger>
-                {!canRemove && <TooltipContent><p>Cannot remove the last administrator.</p></TooltipContent>}
+              <TooltipTrigger asChild>
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={(e) => { e.stopPropagation(); onRemove(user); }} 
+                    aria-label={`Remove user from this group`}
+                    className="text-muted-foreground hover:text-destructive"
+                >
+                  <GoogleSymbol name="cancel" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent><p>Remove from Admins</p></TooltipContent>
             </Tooltip>
-        </TooltipProvider>
+          </TooltipProvider>
+        ) : null}
       </CardContent>
     </Card>
   );

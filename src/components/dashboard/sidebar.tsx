@@ -13,6 +13,7 @@ import { useUser } from '@/context/user-context';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { Badge } from '../ui/badge';
 import { hasAccess } from '@/lib/permissions';
+import { type AppPage } from '@/types';
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -28,34 +29,44 @@ export function Sidebar() {
   }, [viewAsUser, teams, appSettings.adminGroups]);
   
   const orderedNavItems = useMemo(() => {
-    return appSettings.pages
-        .map(page => {
-            if (!hasAccess(viewAsUser, page, teams, appSettings.adminGroups)) {
-                return null;
-            }
-            if (page.isDynamic) {
-                // For the team management page, create a link for each team the user manages
-                return userManagedTeams.map(team => ({
-                    id: `${page.id}-${team.id}`,
-                    path: `${page.path}/${team.id}`,
-                    icon: team.icon,
-                    name: team.name,
-                    tooltip: `${page.name}: ${team.name}`,
-                    isPage: false,
-                }));
-            }
-            return {
-                id: page.id,
-                path: page.path,
-                icon: page.icon,
-                name: page.name,
-                tooltip: page.name,
-                isPage: true,
-            };
-        })
-        .flat()
-        .filter(Boolean);
-  }, [appSettings.pages, viewAsUser, teams, userManagedTeams]);
+    const adminPageId = 'page-admin-management';
+    const pinnedPageIds = ['page-notifications', 'page-settings'];
+
+    const visiblePages = appSettings.pages.filter(page => hasAccess(viewAsUser, page, teams, appSettings.adminGroups));
+
+    const adminPage = visiblePages.find(p => p.id === adminPageId);
+    const pinnedPages = visiblePages.filter(p => pinnedPageIds.includes(p.id)).sort((a,b) => pinnedPageIds.indexOf(a.id) - pinnedPageIds.indexOf(b.id));
+    const mainPages = visiblePages.filter(p => p.id !== adminPageId && !pinnedPageIds.includes(p.id));
+
+    const processPage = (page: AppPage) => {
+        if (!page) return null;
+        if (page.isDynamic) {
+            return userManagedTeams.map(team => ({
+                id: `${page.id}-${team.id}`,
+                path: `${page.path}/${team.id}`,
+                icon: team.icon,
+                name: team.name,
+                tooltip: `${page.name}: ${team.name}`,
+                isPage: false,
+            }));
+        }
+        return {
+            id: page.id,
+            path: page.path,
+            icon: page.icon,
+            name: page.name,
+            tooltip: page.name,
+            isPage: true,
+        };
+    };
+
+    const adminNavItem = adminPage ? [processPage(adminPage)] : [];
+    const mainNavItems = mainPages.map(processPage);
+    const pinnedNavItems = pinnedPages.map(processPage);
+    
+    return [...adminNavItem, ...mainNavItems, ...pinnedNavItems].flat().filter(Boolean);
+
+  }, [appSettings.pages, viewAsUser, teams, userManagedTeams, appSettings.adminGroups]);
   
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-14 flex-col border-r bg-card sm:flex">
