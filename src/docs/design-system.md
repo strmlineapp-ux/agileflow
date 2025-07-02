@@ -1,5 +1,3 @@
-
-
 # AgileFlow: Design System & UI Patterns
 
 This document outlines the established UI patterns and design choices that ensure a consistent and intuitive user experience across the AgileFlow application. These patterns serve as a guide for both current and future development.
@@ -128,6 +126,18 @@ When a destructive action requires user confirmation (like deleting a shared res
     - There are no footer buttons.
 - **Behavior**: Clicking outside the dialog or pressing 'Escape' cancels the operation. Clicking the action icon confirms it.
 - **Application**: Used for confirming the deletion of shared Badges or Badge Collections.
+
+---
+
+### 9. Icon Tabs for Page Navigation
+
+- **Description**: For primary navigation within a page (e.g., switching between "Admin Groups" and "Pages" on the Admin Management screen), tabs should be clear, full-width, and provide strong visual cues.
+- **Appearance**:
+  - Each tab trigger must include both an icon and a text label.
+  - The icon should be visually aligned with the text and use the default text color. Icons should *not* be colored separately.
+  - The active tab is indicated by colored text and a thin underline, which is applied via a custom `underline` variant on the `Tabs` component.
+  - The entire tab list should have a subtle divider underneath it, separating it from the content below.
+- **Application**: Used for all main page-level tab navigation, such as on the Admin, Service Delivery, and Team Management pages.
 
 ## Visual & Theming Elements
 
