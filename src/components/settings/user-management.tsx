@@ -45,11 +45,9 @@ function ColorPicker({ user, onColorChange }: { user: User; onColorChange: (colo
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          className="h-10 w-10 p-0"
-          style={{ backgroundColor: displayColor }}
-        />
+         <Button variant="ghost" size="icon" className="h-10 w-10 text-lg">
+            <GoogleSymbol name="palette" style={{ color: displayColor }} />
+        </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-2">
         <div className="grid grid-cols-8 gap-1">
@@ -233,36 +231,36 @@ export function UserManagement() {
                                         )}
                                     </div>
                                 </div>
-                                <div>
-                                    <div className="flex items-center gap-2">
-                                        <ColorPicker
-                                            user={realUser}
-                                            onColorChange={(color) => updateUser(realUser.userId, { primaryColor: color })}
-                                        />
-                                        <Tabs
-                                            value={realUser.theme || 'light'}
-                                            onValueChange={(theme) => {
-                                                updateUser(realUser.userId, { theme: theme as any, primaryColor: undefined });
-                                            }}
-                                            className="w-full"
-                                        >
-                                            <TabsList className="grid w-full grid-cols-2">
-                                                {THEME_OPTIONS.map((theme) => (
-                                                <TabsTrigger
-                                                    key={theme.name}
-                                                    value={theme.name}
-                                                    className="flex-1 gap-2"
-                                                >
-                                                    <GoogleSymbol name={theme.icon} className="text-lg" />
-                                                    <span>{theme.label}</span>
-                                                </TabsTrigger>
-                                                ))}
-                                            </TabsList>
-                                        </Tabs>
-                                    </div>
-                                </div>
                                 {isCurrentUser && (
                                   <>
+                                    <div className="space-y-1">
+                                        <div className="flex items-center gap-2">
+                                            <ColorPicker
+                                                user={realUser}
+                                                onColorChange={(color) => updateUser(realUser.userId, { primaryColor: color })}
+                                            />
+                                            <Tabs
+                                                value={realUser.theme || 'light'}
+                                                onValueChange={(theme) => {
+                                                    updateUser(realUser.userId, { theme: theme as any, primaryColor: undefined });
+                                                }}
+                                                className="w-full"
+                                            >
+                                                <TabsList className="grid w-full grid-cols-2">
+                                                    {THEME_OPTIONS.map((theme) => (
+                                                    <TabsTrigger
+                                                        key={theme.name}
+                                                        value={theme.name}
+                                                        className="flex-1 gap-2"
+                                                    >
+                                                        <GoogleSymbol name={theme.icon} className="text-lg" />
+                                                        <span>{theme.label}</span>
+                                                    </TabsTrigger>
+                                                    ))}
+                                                </TabsList>
+                                            </Tabs>
+                                        </div>
+                                    </div>
                                     <div className="space-y-1">
                                       <Label className="text-xs text-muted-foreground">Default Calendar View</Label>
                                       <InlineSelectEditor

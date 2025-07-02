@@ -63,8 +63,8 @@ export interface User {
   title?: string;
   roles?: string[]; // Contains names of AdminGroups and Badge names
   directReports?: string[];
-  theme?: 'light' | 'dark' | 'high-visibility' | 'firebase';
-  primaryColor?: string; // HSL value string e.g., "210 40% 55%"
+  theme?: 'light' | 'dark';
+  primaryColor?: string; // HEX value string e.g., "#4A90E2"
   defaultCalendarView?: 'month' | 'week' | 'day' | 'production-schedule';
   easyBooking?: boolean;
   timeFormat?: '12h' | '24h';
