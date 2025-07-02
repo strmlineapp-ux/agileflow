@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -1201,9 +1202,12 @@ export default function AdminPage() {
         <h1 className="font-headline text-3xl font-semibold">{pageConfig.name}</h1>
       </div>
       <Tabs defaultValue={pageTabs[0]?.id} className="w-full">
-        <TabsList className={`grid w-full grid-cols-${pageTabs.length}`}>
+        <TabsList className="flex w-full">
           {pageTabs.map(tab => (
-            <TabsTrigger key={tab.id} value={tab.id}>{tab.name}</TabsTrigger>
+            <TabsTrigger key={tab.id} value={tab.id} className="flex-1 gap-2">
+              <GoogleSymbol name={tab.icon} className="text-lg" />
+              <span>{tab.name}</span>
+            </TabsTrigger>
           ))}
         </TabsList>
         {pageTabs.map(tab => {

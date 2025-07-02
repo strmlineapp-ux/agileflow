@@ -139,7 +139,10 @@ export default function TeamPage() {
       <Tabs defaultValue={pageTabs[0]?.id} className="w-full">
         <TabsList className="flex w-full">
             {pageTabs.map(tab => (
-              <TabsTrigger key={tab.id} value={tab.id} className="flex-1">{tab.name}</TabsTrigger>
+              <TabsTrigger key={tab.id} value={tab.id} className="flex-1 gap-2">
+                <GoogleSymbol name={tab.icon} className="text-lg" />
+                <span>{tab.name}</span>
+              </TabsTrigger>
             ))}
         </TabsList>
         {pageTabs.map(tab => {
