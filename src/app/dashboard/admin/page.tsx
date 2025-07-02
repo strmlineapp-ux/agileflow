@@ -48,10 +48,13 @@ const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
 // #endregion
 
 // #region Admin Groups Management Tab
-const UserAssignmentCard = ({ user, onRemove, canRemove = true }: { user: User; onRemove: (user: User) => void; canRemove?: boolean; }) => {
+const UserAssignmentCard = ({ user, onRemove, isGroupAdmin, onSetGroupAdmin, canRemove = true }: { user: User; onRemove: (user: User) => void; isGroupAdmin: boolean; onSetGroupAdmin: (user: User) => void; canRemove?: boolean; }) => {
   return (
-    <Card className="transition-all">
-      <CardContent className="p-4 flex items-center justify-between">
+    <Card 
+        className={cn("transition-all", isGroupAdmin && "ring-2 ring-primary")}
+        onClick={() => onSetGroupAdmin(user)}
+    >
+      <CardContent className="p-4 flex items-center justify-between cursor-pointer">
         <div className="flex items-center gap-4">
           <Avatar>
             <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
@@ -76,7 +79,7 @@ const UserAssignmentCard = ({ user, onRemove, canRemove = true }: { user: User; 
                   <GoogleSymbol name="cancel" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent><p>Remove from Admins</p></TooltipContent>
+              <TooltipContent><p>Remove from Group</p></TooltipContent>
             </Tooltip>
           </TooltipProvider>
         )}
@@ -212,6 +215,15 @@ function AdminGroupCard({
         toast({ title: 'Success', description: `${user.displayName}'s group assignment has been updated.` });
     };
 
+    const handleSetGroupAdmin = (userToUpdate: User) => {
+        const currentAdmins = group.groupAdmins || [];
+        const isAlreadyAdmin = currentAdmins.includes(userToUpdate.userId);
+        const newAdmins = isAlreadyAdmin
+            ? currentAdmins.filter(id => id !== userToUpdate.userId)
+            : [...currentAdmins, userToUpdate.userId];
+        onUpdate({ ...group, groupAdmins: newAdmins });
+    };
+
     return (
         <>
         <Card>
@@ -281,7 +293,7 @@ function AdminGroupCard({
                     </TooltipProvider>
                 </div>
               </div>
-              <CardDescription>Assign or revoke {group.name} privileges for managing app-wide settings.</CardDescription>
+              <CardDescription>Click a member to promote them to Group Admin for this group. Group Admins have elevated permissions.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {assignedUsers.map(user => (
@@ -289,6 +301,8 @@ function AdminGroupCard({
                     key={user.userId} 
                     user={user} 
                     onRemove={handleGroupToggle}
+                    isGroupAdmin={(group.groupAdmins || []).includes(user.userId)}
+                    onSetGroupAdmin={handleSetGroupAdmin}
                 />
               ))}
             </CardContent>
@@ -342,7 +356,8 @@ const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
   const nonAdminUsers = useMemo(() => users.filter(u => !u.isAdmin), [users]);
 
   const handleAdminToggle = (user: User) => {
-    if (user.isAdmin && adminUsers.length <= 1) {
+    const isLastAdmin = adminUsers.length <= 1 && user.isAdmin;
+    if (isLastAdmin) {
         toast({
             variant: 'destructive',
             title: 'Cannot Remove Last Admin',
@@ -382,6 +397,7 @@ const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
         name: newGroupName,
         icon: 'add_moderator',
         color: predefinedColors[appSettings.adminGroups.length % predefinedColors.length],
+        groupAdmins: [],
     };
     updateAppSettings({ adminGroups: [...appSettings.adminGroups, newGroup] });
     toast({ title: 'New Group Added', description: `"${newGroupName}" has been created.` });
@@ -458,6 +474,8 @@ const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                                 key={user.userId} 
                                 user={user} 
                                 onRemove={handleAdminToggle}
+                                isGroupAdmin={true} // Admins are implicitly group admins of everything
+                                onSetGroupAdmin={() => {}} // No-op, cannot change
                                 canRemove={adminUsers.length > 1}
                               />
                             ))}
@@ -809,8 +827,8 @@ function PageCard({ page, onUpdate, onDelete, isLocked = false }: { page: AppPag
                 <div>
                   <h4 className="font-medium text-sm mb-2">Details</h4>
                   <CardDescription>
-                      When associated with a Team, only Team Admins of that team can access the page.
-                      When associated with an Admin Group, only members of that group can access it.
+                      When associated with a Team, page access is granted to Team Admins, or all members if no Admins are set.
+                      When associated with an Admin Group, page access is granted to Group Admins, or all members if no Admins are set.
                   </CardDescription>
                   <div className="flex gap-2 text-sm text-muted-foreground mt-2">
                       <Badge variant="outline">{page.path}</Badge>

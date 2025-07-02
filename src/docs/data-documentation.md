@@ -94,6 +94,7 @@ A sub-entity of `AppSettings`, `AdminGroup` defines a single, dynamic administra
 | `name: string` | **Internal.** The display name for the group (e.g., "Service Admin", "Service Admin+"). This is editable inline on the Admin Management page. |
 | `icon: string` | **Internal.** The Google Symbol name for the icon associated with the group. |
 | `color: string` | **Internal.** The hex color code for the icon's badge. |
+| `groupAdmins?: string[]` | **Internal.** An array of `userId`s for users who have been designated as an "Admin" for this specific group, granting them elevated permissions for pages associated with this group. |
 
 ## Team Entity
 

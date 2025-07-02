@@ -1,5 +1,3 @@
-
-
 import { type User, type AppPage, type SharedCalendar, type Team, type AdminGroup } from '@/types';
 
 /**
@@ -87,15 +85,36 @@ export const hasAccess = (user: User, page: AppPage, teams: Team[], adminGroups:
     // Direct user assignment always grants access
     if (page.access.users.includes(user.userId)) return true;
 
-    // Team-based access: grants access ONLY if the user is a Team Admin of an associated team
-    const userIsTeamAdminForPage = teams.some(team =>
-        page.access.teams.includes(team.id) && (team.teamAdmins || []).includes(user.userId)
-    );
-    if (userIsTeamAdminForPage) return true;
+    // Team-based access
+    const userHasTeamAccess = teams.some(team => {
+        if (!page.access.teams.includes(team.id)) return false;
+        const teamHasAdmins = (team.teamAdmins || []).length > 0;
+        if (teamHasAdmins) {
+            // If admins exist, only they have access
+            return (team.teamAdmins || []).includes(user.userId);
+        } else {
+            // If no admins exist, all members have access
+            return team.members.includes(user.userId);
+        }
+    });
+    if (userHasTeamAccess) return true;
+    
+    // Group-based access
+    const userHasGroupAccess = page.access.adminGroups.some(groupName => {
+        const group = adminGroups.find(g => g.name === groupName);
+        if (!group) return false;
 
-    // Role-based access: grants access if the user is a member of any associated Admin Group
-    const userIsInAdminGroupForPage = page.access.adminGroups.some(groupName => (user.roles || []).includes(groupName));
-    if (userIsInAdminGroupForPage) return true;
+        const groupHasAdmins = (group.groupAdmins || []).length > 0;
+        
+        if (groupHasAdmins) {
+            // If group admins exist, only they have access
+            return (group.groupAdmins || []).includes(user.userId);
+        } else {
+            // If no group admins exist, all members of the group have access
+            return (user.roles || []).includes(groupName);
+        }
+    });
+    if (userHasGroupAccess) return true;
     
     // Default to no access
     return false;

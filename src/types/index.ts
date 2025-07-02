@@ -5,6 +5,7 @@ export interface AdminGroup {
   name:string;
   icon: string;
   color: string;
+  groupAdmins?: string[]; // userIds of users who are admins *of this group*
 }
 
 export interface AppTab {
