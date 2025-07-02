@@ -150,7 +150,7 @@ export function UserManagement() {
                                     <p className="text-sm font-medium">{user.title || <span className="italic text-muted-foreground">Not provided</span>}</p>
                                 </div>
                                 <div>
-                                    <Label className="text-xs text-muted-foreground">Roles & Badges</Label>
+                                    <Label className="text-xs text-muted-foreground">Roles &amp; Badges</Label>
                                     <div className="flex flex-wrap gap-1 mt-1">
                                       {(user.roles || []).map(role => {
                                         const roleInfo = allRolesAndBadges.find(r => r.name === role);
@@ -186,14 +186,14 @@ export function UserManagement() {
                                 </div>
                                 {isCurrentUser && (
                                   <>
-                                    <div className="space-y-1 md:col-span-2">
+                                    <div className="space-y-1">
                                         <Label className="text-xs text-muted-foreground">Theme</Label>
                                         <Tabs
                                             value={realUser.theme || 'light'}
                                             onValueChange={(theme) => updateUser(realUser.userId, { theme: theme as any })}
                                             className="w-full"
                                         >
-                                            <TabsList className="flex w-full">
+                                            <TabsList className="grid w-full grid-cols-4">
                                                 {THEME_OPTIONS.map((theme) => (
                                                 <TabsTrigger
                                                     key={theme.name}
