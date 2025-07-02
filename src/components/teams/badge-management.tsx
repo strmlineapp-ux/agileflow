@@ -284,7 +284,15 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                             )}
                         </div>
                         {isEditingName ? (
-                            <Input ref={nameInputRef} value={currentName} onChange={(e) => setCurrentName(e.target.value)} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>
+                            <Input
+                                ref={nameInputRef}
+                                value={currentName}
+                                onChange={(e) => setCurrentName(e.target.value)}
+                                onBlur={handleSaveName}
+                                onKeyDown={handleNameKeyDown}
+                                onMouseDown={(e) => e.stopPropagation()}
+                                className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                            />
                         ) : (
                             <CardTitle onClick={() => isOwnedByMyTeam && setIsEditingName(true)} className={cn(isOwnedByMyTeam && "cursor-pointer")}>{badge.name}</CardTitle>
                         )}
@@ -345,6 +353,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
         onChange={(e) => setCurrentName(e.target.value)}
         onBlur={handleSaveName}
         onKeyDown={handleNameKeyDown}
+        onMouseDown={(e) => e.stopPropagation()}
         className={cn(
           "h-auto p-0 font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0",
           viewMode === 'list' && 'text-base',
