@@ -223,11 +223,14 @@ function TeamCard({
                 <div className="space-y-2">
                     {teamMembers.map(user => (
                         <Card 
-                            key={user.userId} 
+                            key={user.userId}
+                            tabIndex={0}
+                            role="button"
                             onClick={() => handleAdminToggle(user.userId)}
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleAdminToggle(user.userId); } }}
                             className={cn(
-                                "p-2 cursor-pointer hover:bg-accent",
-                                (team.teamAdmins || []).includes(user.userId) && "ring-2 ring-primary"
+                                "p-2 cursor-pointer hover:bg-accent transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50",
+                                (team.teamAdmins || []).includes(user.userId) && "ring-1 ring-primary"
                             )}
                         >
                             <div className="flex items-center gap-3">
