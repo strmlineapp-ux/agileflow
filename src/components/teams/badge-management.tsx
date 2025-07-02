@@ -1013,7 +1013,7 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
                 const newAllBadges = [...team.allBadges, newBadge];
                 const newCollections = team.badgeCollections.map(c => {
                     if (c.id === collectionId) {
-                        return { ...c, badgeIds: [...newBadge.id, ...c.badgeIds] };
+                        return { ...c, badgeIds: [newBadge.id, ...c.badgeIds] };
                     }
                     return c;
                 });
