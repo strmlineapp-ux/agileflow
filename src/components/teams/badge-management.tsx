@@ -153,10 +153,29 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     const [isEditingDescription, setIsEditingDescription] = useState(false);
     const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
     
+    // Determine ownership status
+    const ownerTeam = useMemo(() => {
+        for (const t of teams) {
+          if (t.allBadges.some(b => b.id === badge.id)) {
+            const foundBadge = t.allBadges.find(b => b.id === badge.id)!;
+            const collectionOwner = t.badgeCollections.find(c => c.id === foundBadge.ownerCollectionId);
+            if (collectionOwner) {
+                return t;
+            }
+          }
+        }
+        return teams.find(t => t.id === teamId);
+    }, [teams, badge, teamId]);
+    
+    const isThisTheOriginalInstance = badge.ownerCollectionId === collectionId;
+    const isOwnedByMyTeam = ownerTeam?.id === teamId; // Use this for permission check
+
+    // This effect ensures the local state updates if the prop changes
     useEffect(() => {
         setCurrentName(badge.name);
     }, [badge.name]);
 
+    // This effect focuses the input when editing starts
     useEffect(() => {
         if (isEditingName && nameInputRef.current) {
             nameInputRef.current.focus();
@@ -170,6 +189,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
         }
     }, [isEditingDescription]);
 
+    // Centralized save logic
     const handleSaveName = () => {
         const newName = currentName.trim();
         if (newName === '') {
@@ -181,6 +201,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
         setIsEditingName(false);
     };
 
+    // Keyboard controls for the input
     const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') handleSaveName();
         else if (e.key === 'Escape') {
@@ -205,22 +226,6 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
           setIsEditingDescription(false);
         }
     };
-    
-    const ownerTeam = useMemo(() => {
-        for (const t of teams) {
-          if (t.allBadges.some(b => b.id === badge.id)) {
-            const foundBadge = t.allBadges.find(b => b.id === badge.id)!;
-            const collectionOwner = t.badgeCollections.find(c => c.id === foundBadge.ownerCollectionId);
-            if (collectionOwner) {
-                return t;
-            }
-          }
-        }
-        return teams.find(t => t.id === teamId);
-    }, [teams, badge, teamId]);
-    
-    const isThisTheOriginalInstance = badge.ownerCollectionId === collectionId;
-    const isOwnedByMyTeam = ownerTeam?.id === teamId;
 
     const isSharedToOtherTeams = useMemo(() => {
         if (!isOwnedByMyTeam) return false;
@@ -263,7 +268,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                          <div className="relative">
                             <CompactSearchIconPicker icon={badge.icon} color={badge.color} onUpdateIcon={(icon) => onUpdateBadge({ icon })} />
                              <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                                <PopoverTrigger asChild><div className="absolute -bottom-1 -right-0 h-5 w-5 rounded-full border-2 border-card cursor-pointer" style={{ backgroundColor: badge.color }} /></PopoverTrigger>
+                                <PopoverTrigger asChild disabled={!isOwnedByMyTeam}><div className={cn("absolute -bottom-1 -right-0 h-5 w-5 rounded-full border-2 border-card", !isOwnedByMyTeam ? "cursor-not-allowed" : "cursor-pointer")} style={{ backgroundColor: badge.color }} /></PopoverTrigger>
                                 <PopoverContent className="w-auto p-2">
                                 <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdateBadge({ color: c }); setIsColorPopoverOpen(false);}}/>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={badge.color} onChange={(e) => onUpdateBadge({ color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
                                 </PopoverContent>
@@ -281,7 +286,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                         {isEditingName ? (
                             <Input ref={nameInputRef} value={currentName} onChange={(e) => setCurrentName(e.target.value)} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>
                         ) : (
-                            <CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer">{badge.name}</CardTitle>
+                            <CardTitle onClick={() => isOwnedByMyTeam && setIsEditingName(true)} className={cn(isOwnedByMyTeam && "cursor-pointer")}>{badge.name}</CardTitle>
                         )}
                     </div>
                     <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onDelete(); }} className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive">
@@ -291,10 +296,20 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
             </CardHeader>
             <CardContent className="space-y-4 pt-0">
                  {isEditingDescription ? (
-                    <Textarea ref={descriptionTextareaRef} defaultValue={badge.description} onBlur={handleSaveDescription} onKeyDown={handleDescriptionKeyDown} className="p-0 text-sm text-muted-foreground border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 resize-none" />
+                    <Textarea 
+                        ref={descriptionTextareaRef} 
+                        defaultValue={badge.description} 
+                        onBlur={handleSaveDescription} 
+                        onKeyDown={handleDescriptionKeyDown} 
+                        className="p-0 text-sm text-muted-foreground border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 resize-none" 
+                        disabled={!isOwnedByMyTeam}
+                    />
                  ) : (
-                    <p className="text-sm text-muted-foreground cursor-text min-h-[20px]" onClick={() => setIsEditingDescription(true)}>
-                        {badge.description || 'Click to add description.'}
+                    <p 
+                        className={cn("text-sm text-muted-foreground min-h-[20px]", isOwnedByMyTeam && "cursor-text")} 
+                        onClick={() => isOwnedByMyTeam && setIsEditingDescription(true)}
+                    >
+                        {badge.description || (isOwnedByMyTeam ? 'Click to add description.' : 'No description.')}
                     </p>
                  )}
             </CardContent>
@@ -306,7 +321,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
         <div className="relative">
             <CompactSearchIconPicker icon={badge.icon} color={badge.color} onUpdateIcon={(icon) => onUpdateBadge({ icon })} />
              <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                <PopoverTrigger asChild><div className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-muted cursor-pointer" style={{ backgroundColor: badge.color }} /></PopoverTrigger>
+                <PopoverTrigger asChild disabled={!isOwnedByMyTeam}><div className={cn("absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-muted", !isOwnedByMyTeam ? "cursor-not-allowed" : "cursor-pointer")} style={{ backgroundColor: badge.color }} /></PopoverTrigger>
                 <PopoverContent className="w-auto p-2">
                 <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdateBadge({ color: c }); setIsColorPopoverOpen(false);}}/>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={badge.color} onChange={(e) => onUpdateBadge({ color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
                 </PopoverContent>
@@ -338,10 +353,12 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
       />
     ) : (
       <span
-        className={cn("font-semibold cursor-text", viewMode === 'assorted' && 'text-xs')}
+        className={cn("font-semibold", isOwnedByMyTeam && "cursor-text", viewMode === 'assorted' && 'text-xs')}
         onClick={(e) => {
           e.stopPropagation();
-          setIsEditingName(true);
+          if (isOwnedByMyTeam) {
+            setIsEditingName(true);
+          }
         }}
       >
         {badge.name}
@@ -363,10 +380,11 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                         onKeyDown={handleDescriptionKeyDown}
                         className="p-0 text-sm text-muted-foreground border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 resize-none"
                         placeholder="Click to add a description."
+                        disabled={!isOwnedByMyTeam}
                     />
                 ) : (
-                    <p className="text-sm text-muted-foreground cursor-text min-h-[20px]" onClick={() => setIsEditingDescription(true)}>
-                        {badge.description || 'Click to add a description.'}
+                    <p className={cn("text-sm text-muted-foreground min-h-[20px]", isOwnedByMyTeam && "cursor-text")} onClick={() => isOwnedByMyTeam && setIsEditingDescription(true)}>
+                        {badge.description || (isOwnedByMyTeam ? 'Click to add a description.' : 'No description.')}
                     </p>
                 )}
             </div>
