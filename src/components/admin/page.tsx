@@ -52,7 +52,7 @@ const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
 // #endregion
 
 // #region Admin Groups Management Tab
-const UserAssignmentCard = ({ user, onRemove, isTeamAdmin, onSetTeamAdmin }: { user: User; onRemove: (user: User) => void; isTeamAdmin: boolean; onSetTeamAdmin: (user: User) => void; }) => {
+const UserAssignmentCard = ({ user, onRemove, isTeamAdmin, onSetTeamAdmin, canRemove = true }: { user: User; onRemove: (user: User) => void; isTeamAdmin: boolean; onSetTeamAdmin: (user: User) => void; canRemove?: boolean; }) => {
   return (
     <Card 
         className={cn("transition-all", isTeamAdmin && "ring-2 ring-primary")}
@@ -69,15 +69,17 @@ const UserAssignmentCard = ({ user, onRemove, isTeamAdmin, onSetTeamAdmin }: { u
             <p className="text-sm text-muted-foreground">{user.email}</p>
           </div>
         </div>
-        <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={(e) => { e.stopPropagation(); onRemove(user); }} 
-            aria-label={`Remove user from this group`}
-            className="text-muted-foreground hover:text-destructive"
-        >
-          <GoogleSymbol name="cancel" />
-        </Button>
+        {canRemove ? (
+            <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={(e) => { e.stopPropagation(); onRemove(user); }} 
+                aria-label={`Remove user from this group`}
+                className="text-muted-foreground hover:text-destructive"
+            >
+              <GoogleSymbol name="cancel" />
+            </Button>
+        ) : null}
       </CardContent>
     </Card>
   );
@@ -350,6 +352,15 @@ const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
   const nonAdminUsers = useMemo(() => users.filter(u => !u.isAdmin), [users]);
 
   const handleAdminToggle = (user: User) => {
+    if (user.isAdmin && adminUsers.length <= 1) {
+        toast({
+            variant: 'destructive',
+            title: 'Cannot Remove Last Admin',
+            description: 'The system must have at least one administrator.',
+        });
+        return;
+    }
+
     const action = () => {
       updateUser(user.userId, { isAdmin: !user.isAdmin });
       toast({ title: 'Success', description: `${user.displayName}'s admin status has been updated.` });
@@ -454,7 +465,14 @@ const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                           </CardHeader>
                           <CardContent className="space-y-4">
                             {adminUsers.map(user => (
-                              <UserAssignmentCard key={user.userId} user={user} onRemove={handleAdminToggle} isTeamAdmin={false} onSetTeamAdmin={() => {}} />
+                              <UserAssignmentCard 
+                                key={user.userId} 
+                                user={user} 
+                                onRemove={handleAdminToggle} 
+                                isTeamAdmin={false} 
+                                onSetTeamAdmin={() => {}} 
+                                canRemove={adminUsers.length > 1}
+                              />
                             ))}
                           </CardContent>
                         </Card>
@@ -1198,7 +1216,7 @@ export default function AdminPage() {
   return (
     <div className="flex flex-col gap-8">
       <div className="flex items-center gap-3">
-        <GoogleSymbol name={pageConfig.icon} className="text-3xl" style={{color: pageConfig.color}} />
+        <GoogleSymbol name={pageConfig.icon} className="text-3xl" />
         <h1 className="font-headline text-3xl font-semibold">{pageConfig.name}</h1>
       </div>
       <Tabs defaultValue={pageTabs[0]?.id} className="w-full">
@@ -1234,3 +1252,66 @@ const AdminPageSkeleton = () => (
       </div>
     </div>
 );
+```
+  </change>
+  <change>
+    <file>/src/components/ui/button.tsx</file>
+    <content><![CDATA[
+import * as React from "react"
+import { Slot } from "@radix-ui/react-slot"
+import { cva, type VariantProps } from "class-variance-authority"
+
+import { cn } from "@/lib/utils"
+
+const buttonVariants = cva(
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-[1px] focus-visible:ring-ring/50 focus-visible:ring-offset-0 disabled:pointer-events-none disabled:opacity-50",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        destructive:
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        outline:
+          "border border-input bg-transparent hover:bg-muted/50 hover:text-foreground",
+        secondary:
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        ghost: "hover:bg-muted/50 hover:text-foreground",
+        link: "text-primary underline-offset-4 hover:underline",
+      },
+      size: {
+        default: "h-10 px-4 py-2",
+        sm: "h-9 rounded-md px-3",
+        lg: "h-11 rounded-md px-8",
+        icon: "h-10 w-10",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+)
+
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {
+  asChild?: boolean
+}
+
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant, size, asChild = false, ...props }, ref) => {
+    const Comp = asChild ? Slot : "button"
+    return (
+      <Comp
+        className={cn(buttonVariants({ variant, size, className }))}
+        ref={ref}
+        {...props}
+      />
+    )
+  }
+)
+Button.displayName = "Button"
+
+export { Button, buttonVariants }
+
+    
