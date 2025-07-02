@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -189,21 +190,21 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
         setIsEditingName(false);
     }, [badge.name, onUpdateBadge, toast]);
 
-    useEffect(() => {
+     useEffect(() => {
         if (!isEditingName) return;
-    
-        const handleClickOutside = (event: MouseEvent) => {
+
+        const handleOutsideClick = (event: MouseEvent) => {
             if (nameInputRef.current && !nameInputRef.current.contains(event.target as Node)) {
                 handleSaveName();
             }
         };
-    
-        document.addEventListener('mousedown', handleClickOutside);
+
+        document.addEventListener('mousedown', handleOutsideClick);
         nameInputRef.current?.focus();
         nameInputRef.current?.select();
         
         return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('mousedown', handleOutsideClick);
         };
     }, [isEditingName, handleSaveName]);
     
@@ -616,7 +617,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInAllT
                                 collection.viewMode === 'detailed' && "grid grid-cols-1 md:grid-cols-2 gap-4"
                             )}>
                             {collectionBadges.map((badge, index) => (
-                                <Draggable key={`${badge.id}::${collection.id}`} draggableId={`${badge.id}::${collection.id}`} index={index} isDragDisabled={isSharedToThisTeam}>
+                                <Draggable key={`${badge.id}::${collection.id}`} draggableId={`${badge.id}::${collection.id}`} index={index}>
                                     {(provided) => (<div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
                                         <BadgeDisplayItem 
                                             badge={badge} 
@@ -1205,7 +1206,7 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={confirmDeleteCollection}>Continue</AlertDialogAction>
+                        <AlertDialogAction onClick={confirmDeleteCollection} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Continue</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
