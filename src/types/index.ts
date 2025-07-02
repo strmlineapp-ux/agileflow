@@ -1,5 +1,3 @@
-
-
 import type React from 'react';
 
 export interface AdminGroup {
@@ -64,7 +62,7 @@ export interface User {
   title?: string;
   roles?: string[]; // Contains names of AdminGroups and Badge names
   directReports?: string[];
-  theme?: 'light' | 'dark';
+  theme?: 'light' | 'dark' | 'high-visibility' | 'firebase';
   primaryColor?: string; // HSL value string e.g., "210 40% 55%"
   defaultCalendarView?: 'month' | 'week' | 'day' | 'production-schedule';
   easyBooking?: boolean;
@@ -89,7 +87,6 @@ export interface Badge {
     startDate?: Date;
     endDate?: Date;
   };
-  assignedUsers?: string[];
 }
 
 export type BadgeApplication = 'users' | 'events' | 'tasks' | 'badges';
@@ -117,6 +114,7 @@ export interface Team {
   allBadges: Badge[]; // The single source of truth for all badges in this team
   badgeCollections: BadgeCollection[]; // Groups of badges, containing badge IDs
   sharedCollectionIds?: string[];
+  sharedTeamIds?: string[];
   pinnedLocations: string[]; // array of location names
   checkLocations: string[]; // subset of pinnedLocations designated for daily checks
   locationAliases?: { [key:string]: string };
@@ -146,6 +144,7 @@ export interface SharedCalendar {
   color: string;
   managers?: string[]; // array of userIds who can manage this calendar
   defaultEventTitle?: string;
+  roleAssignmentsLabel?: string;
 }
 
 export type AttachmentType = 'drive' | 'docs' | 'sheets' | 'slides' | 'forms' | 'meet' | 'local' | 'link';
@@ -187,7 +186,7 @@ export interface Notification {
   id: string;
   type: 'access_request' | 'standard';
   status?: 'pending' | 'approved' | 'rejected'; // only for access_requests
-  user: Pick<User, 'userId' | 'displayName' | 'avatarUrl' | 'easyBooking'>; // The user who *caused* the notification
+  user: Pick<User, 'userId' | 'displayName' | 'avatarUrl'>; // The user who *caused* the notification
   content: string;
   time: Date;
   read: boolean;

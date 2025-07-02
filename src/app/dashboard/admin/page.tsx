@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -308,23 +308,20 @@ function AdminGroupCard({
               ))}
             </CardContent>
           </Card>
-          <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-            <DialogContent className="sm:max-w-md p-0">
-                <DialogHeader className="p-6 pb-4">
-                    <div className="flex items-start justify-between">
-                        <DialogTitle>Delete "{group.name}"?</DialogTitle>
-                        <DialogClose asChild>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 -mr-2 -mt-2 text-destructive" onClick={onDelete}>
-                                <GoogleSymbol name="delete" className="text-xl" />
-                            </Button>
-                        </DialogClose>
-                    </div>
-                    <DialogDescription>
-                        This will permanently delete the group and unassign all users. This action cannot be undone.
-                    </DialogDescription>
-                </DialogHeader>
-            </DialogContent>
-          </Dialog>
+          <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will permanently delete the "{group.name}" group and unassign all users. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={onDelete}>Continue</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </>
     );
 }
@@ -508,13 +505,19 @@ const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
               )}
             </StrictModeDroppable>
           </DragDropContext>
-          <Dialog open={is2faDialogOpen} onOpenChange={(isOpen) => !isOpen && close2faDialog()}>
-            <DialogContent className="sm:max-w-md">
-            <div className="absolute top-4 right-4"><Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleVerify2fa}><GoogleSymbol name="check" className="text-xl" /><span className="sr-only">Verify & Change</span></Button></div>
-            <DialogHeader><DialogTitle>Two-Factor Authentication</DialogTitle><DialogDescription>Enter the code from your authenticator app and click the checkmark to confirm the role change.</DialogDescription></DialogHeader>
-            <div className="grid gap-4 py-4"><Input id="2fa-code" value={twoFactorCode} onChange={(e) => setTwoFactorCode(e.target.value)} placeholder="123456" onKeyDown={(e) => e.key === 'Enter' && handleVerify2fa()}/></div>
-            </DialogContent>
-        </Dialog>
+          <AlertDialog open={is2faDialogOpen} onOpenChange={(isOpen) => !isOpen && close2faDialog()}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Two-Factor Authentication</AlertDialogTitle>
+                <AlertDialogDescription>Enter the code from your authenticator app to confirm the role change.</AlertDialogDescription>
+              </AlertDialogHeader>
+              <div className="grid gap-4 py-4"><Input id="2fa-code" value={twoFactorCode} onChange={(e) => setTwoFactorCode(e.target.value)} placeholder="123456" onKeyDown={(e) => e.key === 'Enter' && handleVerify2fa()}/></div>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleVerify2fa}>Verify & Change</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     </>
   );
 }

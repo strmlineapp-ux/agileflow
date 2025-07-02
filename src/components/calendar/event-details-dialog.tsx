@@ -1,16 +1,11 @@
-
 'use client';
 
 import * as React from 'react';
 import { type Event } from '@/types';
 import { useUser } from '@/context/user-context';
 import { format } from 'date-fns';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle as AlertDialogTitleComponent } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { PriorityBadge } from './priority-badge';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
