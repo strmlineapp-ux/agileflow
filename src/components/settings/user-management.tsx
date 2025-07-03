@@ -253,7 +253,7 @@ export function UserManagement() {
                                                     key={theme.name}
                                                     variant="ghost"
                                                     size="sm"
-                                                    onClick={() => updateUser(realUser.userId, { theme: theme.name as any })}
+                                                    onClick={() => updateUser(realUser.userId, { theme: theme.name as any, primaryColor: undefined })}
                                                     className={cn(
                                                     "w-full rounded-none gap-2 py-1.5",
                                                     realUser.theme === theme.name ? "text-primary" : ""
