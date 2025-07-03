@@ -120,29 +120,29 @@ This pattern provides a fast, intuitive way for users to duplicate complex entit
 ---
 
 ### 9. Compact Action Dialog
-This is a minimalist dialog for focused actions, such as entering a code or a short piece of information, where a full-screen modal is unnecessary.
+This is a minimalist dialog for focused actions, such as entering a code or a short piece of information, or for low-risk confirmations where a full-screen modal is unnecessary.
 
 - **Component**: Uses the standard `<Dialog>` component, which allows the user to dismiss the action by clicking the overlay or pressing 'Escape'.
 - **Appearance**:
     - No footer buttons ("Cancel", "Save").
-    - The primary action (e.g., Save, Verify) is represented by a single, icon-only button (e.g., `<GoogleSymbol name="check" />`) positioned in the top-right corner of the dialog content.
+    - The primary action (e.g., Save, Verify, Delete) is represented by a single, icon-only button (e.g., `<GoogleSymbol name="check" />`) positioned in the top-right corner of the dialog content.
     - The content is focused and minimal, often using other compact patterns like "Text-based Inputs" for a clean interface.
 - **Behavior**:
     - Clicking the action icon in the corner performs the primary action (e.g., saves or verifies the input).
-    - Clicking the overlay dismisses the dialog without saving.
-- **Application**: Used for Two-Factor Authentication (where the input uses the "Text-based Input" pattern), quick edits that need slightly more context than an inline editor, or simple forms.
+    - Clicking the overlay dismisses the dialog without performing the action.
+- **Application**: Used for Two-Factor Authentication, quick edits, simple forms, and for confirming less critical destructive actions, such as deleting a shared badge.
 
 ---
 
 ### 10. Compact Deletion Dialog
-When a destructive action requires user confirmation (like deleting a shared resource), the standard `AlertDialog` component is used. This is distinct from the `Compact Action Dialog` as it requires an explicit button press to dismiss.
+When a **highly significant destructive action** requires user confirmation (like deleting a Team, Calendar, or Admin Group), the standard `AlertDialog` component is used. This is distinct from the `Compact Action Dialog` as it is intentionally more difficult to dismiss.
 
 - **Appearance**: A modal dialog centered on the screen, overlaying the content.
 - **Interaction**:
     - The dialog contains a clear title, a description of the consequences, and explicit "Cancel" and "Continue" (or similar) buttons in the footer.
     - The "Continue" button for the destructive action is styled with the `destructive` variant to draw attention.
-- **Behavior**: Clicking "Cancel" closes the dialog with no action taken. Clicking "Continue" performs the destructive action. This dialog **cannot** be dismissed by clicking the overlay.
-- **Application**: Used for confirming the deletion of any significant entity, such as Admin Groups, Calendars, Teams, etc.
+- **Behavior**: Clicking "Cancel" closes the dialog with no action taken. Clicking "Continue" performs the destructive action. This dialog **cannot** be dismissed by clicking the overlay, forcing an explicit choice.
+- **Application**: Used for confirming the deletion of **major entities** where accidental dismissal could be problematic, such as Admin Groups, Calendars, Teams, etc.
 
 ---
 
@@ -200,5 +200,6 @@ This is the single source of truth for indicating user interaction state across 
     - **Appearance**: A circular badge (e.g., `h-5 w-5`) with a `border-2` of the parent element's background color (e.g., `border-card` or `border-background`) to create a "punched out" effect. The icon inside should be sized appropriately (e.g., `font-size: 14px` or similar, depending on container).
     - **Placement**: Typically positioned on the bottom-right or top-right corner of the parent element.
     - **Application**: Used for displaying a user's admin group on their avatar, a shared group status on a role icon, or a `share` icon on a shared Badge.
+
 
 
