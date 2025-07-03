@@ -898,6 +898,8 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const titleInputRef = useRef<HTMLInputElement>(null);
 
+    const isPageLocked = (page: AppPage) => ['page-admin-management', 'page-team-management', 'page-calendar'].includes(page.id);
+
     useEffect(() => {
         if (isEditingTitle) titleInputRef.current?.focus();
     }, [isEditingTitle]);
@@ -969,12 +971,10 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
         }
 
         if (source.droppableId === 'pages-list' && destination.droppableId === 'pages-list') {
-            const reorderablePages = appSettings.pages.filter(p => p.id !== 'page-admin-management');
-            const [movedPage] = reorderablePages.splice(source.index, 1);
-            reorderablePages.splice(destination.index, 0, movedPage);
-
-            const adminPage = appSettings.pages.find(p => p.id === 'page-admin-management')!;
-            updateAppSettings({ pages: [adminPage, ...reorderablePages] });
+            const newPages = Array.from(appSettings.pages);
+            const [moved] = newPages.splice(source.index, 1);
+            newPages.splice(destination.index, 0, moved);
+            updateAppSettings({ pages: newPages });
         }
     };
 
@@ -1022,7 +1022,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                             {...provided.droppableProps}
                         >
                             {appSettings.pages.map((page, index) => (
-                                <Draggable key={page.id} draggableId={page.id} index={index}>
+                                <Draggable key={page.id} draggableId={page.id} index={index} isDragDisabled={isPageLocked(page)}>
                                     {(provided) => (
                                         <div 
                                             ref={provided.innerRef} 
