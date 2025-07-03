@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -1031,7 +1030,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                  <StrictModeDroppable droppableId="pages-list">
                     {(provided) => (
                         <div 
-                            className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                            className="space-y-4 max-w-3xl mx-auto"
                             ref={provided.innerRef}
                             {...provided.droppableProps}
                         >
