@@ -63,7 +63,7 @@ const InlineSelectEditor = ({
   const currentLabel = options.find(opt => opt.value === value)?.label || placeholder;
 
   return (
-    <Button variant="ghost" className="h-8 justify-start p-2 text-sm" onClick={() => setIsEditing(true)}>
+    <Button variant="ghost" className="h-8 justify-start p-2 text-sm text-muted-foreground hover:text-primary" onClick={() => setIsEditing(true)}>
       {currentLabel}
     </Button>
   );
@@ -152,17 +152,19 @@ export function UserManagement() {
                             <p className="text-sm text-muted-foreground">{user.email}</p>
                         </div>
                       </div>
+                       {isCurrentUser && (
+                        <Accordion type="single" collapsible className="w-auto px-0">
+                            <AccordionItem value="details" className="border-b-0">
+                                <AccordionTrigger className="py-2 text-sm text-muted-foreground justify-end hover:no-underline [&[data-state=open]>span]:rotate-180">
+                                    <span className="sr-only">Toggle Details</span>
+                                </AccordionTrigger>
+                            </AccordionItem>
+                        </Accordion>
+                       )}
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                       <Label className="text-xs text-muted-foreground">Title</Label>
-                       <p className="text-sm font-medium">{user.title || <span className="italic text-muted-foreground">Not provided</span>}</p>
-                    </div>
-                  </CardContent>
-                  <Accordion type="single" collapsible className="w-full px-4">
+                  <Accordion type="single" collapsible>
                       <AccordionItem value="details" className="border-t">
-                        <AccordionTrigger className="py-2 text-sm text-muted-foreground justify-end hover:no-underline" />
                         <AccordionContent>
                            <div className="p-2 pt-0 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                                 <div>
@@ -197,6 +199,10 @@ export function UserManagement() {
                                         )}
                                     </div>
                                 </div>
+                                 <div>
+                                    <Label className="text-xs text-muted-foreground">Title</Label>
+                                    <p className="text-sm font-medium">{user.title || <span className="italic text-muted-foreground">Not provided</span>}</p>
+                                </div>
                                 <div>
                                     <Label className="text-xs text-muted-foreground">Badges</Label>
                                     <div className="flex flex-wrap gap-1 mt-2">
@@ -227,7 +233,7 @@ export function UserManagement() {
                                                     <TooltipTrigger asChild>
                                                         <PopoverTrigger asChild>
                                                             <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0">
-                                                                <GoogleSymbol name="palette" />
+                                                                <GoogleSymbol name="palette" className="text-primary" />
                                                             </Button>
                                                         </PopoverTrigger>
                                                     </TooltipTrigger>
