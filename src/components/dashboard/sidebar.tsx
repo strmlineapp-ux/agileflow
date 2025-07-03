@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import Link from 'next/link';
@@ -140,7 +139,7 @@ export function Sidebar() {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <div className="px-2 py-1.5">
-                    <p className="text-xs text-muted-foreground mb-2">Roles & Badges</p>
+                    <p className="text-xs text-muted-foreground mb-2">Badges</p>
                     <div className="flex flex-wrap gap-1">
                         {(viewAsUser.roles && viewAsUser.roles.length > 0) ? (
                             viewAsUser.roles.map(roleName => {

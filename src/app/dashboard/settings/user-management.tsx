@@ -3,7 +3,7 @@
 
 import { useState, Fragment, useRef } from 'react';
 import { type User, type Team } from '@/types';
-import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -97,7 +97,7 @@ export function UserManagement() {
 
     return (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 gap-6">
             {users.map(user => {
               const isCurrentUser = user.userId === realUser.userId;
               return (
@@ -146,30 +146,9 @@ export function UserManagement() {
                        <Label className="text-xs text-muted-foreground">Title</Label>
                        <p className="text-sm font-medium">{user.title || <span className="italic text-muted-foreground">Not provided</span>}</p>
                     </div>
-                    <div className="mt-4 space-y-2">
-                      <Label className="text-xs text-muted-foreground">Roles & Badges</Label>
-                      <div className="flex flex-wrap gap-1 min-h-[24px]">
-                        {(user.roles || []).map(role => {
-                          const roleInfo = allRolesAndBadges.find(r => r.name === role);
-                          return (
-                            <Badge
-                              key={role}
-                              variant="outline"
-                              style={roleInfo ? { color: roleInfo.color, borderColor: roleInfo.color } : {}}
-                              className="rounded-full gap-1 text-xs py-0.5 px-2"
-                            >
-                              {roleInfo && <GoogleSymbol name={roleInfo.icon} className="text-sm" />}
-                              <span>{role}</span>
-                            </Badge>
-                          );
-                        })}
-                        {(user.roles || []).length === 0 && <p className="text-xs text-muted-foreground italic">No roles assigned</p>}
-                      </div>
-                    </div>
                   </CardContent>
-                  <CardFooter className="p-0">
-                    <Accordion type="single" collapsible className="w-full px-4">
-                      <AccordionItem value="details" className="border-b-0">
+                  <Accordion type="single" collapsible className="w-full px-4">
+                      <AccordionItem value="details" className="border-t">
                         <AccordionTrigger className="py-2 text-sm text-muted-foreground">
                           Details
                         </AccordionTrigger>
@@ -188,6 +167,26 @@ export function UserManagement() {
                                                 <span className="sr-only">Edit phone number</span>
                                             </Button>
                                         )}
+                                    </div>
+                                </div>
+                                <div>
+                                    <Label className="text-xs text-muted-foreground">Badges</Label>
+                                    <div className="flex flex-wrap gap-1 mt-1">
+                                    {(user.roles || []).map(role => {
+                                        const roleInfo = allRolesAndBadges.find(r => r.name === role);
+                                        return (
+                                        <Badge
+                                            key={role}
+                                            variant="outline"
+                                            style={roleInfo ? { color: roleInfo.color, borderColor: roleInfo.color } : {}}
+                                            className="rounded-full gap-1 text-xs py-0.5 px-2"
+                                        >
+                                            {roleInfo && <GoogleSymbol name={roleInfo.icon} className="text-sm" />}
+                                            <span>{role}</span>
+                                        </Badge>
+                                        );
+                                    })}
+                                    {(user.roles || []).length === 0 && <p className="text-xs text-muted-foreground italic">No roles assigned</p>}
                                     </div>
                                 </div>
                                 {isCurrentUser && (
@@ -254,7 +253,6 @@ export function UserManagement() {
                         </AccordionContent>
                       </AccordionItem>
                     </Accordion>
-                  </CardFooter>
                 </Card>
               )
             })}
