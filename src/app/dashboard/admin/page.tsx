@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -889,30 +890,17 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const titleInputRef = useRef<HTMLInputElement>(null);
 
-    const sortedPages = useMemo(() => {
-        const pages = [...appSettings.pages];
-        const adminIndex = pages.findIndex(p => p.id === 'page-admin-management');
-        
-        let adminPage: AppPage | undefined;
-        if (adminIndex > -1) {
-            [adminPage] = pages.splice(adminIndex, 1);
-        }
+    const adminPage = useMemo(() => appSettings.pages.find(p => p.id === 'page-admin-management'), [appSettings.pages]);
+    const settingsPage = useMemo(() => appSettings.pages.find(p => p.id === 'page-settings'), [appSettings.pages]);
 
-        const settingsIndex = pages.findIndex(p => p.id === 'page-settings');
-        let settingsPage: AppPage | undefined;
-        if (settingsIndex > -1) {
-            [settingsPage] = pages.splice(settingsIndex, 1);
-        }
-
-        const result: AppPage[] = [];
-        if (adminPage) result.push(adminPage);
-        result.push(...pages);
-        if (settingsPage) result.push(settingsPage);
-        
-        return result;
+    const draggablePages = useMemo(() => {
+        return appSettings.pages.filter(p => p.id !== 'page-admin-management' && p.id !== 'page-settings');
     }, [appSettings.pages]);
+    
+    const midPoint = Math.ceil(draggablePages.length / 2);
+    const columnOnePages = draggablePages.slice(0, midPoint);
+    const columnTwoPages = draggablePages.slice(midPoint);
 
-    const isPageLocked = (page: AppPage) => ['page-admin-management', 'page-settings'].includes(page.id);
 
     useEffect(() => {
         if (isEditingTitle) titleInputRef.current?.focus();
@@ -974,32 +962,48 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                     path: newPath,
                 };
                 
-                const originalIndex = sortedPages.findIndex(p => p.id === draggableId);
-                const newPages = [...sortedPages];
+                const newPages = [...appSettings.pages];
+                const originalIndex = newPages.findIndex(p => p.id === draggableId);
                 newPages.splice(originalIndex + 1, 0, newPage);
+
                 updateAppSettings({ pages: newPages });
                 toast({ title: 'Page Duplicated', description: `A copy of "${pageToDuplicate.name}" was created.` });
             }
             return;
         }
 
-        if (source.droppableId === 'pages-list' && destination.droppableId === 'pages-list') {
-            const newPages = Array.from(sortedPages);
-            const [moved] = newPages.splice(source.index, 1);
-            newPages.splice(destination.index, 0, moved);
-            updateAppSettings({ pages: newPages });
+        const newCol1 = Array.from(columnOnePages);
+        const newCol2 = Array.from(columnTwoPages);
+        
+        if (source.droppableId === destination.droppableId) {
+            const list = source.droppableId === 'pages-col-1' ? newCol1 : newCol2;
+            const [removed] = list.splice(source.index, 1);
+            list.splice(destination.index, 0, removed);
+        } else {
+            const sourceList = source.droppableId === 'pages-col-1' ? newCol1 : newCol2;
+            const destList = destination.droppableId === 'pages-col-1' ? newCol1 : newCol2;
+            const [removed] = sourceList.splice(source.index, 1);
+            destList.splice(destination.index, 0, removed);
         }
+        
+        const finalPages = [
+            ...(adminPage ? [adminPage] : []),
+            ...newCol1,
+            ...newCol2,
+            ...(settingsPage ? [settingsPage] : []),
+        ];
+        updateAppSettings({ pages: finalPages });
     };
 
     return (
-        <DragDropContext onDragEnd={onDragEnd}>
-            <div className="space-y-8">
-                <div className="flex items-center gap-2">
-                    {isEditingTitle ? (
-                        <Input ref={titleInputRef} defaultValue={tab.name} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
-                    ) : (
-                        <h2 className="text-2xl font-semibold tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
-                    )}
+        <div className="space-y-8">
+            <div className="flex items-center gap-2">
+                {isEditingTitle ? (
+                    <Input ref={titleInputRef} defaultValue={tab.name} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
+                ) : (
+                    <h2 className="text-2xl font-semibold tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
+                )}
+                <DragDropContext onDragEnd={onDragEnd}>
                     <StrictModeDroppable droppableId="duplicate-page-zone">
                         {(provided, snapshot) => (
                             <div 
@@ -1026,38 +1030,52 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                             </div>
                         )}
                     </StrictModeDroppable>
-                </div>
-                 <StrictModeDroppable droppableId="pages-list">
-                    {(provided) => (
-                        <div 
-                            className="flex flex-col flex-wrap gap-x-6 max-h-[600px]"
-                            ref={provided.innerRef}
-                            {...provided.droppableProps}
-                        >
-                            {sortedPages.map((page, index) => (
-                                <Draggable key={page.id} draggableId={page.id} index={index} isDragDisabled={isPageLocked(page)}>
-                                    {(provided) => (
-                                        <div 
-                                            ref={provided.innerRef} 
-                                            {...provided.draggableProps} 
-                                            {...provided.dragHandleProps}
-                                            className="w-full max-w-md mb-6"
-                                        >
-                                            <PageCard
-                                                page={page}
-                                                onUpdate={handleUpdatePage}
-                                                onDelete={handleDeletePage}
-                                            />
-                                        </div>
-                                    )}
-                                </Draggable>
-                            ))}
-                            {provided.placeholder}
-                        </div>
-                    )}
-                </StrictModeDroppable>
+                </DragDropContext>
             </div>
-        </DragDropContext>
+            
+             <DragDropContext onDragEnd={onDragEnd}>
+                <div className="space-y-6">
+                    {adminPage && <PageCard page={adminPage} onUpdate={handleUpdatePage} onDelete={handleDeletePage} />}
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                        <StrictModeDroppable droppableId="pages-col-1">
+                           {(provided) => (
+                                <div className="space-y-6" ref={provided.innerRef} {...provided.droppableProps}>
+                                    {columnOnePages.map((page, index) => (
+                                        <Draggable key={page.id} draggableId={page.id} index={index}>
+                                            {(provided) => (
+                                                <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
+                                                    <PageCard page={page} onUpdate={handleUpdatePage} onDelete={handleDeletePage} />
+                                                </div>
+                                            )}
+                                        </Draggable>
+                                    ))}
+                                    {provided.placeholder}
+                                </div>
+                            )}
+                        </StrictModeDroppable>
+                        <StrictModeDroppable droppableId="pages-col-2">
+                           {(provided) => (
+                                <div className="space-y-6" ref={provided.innerRef} {...provided.droppableProps}>
+                                    {columnTwoPages.map((page, index) => (
+                                        <Draggable key={page.id} draggableId={page.id} index={index}>
+                                            {(provided) => (
+                                                <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
+                                                    <PageCard page={page} onUpdate={handleUpdatePage} onDelete={handleDeletePage} />
+                                                </div>
+                                            )}
+                                        </Draggable>
+                                    ))}
+                                    {provided.placeholder}
+                                </div>
+                            )}
+                        </StrictModeDroppable>
+                    </div>
+
+                    {settingsPage && <PageCard page={settingsPage} onUpdate={handleUpdatePage} onDelete={handleDeletePage} />}
+                </div>
+            </DragDropContext>
+        </div>
     );
 };
 // #endregion
