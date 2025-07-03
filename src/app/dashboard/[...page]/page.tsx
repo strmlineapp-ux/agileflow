@@ -7,7 +7,7 @@ import { useUser } from '@/context/user-context';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { type AppTab, type Team } from '@/types';
+import { type AppTab, type Team, type AppPage } from '@/types';
 
 // Import all possible tab components
 import { AdminGroupsManagement, PagesManagement, TabsManagement } from '@/app/dashboard/admin/page';
@@ -74,30 +74,28 @@ export default function DynamicPage() {
     }
     
     const pageTabs = appSettings.tabs.filter(t => pageConfig.associatedTabs.includes(t.id));
-    const pageTitle = pageConfig.isDynamic ? `${team?.name} ${pageConfig.name}` : pageConfig.name;
+    const pageTitle = pageConfig.isDynamic && team ? `${team.name} ${pageConfig.name}` : pageConfig.name;
 
     // Render page with no tabs (single view)
     if (pageTabs.length === 0) {
         const ContentComponent = pageConfig.componentKey ? componentMap[pageConfig.componentKey] : null;
-        const pseudoTab = { ...pageConfig, componentKey: pageConfig.componentKey as any };
+        
+        if (ContentComponent) {
+            const pseudoTab: AppPage = { ...pageConfig, componentKey: pageConfig.componentKey as any };
+            return <ContentComponent tab={pseudoTab} team={team} />;
+        }
 
         return (
-            <>
-                {ContentComponent ? (
-                    <ContentComponent tab={pseudoTab} />
-                ) : (
-                    <div className="flex flex-col gap-6">
-                        <div className="flex items-center gap-3">
-                            <GoogleSymbol name={pageConfig.icon} className="text-3xl" />
-                            <h1 className="font-headline text-3xl font-semibold">{pageTitle}</h1>
-                        </div>
-                        <div className="flex items-center justify-center h-64 border-2 border-dashed rounded-lg">
-                            <p className="text-muted-foreground">This page has no content. Add tabs in Admin Management.</p>
-                        </div>
-                    </>
-                )}
-            </>
-        )
+            <div className="flex flex-col gap-6">
+                <div className="flex items-center gap-3">
+                    <GoogleSymbol name={pageConfig.icon} className="text-3xl" />
+                    <h1 className="font-headline text-3xl font-semibold">{pageTitle}</h1>
+                </div>
+                <div className="flex items-center justify-center h-64 border-2 border-dashed rounded-lg">
+                    <p className="text-muted-foreground">This page has no content. Add tabs in Admin Management.</p>
+                </div>
+            </div>
+        );
     }
     
     // Render page with single tab (no tab list)
