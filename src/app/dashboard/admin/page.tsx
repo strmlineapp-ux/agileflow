@@ -748,8 +748,6 @@ function PageCard({ page, onUpdate, onDelete }: { page: AppPage; onUpdate: (id: 
     
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     
-    const isLocked = ['page-admin-management', 'page-team-management', 'page-calendar'].includes(page.id);
-
     useEffect(() => {
         if (isEditingName) nameInputRef.current?.focus();
     }, [isEditingName]);
@@ -836,26 +834,20 @@ function PageCard({ page, onUpdate, onDelete }: { page: AppPage; onUpdate: (id: 
                                 ) : (
                                     <CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer">{page.name}</CardTitle>
                                 )}
-                                {!isLocked && (
-                                    <>
-                                        <PageAccessControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
-                                        <PageTabsControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
-                                    </>
-                                )}
+                                <PageAccessControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
+                                <PageTabsControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
                             </div>
                         </div>
-                        {!isLocked && (
-                             <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => setIsDeleteDialogOpen(true)}>
-                                            <GoogleSymbol name="delete" />
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent><p>Delete Page</p></TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                        )}
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => setIsDeleteDialogOpen(true)}>
+                                        <GoogleSymbol name="delete" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent><p>Delete Page</p></TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
                     </div>
                 </CardHeader>
                 <CardContent>
@@ -898,7 +890,30 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const titleInputRef = useRef<HTMLInputElement>(null);
 
-    const isPageLocked = (page: AppPage) => ['page-admin-management', 'page-team-management', 'page-calendar'].includes(page.id);
+    const sortedPages = useMemo(() => {
+        const pages = [...appSettings.pages];
+        const adminIndex = pages.findIndex(p => p.id === 'page-admin-management');
+        
+        let adminPage: AppPage | undefined;
+        if (adminIndex > -1) {
+            [adminPage] = pages.splice(adminIndex, 1);
+        }
+
+        const settingsIndex = pages.findIndex(p => p.id === 'page-settings');
+        let settingsPage: AppPage | undefined;
+        if (settingsIndex > -1) {
+            [settingsPage] = pages.splice(settingsIndex, 1);
+        }
+
+        const result: AppPage[] = [];
+        if (adminPage) result.push(adminPage);
+        result.push(...pages);
+        if (settingsPage) result.push(settingsPage);
+        
+        return result;
+    }, [appSettings.pages]);
+
+    const isPageLocked = (page: AppPage) => ['page-admin-management', 'page-settings'].includes(page.id);
 
     useEffect(() => {
         if (isEditingTitle) titleInputRef.current?.focus();
@@ -948,7 +963,6 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
 
         if (!destination) return;
         
-        // Handle duplication
         if (destination.droppableId === 'duplicate-page-zone') {
             const pageToDuplicate = appSettings.pages.find(p => p.id === draggableId);
             if (pageToDuplicate) {
@@ -960,9 +974,9 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                     name: newName,
                     path: newPath,
                 };
-                // Insert the new page right after the original one
-                const originalIndex = appSettings.pages.findIndex(p => p.id === draggableId);
-                const newPages = [...appSettings.pages];
+                
+                const originalIndex = sortedPages.findIndex(p => p.id === draggableId);
+                const newPages = [...sortedPages];
                 newPages.splice(originalIndex + 1, 0, newPage);
                 updateAppSettings({ pages: newPages });
                 toast({ title: 'Page Duplicated', description: `A copy of "${pageToDuplicate.name}" was created.` });
@@ -971,7 +985,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
         }
 
         if (source.droppableId === 'pages-list' && destination.droppableId === 'pages-list') {
-            const newPages = Array.from(appSettings.pages);
+            const newPages = Array.from(sortedPages);
             const [moved] = newPages.splice(source.index, 1);
             newPages.splice(destination.index, 0, moved);
             updateAppSettings({ pages: newPages });
@@ -1021,7 +1035,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                             ref={provided.innerRef}
                             {...provided.droppableProps}
                         >
-                            {appSettings.pages.map((page, index) => (
+                            {sortedPages.map((page, index) => (
                                 <Draggable key={page.id} draggableId={page.id} index={index} isDragDisabled={isPageLocked(page)}>
                                     {(provided) => (
                                         <div 
