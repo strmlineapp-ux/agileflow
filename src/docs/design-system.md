@@ -20,14 +20,14 @@ The application favors a compact, information-dense layout. Card components are 
 ### 2. Inline Editor
 This pattern allows for seamless, direct text editing within the main application layout, avoiding disruptive dialog boxes or popovers for simple text changes.
 
-- **Trigger:** Clicking directly on a text element (e.g., a section title, a badge name).
+- **Trigger:** Clicking directly on a text element (e.g., a section title, a badge name, a phone number).
 - **Interaction:**
     - The text element transforms into an input field.
     - The input field must be styled to perfectly match the font, size, weight, and color of the original text element it replaces.
     - **Crucially, the input must have a transparent background and no borders or box-shadow**, ensuring it blends seamlessly into the UI.
 - **Behavior:**
     - Typing modifies the text value.
-    - Clicking anywhere outside the input field or pressing 'Enter' saves the changes and reverts the input back to a standard text element. A global event listener is used to robustly capture the "click away" event without conflicting with other UI libraries.
+    - Clicking anywhere outside the input field or pressing 'Enter' saves the changes and reverts the input back to a standard text element.
     - Pressing 'Escape' cancels the edit without saving.
 - **Application:** Used for editing entity names, labels, and other simple text fields directly in the UI.
 
@@ -155,7 +155,8 @@ When a destructive action requires user confirmation (like deleting a shared res
 
 ### Theming & Button Styles
 
-- **Multi-Theme Support**: The application supports `light` and `dark` themes. This allows users to choose their preferred visual mode. A user can also select a custom primary color to override the theme's default.
+- **Theme Selection**: Users can choose between `light` and `dark` themes. This selection is presented as a set of tab-like buttons, each with an icon and a label. The active theme's button has its text and icon colored with the primary theme color.
+- **Custom Primary Color**: Users can select a custom primary color using a color picker popover, which is triggered by a ghost-style palette icon button. This custom color overrides the theme's default primary color.
 - **Primary Button Gradient**: Primary buttons have a special gradient effect on hover, which is unique to each theme. This provides a subtle but polished visual feedback for key actions.
 - **Text-based Button Hover**: For text-based buttons (like those on the login page), the hover and focus state is indicated *only* by the text color changing to the primary theme color. No background color is applied.
 

@@ -1,17 +1,11 @@
 
 'use client';
 
-import { useState, Fragment, useRef } from 'react';
+import { useState, Fragment, useRef, useEffect } from 'react';
 import { type User, type Team } from '@/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/context/user-context';
@@ -22,6 +16,13 @@ import { GoogleSymbol } from '../icons/google-symbol';
 import { Badge } from '../ui/badge';
 import { Label } from '../ui/label';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+
+const predefinedColors = [
+    '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
+    '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6',
+    '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
+];
 
 const InlineSelectEditor = ({
   value,
@@ -70,30 +71,42 @@ const InlineSelectEditor = ({
 
 export function UserManagement() {
     const { realUser, users, updateUser, linkGoogleCalendar, allRolesAndBadges } = useUser();
-    
-    // State for editing user contact
-    const [editingContactUser, setEditingContactUser] = useState<User | null>(null);
-    const [phone, setPhone] = useState('');
-
+    const [editingPhoneUserId, setEditingPhoneUserId] = useState<string | null>(null);
+    const [phoneValue, setPhoneValue] = useState('');
+    const phoneInputRef = useRef<HTMLInputElement>(null);
     const { toast } = useToast();
+    const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
+
+    useEffect(() => {
+        if (editingPhoneUserId && phoneInputRef.current) {
+            phoneInputRef.current.focus();
+            phoneInputRef.current.select();
+        }
+    }, [editingPhoneUserId]);
    
     const handleSavePhone = async () => {
-        if (!editingContactUser) return;
-        if (editingContactUser.userId !== realUser.userId) {
+        if (!editingPhoneUserId) return;
+        
+        if (editingPhoneUserId !== realUser.userId) {
             toast({ variant: 'destructive', title: 'Error', description: 'You can only edit your own phone number.' });
+            setEditingPhoneUserId(null);
             return;
         }
-        await updateUser(editingContactUser.userId, { phone });
-        setEditingContactUser(null);
+        
+        await updateUser(editingPhoneUserId, { phone: phoneValue });
+        setEditingPhoneUserId(null);
         toast({ title: 'Success', description: 'Contact number updated.' });
     };
 
     const THEME_OPTIONS = [
-      { name: 'light', label: 'Light' },
-      { name: 'dark', label: 'Dark' },
-      { name: 'high-visibility', label: 'High Visibility' },
-      { name: 'firebase', label: 'Firebase' }
+      { name: 'light', label: 'Light', icon: 'light_mode' },
+      { name: 'dark', label: 'Dark', icon: 'dark_mode' },
     ];
+    
+    const handleSetPrimaryColor = (color: string) => {
+      updateUser(realUser.userId, { primaryColor: color });
+      setIsColorPopoverOpen(false);
+    }
 
     return (
         <>
@@ -150,28 +163,45 @@ export function UserManagement() {
                   <Accordion type="single" collapsible className="w-full px-4">
                       <AccordionItem value="details" className="border-t">
                         <AccordionTrigger className="py-2 text-sm text-muted-foreground">
-                          Details
+                          <span className="sr-only">Details</span>
                         </AccordionTrigger>
                         <AccordionContent>
                            <div className="p-2 pt-0 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                                 <div>
                                     <Label className="text-xs text-muted-foreground">Contact</Label>
-                                    <div className="flex items-center gap-2">
-                                        {user.phone ? <p className="text-sm">{user.phone}</p> : <p className="text-sm text-muted-foreground italic">Not provided</p>}
-                                        {isCurrentUser && (
-                                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => {
-                                                setEditingContactUser(user);
-                                                setPhone(user.phone || '');
-                                            }}>
-                                                <GoogleSymbol name="edit" className="text-base" />
-                                                <span className="sr-only">Edit phone number</span>
-                                            </Button>
+                                    <div
+                                        className={cn(
+                                            "text-sm min-h-[36px] flex items-center",
+                                            isCurrentUser && !editingPhoneUserId && "cursor-pointer"
+                                        )}
+                                        onClick={() => {
+                                            if (isCurrentUser && !editingPhoneUserId) {
+                                                setEditingPhoneUserId(user.userId);
+                                                setPhoneValue(user.phone || '');
+                                            }
+                                        }}
+                                    >
+                                        {editingPhoneUserId === user.userId && isCurrentUser ? (
+                                            <Input
+                                                ref={phoneInputRef}
+                                                value={phoneValue}
+                                                onChange={(e) => setPhoneValue(e.target.value)}
+                                                onBlur={handleSavePhone}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') handleSavePhone();
+                                                    if (e.key === 'Escape') setEditingPhoneUserId(null);
+                                                }}
+                                                className="h-auto p-0 text-sm border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                                                placeholder="Not provided"
+                                            />
+                                        ) : (
+                                            user.phone || <span className="italic text-muted-foreground">Not provided</span>
                                         )}
                                     </div>
                                 </div>
                                 <div>
                                     <Label className="text-xs text-muted-foreground">Badges</Label>
-                                    <div className="flex flex-wrap gap-1 mt-1">
+                                    <div className="flex flex-wrap gap-1 mt-2">
                                     {(user.roles || []).map(role => {
                                         const roleInfo = allRolesAndBadges.find(r => r.name === role);
                                         return (
@@ -186,25 +216,52 @@ export function UserManagement() {
                                         </Badge>
                                         );
                                     })}
-                                    {(user.roles || []).length === 0 && <p className="text-xs text-muted-foreground italic">No roles assigned</p>}
+                                    {(user.roles || []).length === 0 && <p className="text-xs text-muted-foreground italic">No badges assigned</p>}
                                     </div>
                                 </div>
                                 {isCurrentUser && (
                                   <>
                                     <div className="space-y-1">
-                                        <Label className="text-xs text-muted-foreground">Theme</Label>
-                                        <div className="flex items-center gap-2">
-                                          {THEME_OPTIONS.map(theme => (
-                                            <Button 
-                                              key={theme.name}
-                                              variant={realUser.theme === theme.name ? 'secondary' : 'ghost'}
-                                              size="sm"
-                                              onClick={() => updateUser(realUser.userId, { theme: theme.name as any })}
-                                            >
-                                              {theme.label}
-                                            </Button>
-                                          ))}
+                                      <Label className="text-xs text-muted-foreground">Theme &amp; Color</Label>
+                                      <div className="flex items-center gap-2">
+                                        <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                                            <PopoverTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0">
+                                                    <GoogleSymbol name="palette" />
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-2">
+                                                <div className="grid grid-cols-8 gap-1">
+                                                    {predefinedColors.map(color => (
+                                                        <button key={color} className="h-6 w-6 rounded-full border" style={{ backgroundColor: color }} onClick={() => handleSetPrimaryColor(color)} aria-label={`Set color to ${color}`}/>
+                                                    ))}
+                                                    <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
+                                                        <GoogleSymbol name="colorize" className="text-muted-foreground" />
+                                                        <Input type="color" value={realUser.primaryColor || '#000000'} onChange={(e) => handleSetPrimaryColor(e.target.value)} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" aria-label="Custom color picker"/>
+                                                    </div>
+                                                </div>
+                                            </PopoverContent>
+                                        </Popover>
+                                        <div className="relative w-full border-b">
+                                          <div className="flex h-10 items-center justify-center p-0 text-muted-foreground">
+                                              {THEME_OPTIONS.map(theme => (
+                                              <Button
+                                                  key={theme.name}
+                                                  variant="ghost"
+                                                  size="sm"
+                                                  onClick={() => updateUser(realUser.userId, { theme: theme.name as any })}
+                                                  className={cn(
+                                                  "w-full rounded-none gap-2 py-1.5",
+                                                  realUser.theme === theme.name ? "text-primary" : ""
+                                                  )}
+                                              >
+                                                  <GoogleSymbol name={theme.icon} className="text-lg" />
+                                                  {theme.label}
+                                              </Button>
+                                              ))}
+                                          </div>
                                         </div>
+                                      </div>
                                     </div>
                                     <div className="space-y-1">
                                       <Label className="text-xs text-muted-foreground">Default Calendar View</Label>
@@ -232,7 +289,7 @@ export function UserManagement() {
                                         placeholder="Select Time Format"
                                       />
                                     </div>
-                                    <div className="space-y-1 self-end">
+                                    <div className="space-y-1 self-center">
                                         <TooltipProvider>
                                           <Tooltip>
                                             <TooltipTrigger asChild>
@@ -257,23 +314,6 @@ export function UserManagement() {
               )
             })}
           </div>
-
-            <Dialog open={!!editingContactUser} onOpenChange={(isOpen) => !isOpen && setEditingContactUser(null)}>
-                <DialogContent>
-                    <div className="absolute top-4 right-4">
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSavePhone}>
-                            <GoogleSymbol name="check" className="text-xl" />
-                            <span className="sr-only">Save Phone Number</span>
-                        </Button>
-                    </div>
-                    <DialogHeader>
-                        <DialogTitle>Edit contact number</DialogTitle>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        <Input id="phone-number" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="e.g. 123-456-7890" />
-                    </div>
-                </DialogContent>
-            </Dialog>
         </>
     )
 }
