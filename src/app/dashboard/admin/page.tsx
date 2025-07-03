@@ -1030,7 +1030,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                  <StrictModeDroppable droppableId="pages-list">
                     {(provided) => (
                         <div 
-                            className="space-y-4 max-w-3xl mx-auto"
+                            className="flex flex-wrap gap-6 justify-center"
                             ref={provided.innerRef}
                             {...provided.droppableProps}
                         >
@@ -1041,6 +1041,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                                             ref={provided.innerRef} 
                                             {...provided.draggableProps} 
                                             {...provided.dragHandleProps}
+                                            className="w-full max-w-md"
                                         >
                                             <PageCard
                                                 page={page}
