@@ -6,7 +6,6 @@ import { useUser } from '@/context/user-context';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { type Team, type EventTemplate, type AppTab } from '@/types';
@@ -181,10 +180,8 @@ export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab
   const { toast } = useToast();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-
   const [editingTemplate, setEditingTemplate] = useState<EventTemplate | null>(null);
-  const [templateToDelete, setTemplateToDelete] = useState<EventTemplate | null>(null);
+  const [deletingTemplate, setDeletingTemplate] = useState<EventTemplate | null>(null);
   const [editingTemplateNameId, setEditingTemplateNameId] = useState<string | null>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
 
@@ -240,11 +237,6 @@ export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab
     setEditingTemplate(template);
     setIsFormOpen(true);
   };
-
-  const openDeleteDialog = (template: EventTemplate) => {
-    setTemplateToDelete(template);
-    setIsDeleteDialogOpen(true);
-  };
   
   const handleSaveTemplate = (templateData: Omit<EventTemplate, 'id'>) => {
     let updatedTemplates;
@@ -265,11 +257,11 @@ export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab
   };
 
   const handleDeleteTemplate = () => {
-    if (!templateToDelete) return;
-    const updatedTemplates = templates.filter(t => t.id !== templateToDelete.id);
+    if (!deletingTemplate) return;
+    const updatedTemplates = templates.filter(t => t.id !== deletingTemplate.id);
     updateTeam(team.id, { eventTemplates: updatedTemplates });
-    toast({ title: 'Template Deleted', description: `"${templateToDelete.name}" has been deleted.` });
-    setTemplateToDelete(null);
+    toast({ title: 'Template Deleted', description: `"${deletingTemplate.name}" has been deleted.` });
+    setDeletingTemplate(null);
   };
 
   return (
@@ -350,7 +342,7 @@ export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab
                                   className="h-8 w-8 text-destructive hover:text-destructive"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    openDeleteDialog(template);
+                                    setDeletingTemplate(template);
                                   }}
                                 >
                                     <GoogleSymbol name="delete" />
@@ -391,22 +383,22 @@ export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab
         </DialogContent>
       </Dialog>
       
-      <AlertDialog open={!!templateToDelete} onOpenChange={(isOpen) => !isOpen && setTemplateToDelete(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the "{templateToDelete?.name}" template.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteTemplate} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Continue
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <Dialog open={!!deletingTemplate} onOpenChange={(isOpen) => !isOpen && setDeletingTemplate(null)}>
+        <DialogContent className="max-w-md">
+            <div className="absolute top-4 right-4">
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={handleDeleteTemplate}>
+                    <GoogleSymbol name="delete" className="text-xl" />
+                    <span className="sr-only">Delete Template</span>
+                </Button>
+            </div>
+            <DialogHeader>
+                <DialogTitle>Delete "{deletingTemplate?.name}"?</DialogTitle>
+                <DialogDescription>
+                    This will permanently delete the template. This action cannot be undone.
+                </DialogDescription>
+            </DialogHeader>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

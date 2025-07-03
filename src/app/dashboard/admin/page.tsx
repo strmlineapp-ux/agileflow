@@ -740,10 +740,11 @@ function PageCard({ page, onUpdate, onDelete }: { page: AppPage; onUpdate: (id: 
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
     
-    // Icon Search State
     const [isSearchingIcons, setIsSearchingIcons] = useState(false);
     const [iconSearch, setIconSearch] = useState('');
     const iconSearchInputRef = useRef<HTMLInputElement>(null);
+    
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     
     const isLocked = ['page-admin-management', 'page-team-management', 'page-calendar'].includes(page.id);
 
@@ -778,96 +779,112 @@ function PageCard({ page, onUpdate, onDelete }: { page: AppPage; onUpdate: (id: 
     const filteredIcons = useMemo(() => googleSymbolNames.filter(icon => icon.toLowerCase().includes(iconSearch.toLowerCase())), [iconSearch]);
 
     return (
-        <Card>
-            <CardHeader>
-                <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="relative">
-                            <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
-                                <PopoverTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-9 w-9 text-2xl">
-                                        <GoogleSymbol name={page.icon} />
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-80 p-0">
-                                    <div className="flex items-center gap-1 p-2 border-b">
-                                        {!isSearchingIcons ? (
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => setIsSearchingIcons(true)}>
-                                                <GoogleSymbol name="search" />
-                                            </Button>
-                                        ) : (
-                                            <div className="flex items-center gap-1 w-full">
-                                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
-                                                <input
-                                                    ref={iconSearchInputRef}
-                                                    placeholder="Search icons..."
-                                                    value={iconSearch}
-                                                    onChange={(e) => setIconSearch(e.target.value)}
-                                                    onBlur={() => !iconSearch && setIsSearchingIcons(false)}
-                                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
-                                                />
-                                            </div>
-                                        )}
-                                    </div>
-                                  <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={page.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(page.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
-                                </PopoverContent>
-                            </Popover>
-                            <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                              <PopoverTrigger asChild>
-                                  <div className="absolute -bottom-1 -right-0 h-4 w-4 rounded-full border-2 border-card cursor-pointer" style={{ backgroundColor: page.color }} />
-                              </PopoverTrigger>
-                              <PopoverContent className="w-auto p-2">
-                                  <div className="grid grid-cols-8 gap-1">
-                                      {predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => { onUpdate(page.id, { color: c }); setIsColorPopoverOpen(false); }}/>))}
-                                      <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
-                                          <GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={page.color} onChange={(e) => onUpdate(page.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/>
+        <>
+            <Card>
+                <CardHeader>
+                    <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="relative">
+                                <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
+                                    <PopoverTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-9 w-9 text-2xl">
+                                            <GoogleSymbol name={page.icon} />
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-80 p-0">
+                                        <div className="flex items-center gap-1 p-2 border-b">
+                                            {!isSearchingIcons ? (
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => setIsSearchingIcons(true)}>
+                                                    <GoogleSymbol name="search" />
+                                                </Button>
+                                            ) : (
+                                                <div className="flex items-center gap-1 w-full">
+                                                    <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                                                    <input
+                                                        ref={iconSearchInputRef}
+                                                        placeholder="Search icons..."
+                                                        value={iconSearch}
+                                                        onChange={(e) => setIconSearch(e.target.value)}
+                                                        onBlur={() => !iconSearch && setIsSearchingIcons(false)}
+                                                        className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
+                                      <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={page.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(page.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
+                                    </PopoverContent>
+                                </Popover>
+                                <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                                  <PopoverTrigger asChild>
+                                      <div className="absolute -bottom-1 -right-0 h-4 w-4 rounded-full border-2 border-card cursor-pointer" style={{ backgroundColor: page.color }} />
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-auto p-2">
+                                      <div className="grid grid-cols-8 gap-1">
+                                          {predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => { onUpdate(page.id, { color: c }); setIsColorPopoverOpen(false); }}/>))}
+                                          <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
+                                              <GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={page.color} onChange={(e) => onUpdate(page.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/>
+                                          </div>
                                       </div>
-                                  </div>
-                              </PopoverContent>
-                            </Popover>
+                                  </PopoverContent>
+                                </Popover>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                {isEditingName ? (
+                                    <Input ref={nameInputRef} defaultValue={page.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 text-2xl font-semibold leading-none tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>
+                                ) : (
+                                    <CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer">{page.name}</CardTitle>
+                                )}
+                                {!isLocked && (
+                                    <>
+                                        <PageAccessControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
+                                        <PageTabsControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
+                                    </>
+                                )}
+                            </div>
                         </div>
-                        <div className="flex items-center gap-1">
-                            {isEditingName ? (
-                                <Input ref={nameInputRef} defaultValue={page.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 text-2xl font-semibold leading-none tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>
-                            ) : (
-                                <CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer">{page.name}</CardTitle>
-                            )}
-                            {!isLocked && (
-                                <>
-                                    <PageAccessControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
-                                    <PageTabsControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
-                                </>
-                            )}
-                        </div>
+                        {!isLocked && (
+                             <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => setIsDeleteDialogOpen(true)}>
+                                            <GoogleSymbol name="delete" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent><p>Delete Page</p></TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        )}
                     </div>
-                    {!isLocked && (
-                         <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => onDelete(page.id)}>
-                                        <GoogleSymbol name="delete" />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent><p>Delete Page</p></TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    )}
-                </div>
-            </CardHeader>
-            <CardContent>
-                <div>
-                  <h4 className="font-medium text-sm mb-2">Details</h4>
-                  <CardDescription>
-                      When associated with a Team, page access is granted to Team Admins, or all members if no Admins are set.
-                      When associated with an Admin Group, page access is granted to Group Admins, or all members if no Admins are set.
-                  </CardDescription>
-                  <div className="flex gap-2 text-sm text-muted-foreground mt-2">
-                      <Badge variant="outline">{page.path}</Badge>
-                      {page.isDynamic && <Badge variant="outline">Dynamic Team Page</Badge>}
-                  </div>
-                </div>
-            </CardContent>
-        </Card>
+                </CardHeader>
+                <CardContent>
+                    <div>
+                      <h4 className="font-medium text-sm mb-2">Details</h4>
+                      <CardDescription>
+                          When associated with a Team, page access is granted to Team Admins, or all members if no Admins are set.
+                          When associated with an Admin Group, page access is granted to Group Admins, or all members if no Admins are set.
+                      </CardDescription>
+                      <div className="flex gap-2 text-sm text-muted-foreground mt-2">
+                          <Badge variant="outline">{page.path}</Badge>
+                          {page.isDynamic && <Badge variant="outline">Dynamic Team Page</Badge>}
+                      </div>
+                    </div>
+                </CardContent>
+            </Card>
+            <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete the "{page.name}" page and its configuration.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction variant="destructive" onClick={() => onDelete(page.id)}>Continue</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </>
     );
 }
 
@@ -1280,5 +1297,3 @@ const AdminPageSkeleton = () => (
       </div>
     </div>
 );
-
-    

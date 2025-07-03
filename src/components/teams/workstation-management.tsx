@@ -1,13 +1,11 @@
 
-
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
 import { useUser } from '@/context/user-context';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { type Team, type AppTab } from '@/types';
@@ -18,7 +16,7 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
   const { toast } = useToast();
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [workstationToDelete, setWorkstationToDelete] = useState<string | null>(null);
+  const [deletingWorkstation, setDeletingWorkstation] = useState<string | null>(null);
   const [newWorkstationName, setNewWorkstationName] = useState('');
   
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -97,11 +95,11 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
   };
 
   const handleDelete = () => {
-    if (!workstationToDelete) return;
-    const updatedWorkstations = teamWorkstations.filter(r => r !== workstationToDelete);
+    if (!deletingWorkstation) return;
+    const updatedWorkstations = teamWorkstations.filter(r => r !== deletingWorkstation);
     handleUpdateTeamWorkstations(updatedWorkstations);
-    toast({ title: "Workstation Deleted", description: `"${workstationToDelete}" has been deleted.` });
-    setWorkstationToDelete(null);
+    toast({ title: "Workstation Deleted", description: `"${deletingWorkstation}" has been deleted.` });
+    setDeletingWorkstation(null);
   };
 
   return (
@@ -158,7 +156,7 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
                  <button
                     type="button"
                     className="ml-1 h-5 w-5 hover:bg-destructive/20 rounded-full inline-flex items-center justify-center opacity-50 group-hover:opacity-100 transition-opacity"
-                    onClick={() => setWorkstationToDelete(ws)}
+                    onClick={() => setDeletingWorkstation(ws)}
                   >
                     <GoogleSymbol name="close" className="text-xs" />
                     <span className="sr-only">Delete {ws}</span>
@@ -194,20 +192,22 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={!!workstationToDelete} onOpenChange={(isOpen) => !isOpen && setWorkstationToDelete(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the workstation "{workstationToDelete}".
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={handleDelete}>Continue</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <Dialog open={!!deletingWorkstation} onOpenChange={(isOpen) => !isOpen && setDeletingWorkstation(null)}>
+        <DialogContent className="max-w-md">
+            <div className="absolute top-4 right-4">
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={handleDelete}>
+                    <GoogleSymbol name="delete" className="text-xl" />
+                    <span className="sr-only">Delete Workstation</span>
+                </Button>
+            </div>
+            <DialogHeader>
+                <DialogTitle>Delete Workstation?</DialogTitle>
+                <DialogDescription>
+                    This will permanently delete the workstation "{deletingWorkstation}". This action cannot be undone.
+                </DialogDescription>
+            </DialogHeader>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
