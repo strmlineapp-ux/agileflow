@@ -513,16 +513,27 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
             </StrictModeDroppable>
           </DragDropContext>
           <AlertDialog open={is2faDialogOpen} onOpenChange={(isOpen) => !isOpen && close2faDialog()}>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Two-Factor Authentication</AlertDialogTitle>
-                <AlertDialogDescription>Enter the code from your authenticator app to confirm the role change.</AlertDialogDescription>
-              </AlertDialogHeader>
-              <Input id="2fa-code" value={twoFactorCode} onChange={(e) => setTwoFactorCode(e.target.value)} placeholder="123456" onKeyDown={(e) => e.key === 'Enter' && handleVerify2fa()}/>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleVerify2fa}>Verify & Change</AlertDialogAction>
-              </AlertDialogFooter>
+            <AlertDialogContent className="max-w-sm">
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Two-Factor Authentication</AlertDialogTitle>
+                    <AlertDialogDescription>Enter the 6-digit code from your authenticator app to proceed.</AlertDialogDescription>
+                </AlertDialogHeader>
+                <div className="relative flex items-center gap-2 w-full">
+                    <GoogleSymbol name="password" className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                        id="2fa-code"
+                        value={twoFactorCode}
+                        onChange={(e) => setTwoFactorCode(e.target.value)}
+                        placeholder="••••••"
+                        onKeyDown={(e) => e.key === 'Enter' && handleVerify2fa()}
+                        className="w-full text-center tracking-[0.5em] pl-10"
+                        maxLength={6}
+                    />
+                </div>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleVerify2fa}>Verify</AlertDialogAction>
+                </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
     </>
@@ -1246,5 +1257,3 @@ const AdminPageSkeleton = () => (
       </div>
     </div>
 );
-
-    
