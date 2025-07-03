@@ -1211,20 +1211,22 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-            <AlertDialog open={!!badgeToDelete} onOpenChange={(isOpen) => !isOpen && setBadgeToDelete(null)}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Shared Badge?</AlertDialogTitle>
-                        <AlertDialogDescription>
+            <Dialog open={!!badgeToDelete} onOpenChange={(isOpen) => !isOpen && setBadgeToDelete(null)}>
+                <DialogContent>
+                    <div className="absolute top-4 right-4">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => { if (badgeToDelete) confirmPermanentDelete(badgeToDelete.badgeId); }}>
+                            <GoogleSymbol name="delete" className="text-xl" />
+                            <span className="sr-only">Delete Badge Permanently</span>
+                        </Button>
+                    </div>
+                    <DialogHeader>
+                        <UIDialogTitle>Delete Shared Badge?</UIDialogTitle>
+                        <DialogDescription>
                             This badge is shared. Deleting it will remove it from all collections and teams. This action cannot be undone.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction variant="destructive" onClick={() => { if (badgeToDelete) confirmPermanentDelete(badgeToDelete.badgeId); }}>Continue</AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+                        </DialogDescription>
+                    </DialogHeader>
+                </DialogContent>
+            </Dialog>
             <ShareCollectionDialog
                 isOpen={isShareDialogOpen}
                 onClose={() => setIsShareDialogOpen(false)}
@@ -1235,5 +1237,3 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
         </DragDropContext>
     );
 }
-
-    
