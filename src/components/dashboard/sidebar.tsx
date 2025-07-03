@@ -32,7 +32,9 @@ export function Sidebar() {
     const adminPageId = 'page-admin-management';
     const pinnedPageIds = ['page-notifications', 'page-settings'];
 
-    const visiblePages = appSettings.pages.filter(page => hasAccess(viewAsUser, page, teams, appSettings.adminGroups));
+    const visiblePages = appSettings.pages
+        .filter(page => page.id !== 'page-settings') // Do not show settings icon in the main sidebar
+        .filter(page => hasAccess(viewAsUser, page, teams, appSettings.adminGroups));
 
     const adminPage = visiblePages.find(p => p.id === adminPageId);
     const pinnedPages = visiblePages.filter(p => pinnedPageIds.includes(p.id)).sort((a,b) => pinnedPageIds.indexOf(a.id) - pinnedPageIds.indexOf(b.id));
