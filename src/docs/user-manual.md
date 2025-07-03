@@ -99,7 +99,7 @@ This page is for managing the specifics of an individual team.
 - **Badge Management**: Create or edit the custom badges available for this team (e.g., `Camera`, `Audio`).
 - **Pinned Locations**: Pin locations to the team's Production Schedule. You can also designate locations as "check locations."
 - **Workstations**: Manage a list of bookable workstations or machines for the team.
-- **Event Templates**: Create reusable templates for common events, pre-filling requested roles to speed up event creation.
+- **Event Templates**: Create reusable templates for common events. You can edit a template's name by clicking on it directly. Click the edit icon on the template card to manage its requested roles.
 - **Location Check Managers**: Assign users who are allowed to manage the daily check assignments for this team's locations.
 
 ### 8.4 View As Another User (Admin Only)
