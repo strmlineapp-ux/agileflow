@@ -15,7 +15,7 @@ export interface AppTab {
   icon: string;
   color: string;
   description?: string;
-  componentKey: 'calendars' | 'teams' | 'team_members' | 'badges' | 'locations' | 'workstations' | 'templates' | 'adminGroups' | 'pages' | 'tabs' | 'strategy' | 'overview' | 'tasks' | 'notifications' | 'settings' | 'calendar';
+  componentKey: 'calendars' | 'teams' | 'team_members' | 'badges' | 'locations' | 'workstations' | 'templates' | 'adminGroups' | 'pages' | 'tabs' | 'overview' | 'tasks' | 'notifications' | 'settings' | 'calendar';
 }
 
 export interface AppPage {
@@ -38,7 +38,6 @@ export interface AppSettings {
   adminGroups: AdminGroup[];
   pages: AppPage[];
   tabs: AppTab[];
-  strategyLabel?: string;
   calendarManagementLabel?: string;
   teamManagementLabel?: string;
 }

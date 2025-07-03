@@ -92,7 +92,6 @@ Navigate to **Settings > User Management** from the sidebar (availability depend
 This is the central hub for global application settings.
 - **Manage Calendars**: Create, edit, or delete shared calendars. You can set a calendar's color, default event title, and assign managers.
 - **Manage Teams**: Create new teams, edit existing team details (name, icon), and assign members and managers.
-- **Manage Priority Strategies**: Define different systems for prioritizing tasks and events (e.g., P0-P4 scale, star ratings).
 
 ### 8.3 Team Management (`/dashboard/teams/[teamId]`)
 This page is for managing the specifics of an individual team.
