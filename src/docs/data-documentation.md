@@ -66,7 +66,7 @@ Not all user capabilities are stored directly as a field on the `User` object. M
 | Capability | Where Data is Stored & How It's Used |
 | :--- | :--- |
 | **Absence Statuses** (e.g., `PTO`, `Sick`) | **Storage:** This data is **not stored on the `User` object**. It is managed in the `userStatusAssignments` state within the `UserContext`, which is a dictionary keyed by date (`YYYY-MM-DD`).<br>**Usage:** The `ProductionScheduleView` allows authorized managers to assign these statuses to users for specific days. The calendar then uses this data to visually indicate a user's availability. |
-| **Access to Pages** (e.g., `/admin`) | **Storage:** This is **not stored directly as data**. Access control is handled directly in the UI components.<br>**Usage:** Components like the `Sidebar` and the page layouts contain logic that checks the current user's `isAdmin` flag or `roles` array (e.g., `user.isAdmin`). If the required role is not present, the link or the entire page is not rendered. |
+| **Access to Pages** (e.g., `/admin`) | **Storage:** Page access is now entirely dynamic and is configured within each `AppPage` object inside `AppSettings.pages`. Each page has an `access` object containing arrays of `userId`s, `teamId`s, and `adminGroup` names that are allowed to view it.<br>**Usage:** A central permission checker (`hasAccess`) evaluates these rules against the current user's properties (`userId`, team memberships, `roles` array). This determines if a page is rendered in the sidebar and if a user can access its URL directly. An empty `access` object makes a page public to all logged-in users. |
 | **Interaction Permissions** (e.g., editing an event, managing a team) | **Storage:** This is also **not stored directly**. Permissions are derived by combining user roles with the context of a specific data item.<br>**Usage:** The application uses helper functions (like `canManageEventOnCalendar`) that check if a user's `userId` is in a `Team`'s `teamAdmins` list or if the user has a system-level role like `Admin`. This determines whether UI elements like "Edit" buttons are displayed. |
 
 ## Application-Wide Settings
@@ -78,11 +78,10 @@ This entity, `AppSettings`, holds global configuration data that allows for cust
 | Data Point | Description |
 | :--- | :--- |
 | `adminGroups: AdminGroup[]` | An array of objects defining custom administrative groups. This allows admins to create a hierarchy between the system `Admin` and standard users. Each group has a name, icon, and color, which are editable on the Admin Management page. |
-| `pages: AppPage[]` | An array of objects defining the application's pages, including their navigation properties (name, icon, path) and access control rules. |
-| `tabs: AppTab[]` | An array of objects defining reusable tabs that can be associated with different pages. |
-| `calendarManagementLabel?: string` | An alias for the "Calendar Management" tab on the Service delivery page. |
+| `pages: AppPage[]` | **The core of the dynamic navigation.** This is an array of objects defining every page in the application. Each object includes the page's name, icon, URL path, access control rules, and a list of associated `tab.id`s that should be rendered on it. |
+| `tabs: AppTab[]` | **The core of the dynamic content.** This is an array of objects defining all reusable content tabs. Each object includes the tab's name, icon, and a `componentKey` that maps it to a specific React component to render its content. |
+| `calendarManagementLabel?: string` | An alias for the "Manage Calendars" tab on the Service Delivery page. |
 | `teamManagementLabel?: string` | An alias for the "Team Management" tab on the Service Delivery page. |
-
 
 ### AdminGroup Entity
 A sub-entity of `AppSettings`, `AdminGroup` defines a single, dynamic administrative level.
