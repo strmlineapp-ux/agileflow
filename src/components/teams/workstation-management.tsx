@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -16,7 +17,7 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
   const { toast } = useToast();
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [deletingWorkstation, setDeletingWorkstation] = useState<string | null>(null);
+  const [workstationToDelete, setWorkstationToDelete] = useState<string | null>(null);
   const [newWorkstationName, setNewWorkstationName] = useState('');
   
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -95,11 +96,11 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
   };
 
   const handleDelete = () => {
-    if (!deletingWorkstation) return;
-    const updatedWorkstations = teamWorkstations.filter(r => r !== deletingWorkstation);
+    if (!workstationToDelete) return;
+    const updatedWorkstations = teamWorkstations.filter(r => r !== workstationToDelete);
     handleUpdateTeamWorkstations(updatedWorkstations);
-    toast({ title: "Workstation Deleted", description: `"${deletingWorkstation}" has been deleted.` });
-    setDeletingWorkstation(null);
+    toast({ title: "Workstation Deleted", description: `"${workstationToDelete}" has been deleted.` });
+    setWorkstationToDelete(null);
   };
 
   return (
@@ -156,7 +157,7 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
                  <button
                     type="button"
                     className="ml-1 h-5 w-5 hover:bg-destructive/20 rounded-full inline-flex items-center justify-center opacity-50 group-hover:opacity-100 transition-opacity"
-                    onClick={() => setDeletingWorkstation(ws)}
+                    onClick={() => setWorkstationToDelete(ws)}
                   >
                     <GoogleSymbol name="close" className="text-xs" />
                     <span className="sr-only">Delete {ws}</span>
@@ -192,7 +193,7 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!deletingWorkstation} onOpenChange={(isOpen) => !isOpen && setDeletingWorkstation(null)}>
+      <Dialog open={!!workstationToDelete} onOpenChange={(isOpen) => !isOpen && setWorkstationToDelete(null)}>
         <DialogContent className="max-w-md">
             <div className="absolute top-4 right-4">
                 <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={handleDelete}>
@@ -203,7 +204,7 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
             <DialogHeader>
                 <DialogTitle>Delete Workstation?</DialogTitle>
                 <DialogDescription>
-                    This will permanently delete the workstation "{deletingWorkstation}". This action cannot be undone.
+                    This will permanently delete the workstation "{workstationToDelete}". This action cannot be undone.
                 </DialogDescription>
             </DialogHeader>
         </DialogContent>

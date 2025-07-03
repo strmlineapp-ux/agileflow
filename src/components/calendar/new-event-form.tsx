@@ -24,8 +24,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Dialog, DialogHeader, DialogTitle, DialogContent, DialogDescription, DialogClose } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Dialog, DialogHeader, DialogTitle, DialogContent, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PriorityBadge } from './priority-badge';
 import { Separator } from '../ui/separator';
@@ -909,20 +908,22 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
         </DialogContent>
     </Dialog>
     
-    <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-            <AlertDialogTitle>Delete "{event?.title}"?</AlertDialogTitle>
-            <AlertDialogDescription>
+    <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <DialogContent className="max-w-md">
+        <div className="absolute top-4 right-4">
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={handleDelete}>
+              <GoogleSymbol name="delete" className="text-xl" />
+              <span className="sr-only">Delete Event</span>
+          </Button>
+        </div>
+        <DialogHeader>
+            <DialogTitle>Delete "{event?.title}"?</DialogTitle>
+            <DialogDescription>
                 This will permanently delete the event. This action cannot be undone.
-            </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={handleDelete}>Delete</AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+            </DialogDescription>
+        </DialogHeader>
+      </DialogContent>
+    </Dialog>
     </>
   );
 }
