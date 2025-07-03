@@ -117,10 +117,10 @@ const AddUserToGroupButton = ({ usersToAdd, onAdd, groupName }: { usersToAdd: Us
         <ScrollArea className="h-64">
            <div className="p-1">
             {usersToAdd.length > 0 ? usersToAdd.map(user => (
-              <div key={user.userId} onClick={() => handleSelect(user)} className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer">
+              <div key={user.userId} onClick={() => handleSelect(user)} className="flex items-center gap-2 p-2 rounded-md cursor-pointer group">
                 <Avatar className="h-8 w-8"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0,2)}</AvatarFallback></Avatar>
                 <div>
-                  <p className="text-sm font-medium">{user.displayName}</p>
+                  <p className="text-sm font-medium group-hover:text-primary transition-colors">{user.displayName}</p>
                   <p className="text-xs text-muted-foreground">{user.email}</p>
                 </div>
               </div>
