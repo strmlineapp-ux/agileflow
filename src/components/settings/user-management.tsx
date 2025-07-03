@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/context/user-context';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { cn, hexToHsl } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { Badge } from '../ui/badge';
 import { Label } from '../ui/label';
@@ -254,8 +254,8 @@ export function UserManagement() {
                                                         </div>
                                                     </PopoverContent>
                                                 </Popover>
-                                                <div className="relative border-b">
-                                                    <div className="flex h-10 items-center justify-center p-0 text-muted-foreground">
+                                                <div className="relative">
+                                                    <div className="flex h-10 items-center justify-center p-0 text-muted-foreground border-b">
                                                         {THEME_OPTIONS.map(theme => (
                                                         <Button
                                                             key={theme.name}
@@ -322,7 +322,7 @@ export function UserManagement() {
                                                     placeholder="Select Time Format"
                                                 />
                                             </div>
-                                            <div className="flex items-center">
+                                            <div className="flex items-center gap-1">
                                                 <TooltipProvider>
                                                   <Tooltip>
                                                     <TooltipTrigger asChild>
