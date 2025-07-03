@@ -1,13 +1,15 @@
 
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { useUser } from '@/context/user-context';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
+import { type AppTab, type Team } from '@/types';
 
+// Import all possible tab components
 import { AdminGroupsManagement, PagesManagement, TabsManagement } from '@/app/dashboard/admin/page';
 import { CalendarManagement } from '@/components/service-delivery/calendar-management';
 import { TeamManagement as ServiceDeliveryTeamManagement } from '@/components/service-delivery/team-management';
@@ -38,50 +40,67 @@ const componentMap: Record<string, React.ComponentType<any>> = {
   locations: PinnedLocationManagement,
   workstations: TeamWorkstationManagement,
   templates: EventTemplateManagement,
-  // Main Content Tabs
+  // Main Content Tabs (formerly static pages)
   overview: OverviewContent,
+  calendar: CalendarPageContent,
   tasks: TasksContent,
   notifications: NotificationsContent,
   settings: SettingsContent,
-  calendar: CalendarPageContent,
 };
 
 
 export default function DynamicPage() {
     const params = useParams();
-    const { loading, appSettings } = useUser();
+    const { loading, appSettings, teams } = useUser();
     
-    // Reconstruct the path from the slug. `params.page` could be a string or an array.
-    const slug = Array.isArray(params.page) ? params.page.join('/') : params.page;
+    const slug = Array.isArray(params.page) ? params.page.join('/') : (params.page || '');
     const currentPath = `/dashboard/${slug}`;
 
-    const pageConfig = appSettings.pages.find(p => p.path === currentPath);
+    const pageConfig = useMemo(() => {
+        return [...appSettings.pages]
+            .sort((a, b) => b.path.length - a.path.length) // Sort to match more specific paths first e.g. /dashboard/teams over /dashboard
+            .find(p => currentPath.startsWith(p.path));
+    }, [appSettings.pages, currentPath]);
     
+    const teamId = pageConfig?.isDynamic && Array.isArray(params.page) ? params.page[1] : undefined;
+    const team = useMemo(() => teams.find(t => t.id === teamId), [teams, teamId]);
+
     if (loading) {
         return <Skeleton className="h-full w-full" />;
     }
 
-    if (!pageConfig) {
-        return <div>404 - Page configuration not found for path: {currentPath}</div>;
+    if (!pageConfig || (pageConfig.isDynamic && !team)) {
+        return <div className="p-4">404 - Page not found for path: {currentPath}</div>;
     }
     
     const pageTabs = appSettings.tabs.filter(t => pageConfig.associatedTabs.includes(t.id));
+    const pageTitle = pageConfig.isDynamic ? `${team?.name} ${pageConfig.name}` : pageConfig.name;
 
+    // Render page with no tabs (single view)
     if (pageTabs.length === 0) {
-      return (
-         <div className="flex flex-col gap-6">
-            <div className="flex items-center gap-3">
-              <GoogleSymbol name={pageConfig.icon} className="text-3xl" />
-              <h1 className="font-headline text-3xl font-semibold">{pageConfig.name}</h1>
-            </div>
-            <div className="flex items-center justify-center h-64 border-2 border-dashed rounded-lg">
-                <p className="text-muted-foreground">This page has no content. Add tabs in Admin Management.</p>
-            </div>
-        </div>
-      )
-    }
+        const ContentComponent = pageConfig.componentKey ? componentMap[pageConfig.componentKey] : null;
+        const pseudoTab = { ...pageConfig, componentKey: pageConfig.componentKey as any };
 
-    // If there is only one tab, don't render the tab list, just the content.
+        return (
+            <>
+                {ContentComponent ? (
+                    <ContentComponent tab={pseudoTab} />
+                ) : (
+                    <div className="flex flex-col gap-6">
+                        <div className="flex items-center gap-3">
+                            <GoogleSymbol name={pageConfig.icon} className="text-3xl" />
+                            <h1 className="font-headline text-3xl font-semibold">{pageTitle}</h1>
+                        </div>
+                        <div className="flex items-center justify-center h-64 border-2 border-dashed rounded-lg">
+                            <p className="text-muted-foreground">This page has no content. Add tabs in Admin Management.</p>
+                        </div>
+                    </>
+                )}
+            </>
+        )
+    }
+    
+    // Render page with single tab (no tab list)
     if (pageTabs.length === 1) {
         const tab = pageTabs[0];
         const ContentComponent = componentMap[tab.componentKey];
@@ -89,18 +108,19 @@ export default function DynamicPage() {
              <div className="flex flex-col gap-6">
                 <div className="flex items-center gap-3">
                     <GoogleSymbol name={pageConfig.icon} className="text-3xl" />
-                    <h1 className="font-headline text-3xl font-semibold">{pageConfig.name}</h1>
+                    <h1 className="font-headline text-3xl font-semibold">{pageTitle}</h1>
                 </div>
-                {ContentComponent ? <ContentComponent tab={tab} /> : <div>Component for {tab.name} not found.</div>}
+                {ContentComponent ? <ContentComponent tab={tab} team={team} /> : <div>Component for {tab.name} not found.</div>}
             </div>
         )
     }
     
+    // Render page with multiple tabs
     return (
         <div className="flex flex-col gap-6">
             <div className="flex items-center gap-3">
                 <GoogleSymbol name={pageConfig.icon} className="text-3xl" />
-                <h1 className="font-headline text-3xl font-semibold">{pageConfig.name}</h1>
+                <h1 className="font-headline text-3xl font-semibold">{pageTitle}</h1>
             </div>
             <Tabs defaultValue={pageTabs[0]?.id} className="w-full">
                 <TabsList className="flex w-full">
@@ -112,12 +132,12 @@ export default function DynamicPage() {
                 ))}
                 </TabsList>
                 {pageTabs.map(tab => {
-                const ContentComponent = componentMap[tab.componentKey];
-                return (
-                    <TabsContent key={tab.id} value={tab.id} className="mt-4">
-                    {ContentComponent ? <ContentComponent tab={tab} /> : <div>Component for {tab.name} not found.</div>}
-                    </TabsContent>
-                );
+                    const ContentComponent = componentMap[tab.componentKey];
+                    return (
+                        <TabsContent key={tab.id} value={tab.id} className="mt-4">
+                        {ContentComponent ? <ContentComponent tab={tab} team={team} /> : <div>Component for {tab.name} not found.</div>}
+                        </TabsContent>
+                    );
                 })}
             </Tabs>
         </div>

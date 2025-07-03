@@ -1,6 +1,12 @@
+
 import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team, type AppSettings, type Badge, type BadgeCollection, type AppTab, type AppPage, type AdminGroup } from '@/types';
 
 export const mockTabs: AppTab[] = [
+  { id: 'tab-overview', name: 'Overview', icon: 'dashboard', color: '#F97316', componentKey: 'overview' },
+  { id: 'tab-calendar', name: 'Calendar', icon: 'calendar_month', color: '#0EA5E9', componentKey: 'calendar' },
+  { id: 'tab-tasks', name: 'Tasks', icon: 'checklist', color: '#10B981', componentKey: 'tasks' },
+  { id: 'tab-notifications', name: 'Notifications', icon: 'notifications', color: '#3B82F6', componentKey: 'notifications' },
+  { id: 'tab-settings', name: 'Settings', icon: 'settings', color: '#64748B', componentKey: 'settings' },
   { id: 'tab-calendars', name: 'Calendars', icon: 'calendar_month', color: '#3B82F6', componentKey: 'calendars', description: 'Manage shared calendars, colors, and default settings.' },
   { id: 'tab-teams', name: 'Teams', icon: 'group', color: '#10B981', componentKey: 'teams', description: 'Create and configure teams and their members.' },
   { id: 'tab-team-members', name: 'Members', icon: 'group', color: '#6366F1', componentKey: 'team_members', description: 'View all members of a specific team and manage their roles.' },
@@ -11,6 +17,7 @@ export const mockTabs: AppTab[] = [
   { id: 'tab-admin-roles', name: 'Admin Groups', icon: 'admin_panel_settings', color: '#8B5CF6', componentKey: 'adminGroups', description: 'Manage high-level administrative groups and their permissions.' },
   { id: 'tab-admin-pages', name: 'Pages', icon: 'web', color: '#EC4899', componentKey: 'pages', description: 'Configure application pages, their navigation, and access controls.' },
   { id: 'tab-admin-tabs', name: 'Tabs', icon: 'tab', color: '#EF4444', componentKey: 'tabs', description: 'Manage the properties of reusable tabs that appear on pages.' },
+  { id: 'tab-strategy', name: 'Strategy', icon: 'strategy', color: '#84CC16', componentKey: 'strategy', description: 'Define and apply priority strategies.' },
 ];
 
 export const mockPages: AppPage[] = [
@@ -19,9 +26,10 @@ export const mockPages: AppPage[] = [
         name: 'Overview',
         icon: 'dashboard',
         color: '#F97316',
-        path: '/dashboard',
+        path: '/dashboard/overview',
         isDynamic: false,
         associatedTabs: [],
+        componentKey: 'overview',
         access: { users: [], teams: [], adminGroups: [] }
     },
     {
@@ -32,6 +40,7 @@ export const mockPages: AppPage[] = [
         path: '/dashboard/calendar',
         isDynamic: false,
         associatedTabs: [],
+        componentKey: 'calendar',
         access: { users: [], teams: [], adminGroups: [] }
     },
     {
@@ -42,6 +51,7 @@ export const mockPages: AppPage[] = [
         path: '/dashboard/tasks',
         isDynamic: false,
         associatedTabs: [],
+        componentKey: 'tasks',
         access: { users: [], teams: [], adminGroups: [] }
     },
     {
@@ -52,6 +62,7 @@ export const mockPages: AppPage[] = [
         path: '/dashboard/notifications',
         isDynamic: false,
         associatedTabs: [],
+        componentKey: 'notifications',
         access: { users: [], teams: [], adminGroups: [] }
     },
     {
@@ -62,6 +73,7 @@ export const mockPages: AppPage[] = [
         path: '/dashboard/settings',
         isDynamic: false,
         associatedTabs: [],
+        componentKey: 'settings',
         access: { users: [], teams: [], adminGroups: [] }
     },
     {
@@ -71,7 +83,7 @@ export const mockPages: AppPage[] = [
         color: '#8B5CF6',
         path: '/dashboard/service-delivery',
         isDynamic: false,
-        associatedTabs: ['tab-calendars', 'tab-teams'],
+        associatedTabs: ['tab-calendars', 'tab-teams', 'tab-strategy'],
         access: {
             users: [],
             teams: [],

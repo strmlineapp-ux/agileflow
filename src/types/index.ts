@@ -15,7 +15,7 @@ export interface AppTab {
   icon: string;
   color: string;
   description?: string;
-  componentKey: 'calendars' | 'teams' | 'team_members' | 'badges' | 'locations' | 'workstations' | 'templates' | 'adminGroups' | 'pages' | 'tabs' | 'strategy';
+  componentKey: 'calendars' | 'teams' | 'team_members' | 'badges' | 'locations' | 'workstations' | 'templates' | 'adminGroups' | 'pages' | 'tabs' | 'strategy' | 'overview' | 'tasks' | 'notifications' | 'settings' | 'calendar';
 }
 
 export interface AppPage {
@@ -26,6 +26,7 @@ export interface AppPage {
   path: string; // e.g., /dashboard/service-delivery or /dashboard/teams
   isDynamic: boolean; // True for paths like /dashboard/teams/:teamId
   associatedTabs: string[]; // Array of AppTab ids
+  componentKey?: 'overview' | 'calendar' | 'tasks' | 'notifications' | 'settings';
   access: {
     users: string[]; // User IDs
     teams: string[]; // Team IDs

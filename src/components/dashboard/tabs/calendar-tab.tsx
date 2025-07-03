@@ -17,16 +17,9 @@ import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { type Event, type AppPage } from '@/types';
 import { EventDetailsDialog } from '@/components/calendar/event-details-dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Input } from '@/components/ui/input';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { googleSymbolNames } from '@/lib/google-symbols';
-import { Skeleton } from '@/components/ui/skeleton';
 
-const PAGE_ID = 'page-calendar';
-
-export function CalendarPageContent() {
-  const { realUser, viewAsUser, calendars, appSettings, updateAppSettings, loading } = useUser();
+export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
+  const { realUser, viewAsUser, calendars, appSettings } = useUser();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'month' | 'week' | 'day' | 'production-schedule'>(realUser.defaultCalendarView || 'day');
   const [zoomLevel, setZoomLevel] = useState<'normal' | 'fit'>('normal');
@@ -39,16 +32,6 @@ export function CalendarPageContent() {
   const dayViewContainerRef = useRef<HTMLDivElement>(null);
   const weekViewContainerRef = useRef<HTMLDivElement>(null);
   const productionScheduleViewContainerRef = useRef<HTMLDivElement>(null);
-  
-  const pageConfig = appSettings.pages.find(p => p.id === PAGE_ID);
-  
-  // Header Editing State
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
-  const [isSearchingIcons, setIsSearchingIcons] = useState(false);
-  const [iconSearch, setIconSearch] = useState('');
-  const titleInputRef = useRef<HTMLInputElement>(null);
-  const iconSearchInputRef = useRef<HTMLInputElement>(null);
   
   const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars, appSettings.customAdminRoles);
 
@@ -134,55 +117,14 @@ export function CalendarPageContent() {
     setSelectedEvent(event);
   }, []);
   
-  const updatePage = (data: Partial<AppPage>) => {
-    if (!pageConfig) return;
-    const newPages = appSettings.pages.map(p => p.id === PAGE_ID ? { ...p, ...data } : p);
-    updateAppSettings({ pages: newPages });
-  };
-  
-  const handleSaveTitle = () => {
-    const newName = titleInputRef.current?.value.trim();
-    if (newName && pageConfig && newName !== pageConfig.name) {
-      updatePage({ name: newName });
-    }
-    setIsEditingTitle(false);
-  };
-  
-  const filteredIcons = useMemo(() => googleSymbolNames.filter(icon => icon.toLowerCase().includes(iconSearch.toLowerCase())), [iconSearch]);
-
-  if (loading || !pageConfig) {
-      return <Skeleton className="h-full w-full" />
-  }
-
   return (
     <>
-      <Tabs defaultValue={realUser.defaultCalendarView || 'day'} value={view} onValueChange={(v) => setView(v as any)} className="flex h-full flex-col">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 shrink-0">
+      <div className="flex flex-col h-full gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shrink-0">
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-3">
-                <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
-                  <PopoverTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-9 w-9 text-3xl shrink-0">
-                      <GoogleSymbol name={pageConfig.icon} />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-80 p-0">
-                    <div className="flex items-center gap-1 p-2 border-b">
-                        {!isSearchingIcons ? ( <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => setIsSearchingIcons(true)}> <GoogleSymbol name="search" /> </Button> ) : (
-                            <div className="flex items-center gap-1 w-full">
-                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
-                                <input ref={iconSearchInputRef} placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} onBlur={() => !iconSearch && setIsSearchingIcons(false)} className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0" />
-                            </div>
-                        )}
-                    </div>
-                    <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={pageConfig.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { updatePage({ icon: iconName }); setIsIconPopoverOpen(false);}} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
-                  </PopoverContent>
-                </Popover>
-                {isEditingTitle ? (
-                  <Input ref={titleInputRef} defaultValue={pageConfig.name} onBlur={handleSaveTitle} onKeyDown={(e) => e.key === 'Enter' ? handleSaveTitle() : e.key === 'Escape' && setIsEditingTitle(false)} className="h-auto p-0 font-headline text-3xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
-                ) : (
-                  <h1 className="font-headline text-3xl font-semibold cursor-pointer" onClick={() => setIsEditingTitle(true)}>{pageConfig.name}</h1>
-                )}
+              <GoogleSymbol name={pageConfig.icon} className="text-3xl" />
+              <h1 className="font-headline text-3xl font-semibold">{pageConfig.name}</h1>
             </div>
             {userCanCreateEvent && (
               <Dialog open={isNewEventOpen} onOpenChange={setIsNewEventOpen}>
@@ -231,29 +173,31 @@ export function CalendarPageContent() {
                   </Tooltip>
                 )}
               </TooltipProvider>
-              <TabsList>
-                  <TabsTrigger value="month">Month</TabsTrigger>
-                  <TabsTrigger value="week">Week</TabsTrigger>
-                  <TabsTrigger value="day">Day</TabsTrigger>
-                  <TabsTrigger value="production-schedule">Production Schedule</TabsTrigger>
-              </TabsList>
+              <Tabs value={view} onValueChange={(v) => setView(v as any)} className="w-full">
+                  <TabsList>
+                      <TabsTrigger value="month">Month</TabsTrigger>
+                      <TabsTrigger value="week">Week</TabsTrigger>
+                      <TabsTrigger value="day">Day</TabsTrigger>
+                      <TabsTrigger value="production-schedule">Production Schedule</TabsTrigger>
+                  </TabsList>
+              </Tabs>
           </div>
         </div>
         <div className="flex-1 relative">
-          <TabsContent value="month" ref={monthViewContainerRef} className="absolute inset-0 overflow-y-auto">
-              <MonthView date={currentDate} containerRef={monthViewContainerRef} onEventClick={onEventClick} />
-          </TabsContent>
-          <TabsContent value="week" ref={weekViewContainerRef} className="absolute inset-0 overflow-y-auto">
-              <WeekView date={currentDate} containerRef={weekViewContainerRef} zoomLevel={zoomLevel} onEasyBooking={handleEasyBooking} onEventClick={onEventClick} />
-          </TabsContent>
-          <TabsContent value="day" ref={dayViewContainerRef} className="absolute inset-0 overflow-auto">
-              <DayView date={currentDate} containerRef={dayViewContainerRef} zoomLevel={zoomLevel} axisView={dayViewAxis} onEasyBooking={handleEasyBooking} onEventClick={onEventClick} />
-          </TabsContent>
-          <TabsContent value="production-schedule" ref={productionScheduleViewContainerRef} className="absolute inset-0 overflow-auto">
-              <ProductionScheduleView date={currentDate} containerRef={productionScheduleViewContainerRef} zoomLevel={zoomLevel} onEasyBooking={handleEasyBooking} onEventClick={onEventClick} />
-          </TabsContent>
+            <div className={view === 'month' ? 'absolute inset-0 overflow-y-auto' : 'hidden'} ref={monthViewContainerRef}>
+                {view === 'month' && <MonthView date={currentDate} containerRef={monthViewContainerRef} onEventClick={onEventClick} />}
+            </div>
+            <div className={view === 'week' ? 'absolute inset-0 overflow-y-auto' : 'hidden'} ref={weekViewContainerRef}>
+                {view === 'week' && <WeekView date={currentDate} containerRef={weekViewContainerRef} zoomLevel={zoomLevel} onEasyBooking={handleEasyBooking} onEventClick={onEventClick} />}
+            </div>
+            <div className={view === 'day' ? 'absolute inset-0 overflow-auto' : 'hidden'} ref={dayViewContainerRef}>
+                {view === 'day' && <DayView date={currentDate} containerRef={dayViewContainerRef} zoomLevel={zoomLevel} axisView={dayViewAxis} onEasyBooking={handleEasyBooking} onEventClick={onEventClick} />}
+            </div>
+            <div className={view === 'production-schedule' ? 'absolute inset-0 overflow-auto' : 'hidden'} ref={productionScheduleViewContainerRef}>
+                {view === 'production-schedule' && <ProductionScheduleView date={currentDate} containerRef={productionScheduleViewContainerRef} zoomLevel={zoomLevel} onEasyBooking={handleEasyBooking} onEventClick={onEventClick} />}
+            </div>
         </div>
-      </Tabs>
+      </div>
       <EventDetailsDialog
         event={selectedEvent}
         isOpen={!!selectedEvent}

@@ -2,10 +2,29 @@
 'use client';
 
 import { NotificationList } from '@/components/notifications/notification-list';
-import { type AppTab } from '@/types';
+import { type AppPage } from '@/types';
+import { GoogleSymbol } from '@/components/icons/google-symbol';
+import { useUser } from '@/context/user-context';
+import { Badge } from '@/components/ui/badge';
 
-export function NotificationsContent({ tab }: { tab: AppTab }) {
-  // The header is now rendered by the dynamic page component.
-  // This component just needs to render the list.
-  return <NotificationList />;
+export function NotificationsContent({ tab: pageConfig }: { tab: AppPage }) {
+  const { notifications } = useUser();
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <GoogleSymbol name={pageConfig.icon} className="text-3xl" />
+          <h1 className="font-headline text-3xl font-semibold">{pageConfig.name}</h1>
+          {unreadCount > 0 && (
+            <Badge variant="default" className="rounded-full text-base px-3">
+              {unreadCount}
+            </Badge>
+          )}
+        </div>
+      </div>
+      <NotificationList />
+    </div>
+  );
 }

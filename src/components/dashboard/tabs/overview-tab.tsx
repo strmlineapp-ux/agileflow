@@ -4,7 +4,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TaskList } from '@/components/tasks/task-list';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
-import { type AppTab } from '@/types';
+import { type AppPage } from '@/types';
 
 const stats = [
   { title: 'Active Tasks', value: '12', icon: 'checklist' },
@@ -13,11 +13,13 @@ const stats = [
   { title: 'Team Members', value: '8', icon: 'group' },
 ];
 
-export function OverviewContent({ tab }: { tab: AppTab }) {
-  // The header is now rendered by the dynamic page component.
-  // This component just needs to render the overview content.
+export function OverviewContent({ tab: pageConfig }: { tab: AppPage }) {
   return (
     <div className="flex flex-col gap-6">
+        <div className="flex items-center gap-3">
+          <GoogleSymbol name={pageConfig.icon} className="text-3xl" />
+          <h1 className="font-headline text-3xl font-semibold">{pageConfig.name}</h1>
+        </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
           <Card key={stat.title}>
