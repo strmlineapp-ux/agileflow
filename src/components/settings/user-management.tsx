@@ -115,212 +115,207 @@ export function UserManagement() {
               const isCurrentUser = user.userId === realUser.userId;
               return (
                 <Card key={user.userId}>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    {isCurrentUser && !user.googleCalendarLinked ? (
-                                        <Button variant="ghost" className="relative h-12 w-12 p-0 rounded-full" onClick={(e) => { e.stopPropagation(); linkGoogleCalendar(user.userId); }}>
-                                            <Avatar className="h-12 w-12">
-                                                <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
-                                                <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                                            </Avatar>
-                                            <span className="absolute bottom-0 right-0 block h-3.5 w-3.5 rounded-full bg-gray-400 ring-2 ring-card" />
-                                        </Button>
-                                    ) : (
-                                        <div className="relative">
-                                            <Avatar className="h-12 w-12">
-                                                <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
-                                                <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                                            </Avatar>
-                                            <span className={cn(
-                                                "absolute bottom-0 right-0 block h-3.5 w-3.5 rounded-full ring-2 ring-card",
-                                                user.googleCalendarLinked ? "bg-green-500" : "bg-gray-400"
-                                            )} />
-                                        </div>
-                                    )}
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>Google Calendar: {user.googleCalendarLinked ? 'Connected' : isCurrentUser ? 'Click to connect' : 'Not Connected'}</p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                        <div>
-                            <p className="font-semibold text-lg">{user.displayName}</p>
-                            <p className="text-sm text-muted-foreground">{user.email}</p>
-                        </div>
-                      </div>
-                       {isCurrentUser && (
-                        <Accordion type="single" collapsible className="w-auto px-0">
-                            <AccordionItem value="details" className="border-b-0">
-                                <AccordionTrigger className="py-2 text-sm text-muted-foreground justify-end hover:no-underline [&[data-state=open]>span]:rotate-180">
-                                    <span className="sr-only">Toggle Details</span>
-                                </AccordionTrigger>
-                            </AccordionItem>
-                        </Accordion>
-                       )}
-                    </div>
-                  </CardHeader>
-                  <Accordion type="single" collapsible>
-                      <AccordionItem value="details" className="border-t">
-                        <AccordionContent>
-                           <div className="p-2 pt-0 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                                <div>
-                                    <Label className="text-xs text-muted-foreground">Contact</Label>
-                                    <div
-                                        className={cn(
-                                            "text-sm min-h-[36px] flex items-center",
-                                            isCurrentUser && !editingPhoneUserId && "cursor-pointer"
-                                        )}
-                                        onClick={() => {
-                                            if (isCurrentUser && !editingPhoneUserId) {
-                                                setEditingPhoneUserId(user.userId);
-                                                setPhoneValue(user.phone || '');
-                                            }
-                                        }}
-                                    >
-                                        {editingPhoneUserId === user.userId && isCurrentUser ? (
-                                            <Input
-                                                ref={phoneInputRef}
-                                                value={phoneValue}
-                                                onChange={(e) => setPhoneValue(e.target.value)}
-                                                onBlur={handleSavePhone}
-                                                onKeyDown={(e) => {
-                                                    if (e.key === 'Enter') handleSavePhone();
-                                                    if (e.key === 'Escape') setEditingPhoneUserId(null);
-                                                }}
-                                                className="h-auto p-0 text-sm border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                                                placeholder="Not provided"
-                                            />
+                  <Accordion type="single" collapsible className="w-full">
+                    <AccordionItem value="details" className="border-none">
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        {isCurrentUser && !user.googleCalendarLinked ? (
+                                            <Button variant="ghost" className="relative h-12 w-12 p-0 rounded-full" onClick={(e) => { e.stopPropagation(); linkGoogleCalendar(user.userId); }}>
+                                                <Avatar className="h-12 w-12">
+                                                    <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
+                                                    <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                                </Avatar>
+                                                <span className="absolute bottom-0 right-0 block h-3.5 w-3.5 rounded-full bg-gray-400 ring-2 ring-card" />
+                                            </Button>
                                         ) : (
-                                            user.phone || <span className="italic text-muted-foreground">Not provided</span>
-                                        )}
-                                    </div>
-                                </div>
-                                 <div>
-                                    <Label className="text-xs text-muted-foreground">Title</Label>
-                                    <p className="text-sm font-medium">{user.title || <span className="italic text-muted-foreground">Not provided</span>}</p>
-                                </div>
-                                <div>
-                                    <Label className="text-xs text-muted-foreground">Badges</Label>
-                                    <div className="flex flex-wrap gap-1 mt-2">
-                                    {(user.roles || []).map(role => {
-                                        const roleInfo = allRolesAndBadges.find(r => r.name === role);
-                                        return (
-                                        <Badge
-                                            key={role}
-                                            variant="outline"
-                                            style={roleInfo ? { color: roleInfo.color, borderColor: roleInfo.color } : {}}
-                                            className="rounded-full gap-1 text-xs py-0.5 px-2"
-                                        >
-                                            {roleInfo && <GoogleSymbol name={roleInfo.icon} className="text-sm" />}
-                                            <span>{role}</span>
-                                        </Badge>
-                                        );
-                                    })}
-                                    {(user.roles || []).length === 0 && <p className="text-xs text-muted-foreground italic">No badges assigned</p>}
-                                    </div>
-                                </div>
-                                {isCurrentUser && (
-                                  <>
-                                    <div className="space-y-1">
-                                      <div className="flex items-center gap-2">
-                                        <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                                            <TooltipProvider>
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <PopoverTrigger asChild>
-                                                            <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0">
-                                                                <GoogleSymbol name="palette" className="text-primary" />
-                                                            </Button>
-                                                        </PopoverTrigger>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>Set custom primary color</TooltipContent>
-                                                </Tooltip>
-                                            </TooltipProvider>
-                                            <PopoverContent className="w-auto p-2">
-                                                <div className="grid grid-cols-8 gap-1">
-                                                    {predefinedColors.map(color => (
-                                                        <button key={color} className="h-6 w-6 rounded-full border" style={{ backgroundColor: color }} onClick={() => handleSetPrimaryColor(color)} aria-label={`Set color to ${color}`}/>
-                                                    ))}
-                                                    <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
-                                                        <GoogleSymbol name="colorize" className="text-muted-foreground" />
-                                                        <Input type="color" value={realUser.primaryColor || '#000000'} onChange={(e) => handleSetPrimaryColor(e.target.value)} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" aria-label="Custom color picker"/>
-                                                    </div>
-                                                </div>
-                                            </PopoverContent>
-                                        </Popover>
-                                        <div className="relative w-full">
-                                            <div className="flex h-10 items-center justify-center p-0 text-muted-foreground">
-                                                {THEME_OPTIONS.map(theme => (
-                                                <Button
-                                                    key={theme.name}
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => updateUser(realUser.userId, { theme: theme.name as any, primaryColor: undefined })}
-                                                    className={cn(
-                                                    "w-full rounded-none gap-2 py-1.5",
-                                                    realUser.theme === theme.name ? "text-primary" : ""
-                                                    )}
-                                                >
-                                                    <GoogleSymbol name={theme.icon} className="text-lg" />
-                                                    {theme.label}
-                                                </Button>
-                                                ))}
+                                            <div className="relative">
+                                                <Avatar className="h-12 w-12">
+                                                    <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
+                                                    <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                                </Avatar>
+                                                <span className={cn(
+                                                    "absolute bottom-0 right-0 block h-3.5 w-3.5 rounded-full ring-2 ring-card",
+                                                    user.googleCalendarLinked ? "bg-green-500" : "bg-gray-400"
+                                                )} />
                                             </div>
-                                            <div className="absolute inset-x-0 bottom-0 h-px bg-border"/>
+                                        )}
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Google Calendar: {user.googleCalendarLinked ? 'Connected' : isCurrentUser ? 'Click to connect' : 'Not Connected'}</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                            <div>
+                                <p className="font-semibold text-lg">{user.displayName}</p>
+                                <p className="text-sm text-muted-foreground">{user.email}</p>
+                            </div>
+                          </div>
+                           {isCurrentUser && (
+                            <AccordionTrigger className="py-2 text-sm text-muted-foreground justify-end hover:no-underline [&[data-state=open]>span]:rotate-180">
+                                <span className="sr-only">Toggle Details</span>
+                            </AccordionTrigger>
+                           )}
+                        </div>
+                      </CardHeader>
+                        <AccordionContent>
+                           <CardContent className="pt-0">
+                               <div className="p-2 pt-0 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 border-t pt-4">
+                                    <div>
+                                        <Label className="text-xs text-muted-foreground">Contact</Label>
+                                        <div
+                                            className={cn(
+                                                "text-sm min-h-[36px] flex items-center",
+                                                isCurrentUser && !editingPhoneUserId && "cursor-pointer"
+                                            )}
+                                            onClick={() => {
+                                                if (isCurrentUser && !editingPhoneUserId) {
+                                                    setEditingPhoneUserId(user.userId);
+                                                    setPhoneValue(user.phone || '');
+                                                }
+                                            }}
+                                        >
+                                            {editingPhoneUserId === user.userId && isCurrentUser ? (
+                                                <Input
+                                                    ref={phoneInputRef}
+                                                    value={phoneValue}
+                                                    onChange={(e) => setPhoneValue(e.target.value)}
+                                                    onBlur={handleSavePhone}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter') handleSavePhone();
+                                                        if (e.key === 'Escape') setEditingPhoneUserId(null);
+                                                    }}
+                                                    className="h-auto p-0 text-sm border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                                                    placeholder="Not provided"
+                                                />
+                                            ) : (
+                                                user.phone || <span className="italic text-muted-foreground">Not provided</span>
+                                            )}
                                         </div>
-                                      </div>
                                     </div>
-                                    <div className="space-y-1">
-                                      <Label className="text-xs text-muted-foreground">Default Calendar View</Label>
-                                      <InlineSelectEditor
-                                        value={realUser.defaultCalendarView || 'day'}
-                                        onSave={(newValue) => updateUser(realUser.userId, { defaultCalendarView: newValue as any})}
-                                        options={[
-                                            { value: "month", label: "Month" },
-                                            { value: "week", label: "Week" },
-                                            { value: "day", label: "Day" },
-                                            { value: "production-schedule", label: "Production Schedule" },
-                                        ]}
-                                        placeholder="Select Default View"
-                                      />
+                                     <div>
+                                        <Label className="text-xs text-muted-foreground">Title</Label>
+                                        <p className="text-sm font-medium">{user.title || <span className="italic text-muted-foreground">Not provided</span>}</p>
                                     </div>
-                                    <div className="space-y-1">
-                                      <Label className="text-xs text-muted-foreground">Time Format</Label>
-                                      <InlineSelectEditor
-                                        value={realUser.timeFormat || '12h'}
-                                        onSave={(newValue) => updateUser(realUser.userId, { timeFormat: newValue as any})}
-                                        options={[
-                                            { value: "12h", label: "12-Hour" },
-                                            { value: "24h", label: "24-Hour" },
-                                        ]}
-                                        placeholder="Select Time Format"
-                                      />
+                                    <div>
+                                        <Label className="text-xs text-muted-foreground">Badges</Label>
+                                        <div className="flex flex-wrap gap-1 mt-2">
+                                        {(user.roles || []).map(role => {
+                                            const roleInfo = allRolesAndBadges.find(r => r.name === role);
+                                            return (
+                                            <Badge
+                                                key={role}
+                                                variant="outline"
+                                                style={roleInfo ? { color: roleInfo.color, borderColor: roleInfo.color } : {}}
+                                                className="rounded-full gap-1 text-xs py-0.5 px-2"
+                                            >
+                                                {roleInfo && <GoogleSymbol name={roleInfo.icon} className="text-sm" />}
+                                                <span>{role}</span>
+                                            </Badge>
+                                            );
+                                        })}
+                                        {(user.roles || []).length === 0 && <p className="text-xs text-muted-foreground italic">No badges assigned</p>}
+                                        </div>
                                     </div>
-                                    <div className="space-y-1 self-center">
-                                        <TooltipProvider>
-                                          <Tooltip>
-                                            <TooltipTrigger asChild>
-                                              <Button variant="ghost" onClick={() => updateUser(realUser.userId, { easyBooking: !realUser.easyBooking })} className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
-                                                  <GoogleSymbol name={realUser.easyBooking ? 'toggle_on' : 'toggle_off'} className="text-2xl" />
-                                                  <span className="text-sm">Easy Booking</span>
-                                              </Button>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                              <p>Click empty calendar slots to quickly create events.</p>
-                                            </TooltipContent>
-                                          </Tooltip>
-                                        </TooltipProvider>
-                                    </div>
-                                  </>
-                                )}
-                             </div>
+                                    {isCurrentUser && (
+                                      <>
+                                        <div className="space-y-1">
+                                          <div className="relative w-full border-b">
+                                              <div className="flex h-10 items-center justify-center p-0 text-muted-foreground">
+                                                  <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                                                      <TooltipProvider>
+                                                          <Tooltip>
+                                                              <TooltipTrigger asChild>
+                                                                  <PopoverTrigger asChild>
+                                                                      <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0">
+                                                                          <GoogleSymbol name="palette" className="text-primary"/>
+                                                                      </Button>
+                                                                  </PopoverTrigger>
+                                                              </TooltipTrigger>
+                                                              <TooltipContent>Set custom primary color</TooltipContent>
+                                                          </Tooltip>
+                                                      </TooltipProvider>
+                                                      <PopoverContent className="w-auto p-2">
+                                                          <div className="grid grid-cols-8 gap-1">
+                                                              {predefinedColors.map(color => (
+                                                                  <button key={color} className="h-6 w-6 rounded-full border" style={{ backgroundColor: color }} onClick={() => handleSetPrimaryColor(color)} aria-label={`Set color to ${color}`}/>
+                                                              ))}
+                                                              <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
+                                                                  <GoogleSymbol name="colorize" className="text-muted-foreground" />
+                                                                  <Input type="color" value={realUser.primaryColor || '#000000'} onChange={(e) => handleSetPrimaryColor(e.target.value)} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" aria-label="Custom color picker"/>
+                                                              </div>
+                                                          </div>
+                                                      </PopoverContent>
+                                                  </Popover>
+                                                  {THEME_OPTIONS.map(theme => (
+                                                  <Button
+                                                      key={theme.name}
+                                                      variant="ghost"
+                                                      size="sm"
+                                                      onClick={() => updateUser(realUser.userId, { theme: theme.name as any, primaryColor: undefined })}
+                                                      className={cn(
+                                                      "w-full rounded-none gap-2 py-1.5",
+                                                      realUser.theme === theme.name ? "text-primary" : ""
+                                                      )}
+                                                  >
+                                                      <GoogleSymbol name={theme.icon} className="text-lg" />
+                                                      {theme.label}
+                                                  </Button>
+                                                  ))}
+                                              </div>
+                                          </div>
+                                        </div>
+                                        <div className="space-y-1">
+                                          <Label className="text-xs text-muted-foreground">Default Calendar View</Label>
+                                          <InlineSelectEditor
+                                            value={realUser.defaultCalendarView || 'day'}
+                                            onSave={(newValue) => updateUser(realUser.userId, { defaultCalendarView: newValue as any})}
+                                            options={[
+                                                { value: "month", label: "Month" },
+                                                { value: "week", label: "Week" },
+                                                { value: "day", label: "Day" },
+                                                { value: "production-schedule", label: "Production Schedule" },
+                                            ]}
+                                            placeholder="Select Default View"
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <Label className="text-xs text-muted-foreground">Time Format</Label>
+                                          <InlineSelectEditor
+                                            value={realUser.timeFormat || '12h'}
+                                            onSave={(newValue) => updateUser(realUser.userId, { timeFormat: newValue as any})}
+                                            options={[
+                                                { value: "12h", label: "12-Hour" },
+                                                { value: "24h", label: "24-Hour" },
+                                            ]}
+                                            placeholder="Select Time Format"
+                                          />
+                                        </div>
+                                        <div className="space-y-1 self-center">
+                                            <TooltipProvider>
+                                              <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                  <Button variant="ghost" onClick={() => updateUser(realUser.userId, { easyBooking: !realUser.easyBooking })} className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
+                                                      <GoogleSymbol name={realUser.easyBooking ? 'toggle_on' : 'toggle_off'} className="text-2xl" />
+                                                      <span className="text-sm">Easy Booking</span>
+                                                  </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                  <p>Click empty calendar slots to quickly create events.</p>
+                                                </TooltipContent>
+                                              </Tooltip>
+                                            </TooltipProvider>
+                                        </div>
+                                      </>
+                                    )}
+                                 </div>
+                           </CardContent>
                         </AccordionContent>
-                      </AccordionItem>
-                    </Accordion>
+                    </AccordionItem>
+                  </Accordion>
                 </Card>
               )
             })}
