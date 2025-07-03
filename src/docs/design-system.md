@@ -130,7 +130,7 @@ This is a minimalist dialog for focused actions, such as entering a code or a sh
 - **Behavior**:
     - Clicking the action icon in the corner performs the primary action (e.g., saves or verifies the input).
     - Clicking the overlay dismisses the dialog without performing the action.
-- **Application**: Used for Two-Factor Authentication, quick edits, simple forms, and for confirming lower-risk destructive actions, such as deleting an Admin Group or unlinking a shared Badge.
+- **Application**: Used for Two-Factor Authentication, quick edits, simple forms, and for confirming lower-risk destructive actions, such as deleting a **Page**, an **Admin Group**, or unlinking a shared Badge.
 
 ---
 
@@ -200,6 +200,7 @@ This is the single source of truth for indicating user interaction state across 
     - **Appearance**: A circular badge (e.g., `h-5 w-5`) with a `border-2` of the parent element's background color (e.g., `border-card` or `border-background`) to create a "punched out" effect. The icon inside should be sized appropriately (e.g., `font-size: 14px` or similar, depending on container).
     - **Placement**: Typically positioned on the bottom-right or top-right corner of the parent element.
     - **Application**: Used for displaying a user's admin group on their avatar, a shared group status on a role icon, or a `share` icon on a shared Badge.
+
 
 
 

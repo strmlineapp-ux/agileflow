@@ -872,20 +872,22 @@ function PageCard({ page, onUpdate, onDelete }: { page: AppPage; onUpdate: (id: 
                     </div>
                 </CardContent>
             </Card>
-            <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete the "{page.name}" page and its configuration.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction variant="destructive" onClick={() => onDelete(page.id)}>Continue</AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                <DialogContent className="max-w-md">
+                    <div className="absolute top-4 right-4">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => onDelete(page.id)}>
+                            <GoogleSymbol name="delete" className="text-xl" />
+                            <span className="sr-only">Delete Page</span>
+                        </Button>
+                    </div>
+                    <DialogHeader>
+                        <DialogTitle>Delete "{page.name}"?</DialogTitle>
+                        <DialogDescription>
+                            This will permanently delete the page and its configuration. This action cannot be undone.
+                        </DialogDescription>
+                    </DialogHeader>
+                </DialogContent>
+            </Dialog>
         </>
     );
 }
