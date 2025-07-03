@@ -16,6 +16,13 @@ import { GoogleSymbol } from '../icons/google-symbol';
 import { Badge } from '../ui/badge';
 import { Label } from '../ui/label';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+
+const predefinedColors = [
+    '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
+    '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6',
+    '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
+];
 
 const InlineSelectEditor = ({
   value,
@@ -41,7 +48,7 @@ const InlineSelectEditor = ({
         onOpenChange={(isOpen) => !isOpen && setIsEditing(false)}
         defaultOpen
       >
-        <SelectTrigger className="h-8 w-[180px] text-sm">
+        <SelectTrigger className="h-9 w-full text-sm">
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>
@@ -56,7 +63,7 @@ const InlineSelectEditor = ({
   const currentLabel = options.find(opt => opt.value === value)?.label || placeholder;
 
   return (
-    <Button variant="ghost" className="h-8 justify-start p-2 text-sm" onClick={() => setIsEditing(true)}>
+    <Button variant="outline" className="h-9 justify-start font-normal w-full" onClick={() => setIsEditing(true)}>
       {currentLabel}
     </Button>
   );
@@ -68,10 +75,12 @@ export function UserManagement() {
     const [phoneValue, setPhoneValue] = useState('');
     const phoneInputRef = useRef<HTMLInputElement>(null);
     const { toast } = useToast();
+    const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
 
     useEffect(() => {
         if (editingPhoneUserId && phoneInputRef.current) {
             phoneInputRef.current.focus();
+            phoneInputRef.current.select();
         }
     }, [editingPhoneUserId]);
    
@@ -90,11 +99,14 @@ export function UserManagement() {
     };
 
     const THEME_OPTIONS = [
-      { name: 'light', label: 'Light' },
-      { name: 'dark', label: 'Dark' },
-      { name: 'high-visibility', label: 'High Visibility' },
-      { name: 'firebase', label: 'Firebase' }
+      { name: 'light', label: 'Light', icon: 'light_mode' },
+      { name: 'dark', label: 'Dark', icon: 'dark_mode' },
     ];
+    
+    const handleSetPrimaryColor = (color: string) => {
+      updateUser(realUser.userId, { primaryColor: color });
+      setIsColorPopoverOpen(false);
+    }
 
     return (
         <>
@@ -151,13 +163,24 @@ export function UserManagement() {
                   <Accordion type="single" collapsible className="w-full px-4">
                       <AccordionItem value="details" className="border-t">
                         <AccordionTrigger className="py-2 text-sm text-muted-foreground">
-                          Details
+                          <span className="sr-only">Details</span>
                         </AccordionTrigger>
                         <AccordionContent>
                            <div className="p-2 pt-0 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                                 <div>
                                     <Label className="text-xs text-muted-foreground">Contact</Label>
-                                    <div className="flex items-center gap-2">
+                                    <div
+                                        className={cn(
+                                            "text-sm min-h-[36px] flex items-center",
+                                            isCurrentUser && !editingPhoneUserId && "cursor-pointer"
+                                        )}
+                                        onClick={() => {
+                                            if (isCurrentUser && !editingPhoneUserId) {
+                                                setEditingPhoneUserId(user.userId);
+                                                setPhoneValue(user.phone || '');
+                                            }
+                                        }}
+                                    >
                                         {editingPhoneUserId === user.userId && isCurrentUser ? (
                                             <Input
                                                 ref={phoneInputRef}
@@ -172,26 +195,13 @@ export function UserManagement() {
                                                 placeholder="Not provided"
                                             />
                                         ) : (
-                                            <p
-                                                className={cn(
-                                                    "text-sm min-h-[32px] flex items-center",
-                                                    isCurrentUser && "cursor-pointer hover:text-primary"
-                                                )}
-                                                onClick={() => {
-                                                    if (isCurrentUser) {
-                                                        setEditingPhoneUserId(user.userId);
-                                                        setPhoneValue(user.phone || '');
-                                                    }
-                                                }}
-                                            >
-                                                {user.phone || <span className="italic text-muted-foreground">Not provided</span>}
-                                            </p>
+                                            user.phone || <span className="italic text-muted-foreground">Not provided</span>
                                         )}
                                     </div>
                                 </div>
                                 <div>
                                     <Label className="text-xs text-muted-foreground">Badges</Label>
-                                    <div className="flex flex-wrap gap-1 mt-1">
+                                    <div className="flex flex-wrap gap-1 mt-2">
                                     {(user.roles || []).map(role => {
                                         const roleInfo = allRolesAndBadges.find(r => r.name === role);
                                         return (
@@ -206,24 +216,46 @@ export function UserManagement() {
                                         </Badge>
                                         );
                                     })}
-                                    {(user.roles || []).length === 0 && <p className="text-xs text-muted-foreground italic">No roles assigned</p>}
+                                    {(user.roles || []).length === 0 && <p className="text-xs text-muted-foreground italic">No badges assigned</p>}
                                     </div>
                                 </div>
                                 {isCurrentUser && (
                                   <>
                                     <div className="space-y-1">
-                                        <Label className="text-xs text-muted-foreground">Theme</Label>
+                                        <Label className="text-xs text-muted-foreground">Theme &amp; Color</Label>
                                         <div className="flex items-center gap-2">
-                                          {THEME_OPTIONS.map(theme => (
-                                            <Button 
-                                              key={theme.name}
-                                              variant={realUser.theme === theme.name ? 'secondary' : 'ghost'}
-                                              size="sm"
-                                              onClick={() => updateUser(realUser.userId, { theme: theme.name as any })}
-                                            >
-                                              {theme.label}
-                                            </Button>
-                                          ))}
+                                            <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                                                <PopoverTrigger asChild>
+                                                    <Button variant="outline" size="icon" className="h-9 w-9 shrink-0">
+                                                        <GoogleSymbol name="palette" />
+                                                    </Button>
+                                                </PopoverTrigger>
+                                                <PopoverContent className="w-auto p-2">
+                                                    <div className="grid grid-cols-8 gap-1">
+                                                        {predefinedColors.map(color => (
+                                                            <button key={color} className="h-6 w-6 rounded-full border" style={{ backgroundColor: color }} onClick={() => handleSetPrimaryColor(color)} aria-label={`Set color to ${color}`}/>
+                                                        ))}
+                                                        <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
+                                                            <GoogleSymbol name="colorize" className="text-muted-foreground" />
+                                                            <Input type="color" value={realUser.primaryColor || '#000000'} onChange={(e) => handleSetPrimaryColor(e.target.value)} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" aria-label="Custom color picker"/>
+                                                        </div>
+                                                    </div>
+                                                </PopoverContent>
+                                            </Popover>
+                                            <div className="flex h-9 w-full items-center justify-start rounded-md border border-input p-1">
+                                              {THEME_OPTIONS.map(theme => (
+                                                <Button 
+                                                  key={theme.name}
+                                                  variant={realUser.theme === theme.name ? 'secondary' : 'ghost'}
+                                                  size="sm"
+                                                  onClick={() => updateUser(realUser.userId, { theme: theme.name as any })}
+                                                  className="w-full"
+                                                >
+                                                  <GoogleSymbol name={theme.icon} className="mr-2 text-lg" />
+                                                  {theme.label}
+                                                </Button>
+                                              ))}
+                                            </div>
                                         </div>
                                     </div>
                                     <div className="space-y-1">
@@ -252,7 +284,7 @@ export function UserManagement() {
                                         placeholder="Select Time Format"
                                       />
                                     </div>
-                                    <div className="space-y-1 self-end">
+                                    <div className="space-y-1 self-center">
                                         <TooltipProvider>
                                           <Tooltip>
                                             <TooltipTrigger asChild>
