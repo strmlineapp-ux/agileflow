@@ -20,14 +20,14 @@ The application favors a compact, information-dense layout. Card components are 
 ### 2. Inline Editor
 This pattern allows for seamless, direct text editing within the main application layout, avoiding disruptive dialog boxes or popovers for simple text changes.
 
-- **Trigger:** Clicking directly on a text element (e.g., a section title, a badge name).
+- **Trigger:** Clicking directly on a text element (e.g., a section title, a badge name, a phone number).
 - **Interaction:**
     - The text element transforms into an input field.
     - The input field must be styled to perfectly match the font, size, weight, and color of the original text element it replaces.
     - **Crucially, the input must have a transparent background and no borders or box-shadow**, ensuring it blends seamlessly into the UI.
 - **Behavior:**
     - Typing modifies the text value.
-    - Clicking anywhere outside the input field or pressing 'Enter' saves the changes and reverts the input back to a standard text element. A global event listener is used to robustly capture the "click away" event without conflicting with other UI libraries.
+    - Clicking anywhere outside the input field or pressing 'Enter' saves the changes and reverts the input back to a standard text element.
     - Pressing 'Escape' cancels the edit without saving.
 - **Application:** Used for editing entity names, labels, and other simple text fields directly in the UI.
 
@@ -155,7 +155,8 @@ When a destructive action requires user confirmation (like deleting a shared res
 
 ### Theming & Button Styles
 
-- **Multi-Theme Support**: The application supports multiple themes (`light`, `dark`, `high-visibility`, `firebase`), which are defined in `src/app/globals.css`. This allows users to choose their preferred visual mode.
+- **Theme Selection**: Users can choose between `light` and `dark` themes. This selection is presented as a set of tab-like buttons, each with an icon and a label. The active theme's button has its text and icon colored with the primary theme color.
+- **Custom Primary Color**: Users can select a custom primary color using a color picker popover, which is triggered by a ghost-style palette icon button. This custom color overrides the theme's default primary color.
 - **Primary Button Gradient**: Primary buttons have a special gradient effect on hover, which is unique to each theme. This provides a subtle but polished visual feedback for key actions.
 - **Text-based Button Hover**: For text-based buttons (like those on the login page), the hover and focus state is indicated *only* by the text color changing to the primary theme color. No background color is applied.
 
@@ -164,6 +165,10 @@ This is the single source of truth for indicating user interaction state across 
 
 -   **Keyboard Focus (`focus-visible`)**: All interactive elements (buttons, inputs, checkboxes, custom cards, etc.) share a consistent focus indicator. When an element is focused via keyboard navigation, a subtle, `1px` ring with 50% opacity appears directly on its border (`focus-visible:ring-1 focus-visible:ring-ring/50`). This provides a clean, minimal, and non-intrusive focus indicator that aligns with the app's elegant aesthetic.
 -   **Selected/Highlighted State**: To indicate a persistently selected or highlighted state (e.g., the designated "Group Admin" in a list), a similar `1px` ring is used, but with the primary theme color (`ring-1 ring-primary`). This creates a clear visual connection between the temporary focus state and the persistent selected state.
+
+### List Item States (Dropdowns & Popovers)
+- **Focus**: When navigating through lists (like in dropdowns or popovers) using the keyboard, the focused item's text color changes to `text-primary`. No background color is applied to maintain a clean look.
+- **Selection**: The currently selected item within a list is indicated by a checkmark icon, which also uses the `primary` color.
 
 ### User Notifications
 
@@ -180,4 +185,3 @@ This is the single source of truth for indicating user interaction state across 
     - **Appearance**: A circular badge (e.g., `h-5 w-5`) with a `border-2` of the parent element's background color (e.g., `border-card` or `border-background`) to create a "punched out" effect. The icon inside should be sized appropriately (e.g., `font-size: 14px` or similar, depending on container).
     - **Placement**: Typically positioned on the bottom-right or top-right corner of the parent element.
     - **Application**: Used for displaying a user's admin group on their avatar, a shared group status on a role icon, or a `share` icon on a shared Badge.
-
