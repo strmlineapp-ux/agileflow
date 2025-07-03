@@ -1039,8 +1039,15 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                         <StrictModeDroppable droppableId="pages-col-1">
-                           {(provided) => (
-                                <div className="space-y-6" ref={provided.innerRef} {...provided.droppableProps}>
+                           {(provided, snapshot) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.droppableProps}
+                                  className={cn(
+                                    "space-y-6 rounded-lg border-2 border-dashed border-transparent p-2 transition-colors",
+                                    snapshot.isDraggingOver && "border-primary/20 bg-accent"
+                                  )}
+                                >
                                     {columnOnePages.map((page, index) => (
                                         <Draggable key={page.id} draggableId={page.id} index={index}>
                                             {(provided) => (
@@ -1055,8 +1062,15 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                             )}
                         </StrictModeDroppable>
                         <StrictModeDroppable droppableId="pages-col-2">
-                           {(provided) => (
-                                <div className="space-y-6" ref={provided.innerRef} {...provided.droppableProps}>
+                           {(provided, snapshot) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.droppableProps}
+                                  className={cn(
+                                    "space-y-6 rounded-lg border-2 border-dashed border-transparent p-2 transition-colors",
+                                    snapshot.isDraggingOver && "border-primary/20 bg-accent"
+                                  )}
+                                >
                                     {columnTwoPages.map((page, index) => (
                                         <Draggable key={page.id} draggableId={page.id} index={index}>
                                             {(provided) => (
