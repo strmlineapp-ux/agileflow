@@ -70,7 +70,7 @@ The **Notifications** page keeps you informed.
 
 ### 7.1 User Preferences
 Access your preferences by clicking your avatar in the bottom-left corner of the sidebar.
-- **Change Colour Scheme**: Choose between `light`, `dark`, `high-visibility`, and `firebase` themes.
+- **Change Colour Scheme**: Choose between `light` and `dark` themes. You can also select a custom primary color to override the theme's default.
 - **Set Default Calendar View**: Select which calendar view you want to see when you log in.
 - **Set Time Format**: Choose between 12-hour and 24-hour time display.
 - **Enable Easy Booking**: Toggle the quick-create event feature.
@@ -85,17 +85,17 @@ Navigate to **Settings > User Management** from the sidebar (availability depend
 
 ### 8.1 Admin Management (`/dashboard/admin`)
 - **Manage Admins**: Assign or revoke Admin privileges for any user. This action requires two-factor authentication for security.
+- **Manage Admin Groups**: Create, edit, and manage high-level administrative groups that grant specific permissions across the app.
 
 ### 8.2 Service Delivery Management (`/dashboard/service-delivery`)
 This is the central hub for global application settings.
 - **Manage Calendars**: Create, edit, or delete shared calendars. You can set a calendar's color, default event title, and assign managers.
 - **Manage Teams**: Create new teams, edit existing team details (name, icon), and assign members and managers.
-- **Manage Priority Strategies**: Define different systems for prioritizing tasks and events (e.g., P0-P4 scale, star ratings).
 
 ### 8.3 Team Management (`/dashboard/teams/[teamId]`)
 This page is for managing the specifics of an individual team.
-- **Team Members**: View all members of the team and manage their team-specific roles.
-- **Role Management**: Create or edit the custom roles available for this team (e.g., `Camera`, `Audio`).
+- **Team Members**: View all members of the team and manage their team-specific badges.
+- **Badge Management**: Create or edit the custom badges available for this team (e.g., `Camera`, `Audio`).
 - **Pinned Locations**: Pin locations to the team's Production Schedule. You can also designate locations as "check locations."
 - **Workstations**: Manage a list of bookable workstations or machines for the team.
 - **Event Templates**: Create reusable templates for common events, pre-filling requested roles to speed up event creation.

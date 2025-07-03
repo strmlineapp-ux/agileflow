@@ -80,7 +80,6 @@ This entity, `AppSettings`, holds global configuration data that allows for cust
 | `adminGroups: AdminGroup[]` | An array of objects defining custom administrative groups. This allows admins to create a hierarchy between the system `Admin` and standard users. Each group has a name, icon, and color, which are editable on the Admin Management page. |
 | `pages: AppPage[]` | An array of objects defining the application's pages, including their navigation properties (name, icon, path) and access control rules. |
 | `tabs: AppTab[]` | An array of objects defining reusable tabs that can be associated with different pages. |
-| `strategyLabel?: string` | An alias for the "Priority Strategies" section on the Service Delivery page. |
 | `calendarManagementLabel?: string` | An alias for the "Calendar Management" tab on the Service delivery page. |
 | `teamManagementLabel?: string` | An alias for the "Team Management" tab on the Service Delivery page. |
 

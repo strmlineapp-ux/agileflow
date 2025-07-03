@@ -13,7 +13,6 @@ import { type AppTab, type Team, type AppPage } from '@/types';
 import { AdminGroupsManagement, PagesManagement, TabsManagement } from '@/app/dashboard/admin/page';
 import { CalendarManagement } from '@/components/service-delivery/calendar-management';
 import { TeamManagement as ServiceDeliveryTeamManagement } from '@/components/service-delivery/team-management';
-import { StrategyManagement } from '@/components/service-delivery/strategy-management';
 import { TeamMembersView } from '@/components/teams/team-members-view';
 import { BadgeManagement } from '@/components/teams/badge-management';
 import { PinnedLocationManagement } from '@/components/settings/pinned-location-management';
@@ -33,7 +32,6 @@ const componentMap: Record<string, React.ComponentType<any>> = {
   // Service Delivery Tabs
   calendars: CalendarManagement,
   teams: ServiceDeliveryTeamManagement,
-  strategy: StrategyManagement,
   // Team Management Tabs
   team_members: TeamMembersView,
   badges: BadgeManagement,

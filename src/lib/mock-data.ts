@@ -17,7 +17,6 @@ export const mockTabs: AppTab[] = [
   { id: 'tab-admin-roles', name: 'Admin Groups', icon: 'admin_panel_settings', color: '#8B5CF6', componentKey: 'adminGroups', description: 'Manage high-level administrative groups and their permissions.' },
   { id: 'tab-admin-pages', name: 'Pages', icon: 'web', color: '#EC4899', componentKey: 'pages', description: 'Configure application pages, their navigation, and access controls.' },
   { id: 'tab-admin-tabs', name: 'Tabs', icon: 'tab', color: '#EF4444', componentKey: 'tabs', description: 'Manage the properties of reusable tabs that appear on pages.' },
-  { id: 'tab-strategy', name: 'Strategy', icon: 'strategy', color: '#84CC16', componentKey: 'strategy', description: 'Define and apply priority strategies.' },
 ];
 
 export const mockPages: AppPage[] = [
@@ -83,7 +82,7 @@ export const mockPages: AppPage[] = [
         color: '#8B5CF6',
         path: '/dashboard/service-delivery',
         isDynamic: false,
-        associatedTabs: ['tab-calendars', 'tab-teams', 'tab-strategy'],
+        associatedTabs: ['tab-calendars', 'tab-teams'],
         access: {
             users: [],
             teams: [],
@@ -132,7 +131,8 @@ export const mockAppSettings: AppSettings = {
   ],
   pages: mockPages,
   tabs: mockTabs,
-  strategyLabel: 'Priority Strategies',
+  calendarManagementLabel: 'Manage Calendars',
+  teamManagementLabel: 'Team Management',
 };
 
 export const mockUsers: User[] = [

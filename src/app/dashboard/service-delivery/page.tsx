@@ -15,14 +15,12 @@ import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { googleSymbolNames } from '@/lib/google-symbols';
-import { StrategyManagement } from '@/components/service-delivery/strategy-management';
 
 
 // This is a mapping from the componentKey in our AppTab model to the actual component to render.
 const componentMap: Record<string, React.ComponentType<{ tab: AppTab }>> = {
   calendars: CalendarManagement,
   teams: TeamManagement,
-  strategy: StrategyManagement,
 };
 
 // Define a unique identifier for this page
