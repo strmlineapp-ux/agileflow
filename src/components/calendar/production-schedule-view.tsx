@@ -615,7 +615,7 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
                                         const dailyCheckUsers = users.filter(user => teams.some(t => (t.checkLocations || []).includes(location) && (t.locationCheckManagers || []).includes(viewAsUser.userId) && (t.members || []).includes(user.userId) ));
 
                                         const pill = canManageThisCheckLocation ? (
-                                            <Popover key={location}><PopoverTrigger asChild><Button variant={assignedUser ? "secondary" : "outline"} size="sm" className={cn("rounded-full h-8", isTempCheck && "border-dashed")}>{pillContent}</Button></PopoverTrigger>
+                                            <Popover key={location}><PopoverTrigger asChild><Button variant={assignedUser ? "default" : "outline"} size="sm" className={cn("rounded-full h-8", isTempCheck && "border-dashed")}>{pillContent}</Button></PopoverTrigger>
                                                 <PopoverContent className="w-56 p-0">
                                                     <div className="p-2 border-b"><p className="text-sm font-medium text-center">{locationAliasMap[location] || location}</p></div>
                                                     <div className="flex flex-col gap-1 max-h-48 overflow-y-auto p-1">
@@ -629,7 +629,7 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
                                                     {assignedUser && <div className="p-1 border-t"><Button variant="outline" size="sm" className="w-full text-destructive hover:text-destructive" onClick={() => handleAssignCheck(dayIso, location, null)}>Unassign</Button></div>}
                                                 </PopoverContent>
                                             </Popover>
-                                        ) : (<Button key={location} variant={assignedUser ? "secondary" : "outline"} size="sm" className={cn("rounded-full h-8", isTempCheck && "border-dashed")} disabled>{pillContent}</Button>);
+                                        ) : (<Button key={location} variant={assignedUser ? "default" : "outline"} size="sm" className={cn("rounded-full h-8", isTempCheck && "border-dashed")} disabled>{pillContent}</Button>);
                                         
                                         return isTempCheck ? (
                                             <div key={location} className="group relative">
@@ -734,4 +734,5 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
     );
 });
 ProductionScheduleView.displayName = 'ProductionScheduleView';
+
 

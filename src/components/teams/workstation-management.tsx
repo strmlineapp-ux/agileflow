@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -140,7 +141,7 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
         <CardContent>
           <div className="flex flex-wrap gap-2 min-h-[40px] p-2 border rounded-md bg-muted/50">
             {teamWorkstations.length > 0 ? teamWorkstations.map(ws => (
-              <div key={ws} className="group relative flex items-center gap-2 rounded-full border-2 p-1 pl-2 bg-secondary text-secondary-foreground">
+              <div key={ws} className="group relative flex items-center gap-2 rounded-full border-2 p-1 pl-2 bg-muted text-muted-foreground">
                 {editingWorkstation === ws ? (
                     <Input
                         ref={workstationInputRef}
@@ -156,7 +157,7 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
                 )}
                  <button
                     type="button"
-                    className="ml-1 h-5 w-5 hover:bg-secondary-foreground/20 rounded-full inline-flex items-center justify-center opacity-50 group-hover:opacity-100 transition-opacity"
+                    className="ml-1 h-5 w-5 hover:bg-destructive/20 rounded-full inline-flex items-center justify-center opacity-50 group-hover:opacity-100 transition-opacity"
                     onClick={() => setWorkstationToDelete(ws)}
                   >
                     <GoogleSymbol name="close" className="text-xs" />

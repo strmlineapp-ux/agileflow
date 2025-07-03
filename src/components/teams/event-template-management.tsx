@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -127,7 +128,7 @@ function EventTemplateForm({
             <p className="text-sm text-muted-foreground">Requested Badges</p>
             <div className="flex flex-wrap gap-2 items-center min-h-[40px] p-2 border rounded-md bg-muted/50">
               {requestedRoles.map(role => (
-                <Badge key={role} variant="secondary" className="group text-base py-1 pl-3 pr-1 rounded-full">
+                <Badge key={role} variant="outline" className="group text-base py-1 pl-3 pr-1 rounded-full">
                     <span className="font-medium">{role}</span>
                     <button 
                         type="button" 
@@ -318,7 +319,7 @@ export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab
                         <p className="text-sm font-medium text-muted-foreground mb-2">Requested Badges</p>
                         <div className="flex flex-wrap gap-1 min-h-[24px]">
                           {template.requestedRoles.length > 0 ? (
-                            template.requestedRoles.map(role => <Badge key={role} variant="secondary" className="rounded-full">{role}</Badge>)
+                            template.requestedRoles.map(role => <Badge key={role} variant="outline" className="rounded-full">{role}</Badge>)
                           ) : (
                             <p className="text-xs text-muted-foreground italic">No badges requested.</p>
                           )}

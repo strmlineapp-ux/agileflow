@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -131,7 +132,7 @@ export function StrategyManagement({ tab }: { tab: AppTab }) {
                 </CardHeader>
                 <CardContent className="flex-grow">
                      <div className="flex flex-wrap gap-2 min-h-[24px]">
-                        {strategy.applications.map(app => <Badge key={app} variant="secondary">{app}</Badge>)}
+                        {strategy.applications.map(app => <Badge key={app} variant="outline">{app}</Badge>)}
                     </div>
                 </CardContent>
                 <CardFooter>
