@@ -7,7 +7,7 @@ export const mockTabs: AppTab[] = [
   { id: 'tab-tasks', name: 'Tasks', icon: 'checklist', color: '#10B981', componentKey: 'tasks' },
   { id: 'tab-notifications', name: 'Notifications', icon: 'notifications', color: '#3B82F6', componentKey: 'notifications' },
   { id: 'tab-settings', name: 'Settings', icon: 'settings', color: '#64748B', componentKey: 'settings' },
-  { id: 'tab-calendars', name: 'Calendars', icon: 'calendar_month', color: '#3B82F6', componentKey: 'calendars', description: 'Manage shared calendars, colors, and default settings.' },
+  { id: 'tab-calendars', name: 'Manage Calendars', icon: 'calendar_month', color: '#3B82F6', componentKey: 'calendars', description: 'Manage shared calendars, colors, and default settings.' },
   { id: 'tab-teams', name: 'Teams', icon: 'group', color: '#10B981', componentKey: 'teams', description: 'Create and configure teams and their members.' },
   { id: 'tab-team-members', name: 'Members', icon: 'group', color: '#6366F1', componentKey: 'team_members', description: 'View all members of a specific team and manage their roles.' },
   { id: 'tab-badges', name: 'Badges', icon: 'style', color: '#F97316', componentKey: 'badges', description: 'Create and manage reusable badges for skills, roles, or priorities.' },
