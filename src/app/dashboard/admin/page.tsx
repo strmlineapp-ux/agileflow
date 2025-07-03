@@ -117,7 +117,7 @@ const AddUserToGroupButton = ({ usersToAdd, onAdd, groupName }: { usersToAdd: Us
         <ScrollArea className="h-64">
            <div className="p-1">
             {usersToAdd.length > 0 ? usersToAdd.map(user => (
-              <div key={user.userId} onClick={() => handleSelect(user)} className="flex items-center gap-2 p-2 rounded-md cursor-pointer group">
+              <div key={user.userId} onClick={() => handleSelect(user)} className="flex items-center gap-2 p-2 rounded-md group">
                 <Avatar className="h-8 w-8"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0,2)}</AvatarFallback></Avatar>
                 <div>
                   <p className="text-sm font-medium group-hover:text-primary transition-colors">{user.displayName}</p>
@@ -340,6 +340,8 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
   const [is2faDialogOpen, setIs2faDialogOpen] = useState(false);
   const [on2faSuccess, setOn2faSuccess] = useState<(() => void) | null>(null);
   const [twoFactorCode, setTwoFactorCode] = useState('');
+  const [isEditing2fa, setIsEditing2fa] = useState(false);
+  const twoFactorCodeInputRef = useRef<HTMLInputElement>(null);
   
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
@@ -347,6 +349,10 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
   useEffect(() => {
     if (isEditingTitle) titleInputRef.current?.focus();
   }, [isEditingTitle]);
+  
+  useEffect(() => {
+    if (isEditing2fa) twoFactorCodeInputRef.current?.focus();
+  }, [isEditing2fa]);
 
   const handleSaveTitle = () => {
     const newName = titleInputRef.current?.value.trim();
@@ -397,6 +403,7 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
     setIs2faDialogOpen(false);
     setTwoFactorCode('');
     setOn2faSuccess(null);
+    setIsEditing2fa(false);
   };
 
   const handleAddAdminGroup = () => {
@@ -525,17 +532,30 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                     <DialogTitle>Two-Factor Authentication</DialogTitle>
                     <DialogDescription>Enter the 6-digit code from your authenticator app to proceed.</DialogDescription>
                 </DialogHeader>
-                <div className="relative flex items-center gap-2 w-full">
-                    <GoogleSymbol name="password" className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                        id="2fa-code"
-                        value={twoFactorCode}
-                        onChange={(e) => setTwoFactorCode(e.target.value)}
-                        placeholder="••••••"
-                        onKeyDown={(e) => e.key === 'Enter' && handleVerify2fa()}
-                        className="w-full text-center tracking-[0.5em] pl-10"
-                        maxLength={6}
-                    />
+                <div
+                    className={cn("flex items-center gap-2 w-full text-left text-muted-foreground transition-colors p-2 h-10",
+                        !isEditing2fa && "cursor-text hover:text-primary/80"
+                    )}
+                    onClick={() => {if (!isEditing2fa) setIsEditing2fa(true)}}
+                    >
+                    <GoogleSymbol name="password" className="text-xl" />
+                    {isEditing2fa ? (
+                        <Input
+                            id="2fa-code"
+                            ref={twoFactorCodeInputRef}
+                            value={twoFactorCode}
+                            onChange={(e) => setTwoFactorCode(e.target.value)}
+                            onBlur={() => { if (!twoFactorCode) setIsEditing2fa(false); }}
+                            onKeyDown={(e) => e.key === 'Enter' && handleVerify2fa()}
+                            className="w-full text-center tracking-[0.5em] h-auto p-0 border-0 shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground"
+                            maxLength={6}
+                            placeholder="••••••"
+                        />
+                    ) : (
+                        <span className="flex-1 text-sm text-center tracking-[0.5em]">
+                            {twoFactorCode ? '••••••' : '6-digit code'}
+                        </span>
+                    )}
                 </div>
             </DialogContent>
         </Dialog>
@@ -1260,3 +1280,5 @@ const AdminPageSkeleton = () => (
       </div>
     </div>
 );
+
+    
