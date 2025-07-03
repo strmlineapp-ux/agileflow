@@ -518,7 +518,7 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                 <AlertDialogTitle>Two-Factor Authentication</AlertDialogTitle>
                 <AlertDialogDescription>Enter the code from your authenticator app to confirm the role change.</AlertDialogDescription>
               </AlertDialogHeader>
-              <div className="grid gap-4 py-4"><Input id="2fa-code" value={twoFactorCode} onChange={(e) => setTwoFactorCode(e.target.value)} placeholder="123456" onKeyDown={(e) => e.key === 'Enter' && handleVerify2fa()}/></div>
+              <Input id="2fa-code" value={twoFactorCode} onChange={(e) => setTwoFactorCode(e.target.value)} placeholder="123456" onKeyDown={(e) => e.key === 'Enter' && handleVerify2fa()}/>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <AlertDialogAction onClick={handleVerify2fa}>Verify & Change</AlertDialogAction>
@@ -1246,3 +1246,5 @@ const AdminPageSkeleton = () => (
       </div>
     </div>
 );
+
+    
