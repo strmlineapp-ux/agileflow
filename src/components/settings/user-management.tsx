@@ -162,9 +162,7 @@ export function UserManagement() {
                   </CardContent>
                   <Accordion type="single" collapsible className="w-full px-4">
                       <AccordionItem value="details" className="border-t">
-                        <AccordionTrigger className="py-2 text-sm text-muted-foreground">
-                          <span className="sr-only">Details</span>
-                        </AccordionTrigger>
+                        <AccordionTrigger className="py-2 text-sm text-muted-foreground justify-end hover:no-underline" />
                         <AccordionContent>
                            <div className="p-2 pt-0 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                                 <div>
@@ -172,7 +170,7 @@ export function UserManagement() {
                                     <div
                                         className={cn(
                                             "text-sm min-h-[36px] flex items-center",
-                                            isCurrentUser && !editingPhoneUserId && "cursor-pointer"
+                                            isCurrentUser && "cursor-pointer"
                                         )}
                                         onClick={() => {
                                             if (isCurrentUser && !editingPhoneUserId) {
@@ -222,41 +220,54 @@ export function UserManagement() {
                                 {isCurrentUser && (
                                   <>
                                     <div className="space-y-1">
-                                        <Label className="text-xs text-muted-foreground">Theme &amp; Color</Label>
-                                        <div className="flex items-center gap-2">
-                                            <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                                                <PopoverTrigger asChild>
-                                                    <Button variant="outline" size="icon" className="h-9 w-9 shrink-0">
-                                                        <GoogleSymbol name="palette" />
-                                                    </Button>
-                                                </PopoverTrigger>
-                                                <PopoverContent className="w-auto p-2">
-                                                    <div className="grid grid-cols-8 gap-1">
-                                                        {predefinedColors.map(color => (
-                                                            <button key={color} className="h-6 w-6 rounded-full border" style={{ backgroundColor: color }} onClick={() => handleSetPrimaryColor(color)} aria-label={`Set color to ${color}`}/>
-                                                        ))}
-                                                        <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
-                                                            <GoogleSymbol name="colorize" className="text-muted-foreground" />
-                                                            <Input type="color" value={realUser.primaryColor || '#000000'} onChange={(e) => handleSetPrimaryColor(e.target.value)} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" aria-label="Custom color picker"/>
-                                                        </div>
+                                      <Label className="text-xs text-muted-foreground">Theme &amp; Color</Label>
+                                      <div className="flex items-center gap-2">
+                                        <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                                            <TooltipProvider>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <PopoverTrigger asChild>
+                                                            <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0">
+                                                                <GoogleSymbol name="palette" />
+                                                            </Button>
+                                                        </PopoverTrigger>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>Set custom primary color</TooltipContent>
+                                                </Tooltip>
+                                            </TooltipProvider>
+                                            <PopoverContent className="w-auto p-2">
+                                                <div className="grid grid-cols-8 gap-1">
+                                                    {predefinedColors.map(color => (
+                                                        <button key={color} className="h-6 w-6 rounded-full border" style={{ backgroundColor: color }} onClick={() => handleSetPrimaryColor(color)} aria-label={`Set color to ${color}`}/>
+                                                    ))}
+                                                    <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
+                                                        <GoogleSymbol name="colorize" className="text-muted-foreground" />
+                                                        <Input type="color" value={realUser.primaryColor || '#000000'} onChange={(e) => handleSetPrimaryColor(e.target.value)} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" aria-label="Custom color picker"/>
                                                     </div>
-                                                </PopoverContent>
-                                            </Popover>
-                                            <div className="flex h-9 w-full items-center justify-start rounded-md border border-input p-1">
-                                              {THEME_OPTIONS.map(theme => (
-                                                <Button 
-                                                  key={theme.name}
-                                                  variant={realUser.theme === theme.name ? 'secondary' : 'ghost'}
-                                                  size="sm"
-                                                  onClick={() => updateUser(realUser.userId, { theme: theme.name as any })}
-                                                  className="w-full"
+                                                </div>
+                                            </PopoverContent>
+                                        </Popover>
+                                        <div className="relative w-full">
+                                            <div className="flex h-10 items-center justify-center p-0 text-muted-foreground">
+                                                {THEME_OPTIONS.map(theme => (
+                                                <Button
+                                                    key={theme.name}
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => updateUser(realUser.userId, { theme: theme.name as any })}
+                                                    className={cn(
+                                                    "w-full rounded-none gap-2 py-1.5",
+                                                    realUser.theme === theme.name ? "text-primary" : ""
+                                                    )}
                                                 >
-                                                  <GoogleSymbol name={theme.icon} className="mr-2 text-lg" />
-                                                  {theme.label}
+                                                    <GoogleSymbol name={theme.icon} className="text-lg" />
+                                                    {theme.label}
                                                 </Button>
-                                              ))}
+                                                ))}
                                             </div>
+                                            <div className="absolute inset-x-0 bottom-0 h-px bg-border"/>
                                         </div>
+                                      </div>
                                     </div>
                                     <div className="space-y-1">
                                       <Label className="text-xs text-muted-foreground">Default Calendar View</Label>
