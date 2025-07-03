@@ -994,14 +994,14 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
     };
 
     return (
-        <div className="space-y-8">
-            <div className="flex items-center gap-2">
-                {isEditingTitle ? (
-                    <Input ref={titleInputRef} defaultValue={tab.name} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
-                ) : (
-                    <h2 className="text-2xl font-semibold tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
-                )}
-                <DragDropContext onDragStart={(start) => setDraggingItemId(start.draggableId)} onDragEnd={onDragEnd}>
+        <DragDropContext onDragStart={(start) => setDraggingItemId(start.draggableId)} onDragEnd={onDragEnd}>
+            <div className="space-y-8">
+                <div className="flex items-center gap-2">
+                    {isEditingTitle ? (
+                        <Input ref={titleInputRef} defaultValue={tab.name} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
+                    ) : (
+                        <h2 className="text-2xl font-semibold tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
+                    )}
                     <StrictModeDroppable droppableId="duplicate-page-zone">
                         {(provided, snapshot) => (
                             <div 
@@ -1028,10 +1028,8 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                             </div>
                         )}
                     </StrictModeDroppable>
-                </DragDropContext>
-            </div>
-            
-             <DragDropContext onDragStart={(start) => setDraggingItemId(start.draggableId)} onDragEnd={onDragEnd}>
+                </div>
+                
                 <div className="space-y-6">
                     {adminPage && <PageCard page={adminPage} onUpdate={handleUpdatePage} onDelete={handleDeletePage} />}
                     
@@ -1045,14 +1043,14 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                                 >
                                     {columnOnePages.map((page, index) => (
                                         <Draggable key={page.id} draggableId={page.id} index={index}>
-                                            {(provided, snapshot) => (
+                                            {(provided) => (
                                                 <div 
                                                     ref={provided.innerRef} 
                                                     {...provided.draggableProps} 
                                                     {...provided.dragHandleProps}
                                                     className={cn("transition-opacity", draggingItemId && draggingItemId !== page.id && "opacity-30")}
                                                 >
-                                                    <PageCard page={page} onUpdate={handleUpdatePage} onDelete={handleDeletePage} isDragging={snapshot.isDragging} />
+                                                    <PageCard page={page} onUpdate={handleUpdatePage} onDelete={handleDeletePage} />
                                                 </div>
                                             )}
                                         </Draggable>
@@ -1070,14 +1068,14 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                                 >
                                     {columnTwoPages.map((page, index) => (
                                         <Draggable key={page.id} draggableId={page.id} index={index}>
-                                            {(provided, snapshot) => (
+                                            {(provided) => (
                                                 <div 
                                                     ref={provided.innerRef} 
                                                     {...provided.draggableProps} 
                                                     {...provided.dragHandleProps}
                                                     className={cn("transition-opacity", draggingItemId && draggingItemId !== page.id && "opacity-30")}
                                                 >
-                                                    <PageCard page={page} onUpdate={handleUpdatePage} onDelete={handleDeletePage} isDragging={snapshot.isDragging} />
+                                                    <PageCard page={page} onUpdate={handleUpdatePage} onDelete={handleDeletePage} />
                                                 </div>
                                             )}
                                         </Draggable>
@@ -1090,8 +1088,8 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
 
                     {settingsPage && <PageCard page={settingsPage} onUpdate={handleUpdatePage} onDelete={handleDeletePage} />}
                 </div>
-            </DragDropContext>
-        </div>
+            </div>
+        </DragDropContext>
     );
 };
 // #endregion
