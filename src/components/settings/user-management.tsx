@@ -48,7 +48,7 @@ const InlineSelectEditor = ({
         onOpenChange={(isOpen) => !isOpen && setIsEditing(false)}
         defaultOpen
       >
-        <SelectTrigger className="h-9 w-full text-sm">
+        <SelectTrigger className="h-8 w-[180px] text-sm">
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>
@@ -63,7 +63,7 @@ const InlineSelectEditor = ({
   const currentLabel = options.find(opt => opt.value === value)?.label || placeholder;
 
   return (
-    <Button variant="outline" className="h-9 justify-start font-normal w-full" onClick={() => setIsEditing(true)}>
+    <Button variant="ghost" className="h-8 justify-start p-2 text-sm" onClick={() => setIsEditing(true)}>
       {currentLabel}
     </Button>
   );
