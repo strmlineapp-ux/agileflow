@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -183,7 +184,7 @@ function AdminGroupCard({
     const handleSaveName = () => {
         const input = nameInputRef.current;
         if (!input || !input.value.trim()) {
-          toast({ variant: 'destructive', title: 'Error', description: 'Display name cannot be empty.' });
+          toast({ variant: 'destructive', title: 'Error', description: 'Group name cannot be empty.' });
           setIsEditingName(false);
           return;
         }
@@ -512,12 +513,18 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
               )}
             </StrictModeDroppable>
           </DragDropContext>
-          <AlertDialog open={is2faDialogOpen} onOpenChange={(isOpen) => !isOpen && close2faDialog()}>
-            <AlertDialogContent className="max-w-sm">
-                <AlertDialogHeader>
-                    <AlertDialogTitle>Two-Factor Authentication</AlertDialogTitle>
-                    <AlertDialogDescription>Enter the 6-digit code from your authenticator app to proceed.</AlertDialogDescription>
-                </AlertDialogHeader>
+          <Dialog open={is2faDialogOpen} onOpenChange={(isOpen) => !isOpen && close2faDialog()}>
+            <DialogContent className="max-w-sm">
+                <div className="absolute top-4 right-4">
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleVerify2fa}>
+                        <GoogleSymbol name="check" className="text-xl" />
+                        <span className="sr-only">Verify Code</span>
+                    </Button>
+                </div>
+                <DialogHeader>
+                    <DialogTitle>Two-Factor Authentication</DialogTitle>
+                    <DialogDescription>Enter the 6-digit code from your authenticator app to proceed.</DialogDescription>
+                </DialogHeader>
                 <div className="relative flex items-center gap-2 w-full">
                     <GoogleSymbol name="password" className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                     <Input
@@ -530,12 +537,8 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                         maxLength={6}
                     />
                 </div>
-                <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleVerify2fa}>Verify</AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
+            </DialogContent>
+        </Dialog>
     </>
   );
 }
