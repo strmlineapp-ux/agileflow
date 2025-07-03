@@ -186,6 +186,8 @@ export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab
 
   const [editingTemplate, setEditingTemplate] = useState<EventTemplate | null>(null);
   const [templateToDelete, setTemplateToDelete] = useState<EventTemplate | null>(null);
+  const [editingTemplateNameId, setEditingTemplateNameId] = useState<string | null>(null);
+  const nameInputRef = useRef<HTMLInputElement>(null);
 
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
@@ -195,6 +197,13 @@ export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab
   useEffect(() => {
     if (isEditingTitle) titleInputRef.current?.focus();
   }, [isEditingTitle]);
+
+  useEffect(() => {
+    if (editingTemplateNameId && nameInputRef.current) {
+        nameInputRef.current.focus();
+        nameInputRef.current.select();
+    }
+  }, [editingTemplateNameId]);
 
   const handleSaveTitle = () => {
     const newName = titleInputRef.current?.value.trim();
@@ -207,6 +216,20 @@ export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab
   const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') handleSaveTitle();
     else if (e.key === 'Escape') setIsEditingTitle(false);
+  };
+  
+  const handleSaveTemplateName = (templateId: string) => {
+    const templateToEdit = templates.find(t => t.id === templateId);
+    if (!templateToEdit || !nameInputRef.current) return;
+
+    const newName = nameInputRef.current.value.trim();
+    if (newName && newName !== templateToEdit.name) {
+        updateTeam(team.id, { 
+            eventTemplates: templates.map(t => t.id === templateId ? { ...t, name: newName } : t) 
+        });
+        toast({ title: "Template name updated" });
+    }
+    setEditingTemplateNameId(null);
   };
 
   const openAddDialog = () => {
@@ -288,31 +311,53 @@ export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {templates.length > 0 ? (
               templates.map(template => (
-                <Card 
-                  key={template.id} 
-                  className="flex flex-col cursor-pointer hover:border-primary/50"
-                  onClick={() => openEditDialog(template)}
-                >
+                <Card key={template.id} className="flex flex-col">
                     <CardHeader>
                         <div className="flex items-start justify-between">
-                             <CardTitle>
+                             <CardTitle className="flex-1 min-w-0">
                                 <Badge className="text-base py-1 px-3 gap-2">
                                     <GoogleSymbol name={template.icon} />
-                                    {template.name}
+                                    {editingTemplateNameId === template.id ? (
+                                        <Input
+                                            ref={nameInputRef}
+                                            defaultValue={template.name}
+                                            onBlur={() => handleSaveTemplateName(template.id)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') handleSaveTemplateName(template.id);
+                                                else if (e.key === 'Escape') setEditingTemplateNameId(null);
+                                            }}
+                                            className="h-auto p-0 bg-transparent text-base font-semibold border-0 rounded-none shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 text-primary-foreground"
+                                        />
+                                    ) : (
+                                        <span className="cursor-text" onClick={(e) => { e.stopPropagation(); setEditingTemplateNameId(template.id); }}>
+                                            {template.name}
+                                        </span>
+                                    )}
                                 </Badge>
                             </CardTitle>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="-mr-4 -mt-2 text-destructive hover:text-destructive"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                openDeleteDialog(template);
-                              }}
-                            >
-                                <GoogleSymbol name="delete" />
-                                <span className="sr-only">Delete {template.name}</span>
-                            </Button>
+                            <div className="flex items-center -mr-4 -mt-2">
+                                <Button
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-8 w-8 text-muted-foreground"
+                                  onClick={() => openEditDialog(template)}
+                                >
+                                    <GoogleSymbol name="edit" />
+                                    <span className="sr-only">Edit roles for {template.name}</span>
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-8 w-8 text-destructive hover:text-destructive"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    openDeleteDialog(template);
+                                  }}
+                                >
+                                    <GoogleSymbol name="delete" />
+                                    <span className="sr-only">Delete {template.name}</span>
+                                </Button>
+                            </div>
                         </div>
                     </CardHeader>
                     <CardContent className="flex-grow">
