@@ -15,7 +15,7 @@ import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { googleSymbolNames } from '@/lib/google-symbols';
-import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProps } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProps, type DraggableLocation } from 'react-beautiful-dnd';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn, getContrastColor } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -736,7 +736,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
 }
 
 
-function PageCard({ page, onUpdate, onDelete }: { page: AppPage; onUpdate: (id: string, data: Partial<AppPage>) => void; onDelete: (id: string) => void; }) {
+function PageCard({ page, onUpdate, onDelete, isDragging }: { page: AppPage; onUpdate: (id: string, data: Partial<AppPage>) => void; onDelete: (id: string) => void; isDragging?: boolean }) {
     const [isEditingName, setIsEditingName] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
@@ -780,7 +780,7 @@ function PageCard({ page, onUpdate, onDelete }: { page: AppPage; onUpdate: (id: 
 
     return (
         <>
-            <Card>
+            <Card className={cn(isDragging && 'shadow-xl')}>
                 <CardHeader>
                     <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3">
@@ -889,6 +889,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
     const { toast } = useToast();
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const titleInputRef = useRef<HTMLInputElement>(null);
+    const [draggingItemId, setDraggingItemId] = useState<string | null>(null);
 
     const adminPage = useMemo(() => appSettings.pages.find(p => p.id === 'page-admin-management'), [appSettings.pages]);
     const settingsPage = useMemo(() => appSettings.pages.find(p => p.id === 'page-settings'), [appSettings.pages]);
@@ -946,6 +947,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
     };
     
     const onDragEnd = (result: DropResult) => {
+        setDraggingItemId(null);
         const { source, destination, draggableId } = result;
 
         if (!destination) return;
@@ -972,24 +974,20 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
             return;
         }
 
-        const newCol1 = Array.from(columnOnePages);
-        const newCol2 = Array.from(columnTwoPages);
+        let newCol1 = Array.from(columnOnePages);
+        let newCol2 = Array.from(columnTwoPages);
         
-        if (source.droppableId === destination.droppableId) {
-            const list = source.droppableId === 'pages-col-1' ? newCol1 : newCol2;
-            const [removed] = list.splice(source.index, 1);
-            list.splice(destination.index, 0, removed);
-        } else {
-            const sourceList = source.droppableId === 'pages-col-1' ? newCol1 : newCol2;
-            const destList = destination.droppableId === 'pages-col-1' ? newCol1 : newCol2;
-            const [removed] = sourceList.splice(source.index, 1);
-            destList.splice(destination.index, 0, removed);
-        }
+        const sourceList = source.droppableId === 'pages-col-1' ? newCol1 : newCol2;
+        const destList = destination.droppableId === 'pages-col-1' ? newCol1 : newCol2;
+        
+        const [removed] = sourceList.splice(source.index, 1);
+        destList.splice(destination.index, 0, removed);
+        
+        const finalDraggablePages = [...newCol1, ...newCol2];
         
         const finalPages = [
             ...(adminPage ? [adminPage] : []),
-            ...newCol1,
-            ...newCol2,
+            ...finalDraggablePages,
             ...(settingsPage ? [settingsPage] : []),
         ];
         updateAppSettings({ pages: finalPages });
@@ -1003,7 +1001,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                 ) : (
                     <h2 className="text-2xl font-semibold tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
                 )}
-                <DragDropContext onDragEnd={onDragEnd}>
+                <DragDropContext onDragStart={(start) => setDraggingItemId(start.draggableId)} onDragEnd={onDragEnd}>
                     <StrictModeDroppable droppableId="duplicate-page-zone">
                         {(provided, snapshot) => (
                             <div 
@@ -1033,26 +1031,28 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                 </DragDropContext>
             </div>
             
-             <DragDropContext onDragEnd={onDragEnd}>
+             <DragDropContext onDragStart={(start) => setDraggingItemId(start.draggableId)} onDragEnd={onDragEnd}>
                 <div className="space-y-6">
                     {adminPage && <PageCard page={adminPage} onUpdate={handleUpdatePage} onDelete={handleDeletePage} />}
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                         <StrictModeDroppable droppableId="pages-col-1">
-                           {(provided, snapshot) => (
+                           {(provided) => (
                                 <div
                                   ref={provided.innerRef}
                                   {...provided.droppableProps}
-                                  className={cn(
-                                    "space-y-6 rounded-lg border-2 border-dashed border-transparent p-2 transition-colors",
-                                    snapshot.isDraggingOver && "border-primary/20 bg-accent"
-                                  )}
+                                  className="space-y-6"
                                 >
                                     {columnOnePages.map((page, index) => (
                                         <Draggable key={page.id} draggableId={page.id} index={index}>
-                                            {(provided) => (
-                                                <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
-                                                    <PageCard page={page} onUpdate={handleUpdatePage} onDelete={handleDeletePage} />
+                                            {(provided, snapshot) => (
+                                                <div 
+                                                    ref={provided.innerRef} 
+                                                    {...provided.draggableProps} 
+                                                    {...provided.dragHandleProps}
+                                                    className={cn("transition-opacity", draggingItemId && draggingItemId !== page.id && "opacity-30")}
+                                                >
+                                                    <PageCard page={page} onUpdate={handleUpdatePage} onDelete={handleDeletePage} isDragging={snapshot.isDragging} />
                                                 </div>
                                             )}
                                         </Draggable>
@@ -1062,20 +1062,22 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                             )}
                         </StrictModeDroppable>
                         <StrictModeDroppable droppableId="pages-col-2">
-                           {(provided, snapshot) => (
+                           {(provided) => (
                                 <div
                                   ref={provided.innerRef}
                                   {...provided.droppableProps}
-                                  className={cn(
-                                    "space-y-6 rounded-lg border-2 border-dashed border-transparent p-2 transition-colors",
-                                    snapshot.isDraggingOver && "border-primary/20 bg-accent"
-                                  )}
+                                  className="space-y-6"
                                 >
                                     {columnTwoPages.map((page, index) => (
                                         <Draggable key={page.id} draggableId={page.id} index={index}>
-                                            {(provided) => (
-                                                <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
-                                                    <PageCard page={page} onUpdate={handleUpdatePage} onDelete={handleDeletePage} />
+                                            {(provided, snapshot) => (
+                                                <div 
+                                                    ref={provided.innerRef} 
+                                                    {...provided.draggableProps} 
+                                                    {...provided.dragHandleProps}
+                                                    className={cn("transition-opacity", draggingItemId && draggingItemId !== page.id && "opacity-30")}
+                                                >
+                                                    <PageCard page={page} onUpdate={handleUpdatePage} onDelete={handleDeletePage} isDragging={snapshot.isDragging} />
                                                 </div>
                                             )}
                                         </Draggable>
