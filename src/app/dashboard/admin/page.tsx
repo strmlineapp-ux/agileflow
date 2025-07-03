@@ -1033,7 +1033,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                 <div className="space-y-6">
                     {adminPage && <PageCard page={adminPage} onUpdate={handleUpdatePage} onDelete={handleDeletePage} />}
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <StrictModeDroppable droppableId="pages-col-1">
                            {(provided) => (
                                 <div
@@ -1048,9 +1048,8 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                                                     ref={provided.innerRef} 
                                                     {...provided.draggableProps} 
                                                     {...provided.dragHandleProps}
-                                                    className={cn("transition-opacity", draggingItemId && draggingItemId !== page.id && "opacity-30")}
                                                 >
-                                                    <PageCard page={page} onUpdate={handleUpdatePage} onDelete={handleDeletePage} />
+                                                    <PageCard page={page} onUpdate={handleUpdatePage} onDelete={handleDeletePage} isDragging={draggingItemId === page.id} />
                                                 </div>
                                             )}
                                         </Draggable>
@@ -1073,9 +1072,8 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                                                     ref={provided.innerRef} 
                                                     {...provided.draggableProps} 
                                                     {...provided.dragHandleProps}
-                                                    className={cn("transition-opacity", draggingItemId && draggingItemId !== page.id && "opacity-30")}
                                                 >
-                                                    <PageCard page={page} onUpdate={handleUpdatePage} onDelete={handleDeletePage} />
+                                                    <PageCard page={page} onUpdate={handleUpdatePage} onDelete={handleDeletePage} isDragging={draggingItemId === page.id}/>
                                                 </div>
                                             )}
                                         </Draggable>
