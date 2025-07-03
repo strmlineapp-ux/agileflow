@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/context/user-context';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { cn } from '@/lib/utils';
+import { cn, hexToHsl } from '@/lib/utils';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { Badge } from '../ui/badge';
 import { Label } from '../ui/label';
@@ -158,9 +158,7 @@ export function UserManagement() {
                                 <p className="text-sm text-muted-foreground">{user.email}</p>
                             </div>
                           </div>
-                            <AccordionTrigger className="py-2 text-sm text-muted-foreground justify-end hover:no-underline [&[data-state=open]>span]:rotate-180">
-                                <span className="sr-only">Toggle Details</span>
-                            </AccordionTrigger>
+                            <AccordionTrigger className="py-2 text-sm text-muted-foreground justify-end hover:no-underline [&[data-state=open]>span]:rotate-180" />
                         </div>
                       </CardHeader>
                         <AccordionContent>
@@ -230,79 +228,99 @@ export function UserManagement() {
                                     <div className="space-y-6">
                                         {isCurrentUser && (
                                         <>
-                                            <div className="space-y-1">
-                                              <div className="relative w-full border-b">
-                                                  <div className="flex h-10 items-center justify-center p-0 text-muted-foreground">
-                                                      <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                                                          <TooltipProvider>
-                                                              <Tooltip>
-                                                                  <TooltipTrigger asChild>
-                                                                      <PopoverTrigger asChild>
-                                                                          <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 text-primary">
-                                                                              <GoogleSymbol name="palette" />
-                                                                          </Button>
-                                                                      </PopoverTrigger>
-                                                                  </TooltipTrigger>
-                                                                  <TooltipContent>Set custom primary color</TooltipContent>
-                                                              </Tooltip>
-                                                          </TooltipProvider>
-                                                          <PopoverContent className="w-auto p-2">
-                                                              <div className="grid grid-cols-8 gap-1">
-                                                                  {predefinedColors.map(color => (
-                                                                      <button key={color} className="h-6 w-6 rounded-full border" style={{ backgroundColor: color }} onClick={() => handleSetPrimaryColor(color)} aria-label={`Set color to ${color}`}/>
-                                                                  ))}
-                                                                  <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
-                                                                      <GoogleSymbol name="colorize" className="text-muted-foreground" />
-                                                                      <Input type="color" value={realUser.primaryColor || '#000000'} onChange={(e) => handleSetPrimaryColor(e.target.value)} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" aria-label="Custom color picker"/>
-                                                                  </div>
-                                                              </div>
-                                                          </PopoverContent>
-                                                      </Popover>
-                                                      {THEME_OPTIONS.map(theme => (
-                                                      <Button
-                                                          key={theme.name}
-                                                          variant="ghost"
-                                                          size="sm"
-                                                          onClick={() => handleThemeChange(theme.name as any)}
-                                                          className={cn(
-                                                          "w-full rounded-none gap-2 py-1.5",
-                                                          realUser.theme === theme.name ? "text-primary" : ""
-                                                          )}
-                                                      >
-                                                          <GoogleSymbol name={theme.icon} className="text-lg" />
-                                                          {theme.label}
-                                                      </Button>
-                                                      ))}
-                                                  </div>
-                                              </div>
+                                            <div className="relative w-full border-b">
+                                                <div className="flex h-10 items-center justify-center p-0 text-muted-foreground">
+                                                    <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                                                        <TooltipProvider>
+                                                            <Tooltip>
+                                                                <TooltipTrigger asChild>
+                                                                    <PopoverTrigger asChild>
+                                                                        <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" style={{ color: 'hsl(var(--primary))' }}>
+                                                                            <GoogleSymbol name="palette" />
+                                                                        </Button>
+                                                                    </PopoverTrigger>
+                                                                </TooltipTrigger>
+                                                                <TooltipContent>Set custom primary color</TooltipContent>
+                                                            </Tooltip>
+                                                        </TooltipProvider>
+                                                        <PopoverContent className="w-auto p-2">
+                                                            <div className="grid grid-cols-8 gap-1">
+                                                                {predefinedColors.map(color => (
+                                                                    <button key={color} className="h-6 w-6 rounded-full border" style={{ backgroundColor: color }} onClick={() => handleSetPrimaryColor(color)} aria-label={`Set color to ${color}`}/>
+                                                                ))}
+                                                                <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
+                                                                    <GoogleSymbol name="colorize" className="text-muted-foreground" />
+                                                                    <Input type="color" value={realUser.primaryColor || '#000000'} onChange={(e) => handleSetPrimaryColor(e.target.value)} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" aria-label="Custom color picker"/>
+                                                                </div>
+                                                            </div>
+                                                        </PopoverContent>
+                                                    </Popover>
+                                                    {THEME_OPTIONS.map(theme => (
+                                                    <Button
+                                                        key={theme.name}
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => handleThemeChange(theme.name as any)}
+                                                        className={cn(
+                                                        "w-full rounded-none gap-2 py-1.5",
+                                                        realUser.theme === theme.name ? "text-primary" : ""
+                                                        )}
+                                                    >
+                                                        <GoogleSymbol name={theme.icon} className="text-lg" />
+                                                        {theme.label}
+                                                    </Button>
+                                                    ))}
+                                                </div>
                                             </div>
-                                            <div className="space-y-1">
-                                              <Label className="text-xs text-muted-foreground">Default Calendar View</Label>
-                                              <InlineSelectEditor
-                                                value={realUser.defaultCalendarView || 'day'}
-                                                onSave={(newValue) => updateUser(realUser.userId, { defaultCalendarView: newValue as any})}
-                                                options={[
-                                                    { value: "month", label: "Month" },
-                                                    { value: "week", label: "Week" },
-                                                    { value: "day", label: "Day" },
-                                                    { value: "production-schedule", label: "Production Schedule" },
-                                                ]}
-                                                placeholder="Select Default View"
-                                              />
+                                            <div className="flex items-center gap-2">
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 text-muted-foreground cursor-default hover:bg-transparent">
+                                                                <GoogleSymbol name="edit_calendar" className="text-xl" />
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p>Default Calendar View</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
+                                                <InlineSelectEditor
+                                                    value={realUser.defaultCalendarView || 'day'}
+                                                    onSave={(newValue) => updateUser(realUser.userId, { defaultCalendarView: newValue as any})}
+                                                    options={[
+                                                        { value: "month", label: "Month" },
+                                                        { value: "week", label: "Week" },
+                                                        { value: "day", label: "Day" },
+                                                        { value: "production-schedule", label: "Production Schedule" },
+                                                    ]}
+                                                    placeholder="Select Default View"
+                                                />
                                             </div>
-                                            <div className="space-y-1">
-                                              <Label className="text-xs text-muted-foreground">Time Format</Label>
-                                              <InlineSelectEditor
-                                                value={realUser.timeFormat || '12h'}
-                                                onSave={(newValue) => updateUser(realUser.userId, { timeFormat: newValue as any})}
-                                                options={[
-                                                    { value: "12h", label: "12-Hour" },
-                                                    { value: "24h", label: "24-Hour" },
-                                                ]}
-                                                placeholder="Select Time Format"
-                                              />
+                                            <div className="flex items-center gap-2">
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                          <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 text-muted-foreground cursor-default hover:bg-transparent">
+                                                              <GoogleSymbol name="schedule" className="text-xl" />
+                                                          </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                          <p>Time Format</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
+                                                <InlineSelectEditor
+                                                    value={realUser.timeFormat || '12h'}
+                                                    onSave={(newValue) => updateUser(realUser.userId, { timeFormat: newValue as any})}
+                                                    options={[
+                                                        { value: "12h", label: "12-Hour" },
+                                                        { value: "24h", label: "24-Hour" },
+                                                    ]}
+                                                    placeholder="Select Time Format"
+                                                />
                                             </div>
-                                            <div className="space-y-1 self-center">
+                                            <div className="flex items-center">
                                                 <TooltipProvider>
                                                   <Tooltip>
                                                     <TooltipTrigger asChild>
@@ -333,6 +351,3 @@ export function UserManagement() {
         </>
     )
 }
-
-
-    
