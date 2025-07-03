@@ -1,17 +1,11 @@
 
 'use client';
 
-import { useState, Fragment, useRef } from 'react';
+import { useState, Fragment, useRef, useEffect } from 'react';
 import { type User, type Team } from '@/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/context/user-context';
@@ -22,61 +16,6 @@ import { GoogleSymbol } from '../icons/google-symbol';
 import { Badge } from '../ui/badge';
 import { Label } from '../ui/label';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
-import { Tabs, TabsList, TabsTrigger } from '../ui/tabs';
-import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
-
-const THEME_OPTIONS = [
-  { name: 'light', label: 'Light', icon: 'light_mode', defaultPrimary: '#6B8CC3' },
-  { name: 'dark', label: 'Dark', icon: 'dark_mode', defaultPrimary: '#D98242' },
-];
-
-const PREDEFINED_COLORS = [
-    '#6B8CC3', '#D98242', '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
-    '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6',
-    '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
-];
-
-function ColorPicker({ user, onColorChange }: { user: User; onColorChange: (color: string) => void; }) {
-  const [isOpen, setIsOpen] = useState(false);
-  
-  const activeTheme = THEME_OPTIONS.find(t => t.name === (user.theme || 'light')) || THEME_OPTIONS[0];
-  const displayColor = user.primaryColor || activeTheme.defaultPrimary;
-
-  return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <PopoverTrigger asChild>
-         <Button variant="ghost" size="icon" className="h-10 w-10 text-lg">
-            <GoogleSymbol name="palette" style={{ color: displayColor }} />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-2">
-        <div className="grid grid-cols-8 gap-1">
-          {PREDEFINED_COLORS.map(color => (
-            <button
-              key={color}
-              className="h-6 w-6 rounded-full border"
-              style={{ backgroundColor: color }}
-              onClick={() => {
-                onColorChange(color);
-                setIsOpen(false);
-              }}
-            />
-          ))}
-          <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
-            <GoogleSymbol name="colorize" className="text-muted-foreground" />
-            <Input
-              type="color"
-              value={displayColor}
-              onChange={(e) => onColorChange(e.target.value)}
-              className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"
-            />
-          </div>
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
-}
-
 
 const InlineSelectEditor = ({
   value,
@@ -125,140 +64,163 @@ const InlineSelectEditor = ({
 
 export function UserManagement() {
     const { realUser, users, updateUser, linkGoogleCalendar, allRolesAndBadges } = useUser();
-    
-    // State for editing user contact
-    const [editingContactUser, setEditingContactUser] = useState<User | null>(null);
-    const [phone, setPhone] = useState('');
-
+    const [editingPhoneUserId, setEditingPhoneUserId] = useState<string | null>(null);
+    const [phoneValue, setPhoneValue] = useState('');
+    const phoneInputRef = useRef<HTMLInputElement>(null);
     const { toast } = useToast();
+
+    useEffect(() => {
+        if (editingPhoneUserId && phoneInputRef.current) {
+            phoneInputRef.current.focus();
+        }
+    }, [editingPhoneUserId]);
    
     const handleSavePhone = async () => {
-        if (!editingContactUser) return;
-        if (editingContactUser.userId !== realUser.userId) {
+        if (!editingPhoneUserId) return;
+        
+        if (editingPhoneUserId !== realUser.userId) {
             toast({ variant: 'destructive', title: 'Error', description: 'You can only edit your own phone number.' });
+            setEditingPhoneUserId(null);
             return;
         }
-        await updateUser(editingContactUser.userId, { phone });
-        setEditingContactUser(null);
+        
+        await updateUser(editingPhoneUserId, { phone: phoneValue });
+        setEditingPhoneUserId(null);
         toast({ title: 'Success', description: 'Contact number updated.' });
     };
 
+    const THEME_OPTIONS = [
+      { name: 'light', label: 'Light' },
+      { name: 'dark', label: 'Dark' },
+      { name: 'high-visibility', label: 'High Visibility' },
+      { name: 'firebase', label: 'Firebase' }
+    ];
+
     return (
         <>
-            <Card>
-              <CardContent className="p-0">
-                <Accordion type="single" collapsible className="w-full">
-                  {users.map(user => {
-                    const isCurrentUser = user.userId === realUser.userId;
-                    return (
-                      <AccordionItem key={user.userId} value={user.userId}>
-                        <AccordionTrigger className="p-4 hover:no-underline">
-                           <div className="flex items-center gap-4">
-                              <TooltipProvider>
-                                  <Tooltip>
-                                      <TooltipTrigger asChild>
-                                          {isCurrentUser && !user.googleCalendarLinked ? (
-                                              <Button variant="ghost" className="relative h-10 w-10 p-0 rounded-full" onClick={(e) => { e.stopPropagation(); linkGoogleCalendar(user.userId); }}>
-                                                  <Avatar className="h-10 w-10">
-                                                      <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
-                                                      <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                                                  </Avatar>
-                                                  <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full bg-gray-400 ring-2 ring-card" />
-                                              </Button>
-                                          ) : (
-                                              <div className="relative">
-                                                  <Avatar>
-                                                      <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
-                                                      <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                                                  </Avatar>
-                                                  <span className={cn(
-                                                      "absolute bottom-0 right-0 block h-3 w-3 rounded-full ring-2 ring-card",
-                                                      user.googleCalendarLinked ? "bg-green-500" : "bg-gray-400"
-                                                  )} />
-                                              </div>
-                                          )}
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                          <p>Google Calendar: {user.googleCalendarLinked ? 'Connected' : isCurrentUser ? 'Click to connect' : 'Not Connected'}</p>
-                                      </TooltipContent>
-                                  </Tooltip>
-                              </TooltipProvider>
-                              <div>
-                                  <p className="font-semibold">{user.displayName}</p>
-                                  <p className="text-sm text-muted-foreground">{user.email}</p>
-                              </div>
-                           </div>
+          <div className="grid grid-cols-1 gap-6">
+            {users.map(user => {
+              const isCurrentUser = user.userId === realUser.userId;
+              return (
+                <Card key={user.userId}>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    {isCurrentUser && !user.googleCalendarLinked ? (
+                                        <Button variant="ghost" className="relative h-12 w-12 p-0 rounded-full" onClick={(e) => { e.stopPropagation(); linkGoogleCalendar(user.userId); }}>
+                                            <Avatar className="h-12 w-12">
+                                                <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
+                                                <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                            </Avatar>
+                                            <span className="absolute bottom-0 right-0 block h-3.5 w-3.5 rounded-full bg-gray-400 ring-2 ring-card" />
+                                        </Button>
+                                    ) : (
+                                        <div className="relative">
+                                            <Avatar className="h-12 w-12">
+                                                <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
+                                                <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                            </Avatar>
+                                            <span className={cn(
+                                                "absolute bottom-0 right-0 block h-3.5 w-3.5 rounded-full ring-2 ring-card",
+                                                user.googleCalendarLinked ? "bg-green-500" : "bg-gray-400"
+                                            )} />
+                                        </div>
+                                    )}
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Google Calendar: {user.googleCalendarLinked ? 'Connected' : isCurrentUser ? 'Click to connect' : 'Not Connected'}</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                        <div>
+                            <p className="font-semibold text-lg">{user.displayName}</p>
+                            <p className="text-sm text-muted-foreground">{user.email}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                       <Label className="text-xs text-muted-foreground">Title</Label>
+                       <p className="text-sm font-medium">{user.title || <span className="italic text-muted-foreground">Not provided</span>}</p>
+                    </div>
+                  </CardContent>
+                  <Accordion type="single" collapsible className="w-full px-4">
+                      <AccordionItem value="details" className="border-t">
+                        <AccordionTrigger className="py-2 text-sm text-muted-foreground">
+                          Details
                         </AccordionTrigger>
                         <AccordionContent>
-                           <div className="p-4 pt-0 pl-16">
-                             <div className="p-4 rounded-md bg-muted/50 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                           <div className="p-2 pt-0 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                                 <div>
-                                    <Label className="text-xs text-muted-foreground">Title</Label>
-                                    <p className="text-sm font-medium">{user.title || <span className="italic text-muted-foreground">Not provided</span>}</p>
+                                    <Label className="text-xs text-muted-foreground">Contact</Label>
+                                    <div className="flex items-center gap-2">
+                                        {editingPhoneUserId === user.userId && isCurrentUser ? (
+                                            <Input
+                                                ref={phoneInputRef}
+                                                value={phoneValue}
+                                                onChange={(e) => setPhoneValue(e.target.value)}
+                                                onBlur={handleSavePhone}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') handleSavePhone();
+                                                    if (e.key === 'Escape') setEditingPhoneUserId(null);
+                                                }}
+                                                className="h-8 text-sm"
+                                                placeholder="e.g. 123-456-7890"
+                                            />
+                                        ) : (
+                                            <p
+                                                className={cn("text-sm min-h-[32px] flex items-center", isCurrentUser && "cursor-pointer hover:text-primary")}
+                                                onClick={() => {
+                                                    if (isCurrentUser) {
+                                                        setEditingPhoneUserId(user.userId);
+                                                        setPhoneValue(user.phone || '');
+                                                    }
+                                                }}
+                                            >
+                                                {user.phone || <span className="italic text-muted-foreground">Not provided</span>}
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
                                 <div>
-                                    <Label className="text-xs text-muted-foreground">Roles &amp; Badges</Label>
+                                    <Label className="text-xs text-muted-foreground">Badges</Label>
                                     <div className="flex flex-wrap gap-1 mt-1">
-                                      {(user.roles || []).map(role => {
+                                    {(user.roles || []).map(role => {
                                         const roleInfo = allRolesAndBadges.find(r => r.name === role);
                                         return (
-                                          <Badge
+                                        <Badge
                                             key={role}
                                             variant="outline"
                                             style={roleInfo ? { color: roleInfo.color, borderColor: roleInfo.color } : {}}
                                             className="rounded-full gap-1 text-xs py-0.5 px-2"
-                                          >
+                                        >
                                             {roleInfo && <GoogleSymbol name={roleInfo.icon} className="text-sm" />}
                                             <span>{role}</span>
-                                          </Badge>
+                                        </Badge>
                                         );
-                                      })}
-                                      {(user.roles || []).length === 0 && <p className="text-sm text-muted-foreground italic">No roles assigned</p>}
-                                    </div>
-                                </div>
-                                <div>
-                                    <Label className="text-xs text-muted-foreground">Contact</Label>
-                                    <div className="flex items-center gap-2">
-                                        {user.phone ? <p className="text-sm">{user.phone}</p> : <p className="text-sm text-muted-foreground italic">Not provided</p>}
-                                        {isCurrentUser && (
-                                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => {
-                                                setEditingContactUser(user);
-                                                setPhone(user.phone || '');
-                                            }}>
-                                                <GoogleSymbol name="edit" className="text-base" />
-                                                <span className="sr-only">Edit phone number</span>
-                                            </Button>
-                                        )}
+                                    })}
+                                    {(user.roles || []).length === 0 && <p className="text-xs text-muted-foreground italic">No roles assigned</p>}
                                     </div>
                                 </div>
                                 {isCurrentUser && (
                                   <>
                                     <div className="space-y-1">
+                                        <Label className="text-xs text-muted-foreground">Theme</Label>
                                         <div className="flex items-center gap-2">
-                                            <ColorPicker
-                                                user={realUser}
-                                                onColorChange={(color) => updateUser(realUser.userId, { primaryColor: color })}
-                                            />
-                                            <Tabs
-                                                value={realUser.theme || 'light'}
-                                                onValueChange={(theme) => {
-                                                    updateUser(realUser.userId, { theme: theme as any, primaryColor: undefined });
-                                                }}
-                                                className="w-full"
+                                          {THEME_OPTIONS.map(theme => (
+                                            <Button 
+                                              key={theme.name}
+                                              variant={realUser.theme === theme.name ? 'secondary' : 'ghost'}
+                                              size="sm"
+                                              onClick={() => updateUser(realUser.userId, { theme: theme.name as any })}
                                             >
-                                                <TabsList className="grid w-full grid-cols-2">
-                                                    {THEME_OPTIONS.map((theme) => (
-                                                    <TabsTrigger
-                                                        key={theme.name}
-                                                        value={theme.name}
-                                                        className="flex-1 gap-2"
-                                                    >
-                                                        <GoogleSymbol name={theme.icon} className="text-lg" />
-                                                        <span>{theme.label}</span>
-                                                    </TabsTrigger>
-                                                    ))}
-                                                </TabsList>
-                                            </Tabs>
+                                              {theme.label}
+                                            </Button>
+                                          ))}
                                         </div>
                                     </div>
                                     <div className="space-y-1">
@@ -305,31 +267,13 @@ export function UserManagement() {
                                   </>
                                 )}
                              </div>
-                           </div>
                         </AccordionContent>
                       </AccordionItem>
-                    )
-                  })}
-                </Accordion>
-              </CardContent>
-            </Card>
-
-            <Dialog open={!!editingContactUser} onOpenChange={(isOpen) => !isOpen && setEditingContactUser(null)}>
-                <DialogContent>
-                    <div className="absolute top-4 right-4">
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSavePhone}>
-                            <GoogleSymbol name="check" className="text-xl" />
-                            <span className="sr-only">Save Phone Number</span>
-                        </Button>
-                    </div>
-                    <DialogHeader>
-                        <DialogTitle>Edit contact number</DialogTitle>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        <Input id="phone-number" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="e.g. 123-456-7890" />
-                    </div>
-                </DialogContent>
-            </Dialog>
+                    </Accordion>
+                </Card>
+              )
+            })}
+          </div>
         </>
     )
 }
