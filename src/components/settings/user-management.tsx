@@ -170,7 +170,7 @@ export function UserManagement() {
                                     <div
                                         className={cn(
                                             "text-sm min-h-[36px] flex items-center",
-                                            isCurrentUser && "cursor-pointer"
+                                            isCurrentUser && !editingPhoneUserId && "cursor-pointer"
                                         )}
                                         onClick={() => {
                                             if (isCurrentUser && !editingPhoneUserId) {
@@ -220,7 +220,6 @@ export function UserManagement() {
                                 {isCurrentUser && (
                                   <>
                                     <div className="space-y-1">
-                                      <Label className="text-xs text-muted-foreground">Theme &amp; Color</Label>
                                       <div className="flex items-center gap-2">
                                         <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
                                             <TooltipProvider>
