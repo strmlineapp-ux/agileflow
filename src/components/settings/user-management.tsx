@@ -168,12 +168,15 @@ export function UserManagement() {
                                                     if (e.key === 'Enter') handleSavePhone();
                                                     if (e.key === 'Escape') setEditingPhoneUserId(null);
                                                 }}
-                                                className="h-8 text-sm"
-                                                placeholder="e.g. 123-456-7890"
+                                                className="h-auto p-0 text-sm border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                                                placeholder="Not provided"
                                             />
                                         ) : (
                                             <p
-                                                className={cn("text-sm min-h-[32px] flex items-center", isCurrentUser && "cursor-pointer hover:text-primary")}
+                                                className={cn(
+                                                    "text-sm min-h-[32px] flex items-center",
+                                                    isCurrentUser && "cursor-pointer hover:text-primary"
+                                                )}
                                                 onClick={() => {
                                                     if (isCurrentUser) {
                                                         setEditingPhoneUserId(user.userId);
