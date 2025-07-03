@@ -466,7 +466,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setEditingCalendar(null)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction variant="destructive" onClick={handleDelete}>
               Continue
             </AlertDialogAction>
           </AlertDialogFooter>

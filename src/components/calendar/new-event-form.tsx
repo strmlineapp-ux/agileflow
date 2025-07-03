@@ -25,6 +25,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogHeader, DialogTitle, DialogContent, DialogDescription, DialogClose } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PriorityBadge } from './priority-badge';
 import { Separator } from '../ui/separator';
@@ -476,7 +477,7 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                                 <Popover open={isTemplatePopoverOpen} onOpenChange={setIsTemplatePopoverOpen}>
                                     <PopoverTrigger asChild>
                                         <Button variant="ghost" className="h-auto p-0">
-                                            <UiBadge variant={selectedTemplate ? 'default' : 'secondary'} className="gap-2">
+                                            <UiBadge variant={selectedTemplate ? 'default' : 'outline'} className="gap-2">
                                                 {selectedTemplate && <GoogleSymbol name={selectedTemplate.icon} />}
                                                 {selectedTemplate?.name || 'Tag'}
                                             </UiBadge>
@@ -908,23 +909,20 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
         </DialogContent>
     </Dialog>
     
-    <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-      <DialogContent className="sm:max-w-md p-0">
-        <DialogHeader className="p-6 pb-4">
-            <div className="flex items-start justify-between">
-                <DialogTitle>Delete "{event?.title}"?</DialogTitle>
-                <DialogClose asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 -mr-2 -mt-2 text-destructive" onClick={handleDelete}>
-                        <GoogleSymbol name="delete" className="text-xl" />
-                    </Button>
-                </DialogClose>
-            </div>
-            <DialogDescription>
+    <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+            <AlertDialogTitle>Delete "{event?.title}"?</AlertDialogTitle>
+            <AlertDialogDescription>
                 This will permanently delete the event. This action cannot be undone.
-            </DialogDescription>
-        </DialogHeader>
-      </DialogContent>
-    </Dialog>
+            </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={handleDelete}>Delete</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
     </>
   );
 }

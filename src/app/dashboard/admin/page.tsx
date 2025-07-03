@@ -325,7 +325,7 @@ function AdminGroupCard({
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={onDelete}>Continue</AlertDialogAction>
+                <AlertDialogAction variant="destructive" onClick={onDelete}>Continue</AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
