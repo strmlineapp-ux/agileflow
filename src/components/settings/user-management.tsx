@@ -228,8 +228,8 @@ export function UserManagement() {
                                     <div className="space-y-6">
                                         {isCurrentUser && (
                                         <>
-                                            <div className="relative w-full border-b">
-                                                <div className="flex h-10 items-center justify-center p-0 text-muted-foreground">
+                                            <div className="space-y-1">
+                                                <div className="flex items-center gap-2">
                                                     <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
                                                         <TooltipProvider>
                                                             <Tooltip>
@@ -255,21 +255,25 @@ export function UserManagement() {
                                                             </div>
                                                         </PopoverContent>
                                                     </Popover>
-                                                    {THEME_OPTIONS.map(theme => (
-                                                    <Button
-                                                        key={theme.name}
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handleThemeChange(theme.name as any)}
-                                                        className={cn(
-                                                        "w-full rounded-none gap-2 py-1.5",
-                                                        realUser.theme === theme.name ? "text-primary" : ""
-                                                        )}
-                                                    >
-                                                        <GoogleSymbol name={theme.icon} className="text-lg" />
-                                                        {theme.label}
-                                                    </Button>
-                                                    ))}
+                                                    <div className="relative border-b">
+                                                        <div className="flex h-10 items-center justify-center p-0 text-muted-foreground">
+                                                            {THEME_OPTIONS.map(theme => (
+                                                            <Button
+                                                                key={theme.name}
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={() => handleThemeChange(theme.name as any)}
+                                                                className={cn(
+                                                                "rounded-none gap-2 py-1.5",
+                                                                realUser.theme === theme.name ? "text-primary" : ""
+                                                                )}
+                                                            >
+                                                                <GoogleSymbol name={theme.icon} className="text-lg" />
+                                                                {theme.label}
+                                                            </Button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-2">
