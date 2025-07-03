@@ -333,7 +333,7 @@ function AdminGroupCard({
     );
 }
 
-const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
+export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
   const { toast } = useToast();
   const { users, updateUser, appSettings, updateAppSettings, updateAppTab } = useUser();
   const [is2faDialogOpen, setIs2faDialogOpen] = useState(false);
@@ -650,10 +650,6 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
 
 function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: Partial<AppPage>) => void }) {
   const { appSettings } = useUser();
-
-  const calendarTabId = appSettings.tabs.find(t => t.componentKey === 'calendars')?.id;
-  const teamsTabId = appSettings.tabs.find(t => t.componentKey === 'teams')?.id;
-  const isServiceDeliveryPage = page.id === 'page-service-delivery';
   
   const handleToggle = (tabId: string) => {
     const currentIds = new Set(page.associatedTabs || []);
@@ -683,19 +679,13 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
           <div className="p-1 space-y-1">
             {appSettings.tabs.map(tab => {
               const isAssociated = (page.associatedTabs || []).includes(tab.id);
-              const isLockedTab = isServiceDeliveryPage && (tab.id === calendarTabId || tab.id === teamsTabId);
-              const finalIsAssociated = isLockedTab || isAssociated;
-
+              
               return (
                 <div 
                     key={tab.id} 
-                    className={cn(
-                      "flex items-center gap-3 p-2 rounded-md text-sm",
-                      !isLockedTab && "cursor-pointer",
-                      isLockedTab && "cursor-not-allowed opacity-75"
-                    )}
-                    style={{ color: finalIsAssociated ? tab.color : undefined }}
-                    onClick={!isLockedTab ? () => handleToggle(tab.id) : undefined}
+                    className={cn("flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer")}
+                    style={{ color: isAssociated ? tab.color : undefined }}
+                    onClick={() => handleToggle(tab.id)}
                 >
                     <GoogleSymbol name={tab.icon} className="text-xl" />
                     <span className="font-medium">{tab.name}</span>
@@ -710,7 +700,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
 }
 
 
-function PageCard({ page, onUpdate, onDelete, isLocked = false }: { page: AppPage; onUpdate: (id: string, data: Partial<AppPage>) => void; onDelete: (id: string) => void; isLocked?: boolean; }) {
+function PageCard({ page, onUpdate, onDelete }: { page: AppPage; onUpdate: (id: string, data: Partial<AppPage>) => void; onDelete: (id: string) => void; }) {
     const [isEditingName, setIsEditingName] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
@@ -721,7 +711,7 @@ function PageCard({ page, onUpdate, onDelete, isLocked = false }: { page: AppPag
     const [iconSearch, setIconSearch] = useState('');
     const iconSearchInputRef = useRef<HTMLInputElement>(null);
     
-    const controlsHidden = ['page-calendar', 'page-notifications', 'page-settings'].includes(page.id);
+    const isLocked = ['page-admin-management', 'page-team-management', 'page-calendar'].includes(page.id);
 
     useEffect(() => {
         if (isEditingName) nameInputRef.current?.focus();
@@ -808,7 +798,7 @@ function PageCard({ page, onUpdate, onDelete, isLocked = false }: { page: AppPag
                             ) : (
                                 <CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer">{page.name}</CardTitle>
                             )}
-                            {!isLocked && !controlsHidden && (
+                            {!isLocked && (
                                 <>
                                     <PageAccessControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
                                     <PageTabsControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
@@ -839,7 +829,7 @@ function PageCard({ page, onUpdate, onDelete, isLocked = false }: { page: AppPag
                   </CardDescription>
                   <div className="flex gap-2 text-sm text-muted-foreground mt-2">
                       <Badge variant="outline">{page.path}</Badge>
-                      {page.isDynamic && <Badge variant="outline">Dynamic</Badge>}
+                      {page.isDynamic && <Badge variant="outline">Dynamic Team Page</Badge>}
                   </div>
                 </div>
             </CardContent>
@@ -847,22 +837,11 @@ function PageCard({ page, onUpdate, onDelete, isLocked = false }: { page: AppPag
     );
 }
 
-const PagesManagement = ({ tab }: { tab: AppTab }) => {
+export const PagesManagement = ({ tab }: { tab: AppTab }) => {
     const { appSettings, updateAppSettings, updateAppTab } = useUser();
     const { toast } = useToast();
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const titleInputRef = useRef<HTMLInputElement>(null);
-
-    const lockedPageIds = ['page-admin-management'];
-    const pinnedPageIds = ['page-notifications', 'page-settings'];
-
-    const { adminPageConfig, unpinnedPages, pinnedPages } = useMemo(() => {
-        const adminPageConfig = appSettings.pages.find(p => p.id === 'page-admin-management');
-        const otherPages = appSettings.pages.filter(p => p.id !== 'page-admin-management');
-        const pinnedPages = otherPages.filter(p => pinnedPageIds.includes(p.id)).sort((a, b) => pinnedPageIds.indexOf(a.id) - pinnedPageIds.indexOf(b.id));
-        const unpinnedPages = otherPages.filter(p => !pinnedPageIds.includes(p.id));
-        return { adminPageConfig, unpinnedPages, pinnedPages };
-    }, [appSettings.pages]);
 
     useEffect(() => {
         if (isEditingTitle) titleInputRef.current?.focus();
@@ -887,12 +866,14 @@ const PagesManagement = ({ tab }: { tab: AppTab }) => {
     }, [appSettings.pages, updateAppSettings]);
 
     const handleAddPage = () => {
+        const pageCount = appSettings.pages.length;
+        const newName = `New Page ${pageCount + 1}`;
         const newPage: AppPage = {
             id: crypto.randomUUID(),
-            name: `New Page ${appSettings.pages.length + 1}`,
+            name: newName,
             icon: 'web',
             color: '#64748B',
-            path: '/dashboard/new-page',
+            path: `/dashboard/${newName.toLowerCase().replace(/\s/g, '-')}`,
             isDynamic: false,
             associatedTabs: [],
             access: { users: [], teams: [], adminGroups: [] }
@@ -932,17 +913,13 @@ const PagesManagement = ({ tab }: { tab: AppTab }) => {
             return;
         }
 
-        // Handle reordering
         if (source.droppableId === 'pages-list' && destination.droppableId === 'pages-list') {
-            if (source.index === destination.index) return;
-            
-            const reorderablePages = appSettings.pages.filter(p => !lockedPageIds.includes(p.id) && !pinnedPageIds.includes(p.id));
+            const reorderablePages = appSettings.pages.filter(p => p.id !== 'page-admin-management');
             const [movedPage] = reorderablePages.splice(source.index, 1);
             reorderablePages.splice(destination.index, 0, movedPage);
 
-            const lockedPages = appSettings.pages.filter(p => lockedPageIds.includes(p.id));
-            const finalPinnedPages = appSettings.pages.filter(p => pinnedPageIds.includes(p.id)).sort((a, b) => pinnedPageIds.indexOf(a.id) - pinnedPageIds.indexOf(b.id));
-            updateAppSettings({ pages: [...lockedPages, ...reorderablePages, ...finalPinnedPages] });
+            const adminPage = appSettings.pages.find(p => p.id === 'page-admin-management')!;
+            updateAppSettings({ pages: [adminPage, ...reorderablePages] });
         }
     };
 
@@ -982,53 +959,34 @@ const PagesManagement = ({ tab }: { tab: AppTab }) => {
                         )}
                     </StrictModeDroppable>
                 </div>
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {adminPageConfig && (
-                        <PageCard
-                            page={adminPageConfig}
-                            onUpdate={handleUpdatePage}
-                            onDelete={handleDeletePage}
-                            isLocked
-                        />
+                 <StrictModeDroppable droppableId="pages-list">
+                    {(provided) => (
+                        <div 
+                            className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                            ref={provided.innerRef}
+                            {...provided.droppableProps}
+                        >
+                            {appSettings.pages.map((page, index) => (
+                                <Draggable key={page.id} draggableId={page.id} index={index}>
+                                    {(provided) => (
+                                        <div 
+                                            ref={provided.innerRef} 
+                                            {...provided.draggableProps} 
+                                            {...provided.dragHandleProps}
+                                        >
+                                            <PageCard
+                                                page={page}
+                                                onUpdate={handleUpdatePage}
+                                                onDelete={handleDeletePage}
+                                            />
+                                        </div>
+                                    )}
+                                </Draggable>
+                            ))}
+                            {provided.placeholder}
+                        </div>
                     )}
-                    <StrictModeDroppable droppableId="pages-list">
-                        {(provided) => (
-                            <div 
-                                className="contents"
-                                ref={provided.innerRef}
-                                {...provided.droppableProps}
-                            >
-                                {unpinnedPages.map((page, index) => (
-                                    <Draggable key={page.id} draggableId={page.id} index={index}>
-                                        {(provided) => (
-                                            <div 
-                                                ref={provided.innerRef} 
-                                                {...provided.draggableProps} 
-                                                {...provided.dragHandleProps}
-                                            >
-                                                <PageCard
-                                                    page={page}
-                                                    onUpdate={handleUpdatePage}
-                                                    onDelete={handleDeletePage}
-                                                />
-                                            </div>
-                                        )}
-                                    </Draggable>
-                                ))}
-                                {provided.placeholder}
-                            </div>
-                        )}
-                    </StrictModeDroppable>
-                    {pinnedPages.map((page) => (
-                        <PageCard
-                            key={page.id}
-                            page={page}
-                            onUpdate={handleUpdatePage}
-                            onDelete={handleDeletePage}
-                            isLocked
-                        />
-                    ))}
-                </div>
+                </StrictModeDroppable>
             </div>
         </DragDropContext>
     );
@@ -1036,7 +994,7 @@ const PagesManagement = ({ tab }: { tab: AppTab }) => {
 // #endregion
 
 // #region Tabs Management Tab
-function TabItem({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string, data: Partial<AppTab>) => void; }) {
+export function TabItem({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string, data: Partial<AppTab>) => void; }) {
     const [isEditingName, setIsEditingName] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
@@ -1176,7 +1134,7 @@ function TabItem({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string, data: 
     );
 }
 
-const TabsManagement = ({ tab }: { tab: AppTab }) => {
+export const TabsManagement = ({ tab }: { tab: AppTab }) => {
     const { appSettings, updateAppSettings, updateAppTab } = useUser();
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const titleInputRef = useRef<HTMLInputElement>(null);
