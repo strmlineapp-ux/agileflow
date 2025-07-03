@@ -316,20 +316,22 @@ function AdminGroupCard({
               ))}
             </CardContent>
           </Card>
-          <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will permanently delete the "{group.name}" group and unassign all users. This action cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction variant="destructive" onClick={onDelete}>Continue</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+            <DialogContent className="max-w-md">
+                <div className="absolute top-4 right-4">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={onDelete}>
+                        <GoogleSymbol name="delete" className="text-xl" />
+                        <span className="sr-only">Delete Group</span>
+                    </Button>
+                </div>
+                <DialogHeader>
+                    <DialogTitle>Delete "{group.name}"?</DialogTitle>
+                    <DialogDescription>
+                        This will permanently delete the group and unassign all users. This action cannot be undone.
+                    </DialogDescription>
+                </DialogHeader>
+            </DialogContent>
+        </Dialog>
         </>
     );
 }
