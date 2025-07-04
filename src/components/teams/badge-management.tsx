@@ -270,7 +270,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
         <Card className="group">
             <CardHeader>
                 <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="flex items-center gap-3 flex-1">
                          <div className="relative">
                             <CompactSearchIconPicker icon={badge.icon} color={badge.color} onUpdateIcon={(icon) => onUpdateBadge({ icon })} />
                              <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
@@ -1018,57 +1018,58 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
     return (
         <DragDropContext onDragEnd={onDragEnd}>
             <div className="space-y-6">
-                 <div className="flex items-center gap-2">
-                    {isEditingTitle ? (
-                        <Input
-                            ref={titleInputRef}
-                            defaultValue={tab.name}
-                            onBlur={handleSaveTitle}
-                            onKeyDown={handleTitleKeyDown}
-                            className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                        />
-                    ) : (
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <h2 className="text-2xl font-semibold tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
-                                </TooltipTrigger>
-                                {tab.description && (
-                                <TooltipContent>
-                                    <p className="max-w-xs">{tab.description}</p>
-                                </TooltipContent>
-                                )}
-                            </Tooltip>
-                        </TooltipProvider>
-                    )}
-                </div>
                 <div className="flex items-center justify-between">
-                    <StrictModeDroppable droppableId="duplicate-collection-zone" type="collection">
-                        {(provided, snapshot) => (
-                            <div
-                                ref={provided.innerRef}
-                                {...provided.droppableProps}
-                                className={cn(
-                                    "rounded-full transition-all p-1",
-                                    snapshot.isDraggingOver && "ring-1 ring-primary bg-accent"
-                                )}
-                            >
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={handleAddCollection}>
-                                                <GoogleSymbol name="add_circle" className="text-xl" />
-                                                <span className="sr-only">New Collection or Drop to Duplicate</span>
-                                            </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                            <p>{snapshot.isDraggingOver ? 'Drop to Duplicate' : 'Add New Collection'}</p>
-                                        </TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                            </div>
+                    <div className="flex items-center gap-2">
+                        {isEditingTitle ? (
+                            <Input
+                                ref={titleInputRef}
+                                defaultValue={tab.name}
+                                onBlur={handleSaveTitle}
+                                onKeyDown={handleTitleKeyDown}
+                                className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                            />
+                        ) : (
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <h2 className="text-2xl font-semibold tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
+                                    </TooltipTrigger>
+                                    {tab.description && (
+                                    <TooltipContent>
+                                        <p className="max-w-xs">{tab.description}</p>
+                                    </TooltipContent>
+                                    )}
+                                </Tooltip>
+                            </TooltipProvider>
                         )}
-                    </StrictModeDroppable>
+                        <StrictModeDroppable droppableId="duplicate-collection-zone" type="collection">
+                            {(provided, snapshot) => (
+                                <div
+                                    ref={provided.innerRef}
+                                    {...provided.droppableProps}
+                                    className={cn(
+                                        "rounded-full transition-all p-1",
+                                        snapshot.isDraggingOver && "ring-1 ring-primary bg-accent"
+                                    )}
+                                >
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={handleAddCollection}>
+                                                    <GoogleSymbol name="add_circle" className="text-xl" />
+                                                    <span className="sr-only">New Collection or Drop to Duplicate</span>
+                                                </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>{snapshot.isDraggingOver ? 'Drop to Duplicate' : 'Add New Collection'}</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                </div>
+                            )}
+                        </StrictModeDroppable>
+                    </div>
+
                     <div className="flex items-center justify-end">
                         <Button variant="ghost" size="icon" onClick={() => setIsSearching(true)} className={cn(isSearching && "hidden")}>
                             <GoogleSymbol name="search" />
