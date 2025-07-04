@@ -143,6 +143,7 @@ export interface SharedCalendar {
   name: string;
   icon: string;
   color: string;
+  googleCalendarId?: string; // The ID of the real Google Calendar it's linked to
   managers?: string[]; // array of userIds who can manage this calendar
   defaultEventTitle?: string;
   roleAssignmentsLabel?: string;

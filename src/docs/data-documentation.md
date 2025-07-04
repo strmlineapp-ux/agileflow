@@ -70,6 +70,22 @@ Not all user capabilities are stored directly as a field on the `User` object. M
 | **Access to Pages** (e.g., `/admin`) | **Storage:** Page access is now entirely dynamic and is configured within each `AppPage` object inside `AppSettings.pages`. Each page has an `access` object containing arrays of `userId`s, `teamId`s, and `adminGroup` names that are allowed to view it.<br>**Usage:** A central permission checker (`hasAccess`) evaluates these rules against the current user's properties (`userId`, team memberships, `roles` array). This determines if a page is rendered in the sidebar and if a user can access its URL directly. An empty `access` object makes a page public to all logged-in users. |
 | **Interaction Permissions** (e.g., editing an event, managing a team) | **Storage:** This is also **not stored directly**. Permissions are derived by combining user roles with the context of a specific data item.<br>**Usage:** The application uses helper functions (like `canManageEventOnCalendar`) that check if a user's `userId` is in a `Team`'s `teamAdmins` list or if the user has a system-level role like `Admin`. This determines whether UI elements like "Edit" buttons are displayed. |
 
+## Shared Calendar Entity
+
+This entity represents an internal AgileFlow calendar. It acts as a logical container for events within the application and can be linked to a real, external Google Calendar for future synchronization. These are managed on the **Service Delivery** page.
+
+| Data Point | Description & Link to Services |
+| :--- | :--- |
+| `id: string` | **Internal.** A unique identifier for the AgileFlow calendar. |
+| `name: string` | **Internal.** The display name for the calendar within the application. |
+| `icon: string` | **Internal.** The Google Symbol name for the calendar's icon. |
+| `color: string` | **Internal.** The hex color code used for this calendar's events in the UI. |
+| `googleCalendarId?: string` | **External (Google Calendar).** The unique ID of the Google Calendar that this internal calendar is linked to. This ID can be found in the settings of a shared Google Calendar and typically looks like an email address (e.g., `your-calendar-id@group.calendar.google.com`). This is the key for enabling event synchronization. |
+| `managers?: string[]` | **Internal.** An array of `userId`s for users who can manage this calendar's events and settings. |
+| `defaultEventTitle?: string` | **Internal.** A placeholder string for the title of new events created on this calendar. |
+| `roleAssignmentsLabel?: string` | **Internal.** A custom label for the "Role Assignments" section in the event details view. |
+
+
 ## Application-Wide Settings
 
 This entity, `AppSettings`, holds global configuration data that allows for customization of the application's terminology and appearance without altering the core codebase. These settings are managed on the **Admin Management** and **Service Delivery** pages.
