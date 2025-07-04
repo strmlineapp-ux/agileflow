@@ -478,7 +478,7 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
           </Card>
           
         <DragDropContext onDragEnd={onDragEnd}>
-            <StrictModeDroppable droppableId="admin-groups-list" direction="horizontal">
+            <StrictModeDroppable droppableId="admin-groups-list" direction="vertical">
               {(provided) => (
                 <div 
                   ref={provided.innerRef} 
@@ -1006,7 +1006,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                 <div className="space-y-6">
                     {adminPage && <PageCard page={adminPage} onUpdate={handleUpdatePage} onDelete={handleDeletePage} />}
                     
-                    <StrictModeDroppable droppableId="draggable-pages-list" direction="horizontal">
+                    <StrictModeDroppable droppableId="draggable-pages-list" direction="vertical">
                         {(provided) => (
                             <div
                                 ref={provided.innerRef}
