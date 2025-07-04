@@ -10,6 +10,7 @@ import { auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { hexToHsl } from '@/lib/utils';
+import { startOfDay } from 'date-fns';
 
 interface UserContextType {
   loading: boolean;
@@ -54,13 +55,32 @@ const REAL_USER_ID = '1'; // Alice is the admin
 // Helper to simulate async operations
 const simulateApi = (delay = 50) => new Promise(res => setTimeout(res, delay));
 
+const getInitialAbsences = (): Record<string, UserStatusAssignment[]> => {
+    const today = startOfDay(new Date());
+    const todayISO = today.toISOString();
+    
+    const tomorrow = startOfDay(new Date());
+    tomorrow.setDate(today.getDate() + 1);
+    const tomorrowISO = tomorrow.toISOString();
+    
+    return {
+        [todayISO]: [
+            { userId: '2', status: 'PTO' },
+            { userId: '4', status: 'Sick' },
+        ],
+        [tomorrowISO]: [
+             { userId: '3', status: 'PTO (AM)' },
+        ]
+    };
+};
+
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [viewAsUserId, setViewAsUserId] = useState<string>(REAL_USER_ID);
   const [users, setUsers] = useState<User[]>(initialUsers);
   const [teams, setTeams] = useState<Team[]>(mockTeams);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [userStatusAssignments, setUserStatusAssignments] = useState<Record<string, UserStatusAssignment[]>>({});
+  const [userStatusAssignments, setUserStatusAssignments] = useState<Record<string, UserStatusAssignment[]>>(getInitialAbsences());
   const [calendars, setCalendars] = useState<SharedCalendar[]>(initialCalendars);
   const [events, setEvents] = useState<Event[]>(initialEvents);
   const [locations, setLocations] = useState<BookableLocation[]>(initialLocations);
