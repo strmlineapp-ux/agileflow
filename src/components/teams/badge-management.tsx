@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -694,7 +695,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                 collection.viewMode === 'detailed' && "grid grid-cols-1 md:grid-cols-2 gap-4"
                             )}>
                             {collectionBadges.map((badge, index) => (
-                                <Draggable key={`${badge.id}::${collection.id}`} draggableId={`${badge.id}::${collection.id}`} index={index}>
+                                <Draggable key={`${badge.id}::${collection.id}`} draggableId={`${badge.id}::${collection.id}`} index={index} isDraggable={!isSharedPreview}>
                                     {(provided) => (<div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
                                         <BadgeDisplayItem 
                                             badge={badge} 
@@ -874,9 +875,21 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
                 }
             }
         });
+
+        // Also include badges from collections in the shared panel that are not yet linked
+        sharedCollectionsFromOthers.forEach(sharedCollection => {
+            const sourceTeam = teams.find(t => t.id === sharedCollection.ownerTeamId);
+            if(sourceTeam) {
+                sourceTeam.allBadges.forEach(badge => {
+                    if (sharedCollection.badgeIds.includes(badge.id) && !badgeMap.has(badge.id)) {
+                        badgeMap.set(badge.id, badge);
+                    }
+                })
+            }
+        });
         
         return Array.from(badgeMap.values());
-    }, [team, teams]);
+    }, [team, teams, sharedCollectionsFromOthers]);
     
     const allBadgesFromAllTeams = useMemo(() => {
         const badgeMap = new Map<string, Badge>();
@@ -1138,7 +1151,13 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
                                 <div 
                                     ref={provided.innerRef}
                                     {...provided.droppableProps}
-                                    className={cn("grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4", snapshot.isDraggingOver && "ring-1 ring-border ring-inset p-2 rounded-lg")}
+                                    className={cn(
+                                        "grid gap-4 transition-all duration-300",
+                                        isSharedPanelOpen 
+                                            ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" // Fewer columns
+                                            : "grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5", // Original columns
+                                        snapshot.isDraggingOver && "ring-1 ring-border ring-inset p-2 rounded-lg"
+                                    )}
                                 >
                                     {displayedCollections.map((collection, index) => (
                                         <Draggable key={collection.id} draggableId={collection.id} index={index}>
