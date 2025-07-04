@@ -566,7 +566,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                         <div
                                             ref={provided.innerRef}
                                             {...provided.droppableProps}
-                                            className={cn("rounded-full p-0.5", snapshot.isDraggingOver && "ring-1 ring-border")}
+                                            className={cn("rounded-full p-0.5", snapshot.isDraggingOver && "ring-1 ring-primary bg-accent")}
                                         >
                                             <TooltipProvider>
                                                 <Tooltip>
@@ -723,7 +723,7 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
             name: newName,
             icon: 'category',
             color: '#64748B',
-            viewMode: 'assorted',
+            viewMode: 'detailed',
             badgeIds: [],
             applications: [],
             description: '',
@@ -964,6 +964,16 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
         }
 
         if (type === 'collection') {
+            const reorderedCollections = Array.from(displayedCollections);
+            const [moved] = reorderedCollections.splice(source.index, 1);
+            reorderedCollections.splice(destination.index, 0, moved);
+            
+            const reorderedIds = reorderedCollections.map(c => c.id);
+            const finalOrder = team.badgeCollections
+                .filter(c => reorderedIds.includes(c.id))
+                .sort((a,b) => reorderedIds.indexOf(a.id) - reorderedIds.indexOf(b.id));
+
+            updateTeam(team.id, { badgeCollections: finalOrder });
             return;
         }
     
@@ -1074,7 +1084,7 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
                 </div>
                 <StrictModeDroppable droppableId="collections-list" type="collection">
                     {(provided) => (
-                        <div className="flex flex-col gap-6" ref={provided.innerRef} {...provided.droppableProps}>
+                        <div className="space-y-6" ref={provided.innerRef} {...provided.droppableProps}>
                         {displayedCollections.map((collection, index) => (
                             <Draggable key={collection.id} draggableId={collection.id} index={index}>
                                 {(provided, snapshot) => (

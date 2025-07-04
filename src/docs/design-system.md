@@ -125,7 +125,7 @@ This is the application's perfected, gold-standard pattern for managing a collec
 -   **Drag-to-Duplicate**:
     -   **Interaction**: A designated "Add New" icon (`<Button>`) acts as a drop zone. While a card is being dragged, this zone becomes highlighted to indicate it can accept a drop.
     -   **Behavior**: Dropping any card (pinned or not) onto this zone creates a deep, independent copy of the original. The new card is given a unique ID, a modified name (e.g., with `(Copy)`), and is placed immediately after the original in the list.
--   **Application**: This is the required pattern for managing Pages, Calendars, and Teams.
+-   **Application**: This is the required pattern for managing Pages, Calendars, Teams, and Badge Collections.
 
 ---
 
@@ -221,6 +221,7 @@ This is the single source of truth for indicating user interaction state across 
     - **Appearance**: A circular badge (e.g., `h-5 w-5`) with a `border-2` of the parent element's background color (e.g., `border-card` or `border-background`) to create a "punched out" effect. The icon inside should be sized appropriately (e.g., `font-size: 14px` or similar, depending on container).
     - **Placement**: Typically positioned on the bottom-right or top-right corner of the parent element.
     - **Application**: Used for displaying a user's admin group on their avatar, a shared group status on a role icon, or a `share` icon on a shared Badge.
+
 
 
 

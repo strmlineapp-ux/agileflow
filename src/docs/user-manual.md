@@ -95,7 +95,7 @@ This is the central hub for global application settings.
 ### 8.3 Team Management (`/dashboard/teams/[teamId]`)
 This page is for managing the specifics of an individual team.
 - **Team Members**: View all members of the team and manage their team-specific badges.
-- **Badge Management**: Create or edit the custom badges available for this team (e.g., `Camera`, `Audio`). To make a collection of badges available to all other teams, click the `change_circle` icon on the collection's card.
+- **Badge Management**: Create and manage badge collections in an intuitive, card-based grid. You can reorder collections by dragging them, or duplicate an entire collection (and all its owned badges) by dragging it onto the "Add New Collection" button. To make a collection of badges available to all other teams, click the `change_circle` icon on the collection's card.
 - **Pinned Locations**: Pin locations to the team's Production Schedule. You can also designate locations as "check locations."
 - **Workstations**: Manage a list of bookable workstations or machines for the team.
 - **Event Templates**: Create reusable templates for common events. You can edit a template's name by clicking on it directly. Click the edit icon on the template card to manage its requested roles.
