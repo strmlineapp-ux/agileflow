@@ -404,7 +404,7 @@ function AdminGroupCard({
                 <CardContent 
                   ref={provided.innerRef}
                   {...provided.droppableProps}
-                  className={cn("space-y-4", snapshot.isDraggingOver && "ring-2 ring-primary ring-inset rounded-b-lg")}
+                  className={cn("space-y-4", snapshot.isDraggingOver && "ring-2 ring-border ring-inset rounded-b-lg")}
                 >
                   {assignedUsers.map((user, index) => (
                     <UserAssignmentCard 
@@ -659,7 +659,7 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                                 <CardContent 
                                   ref={provided.innerRef}
                                   {...provided.droppableProps}
-                                  className={cn("space-y-4", snapshot.isDraggingOver && "ring-2 ring-primary ring-inset rounded-b-lg")}
+                                  className={cn("space-y-4", snapshot.isDraggingOver && "ring-2 ring-border ring-inset rounded-b-lg")}
                                 >
                                   {adminUsers.map(user => (
                                     <UserAssignmentCard 
