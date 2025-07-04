@@ -106,12 +106,19 @@ const AddUserToGroupButton = ({ usersToAdd, onAdd, groupName }: { usersToAdd: Us
   
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8">
-            <GoogleSymbol name="add_circle" className="text-2xl" />
-            <span className="sr-only">Assign user to {groupName}</span>
-        </Button>
-      </PopoverTrigger>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <GoogleSymbol name="add_circle" className="text-2xl" />
+                  <span className="sr-only">Assign user to {groupName}</span>
+              </Button>
+            </PopoverTrigger>
+          </TooltipTrigger>
+          <TooltipContent><p>Assign User</p></TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
       <PopoverContent className="p-0 w-80">
         <ScrollArea className="h-64">
            <div className="p-1">
@@ -238,11 +245,18 @@ function AdminGroupCard({
                 <div className="relative">
                   <div className="relative">
                     <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
-                        <PopoverTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-9 w-9 text-2xl text-muted-foreground hover:text-foreground">
-                            <GoogleSymbol name={group.icon} />
-                            </Button>
-                        </PopoverTrigger>
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <PopoverTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-9 w-9 text-2xl text-muted-foreground hover:text-foreground">
+                                        <GoogleSymbol name={group.icon} />
+                                        </Button>
+                                    </PopoverTrigger>
+                                </TooltipTrigger>
+                                <TooltipContent><p>Change Icon</p></TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
                         <PopoverContent className="w-80 p-0">
                             <div className="flex items-center gap-1 p-2 border-b">
                                 {!isSearchingIcons ? (
@@ -267,13 +281,20 @@ function AdminGroupCard({
                         </PopoverContent>
                     </Popover>
                     <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                        <PopoverTrigger asChild>
-                            <div 
-                                className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full border-2 border-card cursor-pointer" 
-                                aria-label="Change service admin color"
-                                style={{ backgroundColor: group.color }}
-                            />
-                        </PopoverTrigger>
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <PopoverTrigger asChild>
+                                        <div 
+                                            className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full border-2 border-card cursor-pointer" 
+                                            aria-label="Change service admin color"
+                                            style={{ backgroundColor: group.color }}
+                                        />
+                                    </PopoverTrigger>
+                                </TooltipTrigger>
+                                <TooltipContent><p>Change Color</p></TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
                         <PopoverContent className="w-auto p-2">
                         <div className="grid grid-cols-8 gap-1">
                             {predefinedColors.map(color => (<button key={color} className="h-6 w-6 rounded-full border" style={{ backgroundColor: color }} onClick={() => { onUpdate({ ...group, color: color }); setIsColorPopoverOpen(false); }} aria-label={`Set color to ${color}`}/>))}
@@ -289,9 +310,14 @@ function AdminGroupCard({
                     {isEditingName ? (<Input ref={nameInputRef} defaultValue={group.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 text-lg font-semibold leading-none tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>) : (<CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer text-lg">{group.name}</CardTitle>)}
                 </div>
                 <div className="flex items-center">
+                    <AddUserToGroupButton usersToAdd={unassignedUsers} onAdd={handleGroupToggle} groupName={group.name} />
                     <TooltipProvider>
-                        <Tooltip><TooltipTrigger asChild><AddUserToGroupButton usersToAdd={unassignedUsers} onAdd={handleGroupToggle} groupName={group.name} /></TooltipTrigger><TooltipContent><p>Assign User</p></TooltipContent></Tooltip>
-                        <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setIsDeleteDialogOpen(true)}><GoogleSymbol name="delete" /></Button></TooltipTrigger><TooltipContent><p>Delete Group</p></TooltipContent></Tooltip>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setIsDeleteDialogOpen(true)}><GoogleSymbol name="delete" /></Button>
+                            </TooltipTrigger>
+                            <TooltipContent><p>Delete Group</p></TooltipContent>
+                        </Tooltip>
                     </TooltipProvider>
                 </div>
               </div>
@@ -469,7 +495,7 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
         </div>
         
         <DragDropContext onDragEnd={onDragEnd}>
-            <StrictModeDroppable droppableId="admin-groups-list" direction="vertical">
+            <StrictModeDroppable droppableId="admin-groups-list">
               {(provided) => (
                   <div ref={provided.innerRef} {...provided.droppableProps} className="flex flex-wrap -m-3">
                       <div className="w-full md:w-1/2 p-3">
@@ -477,12 +503,7 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                             <CardHeader>
                               <div className="flex items-center gap-2">
                                 <CardTitle>Admins</CardTitle>
-                                <TooltipProvider>
-                                  <Tooltip>
-                                      <TooltipTrigger asChild><AddUserToGroupButton usersToAdd={nonAdminUsers} onAdd={handleAdminToggle} groupName="Admin" /></TooltipTrigger>
-                                      <TooltipContent><p>Assign User</p></TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
+                                <AddUserToGroupButton usersToAdd={nonAdminUsers} onAdd={handleAdminToggle} groupName="Admin" />
                               </div>
                               <CardDescription>Assign or revoke Admin privileges. This is the highest level of access.</CardDescription>
                             </CardHeader>
@@ -518,10 +539,17 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
           <Dialog open={is2faDialogOpen} onOpenChange={(isOpen) => !isOpen && close2faDialog()}>
             <DialogContent className="max-w-sm">
                 <div className="absolute top-4 right-4">
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleVerify2fa}>
-                        <GoogleSymbol name="check" className="text-xl" />
-                        <span className="sr-only">Verify Code</span>
-                    </Button>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleVerify2fa}>
+                                    <GoogleSymbol name="check" className="text-xl" />
+                                    <span className="sr-only">Verify Code</span>
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent><p>Verify Code</p></TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
                 </div>
                 <DialogHeader>
                     <DialogTitle>Two-Factor Authentication</DialogTitle>
@@ -779,11 +807,18 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
                         <div className="flex items-center gap-2 flex-1 min-w-0">
                             <div className="relative">
                                 <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
-                                    <PopoverTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="h-9 w-9 text-2xl">
-                                            <GoogleSymbol name={page.icon} />
-                                        </Button>
-                                    </PopoverTrigger>
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <PopoverTrigger asChild>
+                                                    <Button variant="ghost" size="icon" className="h-9 w-9 text-2xl">
+                                                        <GoogleSymbol name={page.icon} />
+                                                    </Button>
+                                                </PopoverTrigger>
+                                            </TooltipTrigger>
+                                            <TooltipContent><p>Change Icon</p></TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
                                     <PopoverContent className="w-80 p-0">
                                         <div className="flex items-center gap-1 p-2 border-b">
                                             {!isSearchingIcons ? (
@@ -808,9 +843,16 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
                                     </PopoverContent>
                                 </Popover>
                                 <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                                  <PopoverTrigger asChild>
-                                      <div className="absolute -bottom-1 -right-0 h-4 w-4 rounded-full border-2 border-card cursor-pointer" style={{ backgroundColor: page.color }} />
-                                  </PopoverTrigger>
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <PopoverTrigger asChild>
+                                                <div className="absolute -bottom-1 -right-0 h-4 w-4 rounded-full border-2 border-card cursor-pointer" style={{ backgroundColor: page.color }} />
+                                            </PopoverTrigger>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>Change Color</p></TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
                                   <PopoverContent className="w-auto p-2">
                                       <div className="grid grid-cols-8 gap-1">
                                           {predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => { onUpdate(page.id, { color: c }); setIsColorPopoverOpen(false); }}/>))}
@@ -1148,11 +1190,18 @@ export function TabItem({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string,
         <div className="flex items-start p-3 gap-4">
             <div className="relative mt-1">
                 <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
-                    <PopoverTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-xl" style={{ color: tab.color }}>
-                            <GoogleSymbol name={tab.icon} />
-                        </Button>
-                    </PopoverTrigger>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <PopoverTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-xl" style={{ color: tab.color }}>
+                                        <GoogleSymbol name={tab.icon} />
+                                    </Button>
+                                </PopoverTrigger>
+                            </TooltipTrigger>
+                            <TooltipContent><p>Change Icon</p></TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
                      <PopoverContent className="w-80 p-0">
                         <div className="flex items-center gap-1 p-2 border-b">
                             {!isSearchingIcons ? (
@@ -1177,9 +1226,16 @@ export function TabItem({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string,
                     </PopoverContent>
                 </Popover>
                 <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                    <PopoverTrigger asChild>
-                        <div className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-card cursor-pointer" style={{ backgroundColor: tab.color }} />
-                    </PopoverTrigger>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <PopoverTrigger asChild>
+                                    <div className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-card cursor-pointer" style={{ backgroundColor: tab.color }} />
+                                </PopoverTrigger>
+                            </TooltipTrigger>
+                            <TooltipContent><p>Change Color</p></TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
                     <PopoverContent className="w-auto p-2">
                         <div className="grid grid-cols-8 gap-1">
                             {predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => { onUpdate(tab.id, { color: c }); setIsColorPopoverOpen(false); }}/>))}

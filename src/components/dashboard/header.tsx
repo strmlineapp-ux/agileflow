@@ -14,6 +14,7 @@ import { useUser } from '@/context/user-context';
 import { Badge } from '@/components/ui/badge';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { hasAccess } from '@/lib/permissions';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export function Header() {
   const { realUser, viewAsUser, teams, notifications, appSettings, allRolesAndBadges } = useUser();
@@ -57,12 +58,19 @@ export function Header() {
         </div>
       )}
       <Sheet>
-        <SheetTrigger asChild>
-          <Button size="icon" variant="outline" className="sm:hidden">
-            <GoogleSymbol name="menu" />
-            <span className="sr-only">Toggle Menu</span>
-          </Button>
-        </SheetTrigger>
+        <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <SheetTrigger asChild>
+                        <Button size="icon" variant="outline" className="sm:hidden">
+                            <GoogleSymbol name="menu" />
+                            <span className="sr-only">Toggle Menu</span>
+                        </Button>
+                    </SheetTrigger>
+                </TooltipTrigger>
+                <TooltipContent side="right"><p>Toggle Menu</p></TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
         <SheetContent side="left" className="sm:max-w-xs">
           <nav className="grid gap-6 text-lg font-medium">
             <Link

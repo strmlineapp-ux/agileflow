@@ -160,6 +160,17 @@ When a **high-risk destructive action** requires user confirmation (like deletin
   - The entire tab list has a subtle divider underneath it, separating it from the content below.
 - **Application**: Used for all main page-level tab navigation, such as on the Admin, Service Delivery, and Team Management pages.
 
+---
+
+### 12. Seamless Single-Tab Pages
+
+- **Description**: This pattern ensures a streamlined user experience for pages that contain only a single content tab. Instead of displaying a redundant page header *and* a tab header, the tab's content becomes the page itself.
+- **Behavior**:
+  - When a page is configured with exactly one associated tab, the main page layout does not render its own title or icon.
+  - The single tab's component is rendered directly within the main content area.
+  - The tab's component is responsible for displaying the page's title and icon, effectively promoting its header to become the page's header.
+- **Application**: Applied automatically to any page in the dynamic routing system (`/dashboard/[...page]`) that meets the single-tab condition. This creates a more integrated and less cluttered UI.
+
 ## Visual & Theming Elements
 
 ### Icons & Hover Effects
@@ -205,5 +216,6 @@ This is the single source of truth for indicating user interaction state across 
     - **Appearance**: A circular badge (e.g., `h-5 w-5`) with a `border-2` of the parent element's background color (e.g., `border-card` or `border-background`) to create a "punched out" effect. The icon inside should be sized appropriately (e.g., `font-size: 14px` or similar, depending on container).
     - **Placement**: Typically positioned on the bottom-right or top-right corner of the parent element.
     - **Application**: Used for displaying a user's admin group on their avatar, a shared group status on a role icon, or a `share` icon on a shared Badge.
+
 
 
