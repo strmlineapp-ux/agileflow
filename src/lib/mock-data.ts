@@ -1,4 +1,5 @@
 
+
 import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team, type AppSettings, type Badge, type BadgeCollection, type AppTab, type AppPage, type AdminGroup } from '@/types';
 
 export const mockTabs: AppTab[] = [
@@ -365,7 +366,7 @@ export const mockTeams: Team[] = [
             icon: 'video_settings',
             color: '#10B981',
             viewMode: 'assorted',
-            applications: ['users'],
+            applications: ['team members'],
             description: 'Badges related to the full pipeline of audio and video creation, from directing to post-production.',
             badgeIds: studioProdBadges.map(b => b.id),
             isShared: true,
@@ -398,7 +399,7 @@ export const mockTeams: Team[] = [
             icon: 'palette',
             color: '#64748B',
             viewMode: 'assorted',
-            applications: ['users', 'events'],
+            applications: ['team members', 'events'],
             description: 'General skills and roles for live event execution.',
             badgeIds: [
                 ...liveEventsBadges.map(b => b.id),

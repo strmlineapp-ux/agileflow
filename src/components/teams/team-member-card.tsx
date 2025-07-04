@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { type User, type Team, type Badge } from '@/types';
 import { useUser } from '@/context/user-context';
 import { useToast } from '@/hooks/use-toast';
@@ -15,7 +15,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/
 import { Input } from '../ui/input';
 
 export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
-  const { viewAsUser, updateUser, updateTeam } = useUser();
+  const { viewAsUser, updateUser, updateTeam, allBadges } = useUser();
   const { toast } = useToast();
 
   const [isEditingLabel, setIsEditingLabel] = useState(false);
@@ -26,21 +26,21 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
   const teamBadgesLabel = team.userBadgesLabel || 'Team Badges';
 
   const userAssignableBadges = useMemo(() => {
-    const userBadgeCollectionIds = new Set(
-        team.badgeCollections.filter(c => c.applications?.includes('users')).map(c => c.id)
-    );
-    return team.allBadges.filter(b => userBadgeCollectionIds.has(b.ownerCollectionId));
-  }, [team.badgeCollections, team.allBadges]);
+    const userBadgeCollections = team.badgeCollections.filter(c => c.applications?.includes('team members'));
+    const userAssignableBadgeIds = new Set(userBadgeCollections.flatMap(c => c.badgeIds));
+    return allBadges.filter(b => userAssignableBadgeIds.has(b.id));
+  }, [team.badgeCollections, allBadges]);
+
 
   const groupedBadges = useMemo(() => {
     const assignedBadgeIds = new Set(member.roles || []);
     const groups: { [collectionId: string]: { collectionName: string; badges: Badge[] } } = {};
 
     team.badgeCollections.forEach(collection => {
-        if (!collection.applications?.includes('users')) return;
+        if (!collection.applications?.includes('team members')) return;
 
         const assignedInCollection = collection.badgeIds
-            .map(id => team.allBadges.find(b => b.id === id))
+            .map(id => allBadges.find(b => b.id === id))
             .filter((b): b is Badge => !!b && assignedBadgeIds.has(b.name));
         
         if (assignedInCollection.length > 0) {
@@ -52,7 +52,7 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
     });
 
     return Object.values(groups);
-  }, [member.roles, team.badgeCollections, team.allBadges]);
+  }, [member.roles, team.badgeCollections, allBadges]);
   
   const unassignedBadges = useMemo(() => {
     const assigned = new Set(member.roles || []);
@@ -86,14 +86,14 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
     });
   }
   
-  const handleSaveLabel = () => {
+  const handleSaveLabel = useCallback(() => {
     if (!canManageRoles) return;
     const newLabel = labelInputRef.current?.value.trim();
     if (newLabel && newLabel !== teamBadgesLabel) {
         updateTeam(team.id, { userBadgesLabel: newLabel });
     }
     setIsEditingLabel(false);
-  };
+  }, [canManageRoles, team.id, teamBadgesLabel, updateTeam]);
 
   useEffect(() => {
     if (!isEditingLabel) return;
@@ -111,7 +111,7 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
     return () => {
       document.removeEventListener("mousedown", handleOutsideClick);
     };
-  }, [isEditingLabel]);
+  }, [isEditingLabel, handleSaveLabel]);
 
   const renderBadge = (badge: Badge, isAssigned: boolean) => (
     <TooltipProvider key={badge.id}>
@@ -164,7 +164,7 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
                     />
                 ) : (
                     <span
-                        className={canManageRoles ? "cursor-text" : ""}
+                        className={cn("cursor-text", canManageRoles && "border-b border-dashed border-transparent hover:border-foreground")}
                         onClick={() => canManageRoles && setIsEditingLabel(true)}
                     >
                         {teamBadgesLabel}
@@ -189,7 +189,7 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
                 )}
                 </>
               ) : (
-                <p className="text-xs text-muted-foreground italic w-full text-center">No user-assignable badges configured for this team.</p>
+                <p className="text-xs text-muted-foreground italic w-full text-center">No assignable badges configured for this team.</p>
               )}
             </div>
           </div>

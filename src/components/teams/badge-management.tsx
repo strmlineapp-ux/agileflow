@@ -19,7 +19,6 @@ import { Textarea } from '../ui/textarea';
 import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProps } from 'react-beautiful-dnd';
 import { Separator } from '../ui/separator';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle as UIDialogTitle } from '@/components/ui/dialog';
 import { Badge as UiBadge } from '../ui/badge';
 
@@ -325,11 +324,6 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                             )}
                         </div>
                     </div>
-                    {!isSharedPreview && (
-                        <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onDelete(); }} className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive">
-                            <GoogleSymbol name="delete" />
-                        </Button>
-                    )}
                 </div>
             </CardHeader>
             <CardContent className="space-y-4 pt-0 flex-grow">
@@ -351,6 +345,13 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                     </p>
                  )}
             </CardContent>
+             <CardFooter className="justify-end">
+                {!isSharedPreview && (
+                    <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onDelete(); }} className="h-7 w-7 text-muted-foreground hover:text-destructive">
+                        <GoogleSymbol name="delete" />
+                    </Button>
+                )}
+            </CardFooter>
         </Card>
       );
     }
@@ -530,7 +531,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
     }, [collection.badgeIds, allBadgesInTeam]);
     
     const APPLICATIONS: { key: BadgeApplication, icon: string, label: string }[] = [
-        { key: 'users', icon: 'group', label: 'Users' },
+        { key: 'team members', icon: 'group', label: 'Team Members' },
         { key: 'events', icon: 'calendar_month', label: 'Events' },
         { key: 'tasks', icon: 'checklist', label: 'Tasks' },
         { key: 'badges', icon: 'style', label: 'Badges' },
@@ -857,39 +858,14 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
     const allBadgesAvailableToTeam = useMemo(() => {
         const badgeMap = new Map<string, Badge>();
         
-        // Include badges owned by the current team.
-        team.allBadges.forEach(badge => {
-            badgeMap.set(badge.id, badge);
-        });
-
-        // Add badges from linked (shared-in) collections.
-        team.badgeCollections.forEach(linkedCollection => {
-            if (linkedCollection.ownerTeamId !== team.id) {
-                const sourceTeam = teams.find(t => t.id === linkedCollection.ownerTeamId);
-                if (sourceTeam) {
-                    sourceTeam.allBadges.forEach(badge => {
-                        if (linkedCollection.badgeIds.includes(badge.id) && !badgeMap.has(badge.id)) {
-                             badgeMap.set(badge.id, badge);
-                        }
-                    })
-                }
-            }
-        });
-
-        // Also include badges from collections in the shared panel that are not yet linked
-        sharedCollectionsFromOthers.forEach(sharedCollection => {
-            const sourceTeam = teams.find(t => t.id === sharedCollection.ownerTeamId);
-            if(sourceTeam) {
-                sourceTeam.allBadges.forEach(badge => {
-                    if (sharedCollection.badgeIds.includes(badge.id) && !badgeMap.has(badge.id)) {
-                        badgeMap.set(badge.id, badge);
-                    }
-                })
-            }
+        teams.forEach(t => {
+            (t.allBadges || []).forEach(badge => {
+                badgeMap.set(badge.id, badge);
+            });
         });
         
         return Array.from(badgeMap.values());
-    }, [team, teams, sharedCollectionsFromOthers]);
+    }, [teams]);
     
     const allBadgesFromAllTeams = useMemo(() => {
         const badgeMap = new Map<string, Badge>();
@@ -1111,15 +1087,12 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
                             <GoogleSymbol name="add_circle" className="text-xl" />
                             <span className="sr-only">New Collection</span>
                         </Button>
-                    </div>
-
-                    <div className="flex items-center justify-end gap-1">
                         {!isSearching ? (
                             <Button variant="ghost" size="icon" onClick={() => setIsSearching(true)} className="h-8 w-8">
                                 <GoogleSymbol name="search" />
                             </Button>
                         ) : (
-                            <div className="flex items-center gap-1 w-56 p-1 rounded-md border">
+                            <div className="flex items-center gap-1 w-56 p-1 rounded-md">
                                 <GoogleSymbol name="search" className="text-muted-foreground" />
                                 <input
                                     ref={searchInputRef}
@@ -1131,14 +1104,17 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
                                 />
                             </div>
                         )}
+                    </div>
+
+                    <div className="flex items-center justify-end gap-1">
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Button variant="ghost" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)} className="h-8 w-8">
-                                        <GoogleSymbol name={isSharedPanelOpen ? "chevron_right" : "chevron_left"} />
+                                        <GoogleSymbol name="dynamic_feed" />
                                     </Button>
                                 </TooltipTrigger>
-                                <TooltipContent><p>{isSharedPanelOpen ? 'Hide Shared Collections' : 'Show Shared Collections'}</p></TooltipContent>
+                                <TooltipContent><p>Show/Hide Shared Collections</p></TooltipContent>
                             </Tooltip>
                         </TooltipProvider>
                     </div>

@@ -92,7 +92,7 @@ export interface Badge {
   };
 }
 
-export type BadgeApplication = 'users' | 'events' | 'tasks' | 'badges';
+export type BadgeApplication = 'team members' | 'events' | 'tasks' | 'badges';
 
 export interface BadgeCollection {
   id: string;
