@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -19,6 +20,7 @@ import { Separator } from '../ui/separator';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle as UIDialogTitle } from '@/components/ui/dialog';
+import { Badge as UiBadge } from '../ui/badge';
 
 const predefinedColors = [
     '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
@@ -1171,21 +1173,75 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
                                 <StrictModeDroppable droppableId="shared-collections-panel" type="collection">
                                     {(provided) => (
                                         <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-2">
-                                            {sharedCollectionsFromOthers.map((collection, index) => (
-                                                <Draggable key={collection.id} draggableId={collection.id} index={index}>
-                                                    {(provided, snapshot) => (
-                                                        <div 
-                                                            ref={provided.innerRef} 
-                                                            {...provided.draggableProps} 
-                                                            {...provided.dragHandleProps}
-                                                            className={cn("p-2 border rounded-lg flex items-center gap-2", snapshot.isDragging && "shadow-xl")}
-                                                        >
-                                                            <GoogleSymbol name={collection.icon} style={{color: collection.color}}/>
-                                                            <span className="text-sm font-medium">{collection.name}</span>
-                                                        </div>
-                                                    )}
-                                                </Draggable>
-                                            ))}
+                                            {sharedCollectionsFromOthers.map((collection, index) => {
+                                                const ownerTeam = teams.find(t => t.id === collection.ownerTeamId);
+                                                const badgesInCollection = ownerTeam ? ownerTeam.allBadges.filter(b => collection.badgeIds.includes(b.id)) : [];
+
+                                                return (
+                                                    <Draggable key={collection.id} draggableId={collection.id} index={index}>
+                                                        {(provided, snapshot) => (
+                                                            <div 
+                                                                ref={provided.innerRef} 
+                                                                {...provided.draggableProps} 
+                                                                {...provided.dragHandleProps}
+                                                                className={cn("w-full cursor-grab", snapshot.isDragging && "shadow-xl opacity-80")}
+                                                            >
+                                                                <Card>
+                                                                    <CardHeader className="p-3">
+                                                                        <div className="flex items-start justify-between">
+                                                                            <div className="flex items-center gap-3">
+                                                                                <div className="relative">
+                                                                                    <Button variant="ghost" size="icon" className="h-9 w-9 text-3xl" style={{color: collection.color}} disabled>
+                                                                                        <GoogleSymbol name={collection.icon} />
+                                                                                    </Button>
+                                                                                    {ownerTeam && (
+                                                                                    <TooltipProvider>
+                                                                                        <Tooltip>
+                                                                                            <TooltipTrigger asChild>
+                                                                                                <div
+                                                                                                className="absolute -top-1 -right-1 h-5 w-5 rounded-full border-2 border-card flex items-center justify-center text-white"
+                                                                                                style={{ backgroundColor: ownerTeam.color }}
+                                                                                                >
+                                                                                                <GoogleSymbol name={ownerTeam.icon} style={{ fontSize: '12px' }}/>
+                                                                                                </div>
+                                                                                            </TooltipTrigger>
+                                                                                            <TooltipContent><p>Owned by {ownerTeam.name}</p></TooltipContent>
+                                                                                        </Tooltip>
+                                                                                    </TooltipProvider>
+                                                                                    )}
+                                                                                </div>
+                                                                                <CardTitle className="text-base">{collection.name}</CardTitle>
+                                                                            </div>
+                                                                        </div>
+                                                                    </CardHeader>
+                                                                    <CardContent className="px-3 pb-3 pt-0 space-y-2">
+                                                                        <p className="text-xs text-muted-foreground">{collection.description || 'No description.'}</p>
+                                                                        {badgesInCollection.length > 0 && (
+                                                                            <div className="flex flex-wrap gap-1">
+                                                                                {badgesInCollection.slice(0, 5).map(badge => (
+                                                                                <TooltipProvider key={badge.id}>
+                                                                                    <Tooltip>
+                                                                                    <TooltipTrigger asChild>
+                                                                                        <UiBadge variant="outline" className="gap-1 p-1 rounded-full" style={{borderColor: badge.color}}>
+                                                                                            <GoogleSymbol name={badge.icon} style={{color: badge.color}} className="text-sm" />
+                                                                                        </UiBadge>
+                                                                                    </TooltipTrigger>
+                                                                                    <TooltipContent><p>{badge.name}</p></TooltipContent>
+                                                                                    </Tooltip>
+                                                                                </TooltipProvider>
+                                                                                ))}
+                                                                                {badgesInCollection.length > 5 && (
+                                                                                <UiBadge variant="outline" className="rounded-full">+{badgesInCollection.length - 5}</UiBadge>
+                                                                                )}
+                                                                            </div>
+                                                                        )}
+                                                                    </CardContent>
+                                                                </Card>
+                                                            </div>
+                                                        )}
+                                                    </Draggable>
+                                                )
+                                            })}
                                             {provided.placeholder}
                                             {sharedCollectionsFromOthers.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">No collections are being shared by other teams.</p>}
                                         </div>
