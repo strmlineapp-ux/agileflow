@@ -21,6 +21,20 @@ export const mockTabs: AppTab[] = [
 
 export const mockPages: AppPage[] = [
     {
+        id: 'page-admin-management',
+        name: 'Admin Management',
+        icon: 'shield',
+        color: '#64748B',
+        path: '/dashboard/admin',
+        isDynamic: false,
+        associatedTabs: ['tab-admin-roles', 'tab-admin-pages', 'tab-admin-tabs'],
+        access: {
+            users: [],
+            teams: [],
+            adminGroups: [] // Access is controlled by isAdmin flag in permissions
+        }
+    },
+    {
         id: 'page-overview',
         name: 'Overview',
         icon: 'dashboard',
@@ -54,28 +68,6 @@ export const mockPages: AppPage[] = [
         access: { users: [], teams: [], adminGroups: [] }
     },
     {
-        id: 'page-notifications',
-        name: 'Notifications',
-        icon: 'notifications',
-        color: '#3B82F6',
-        path: '/dashboard/notifications',
-        isDynamic: false,
-        associatedTabs: [],
-        componentKey: 'notifications',
-        access: { users: [], teams: [], adminGroups: [] }
-    },
-    {
-        id: 'page-settings',
-        name: 'Settings',
-        icon: 'settings',
-        color: '#64748B',
-        path: '/dashboard/settings',
-        isDynamic: false,
-        associatedTabs: [],
-        componentKey: 'settings',
-        access: { users: [], teams: [], adminGroups: [] }
-    },
-    {
         id: 'page-service-delivery',
         name: 'Service Delivery',
         icon: 'business_center',
@@ -104,18 +96,26 @@ export const mockPages: AppPage[] = [
         }
     },
     {
-        id: 'page-admin-management',
-        name: 'Admin Management',
-        icon: 'shield',
-        color: '#64748B',
-        path: '/dashboard/admin',
+        id: 'page-notifications',
+        name: 'Notifications',
+        icon: 'notifications',
+        color: '#3B82F6',
+        path: '/dashboard/notifications',
         isDynamic: false,
-        associatedTabs: ['tab-admin-roles', 'tab-admin-pages', 'tab-admin-tabs'],
-        access: {
-            users: [],
-            teams: [],
-            adminGroups: [] // Access is controlled by isAdmin flag in permissions
-        }
+        associatedTabs: [],
+        componentKey: 'notifications',
+        access: { users: [], teams: [], adminGroups: [] }
+    },
+    {
+        id: 'page-settings',
+        name: 'Settings',
+        icon: 'settings',
+        color: '#64748B',
+        path: '/dashboard/settings',
+        isDynamic: false,
+        associatedTabs: [],
+        componentKey: 'settings',
+        access: { users: [], teams: [], adminGroups: [] }
     },
 ];
 
