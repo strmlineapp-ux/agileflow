@@ -434,32 +434,23 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
 
   const onDragEnd = (result: DropResult) => {
     const { source, destination } = result;
-    if (!destination) return;
-    
-    const draggableGroups = appSettings.adminGroups;
-    const midPoint = Math.ceil(draggableGroups.length / 2);
-    let col1Groups = draggableGroups.slice(0, midPoint);
-    let col2Groups = draggableGroups.slice(midPoint);
-
-    if (source.droppableId === destination.droppableId) {
-        const list = source.droppableId === 'groups-col-1' ? col1Groups : col2Groups;
-        const [removed] = list.splice(source.index, 1);
-        list.splice(destination.index, 0, removed);
-    } else {
-        const sourceList = source.droppableId === 'groups-col-1' ? col1Groups : col2Groups;
-        const destList = destination.droppableId === 'groups-col-1' ? col1Groups : col2Groups;
-        const [removed] = sourceList.splice(source.index, 1);
-        destList.splice(destination.index, 0, removed);
+    if (!destination) {
+      return;
     }
 
-    const newAdminGroups = [...col1Groups, ...col2Groups];
-    updateAppSettings({ adminGroups: newAdminGroups });
-  };
+    if (
+      destination.droppableId === source.droppableId &&
+      destination.index === source.index
+    ) {
+      return;
+    }
 
-  const draggableGroups = appSettings.adminGroups;
-  const midPoint = Math.ceil(draggableGroups.length / 2);
-  const col1Groups = draggableGroups.slice(0, midPoint);
-  const col2Groups = draggableGroups.slice(midPoint);
+    const items = Array.from(appSettings.adminGroups);
+    const [reorderedItem] = items.splice(source.index, 1);
+    items.splice(destination.index, 0, reorderedItem);
+
+    updateAppSettings({ adminGroups: items });
+  };
 
   return (
     <div className="space-y-6">
@@ -502,62 +493,33 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
           </Card>
           
         <DragDropContext onDragEnd={onDragEnd}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <StrictModeDroppable droppableId="groups-col-1">
-                  {(provided, snapshot) => (
-                    <div 
-                        ref={provided.innerRef} 
+            <StrictModeDroppable droppableId="admin-groups">
+                {(provided) => (
+                    <div
                         {...provided.droppableProps}
-                        className={cn("space-y-6 rounded-lg border-2 border-dashed p-4 transition-colors", snapshot.isDraggingOver ? "border-primary bg-accent" : "border-transparent")}
+                        ref={provided.innerRef}
+                        className="grid grid-cols-1 md:grid-cols-2 gap-6"
                     >
-                      {col1Groups.map((group, index) => (
-                        <Draggable key={group.id} draggableId={group.id} index={index}>
-                          {(provided) => (
-                            <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
-                              <AdminGroupCard
-                                group={group}
-                                rank={index + 1}
-                                users={users}
-                                onUpdate={handleUpdateAdminGroup}
-                                onDelete={() => handleDeleteAdminGroup(group.id)}
-                              />
-                            </div>
-                          )}
-                        </Draggable>
-                      ))}
-                      {provided.placeholder}
+                        {appSettings.adminGroups.map((group, index) => (
+                            <Draggable key={group.id} draggableId={group.id} index={index}>
+                                {(provided) => (
+                                    <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
+                                        <AdminGroupCard
+                                            group={group}
+                                            rank={index + 1}
+                                            users={users}
+                                            onUpdate={handleUpdateAdminGroup}
+                                            onDelete={() => handleDeleteAdminGroup(group.id)}
+                                        />
+                                    </div>
+                                )}
+                            </Draggable>
+                        ))}
+                        {provided.placeholder}
                     </div>
-                  )}
-                </StrictModeDroppable>
-                
-                <StrictModeDroppable droppableId="groups-col-2">
-                   {(provided, snapshot) => (
-                    <div 
-                        ref={provided.innerRef} 
-                        {...provided.droppableProps}
-                        className={cn("space-y-6 rounded-lg border-2 border-dashed p-4 transition-colors", snapshot.isDraggingOver ? "border-primary bg-accent" : "border-transparent")}
-                    >
-                      {col2Groups.map((group, index) => (
-                        <Draggable key={group.id} draggableId={group.id} index={index}>
-                          {(provided) => (
-                            <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
-                              <AdminGroupCard
-                                group={group}
-                                rank={col1Groups.length + index + 1}
-                                users={users}
-                                onUpdate={handleUpdateAdminGroup}
-                                onDelete={() => handleDeleteAdminGroup(group.id)}
-                              />
-                            </div>
-                          )}
-                        </Draggable>
-                      ))}
-                      {provided.placeholder}
-                    </div>
-                  )}
-                </StrictModeDroppable>
-            </div>
-          </DragDropContext>
+                )}
+            </StrictModeDroppable>
+        </DragDropContext>
           
           <Dialog open={is2faDialogOpen} onOpenChange={(isOpen) => !isOpen && close2faDialog()}>
             <DialogContent className="max-w-sm">
@@ -1093,6 +1055,9 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                                                     ref={provided.innerRef} 
                                                     {...provided.draggableProps} 
                                                     {...provided.dragHandleProps}
+                                                    className={cn(
+                                                        draggingItemId === page.id ? "opacity-50" : "opacity-100"
+                                                    )}
                                                 >
                                                     <PageCard page={page} onUpdate={handleUpdatePage} onDelete={handleDeletePage} isDragging={draggingItemId === page.id} />
                                                 </div>
@@ -1120,6 +1085,9 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                                                     ref={provided.innerRef} 
                                                     {...provided.draggableProps} 
                                                     {...provided.dragHandleProps}
+                                                    className={cn(
+                                                        draggingItemId === page.id ? "opacity-50" : "opacity-100"
+                                                    )}
                                                 >
                                                     <PageCard page={page} onUpdate={handleUpdatePage} onDelete={handleDeletePage} isDragging={draggingItemId === page.id}/>
                                                 </div>
