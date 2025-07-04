@@ -85,7 +85,7 @@ Navigate to **Settings > User Management** from the sidebar (availability depend
 
 ### 8.1 Admin Management (`/dashboard/admin`)
 This is the central control panel for configuring the application itself.
-- **Admin Groups**: Create and manage high-level administrative groups that grant specific permissions across the app. Assign users to these groups.
+- **Admin Groups**: Create and manage high-level administrative groups. To assign users, click the `add_circle` button on a group's card; you can then search for users by name or email in the popover that appears.
 - **Pages**: Configure the application's navigation. Create new pages, define their URL paths, and control who has access to them (by user, team, or admin group). You can intuitively reorder pages by dragging and dropping them in the grid. Key system pages like "Admin Management" are pinned and cannot be moved. You can also instantly duplicate any page by dragging it onto the "Add New Page" (+) button.
 - **Tabs**: Manage the reusable content blocks (tabs) that can be assigned to different pages. Edit their names, icons, and descriptions.
 
