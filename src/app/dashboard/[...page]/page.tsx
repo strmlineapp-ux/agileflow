@@ -7,7 +7,7 @@ import { useUser } from '@/context/user-context';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { type AppTab, type Team, type AppPage } from '@/types';
+import { type AppTab, type AppPage } from '@/types';
 
 // Import all possible tab components
 import { AdminGroupsManagement, PagesManagement, TabsManagement } from '@/app/dashboard/admin/page';
@@ -100,15 +100,10 @@ export default function DynamicPage() {
     if (pageTabs.length === 1) {
         const tab = pageTabs[0];
         const ContentComponent = componentMap[tab.componentKey];
-        return (
-             <div className="flex flex-col gap-6">
-                <div className="flex items-center gap-3">
-                    <GoogleSymbol name={pageConfig.icon} className="text-3xl" />
-                    <h1 className="font-headline text-3xl font-semibold">{pageTitle}</h1>
-                </div>
-                {ContentComponent ? <ContentComponent tab={tab} team={team} /> : <div>Component for {tab.name} not found.</div>}
-            </div>
-        )
+        // The page header is rendered directly by the content component.
+        // We pass the page's title, icon, and description to the tab to ensure the correct header is displayed.
+        const pageAsTab = { ...tab, name: pageTitle, icon: pageConfig.icon, description: tab.description };
+        return ContentComponent ? <ContentComponent tab={pageAsTab} team={team} /> : <div>Component for {tab.name} not found.</div>;
     }
     
     // Render page with multiple tabs
