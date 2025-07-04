@@ -141,7 +141,7 @@ export const mockUsers: User[] = [
         email: 'alice@example.com', 
         isAdmin: true,
         accountType: 'Full',
-        googleCalendarLinked: true, 
+        googleCalendarLinked: false, 
         avatarUrl: 'https://placehold.co/40x40.png', 
         title: 'Product Manager', 
         location: 'New York, USA', 
