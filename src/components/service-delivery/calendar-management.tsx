@@ -6,16 +6,7 @@ import { useUser } from '@/context/user-context';
 import { type SharedCalendar, type AppTab } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle as UIAlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { GoogleSymbol } from '../icons/google-symbol';
@@ -386,22 +377,22 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
         </StrictModeDroppable>
       </div>
       
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <UIAlertDialogTitle>Are you absolutely sure?</UIAlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the "{editingCalendar?.name}" calendar. All events on this calendar will also be removed.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setEditingCalendar(null)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={handleDelete}>
-              Continue
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="max-w-md">
+          <div className="absolute top-4 right-4">
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={handleDelete}>
+                  <GoogleSymbol name="delete" className="text-xl" />
+                  <span className="sr-only">Delete Calendar</span>
+              </Button>
+          </div>
+          <DialogHeader>
+              <DialogTitle>Delete "{editingCalendar?.name}"?</DialogTitle>
+              <DialogDescription>
+                This action cannot be undone. This will permanently delete the calendar and all of its associated events.
+              </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
     </DragDropContext>
   );
 }
