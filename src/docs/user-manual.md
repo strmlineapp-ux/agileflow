@@ -1,4 +1,3 @@
-
 # AgileFlow User Manual
 
 Welcome to AgileFlow, your team's central hub for managing tasks, scheduling events, and coordinating production workflows. This guide will walk you through the key features of the app.
@@ -85,8 +84,10 @@ Navigate to **Settings > User Management** from the sidebar (availability depend
 ## 8. Management Pages (Admin & Manager Roles)
 
 ### 8.1 Admin Management (`/dashboard/admin`)
-- **Manage Admins**: Assign or revoke Admin privileges for any user. This action requires two-factor authentication for security.
-- **Manage Admin Groups**: Create, edit, and manage high-level administrative groups that grant specific permissions across the app.
+This is the central control panel for configuring the application itself.
+- **Admin Groups**: Create and manage high-level administrative groups that grant specific permissions across the app. Assign users to these groups.
+- **Pages**: Configure the application's navigation. Create new pages, define their URL paths, and control who has access to them (by user, team, or admin group).
+- **Tabs**: Manage the reusable content blocks (tabs) that can be assigned to different pages. Edit their names, icons, and descriptions.
 
 ### 8.2 Service Delivery Management (`/dashboard/service-delivery`)
 This is the central hub for global application settings.
@@ -108,4 +109,3 @@ Administrators can view the application from another user's perspective.
 2.  Select "View as" from the dropdown menu.
 3.  Choose a user from the list.
 4.  A banner will appear at the top of the screen indicating whose view you are using. To return to your own view, repeat the process and select "Return to your view".
-
