@@ -49,13 +49,13 @@ const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
 // #endregion
 
 // #region Admin Groups Management Tab
-const UserAssignmentCard = ({ user, onRemove, isGroupAdmin, onSetGroupAdmin, canRemove = true }: { user: User; onRemove: (user: User) => void; isGroupAdmin: boolean; onSetGroupAdmin?: (user: User) => void; canRemove?: boolean; }) => {
-  return (
+const UserAssignmentCard = ({ user, index, onRemove, isGroupAdmin, onSetGroupAdmin, canRemove = true, isDraggable = false }: { user: User; index?: number; onRemove: (user: User) => void; isGroupAdmin: boolean; onSetGroupAdmin?: (user: User) => void; canRemove?: boolean; isDraggable?: boolean }) => {
+  const cardContent = (
     <Card 
         tabIndex={onSetGroupAdmin ? 0 : -1}
         role={onSetGroupAdmin ? "button" : undefined}
         className={cn(
-            "transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50",
+            "transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50 bg-card",
             onSetGroupAdmin && isGroupAdmin && "ring-1 ring-primary",
             onSetGroupAdmin && "cursor-pointer"
         )}
@@ -94,6 +94,25 @@ const UserAssignmentCard = ({ user, onRemove, isGroupAdmin, onSetGroupAdmin, can
       </CardContent>
     </Card>
   );
+
+  if (isDraggable && index !== undefined) {
+    return (
+      <Draggable draggableId={`user-${user.userId}`} index={index} type="user-card">
+        {(provided, snapshot) => (
+          <div
+            ref={provided.innerRef}
+            {...provided.draggableProps}
+            {...provided.dragHandleProps}
+            className={cn(snapshot.isDragging && "shadow-lg opacity-80")}
+          >
+            {cardContent}
+          </div>
+        )}
+      </Draggable>
+    );
+  }
+
+  return cardContent;
 };
 
 const AddUserToGroupButton = ({ usersToAdd, onAdd, groupName }: { usersToAdd: User[], onAdd: (user: User) => void, groupName: string }) => {
@@ -355,29 +374,53 @@ function AdminGroupCard({
                 </div>
                 <div className="flex items-center">
                     <AddUserToGroupButton usersToAdd={unassignedUsers} onAdd={handleGroupToggle} groupName={group.name} />
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setIsDeleteDialogOpen(true)}><GoogleSymbol name="delete" /></Button>
-                            </TooltipTrigger>
-                            <TooltipContent><p>Delete Group</p></TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
+                    <StrictModeDroppable droppableId={`delete-dropzone-${group.id}`} type="user-card">
+                        {(provided, snapshot) => (
+                            <div 
+                                ref={provided.innerRef} 
+                                {...provided.droppableProps}
+                                className={cn(
+                                    "rounded-full transition-all p-0.5",
+                                    snapshot.isDraggingOver && "bg-destructive/20 ring-2 ring-destructive"
+                                )}
+                            >
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setIsDeleteDialogOpen(true)}><GoogleSymbol name="delete" /></Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>{snapshot.isDraggingOver ? `Drop to remove user` : 'Delete Group'}</p></TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            </div>
+                        )}
+                    </StrictModeDroppable>
                 </div>
               </div>
               <CardDescription>Click a member to promote them to Group Admin for this group. Group Admins have elevated permissions.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {assignedUsers.map(user => (
-                <UserAssignmentCard 
-                    key={user.userId} 
-                    user={user} 
-                    onRemove={handleGroupToggle}
-                    isGroupAdmin={(group.groupAdmins || []).includes(user.userId)}
-                    onSetGroupAdmin={handleSetGroupAdmin}
-                />
-              ))}
-            </CardContent>
+            <StrictModeDroppable droppableId={`group-content-${group.id}`} type="user-card">
+              {(provided, snapshot) => (
+                <CardContent 
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                  className={cn("space-y-4", snapshot.isDraggingOver && "bg-accent/50 ring-2 ring-accent ring-inset rounded-b-lg")}
+                >
+                  {assignedUsers.map((user, index) => (
+                    <UserAssignmentCard 
+                        key={user.userId} 
+                        index={index}
+                        user={user} 
+                        onRemove={handleGroupToggle}
+                        isGroupAdmin={(group.groupAdmins || []).includes(user.userId)}
+                        onSetGroupAdmin={handleSetGroupAdmin}
+                        isDraggable={true}
+                    />
+                  ))}
+                  {provided.placeholder}
+                </CardContent>
+              )}
+            </StrictModeDroppable>
           </Card>
           <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
             <DialogContent className="max-w-md">
@@ -496,16 +539,87 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
   }
 
   const onDragEnd = (result: DropResult) => {
-    const { source, destination } = result;
-    if (!destination || source.droppableId !== destination.droppableId) {
+    const { source, destination, draggableId, type } = result;
+
+    if (!destination) return;
+
+    if (type === 'group-card') {
+      if (source.droppableId !== destination.droppableId) return;
+      const allGroups = appSettings.adminGroups;
+      const [movedItem] = allGroups.splice(source.index, 1);
+      allGroups.splice(destination.index, 0, movedItem);
+      updateAppSettings({ adminGroups: allGroups });
       return;
     }
-    
-    const allGroups = appSettings.adminGroups;
-    const [movedItem] = allGroups.splice(source.index, 1);
-    allGroups.splice(destination.index, 0, movedItem);
-    
-    updateAppSettings({ adminGroups: allGroups });
+
+    if (type === 'user-card') {
+      const userId = draggableId.replace('user-', '');
+      const sourceDroppableId = source.droppableId;
+      const destinationDroppableId = destination.droppableId;
+        
+      if (sourceDroppableId === destinationDroppableId) return;
+
+      const user = users.find(u => u.userId === userId);
+      if (!user) return;
+        
+      if (destinationDroppableId === 'admins-card-droppable') {
+        if (user.isAdmin) {
+          toast({ title: 'No Change', description: `${user.displayName} is already an Admin.` });
+          return;
+        }
+            
+        let newRoles = [...(user.roles || [])];
+        const sourceGroupId = sourceDroppableId.replace('group-content-', '');
+        const sourceGroup = appSettings.adminGroups.find(g => g.id === sourceGroupId);
+        if(sourceGroup) {
+          newRoles = newRoles.filter(r => r !== sourceGroup.name);
+        }
+            
+        updateUser(user.userId, { isAdmin: true, roles: newRoles });
+        toast({ title: 'Admin Promoted', description: `${user.displayName} is now an Admin.` });
+        return;
+      }
+
+      if (destinationDroppableId.startsWith('group-content-')) {
+        const destGroupId = destinationDroppableId.replace('group-content-', '');
+        const destGroup = appSettings.adminGroups.find(g => g.id === destGroupId);
+        if (!destGroup) return;
+
+        if ((user.roles || []).includes(destGroup.name)) {
+          toast({ title: 'No Change', description: `${user.displayName} is already in the "${destGroup.name}" group.` });
+          return;
+        }
+
+        let newRoles = [...(user.roles || [])];
+        const sourceGroupId = sourceDroppableId.replace('group-content-', '');
+        const sourceGroup = appSettings.adminGroups.find(g => g.id === sourceGroupId);
+        if (sourceGroup) {
+          newRoles = newRoles.filter(r => r !== sourceGroup.name);
+        }
+        newRoles.push(destGroup.name);
+
+        updateUser(user.userId, { roles: newRoles });
+        toast({ title: 'User Moved', description: `${user.displayName} moved to "${destGroup.name}".` });
+        return;
+      }
+
+      if (destinationDroppableId.startsWith('delete-dropzone-')) {
+        const destGroupId = destinationDroppableId.replace('delete-dropzone-', '');
+        const sourceGroupId = sourceDroppableId.replace('group-content-', '');
+            
+        if (destGroupId !== sourceGroupId) {
+          toast({ title: 'Invalid Action', description: 'Can only remove a user from their own group.' });
+          return;
+        }
+            
+        const group = appSettings.adminGroups.find(g => g.id === destGroupId);
+        if (!group) return;
+
+        const newRoles = (user.roles || []).filter(r => r !== group.name);
+        updateUser(user.userId, { roles: newRoles });
+        toast({ title: 'User Removed', description: `${user.displayName} removed from "${group.name}".` });
+      }
+    }
   };
   
   return (
@@ -539,7 +653,7 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
         </div>
         
         <DragDropContext onDragEnd={onDragEnd}>
-            <StrictModeDroppable droppableId="admin-groups-list">
+            <StrictModeDroppable droppableId="admin-groups-list" type="group-card">
               {(provided) => (
                   <div ref={provided.innerRef} {...provided.droppableProps} className="flex flex-wrap -m-3">
                       <div className="w-full md:w-1/2 p-3">
@@ -551,22 +665,31 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                               </div>
                               <CardDescription>Assign or revoke Admin privileges. This is the highest level of access.</CardDescription>
                             </CardHeader>
-                            <CardContent className="space-y-4">
-                              {adminUsers.map(user => (
-                                <UserAssignmentCard 
-                                  key={user.userId} 
-                                  user={user} 
-                                  onRemove={handleAdminToggle}
-                                  isGroupAdmin={false}
-                                  canRemove={adminUsers.length > 1}
-                                />
-                              ))}
-                            </CardContent>
+                            <StrictModeDroppable droppableId="admins-card-droppable" type="user-card">
+                              {(provided, snapshot) => (
+                                <CardContent 
+                                  ref={provided.innerRef}
+                                  {...provided.droppableProps}
+                                  className={cn("space-y-4", snapshot.isDraggingOver && "bg-accent/50 ring-2 ring-accent ring-inset rounded-b-lg")}
+                                >
+                                  {adminUsers.map(user => (
+                                    <UserAssignmentCard 
+                                      key={user.userId} 
+                                      user={user} 
+                                      onRemove={handleAdminToggle}
+                                      isGroupAdmin={false}
+                                      canRemove={adminUsers.length > 1}
+                                    />
+                                  ))}
+                                  {provided.placeholder}
+                                </CardContent>
+                              )}
+                            </StrictModeDroppable>
                           </Card>
                       </div>
 
                     {appSettings.adminGroups.map((group, index) => (
-                      <Draggable key={group.id} draggableId={group.id} index={index}>
+                      <Draggable key={group.id} draggableId={group.id} index={index} type="group-card">
                         {(provided) => (
                           <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} className="w-full md:w-1/2 p-3">
                             <AdminGroupCard group={group} users={users} onUpdate={handleUpdateAdminGroup} onDelete={() => handleDeleteAdminGroup(group.id)} />
@@ -1448,3 +1571,5 @@ const AdminPageSkeleton = () => (
       </div>
     </div>
 );
+
+    
