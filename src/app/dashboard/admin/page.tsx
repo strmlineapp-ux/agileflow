@@ -431,7 +431,6 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
       return;
     }
     
-    // Reordering logic
     const allGroups = appSettings.adminGroups;
     const [movedItem] = allGroups.splice(source.index, 1);
     allGroups.splice(destination.index, 0, movedItem);
@@ -453,38 +452,38 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
             </Button>
         </div>
         
-        <div className="flex flex-wrap -m-3">
-          <div className="w-full md:w-1/2 p-3">
-            <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <CardTitle>Admins</CardTitle>
-                    <TooltipProvider>
-                      <Tooltip>
-                          <TooltipTrigger asChild><AddUserToGroupButton usersToAdd={nonAdminUsers} onAdd={handleAdminToggle} groupName="Admin" /></TooltipTrigger>
-                          <TooltipContent>Assign User</TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                  <CardDescription>Assign or revoke Admin privileges. This is the highest level of access.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {adminUsers.map(user => (
-                    <UserAssignmentCard 
-                      key={user.userId} 
-                      user={user} 
-                      onRemove={handleAdminToggle}
-                      isGroupAdmin={false}
-                      canRemove={adminUsers.length > 1}
-                    />
-                  ))}
-                </CardContent>
-              </Card>
-          </div>
-          <DragDropContext onDragEnd={onDragEnd}>
-              <StrictModeDroppable droppableId="admin-groups-list" direction="vertical">
-                {(provided) => (
-                  <div ref={provided.innerRef} {...provided.droppableProps} className="contents">
+        <DragDropContext onDragEnd={onDragEnd}>
+            <StrictModeDroppable droppableId="admin-groups-list" direction="vertical">
+              {(provided) => (
+                  <div ref={provided.innerRef} {...provided.droppableProps} className="flex flex-wrap -m-3">
+                      <div className="w-full md:w-1/2 p-3">
+                        <Card>
+                            <CardHeader>
+                              <div className="flex items-center gap-2">
+                                <CardTitle>Admins</CardTitle>
+                                <TooltipProvider>
+                                  <Tooltip>
+                                      <TooltipTrigger asChild><AddUserToGroupButton usersToAdd={nonAdminUsers} onAdd={handleAdminToggle} groupName="Admin" /></TooltipTrigger>
+                                      <TooltipContent>Assign User</TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              </div>
+                              <CardDescription>Assign or revoke Admin privileges. This is the highest level of access.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                              {adminUsers.map(user => (
+                                <UserAssignmentCard 
+                                  key={user.userId} 
+                                  user={user} 
+                                  onRemove={handleAdminToggle}
+                                  isGroupAdmin={false}
+                                  canRemove={adminUsers.length > 1}
+                                />
+                              ))}
+                            </CardContent>
+                          </Card>
+                      </div>
+
                     {appSettings.adminGroups.map((group, index) => (
                       <Draggable key={group.id} draggableId={group.id} index={index}>
                         {(provided) => (
@@ -496,10 +495,9 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                     ))}
                     {provided.placeholder}
                   </div>
-                )}
-              </StrictModeDroppable>
-          </DragDropContext>
-        </div>
+              )}
+            </StrictModeDroppable>
+        </DragDropContext>
           
           <Dialog open={is2faDialogOpen} onOpenChange={(isOpen) => !isOpen && close2faDialog()}>
             <DialogContent className="max-w-sm">
@@ -870,29 +868,6 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
     const titleInputRef = useRef<HTMLInputElement>(null);
     const [draggingItemId, setDraggingItemId] = useState<string | null>(null);
 
-    const { pinnedTop, draggablePages, pinnedBottom } = useMemo(() => {
-        const pinnedTop: AppPage[] = [];
-        const draggablePages: AppPage[] = [];
-        const pinnedBottom: AppPage[] = [];
-        
-        const topPinnedIds = ['page-admin-management'];
-        const bottomPinnedIds = ['page-notifications', 'page-settings'];
-
-        appSettings.pages.forEach(page => {
-            if (topPinnedIds.includes(page.id)) {
-                pinnedTop.push(page);
-            } else if (bottomPinnedIds.includes(page.id)) {
-                pinnedBottom.push(page);
-            } else {
-                draggablePages.push(page);
-            }
-        });
-        
-        pinnedBottom.sort((a, b) => bottomPinnedIds.indexOf(a.id) - bottomPinnedIds.indexOf(b.id));
-
-        return { pinnedTop, draggablePages, pinnedBottom };
-    }, [appSettings.pages]);
-    
     useEffect(() => {
         if (isEditingTitle) titleInputRef.current?.focus();
     }, [isEditingTitle]);
@@ -928,8 +903,15 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
             associatedTabs: [],
             access: { users: [], teams: [], adminGroups: [] }
         };
-        const newDraggablePages = [...draggablePages, newPage];
-        const newPages = [...pinnedTop, ...newDraggablePages, ...pinnedBottom];
+        
+        const newPages = [...appSettings.pages];
+        const lastPinnedIndex = newPages.findLastIndex(p => ['page-notifications', 'page-settings'].includes(p.id));
+        if (lastPinnedIndex !== -1) {
+            newPages.splice(lastPinnedIndex, 0, newPage);
+        } else {
+            newPages.push(newPage);
+        }
+        
         updateAppSettings({ pages: newPages });
     };
 
@@ -956,11 +938,9 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                     path: newPath,
                 };
                 
-                const originalIndex = draggablePages.findIndex(p => p.id === draggableId);
-                const newDraggablePages = [...draggablePages];
-                newDraggablePages.splice(originalIndex + 1, 0, newPage);
+                const newPages = [...appSettings.pages];
+                newPages.splice(source.index + 1, 0, newPage);
     
-                const newPages = [...pinnedTop, ...newDraggablePages, ...pinnedBottom];
                 updateAppSettings({ pages: newPages });
                 toast({ title: 'Page Duplicated', description: `A copy of "${pageToDuplicate.name}" was created.` });
             }
@@ -968,12 +948,11 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
         }
     
         if (destination.droppableId === 'draggable-pages-list') {
-            const reorderedDraggablePages = Array.from(draggablePages);
-            const [reorderedItem] = reorderedDraggablePages.splice(source.index, 1);
-            reorderedDraggablePages.splice(destination.index, 0, reorderedItem);
+            const reorderedPages = Array.from(appSettings.pages);
+            const [movedItem] = reorderedPages.splice(source.index, 1);
+            reorderedPages.splice(destination.index, 0, movedItem);
             
-            const newPages = [...pinnedTop, ...reorderedDraggablePages, ...pinnedBottom];
-            updateAppSettings({ pages: newPages });
+            updateAppSettings({ pages: reorderedPages });
         }
     };
 
@@ -1014,22 +993,17 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                     </StrictModeDroppable>
                 </div>
                 
-                <div className="flex flex-wrap -m-3">
-                    {pinnedTop.map(page => (
-                        <div key={page.id} className="w-full md:w-1/2 p-3 opacity-70">
-                            <PageCard page={page} onUpdate={handleUpdatePage} onDelete={handleDeletePage} isPinned />
-                        </div>
-                    ))}
-                    
-                    <StrictModeDroppable droppableId="draggable-pages-list" direction="vertical">
-                        {(provided) => (
-                            <div
-                                ref={provided.innerRef}
-                                {...provided.droppableProps}
-                                className="contents" // Use 'contents' to allow flex-wrap from parent
-                            >
-                                {draggablePages.map((page, index) => (
-                                    <Draggable key={page.id} draggableId={page.id} index={index}>
+                <StrictModeDroppable droppableId="draggable-pages-list" direction="vertical">
+                    {(provided) => (
+                        <div
+                            ref={provided.innerRef}
+                            {...provided.droppableProps}
+                            className="flex flex-wrap -m-3"
+                        >
+                            {appSettings.pages.map((page, index) => {
+                                const isPinned = ['page-admin-management', 'page-notifications', 'page-settings'].includes(page.id);
+                                return (
+                                    <Draggable key={page.id} draggableId={page.id} index={index} isDragDisabled={isPinned}>
                                         {(provided, snapshot) => (
                                             <div
                                                 ref={provided.innerRef}
@@ -1037,6 +1011,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                                                 {...provided.dragHandleProps}
                                                 className={cn(
                                                     "w-full md:w-1/2 p-3",
+                                                    isPinned && "opacity-70",
                                                     draggingItemId === page.id && "opacity-50"
                                                 )}
                                             >
@@ -1045,23 +1020,17 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                                                     onUpdate={handleUpdatePage}
                                                     onDelete={handleDeletePage}
                                                     isDragging={snapshot.isDragging}
-                                                    isPinned={false}
+                                                    isPinned={isPinned}
                                                 />
                                             </div>
                                         )}
                                     </Draggable>
-                                ))}
-                                {provided.placeholder}
-                            </div>
-                        )}
-                    </StrictModeDroppable>
-
-                    {pinnedBottom.map(page => (
-                        <div key={page.id} className="w-full md:w-1/2 p-3 opacity-70">
-                            <PageCard page={page} onUpdate={handleUpdatePage} onDelete={handleDeletePage} isPinned />
+                                );
+                            })}
+                            {provided.placeholder}
                         </div>
-                    ))}
-                </div>
+                    )}
+                </StrictModeDroppable>
             </div>
         </DragDropContext>
     );
@@ -1327,5 +1296,7 @@ const AdminPageSkeleton = () => (
     
 
 
+
+    
 
     
