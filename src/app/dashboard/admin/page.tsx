@@ -466,13 +466,13 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
             <StrictModeDroppable droppableId="admin-groups-list">
               {(provided) => (
                 <div 
-                  className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
+                  className="flex flex-wrap -m-3"
                   ref={provided.innerRef}
                   {...provided.droppableProps}
                 >
                   <Draggable draggableId="admins-card-static" index={0} isDragDisabled={true}>
                     {(provided) => (
-                      <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
+                      <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} className="w-full md:w-1/2 xl:w-1/3 p-3">
                         <Card>
                           <CardHeader>
                             <div className="flex items-center gap-2">
@@ -505,7 +505,7 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                   {appSettings.adminGroups.map((group, index) => (
                     <Draggable key={group.id} draggableId={group.id} index={index + 1}>
                       {(provided) => (
-                        <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
+                        <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} className="w-full md:w-1/2 xl:w-1/3 p-3">
                           <AdminGroupCard
                             group={group}
                             rank={index + 1}
@@ -1345,3 +1345,5 @@ const AdminPageSkeleton = () => (
       </div>
     </div>
 );
+
+    
