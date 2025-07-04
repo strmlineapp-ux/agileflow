@@ -466,7 +466,7 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
             <StrictModeDroppable droppableId="admin-groups-list">
               {(provided) => (
                 <div 
-                  className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 items-start"
+                  className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
                   ref={provided.innerRef}
                   {...provided.droppableProps}
                 >
@@ -1338,7 +1338,7 @@ const AdminPageSkeleton = () => (
     <div className="flex flex-col gap-8">
       <Skeleton className="h-10 w-72" />
       <Skeleton className="h-10 w-full" />
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 items-start">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         <Skeleton className="h-64 w-full" />
         <Skeleton className="h-64 w-full" />
         <Skeleton className="h-64 w-full" />
