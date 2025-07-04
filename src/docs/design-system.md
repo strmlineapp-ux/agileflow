@@ -206,7 +206,7 @@ This is the single source of truth for indicating user interaction state across 
 - **Toaster Notifications**: Used for providing brief, non-blocking feedback for user actions (e.g., "Badge Deleted").
     - **Appearance**: Simple, clean, and without a close button. They have a `cursor-pointer` style to indicate they can be dismissed.
     - **Behavior**:
-        - Automatically dismisses after a short period (e.g., 5 seconds).
+        - Automatically dismisses after a short period (e.g., 2 seconds).
         - Can be dismissed instantly by clicking anywhere on the notification.
 
 ### Subtle Visual Cues
@@ -216,6 +216,7 @@ This is the single source of truth for indicating user interaction state across 
     - **Appearance**: A circular badge (e.g., `h-5 w-5`) with a `border-2` of the parent element's background color (e.g., `border-card` or `border-background`) to create a "punched out" effect. The icon inside should be sized appropriately (e.g., `font-size: 14px` or similar, depending on container).
     - **Placement**: Typically positioned on the bottom-right or top-right corner of the parent element.
     - **Application**: Used for displaying a user's admin group on their avatar, a shared group status on a role icon, or a `share` icon on a shared Badge.
+
 
 
 
