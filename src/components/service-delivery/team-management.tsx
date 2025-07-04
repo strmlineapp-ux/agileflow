@@ -122,7 +122,7 @@ function TeamCard({
     const isSharedWithOtherTeams = team.sharedTeamIds && team.sharedTeamIds.length > 0;
 
     return (
-        <Card className={cn("flex flex-col", isSharing && "ring-2 ring-primary ring-offset-2 ring-offset-background")}>
+        <Card className={cn("flex flex-col", isSharing && "ring-1 ring-primary")}>
             <CardHeader>
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -406,7 +406,7 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
                         {...provided.droppableProps}
                         className={cn(
                             "rounded-full transition-all p-0.5",
-                            snapshot.isDraggingOver && "ring-2 ring-primary ring-offset-2 bg-accent"
+                            snapshot.isDraggingOver && "ring-1 ring-primary ring-offset-1 bg-accent"
                         )}
                     >
                          <TooltipProvider>
