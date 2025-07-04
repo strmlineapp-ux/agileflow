@@ -498,12 +498,17 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                     <div
                         {...provided.droppableProps}
                         ref={provided.innerRef}
-                        className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                        className="flex flex-wrap -m-3"
                     >
                         {appSettings.adminGroups.map((group, index) => (
                             <Draggable key={group.id} draggableId={group.id} index={index}>
                                 {(provided) => (
-                                    <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
+                                    <div 
+                                        ref={provided.innerRef} 
+                                        {...provided.draggableProps} 
+                                        {...provided.dragHandleProps}
+                                        className="p-3 w-full md:w-1/2"
+                                    >
                                         <AdminGroupCard
                                             group={group}
                                             rank={index + 1}
@@ -1044,8 +1049,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                                   ref={provided.innerRef}
                                   {...provided.droppableProps}
                                   className={cn(
-                                    "space-y-6 rounded-lg border-2 border-dashed p-4 transition-colors",
-                                    snapshot.isDraggingOver ? "border-primary bg-accent" : "border-transparent"
+                                    "space-y-6 rounded-lg p-4 transition-colors",
                                   )}
                                 >
                                     {columnOnePages.map((page, index) => (
@@ -1074,8 +1078,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                                   ref={provided.innerRef}
                                   {...provided.droppableProps}
                                   className={cn(
-                                    "space-y-6 rounded-lg border-2 border-dashed p-4 transition-colors",
-                                    snapshot.isDraggingOver ? "border-primary bg-accent" : "border-transparent"
+                                    "space-y-6 rounded-lg p-4 transition-colors",
                                   )}
                                 >
                                     {columnTwoPages.map((page, index) => (
