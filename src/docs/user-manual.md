@@ -1,4 +1,5 @@
 
+
 # AgileFlow User Manual
 
 Welcome to AgileFlow, your team's central hub for managing tasks, scheduling events, and coordinating production workflows. This guide will walk you through the key features of the app.
@@ -89,7 +90,7 @@ This is the central control panel for configuring the application itself.
 ### 8.2 Service Delivery Management (`/dashboard/service-delivery`)
 This is the central hub for global application settings.
 - **Manage Calendars**: Create, edit, or delete shared calendars using our intuitive card-based system. You can reorder calendars by dragging and dropping them, or instantly duplicate any calendar by dragging it onto the "Add New Calendar" (+) button.
-- **Manage Teams**: Create new teams, edit existing team details (name, icon), and assign members and managers.
+- **Manage Teams**: Create new teams, edit existing team details, and manage members. To add a user to a team, you can either click the `add_circle` icon on the team's card or simply drag a user from one team card and drop them onto another. Dropping a user on the delete icon of a team card will remove them from that team.
 
 ### 8.3 Team Management (`/dashboard/teams/[teamId]`)
 This page is for managing the specifics of an individual team.
