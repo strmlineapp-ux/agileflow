@@ -119,11 +119,18 @@ function CalendarCard({ calendar, onUpdate, onDelete }: { calendar: SharedCalend
           <div className="flex items-center gap-3">
              <div className="relative">
                 <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
-                    <PopoverTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-9 w-9 text-3xl">
-                            <GoogleSymbol name={calendar.icon} />
-                        </Button>
-                    </PopoverTrigger>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <PopoverTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-9 w-9 text-2xl">
+                                        <GoogleSymbol name={calendar.icon} />
+                                    </Button>
+                                </PopoverTrigger>
+                            </TooltipTrigger>
+                            <TooltipContent><p>Change Icon</p></TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
                     <PopoverContent className="w-80 p-0">
                         <div className="flex items-center gap-1 p-2 border-b">
                             {!isSearching ? (
@@ -148,7 +155,14 @@ function CalendarCard({ calendar, onUpdate, onDelete }: { calendar: SharedCalend
                     </PopoverContent>
                 </Popover>
                 <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                    <PopoverTrigger asChild><div className="absolute -bottom-1 -right-0 h-4 w-4 rounded-full border-2 border-card cursor-pointer" style={{ backgroundColor: calendar.color }} /></PopoverTrigger>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <PopoverTrigger asChild><div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full border-2 border-card cursor-pointer" style={{ backgroundColor: calendar.color }} /></PopoverTrigger>
+                            </TooltipTrigger>
+                            <TooltipContent><p>Change Color</p></TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
                     <PopoverContent className="w-auto p-2">
                     <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdate(calendar.id, { color: c }); setIsColorPopoverOpen(false);}}/>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={calendar.color} onChange={(e) => onUpdate(calendar.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
                     </PopoverContent>
