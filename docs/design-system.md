@@ -88,9 +88,9 @@ This is the consistent reference pattern for allowing a user to change both an i
 ---
 
 ### 7. Entity Sharing & Linking
-This pattern describes how a single entity (like a Badge or Badge Collection) can exist in multiple contexts while maintaining a single source of truth.
+This pattern describes how a single entity (like a Badge or Badge Collection) can exist in multiple contexts while maintaining a single source of truth. The user performs a **"Share"** action, which creates a new **"Linked"** instance of the resource, not an independent copy.
 
-- **Mechanism**: Implemented via an explicit "Share" action to link teams, or by dragging a badge into a new collection to create a linked instance. This creates a shared instance, not a copy.
+- **Mechanism**: Implemented via an explicit "Share" action to link teams, or by dragging a badge into a new collection to create a linked instance.
 - **Visual Cues**:
   - **Owned & Shared Externally (`upload`)**: An item created by the current team but also being used in at least one other team is marked with an `upload` icon overlay. This indicates it is the "source of truth." **The color of this icon badge matches the owner team's color.**
   - **Internally Linked (`change_circle`)**: An item that is used in multiple places within the *same* team (e.g., a badge appearing in two collections) is marked with a `change_circle` icon overlay on its linked instances. The original instance does not get this icon unless it is also shared externally. **The color of this icon badge matches the owner team's color.**
@@ -106,43 +106,52 @@ This pattern describes how a single entity (like a Badge or Badge Collection) ca
 
 ---
 
-### 8. Drag-to-Duplicate
-This pattern provides a fast, intuitive way for users to duplicate complex entities using a drag-and-drop gesture, significantly speeding up configuration workflows.
+### 8. Draggable Card Management (The Gold Standard)
+This is the application's perfected, gold-standard pattern for managing a collection of entities displayed as cards. It provides a fluid, intuitive, and grid-responsive way for users to reorder and duplicate items.
 
--   **Trigger**: Dragging a configured entity (e.g., a "Page" card, "Calendar" card, or "Badge").
--   **Interaction**: A designated "Add New" icon or button acts as a drop zone. While an entity is being dragged, this drop zone becomes highlighted (e.g., with a colored ring) to indicate it can accept a drop.
--   **Behavior**:
-    -   Dropping the entity onto the zone creates a deep, independent copy of the original.
-    -   The new entity is given a new unique ID and a modified name (e.g., with `(Copy)` appended) to distinguish it from the original.
-    -   The new entity is typically placed immediately after the original in the list.
--   **Application**: Used for duplicating Pages, Calendars, Teams, and Badges to serve as a starting point for a new configuration.
+-   **Layout**: Entities are presented in a responsive grid of cards (`<Card>`).
+-   **Draggable & Pinned States**:
+    -   **Draggable Cards**: Most cards can be freely reordered within the grid.
+    -   **Pinned Cards**: Certain cards are designated as "pinned" and cannot be dragged. They act as fixed anchors in the layout.
+-   **Reordering with Guardrails**:
+    -   **Interaction**: Users can drag any non-pinned card and drop it between other non-pinned cards to change its order. The grid reflows smoothly to show the drop position.
+    -   **Top Guardrail**: If a card is dropped *before* the first pinned item, it is automatically repositioned to be *after* it.
+    -   **Bottom Guardrail**: If a card is dropped *after* the last pinned item, it is automatically repositioned to be *before* it. This ensures the integrity of the pinned items.
+-   **Drop Zone Highlighting**: Drop zones provide visual feedback when an item is dragged over them. To maintain a clean UI, highlights primarily use rings without background fills, except for duplication which is a special case.
+    -   **Standard Zones (Reordering, Moving):** The drop area is highlighted with a `1px` inset, **colorless** ring using the standard border color (`ring-1 ring-border ring-inset`).
+    -   **Destructive Zones (Deleting):** The drop area is highlighted with a `1px` ring in the destructive theme color (`ring-1 ring-destructive`).
+    -   **Duplication Zones:** The drop zone is highlighted with both a `1px` ring and a background fill (`ring-1 ring-primary bg-accent`) to signal a unique creation action.
+-   **Drag-to-Duplicate**:
+    -   **Interaction**: A designated "Add New" icon (`<Button>`) acts as a drop zone. While a card is being dragged, this zone becomes highlighted to indicate it can accept a drop.
+    -   **Behavior**: Dropping any card (pinned or not) onto this zone creates a deep, independent copy of the original. The new card is given a unique ID, a modified name (e.g., with `(Copy)`), and is placed immediately after the original in the list.
+-   **Application**: This is the required pattern for managing Pages, Calendars, and Teams.
 
 ---
 
 ### 9. Compact Action Dialog
-This is a minimalist dialog for focused actions, such as entering a code or a short piece of information, where a full-screen modal is unnecessary.
+This is a minimalist dialog for focused actions, such as entering a code or a short piece of information, or for low-risk confirmations where a full-screen modal is unnecessary.
 
-- **Component**: Uses the standard `<Dialog>` component to allow dismissal by clicking the overlay.
+- **Component**: Uses the standard `<Dialog>` component, which allows the user to dismiss the action by clicking the overlay or pressing 'Escape'.
 - **Appearance**:
     - No footer buttons ("Cancel", "Save").
-    - The primary action (e.g., Save, Verify) is represented by an icon-only button (e.g., `<GoogleSymbol name="check" />`) positioned in the top-right corner of the dialog content.
-    - The content is focused and minimal, often using other compact patterns like "Text-based Inputs".
+    - The primary action (e.g., Save, Verify, Delete) is represented by a single, icon-only button (e.g., `<GoogleSymbol name="check" />`) positioned in the top-right corner of the dialog content.
+    - The content is focused and minimal, often using other compact patterns like "Text-based Inputs" for a clean interface.
 - **Behavior**:
-    - Clicking the action icon performs the primary action (e.g., saves or verifies).
-    - Clicking the overlay or pressing 'Escape' dismisses the dialog without saving.
-- **Application**: Used for Two-Factor Authentication, quick edits that need slightly more context than an inline editor, or simple forms.
+    - Clicking the action icon in the corner performs the primary action (e.g., saves or verifies the input).
+    - Clicking the overlay dismisses the dialog without performing the action.
+- **Application**: Used for Two-Factor Authentication, quick edits, simple forms, and for confirming lower-risk destructive actions, such as deleting a **Page**, an **Admin Group**, or unlinking a shared Badge.
 
 ---
 
 ### 10. Compact Deletion Dialog
-When a destructive action requires user confirmation (like deleting a shared resource), the standard `AlertDialog` component is used. This is distinct from the `Compact Action Dialog` as it requires an explicit button press to dismiss.
+When a **high-risk destructive action** requires user confirmation (like deleting a **Team** or **Calendar**), the standard `AlertDialog` component is used. This is distinct from the `Compact Action Dialog` as it is intentionally more difficult to dismiss.
 
 - **Appearance**: A modal dialog centered on the screen, overlaying the content.
 - **Interaction**:
     - The dialog contains a clear title, a description of the consequences, and explicit "Cancel" and "Continue" (or similar) buttons in the footer.
     - The "Continue" button for the destructive action is styled with the `destructive` variant to draw attention.
-- **Behavior**: Clicking "Cancel" closes the dialog with no action taken. Clicking "Continue" performs the destructive action. This dialog **cannot** be dismissed by clicking the overlay.
-- **Application**: Used for confirming the deletion of any significant entity, such as Admin Groups, Calendars, Teams, etc.
+- **Behavior**: Clicking "Cancel" closes the dialog with no action taken. Clicking "Continue" performs the destructive action. This dialog **cannot** be dismissed by clicking the overlay, forcing an explicit choice.
+- **Application**: Used for confirming the deletion of **major entities** where accidental dismissal could be problematic, such as Calendars or Teams.
 
 ---
 
@@ -154,6 +163,17 @@ When a destructive action requires user confirmation (like deleting a shared res
   - The active tab is indicated by colored text (`text-primary`).
   - The entire tab list has a subtle divider underneath it, separating it from the content below.
 - **Application**: Used for all main page-level tab navigation, such as on the Admin, Service Delivery, and Team Management pages.
+
+---
+
+### 12. Seamless Single-Tab Pages
+
+- **Description**: This pattern ensures a streamlined user experience for pages that contain only a single content tab. Instead of displaying a redundant page header *and* a tab header, the tab's content becomes the page itself.
+- **Behavior**:
+  - When a page is configured with exactly one associated tab, the main page layout does not render its own title or icon.
+  - The single tab's component is rendered directly within the main content area.
+  - The tab's component is responsible for displaying the page's title and icon, effectively promoting its header to become the page's header.
+- **Application**: Applied automatically to any page in the dynamic routing system (`/dashboard/[...page]`) that meets the single-tab condition. This creates a more integrated and less cluttered UI.
 
 ## Visual & Theming Elements
 
@@ -190,7 +210,7 @@ This is the single source of truth for indicating user interaction state across 
 - **Toaster Notifications**: Used for providing brief, non-blocking feedback for user actions (e.g., "Badge Deleted").
     - **Appearance**: Simple, clean, and without a close button. They have a `cursor-pointer` style to indicate they can be dismissed.
     - **Behavior**:
-        - Automatically dismisses after a short period (e.g., 5 seconds).
+        - Automatically dismisses after a short period (e.g., 2 seconds).
         - Can be dismissed instantly by clicking anywhere on the notification.
 
 ### Subtle Visual Cues
@@ -200,4 +220,12 @@ This is the single source of truth for indicating user interaction state across 
     - **Appearance**: A circular badge (e.g., `h-5 w-5`) with a `border-2` of the parent element's background color (e.g., `border-card` or `border-background`) to create a "punched out" effect. The icon inside should be sized appropriately (e.g., `font-size: 14px` or similar, depending on container).
     - **Placement**: Typically positioned on the bottom-right or top-right corner of the parent element.
     - **Application**: Used for displaying a user's admin group on their avatar, a shared group status on a role icon, or a `share` icon on a shared Badge.
+
+
+
+
+
+
+
+
 
