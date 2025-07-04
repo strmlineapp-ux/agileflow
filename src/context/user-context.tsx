@@ -39,6 +39,7 @@ interface UserContextType {
   events: Event[];
   addEvent: (newEventData: Omit<Event, 'eventId'>) => Promise<void>;
   updateEvent: (eventId: string, eventData: Partial<Omit<Event, 'eventId'>>) => Promise<void>;
+  deleteEvent: (eventId: string) => Promise<void>;
   locations: BookableLocation[];
   allBookableLocations: BookableLocation[];
   addLocation: (locationName: string) => Promise<void>;
@@ -235,6 +236,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       )
     );
   }, []);
+
+  const deleteEvent = useCallback(async (eventId: string) => {
+    await simulateApi();
+    setEvents(currentEvents => currentEvents.filter(e => e.eventId !== eventId));
+  }, []);
   
   const addLocation = useCallback(async (locationName: string) => {
       const newLocation: BookableLocation = {
@@ -284,9 +290,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const provider = new GoogleAuthProvider();
     provider.addScope('https://www.googleapis.com/auth/calendar.readonly');
     try {
-      await signInWithPopup(auth, provider);
-      // In a real app, you would send the token to your backend to securely store it.
-      await updateUser(userId, { googleCalendarLinked: true });
+      // In a real app, you would use signInWithPopup to get credentials
+      // await signInWithPopup(auth, provider);
+      // For this prototype, we will just simulate a successful link.
+      await simulateApi(1000); 
+
+      await updateUser(userId, { googleCalendarLinked: true, accountType: 'Full' });
       toast({
         title: "Success!",
         description: "Your Google Calendar has been successfully connected.",
@@ -348,6 +357,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     events,
     addEvent,
     updateEvent,
+    deleteEvent,
     locations,
     allBookableLocations,
     addLocation,
@@ -361,7 +371,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     calendars, events, locations, allBookableLocations, appSettings,
     addTeam, updateTeam, deleteTeam, setNotifications, setUserStatusAssignments, addUser,
     updateUser, linkGoogleCalendar, reorderCalendars, addCalendar, updateCalendar, deleteCalendar,
-    addEvent, updateEvent, addLocation, deleteLocation,
+    addEvent, updateEvent, deleteEvent, addLocation, deleteLocation,
     getPriorityDisplay, updateAppSettings, updateAppTab
   ]);
 
