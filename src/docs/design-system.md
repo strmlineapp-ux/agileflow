@@ -117,8 +117,12 @@ This is the application's perfected, gold-standard pattern for managing a collec
     -   **Interaction**: Users can drag any non-pinned card and drop it between other non-pinned cards to change its order. The grid reflows smoothly to show the drop position.
     -   **Top Guardrail**: If a card is dropped *before* the first pinned item, it is automatically repositioned to be *after* it.
     -   **Bottom Guardrail**: If a card is dropped *after* the last pinned item, it is automatically repositioned to be *before* it. This ensures the integrity of the pinned items.
+-   **Drop Zone Highlighting**: Drop zones provide visual feedback when an item is dragged over them. To maintain a clean UI, highlights primarily use rings without background fills, except for duplication which is a special case.
+    -   **Standard Zones (Reordering, Moving):** The drop area is highlighted with a `2px` ring in the primary theme color (`ring-2 ring-primary`).
+    -   **Destructive Zones (Deleting):** The drop area is highlighted with a `2px` ring in the destructive theme color (`ring-2 ring-destructive`).
+    -   **Duplication Zones:** The drop zone is highlighted with both a ring and a background fill (`ring-2 ring-primary bg-accent`) to signal a unique creation action.
 -   **Drag-to-Duplicate**:
-    -   **Interaction**: A designated "Add New" icon (`<Button>`) acts as a drop zone. While a card is being dragged, this zone becomes highlighted (e.g., with a colored ring) to indicate it can accept a drop.
+    -   **Interaction**: A designated "Add New" icon (`<Button>`) acts as a drop zone. While a card is being dragged, this zone becomes highlighted to indicate it can accept a drop.
     -   **Behavior**: Dropping any card (pinned or not) onto this zone creates a deep, independent copy of the original. The new card is given a unique ID, a modified name (e.g., with `(Copy)`), and is placed immediately after the original in the list.
 -   **Application**: This is the required pattern for managing Pages, Calendars, and Teams.
 
@@ -216,6 +220,7 @@ This is the single source of truth for indicating user interaction state across 
     - **Appearance**: A circular badge (e.g., `h-5 w-5`) with a `border-2` of the parent element's background color (e.g., `border-card` or `border-background`) to create a "punched out" effect. The icon inside should be sized appropriately (e.g., `font-size: 14px` or similar, depending on container).
     - **Placement**: Typically positioned on the bottom-right or top-right corner of the parent element.
     - **Application**: Used for displaying a user's admin group on their avatar, a shared group status on a role icon, or a `share` icon on a shared Badge.
+
 
 
 

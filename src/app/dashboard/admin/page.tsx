@@ -381,7 +381,7 @@ function AdminGroupCard({
                                 {...provided.droppableProps}
                                 className={cn(
                                     "rounded-full transition-all p-0.5",
-                                    snapshot.isDraggingOver && "bg-destructive/20 ring-2 ring-destructive"
+                                    snapshot.isDraggingOver && "ring-2 ring-destructive"
                                 )}
                             >
                                 <TooltipProvider>
@@ -404,7 +404,7 @@ function AdminGroupCard({
                 <CardContent 
                   ref={provided.innerRef}
                   {...provided.droppableProps}
-                  className={cn("space-y-4", snapshot.isDraggingOver && "bg-accent/50 ring-2 ring-accent ring-inset rounded-b-lg")}
+                  className={cn("space-y-4", snapshot.isDraggingOver && "ring-2 ring-primary ring-inset rounded-b-lg")}
                 >
                   {assignedUsers.map((user, index) => (
                     <UserAssignmentCard 
@@ -568,14 +568,8 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
           return;
         }
             
-        let newRoles = [...(user.roles || [])];
-        const sourceGroupId = sourceDroppableId.replace('group-content-', '');
-        const sourceGroup = appSettings.adminGroups.find(g => g.id === sourceGroupId);
-        if(sourceGroup) {
-          newRoles = newRoles.filter(r => r !== sourceGroup.name);
-        }
-            
-        updateUser(user.userId, { isAdmin: true, roles: newRoles });
+        // When dropped into Admins, the user becomes an admin but retains their group membership.
+        updateUser(user.userId, { isAdmin: true });
         toast({ title: 'Admin Promoted', description: `${user.displayName} is now an Admin.` });
         return;
       }
@@ -670,7 +664,7 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                                 <CardContent 
                                   ref={provided.innerRef}
                                   {...provided.droppableProps}
-                                  className={cn("space-y-4", snapshot.isDraggingOver && "bg-accent/50 ring-2 ring-accent ring-inset rounded-b-lg")}
+                                  className={cn("space-y-4", snapshot.isDraggingOver && "ring-2 ring-primary ring-inset rounded-b-lg")}
                                 >
                                   {adminUsers.map(user => (
                                     <UserAssignmentCard 
