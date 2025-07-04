@@ -16,7 +16,7 @@ import { type AppPage } from '@/types';
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { realUser, viewAsUser, setViewAsUser, users, teams, notifications, appSettings, allRolesAndBadges } = useUser();
+  const { realUser, viewAsUser, setViewAsUser, users, teams, notifications, appSettings, allRolesAndBadges, linkGoogleCalendar } = useUser();
   const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -120,10 +120,16 @@ export function Sidebar() {
                 <TooltipTrigger asChild>
                     <DropdownMenuTrigger asChild>
                         <button className="flex h-9 w-9 items-center justify-center rounded-full md:h-8 md:w-8">
-                             <Avatar className="h-8 w-8">
-                                <AvatarImage src={viewAsUser.avatarUrl} alt={viewAsUser.displayName} data-ai-hint="user avatar" />
-                                <AvatarFallback>{viewAsUser.displayName.slice(0,2).toUpperCase()}</AvatarFallback>
-                            </Avatar>
+                            <div className="relative">
+                                <Avatar className="h-8 w-8">
+                                    <AvatarImage src={viewAsUser.avatarUrl} alt={viewAsUser.displayName} data-ai-hint="user avatar" />
+                                    <AvatarFallback>{viewAsUser.displayName.slice(0,2).toUpperCase()}</AvatarFallback>
+                                </Avatar>
+                                <span className={cn(
+                                    "absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-card",
+                                    viewAsUser.googleCalendarLinked ? "bg-green-500" : "bg-gray-400"
+                                )} />
+                            </div>
                         </button>
                     </DropdownMenuTrigger>
                 </TooltipTrigger>
@@ -171,6 +177,13 @@ export function Sidebar() {
                         <span>Account Settings</span>
                     </Link>
                 </DropdownMenuItem>
+                
+                {realUser.userId === viewAsUser.userId && (
+                  <DropdownMenuItem onSelect={() => linkGoogleCalendar(realUser.userId)} disabled={realUser.googleCalendarLinked}>
+                    <GoogleSymbol name={realUser.googleCalendarLinked ? "link" : "link_off"} className="mr-2 text-lg" />
+                    <span>{realUser.googleCalendarLinked ? "Calendar Linked" : "Link Google Calendar"}</span>
+                  </DropdownMenuItem>
+                )}
 
                 {realUser.isAdmin && (
                   <DropdownMenuSub>
