@@ -274,7 +274,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
 
     if (viewMode === 'detailed') {
       return (
-        <Card className="group">
+        <Card className="group h-full flex flex-col">
             <CardHeader>
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3 flex-1">
@@ -331,7 +331,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                     )}
                 </div>
             </CardHeader>
-            <CardContent className="space-y-4 pt-0">
+            <CardContent className="space-y-4 pt-0 flex-grow">
                  {isEditingDescription && !isSharedPreview ? (
                     <Textarea 
                         ref={descriptionTextareaRef} 
@@ -560,7 +560,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
     }
     
     return (
-        <Card>
+        <Card className="h-full flex flex-col">
             <CardHeader>
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -681,8 +681,8 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                 </div>
                  {collection.description && <CardDescription className="pt-2">{collection.description}</CardDescription>}
             </CardHeader>
-            <CardContent>
-                <StrictModeDroppable droppableId={collection.id} type="badge" isDropDisabled={!isOwned && !isSharedPreview}>
+            <CardContent className="flex-grow">
+                <StrictModeDroppable droppableId={collection.id} type="badge" isDropDisabled={isSharedPreview || !isOwned}>
                     {(provided) => (
                          <div
                             ref={provided.innerRef}
@@ -694,7 +694,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                 collection.viewMode === 'detailed' && "grid grid-cols-1 md:grid-cols-2 gap-4"
                             )}>
                             {collectionBadges.map((badge, index) => (
-                                <Draggable key={`${badge.id}::${collection.id}`} draggableId={`${badge.id}::${collection.id}`} index={index}>
+                                <Draggable key={`${badge.id}::${collection.id}`} draggableId={`${badge.id}::${collection.id}`} index={index} isDragDisabled={isSharedPreview}>
                                     {(provided) => (<div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
                                         <BadgeDisplayItem 
                                             badge={badge} 
@@ -1029,7 +1029,8 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
         const sourceCollectionId = source.droppableId;
         const destCollectionId = destination.droppableId;
 
-        const sourceCollection = [...(team.badgeCollections || []), ...sharedCollectionsFromOthers].find(c => c.id === sourceCollectionId);
+        const allCollections = [...(team.badgeCollections || []), ...sharedCollectionsFromOthers];
+        const sourceCollection = allCollections.find(c => c.id === sourceCollectionId);
         const destCollection = (team.badgeCollections || []).find(c => c.id === destCollectionId);
     
         if (!sourceCollection || !destCollection) return;

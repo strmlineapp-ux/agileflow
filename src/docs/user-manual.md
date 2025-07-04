@@ -94,7 +94,7 @@ This is the central hub for global application settings.
 
 ### 8.3 Team Management (`/dashboard/teams/[teamId]`)
 This page is for managing the specifics of an individual team.
-- **Team Members**: View all members of the team. If you have permission, you can assign and unassign badges to users by clicking on them. You can also click the "Team Badges" label to customize it for your team.
+- **Team Members**: View all members of the team. If you have permission, you can assign and unassign badges to users by clicking on them. Badges are now conveniently grouped by their parent collection. You can also click the "Team Badges" label to customize it for your team.
 - **Badge Management**: Create and manage your team's badge collections in an intuitive, card-based grid.
   - **Sharing**: To make a collection of badges available to all other teams, click the `change_circle` icon on its card.
   - **Using Shared Collections**: Click the `chevron_left` icon in the header to open the Shared Collections panel. From here, you can drag a shared collection onto your main board to link it to your team. You can also drag individual badges from a shared collection and drop them into one of your own collections to create a link to that specific badge.
