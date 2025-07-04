@@ -106,27 +106,21 @@ This pattern describes how a single entity (like a Badge or Badge Collection) ca
 
 ---
 
-### 8. Draggable Card Management (Reordering & Duplication)
-This pattern provides a unified, intuitive way for users to manage lists of complex entities using drag-and-drop, supporting both reordering and duplication.
+### 8. Draggable Card Management (The Gold Standard)
+This is the application's perfected, gold-standard pattern for managing a collection of entities displayed as cards. It provides a fluid, intuitive, and grid-responsive way for users to reorder and duplicate items.
 
-#### Reordering
-- **Trigger**: Clicking and dragging a card within a list.
-- **Interaction**: The dragged card can be moved up or down in the list. Other cards shift to indicate the drop position.
-- **Pinned Items**: Some items in the list may be "pinned" and cannot be moved (e.g., "Admin Management" or "Settings" pages). These items act as fixed boundaries.
-- **Behavior**:
-  - Dropping a card between two other draggable cards reorders the list.
-  - Attempting to drop a card before a pinned item at the top of the list will place it *after* that pinned item.
-  - Attempting to drop a card after a pinned item at the bottom of the list will place it *before* that pinned item.
-- **Application**: Used for reordering sidebar navigation pages.
-
-#### Duplication
-- **Trigger**: Dragging a configured entity (e.g., a "Page" card, "Calendar" card, or "Badge") from the list.
-- **Interaction**: A designated "Add New" icon or button acts as a drop zone. While an entity is being dragged, this drop zone becomes highlighted (e.g., with a colored ring) to indicate it can accept a drop.
-- **Behavior**:
-  - Dropping the entity onto the zone creates a deep, independent copy of the original.
-  - The new entity is given a new unique ID and a modified name (e.g., with `(Copy)` appended) to distinguish it from the original.
-  - The new entity is typically placed immediately after the original in the list.
-- **Application**: Used for duplicating Pages, Calendars, Teams, and Badges to serve as a starting point for a new configuration.
+-   **Layout**: Entities are presented in a responsive grid of cards (`<Card>`).
+-   **Draggable & Pinned States**:
+    -   **Draggable Cards**: Most cards can be freely reordered within the grid.
+    -   **Pinned Cards**: Certain cards are designated as "pinned" and cannot be dragged. They act as fixed anchors in the layout.
+-   **Reordering with Guardrails**:
+    -   **Interaction**: Users can drag any non-pinned card and drop it between other non-pinned cards to change its order. The grid reflows smoothly to show the drop position.
+    -   **Top Guardrail**: If a card is dropped *before* the first pinned item, it is automatically repositioned to be *after* it.
+    -   **Bottom Guardrail**: If a card is dropped *after* the last pinned item, it is automatically repositioned to be *before* it. This ensures the integrity of the pinned items.
+-   **Drag-to-Duplicate**:
+    -   **Interaction**: A designated "Add New" icon (`<Button>`) acts as a drop zone. While a card is being dragged, this zone becomes highlighted (e.g., with a colored ring) to indicate it can accept a drop.
+    -   **Behavior**: Dropping any card (pinned or not) onto this zone creates a deep, independent copy of the original. The new card is given a unique ID, a modified name (e.g., with `(Copy)`), and is placed immediately after the original in the list.
+-   **Application**: This is the required pattern for managing Pages, Calendars, and Teams.
 
 ---
 
@@ -211,4 +205,5 @@ This is the single source of truth for indicating user interaction state across 
     - **Appearance**: A circular badge (e.g., `h-5 w-5`) with a `border-2` of the parent element's background color (e.g., `border-card` or `border-background`) to create a "punched out" effect. The icon inside should be sized appropriately (e.g., `font-size: 14px` or similar, depending on container).
     - **Placement**: Typically positioned on the bottom-right or top-right corner of the parent element.
     - **Application**: Used for displaying a user's admin group on their avatar, a shared group status on a role icon, or a `share` icon on a shared Badge.
+
 
