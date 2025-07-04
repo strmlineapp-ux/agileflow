@@ -68,17 +68,13 @@ The **Notifications** page keeps you informed.
 
 ## 7. Settings & Preferences
 
-### 7.1 User Preferences
-Access your preferences by clicking your avatar in the bottom-left corner of the sidebar.
+Access your preferences by clicking your avatar in the bottom-left corner of the sidebar and selecting "Account Settings".
+
 - **Change Colour Scheme**: Choose between `light` and `dark` themes. You can also select a custom primary color to override the theme's default.
 - **Set Default Calendar View**: Select which calendar view you want to see when you log in.
 - **Set Time Format**: Choose between 12-hour and 24-hour time display.
 - **Enable Easy Booking**: Toggle the quick-create event feature.
-
-### 7.2 User Management Page
-Navigate to **Settings > User Management** from the sidebar (availability depends on permissions).
-- **View All Users**: See a list of all users in the system.
-- **Edit Contact Info**: Click the arrow on a user row to expand it. You can edit your own contact phone number.
+- **Edit Contact Info**: Click the arrow on your user row to expand it. You can edit your own contact phone number.
 - **Link Google Calendar**: Click the grey dot on your avatar to link your Google Calendar, which enables features like creating Meet links.
 
 ## 8. Management Pages (Admin & Manager Roles)
