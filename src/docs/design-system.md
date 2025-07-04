@@ -92,7 +92,7 @@ This is the consistent reference pattern for allowing a user to change both an i
 This pattern describes how a single entity (like a Badge or BadgeCollection) can exist in multiple contexts while maintaining a single source of truth.
 
 - **Mechanism**: Sharing is controlled at the `BadgeCollection` level. An owner of a collection can click a "Share" icon (`change_circle`) to toggle its `isShared` status. This action makes the original collection and its badges visible in a "Shared Collections" side panel for all other teams. From this panel, other teams can:
-    - **Link the entire collection**: Dragging the collection's card from the panel to their main board adds a *link* to that collection to their team.
+    - **Link the entire collection**: Dragging the collection's card from the panel to their main board adds a *link* to that collection to their team. This does not create a copy; it's a pointer to the original shared collection.
     - **Link individual badges**: Dragging a single badge from a shared collection (either in the panel or from a linked collection on their board) and dropping it into one of their *owned* collections creates a link to that specific badge.
 - **Visual Cues**:
   - **Owned & Shared Externally (`upload`)**: An item created by the current team that has been explicitly shared with other teams is marked with an `upload` icon overlay. This indicates it is the "source of truth." **The color of this icon badge matches the owner team's color.**
@@ -102,9 +102,9 @@ This pattern describes how a single entity (like a Badge or BadgeCollection) can
 - **Behavior**:
   - Editing a shared item (e.g., changing a badge's name or icon) modifies the original "source of truth" item, and the changes are instantly reflected in all other places where it is used.
   - **Smart Deletion**: Deleting an item follows contextual rules:
-    - Deleting a *shared-to-you* or *internally linked* instance only removes that specific link/instance. The original remains untouched.
-    - Deleting the *original, shared* item (i.e., an item that is currently linked elsewhere) will trigger a confirmation dialog to prevent accidental removal of a widely-used resource.
-    - Deleting an *original, un-shared* item is immediate and confirmed with a toaster notification.
+    - Deleting a *shared-to-you* or *internally linked* instance only removes that specific link/instance. The original remains untouched. This is a low-risk action confirmed via a `Compact Action Dialog`.
+    - Deleting the *original, shared* item (i.e., an item that is currently linked elsewhere) will trigger a high-risk `AlertDialog` to prevent accidental removal of a widely-used resource.
+    - Deleting an *original, un-shared* item is a low-risk action confirmed via a `Compact Action Dialog`.
 - **Application**: Used for sharing Badges and Badge Collections between Teams.
 
 ---
@@ -142,7 +142,7 @@ This is a minimalist dialog for focused actions, such as entering a code or a sh
 - **Behavior**:
     - Clicking the action icon in the corner performs the primary action (e.g., saves or verifies the input).
     - Clicking the overlay dismisses the dialog without performing the action.
-- **Application**: Used for Two-Factor Authentication, quick edits, simple forms, and for confirming lower-risk destructive actions, such as deleting a **Page**, an **Admin Group**, a **Team**, or unlinking a shared Badge.
+- **Application**: Used for Two-Factor Authentication, quick edits, simple forms, and for confirming lower-risk destructive actions, such as deleting a **Page**, an **Admin Group**, a **Team**, or an un-shared **Badge Collection**.
 
 ---
 

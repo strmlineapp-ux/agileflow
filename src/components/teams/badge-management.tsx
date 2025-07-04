@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -525,7 +524,9 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
         else if (e.key === 'Escape') setIsEditingName(false);
     };
     
-    const collectionBadges = collection.badgeIds.map(id => allBadgesInTeam.find(b => b.id === id)).filter((b): b is Badge => !!b);
+    const collectionBadges = useMemo(() => {
+        return collection.badgeIds.map(id => allBadgesInTeam.find(b => b.id === id)).filter((b): b is Badge => !!b);
+    }, [collection.badgeIds, allBadgesInTeam]);
     
     const APPLICATIONS: { key: BadgeApplication, icon: string, label: string }[] = [
         { key: 'users', icon: 'group', label: 'Users' },
@@ -588,8 +589,8 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <div 
-                                                className="absolute -top-1 -right-1 h-5 w-5 rounded-full border-2 border-card flex items-center justify-center text-white"
-                                                style={{ backgroundColor: shareIconColor }}
+                                                className="absolute -top-1 -right-1 h-5 w-5 rounded-full border-2 border-card flex items-center justify-center"
+                                                style={{ backgroundColor: shareIconColor, color: ownerTeam?.color ? cn('white', 'black') : 'white' }}
                                             >
                                                 <GoogleSymbol name={shareIcon} style={{ fontSize: '14px' }}/>
                                             </div>
@@ -601,7 +602,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                         </div>
                         <div className="flex-1 min-w-0">
                             {isEditingName && !isSharedPreview ? (
-                                <Input ref={nameInputRef} defaultValue={collection.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>
+                                <Input ref={nameInputRef} defaultValue={collection.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"/>
                             ) : (
                                 <CardTitle onClick={() => isOwned && !isSharedPreview && setIsEditingName(true)} className={cn("text-2xl break-words", isOwned && !isSharedPreview && "cursor-pointer")}>{collection.name}</CardTitle>
                             )}
@@ -613,10 +614,10 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                             <DropdownMenuItem onClick={() => onUpdateCollection(collection.id, { viewMode: 'assorted' })}><GoogleSymbol name="view_module" className="mr-2 text-lg" />Assorted View</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => onUpdateCollection(collection.id, { viewMode: 'detailed' })}><GoogleSymbol name="view_comfy_alt" className="mr-2 text-lg" />Detailed View</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => onUpdateCollection(collection.id, { viewMode: 'list' })}><GoogleSymbol name="view_list" className="mr-2 text-lg" />List View</DropdownMenuItem>
-                            {isOwned && !isSharedPreview && <DropdownMenuSeparator />}
-                            {isOwned && !isSharedPreview && <DropdownMenuItem onClick={() => onDeleteCollection(collection.id)} className="text-destructive focus:text-destructive">
+                            {!isSharedPreview && <DropdownMenuSeparator />}
+                            {!isSharedPreview && <DropdownMenuItem onClick={() => onDeleteCollection(collection.id)} className="text-destructive focus:text-destructive">
                                 <GoogleSymbol name="delete" className="mr-2 text-lg"/>
-                                Delete Collection
+                                {isOwned ? "Delete Collection" : "Unlink Collection"}
                             </DropdownMenuItem>}
                         </DropdownMenuContent>
                     </DropdownMenu>
@@ -681,7 +682,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                  {collection.description && <CardDescription className="pt-2">{collection.description}</CardDescription>}
             </CardHeader>
             <CardContent>
-                <StrictModeDroppable droppableId={collection.id} type="badge" isDropDisabled={!isOwned && isSharedPreview}>
+                <StrictModeDroppable droppableId={collection.id} type="badge" isDropDisabled={!isOwned && !isSharedPreview}>
                     {(provided) => (
                          <div
                             ref={provided.innerRef}
@@ -693,7 +694,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                 collection.viewMode === 'detailed' && "grid grid-cols-1 md:grid-cols-2 gap-4"
                             )}>
                             {collectionBadges.map((badge, index) => (
-                                <Draggable key={`${badge.id}::${collection.id}`} draggableId={`${badge.id}::${collection.id}`} index={index} isDragDisabled={isSharedPreview}>
+                                <Draggable key={`${badge.id}::${collection.id}`} draggableId={`${badge.id}::${collection.id}`} index={index}>
                                     {(provided) => (<div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
                                         <BadgeDisplayItem 
                                             badge={badge} 
@@ -786,7 +787,20 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
     };
     
     const handleDeleteCollection = (collectionId: string) => {
-        setCollectionToDelete(collectionId);
+        const collection = team.badgeCollections.find(c => c.id === collectionId);
+        if (!collection) return;
+
+        const isOwned = collection.ownerTeamId === team.id;
+
+        if (isOwned) {
+            // This is an owned collection, show the deletion dialog.
+            setCollectionToDelete(collectionId);
+        } else {
+            // This is a linked collection, just unlink it.
+            const newCollections = team.badgeCollections.filter(c => c.id !== collectionId);
+            updateTeam(team.id, { badgeCollections: newCollections });
+            toast({ title: 'Collection Unlinked', description: `"${collection.name}" is no longer linked to your team.` });
+        }
     };
 
     const confirmDeleteCollection = () => {
@@ -834,7 +848,7 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
         return teams
             .filter(t => t.id !== team.id)
             .flatMap(t => t.badgeCollections || [])
-            .filter(c => c.isShared);
+            .filter(c => c.isShared && c.ownerTeamId !== team.id);
     }, [teams, team.id]);
     
     const allBadgesAvailableToTeam = useMemo(() => {
@@ -861,6 +875,18 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
         
         return Array.from(badgeMap.values());
     }, [team, teams]);
+    
+    const allBadgesFromAllTeams = useMemo(() => {
+        const badgeMap = new Map<string, Badge>();
+        teams.forEach(t => {
+          (t.allBadges || []).forEach(badge => {
+            if (!badgeMap.has(badge.id)) {
+              badgeMap.set(badge.id, badge);
+            }
+          });
+        });
+        return Array.from(badgeMap.values());
+    }, [teams]);
 
     const displayedCollections = useMemo(() => {
         const all = team.badgeCollections || [];
@@ -1168,7 +1194,7 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
                                                                <BadgeCollectionCard
                                                                     key={collection.id}
                                                                     collection={collection}
-                                                                    allBadgesInTeam={allBadgesAvailableToTeam}
+                                                                    allBadgesInTeam={allBadgesFromAllTeams}
                                                                     teamId={team.id}
                                                                     teams={teams}
                                                                     onUpdateCollection={handleUpdateCollection}
@@ -1194,20 +1220,22 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
                     </div>
                 </div>
             </div>
-            <AlertDialog open={!!collectionToDelete} onOpenChange={(isOpen) => !isOpen && setCollectionToDelete(null)}>
-                 <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete the collection and all badges it owns.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction variant="destructive" onClick={confirmDeleteCollection}>Continue</AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            <Dialog open={!!collectionToDelete} onOpenChange={(isOpen) => !isOpen && setCollectionToDelete(null)}>
+                <DialogContent className="max-w-md">
+                    <div className="absolute top-4 right-4">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={confirmDeleteCollection}>
+                            <GoogleSymbol name="delete" className="text-xl" />
+                            <span className="sr-only">Delete Collection</span>
+                        </Button>
+                    </div>
+                    <DialogHeader>
+                        <UIDialogTitle>Delete Collection?</UIDialogTitle>
+                        <DialogDescription>
+                            This will permanently delete the collection and all badges it owns from this team.
+                        </DialogDescription>
+                    </DialogHeader>
+                </DialogContent>
+            </Dialog>
             <Dialog open={!!badgeToDelete} onOpenChange={(isOpen) => !isOpen && setBadgeToDelete(null)}>
                 <DialogContent>
                     <div className="absolute top-4 right-4">

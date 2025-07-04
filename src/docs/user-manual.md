@@ -84,7 +84,7 @@ Access your preferences by clicking your avatar in the bottom-left corner of the
 ### 8.1 Admin Management (`/dashboard/admin`)
 This is the central control panel for configuring the application itself.
 - **Admin Groups**: Create and manage high-level administrative groups. To assign users, you can either click the `add_circle` button on a group's card, or simply drag a user card and drop it into another group to add them. Dropping a user onto the 'Admins' card will promote them to a full Admin while keeping their existing group memberships. You can also instantly duplicate any group and its members by dragging the group card onto the "Add New Group" (+) button.
-- **Pages**: Configure the application's navigation. Create new pages, define their URL paths, and control who has access to them (by user, team, or admin group). You can intuitively reorder pages by dragging and dropping them in the grid. Key system pages like "Admin Management" are pinned and cannot be moved. You can also instantly duplicate any page by dragging it onto the "Add New Page" (+) button.
+- **Pages**: Configure the application's navigation. Create new pages, define their URL path, and control who has access to them (by user, team, or admin group). You can intuitively reorder pages by dragging and dropping them in the grid. Key system pages like "Admin Management" are pinned and cannot be moved. You can also instantly duplicate any page by dragging it onto the "Add New Page" (+) button.
 - **Tabs**: Manage the reusable content blocks (tabs) that can be assigned to different pages. Edit their names, icons, and descriptions.
 
 ### 8.2 Service Delivery Management (`/dashboard/service-delivery`)
@@ -97,7 +97,8 @@ This page is for managing the specifics of an individual team.
 - **Team Members**: View all members of the team. If you have permission, you can assign and unassign badges to users by clicking on them. You can also click the "Team Badges" label to customize it for your team.
 - **Badge Management**: Create and manage your team's badge collections in an intuitive, card-based grid.
   - **Sharing**: To make a collection of badges available to all other teams, click the `change_circle` icon on its card.
-  - **Using Shared Collections**: Click the `chevron_left` icon in the header to open the Shared Collections panel. From here, you can drag a shared collection onto your main board to link it to your team, or drag individual badges from a shared collection into one of your own collections.
+  - **Using Shared Collections**: Click the `chevron_left` icon in the header to open the Shared Collections panel. From here, you can drag a shared collection onto your main board to link it to your team. You can also drag individual badges from a shared collection and drop them into one of your own collections to create a link to that specific badge.
+  - **Unlinking a Collection**: To remove a linked collection from your team, simply click the delete icon on its card. This will not delete the original.
   - **Duplication**: You can duplicate an entire collection (and all its owned badges) by dragging it onto the "Add New Collection" button.
 - **Pinned Locations**: Pin locations to the team's Production Schedule. You can also designate locations as "check locations."
 - **Workstations**: Manage a list of bookable workstations or machines for the team.
