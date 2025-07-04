@@ -282,13 +282,19 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                 </PopoverContent>
                             </Popover>
                             {shareIcon && (
-                                <div 
-                                    className="absolute -top-1 -right-1 h-5 w-5 rounded-full border-2 border-card flex items-center justify-center text-white"
-                                    title={shareIconTitle}
-                                    style={{ backgroundColor: shareIconColor }}
-                                >
-                                    <GoogleSymbol name={shareIcon} style={{ fontSize: '14px' }}/>
-                                </div>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <div 
+                                                className="absolute -top-1 -right-1 h-5 w-5 rounded-full border-2 border-card flex items-center justify-center text-white"
+                                                style={{ backgroundColor: shareIconColor }}
+                                            >
+                                                <GoogleSymbol name={shareIcon} style={{ fontSize: '14px' }}/>
+                                            </div>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>{shareIconTitle}</p></TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
                             )}
                         </div>
                         {isEditingName ? (
@@ -342,13 +348,19 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                 </PopoverContent>
             </Popover>
             {shareIcon && (
-                <div
-                    className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-card text-white flex items-center justify-center"
-                    title={shareIconTitle}
-                    style={{ backgroundColor: shareIconColor }}
-                >
-                    <GoogleSymbol name={shareIcon} style={{fontSize: '12px'}}/>
-                </div>
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <div
+                                className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-card text-white flex items-center justify-center"
+                                style={{ backgroundColor: shareIconColor }}
+                            >
+                                <GoogleSymbol name={shareIcon} style={{fontSize: '12px'}}/>
+                            </div>
+                        </TooltipTrigger>
+                        <TooltipContent><p>{shareIconTitle}</p></TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
             )}
         </div>
     );
@@ -416,13 +428,19 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
             <div className="relative flex items-center justify-center">
                 <GoogleSymbol name={badge.icon} style={{color: badge.color}} className="text-sm" />
                 {shareIcon && (
-                    <div
-                        className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-background text-white flex items-center justify-center"
-                        title={shareIconTitle}
-                        style={{ backgroundColor: shareIconColor }}
-                    >
-                        <GoogleSymbol name={shareIcon} style={{fontSize: '10px'}}/>
-                    </div>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <div
+                                    className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-background text-white flex items-center justify-center"
+                                    style={{ backgroundColor: shareIconColor }}
+                                >
+                                    <GoogleSymbol name={shareIcon} style={{fontSize: '10px'}}/>
+                                </div>
+                            </TooltipTrigger>
+                            <TooltipContent><p>{shareIconTitle}</p></TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
                 )}
             </div>
             {inlineNameEditor}
@@ -517,9 +535,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInAllT
                                 onUpdateIcon={(icon) => onUpdateCollection(collection.id, { icon })}
                             />
                             <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                                <PopoverTrigger asChild disabled={isSharedToThisTeam}>
-                                    <div className={cn("absolute -bottom-1 -right-0 h-4 w-4 rounded-full border-2 border-card", isSharedToThisTeam ? "cursor-not-allowed" : "cursor-pointer")} style={{ backgroundColor: collection.color }} />
-                                </PopoverTrigger>
+                                <PopoverTrigger asChild disabled={isSharedToThisTeam}><div className={cn("absolute -bottom-1 -right-0 h-4 w-4 rounded-full border-2 border-card", isSharedToThisTeam ? "cursor-not-allowed" : "cursor-pointer")} style={{ backgroundColor: collection.color }} /></PopoverTrigger>
                                 <PopoverContent className="w-auto p-2">
                                     <div className="grid grid-cols-8 gap-1">
                                         {predefinedColors.map(color => (
@@ -530,13 +546,19 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInAllT
                                 </PopoverContent>
                             </Popover>
                             {shareIcon && (
-                                <div 
-                                    className="absolute -top-1 -right-1 h-5 w-5 rounded-full border-2 border-card flex items-center justify-center text-white"
-                                    title={shareIconTitle}
-                                    style={{ backgroundColor: shareIconColor }}
-                                >
-                                    <GoogleSymbol name={shareIcon} style={{ fontSize: '14px' }}/>
-                                </div>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <div 
+                                                className="absolute -top-1 -right-1 h-5 w-5 rounded-full border-2 border-card flex items-center justify-center text-white"
+                                                style={{ backgroundColor: shareIconColor }}
+                                            >
+                                                <GoogleSymbol name={shareIcon} style={{ fontSize: '14px' }}/>
+                                            </div>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>{shareIconTitle}</p></TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
                             )}
                         </div>
                         <div className="flex items-center gap-1 flex-1 min-w-0">
@@ -1101,9 +1123,18 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
                             className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
                         />
                     ) : (
-                        <h2 className="text-2xl font-semibold tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>
-                            {tab.name}
-                        </h2>
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <h2 className="text-2xl font-semibold tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
+                                </TooltipTrigger>
+                                {tab.description && (
+                                <TooltipContent>
+                                    <p className="max-w-xs">{tab.description}</p>
+                                </TooltipContent>
+                                )}
+                            </Tooltip>
+                        </TooltipProvider>
                     )}
                 </div>
                 <div className="flex items-center justify-between">

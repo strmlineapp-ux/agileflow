@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { googleSymbolNames } from '@/lib/google-symbols';
+import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 
 // This is a mapping from the componentKey in our AppTab model to the actual component to render.
@@ -91,7 +92,16 @@ export default function ServiceDeliveryPage() {
         {isEditingTitle ? (
           <Input ref={titleInputRef} defaultValue={pageConfig.name} onBlur={handleSaveTitle} onKeyDown={(e) => e.key === 'Enter' ? handleSaveTitle() : e.key === 'Escape' && setIsEditingTitle(false)} className="h-auto p-0 font-headline text-3xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
         ) : (
-          <h1 className="font-headline text-3xl font-semibold cursor-pointer" onClick={() => setIsEditingTitle(true)}>{pageConfig.name}</h1>
+          <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                  <h1 className="font-headline text-3xl font-semibold cursor-pointer border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{pageConfig.name}</h1>
+                </TooltipTrigger>
+                {pageConfig.description && (
+                  <TooltipContent><p className="max-w-xs">{pageConfig.description}</p></TooltipContent>
+                )}
+            </Tooltip>
+          </TooltipProvider>
         )}
       </div>
       

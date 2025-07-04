@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { googleSymbolNames } from '@/lib/google-symbols';
+import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 const componentMap: Record<string, React.ComponentType<{ team: any, tab: AppTab }>> = {
   team_members: TeamMembersView,
@@ -122,19 +123,28 @@ export default function TeamPage() {
                 <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={pageConfig.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { updatePage({ icon: iconName }); setIsIconPopoverOpen(false);}} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
               </PopoverContent>
             </Popover>
-            {isEditingName ? (
-                <Input
-                    ref={nameInputRef}
-                    defaultValue={team.name}
-                    onBlur={handleSaveName}
-                    onKeyDown={handleNameKeyDown}
-                    className="h-auto p-0 font-headline text-3xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                />
-            ) : (
-                <h1 className="font-headline text-3xl font-semibold cursor-pointer" onClick={() => setIsEditingName(true)}>
-                    {team.name} Team Management
-                </h1>
-            )}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  {isEditingName ? (
+                      <Input
+                          ref={nameInputRef}
+                          defaultValue={team.name}
+                          onBlur={handleSaveName}
+                          onKeyDown={handleNameKeyDown}
+                          className="h-auto p-0 font-headline text-3xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                      />
+                  ) : (
+                      <h1 className="font-headline text-3xl font-semibold cursor-pointer border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingName(true)}>
+                          {team.name} Team Management
+                      </h1>
+                  )}
+                </TooltipTrigger>
+                {pageConfig.description && (
+                  <TooltipContent><p className="max-w-xs">{pageConfig.description}</p></TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
         </div>
       <Tabs defaultValue={pageTabs[0]?.id} className="w-full">
         <TabsList className="flex w-full">

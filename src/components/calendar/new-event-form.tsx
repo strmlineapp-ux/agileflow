@@ -508,16 +508,37 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
 
             <div className="flex items-center">
                 {isEditing && (
-                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setIsDeleteDialogOpen(true)} disabled={isLoading}>
-                      <GoogleSymbol name="delete"/>
-                    </Button>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setIsDeleteDialogOpen(true)} disabled={isLoading}>
+                            <GoogleSymbol name="delete"/>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent><p>Delete Event</p></TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                 )}
-                <Button type="button" variant="ghost" size="icon" onClick={onFinished} disabled={isLoading} aria-label="Discard changes">
-                <GoogleSymbol name="close" />
-                </Button>
-                <Button type="submit" variant="ghost" size="icon" disabled={isLoading} aria-label="Save changes">
-                <GoogleSymbol name="check" />
-                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button type="button" variant="ghost" size="icon" onClick={onFinished} disabled={isLoading} aria-label="Discard changes">
+                        <GoogleSymbol name="close" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent><p>Discard Changes</p></TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                 <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button type="submit" variant="ghost" size="icon" disabled={isLoading} aria-label="Save changes">
+                        <GoogleSymbol name="check" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent><p>Save Changes</p></TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
             </div>
         </div>
 

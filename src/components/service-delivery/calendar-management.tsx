@@ -341,7 +341,16 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
           {isEditingTitle ? (
             <Input ref={titleInputRef} defaultValue={title} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
           ) : (
-            <h3 className="text-2xl font-semibold tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{title}</h3>
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <h3 className="text-2xl font-semibold tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{title}</h3>
+                    </TooltipTrigger>
+                    {tab.description && (
+                        <TooltipContent><p className="max-w-xs">{tab.description}</p></TooltipContent>
+                    )}
+                </Tooltip>
+            </TooltipProvider>
           )}
           <StrictModeDroppable droppableId="duplicate-calendar-zone">
               {(provided, snapshot) => (

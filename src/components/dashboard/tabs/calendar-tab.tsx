@@ -124,15 +124,33 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-3">
               <GoogleSymbol name={pageConfig.icon} className="text-3xl" />
-              <h1 className="font-headline text-3xl font-semibold">{pageConfig.name}</h1>
+              <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                      <h1 className="font-headline text-3xl font-semibold">{pageConfig.name}</h1>
+                    </TooltipTrigger>
+                    {pageConfig.description && (
+                      <TooltipContent>
+                        <p className="max-w-xs">{pageConfig.description}</p>
+                      </TooltipContent>
+                    )}
+                </Tooltip>
+              </TooltipProvider>
             </div>
             {userCanCreateEvent && (
               <Dialog open={isNewEventOpen} onOpenChange={setIsNewEventOpen}>
                 <DialogTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-                    <GoogleSymbol name="add_circle" className="text-2xl" />
-                    <span className="sr-only">New Event</span>
-                  </Button>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+                          <GoogleSymbol name="add_circle" className="text-2xl" />
+                          <span className="sr-only">New Event</span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent><p>New Event</p></TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-xl">
                   <EventForm onFinished={closeNewEventDialog} initialData={initialEventData} />

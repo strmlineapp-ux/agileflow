@@ -128,12 +128,20 @@ function TeamCard({
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                          <div className="relative">
                             {isSharedWithOtherTeams && (
-                                <div 
-                                    className="absolute -top-1 -right-1 h-5 w-5 rounded-full border-2 border-card flex items-center justify-center bg-muted text-muted-foreground"
-                                    title="This team shares resources with other teams"
-                                >
-                                    <GoogleSymbol name="change_circle" style={{ fontSize: '14px' }}/>
-                                </div>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <div 
+                                                className="absolute -top-1 -right-1 h-5 w-5 rounded-full border-2 border-card flex items-center justify-center bg-muted text-muted-foreground"
+                                            >
+                                                <GoogleSymbol name="change_circle" style={{ fontSize: '14px' }}/>
+                                            </div>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>This team shares resources with other teams</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
                             )}
                             <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                                 <PopoverTrigger asChild>
@@ -256,7 +264,7 @@ function TeamCard({
 }
 
 export function TeamManagement({ tab }: { tab: AppTab }) {
-  const { users, teams, addTeam, updateTeam, deleteTeam, updateAppTab } = useUser();
+  const { users, teams, addTeam, updateTeam, deleteTeam, updateAppTab, appSettings } = useUser();
   const { toast } = useToast();
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -269,6 +277,7 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
   
   const [sharingState, setSharingState] = useState<{ teamId: string } | null>(null);
   const canShareTeams = teams.length > 1;
+  const title = appSettings.teamManagementLabel || tab.name;
 
   useEffect(() => {
     if (isEditingTitle) titleInputRef.current?.focus();
@@ -276,7 +285,7 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
 
   const handleSaveTitle = () => {
     const newName = titleInputRef.current?.value.trim();
-    if (newName && newName !== tab.name) {
+    if (newName && newName !== title) {
       updateAppTab(tab.id, { name: newName });
     }
     setIsEditingTitle(false);
@@ -377,9 +386,18 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
     <DragDropContext onDragEnd={onDragEnd}>
         <div className="flex items-center gap-2 mb-6">
             {isEditingTitle ? (
-              <Input ref={titleInputRef} defaultValue={tab.name} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
+              <Input ref={titleInputRef} defaultValue={title} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
             ) : (
-              <h2 className="text-2xl font-semibold tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <h2 className="text-2xl font-semibold tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{title}</h2>
+                        </TooltipTrigger>
+                        {tab.description && (
+                            <TooltipContent><p className="max-w-xs">{tab.description}</p></TooltipContent>
+                        )}
+                    </Tooltip>
+                </TooltipProvider>
             )}
             <StrictModeDroppable droppableId="duplicate-team-zone">
                 {(provided, snapshot) => (

@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { type Team, type AppTab } from '@/types';
 import { GoogleSymbol } from '../icons/google-symbol';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }) {
   const { updateTeam, updateAppTab } = useUser();
@@ -115,9 +116,16 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
                 className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
             />
         ) : (
-            <h2 className="text-2xl font-semibold tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>
-                {tab.name}
-            </h2>
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <h2 className="text-2xl font-semibold tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
+                    </TooltipTrigger>
+                    {tab.description && (
+                        <TooltipContent><p className="max-w-xs">{tab.description}</p></TooltipContent>
+                    )}
+                </Tooltip>
+            </TooltipProvider>
         )}
       </div>
       <Card>

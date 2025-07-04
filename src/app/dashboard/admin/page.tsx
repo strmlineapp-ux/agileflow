@@ -1254,7 +1254,7 @@ export const TabsManagement = ({ tab }: { tab: AppTab }) => {
                 <TooltipProvider>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                           <h2 className="text-2xl font-semibold tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
+                           <h2 className="text-2xl font-semibold tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
                         </TooltipTrigger>
                         <TooltipContent>
                             <p className="max-w-xs">{tab.description}</p>
@@ -1304,7 +1304,16 @@ export default function AdminPage() {
     <div className="flex flex-col gap-8">
       <div className="flex items-center gap-3">
         <GoogleSymbol name={pageConfig.icon} className="text-3xl" />
-        <h1 className="font-headline text-3xl font-semibold">{pageConfig.name}</h1>
+        <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <h1 className="font-headline text-3xl font-semibold">{pageConfig.name}</h1>
+                </TooltipTrigger>
+                {pageConfig.description && (
+                    <TooltipContent><p className="max-w-xs">{pageConfig.description}</p></TooltipContent>
+                )}
+            </Tooltip>
+        </TooltipProvider>
       </div>
       <Tabs defaultValue={pageTabs[0]?.id} className="w-full">
         <TabsList className="flex w-full">
