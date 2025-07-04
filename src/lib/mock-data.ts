@@ -1,3 +1,4 @@
+
 import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team, type AppSettings, type Badge, type BadgeCollection, type AppTab, type AppPage, type AdminGroup } from '@/types';
 
 export const mockTabs: AppTab[] = [
@@ -369,6 +370,7 @@ export const mockTeams: Team[] = [
             badgeIds: studioProdBadges.map(b => b.id),
             isShared: true,
         }, pScaleCollection, starRatingCollection, effortScoreCollection],
+        userBadgesLabel: 'Production Badges',
         pinnedLocations: ['Studio'],
         checkLocations: [],
         locationAliases: {},
@@ -403,6 +405,7 @@ export const mockTeams: Team[] = [
             ],
             isShared: false,
         }],
+        userBadgesLabel: 'Assigned Skills',
         pinnedLocations: ['Auditorium', 'ACR', 'Event Space 1 (S2)', 'Event Space 2 (S2)', 'Event Space 3 (R7)', 'Event Space 4 (R7)', 'Training Room', 'Apgar', 'Locke'],
         checkLocations: ['Training Room', 'Apgar', 'Locke'],
         locationAliases: {},
@@ -422,6 +425,7 @@ export const mockTeams: Team[] = [
         locationCheckManagers: [],
         allBadges: [],
         badgeCollections: [],
+        userBadgesLabel: 'Team Roles',
         pinnedLocations: [],
         checkLocations: [],
         locationAliases: {},
