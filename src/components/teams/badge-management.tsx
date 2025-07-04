@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -573,7 +572,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInAllT
                                         <div
                                             ref={provided.innerRef}
                                             {...provided.droppableProps}
-                                            className={cn("rounded-full p-0.5", snapshot.isDraggingOver && "ring-1 ring-primary ring-offset-1 bg-accent")}
+                                            className={cn("rounded-full p-0.5", snapshot.isDraggingOver && "ring-1 ring-border")}
                                         >
                                             <TooltipProvider>
                                                 <Tooltip>
@@ -1146,7 +1145,7 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
                                     {...provided.droppableProps}
                                     className={cn(
                                         "rounded-full transition-all p-1",
-                                        snapshot.isDraggingOver && "ring-1 ring-primary ring-offset-1 bg-accent"
+                                        snapshot.isDraggingOver && "ring-1 ring-border"
                                     )}
                                 >
                                     <TooltipProvider>

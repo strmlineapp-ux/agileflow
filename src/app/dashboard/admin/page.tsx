@@ -1209,7 +1209,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                                     {...provided.droppableProps}
                                     className={cn(
                                         "rounded-full transition-all p-0.5",
-                                        snapshot.isDraggingOver && "ring-1 ring-primary ring-offset-1 bg-accent"
+                                        snapshot.isDraggingOver && "ring-1 ring-border"
                                     )}
                                 >
                                     <TooltipProvider>
