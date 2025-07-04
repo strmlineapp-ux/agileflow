@@ -134,10 +134,10 @@ const MemberCard = ({ user, index, onRemove, onSetAdmin, isTeamAdmin }: { user: 
         <Draggable draggableId={`user-${user.userId}`} index={index} type="user-card">
         {(provided, snapshot) => (
             <div
-            ref={provided.innerRef}
-            {...provided.draggableProps}
-            {...provided.dragHandleProps}
-            className={cn(snapshot.isDragging && "shadow-lg opacity-80")}
+                ref={provided.innerRef}
+                {...provided.draggableProps}
+                {...provided.dragHandleProps}
+                className={cn(snapshot.isDragging && "opacity-80")}
             >
             <Card
                 tabIndex={0}
@@ -456,7 +456,6 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
           reorderedTeams.splice(destination.index, 0, movedItem);
           // In a real app, we would persist this new order. For now, it's just a visual reorder in local state.
           // Note: reorderTeams is not a function in context, so this is just a placeholder for a state update.
-          // We can't reorder teams as there is no state setter for the `teams` array in the context.
           toast({ title: "Reordering teams is not implemented yet." });
           return;
       }
@@ -529,7 +528,7 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
                         {...provided.droppableProps}
                         className={cn(
                             "rounded-full transition-all p-1",
-                            snapshot.isDraggingOver && "ring-1 ring-primary bg-accent"
+                            snapshot.isDraggingOver && "ring-1 ring-border"
                         )}
                     >
                          <TooltipProvider>
