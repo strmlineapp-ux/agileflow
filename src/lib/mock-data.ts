@@ -298,7 +298,8 @@ const pScaleCollection: BadgeCollection = {
     viewMode: 'assorted',
     applications: ['events', 'tasks'],
     description: 'Standard P-number priority system for criticality.',
-    badgeIds: pScaleBadges.map(b => b.id)
+    badgeIds: pScaleBadges.map(b => b.id),
+    isShared: false,
 };
 
 const starRatingCollectionId = 'star-rating-collection';
@@ -318,7 +319,8 @@ const starRatingCollection: BadgeCollection = {
     viewMode: 'assorted',
     applications: [],
     description: 'A simple 5-star rating system.',
-    badgeIds: starRatingBadges.map(b => b.id)
+    badgeIds: starRatingBadges.map(b => b.id),
+    isShared: false,
 };
 
 const effortScoreCollectionId = 'effort-score-collection';
@@ -336,7 +338,8 @@ const effortScoreCollection: BadgeCollection = {
     viewMode: 'assorted',
     applications: [],
     description: 'A numeric scale for estimating effort.',
-    badgeIds: effortScoreBadges.map(b => b.id)
+    badgeIds: effortScoreBadges.map(b => b.id),
+    isShared: false,
 };
 
 export const mockTeams: Team[] = [
@@ -345,7 +348,6 @@ export const mockTeams: Team[] = [
         name: 'Studio Productions',
         icon: 'movie',
         color: '#10B981',
-        sharedTeamIds: ['live-events'],
         members: ['1', '2', '6'],
         teamAdmins: ['1', '2'],
         locationCheckManagers: ['1'],
@@ -364,9 +366,9 @@ export const mockTeams: Team[] = [
             viewMode: 'assorted',
             applications: ['users'],
             description: 'Badges related to the full pipeline of audio and video creation, from directing to post-production.',
-            badgeIds: studioProdBadges.map(b => b.id)
+            badgeIds: studioProdBadges.map(b => b.id),
+            isShared: true,
         }, pScaleCollection, starRatingCollection, effortScoreCollection],
-        sharedCollectionIds: [],
         pinnedLocations: ['Studio'],
         checkLocations: [],
         locationAliases: {},
@@ -381,7 +383,6 @@ export const mockTeams: Team[] = [
         name: 'Live Events',
         icon: 'videocam',
         color: '#3B82F6',
-        sharedTeamIds: ['studio-productions'],
         members: ['1', '2', '3', '4'],
         teamAdmins: ['1', '2'],
         locationCheckManagers: ['2'],
@@ -399,9 +400,9 @@ export const mockTeams: Team[] = [
             description: 'General skills and roles for live event execution.',
             badgeIds: [
                 ...liveEventsBadges.map(b => b.id),
-            ]
+            ],
+            isShared: false,
         }],
-        sharedCollectionIds: [studioProdCollectionId],
         pinnedLocations: ['Auditorium', 'ACR', 'Event Space 1 (S2)', 'Event Space 2 (S2)', 'Event Space 3 (R7)', 'Event Space 4 (R7)', 'Training Room', 'Apgar', 'Locke'],
         checkLocations: ['Training Room', 'Apgar', 'Locke'],
         locationAliases: {},
@@ -416,13 +417,11 @@ export const mockTeams: Team[] = [
         name: 'Productions',
         icon: 'campaign',
         color: '#EC4899',
-        sharedTeamIds: [],
         members: ['2', '3', '5'],
         teamAdmins: ['2'],
         locationCheckManagers: [],
         allBadges: [],
         badgeCollections: [],
-        sharedCollectionIds: [],
         pinnedLocations: [],
         checkLocations: [],
         locationAliases: {},

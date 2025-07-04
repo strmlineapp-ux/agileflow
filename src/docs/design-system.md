@@ -90,16 +90,17 @@ This is the consistent reference pattern for allowing a user to change both an i
 ### 7. Entity Sharing & Linking
 This pattern describes how a single entity (like a Badge or Badge Collection) can exist in multiple contexts while maintaining a single source of truth.
 
-- **Mechanism**: Implemented via an explicit "Share" action to link teams, or by dragging a badge into a new collection to create a linked instance. This creates a shared instance, not a copy.
+- **Mechanism**: Sharing is controlled at the `BadgeCollection` level. An owner of a collection can click a "Share" icon (`change_circle`) to toggle its shared status. This action does not create a copy, but rather makes the original collection and its badges visible to all other teams.
 - **Visual Cues**:
-  - **Owned & Shared Externally (`upload`)**: An item created by the current team but also being used in at least one other team is marked with an `upload` icon overlay. This indicates it is the "source of truth." **The color of this icon badge matches the owner team's color.**
+  - **Owned & Shared Externally (`upload`)**: An item created by the current team that has been explicitly shared with other teams is marked with an `upload` icon overlay. This indicates it is the "source of truth." **The color of this icon badge matches the owner team's color.**
   - **Internally Linked (`change_circle`)**: An item that is used in multiple places within the *same* team (e.g., a badge appearing in two collections) is marked with a `change_circle` icon overlay on its linked instances. The original instance does not get this icon unless it is also shared externally. **The color of this icon badge matches the owner team's color.**
   - **Shared-to-You (`downloading`)**: An item created in another team and being used in the current context is marked with a `downloading` icon overlay. **The color of this icon badge matches the source team's color.**
   - **Owned and Not Shared/Linked**: An item that is owned and exists only in its original location does not get an icon.
 - **Behavior**:
-  - Editing a shared or linked item (e.g., changing its name or icon) modifies the original "source of truth" item, and the changes are instantly reflected in all other places where it is used.
+  - Editing a shared item (e.g., changing a badge's name or icon) modifies the original "source of truth" item, and the changes are instantly reflected in all other places where it is used.
   - **Smart Deletion**: Deleting an item follows contextual rules:
-    - Deleting a *shared-to-you* or *internally linked* instance only removes that specific instance. The action is immediate and confirmed with a toaster notification.
+    - Deleting a *shared-to-you* instance only removes that specific instance from the current view. The original collection remains untouched.
+    - Deleting an *internally linked* instance only removes that specific link.
     - Deleting the *original, shared* item (i.e., an item that is currently linked elsewhere) will trigger a confirmation dialog to prevent accidental removal of a widely-used resource.
     - Deleting an *original, un-shared* item is immediate and confirmed with a toaster notification.
 - **Application**: Used for sharing Badges and Badge Collections between Teams.
@@ -117,9 +118,10 @@ This is the application's perfected, gold-standard pattern for managing a collec
     -   **Interaction**: Users can drag any non-pinned card and drop it between other non-pinned cards to change its order. The grid reflows smoothly to show the drop position.
     -   **Top Guardrail**: If a card is dropped *before* the first pinned item, it is automatically repositioned to be *after* it.
     -   **Bottom Guardrail**: If a card is dropped *after* the last pinned item, it is automatically repositioned to be *before* it. This ensures the integrity of the pinned items.
--   **Drop Zone Highlighting**: Drop zones provide visual feedback when an item is dragged over them. To maintain a clean UI, highlights primarily use subtle, `1px` rings without background fills.
-    -   **Standard Zones (Reordering, Moving, Duplicating):** The drop area is highlighted with a `1px` ring using the standard border color (`ring-1 ring-border`). For inset content areas like user lists, an inset ring (`ring-inset`) is used. This provides a consistent, colorless highlight.
+-   **Drop Zone Highlighting**: Drop zones provide visual feedback when an item is dragged over them. To maintain a clean UI, highlights primarily use rings without background fills, except for duplication which is a special case.
+    -   **Standard Zones (Reordering, Moving):** The drop area is highlighted with a `1px` inset, **colorless** ring using the standard border color (`ring-1 ring-border ring-inset`).
     -   **Destructive Zones (Deleting):** The drop area is highlighted with a `1px` ring in the destructive theme color (`ring-1 ring-destructive`).
+    -   **Duplication Zones:** The drop zone is highlighted with both a `1px` ring and a background fill (`ring-1 ring-primary bg-accent`) to signal a unique creation action.
 -   **Drag-to-Duplicate**:
     -   **Interaction**: A designated "Add New" icon (`<Button>`) acts as a drop zone. While a card is being dragged, this zone becomes highlighted to indicate it can accept a drop.
     -   **Behavior**: Dropping any card (pinned or not) onto this zone creates a deep, independent copy of the original. The new card is given a unique ID, a modified name (e.g., with `(Copy)`), and is placed immediately after the original in the list.
@@ -219,6 +221,7 @@ This is the single source of truth for indicating user interaction state across 
     - **Appearance**: A circular badge (e.g., `h-5 w-5`) with a `border-2` of the parent element's background color (e.g., `border-card` or `border-background`) to create a "punched out" effect. The icon inside should be sized appropriately (e.g., `font-size: 14px` or similar, depending on container).
     - **Placement**: Typically positioned on the bottom-right or top-right corner of the parent element.
     - **Application**: Used for displaying a user's admin group on their avatar, a shared group status on a role icon, or a `share` icon on a shared Badge.
+
 
 
 

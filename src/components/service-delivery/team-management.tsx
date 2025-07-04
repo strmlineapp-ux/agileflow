@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -55,17 +56,11 @@ function TeamCard({
     allUsers, 
     onUpdate, 
     onDelete, 
-    canShare,
-    onShare,
-    isSharing,
 }: { 
     team: Team, 
     allUsers: User[], 
     onUpdate: (id: string, data: Partial<Team>) => void, 
     onDelete: (team: Team) => void,
-    canShare: boolean,
-    onShare: (teamId: string) => void,
-    isSharing: boolean,
 }) {
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isEditingName, setIsEditingName] = useState(false);
@@ -118,30 +113,12 @@ function TeamCard({
         onUpdate(team.id, { teamAdmins: newAdmins });
     };
 
-    const isSharedWithOtherTeams = team.sharedTeamIds && team.sharedTeamIds.length > 0;
-
     return (
-        <Card className={cn("flex flex-col", isSharing && "ring-1 ring-primary")}>
+        <Card className="flex flex-col">
             <CardHeader>
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                          <div className="relative">
-                            {isSharedWithOtherTeams && (
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <div 
-                                                className="absolute -top-1 -right-1 h-5 w-5 rounded-full border-2 border-card flex items-center justify-center bg-muted text-muted-foreground"
-                                            >
-                                                <GoogleSymbol name="change_circle" style={{ fontSize: '14px' }}/>
-                                            </div>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                            <p>This team shares resources with other teams</p>
-                                        </TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                            )}
                             <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                                 <PopoverTrigger asChild>
                                     <Button variant="ghost" size="icon" className="h-9 w-9 text-3xl">
@@ -199,31 +176,17 @@ function TeamCard({
                             )}
                         </div>
                     </div>
-                    <div className="flex items-center">
-                        {canShare && (
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0 text-muted-foreground hover:text-primary" onClick={() => onShare(team.id)}>
-                                            <GoogleSymbol name="change_circle" className="text-lg"/>
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>Share Team</TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                        )}
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive" onClick={() => onDelete(team)}>
-                                        <GoogleSymbol name="delete" className="text-lg"/>
-                                        <span className="sr-only">Delete Team</span>
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Delete Team</TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    </div>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive" onClick={() => onDelete(team)}>
+                                    <GoogleSymbol name="delete" className="text-lg"/>
+                                    <span className="sr-only">Delete Team</span>
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Delete Team</TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
                 </div>
             </CardHeader>
             <CardContent className="space-y-2">
@@ -274,8 +237,6 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
   
-  const [sharingState, setSharingState] = useState<{ teamId: string } | null>(null);
-  const canShareTeams = teams.length > 1;
   const title = appSettings.teamManagementLabel || tab.name;
 
   useEffect(() => {
@@ -323,49 +284,10 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
           return;
       }
       const newTeamData: Omit<Team, 'id'> = {
-          ...JSON.parse(JSON.stringify(sourceTeam)), // Deep copy
-          sharedTeamIds: [], // Copies should not be shared
+          ...JSON.parse(JSON.stringify(sourceTeam)),
       };
       addTeam(newTeamData);
       toast({ title: 'Success', description: `Team "${newName}" created.` });
-  };
-  
-  const handleShareClick = (teamId: string) => {
-    if (!sharingState) {
-        setSharingState({ teamId });
-        return;
-    }
-    if (sharingState.teamId === teamId) {
-        setSharingState(null); // Clicked the same team again, cancel sharing mode
-        return;
-    }
-
-    const sourceTeam = teams.find(t => t.id === sharingState.teamId)!;
-    const targetTeam = teams.find(t => t.id === teamId)!;
-
-    // Toggle sharing status
-    const sourceShared = new Set(sourceTeam.sharedTeamIds || []);
-    const targetShared = new Set(targetTeam.sharedTeamIds || []);
-
-    let isNowSharing;
-
-    if (sourceShared.has(targetTeam.id)) {
-        // Unshare
-        sourceShared.delete(targetTeam.id);
-        targetShared.delete(sourceTeam.id);
-        isNowSharing = false;
-    } else {
-        // Share
-        sourceShared.add(targetTeam.id);
-        targetShared.add(sourceTeam.id);
-        isNowSharing = true;
-    }
-    
-    updateTeam(sourceTeam.id, { sharedTeamIds: Array.from(sourceShared) });
-    updateTeam(targetTeam.id, { sharedTeamIds: Array.from(targetShared) });
-    
-    toast({ title: isNowSharing ? 'Teams Shared' : 'Teams Unshared', description: `Sharing status between "${sourceTeam.name}" and "${targetTeam.name}" has been updated.` });
-    setSharingState(null);
   };
   
   const onDragEnd = (result: DropResult) => {
@@ -404,8 +326,8 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
                         ref={provided.innerRef}
                         {...provided.droppableProps}
                         className={cn(
-                            "rounded-full transition-all p-0.5",
-                            snapshot.isDraggingOver && "ring-1 ring-border"
+                            "rounded-full transition-all p-1",
+                            snapshot.isDraggingOver && "ring-1 ring-primary bg-accent"
                         )}
                     >
                          <TooltipProvider>
@@ -445,9 +367,6 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
                                         allUsers={users} 
                                         onUpdate={handleUpdate} 
                                         onDelete={openDeleteDialog}
-                                        canShare={canShareTeams}
-                                        onShare={handleShareClick}
-                                        isSharing={sharingState?.teamId === team.id}
                                     />
                                 </div>
                             )}
@@ -538,7 +457,6 @@ function AddTeamDialog({ isOpen, onClose, allUsers, addTeam }: AddTeamDialogProp
             locationCheckManagers: [],
             allBadges: [],
             badgeCollections: [],
-            sharedCollectionIds: [],
             pinnedLocations: [],
             checkLocations: [],
             locationAliases: {},

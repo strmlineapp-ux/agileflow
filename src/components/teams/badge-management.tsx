@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -20,7 +21,6 @@ import { Separator } from '../ui/separator';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle as UIDialogTitle } from '@/components/ui/dialog';
-import { Badge as UiBadge } from '@/components/ui/badge';
 
 const predefinedColors = [
     '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
@@ -233,15 +233,14 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
         }
     };
 
-    const isSharedToOtherTeams = useMemo(() => {
+    const isShared = useMemo(() => {
         if (!isOwnedByMyTeam) return false;
-        return teams.some(t => {
-            if (t.id === teamId) return false;
-            return t.badgeCollections.some(c => c.badgeIds.includes(badge.id));
-        });
-    }, [teams, badge.id, isOwnedByMyTeam, teamId]);
+        const ownerCollection = ownerTeam.badgeCollections.find(c => c.id === badge.ownerCollectionId);
+        return !!ownerCollection?.isShared;
+    }, [badge.ownerCollectionId, isOwnedByMyTeam, ownerTeam]);
     
     const isThisTheOriginalInstance = badge.ownerCollectionId === collectionId;
+
     const isLinkedInternally = useMemo(() => {
         if (!isOwnedByMyTeam) return false;
         const currentTeam = teams.find(t => t.id === teamId);
@@ -254,7 +253,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     let shareIconTitle: string = '';
     let shareIconColor = ownerTeam?.color;
 
-    if (isSharedToOtherTeams) {
+    if (isShared) {
         shareIcon = 'upload';
         shareIconTitle = `Owned by this team and shared externally`;
     } else if (!isOwnedByMyTeam) {
@@ -450,10 +449,9 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     );
 }
 
-function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInAllTeams, teamId, teams, onUpdateCollection, onDeleteCollection, onAddBadge, onUpdateBadge, onDeleteBadge }: {
+function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpdateCollection, onDeleteCollection, onAddBadge, onUpdateBadge, onDeleteBadge, onToggleShare }: {
     collection: BadgeCollection;
     allBadgesInTeam: Badge[];
-    allCollectionsInAllTeams: BadgeCollection[];
     teamId: string;
     teams: Team[];
     onUpdateCollection: (collectionId: string, newValues: Partial<Omit<BadgeCollection, 'id' | 'badgeIds'>>) => void;
@@ -461,6 +459,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInAllT
     onAddBadge: (collectionId: string) => void;
     onUpdateBadge: (badgeData: Partial<Badge>) => void;
     onDeleteBadge: (collectionId: string, badgeId: string) => void;
+    onToggleShare: (collectionId: string) => void;
 }) {
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isEditingName, setIsEditingName] = useState(false);
@@ -502,22 +501,17 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInAllT
     };
 
     const isOwned = collection.ownerTeamId === teamId;
-    const isSharedToThisTeam = !isOwned;
+    const isShared = collection.isShared;
     const ownerTeam = teams.find(t => t.id === collection.ownerTeamId);
-    
-    const isSharedFromThisTeam = useMemo(() => {
-        if (!isOwned) return false;
-        return teams.some(t => t.id !== teamId && (t.sharedCollectionIds || []).includes(collection.id));
-    }, [teams, collection.id, teamId, isOwned]);
     
     let shareIcon: string | null = null;
     let shareIconTitle: string = '';
     let shareIconColor = ownerTeam?.color;
 
-    if (isSharedFromThisTeam) {
+    if (isOwned && isShared) {
         shareIcon = 'upload';
-        shareIconTitle = 'Owned by this team and shared externally';
-    } else if (isSharedToThisTeam) {
+        shareIconTitle = 'Owned by this team and shared with all teams';
+    } else if (!isOwned) {
         shareIcon = 'downloading';
         shareIconTitle = `Shared from ${ownerTeam?.name || 'another team'}`;
     }
@@ -534,7 +528,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInAllT
                                 onUpdateIcon={(icon) => onUpdateCollection(collection.id, { icon })}
                             />
                             <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                                <PopoverTrigger asChild disabled={isSharedToThisTeam}><div className={cn("absolute -bottom-1 -right-0 h-4 w-4 rounded-full border-2 border-card", isSharedToThisTeam ? "cursor-not-allowed" : "cursor-pointer")} style={{ backgroundColor: collection.color }} /></PopoverTrigger>
+                                <PopoverTrigger asChild disabled={!isOwned}><div className={cn("absolute -bottom-1 -right-0 h-4 w-4 rounded-full border-2 border-card", !isOwned ? "cursor-not-allowed" : "cursor-pointer")} style={{ backgroundColor: collection.color }} /></PopoverTrigger>
                                 <PopoverContent className="w-auto p-2">
                                     <div className="grid grid-cols-8 gap-1">
                                         {predefinedColors.map(color => (
@@ -564,10 +558,10 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInAllT
                             {isEditingName ? (
                                 <Input ref={nameInputRef} defaultValue={collection.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>
                             ) : (
-                                <CardTitle onClick={() => !isSharedToThisTeam && setIsEditingName(true)} className={cn(!isSharedToThisTeam && "cursor-pointer", "truncate")}>{collection.name}</CardTitle>
+                                <CardTitle onClick={() => isOwned && setIsEditingName(true)} className={cn(isOwned && "cursor-pointer", "truncate")}>{collection.name}</CardTitle>
                             )}
-                            {!isSharedToThisTeam && (
-                                 <StrictModeDroppable droppableId={`duplicate-badge-zone:${collection.id}`} type="badge" isDropDisabled={!!isSharedToThisTeam}>
+                            {isOwned && (
+                                 <StrictModeDroppable droppableId={`duplicate-badge-zone:${collection.id}`} type="badge" isDropDisabled={!isOwned}>
                                      {(provided, snapshot) => (
                                         <div
                                             ref={provided.innerRef}
@@ -586,10 +580,22 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInAllT
                                     )}
                                 </StrictModeDroppable>
                             )}
+                            {isOwned && (
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => onToggleShare(collection.id)}>
+                                                <GoogleSymbol name="change_circle" filled={collection.isShared} />
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>{collection.isShared ? 'Unshare this collection' : 'Share this collection'}</p></TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            )}
                         </div>
                     </div>
                      <div className="flex items-center gap-1">
-                        {!isSharedToThisTeam && APPLICATIONS.map(app => (
+                        {isOwned && APPLICATIONS.map(app => (
                             <TooltipProvider key={app.key}>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
@@ -615,11 +621,11 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInAllT
                                 <DropdownMenuItem onClick={() => onUpdateCollection(collection.id, { viewMode: 'assorted' })}><GoogleSymbol name="view_module" className="mr-2" />Assorted View</DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => onUpdateCollection(collection.id, { viewMode: 'detailed' })}><GoogleSymbol name="view_comfy_alt" className="mr-2" />Detailed View</DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => onUpdateCollection(collection.id, { viewMode: 'list' })}><GoogleSymbol name="view_list" className="mr-2" />List View</DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => onDeleteCollection(collection.id)} className="text-destructive focus:text-destructive">
-                                    <GoogleSymbol name={isSharedToThisTeam ? 'link_off' : 'delete'} className="mr-2"/>
-                                    {isSharedToThisTeam ? 'Unshare Collection' : 'Delete Collection'}
-                                </DropdownMenuItem>
+                                {isOwned && <DropdownMenuSeparator />}
+                                {isOwned && <DropdownMenuItem onClick={() => onDeleteCollection(collection.id)} className="text-destructive focus:text-destructive">
+                                    <GoogleSymbol name="delete" className="mr-2"/>
+                                    Delete Collection
+                                </DropdownMenuItem>}
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
@@ -627,7 +633,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInAllT
                  {collection.description && <CardDescription className="pt-2">{collection.description}</CardDescription>}
             </CardHeader>
             <CardContent>
-                <StrictModeDroppable droppableId={collection.id} type="badge" isDropDisabled={isSharedToThisTeam}>
+                <StrictModeDroppable droppableId={collection.id} type="badge" isDropDisabled={!isOwned}>
                     {(provided) => (
                          <div
                             ref={provided.innerRef}
@@ -639,7 +645,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInAllT
                                 collection.viewMode === 'detailed' && "grid grid-cols-1 md:grid-cols-2 gap-4"
                             )}>
                             {collectionBadges.map((badge, index) => (
-                                <Draggable key={`${badge.id}::${collection.id}`} draggableId={`${badge.id}::${collection.id}`} index={index}>
+                                <Draggable key={`${badge.id}::${collection.id}`} draggableId={`${badge.id}::${collection.id}`} index={index} isDragDisabled={!isOwned}>
                                     {(provided) => (<div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
                                         <BadgeDisplayItem 
                                             badge={badge} 
@@ -661,102 +667,12 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, allCollectionsInAllT
     );
 }
 
-function ShareCollectionDialog({ isOpen, onClose, team, teams, onShareCollection }: { isOpen: boolean, onClose: () => void, team: Team, teams: Team[], onShareCollection: (collectionId: string) => void }) {
-    
-    const allBadgesFromAllTeams = useMemo(() => {
-        return teams.flatMap(t => t.allBadges || []);
-    }, [teams]);
-
-    const groupedSharedCollections = useMemo(() => {
-        const sharedTeamIds = team.sharedTeamIds || [];
-        const currentSharedCollectionIds = team.sharedCollectionIds || [];
-
-        const otherCollections = teams
-            .filter(t => sharedTeamIds.includes(t.id))
-            .flatMap(t => t.badgeCollections.map(c => ({
-                ...c,
-                teamName: t.name,
-                teamIcon: t.icon,
-                teamColor: t.color
-            })))
-            .filter(c => !currentSharedCollectionIds.includes(c.id));
-
-        return otherCollections.reduce((acc, collection) => {
-            const teamName = collection.teamName || 'Unknown Team';
-            if (!acc[teamName]) {
-                acc[teamName] = [];
-            }
-            acc[teamName].push({
-                ...collection,
-                badges: collection.badgeIds.map(id => allBadgesFromAllTeams.find(b => b.id === id)).filter((b): b is Badge => !!b)
-            });
-            return acc;
-        }, {} as Record<string, (BadgeCollection & { teamName: string, teamIcon: string, teamColor: string, badges: Badge[] })[]>);
-    }, [teams, team, allBadgesFromAllTeams]);
-
-    return (
-        <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-3xl">
-                <DialogHeader>
-                    <UIDialogTitle>Share a Collection</UIDialogTitle>
-                    <DialogDescription>Select a collection from a shared team to make its badges available to the "{team.name}" team.</DialogDescription>
-                </DialogHeader>
-                <ScrollArea className="h-[60vh] -mx-6">
-                    <div className="px-6 py-2 space-y-4">
-                    {Object.keys(groupedSharedCollections).length > 0 ? (
-                        Object.entries(groupedSharedCollections).map(([teamName, collections]) => {
-                            const sourceTeam = teams.find(t => t.name === teamName);
-                            return (
-                                <div key={teamName}>
-                                    <h3 className="font-semibold mb-2 flex items-center gap-2">
-                                        {sourceTeam && <GoogleSymbol name={sourceTeam.icon} style={{color: sourceTeam.color}} />}
-                                        {teamName}
-                                    </h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {collections.map(collection => (
-                                        <Card key={collection.id} className="cursor-pointer hover:border-primary" onClick={() => onShareCollection(collection.id)}>
-                                        <CardHeader>
-                                            <CardTitle className="flex items-center gap-2 text-base">
-                                            <GoogleSymbol name={collection.icon} style={{color: collection.color}} />
-                                            {collection.name}
-                                            </CardTitle>
-                                        </CardHeader>
-                                        <CardContent>
-                                            <div className="flex flex-wrap gap-1 min-h-[28px] items-center">
-                                            {collection.badges.slice(0, 5).map(badge => (
-                                                <UiBadge key={badge.id} variant="outline" style={{ color: badge.color, borderColor: badge.color, backgroundColor: `${badge.color}1A`}} className="gap-1 rounded-full text-xs">
-                                                    <GoogleSymbol name={badge.icon} className="text-sm" />
-                                                    <span className="font-normal">{badge.name}</span>
-                                                </UiBadge>
-                                            ))}
-                                            {collection.badges.length > 5 && <UiBadge variant="outline" className="rounded-full text-xs">... and more</UiBadge>}
-                                            </div>
-                                        </CardContent>
-                                        </Card>
-                                    ))}
-                                    </div>
-                                </div>
-                            )
-                        })
-                    ) : (
-                        <div className="flex items-center justify-center h-48">
-                            <p className="text-sm text-center text-muted-foreground">No new collections available from shared teams.</p>
-                        </div>
-                    )}
-                    </div>
-                </ScrollArea>
-            </DialogContent>
-        </Dialog>
-    );
-}
-
 export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
     const { teams, updateTeam, updateAppTab } = useUser();
     const { toast } = useToast();
     
     const [collectionToDelete, setCollectionToDelete] = useState<string | null>(null);
     const [badgeToDelete, setBadgeToDelete] = useState<{ collectionId: string, badgeId: string } | null>(null);
-    const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
     
     const [isSearching, setIsSearching] = useState(false);
     const searchInputRef = useRef<HTMLInputElement>(null);
@@ -811,23 +727,14 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
             badgeIds: [],
             applications: [],
             description: '',
+            isShared: false,
         };
         const newCollections = [...team.badgeCollections, newCollection];
         updateTeam(team.id, { badgeCollections: newCollections });
         toast({ title: 'Collection Added', description: `"${newName}" has been created.`});
     };
     
-    const handleDeleteOrUnlinkCollection = (collectionId: string) => {
-        const collection = displayedCollections.find(c => c.id === collectionId);
-        if (!collection) return;
-
-        if (collection.ownerTeamId !== team.id) {
-            const newSharedCollectionIds = (team.sharedCollectionIds || []).filter(id => id !== collectionId);
-            updateTeam(team.id, { sharedCollectionIds: newSharedCollectionIds });
-            toast({ title: 'Collection Unshared' });
-            return;
-        }
-
+    const handleDeleteCollection = (collectionId: string) => {
         setCollectionToDelete(collectionId);
     };
 
@@ -843,13 +750,6 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
         const newAllBadges = team.allBadges.filter(b => !ownedBadgeIds.has(b.id));
 
         updateTeam(team.id, { badgeCollections: newCollections, allBadges: newAllBadges });
-
-        teams.forEach(otherTeam => {
-            if (otherTeam.id !== team.id && otherTeam.sharedCollectionIds?.includes(collectionToDelete)) {
-                const newSharedIds = otherTeam.sharedCollectionIds.filter(id => id !== collectionToDelete);
-                updateTeam(otherTeam.id, { sharedCollectionIds: newSharedIds });
-            }
-        });
 
         toast({ title: 'Collection Deleted', description: `"${collection.name}" and all its owned badges have been deleted.`});
         setCollectionToDelete(null);
@@ -878,31 +778,34 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
         const newAllBadges = team.allBadges.map(b => b.id === badgeData.id ? {...b, ...badgeData} : b);
         updateTeam(team.id, { allBadges: newAllBadges });
     };
+    
+    const ownedCollections = team.badgeCollections || [];
+    const sharedCollectionsFromOthers = useMemo(() => {
+        return teams
+            .filter(t => t.id !== team.id)
+            .flatMap(t => t.badgeCollections || [])
+            .filter(c => c.isShared);
+    }, [teams, team.id]);
+
+    const displayedCollections = useMemo(() => {
+        const all = [...ownedCollections, ...sharedCollectionsFromOthers];
+        return all.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    }, [ownedCollections, sharedCollectionsFromOthers, searchTerm]);
 
     const allBadgesAvailableToTeam = useMemo(() => {
-        const allBadgesFromAllTeams = teams.flatMap(t => t.allBadges);
         const badgeMap = new Map<string, Badge>();
+        const collectionIdsToInclude = new Set(displayedCollections.map(c => c.id));
         
-        team.allBadges.forEach(b => badgeMap.set(b.id, b));
-        
-        const sharedCollectionIds = new Set(team.sharedCollectionIds || []);
-        teams.forEach(t => {
-            if (t.id !== team.id) {
-                t.badgeCollections.forEach(c => {
-                    if (sharedCollectionIds.has(c.id)) {
-                        c.badgeIds.forEach(badgeId => {
-                            if (!badgeMap.has(badgeId)) {
-                                const badge = allBadgesFromAllTeams.find(b => b.id === badgeId);
-                                if (badge) badgeMap.set(badge.id, badge);
-                            }
-                        })
-                    }
-                })
+        const allBadgesFromAllTeams = teams.flatMap(t => t.allBadges || []);
+
+        allBadgesFromAllTeams.forEach(badge => {
+            if (collectionIdsToInclude.has(badge.ownerCollectionId)) {
+                badgeMap.set(badge.id, badge);
             }
         });
 
         return Array.from(badgeMap.values());
-    }, [team.allBadges, team.sharedCollectionIds, teams]);
+    }, [displayedCollections, teams]);
 
     const confirmPermanentDelete = useCallback((badgeId: string) => {
         const badgeToDelete = allBadgesAvailableToTeam.find(b => b.id === badgeId);
@@ -991,6 +894,7 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
             ownerTeamId: team.id,
             name: `${sourceCollection.name} (Copy)`,
             badgeIds: newBadgeIds,
+            isShared: false,
         };
         
         const updatedCollections = [...team.badgeCollections, newCollection];
@@ -1005,6 +909,17 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
             title: 'Collection Duplicated',
             description: `"${newCollection.name}" has been created.`,
         });
+    };
+    
+    const handleToggleShare = (collectionId: string) => {
+        const collection = team.badgeCollections.find(c => c.id === collectionId);
+        if (!collection) return;
+        
+        const newCollections = team.badgeCollections.map(c => 
+            c.id === collectionId ? { ...c, isShared: !c.isShared } : c
+        );
+        updateTeam(team.id, { badgeCollections: newCollections });
+        toast({ title: collection.isShared ? 'Collection Unshared' : 'Collection Shared', description: `"${collection.name}" is now ${collection.isShared ? 'private.' : 'visible to all teams.'}`});
     };
     
     const onDragEnd = (result: DropResult) => {
@@ -1085,29 +1000,6 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
         }
     };
 
-    const handleShareCollection = (collectionId: string) => {
-        const newSharedIds = [...(team.sharedCollectionIds || []), collectionId];
-        updateTeam(team.id, { sharedCollectionIds: newSharedIds });
-        toast({ title: 'Collection Shared' });
-        setIsShareDialogOpen(false);
-    }
-    
-    const sharedCollections = useMemo(() => {
-        const sharedIds = new Set(team.sharedCollectionIds || []);
-        if (sharedIds.size === 0) return [];
-        const allCollectionsFromAllTeams = teams.flatMap(t => t.badgeCollections);
-        return allCollectionsFromAllTeams.filter(c => sharedIds.has(c.id));
-    }, [teams, team.sharedCollectionIds]);
-
-    const displayedCollections = useMemo(() => {
-        const allVisibleCollections = [...team.badgeCollections, ...sharedCollections];
-        return allVisibleCollections.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
-    }, [team.badgeCollections, sharedCollections, searchTerm]);
-    
-    const allCollectionsFromAllTeams = useMemo(() => {
-        return teams.flatMap(t => t.badgeCollections || []);
-    }, [teams]);
-
 
     return (
         <DragDropContext onDragEnd={onDragEnd}>
@@ -1137,45 +1029,32 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
                     )}
                 </div>
                 <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <StrictModeDroppable droppableId="duplicate-collection-zone" type="collection">
-                            {(provided, snapshot) => (
-                                <div
-                                    ref={provided.innerRef}
-                                    {...provided.droppableProps}
-                                    className={cn(
-                                        "rounded-full transition-all p-1",
-                                        snapshot.isDraggingOver && "ring-1 ring-border"
-                                    )}
-                                >
-                                    <TooltipProvider>
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={handleAddCollection}>
-                                                    <GoogleSymbol name="add_circle" className="text-xl" />
-                                                    <span className="sr-only">New Collection or Drop to Duplicate</span>
-                                                </Button>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                                <p>{snapshot.isDraggingOver ? 'Drop to Duplicate' : 'Add New Collection'}</p>
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
-                                </div>
-                            )}
-                        </StrictModeDroppable>
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => setIsShareDialogOpen(true)}>
-                                        <GoogleSymbol name="change_circle" className="text-xl" />
-                                        <span className="sr-only">Share Collection</span>
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Share Collection from another team</TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    </div>
+                    <StrictModeDroppable droppableId="duplicate-collection-zone" type="collection">
+                        {(provided, snapshot) => (
+                            <div
+                                ref={provided.innerRef}
+                                {...provided.droppableProps}
+                                className={cn(
+                                    "rounded-full transition-all p-1",
+                                    snapshot.isDraggingOver && "ring-1 ring-primary bg-accent"
+                                )}
+                            >
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={handleAddCollection}>
+                                                <GoogleSymbol name="add_circle" className="text-xl" />
+                                                <span className="sr-only">New Collection or Drop to Duplicate</span>
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>{snapshot.isDraggingOver ? 'Drop to Duplicate' : 'Add New Collection'}</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            </div>
+                        )}
+                    </StrictModeDroppable>
                     <div className="flex items-center justify-end">
                         <Button variant="ghost" size="icon" onClick={() => setIsSearching(true)} className={cn(isSearching && "hidden")}>
                             <GoogleSymbol name="search" />
@@ -1209,14 +1088,14 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
                                             key={collection.id}
                                             collection={collection}
                                             allBadgesInTeam={allBadgesAvailableToTeam}
-                                            allCollectionsInAllTeams={allCollectionsFromAllTeams}
                                             teamId={team.id}
                                             teams={teams}
                                             onUpdateCollection={handleUpdateCollection}
-                                            onDeleteCollection={handleDeleteOrUnlinkCollection}
+                                            onDeleteCollection={handleDeleteCollection}
                                             onAddBadge={handleAddBadge}
                                             onUpdateBadge={handleUpdateBadge}
                                             onDeleteBadge={handleDeleteBadge}
+                                            onToggleShare={handleToggleShare}
                                         />
                                     </div>
                                 )}
@@ -1257,13 +1136,6 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
                     </DialogHeader>
                 </DialogContent>
             </Dialog>
-            <ShareCollectionDialog
-                isOpen={isShareDialogOpen}
-                onClose={() => setIsShareDialogOpen(false)}
-                team={team}
-                teams={teams}
-                onShareCollection={handleShareCollection}
-            />
         </DragDropContext>
     );
 }
