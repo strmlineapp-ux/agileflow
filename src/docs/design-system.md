@@ -106,16 +106,27 @@ This pattern describes how a single entity (like a Badge or Badge Collection) ca
 
 ---
 
-### 8. Drag-to-Duplicate
-This pattern provides a fast, intuitive way for users to duplicate complex entities using a drag-and-drop gesture, significantly speeding up configuration workflows.
+### 8. Draggable Card Management (Reordering & Duplication)
+This pattern provides a unified, intuitive way for users to manage lists of complex entities using drag-and-drop, supporting both reordering and duplication.
 
--   **Trigger**: Dragging a configured entity (e.g., a "Page" card, "Calendar" card, or "Badge").
--   **Interaction**: A designated "Add New" icon or button acts as a drop zone. While an entity is being dragged, this drop zone becomes highlighted (e.g., with a colored ring) to indicate it can accept a drop.
--   **Behavior**:
-    -   Dropping the entity onto the zone creates a deep, independent copy of the original.
-    -   The new entity is given a new unique ID and a modified name (e.g., with `(Copy)` appended) to distinguish it from the original.
-    -   The new entity is typically placed immediately after the original in the list.
--   **Application**: Used for duplicating Pages, Calendars, Teams, and Badges to serve as a starting point for a new configuration.
+#### Reordering
+- **Trigger**: Clicking and dragging a card within a list.
+- **Interaction**: The dragged card can be moved up or down in the list. Other cards shift to indicate the drop position.
+- **Pinned Items**: Some items in the list may be "pinned" and cannot be moved (e.g., "Admin Management" or "Settings" pages). These items act as fixed boundaries.
+- **Behavior**:
+  - Dropping a card between two other draggable cards reorders the list.
+  - Attempting to drop a card before a pinned item at the top of the list will place it *after* that pinned item.
+  - Attempting to drop a card after a pinned item at the bottom of the list will place it *before* that pinned item.
+- **Application**: Used for reordering sidebar navigation pages.
+
+#### Duplication
+- **Trigger**: Dragging a configured entity (e.g., a "Page" card, "Calendar" card, or "Badge") from the list.
+- **Interaction**: A designated "Add New" icon or button acts as a drop zone. While an entity is being dragged, this drop zone becomes highlighted (e.g., with a colored ring) to indicate it can accept a drop.
+- **Behavior**:
+  - Dropping the entity onto the zone creates a deep, independent copy of the original.
+  - The new entity is given a new unique ID and a modified name (e.g., with `(Copy)` appended) to distinguish it from the original.
+  - The new entity is typically placed immediately after the original in the list.
+- **Application**: Used for duplicating Pages, Calendars, Teams, and Badges to serve as a starting point for a new configuration.
 
 ---
 
@@ -200,3 +211,4 @@ This is the single source of truth for indicating user interaction state across 
     - **Appearance**: A circular badge (e.g., `h-5 w-5`) with a `border-2` of the parent element's background color (e.g., `border-card` or `border-background`) to create a "punched out" effect. The icon inside should be sized appropriately (e.g., `font-size: 14px` or similar, depending on container).
     - **Placement**: Typically positioned on the bottom-right or top-right corner of the parent element.
     - **Application**: Used for displaying a user's admin group on their avatar, a shared group status on a role icon, or a `share` icon on a shared Badge.
+

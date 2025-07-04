@@ -79,7 +79,7 @@ This entity, `AppSettings`, holds global configuration data that allows for cust
 | Data Point | Description |
 | :--- | :--- |
 | `adminGroups: AdminGroup[]` | An array of objects defining custom administrative groups. This allows admins to create a hierarchy between the system `Admin` and standard users. Each group has a name, icon, and color, which are editable on the Admin Management page. |
-| `pages: AppPage[]` | **The core of the dynamic navigation.** This is an array of objects defining every page in the application. Each object includes the page's name, icon, URL path, access control rules, and a list of associated `tab.id`s that should be rendered on it. |
+| `pages: AppPage[]` | **The core of the dynamic navigation.** This is an array of objects defining every page in the application. The order of pages in this array directly corresponds to their order in the sidebar navigation and can be managed via drag-and-drop on the Admin Management page. Each object includes the page's name, icon, URL path, access control rules, and a list of associated `tab.id`s that should be rendered on it. |
 | `tabs: AppTab[]` | **The core of the dynamic content.** This is an array of objects defining all reusable content tabs. Each object includes the tab's name, icon, and a `componentKey` that maps it to a specific React component to render its content. |
 | `calendarManagementLabel?: string` | An alias for the "Manage Calendars" tab on the Service Delivery page. |
 | `teamManagementLabel?: string` | An alias for the "Team Management" tab on the Service Delivery page. |
