@@ -859,12 +859,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
     const titleInputRef = useRef<HTMLInputElement>(null);
     const [draggingItemId, setDraggingItemId] = useState<string | null>(null);
 
-    const pinnedTopIds = useMemo(() => ['page-admin-management'], []);
-    const pinnedBottomIds = useMemo(() => ['page-notifications', 'page-settings'], []);
-
-    const topPinnedPages = useMemo(() => appSettings.pages.filter(p => pinnedTopIds.includes(p.id)), [appSettings.pages, pinnedTopIds]);
-    const draggablePages = useMemo(() => appSettings.pages.filter(p => !pinnedTopIds.includes(p.id) && !pinnedBottomIds.includes(p.id)), [appSettings.pages, pinnedTopIds, pinnedBottomIds]);
-    const bottomPinnedPages = useMemo(() => appSettings.pages.filter(p => pinnedBottomIds.includes(p.id)), [appSettings.pages, pinnedBottomIds]);
+    const pinnedIds = useMemo(() => ['page-admin-management', 'page-notifications', 'page-settings'], []);
 
     useEffect(() => {
         if (isEditingTitle) titleInputRef.current?.focus();
@@ -902,9 +897,13 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
             access: { users: [], teams: [], adminGroups: [] }
         };
         
-        const newDraggablePages = [...draggablePages, newPage];
-        const finalPages = [...topPinnedPages, ...newDraggablePages, ...bottomPinnedPages];
-        updateAppSettings({ pages: finalPages });
+        const draggablePages = appSettings.pages.filter(p => !pinnedIds.includes(p.id));
+        const lastDraggableIndex = appSettings.pages.findLastIndex(p => !pinnedIds.includes(p.id));
+
+        const newPages = [...appSettings.pages];
+        newPages.splice(lastDraggableIndex + 1, 0, newPage);
+        
+        updateAppSettings({ pages: newPages });
     };
 
     const handleDeletePage = (pageId: string) => {
@@ -930,96 +929,84 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                     path: newPath,
                 };
                 
-                const draggableSourceIndex = draggablePages.findIndex(p => p.id === draggableId);
-                const newDraggablePages = [...draggablePages];
-                newDraggablePages.splice(draggableSourceIndex + 1, 0, newPage);
+                const sourcePageIndex = appSettings.pages.findIndex(p => p.id === draggableId);
+                const newPages = [...appSettings.pages];
+                newPages.splice(sourcePageIndex + 1, 0, newPage);
     
-                const finalPages = [...topPinnedPages, ...newDraggablePages, ...bottomPinnedPages];
-                updateAppSettings({ pages: finalPages });
+                updateAppSettings({ pages: newPages });
                 toast({ title: 'Page Duplicated', description: `A copy of "${pageToDuplicate.name}" was created.` });
             }
             return;
         }
     
-        if (destination.droppableId === 'draggable-pages-list') {
-            const reorderedDraggablePages = Array.from(draggablePages);
-            const [movedItem] = reorderedDraggablePages.splice(source.index, 1);
-            reorderedDraggablePages.splice(destination.index, 0, movedItem);
+        if (destination.droppableId === 'pages-list' && source.droppableId === 'pages-list') {
+            const reorderedPages = Array.from(appSettings.pages);
+            const [movedItem] = reorderedPages.splice(source.index, 1);
+            reorderedPages.splice(destination.index, 0, movedItem);
             
-            const finalPages = [...topPinnedPages, ...reorderedDraggablePages, ...bottomPinnedPages];
-            updateAppSettings({ pages: finalPages });
+            updateAppSettings({ pages: reorderedPages });
         }
     };
 
     return (
         <DragDropContext onDragStart={(start) => setDraggingItemId(start.draggableId)} onDragEnd={onDragEnd}>
             <div className="space-y-6">
-                <div className="flex items-center gap-2">
-                    {isEditingTitle ? (
-                        <Input ref={titleInputRef} defaultValue={tab.name} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
-                    ) : (
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <h2 className="text-2xl font-semibold tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p className="max-w-xs">When associated with a Team, page access is granted to Team Admins, or all members if no Admins are set. When associated with an Admin Group, page access is granted to Group Admins, or all members if no Admins are set.</p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    )}
-                    <StrictModeDroppable droppableId="duplicate-page-zone">
-                        {(provided, snapshot) => (
-                            <div 
-                                ref={provided.innerRef} 
-                                {...provided.droppableProps}
-                                className={cn(
-                                    "rounded-full transition-all p-0.5",
-                                    snapshot.isDraggingOver && "ring-2 ring-primary ring-offset-2 bg-accent"
-                                )}
-                            >
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={handleAddPage}>
-                                                <GoogleSymbol name="add_circle" className="text-xl" />
-                                                <span className="sr-only">Add New Page</span>
-                                            </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                            <p>{snapshot.isDraggingOver ? 'Drop to Duplicate' : 'Add New Page'}</p>
-                                        </TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                            </div>
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        {isEditingTitle ? (
+                            <Input ref={titleInputRef} defaultValue={tab.name} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
+                        ) : (
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <h2 className="text-2xl font-semibold tracking-tight cursor-pointer border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p className="max-w-xs">{tab.description}</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
                         )}
-                    </StrictModeDroppable>
+                        <StrictModeDroppable droppableId="duplicate-page-zone">
+                            {(provided, snapshot) => (
+                                <div 
+                                    ref={provided.innerRef} 
+                                    {...provided.droppableProps}
+                                    className={cn(
+                                        "rounded-full transition-all p-0.5",
+                                        snapshot.isDraggingOver && "ring-2 ring-primary ring-offset-2 bg-accent"
+                                    )}
+                                >
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={handleAddPage}>
+                                                    <GoogleSymbol name="add_circle" className="text-xl" />
+                                                    <span className="sr-only">Add New Page</span>
+                                                </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>{snapshot.isDraggingOver ? 'Drop to Duplicate' : 'Add New Page'}</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                </div>
+                            )}
+                        </StrictModeDroppable>
+                    </div>
                 </div>
                 
-                <div className="flex flex-wrap -m-3">
-                    {/* Top Pinned Cards */}
-                    {topPinnedPages.map(page => (
-                        <div key={page.id} className="w-full md:w-1/2 p-3 opacity-70">
-                            <PageCard
-                                page={page}
-                                onUpdate={handleUpdatePage}
-                                onDelete={handleDeletePage}
-                                isPinned={true}
-                            />
-                        </div>
-                    ))}
-
-                    {/* Draggable Cards */}
-                    <StrictModeDroppable droppableId="draggable-pages-list" direction="vertical">
-                        {(provided) => (
-                            <div
-                                ref={provided.innerRef}
-                                {...provided.droppableProps}
-                                className="contents"
-                            >
-                                {draggablePages.map((page, index) => (
-                                    <Draggable key={page.id} draggableId={page.id} index={index}>
+                <StrictModeDroppable droppableId="pages-list" direction="vertical">
+                    {(provided) => (
+                        <div
+                            ref={provided.innerRef}
+                            {...provided.droppableProps}
+                            className="flex flex-wrap -m-3"
+                        >
+                            {appSettings.pages.map((page, index) => {
+                                const isPinned = pinnedIds.includes(page.id);
+                                return (
+                                    <Draggable key={page.id} draggableId={page.id} index={index} isDragDisabled={isPinned}>
                                         {(provided, snapshot) => (
                                             <div
                                                 ref={provided.innerRef}
@@ -1027,6 +1014,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                                                 {...provided.dragHandleProps}
                                                 className={cn(
                                                     "w-full md:w-1/2 p-3",
+                                                    isPinned && "opacity-70",
                                                     draggingItemId === page.id && "opacity-50"
                                                 )}
                                             >
@@ -1035,29 +1023,17 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                                                     onUpdate={handleUpdatePage}
                                                     onDelete={handleDeletePage}
                                                     isDragging={snapshot.isDragging}
-                                                    isPinned={false}
+                                                    isPinned={isPinned}
                                                 />
                                             </div>
                                         )}
                                     </Draggable>
-                                ))}
-                                {provided.placeholder}
-                            </div>
-                        )}
-                    </StrictModeDroppable>
-
-                     {/* Bottom Pinned Cards */}
-                    {bottomPinnedPages.map(page => (
-                        <div key={page.id} className="w-full md:w-1/2 p-3 opacity-70">
-                            <PageCard
-                                page={page}
-                                onUpdate={handleUpdatePage}
-                                onDelete={handleDeletePage}
-                                isPinned={true}
-                            />
+                                )
+                            })}
+                            {provided.placeholder}
                         </div>
-                    ))}
-                </div>
+                    )}
+                </StrictModeDroppable>
             </div>
         </DragDropContext>
     );
