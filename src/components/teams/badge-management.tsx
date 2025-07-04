@@ -409,7 +409,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                     />
                 ) : (
                     <p className={cn("text-sm text-muted-foreground min-h-[20px]", isOwnedByMyTeam && "cursor-text")} onClick={() => isOwnedByMyTeam && setIsEditingDescription(true)}>
-                        {badge.description || (isOwnedByMyTeam ? 'Click to add a description.' : 'No description.')}
+                        {badge.description || (isOwnedByMyTeam ? 'Click to add description.' : 'No description.')}
                     </p>
                 )}
             </div>
@@ -554,45 +554,49 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                 </TooltipProvider>
                             )}
                         </div>
-                        <div className="flex items-center gap-1 flex-1 min-w-0">
+                        <div className="flex-1 min-w-0">
                             {isEditingName ? (
                                 <Input ref={nameInputRef} defaultValue={collection.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>
                             ) : (
                                 <CardTitle onClick={() => isOwned && setIsEditingName(true)} className={cn(isOwned && "cursor-pointer", "truncate")}>{collection.name}</CardTitle>
                             )}
-                            {isOwned && (
-                                 <StrictModeDroppable droppableId={`duplicate-badge-zone:${collection.id}`} type="badge" isDropDisabled={!isOwned}>
-                                     {(provided, snapshot) => (
-                                        <div
-                                            ref={provided.innerRef}
-                                            {...provided.droppableProps}
-                                            className={cn("rounded-full p-0.5", snapshot.isDraggingOver && "ring-1 ring-primary bg-accent")}
-                                        >
-                                            <TooltipProvider>
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => onAddBadge(collection.id)}><GoogleSymbol name="add_circle" className="text-xl" /><span className="sr-only">Add Badge</span></Button>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent><p>{snapshot.isDraggingOver ? 'Drop to Duplicate' : 'Add New Badge'}</p></TooltipContent>
-                                                </Tooltip>
-                                            </TooltipProvider>
-                                        </div>
-                                    )}
-                                </StrictModeDroppable>
-                            )}
-                            {isOwned && (
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => onToggleShare(collection.id)}>
-                                                <GoogleSymbol name="change_circle" filled={collection.isShared} />
-                                            </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent><p>{collection.isShared ? 'Unshare this collection' : 'Share this collection'}</p></TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                            )}
                         </div>
+                    </div>
+                </div>
+                 <div className="flex items-center justify-between pt-2">
+                    <div className="flex items-center gap-1">
+                        {isOwned && (
+                             <StrictModeDroppable droppableId={`duplicate-badge-zone:${collection.id}`} type="badge" isDropDisabled={!isOwned}>
+                                 {(provided, snapshot) => (
+                                    <div
+                                        ref={provided.innerRef}
+                                        {...provided.droppableProps}
+                                        className={cn("rounded-full p-0.5", snapshot.isDraggingOver && "ring-1 ring-primary bg-accent")}
+                                    >
+                                        <TooltipProvider>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => onAddBadge(collection.id)}><GoogleSymbol name="add_circle" className="text-xl" /><span className="sr-only">Add Badge</span></Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent><p>{snapshot.isDraggingOver ? 'Drop to Duplicate' : 'Add New Badge'}</p></TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
+                                    </div>
+                                )}
+                            </StrictModeDroppable>
+                        )}
+                        {isOwned && (
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => onToggleShare(collection.id)}>
+                                            <GoogleSymbol name="change_circle" filled={collection.isShared} />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent><p>{collection.isShared ? 'Unshare this collection' : 'Share this collection'}</p></TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        )}
                     </div>
                      <div className="flex items-center gap-1">
                         {isOwned && APPLICATIONS.map(app => (
@@ -614,7 +618,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                 </Tooltip>
                             </TooltipProvider>
                         ))}
-                        <Separator orientation="vertical" className="h-6 mx-1" />
+                        {isOwned && <Separator orientation="vertical" className="h-6 mx-1" />}
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><GoogleSymbol name="more_vert" /></Button></DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
