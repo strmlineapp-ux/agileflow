@@ -125,7 +125,7 @@ This is the application's perfected, gold-standard pattern for managing a collec
 -   **Drag-to-Duplicate**:
     -   **Interaction**: A designated "Add New" icon (`<Button>`) acts as a drop zone. While a card is being dragged, this zone becomes highlighted to indicate it can accept a drop.
     -   **Behavior**: Dropping any card (pinned or not) onto this zone creates a deep, independent copy of the original. The new card is given a unique ID, a modified name (e.g., with `(Copy)`), and is placed immediately after the original in the list.
--   **Application**: This is the required pattern for managing Pages, Calendars, Teams, and Badge Collections.
+-   **Application**: This is the required pattern for managing Pages, Calendars, and Teams.
 
 ---
 
@@ -140,19 +140,19 @@ This is a minimalist dialog for focused actions, such as entering a code or a sh
 - **Behavior**:
     - Clicking the action icon in the corner performs the primary action (e.g., saves or verifies the input).
     - Clicking the overlay dismisses the dialog without performing the action.
-- **Application**: Used for Two-Factor Authentication, quick edits, simple forms, and for confirming lower-risk destructive actions, such as deleting a **Page**, an **Admin Group**, a **Team**, or unlinking a shared Badge.
+- **Application**: Used for Two-Factor Authentication, quick edits, simple forms, and for confirming lower-risk destructive actions, such as deleting a **Page**, an **Admin Group**, or unlinking a shared Badge.
 
 ---
 
 ### 10. Compact Deletion Dialog
-When a **high-risk destructive action** requires user confirmation (like deleting a **Calendar**), the standard `AlertDialog` component is used. This is distinct from the `Compact Action Dialog` as it is intentionally more difficult to dismiss.
+When a **high-risk destructive action** requires user confirmation (like deleting a **Team** or **Calendar**), the standard `AlertDialog` component is used. This is distinct from the `Compact Action Dialog` as it is intentionally more difficult to dismiss.
 
 - **Appearance**: A modal dialog centered on the screen, overlaying the content.
 - **Interaction**:
     - The dialog contains a clear title, a description of the consequences, and explicit "Cancel" and "Continue" (or similar) buttons in the footer.
     - The "Continue" button for the destructive action is styled with the `destructive` variant to draw attention.
 - **Behavior**: Clicking "Cancel" closes the dialog with no action taken. Clicking "Continue" performs the destructive action. This dialog **cannot** be dismissed by clicking the overlay, forcing an explicit choice.
-- **Application**: Used for confirming the deletion of **major entities** where accidental dismissal could be problematic, such as Calendars.
+- **Application**: Used for confirming the deletion of **major entities** where accidental dismissal could be problematic, such as Calendars or Teams.
 
 ---
 
@@ -221,6 +221,7 @@ This is the single source of truth for indicating user interaction state across 
     - **Appearance**: A circular badge (e.g., `h-5 w-5`) with a `border-2` of the parent element's background color (e.g., `border-card` or `border-background`) to create a "punched out" effect. The icon inside should be sized appropriately (e.g., `font-size: 14px` or similar, depending on container).
     - **Placement**: Typically positioned on the bottom-right or top-right corner of the parent element.
     - **Application**: Used for displaying a user's admin group on their avatar, a shared group status on a role icon, or a `share` icon on a shared Badge.
+
 
 
 

@@ -7,7 +7,8 @@ import { useUser } from '@/context/user-context';
 import { type Team, type User, type AppTab } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle as UIDialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -377,9 +378,7 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
   const { toast } = useToast();
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  
-  const [editingTeam, setEditingTeam] = useState<Team | null>(null);
+  const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
 
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
@@ -408,8 +407,7 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
   };
 
   const openDeleteDialog = (team: Team) => {
-    setEditingTeam(team);
-    setIsDeleteDialogOpen(true);
+    setTeamToDelete(team);
   };
 
   const handleUpdate = async (teamId: string, data: Partial<Team>) => {
@@ -417,11 +415,10 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
   };
 
   const handleDelete = () => {
-    if (!editingTeam) return;
-    deleteTeam(editingTeam.id);
-    toast({ title: 'Success', description: `Team "${editingTeam.name}" has been deleted.` });
-    setIsDeleteDialogOpen(false);
-    setEditingTeam(null);
+    if (!teamToDelete) return;
+    deleteTeam(teamToDelete.id);
+    toast({ title: 'Success', description: `Team "${teamToDelete.name}" has been deleted.` });
+    setTeamToDelete(null);
   };
   
   const handleDuplicateTeam = (sourceTeam: Team) => {
@@ -587,22 +584,22 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
           />
       )}
 
-      <Dialog open={isDeleteDialogOpen} onOpenChange={(isOpen) => !isOpen && setEditingTeam(null)}>
-        <DialogContent className="max-w-md">
-            <div className="absolute top-4 right-4">
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={handleDelete}>
-                    <GoogleSymbol name="delete" className="text-xl" />
-                    <span className="sr-only">Delete Team</span>
-                </Button>
-            </div>
-            <DialogHeader>
-                <DialogTitle>Delete "{editingTeam?.name}"?</DialogTitle>
-                <DialogDescription>
-                    This action cannot be undone. This will permanently delete the team and all of its associated roles and settings.
-                </DialogDescription>
-            </DialogHeader>
-        </DialogContent>
-      </Dialog>
+      <AlertDialog open={!!teamToDelete} onOpenChange={() => setTeamToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the "{teamToDelete?.name}" team, its badge collections, and all associated settings.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={handleDelete}>
+              Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DragDropContext>
   );
 }
@@ -699,7 +696,7 @@ function AddTeamDialog({ isOpen, onClose, allUsers, addTeam }: AddTeamDialogProp
                     </Button>
                 </div>
                 <DialogHeader>
-                    <DialogTitle>New Team</DialogTitle>
+                    <UIDialogTitle>New Team</UIDialogTitle>
                     <DialogDescription>Create a new team and assign its initial members.</DialogDescription>
                 </DialogHeader>
 

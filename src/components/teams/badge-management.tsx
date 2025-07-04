@@ -1084,34 +1084,38 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
                 </div>
                 <StrictModeDroppable droppableId="collections-list" type="collection">
                     {(provided) => (
-                        <div className="space-y-6" ref={provided.innerRef} {...provided.droppableProps}>
-                        {displayedCollections.map((collection, index) => (
-                            <Draggable key={collection.id} draggableId={collection.id} index={index}>
-                                {(provided, snapshot) => (
-                                    <div 
-                                        ref={provided.innerRef} 
-                                        {...provided.draggableProps} 
-                                        {...provided.dragHandleProps}
-                                        className={cn(snapshot.isDragging && "shadow-xl")}
-                                    >
-                                        <BadgeCollectionCard
-                                            key={collection.id}
-                                            collection={collection}
-                                            allBadgesInTeam={allBadgesAvailableToTeam}
-                                            teamId={team.id}
-                                            teams={teams}
-                                            onUpdateCollection={handleUpdateCollection}
-                                            onDeleteCollection={handleDeleteCollection}
-                                            onAddBadge={handleAddBadge}
-                                            onUpdateBadge={handleUpdateBadge}
-                                            onDeleteBadge={handleDeleteBadge}
-                                            onToggleShare={handleToggleShare}
-                                        />
-                                    </div>
-                                )}
-                            </Draggable>
-                        ))}
-                        {provided.placeholder}
+                        <div 
+                            ref={provided.innerRef}
+                            {...provided.droppableProps}
+                            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4"
+                        >
+                            {displayedCollections.map((collection, index) => (
+                                <Draggable key={collection.id} draggableId={collection.id} index={index}>
+                                    {(provided, snapshot) => (
+                                        <div
+                                            ref={provided.innerRef}
+                                            {...provided.draggableProps}
+                                            {...provided.dragHandleProps}
+                                            className={cn("w-full", snapshot.isDragging && "shadow-xl")}
+                                        >
+                                            <BadgeCollectionCard
+                                                key={collection.id}
+                                                collection={collection}
+                                                allBadgesInTeam={allBadgesAvailableToTeam}
+                                                teamId={team.id}
+                                                teams={teams}
+                                                onUpdateCollection={handleUpdateCollection}
+                                                onDeleteCollection={handleDeleteCollection}
+                                                onAddBadge={handleAddBadge}
+                                                onUpdateBadge={handleUpdateBadge}
+                                                onDeleteBadge={handleDeleteBadge}
+                                                onToggleShare={handleToggleShare}
+                                            />
+                                        </div>
+                                    )}
+                                </Draggable>
+                            ))}
+                            {provided.placeholder}
                         </div>
                     )}
                 </StrictModeDroppable>
