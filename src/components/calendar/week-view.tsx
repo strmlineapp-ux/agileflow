@@ -31,7 +31,7 @@ export const WeekView = React.memo(({ date, containerRef, zoomLevel, onEasyBooki
     const initialScrollPerformed = useRef(false);
     const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
     
-    const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars, appSettings.customAdminRoles);
+    const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars, appSettings.adminGroups);
     const weekStart = useMemo(() => startOfWeek(date, { weekStartsOn: 1 }), [date]);
     const weekDays = useMemo(() => eachDayOfInterval({ start: weekStart, end: addDays(weekStart, 6) }), [weekStart]);
     const isCurrentWeek = useMemo(() => weekDays.some(isToday), [weekDays]);

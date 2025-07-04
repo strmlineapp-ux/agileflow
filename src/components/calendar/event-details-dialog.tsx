@@ -187,7 +187,7 @@ export function EventDetailsDialog({ event, isOpen, onOpenChange }: EventDetails
   const calendar = calendars.find(c => c.id === event.calendarId);
   if (!calendar) return null;
 
-  const canManage = canManageEventOnCalendar(viewAsUser, calendar, appSettings.customAdminRoles);
+  const canManage = canManageEventOnCalendar(viewAsUser, calendar, appSettings.adminGroups);
   
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>

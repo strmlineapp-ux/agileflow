@@ -339,7 +339,7 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
     const [addCheckPopoverOpen, setAddCheckPopoverOpen] = useState<Record<string, boolean>>({});
     const [checkSearchTerm, setCheckSearchTerm] = useState('');
     
-    const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars, appSettings.customAdminRoles);
+    const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars, appSettings.adminGroups);
     const managerialRoles = appSettings.adminGroups.map(r => r.name);
     const canManageStatus = viewAsUser.isAdmin || viewAsUser.roles?.some(p => managerialRoles.includes(p));
 
@@ -734,6 +734,7 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
     );
 });
 ProductionScheduleView.displayName = 'ProductionScheduleView';
+
 
 
 

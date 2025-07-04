@@ -153,7 +153,7 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
     const initialScrollPerformed = useRef(false);
     const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
 
-    const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars, appSettings.customAdminRoles);
+    const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars, appSettings.adminGroups);
     const isViewingToday = useMemo(() => isSameDay(date, new Date()), [date]);
 
     const timeFormatTimeline = viewAsUser.timeFormat === '24h' ? 'HH:mm' : 'h a';
