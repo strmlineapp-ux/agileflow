@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -544,7 +545,28 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
     if (!destination) return;
 
     if (type === 'group-card') {
+      if (destination.droppableId === 'duplicate-admin-group-zone') {
+        const groupToDuplicate = appSettings.adminGroups.find(g => g.id === draggableId);
+        if (groupToDuplicate) {
+            const newName = `${groupToDuplicate.name} (Copy)`;
+            const newGroup: AdminGroup = {
+                ...JSON.parse(JSON.stringify(groupToDuplicate)), // Deep copy
+                id: crypto.randomUUID(),
+                name: newName,
+            };
+            
+            const sourceGroupIndex = appSettings.adminGroups.findIndex(g => g.id === draggableId);
+            const newGroups = [...appSettings.adminGroups];
+            newGroups.splice(sourceGroupIndex + 1, 0, newGroup);
+
+            updateAppSettings({ adminGroups: newGroups });
+            toast({ title: 'Group Duplicated', description: `A copy of "${groupToDuplicate.name}" was created.` });
+        }
+        return;
+      }
+      
       if (source.droppableId !== destination.droppableId) return;
+      
       const allGroups = appSettings.adminGroups;
       const [movedItem] = allGroups.splice(source.index, 1);
       allGroups.splice(destination.index, 0, movedItem);
@@ -594,7 +616,7 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
 
       if (destinationDroppableId.startsWith('delete-dropzone-')) {
         const destGroupId = destinationDroppableId.replace('delete-dropzone-', '');
-        const sourceGroupId = sourceDroppableId.replace('group-content-', '');
+        const sourceGroupId = source.droppableId.replace('group-content-', '');
             
         if (destGroupId !== sourceGroupId) {
           toast({ title: 'Invalid Action', description: 'Can only remove a user from their own group.' });
@@ -612,36 +634,51 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
   };
   
   return (
-    <div className="space-y-6">
-        <div className="flex items-center gap-2">
-            {isEditingTitle ? (
-              <Input ref={titleInputRef} defaultValue={tab.name} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
-            ) : (
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <h2 className="text-2xl font-semibold tracking-tight cursor-pointer border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p className="max-w-xs">{tab.description}</p>
-                        </TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
-            )}
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={handleAddAdminGroup}>
-                      <GoogleSymbol name="add_circle" className="text-xl" />
-                      <span className="sr-only">Add New Group</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent><p>Add New Group</p></TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-        </div>
-        
-        <DragDropContext onDragEnd={onDragEnd}>
+    <DragDropContext onDragEnd={onDragEnd}>
+        <div className="space-y-6">
+            <div className="flex items-center gap-2">
+                {isEditingTitle ? (
+                  <Input ref={titleInputRef} defaultValue={tab.name} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
+                ) : (
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <h2 className="text-2xl font-semibold tracking-tight cursor-pointer border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p className="max-w-xs">{tab.description}</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                )}
+                 <StrictModeDroppable droppableId="duplicate-admin-group-zone" type="group-card">
+                    {(provided, snapshot) => (
+                        <div 
+                            ref={provided.innerRef} 
+                            {...provided.droppableProps}
+                            className={cn(
+                                "rounded-full transition-all p-0.5",
+                                snapshot.isDraggingOver && "ring-1 ring-border"
+                            )}
+                        >
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={handleAddAdminGroup}>
+                                            <GoogleSymbol name="add_circle" className="text-xl" />
+                                            <span className="sr-only">Add New Group or Drop to Duplicate</span>
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>{snapshot.isDraggingOver ? 'Drop to Duplicate' : 'Add New Group'}</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        </div>
+                    )}
+                </StrictModeDroppable>
+            </div>
+            
             <StrictModeDroppable droppableId="admin-groups-list" type="group-card">
               {(provided) => (
                   <div ref={provided.innerRef} {...provided.droppableProps} className="flex flex-wrap -m-3">
@@ -690,55 +727,55 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                   </div>
               )}
             </StrictModeDroppable>
-        </DragDropContext>
           
-          <Dialog open={is2faDialogOpen} onOpenChange={(isOpen) => !isOpen && close2faDialog()}>
-            <DialogContent className="max-w-sm">
-                <div className="absolute top-4 right-4">
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleVerify2fa}>
-                                    <GoogleSymbol name="check" className="text-xl" />
-                                    <span className="sr-only">Verify Code</span>
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent><p>Verify Code</p></TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                </div>
-                <DialogHeader>
-                    <DialogTitle>Two-Factor Authentication</DialogTitle>
-                    <DialogDescription>Enter the 6-digit code from your authenticator app to proceed.</DialogDescription>
-                </DialogHeader>
-                <div
-                    className={cn("flex items-center gap-2 w-full text-left text-muted-foreground transition-colors p-2 h-10",
-                        !isEditing2fa && "cursor-text hover:text-primary/80"
-                    )}
-                    onClick={() => {if (!isEditing2fa) setIsEditing2fa(true)}}
-                    >
-                    <GoogleSymbol name="password" className="text-xl" />
-                    {isEditing2fa ? (
-                        <Input
-                            id="2fa-code"
-                            ref={twoFactorCodeInputRef}
-                            value={twoFactorCode}
-                            onChange={(e) => setTwoFactorCode(e.target.value)}
-                            onBlur={() => { if (!twoFactorCode) setIsEditing2fa(false); }}
-                            onKeyDown={(e) => e.key === 'Enter' && handleVerify2fa()}
-                            className="w-full text-center tracking-[0.5em] h-auto p-0 border-0 shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground"
-                            maxLength={6}
-                            placeholder="••••••"
-                        />
-                    ) : (
-                        <span className="flex-1 text-sm text-center tracking-[0.5em]">
-                            {twoFactorCode ? '••••••' : '6-digit code'}
-                        </span>
-                    )}
-                </div>
-            </DialogContent>
-        </Dialog>
-    </div>
+              <Dialog open={is2faDialogOpen} onOpenChange={(isOpen) => !isOpen && close2faDialog()}>
+                <DialogContent className="max-w-sm">
+                    <div className="absolute top-4 right-4">
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleVerify2fa}>
+                                        <GoogleSymbol name="check" className="text-xl" />
+                                        <span className="sr-only">Verify Code</span>
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent><p>Verify Code</p></TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    </div>
+                    <DialogHeader>
+                        <DialogTitle>Two-Factor Authentication</DialogTitle>
+                        <DialogDescription>Enter the 6-digit code from your authenticator app to proceed.</DialogDescription>
+                    </DialogHeader>
+                    <div
+                        className={cn("flex items-center gap-2 w-full text-left text-muted-foreground transition-colors p-2 h-10",
+                            !isEditing2fa && "cursor-text hover:text-primary/80"
+                        )}
+                        onClick={() => {if (!isEditing2fa) setIsEditing2fa(true)}}
+                        >
+                        <GoogleSymbol name="password" className="text-xl" />
+                        {isEditing2fa ? (
+                            <Input
+                                id="2fa-code"
+                                ref={twoFactorCodeInputRef}
+                                value={twoFactorCode}
+                                onChange={(e) => setTwoFactorCode(e.target.value)}
+                                onBlur={() => { if (!twoFactorCode) setIsEditing2fa(false); }}
+                                onKeyDown={(e) => e.key === 'Enter' && handleVerify2fa()}
+                                className="w-full text-center tracking-[0.5em] h-auto p-0 border-0 shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground"
+                                maxLength={6}
+                                placeholder="••••••"
+                            />
+                        ) : (
+                            <span className="flex-1 text-sm text-center tracking-[0.5em]">
+                                {twoFactorCode ? '••••••' : '6-digit code'}
+                            </span>
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
+        </div>
+    </DragDropContext>
   );
 }
 // #endregion
