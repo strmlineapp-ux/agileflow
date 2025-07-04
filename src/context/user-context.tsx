@@ -32,6 +32,7 @@ interface UserContextType {
   updateUser: (userId: string, userData: Partial<User>) => Promise<void>;
   linkGoogleCalendar: (userId: string) => Promise<void>;
   calendars: SharedCalendar[];
+  reorderCalendars: (reorderedCalendars: SharedCalendar[]) => Promise<void>;
   addCalendar: (newCalendar: Omit<SharedCalendar, 'id'>) => Promise<void>;
   updateCalendar: (calendarId: string, calendarData: Partial<SharedCalendar>) => Promise<void>;
   deleteCalendar: (calendarId: string) => Promise<void>;
@@ -211,6 +212,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setCalendars(current => current.filter(c => c.id !== calendarId));
   }, [calendars.length, toast]);
 
+  const reorderCalendars = useCallback(async (reordered: SharedCalendar[]) => {
+      await simulateApi();
+      setCalendars(reordered);
+  }, []);
+
 
   const addEvent = useCallback(async (newEventData: Omit<Event, 'eventId'>) => {
     const event: Event = {
@@ -335,6 +341,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     updateUser,
     linkGoogleCalendar,
     calendars,
+    reorderCalendars,
     addCalendar,
     updateCalendar,
     deleteCalendar,
@@ -353,7 +360,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     loading, realUser, viewAsUser, users, allBadges, allRolesAndBadges, teams, notifications, userStatusAssignments,
     calendars, events, locations, allBookableLocations, appSettings,
     addTeam, updateTeam, deleteTeam, setNotifications, setUserStatusAssignments, addUser,
-    updateUser, linkGoogleCalendar, addCalendar, updateCalendar, deleteCalendar,
+    updateUser, linkGoogleCalendar, reorderCalendars, addCalendar, updateCalendar, deleteCalendar,
     addEvent, updateEvent, addLocation, deleteLocation,
     getPriorityDisplay, updateAppSettings, updateAppTab
   ]);

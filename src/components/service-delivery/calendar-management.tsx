@@ -218,7 +218,7 @@ function CalendarCard({ calendar, onUpdate, onDelete }: { calendar: SharedCalend
 }
 
 export function CalendarManagement({ tab }: { tab: AppTab }) {
-  const { calendars, addCalendar, updateCalendar, deleteCalendar, updateAppTab, appSettings } = useUser();
+  const { calendars, reorderCalendars, addCalendar, updateCalendar, deleteCalendar, updateAppTab, appSettings } = useUser();
   const { toast } = useToast();
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -304,82 +304,87 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
       }
   
       if (source.droppableId === 'calendars-list' && destination.droppableId === 'calendars-list') {
-          // Reordering logic would go here if needed in the future
+          const reorderedCalendars = Array.from(calendars);
+          const [movedItem] = reorderedCalendars.splice(source.index, 1);
+          reorderedCalendars.splice(destination.index, 0, movedItem);
+          reorderCalendars(reorderedCalendars);
       }
   };
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <div className="flex items-center gap-2 mb-6">
-          {isEditingTitle ? (
-            <Input ref={titleInputRef} defaultValue={title} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
-          ) : (
-            <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <h3 className="text-2xl font-semibold tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{title}</h3>
-                    </TooltipTrigger>
-                    {tab.description && (
-                        <TooltipContent><p className="max-w-xs">{tab.description}</p></TooltipContent>
-                    )}
-                </Tooltip>
-            </TooltipProvider>
-          )}
-          <StrictModeDroppable droppableId="duplicate-calendar-zone">
-              {(provided, snapshot) => (
-                  <div
-                      ref={provided.innerRef}
-                      {...provided.droppableProps}
-                      className={cn(
-                          "rounded-full transition-all p-0.5",
-                          snapshot.isDraggingOver && "ring-2 ring-primary ring-offset-2 bg-accent"
+      <div className="space-y-6">
+        <div className="flex items-center gap-2">
+            {isEditingTitle ? (
+              <Input ref={titleInputRef} defaultValue={title} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
+            ) : (
+              <TooltipProvider>
+                  <Tooltip>
+                      <TooltipTrigger asChild>
+                          <h3 className="text-2xl font-semibold tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{title}</h3>
+                      </TooltipTrigger>
+                      {tab.description && (
+                          <TooltipContent><p className="max-w-xs">{tab.description}</p></TooltipContent>
                       )}
-                  >
-                      <TooltipProvider>
-                          <Tooltip>
-                              <TooltipTrigger asChild>
-                                   <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={handleAddCalendar}>
-                                      <GoogleSymbol name="add_circle" className="text-xl" />
-                                      <span className="sr-only">New Calendar or Drop to Duplicate</span>
-                                  </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                  <p>{snapshot.isDraggingOver ? 'Drop to Duplicate' : 'Add New Calendar'}</p>
-                              </TooltipContent>
-                          </Tooltip>
-                      </TooltipProvider>
-                  </div>
-              )}
-          </StrictModeDroppable>
+                  </Tooltip>
+              </TooltipProvider>
+            )}
+            <StrictModeDroppable droppableId="duplicate-calendar-zone">
+                {(provided, snapshot) => (
+                    <div
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                        className={cn(
+                            "rounded-full transition-all p-0.5",
+                            snapshot.isDraggingOver && "ring-2 ring-primary ring-offset-2 bg-accent"
+                        )}
+                    >
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={handleAddCalendar}>
+                                        <GoogleSymbol name="add_circle" className="text-xl" />
+                                        <span className="sr-only">New Calendar or Drop to Duplicate</span>
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>{snapshot.isDraggingOver ? 'Drop to Duplicate' : 'Add New Calendar'}</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    </div>
+                )}
+            </StrictModeDroppable>
+        </div>
+        <StrictModeDroppable droppableId="calendars-list">
+            {(provided) => (
+                <div
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                >
+                    {calendars.map((calendar, index) => (
+                        <Draggable key={calendar.id} draggableId={calendar.id} index={index}>
+                            {(provided) => (
+                                <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                >
+                                    <CalendarCard
+                                        calendar={calendar}
+                                        onUpdate={handleUpdate}
+                                        onDelete={openDeleteDialog}
+                                    />
+                                </div>
+                            )}
+                        </Draggable>
+                    ))}
+                    {provided.placeholder}
+                </div>
+            )}
+        </StrictModeDroppable>
       </div>
-      <StrictModeDroppable droppableId="calendars-list">
-          {(provided) => (
-              <div
-                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-                  ref={provided.innerRef}
-                  {...provided.droppableProps}
-              >
-                  {calendars.map((calendar, index) => (
-                      <Draggable key={calendar.id} draggableId={calendar.id} index={index}>
-                          {(provided) => (
-                              <div
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  {...provided.dragHandleProps}
-                              >
-                                  <CalendarCard
-                                      calendar={calendar}
-                                      onUpdate={handleUpdate}
-                                      onDelete={openDeleteDialog}
-                                  />
-                              </div>
-                          )}
-                      </Draggable>
-                  ))}
-                  {provided.placeholder}
-              </div>
-          )}
-      </StrictModeDroppable>
       
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
