@@ -290,8 +290,8 @@ function AdminGroupCard({
                 </div>
                 <div className="flex items-center">
                     <TooltipProvider>
-                        <Tooltip><TooltipTrigger asChild><AddUserToGroupButton usersToAdd={unassignedUsers} onAdd={handleGroupToggle} groupName={group.name} /></TooltipTrigger><TooltipContent>Assign User</TooltipContent></Tooltip>
-                        <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setIsDeleteDialogOpen(true)}><GoogleSymbol name="delete" /></Button></TooltipTrigger><TooltipContent>Delete Group</TooltipContent></Tooltip>
+                        <Tooltip><TooltipTrigger asChild><AddUserToGroupButton usersToAdd={unassignedUsers} onAdd={handleGroupToggle} groupName={group.name} /></TooltipTrigger><TooltipContent><p>Assign User</p></TooltipContent></Tooltip>
+                        <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setIsDeleteDialogOpen(true)}><GoogleSymbol name="delete" /></Button></TooltipTrigger><TooltipContent><p>Delete Group</p></TooltipContent></Tooltip>
                     </TooltipProvider>
                 </div>
               </div>
@@ -446,10 +446,17 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
             ) : (
               <h2 className="text-2xl font-semibold tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
             )}
-            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={handleAddAdminGroup}>
-                <GoogleSymbol name="add_circle" className="text-xl" />
-                <span className="sr-only">Add New Group</span>
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={handleAddAdminGroup}>
+                      <GoogleSymbol name="add_circle" className="text-xl" />
+                      <span className="sr-only">Add New Group</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent><p>Add New Group</p></TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
         </div>
         
         <DragDropContext onDragEnd={onDragEnd}>
@@ -464,7 +471,7 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                                 <TooltipProvider>
                                   <Tooltip>
                                       <TooltipTrigger asChild><AddUserToGroupButton usersToAdd={nonAdminUsers} onAdd={handleAdminToggle} groupName="Admin" /></TooltipTrigger>
-                                      <TooltipContent>Assign User</TooltipContent>
+                                      <TooltipContent><p>Assign User</p></TooltipContent>
                                   </Tooltip>
                                 </TooltipProvider>
                               </div>
