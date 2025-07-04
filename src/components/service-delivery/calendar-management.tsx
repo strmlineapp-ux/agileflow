@@ -6,7 +6,6 @@ import { useUser } from '@/context/user-context';
 import { type SharedCalendar, type AppTab } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -208,21 +207,8 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
   const { calendars, addCalendar, updateCalendar, deleteCalendar, updateAppTab, appSettings } = useUser();
   const { toast } = useToast();
 
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isAddColorPopoverOpen, setIsAddColorPopoverOpen] = useState(false);
-  const [isAddIconPopoverOpen, setIsAddIconPopoverOpen] = useState(false);
-  
   const [editingCalendar, setEditingCalendar] = useState<SharedCalendar | null>(null);
-
-  // Add new calendar state
-  const [newCalendarName, setNewCalendarName] = useState('');
-  const [newCalendarIcon, setNewCalendarIcon] = useState('calendar_month');
-  const [newCalendarColor, setNewCalendarColor] = useState('#3B82F6');
-  
-  const [isAddIconSearching, setIsAddIconSearching] = useState(false);
-  const [addIconSearch, setAddIconSearch] = useState('');
-  const addSearchInputRef = useRef<HTMLInputElement>(null);
   
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
@@ -246,28 +232,17 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
     else if (e.key === 'Escape') setIsEditingTitle(false);
   };
   
-  useEffect(() => {
-    if (!isAddIconPopoverOpen) {
-        setIsAddIconSearching(false);
-        setAddIconSearch('');
-    }
-  }, [isAddIconPopoverOpen]);
-  
-  useEffect(() => {
-    if (isAddIconSearching) addSearchInputRef.current?.focus();
-  }, [isAddIconSearching]);
-
-  const handleAddBlurSearch = () => {
-    if (!addIconSearch) setIsAddIconSearching(false);
-  }
-
-  const filteredIcons = googleSymbolNames.filter(name => name.toLowerCase().includes(addIconSearch.toLowerCase()));
-
-  const openAddDialog = () => {
-    setNewCalendarName('');
-    setNewCalendarColor('#3B82F6');
-    setNewCalendarIcon('calendar_month');
-    setIsAddDialogOpen(true);
+  const handleAddCalendar = () => {
+    const calendarCount = calendars.length;
+    const newName = `New Calendar ${calendarCount + 1}`;
+    addCalendar({
+      name: newName,
+      icon: 'calendar_month',
+      color: predefinedColors[calendarCount % predefinedColors.length],
+      managers: [],
+      defaultEventTitle: 'New Event',
+    });
+    toast({ title: 'New Calendar Added', description: `"${newName}" has been created.` });
   };
 
   const openDeleteDialog = (calendar: SharedCalendar) => {
@@ -275,22 +250,6 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
     setIsDeleteDialogOpen(true);
   };
   
-  const handleAddNewCalendar = async () => {
-    if (!newCalendarName.trim()) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Calendar name is required.' });
-      return;
-    }
-    await addCalendar({
-      name: newCalendarName.trim(),
-      icon: newCalendarIcon,
-      color: newCalendarColor,
-      managers: [],
-      defaultEventTitle: 'New Event',
-    });
-    toast({ title: 'Success', description: 'Calendar added successfully.' });
-    setIsAddDialogOpen(false);
-  };
-
   const handleUpdate = async (calendarId: string, data: Partial<SharedCalendar>) => {
     await updateCalendar(calendarId, data);
     toast({ title: 'Success', description: 'Calendar updated successfully.' });
@@ -365,7 +324,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                       <TooltipProvider>
                           <Tooltip>
                               <TooltipTrigger asChild>
-                                   <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={openAddDialog}>
+                                   <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={handleAddCalendar}>
                                       <GoogleSymbol name="add_circle" className="text-xl" />
                                       <span className="sr-only">New Calendar or Drop to Duplicate</span>
                                   </Button>
@@ -407,63 +366,6 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
               </div>
           )}
       </StrictModeDroppable>
-
-      {/* Add New Calendar Dialog */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="max-w-md">
-            <div className="absolute top-4 right-4">
-                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleAddNewCalendar}>
-                    <GoogleSymbol name="check" className="text-xl" />
-                    <span className="sr-only">Add Calendar</span>
-                </Button>
-            </div>
-            <DialogHeader>
-                <DialogTitle>Add New Calendar</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4 pt-4">
-                <div className="flex items-center gap-4">
-                    <div className="relative">
-                        <Popover open={isAddIconPopoverOpen} onOpenChange={setIsAddIconPopoverOpen}>
-                            <PopoverTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-9 w-9 text-2xl" style={{ color: newCalendarColor }}>
-                                    <GoogleSymbol name={newCalendarIcon} />
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-80 p-0">
-                                <div className="flex items-center gap-1 p-2 border-b">
-                                    {!isAddIconSearching ? (
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => setIsAddIconSearching(true)}>
-                                        <GoogleSymbol name="search" />
-                                    </Button>
-                                    ) : (
-                                    <div className="flex items-center gap-1 w-full">
-                                        <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
-                                        <input
-                                            ref={addSearchInputRef}
-                                            placeholder="Search icons..."
-                                            value={addIconSearch}
-                                            onChange={(e) => setAddIconSearch(e.target.value)}
-                                            onBlur={handleAddBlurSearch}
-                                            className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
-                                        />
-                                    </div>
-                                    )}
-                                </div>
-                                <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={newCalendarIcon === iconName ? "default" : "ghost"} size="icon" onClick={() => { setNewCalendarIcon(iconName); setIsAddIconPopoverOpen(false);}} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
-                            </PopoverContent>
-                        </Popover>
-                        <Popover open={isAddColorPopoverOpen} onOpenChange={setIsAddColorPopoverOpen}>
-                            <PopoverTrigger asChild><div className="absolute -bottom-1 -right-0 h-4 w-4 rounded-full border-2 border-card cursor-pointer" style={{ backgroundColor: newCalendarColor }} /></PopoverTrigger>
-                            <PopoverContent className="w-auto p-2">
-                                <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {setNewCalendarColor(c); setIsAddColorPopoverOpen(false);}}/>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={newCalendarColor} onChange={(e) => setNewCalendarColor(e.target.value)} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
-                            </PopoverContent>
-                        </Popover>
-                    </div>
-                    <Input id="name" value={newCalendarName} onChange={(e) => setNewCalendarName(e.target.value)} placeholder="Calendar Name" className="flex-1 text-lg font-semibold" />
-                </div>
-            </div>
-        </DialogContent>
-      </Dialog>
       
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
