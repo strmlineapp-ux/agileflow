@@ -940,10 +940,30 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
         }
     
         if (destination.droppableId === 'pages-list' && source.droppableId === 'pages-list') {
-            const reorderedPages = Array.from(appSettings.pages);
-            const [movedItem] = reorderedPages.splice(source.index, 1);
-            reorderedPages.splice(destination.index, 0, movedItem);
+            const pages = appSettings.pages;
+            const fromIndex = source.index;
+            let toIndex = destination.index;
             
+            // Constraint 1: Can't drop before Admin Management (which is at index 0)
+            if (toIndex === 0) {
+                toIndex = 1;
+            }
+
+            // Constraint 2: Can't drop on or after the notifications page
+            const notificationsIndex = pages.findIndex(p => p.id === 'page-notifications');
+            if (notificationsIndex !== -1 && toIndex >= notificationsIndex) {
+                toIndex = notificationsIndex;
+            }
+
+            // Reorder the array with the corrected index
+            const reorderedPages = Array.from(pages);
+            const [movedItem] = reorderedPages.splice(fromIndex, 1);
+            
+            // The destination index needs to be adjusted if the item was moved from before it
+            const finalInsertionIndex = fromIndex < toIndex ? toIndex - 1 : toIndex;
+            
+            reorderedPages.splice(finalInsertionIndex, 0, movedItem);
+
             updateAppSettings({ pages: reorderedPages });
         }
     };
