@@ -1033,7 +1033,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                     </div>
                 </div>
                 
-                <StrictModeDroppable droppableId="pages-list" direction="vertical">
+                <StrictModeDroppable droppableId="pages-list">
                     {(provided) => (
                         <div
                             ref={provided.innerRef}
