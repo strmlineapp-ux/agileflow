@@ -434,23 +434,36 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
 
   const onDragEnd = (result: DropResult) => {
     const { source, destination } = result;
-    if (!destination || destination.index === 0) return;
-
-    const sourceIndex = source.index - 1;
-    const destinationIndex = destination.index - 1;
+    if (!destination) return;
     
-    if (sourceIndex === destinationIndex) return;
+    const draggableGroups = appSettings.adminGroups;
+    const midPoint = Math.ceil(draggableGroups.length / 2);
+    let col1Groups = draggableGroups.slice(0, midPoint);
+    let col2Groups = draggableGroups.slice(midPoint);
 
-    const reorderedGroups = Array.from(appSettings.adminGroups);
-    const [movedGroup] = reorderedGroups.splice(sourceIndex, 1);
-    reorderedGroups.splice(destinationIndex, 0, movedGroup);
+    if (source.droppableId === destination.droppableId) {
+        const list = source.droppableId === 'groups-col-1' ? col1Groups : col2Groups;
+        const [removed] = list.splice(source.index, 1);
+        list.splice(destination.index, 0, removed);
+    } else {
+        const sourceList = source.droppableId === 'groups-col-1' ? col1Groups : col2Groups;
+        const destList = destination.droppableId === 'groups-col-1' ? col1Groups : col2Groups;
+        const [removed] = sourceList.splice(source.index, 1);
+        destList.splice(destination.index, 0, removed);
+    }
 
-    updateAppSettings({ adminGroups: reorderedGroups });
+    const newAdminGroups = [...col1Groups, ...col2Groups];
+    updateAppSettings({ adminGroups: newAdminGroups });
   };
 
+  const draggableGroups = appSettings.adminGroups;
+  const midPoint = Math.ceil(draggableGroups.length / 2);
+  const col1Groups = draggableGroups.slice(0, midPoint);
+  const col2Groups = draggableGroups.slice(midPoint);
+
   return (
-    <>
-        <div className="flex items-center gap-2 mb-8">
+    <div className="space-y-6">
+        <div className="flex items-center gap-2">
             {isEditingTitle ? (
               <Input ref={titleInputRef} defaultValue={tab.name} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
             ) : (
@@ -462,66 +475,90 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
             </Button>
         </div>
         
+        <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <CardTitle>Admins</CardTitle>
+                <TooltipProvider>
+                  <Tooltip>
+                      <TooltipTrigger asChild><AddUserToGroupButton usersToAdd={nonAdminUsers} onAdd={handleAdminToggle} groupName="Admin" /></TooltipTrigger>
+                      <TooltipContent>Assign User</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <CardDescription>Assign or revoke Admin privileges. This is the highest level of access.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {adminUsers.map(user => (
+                <UserAssignmentCard 
+                  key={user.userId} 
+                  user={user} 
+                  onRemove={handleAdminToggle}
+                  isGroupAdmin={false}
+                  canRemove={adminUsers.length > 1}
+                />
+              ))}
+            </CardContent>
+          </Card>
+          
         <DragDropContext onDragEnd={onDragEnd}>
-            <StrictModeDroppable droppableId="admin-groups-list">
-              {(provided) => (
-                <div 
-                  className="flex flex-wrap -m-3"
-                  ref={provided.innerRef}
-                  {...provided.droppableProps}
-                >
-                  <Draggable draggableId="admins-card-static" index={0} isDragDisabled={true}>
-                    {(provided) => (
-                      <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} className="w-full md:w-1/2 xl:w-1/3 p-3">
-                        <Card>
-                          <CardHeader>
-                            <div className="flex items-center gap-2">
-                              <CardTitle>Admins</CardTitle>
-                              <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild><AddUserToGroupButton usersToAdd={nonAdminUsers} onAdd={handleAdminToggle} groupName="Admin" /></TooltipTrigger>
-                                    <TooltipContent>Assign User</TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            </div>
-                            <CardDescription>Assign or revoke Admin privileges. This is the highest level of access.</CardDescription>
-                          </CardHeader>
-                          <CardContent className="space-y-4">
-                            {adminUsers.map(user => (
-                              <UserAssignmentCard 
-                                key={user.userId} 
-                                user={user} 
-                                onRemove={handleAdminToggle}
-                                isGroupAdmin={false}
-                                canRemove={adminUsers.length > 1}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <StrictModeDroppable droppableId="groups-col-1">
+                  {(provided, snapshot) => (
+                    <div 
+                        ref={provided.innerRef} 
+                        {...provided.droppableProps}
+                        className={cn("space-y-6 rounded-lg border-2 border-dashed p-4 transition-colors", snapshot.isDraggingOver ? "border-primary bg-accent" : "border-transparent")}
+                    >
+                      {col1Groups.map((group, index) => (
+                        <Draggable key={group.id} draggableId={group.id} index={index}>
+                          {(provided) => (
+                            <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
+                              <AdminGroupCard
+                                group={group}
+                                rank={index + 1}
+                                users={users}
+                                onUpdate={handleUpdateAdminGroup}
+                                onDelete={() => handleDeleteAdminGroup(group.id)}
                               />
-                            ))}
-                          </CardContent>
-                        </Card>
-                      </div>
-                    )}
-                  </Draggable>
-                  
-                  {appSettings.adminGroups.map((group, index) => (
-                    <Draggable key={group.id} draggableId={group.id} index={index + 1}>
-                      {(provided) => (
-                        <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} className="w-full md:w-1/2 xl:w-1/3 p-3">
-                          <AdminGroupCard
-                            group={group}
-                            rank={index + 1}
-                            users={users}
-                            onUpdate={handleUpdateAdminGroup}
-                            onDelete={() => handleDeleteAdminGroup(group.id)}
-                          />
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
-                  {provided.placeholder}
-                </div>
-              )}
-            </StrictModeDroppable>
+                            </div>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
+                    </div>
+                  )}
+                </StrictModeDroppable>
+                
+                <StrictModeDroppable droppableId="groups-col-2">
+                   {(provided, snapshot) => (
+                    <div 
+                        ref={provided.innerRef} 
+                        {...provided.droppableProps}
+                        className={cn("space-y-6 rounded-lg border-2 border-dashed p-4 transition-colors", snapshot.isDraggingOver ? "border-primary bg-accent" : "border-transparent")}
+                    >
+                      {col2Groups.map((group, index) => (
+                        <Draggable key={group.id} draggableId={group.id} index={index}>
+                          {(provided) => (
+                            <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
+                              <AdminGroupCard
+                                group={group}
+                                rank={col1Groups.length + index + 1}
+                                users={users}
+                                onUpdate={handleUpdateAdminGroup}
+                                onDelete={() => handleDeleteAdminGroup(group.id)}
+                              />
+                            </div>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
+                    </div>
+                  )}
+                </StrictModeDroppable>
+            </div>
           </DragDropContext>
+          
           <Dialog open={is2faDialogOpen} onOpenChange={(isOpen) => !isOpen && close2faDialog()}>
             <DialogContent className="max-w-sm">
                 <div className="absolute top-4 right-4">
@@ -561,7 +598,7 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                 </div>
             </DialogContent>
         </Dialog>
-    </>
+    </div>
   );
 }
 // #endregion
@@ -977,11 +1014,16 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
         let newCol1 = Array.from(columnOnePages);
         let newCol2 = Array.from(columnTwoPages);
         
-        const sourceList = source.droppableId === 'pages-col-1' ? newCol1 : newCol2;
-        const destList = destination.droppableId === 'pages-col-1' ? newCol1 : newCol2;
-        
-        const [removed] = sourceList.splice(source.index, 1);
-        destList.splice(destination.index, 0, removed);
+        if (source.droppableId === destination.droppableId) {
+            const list = source.droppableId === 'pages-col-1' ? newCol1 : newCol2;
+            const [removed] = list.splice(source.index, 1);
+            list.splice(destination.index, 0, removed);
+        } else {
+            const sourceList = source.droppableId === 'pages-col-1' ? newCol1 : newCol2;
+            const destList = destination.droppableId === 'pages-col-1' ? newCol1 : newCol2;
+            const [removed] = sourceList.splice(source.index, 1);
+            destList.splice(destination.index, 0, removed);
+        }
         
         const finalDraggablePages = [...newCol1, ...newCol2];
         
@@ -1035,11 +1077,14 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <StrictModeDroppable droppableId="pages-col-1">
-                           {(provided) => (
+                           {(provided, snapshot) => (
                                 <div
                                   ref={provided.innerRef}
                                   {...provided.droppableProps}
-                                  className="space-y-6"
+                                  className={cn(
+                                    "space-y-6 rounded-lg border-2 border-dashed p-4 transition-colors",
+                                    snapshot.isDraggingOver ? "border-primary bg-accent" : "border-transparent"
+                                  )}
                                 >
                                     {columnOnePages.map((page, index) => (
                                         <Draggable key={page.id} draggableId={page.id} index={index}>
@@ -1059,11 +1104,14 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                             )}
                         </StrictModeDroppable>
                         <StrictModeDroppable droppableId="pages-col-2">
-                           {(provided) => (
+                           {(provided, snapshot) => (
                                 <div
                                   ref={provided.innerRef}
                                   {...provided.droppableProps}
-                                  className="space-y-6"
+                                  className={cn(
+                                    "space-y-6 rounded-lg border-2 border-dashed p-4 transition-colors",
+                                    snapshot.isDraggingOver ? "border-primary bg-accent" : "border-transparent"
+                                  )}
                                 >
                                     {columnTwoPages.map((page, index) => (
                                         <Draggable key={page.id} draggableId={page.id} index={index}>
