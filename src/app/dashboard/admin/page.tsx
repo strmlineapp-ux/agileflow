@@ -584,16 +584,11 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
           return;
         }
 
-        let newRoles = [...(user.roles || [])];
-        const sourceGroupId = sourceDroppableId.replace('group-content-', '');
-        const sourceGroup = appSettings.adminGroups.find(g => g.id === sourceGroupId);
-        if (sourceGroup) {
-          newRoles = newRoles.filter(r => r !== sourceGroup.name);
-        }
-        newRoles.push(destGroup.name);
+        // Add user to the new group, keeping existing group memberships.
+        const newRoles = [...(user.roles || []), destGroup.name];
 
         updateUser(user.userId, { roles: newRoles });
-        toast({ title: 'User Moved', description: `${user.displayName} moved to "${destGroup.name}".` });
+        toast({ title: 'User Added to Group', description: `${user.displayName} added to "${destGroup.name}".` });
         return;
       }
 
