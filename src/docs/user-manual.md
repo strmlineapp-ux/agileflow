@@ -91,7 +91,7 @@ This is the central control panel for configuring the application itself.
 
 ### 8.2 Service Delivery Management (`/dashboard/service-delivery`)
 This is the central hub for global application settings.
-- **Manage Calendars**: Create, edit, or delete shared calendars. You can set a calendar's color, default event title, and assign managers.
+- **Manage Calendars**: Create, edit, or delete shared calendars using our intuitive card-based system. You can reorder calendars by dragging and dropping them, or instantly duplicate any calendar by dragging it onto the "Add New Calendar" (+) button.
 - **Manage Teams**: Create new teams, edit existing team details (name, icon), and assign members and managers.
 
 ### 8.3 Team Management (`/dashboard/teams/[teamId]`)
