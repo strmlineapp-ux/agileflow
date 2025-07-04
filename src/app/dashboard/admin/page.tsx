@@ -451,58 +451,62 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
             </Button>
         </div>
         
-        <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <CardTitle>Admins</CardTitle>
-                <TooltipProvider>
-                  <Tooltip>
-                      <TooltipTrigger asChild><AddUserToGroupButton usersToAdd={nonAdminUsers} onAdd={handleAdminToggle} groupName="Admin" /></TooltipTrigger>
-                      <TooltipContent>Assign User</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              <CardDescription>Assign or revoke Admin privileges. This is the highest level of access.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {adminUsers.map(user => (
-                <UserAssignmentCard 
-                  key={user.userId} 
-                  user={user} 
-                  onRemove={handleAdminToggle}
-                  isGroupAdmin={false}
-                  canRemove={adminUsers.length > 1}
-                />
-              ))}
-            </CardContent>
-          </Card>
-          
         <DragDropContext onDragEnd={onDragEnd}>
-            <StrictModeDroppable droppableId="admin-groups-list" direction="vertical">
-              {(provided) => (
-                <div 
-                  ref={provided.innerRef} 
-                  {...provided.droppableProps}
-                  className="flex flex-wrap -m-3"
-                >
-                  {appSettings.adminGroups.map((group, index) => (
-                    <Draggable key={group.id} draggableId={group.id} index={index}>
-                      {(provided) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          className="w-full md:w-1/2 xl:w-1/4 p-3"
-                        >
-                          <AdminGroupCard group={group} users={users} onUpdate={handleUpdateAdminGroup} onDelete={() => handleDeleteAdminGroup(group.id)} />
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
-                  {provided.placeholder}
-                </div>
-              )}
-            </StrictModeDroppable>
+            <div className="flex flex-wrap -m-3">
+              <div className="w-full md:w-1/2 xl:w-1/4 p-3">
+                <Card>
+                    <CardHeader>
+                      <div className="flex items-center gap-2">
+                        <CardTitle>Admins</CardTitle>
+                        <TooltipProvider>
+                          <Tooltip>
+                              <TooltipTrigger asChild><AddUserToGroupButton usersToAdd={nonAdminUsers} onAdd={handleAdminToggle} groupName="Admin" /></TooltipTrigger>
+                              <TooltipContent>Assign User</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                      <CardDescription>Assign or revoke Admin privileges. This is the highest level of access.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {adminUsers.map(user => (
+                        <UserAssignmentCard 
+                          key={user.userId} 
+                          user={user} 
+                          onRemove={handleAdminToggle}
+                          isGroupAdmin={false}
+                          canRemove={adminUsers.length > 1}
+                        />
+                      ))}
+                    </CardContent>
+                  </Card>
+              </div>
+
+              <StrictModeDroppable droppableId="admin-groups-list" direction="vertical">
+                {(provided) => (
+                  <div 
+                    ref={provided.innerRef} 
+                    {...provided.droppableProps}
+                    className="contents" // Use "contents" to make children flex items of the parent
+                  >
+                    {appSettings.adminGroups.map((group, index) => (
+                      <Draggable key={group.id} draggableId={group.id} index={index}>
+                        {(provided) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            className="w-full md:w-1/2 xl:w-1/4 p-3"
+                          >
+                            <AdminGroupCard group={group} users={users} onUpdate={handleUpdateAdminGroup} onDelete={() => handleDeleteAdminGroup(group.id)} />
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </StrictModeDroppable>
+            </div>
         </DragDropContext>
           
           <Dialog open={is2faDialogOpen} onOpenChange={(isOpen) => !isOpen && close2faDialog()}>
@@ -876,9 +880,11 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
 
     const adminPage = useMemo(() => appSettings.pages.find(p => p.id === 'page-admin-management'), [appSettings.pages]);
     const settingsPage = useMemo(() => appSettings.pages.find(p => p.id === 'page-settings'), [appSettings.pages]);
+    const notificationsPage = useMemo(() => appSettings.pages.find(p => p.id === 'page-notifications'), [appSettings.pages]);
 
     const draggablePages = useMemo(() => {
-        return appSettings.pages.filter(p => p.id !== 'page-admin-management' && p.id !== 'page-settings');
+        const pinnedIds = ['page-admin-management', 'page-settings', 'page-notifications'];
+        return appSettings.pages.filter(p => !pinnedIds.includes(p.id));
     }, [appSettings.pages]);
     
     useEffect(() => {
@@ -960,6 +966,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
             const finalPages = [
                 ...(adminPage ? [adminPage] : []),
                 ...newDraggablePages,
+                ...(notificationsPage ? [notificationsPage] : []),
                 ...(settingsPage ? [settingsPage] : []),
             ];
             updateAppSettings({ pages: finalPages });
@@ -1003,15 +1010,19 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                     </StrictModeDroppable>
                 </div>
                 
-                <div className="space-y-6">
-                    {adminPage && <PageCard page={adminPage} onUpdate={handleUpdatePage} onDelete={handleDeletePage} />}
+                <div className="flex flex-wrap -m-3">
+                    {adminPage && (
+                        <div className="w-full md:w-1/2 p-3">
+                            <PageCard page={adminPage} onUpdate={handleUpdatePage} onDelete={handleDeletePage} />
+                        </div>
+                    )}
                     
                     <StrictModeDroppable droppableId="draggable-pages-list" direction="vertical">
                         {(provided) => (
                             <div
                                 ref={provided.innerRef}
                                 {...provided.droppableProps}
-                                className="flex flex-wrap -m-3"
+                                className="contents"
                             >
                                 {draggablePages.map((page, index) => (
                                     <Draggable key={page.id} draggableId={page.id} index={index}>
@@ -1034,8 +1045,17 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                             </div>
                         )}
                     </StrictModeDroppable>
-
-                    {settingsPage && <PageCard page={settingsPage} onUpdate={handleUpdatePage} onDelete={handleDeletePage} />}
+                    
+                    {notificationsPage && (
+                        <div className="w-full md:w-1/2 p-3">
+                            <PageCard page={notificationsPage} onUpdate={handleUpdatePage} onDelete={handleDeletePage} />
+                        </div>
+                    )}
+                    {settingsPage && (
+                        <div className="w-full md:w-1/2 p-3">
+                            <PageCard page={settingsPage} onUpdate={handleUpdatePage} onDelete={handleDeletePage} />
+                        </div>
+                    )}
                 </div>
             </div>
         </DragDropContext>
