@@ -444,7 +444,16 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
             {isEditingTitle ? (
               <Input ref={titleInputRef} defaultValue={tab.name} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
             ) : (
-              <h2 className="text-2xl font-semibold tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <h2 className="text-2xl font-semibold tracking-tight cursor-pointer border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p className="max-w-xs">{tab.description}</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
             )}
             <TooltipProvider>
               <Tooltip>
@@ -764,10 +773,10 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
 
     return (
         <>
-            <Card className={cn(isDragging && 'shadow-xl')}>
+            <Card className={cn("flex flex-col h-full", isDragging && 'shadow-xl')}>
                 <CardHeader>
                     <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
                             <div className="relative">
                                 <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                                     <PopoverTrigger asChild>
@@ -812,14 +821,12 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
                                   </PopoverContent>
                                 </Popover>
                             </div>
-                            <div className="flex items-center gap-1">
+                            <div className="flex-1 min-w-0">
                                 {isEditingName ? (
-                                    <Input ref={nameInputRef} defaultValue={page.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 text-2xl font-semibold leading-none tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>
+                                    <Input ref={nameInputRef} defaultValue={page.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 text-base font-semibold leading-none tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>
                                 ) : (
-                                    <CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer">{page.name}</CardTitle>
+                                    <CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer text-base truncate">{page.name}</CardTitle>
                                 )}
-                                <PageAccessControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
-                                <PageTabsControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
                             </div>
                         </div>
                         <TooltipProvider>
@@ -833,11 +840,14 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
                             </Tooltip>
                         </TooltipProvider>
                     </div>
-                    <div className="flex gap-2 text-sm text-muted-foreground pt-2">
-                        <Badge variant="outline">{page.path}</Badge>
-                        {page.isDynamic && <Badge variant="outline">Dynamic Team Page</Badge>}
-                    </div>
                 </CardHeader>
+                <CardContent className="flex-grow flex flex-col justify-end">
+                    <p className="text-xs text-muted-foreground truncate">{page.path}</p>
+                    <div className="flex items-center gap-2 mt-2">
+                        <PageAccessControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
+                        <PageTabsControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
+                    </div>
+                </CardContent>
             </Card>
             <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                 <DialogContent className="max-w-md">
@@ -977,7 +987,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
 
     return (
         <DragDropContext onDragStart={(start) => setDraggingItemId(start.draggableId)} onDragEnd={onDragEnd}>
-            <div className="space-y-6">
+            <div className="space-y-4">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         {isEditingTitle ? (
@@ -1028,7 +1038,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                         <div
                             ref={provided.innerRef}
                             {...provided.droppableProps}
-                            className="flex flex-wrap -m-3"
+                            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4"
                         >
                             {appSettings.pages.map((page, index) => {
                                 const isPinned = pinnedIds.includes(page.id);
@@ -1040,7 +1050,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                                                 {...provided.draggableProps}
                                                 {...provided.dragHandleProps}
                                                 className={cn(
-                                                    "w-full md:w-1/2 p-3",
+                                                    "w-full",
                                                     isPinned && "opacity-70",
                                                     draggingItemId === page.id && "opacity-50"
                                                 )}
@@ -1241,7 +1251,16 @@ export const TabsManagement = ({ tab }: { tab: AppTab }) => {
               {isEditingTitle ? (
                   <Input ref={titleInputRef} defaultValue={tab.name} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
               ) : (
-                  <h2 className="text-2xl font-semibold tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                           <h2 className="text-2xl font-semibold tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p className="max-w-xs">{tab.description}</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
               )}
             </div>
             <Card>

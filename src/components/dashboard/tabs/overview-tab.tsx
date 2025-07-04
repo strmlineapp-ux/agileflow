@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TaskList } from '@/components/tasks/task-list';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { type AppPage } from '@/types';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const stats = [
   { title: 'Active Tasks', value: '12', icon: 'checklist' },
@@ -18,7 +19,18 @@ export function OverviewContent({ tab: pageConfig }: { tab: AppPage }) {
     <div className="flex flex-col gap-6">
         <div className="flex items-center gap-3">
           <GoogleSymbol name={pageConfig.icon} className="text-3xl" />
-          <h1 className="font-headline text-3xl font-semibold">{pageConfig.name}</h1>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <h1 className="font-headline text-3xl font-semibold">{pageConfig.name}</h1>
+              </TooltipTrigger>
+              {pageConfig.description && (
+                <TooltipContent>
+                  <p className="max-w-xs">{pageConfig.description}</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
         </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
