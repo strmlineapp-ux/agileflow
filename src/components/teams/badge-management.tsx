@@ -277,7 +277,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
         <Card className="group h-full flex flex-col">
             <CardHeader>
                 <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3 flex-1">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
                          <div className="relative">
                             <CompactSearchIconPicker 
                                 icon={badge.icon} 
@@ -317,7 +317,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                     onMouseDown={(e) => e.stopPropagation()}
                                     onChange={(e) => setCurrentName(e.target.value)}
                                     onKeyDown={handleNameKeyDown}
-                                    className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                                    className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
                                 />
                             ) : (
                                 <CardTitle onClick={() => isOwnedByMyTeam && !isSharedPreview && setIsEditingName(true)} className={cn("text-2xl break-words", isOwnedByMyTeam && !isSharedPreview && "cursor-pointer")}>{badge.name}</CardTitle>
@@ -343,7 +343,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                     />
                  ) : (
                     <p 
-                        className={cn("text-sm text-muted-foreground min-h-[20px]", isOwnedByMyTeam && !isSharedPreview && "cursor-text")} 
+                        className={cn("text-sm text-muted-foreground min-h-[20px] break-words", isOwnedByMyTeam && !isSharedPreview && "cursor-text")} 
                         onClick={() => isOwnedByMyTeam && !isSharedPreview && setIsEditingDescription(true)}
                     >
                         {badge.description || (isOwnedByMyTeam ? 'Click to add description.' : 'No description.')}
@@ -433,7 +433,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                         disabled={!isOwnedByMyTeam}
                     />
                 ) : (
-                    <p className={cn("text-sm text-muted-foreground min-h-[20px]", isOwnedByMyTeam && !isSharedPreview && "cursor-text")} onClick={() => isOwnedByMyTeam && !isSharedPreview && setIsEditingDescription(true)}>
+                    <p className={cn("text-sm text-muted-foreground min-h-[20px] break-words", isOwnedByMyTeam && !isSharedPreview && "cursor-text")} onClick={() => isOwnedByMyTeam && !isSharedPreview && setIsEditingDescription(true)}>
                         {badge.description || (isOwnedByMyTeam ? 'Click to add description.' : 'No description.')}
                     </p>
                 )}
@@ -570,7 +570,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                 color={collection.color} 
                                 onUpdateIcon={(icon) => onUpdateCollection(collection.id, { icon })}
                                 disabled={isSharedPreview || !isOwned}
-                                buttonClassName="h-8 w-8"
+                                buttonClassName="h-8 w-8 text-2xl"
                                 iconClassName="text-2xl"
                             />
                             <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
@@ -590,9 +590,9 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                         <TooltipTrigger asChild>
                                             <div 
                                                 className="absolute -top-1 -right-1 h-5 w-5 rounded-full border-2 border-card flex items-center justify-center"
-                                                style={{ backgroundColor: shareIconColor, color: ownerTeam?.color ? cn('white', 'black') : 'white' }}
+                                                style={{ backgroundColor: shareIconColor }}
                                             >
-                                                <GoogleSymbol name={shareIcon} style={{ fontSize: '14px' }}/>
+                                                <GoogleSymbol name={shareIcon} className="text-white" style={{ fontSize: '14px' }}/>
                                             </div>
                                         </TooltipTrigger>
                                         <TooltipContent><p>{shareIconTitle}</p></TooltipContent>
@@ -682,7 +682,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                  {collection.description && <CardDescription className="pt-2">{collection.description}</CardDescription>}
             </CardHeader>
             <CardContent className="flex-grow">
-                <StrictModeDroppable droppableId={collection.id} type="badge" isDropDisabled={isSharedPreview || !isOwned}>
+                <StrictModeDroppable droppableId={collection.id} type="badge" isDropDisabled={isSharedPreview}>
                     {(provided) => (
                          <div
                             ref={provided.innerRef}
@@ -694,7 +694,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                 collection.viewMode === 'detailed' && "grid grid-cols-1 md:grid-cols-2 gap-4"
                             )}>
                             {collectionBadges.map((badge, index) => (
-                                <Draggable key={`${badge.id}::${collection.id}`} draggableId={`${badge.id}::${collection.id}`} index={index} isDragDisabled={isSharedPreview}>
+                                <Draggable key={`${badge.id}::${collection.id}`} draggableId={`${badge.id}::${collection.id}`} index={index}>
                                     {(provided) => (<div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
                                         <BadgeDisplayItem 
                                             badge={badge} 
@@ -844,12 +844,14 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
         updateTeam(team.id, { allBadges: newAllBadges });
     };
     
+    const linkedCollectionIds = useMemo(() => new Set(team.badgeCollections.map(c => c.id)), [team.badgeCollections]);
+
     const sharedCollectionsFromOthers = useMemo(() => {
         return teams
             .filter(t => t.id !== team.id)
             .flatMap(t => t.badgeCollections || [])
-            .filter(c => c.isShared && c.ownerTeamId !== team.id);
-    }, [teams, team.id]);
+            .filter(c => c.isShared && c.ownerTeamId !== team.id && !linkedCollectionIds.has(c.id));
+    }, [teams, team.id, linkedCollectionIds]);
     
     const allBadgesAvailableToTeam = useMemo(() => {
         const badgeMap = new Map<string, Badge>();
