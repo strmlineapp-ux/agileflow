@@ -371,6 +371,10 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
   
   const adminUsers = useMemo(() => users.filter(u => u.isAdmin), [users]);
   const nonAdminUsers = useMemo(() => users.filter(u => !u.isAdmin), [users]);
+  
+  const midPoint = Math.ceil(appSettings.adminGroups.length / 2);
+  const columnOneGroups = appSettings.adminGroups.slice(0, midPoint);
+  const columnTwoGroups = appSettings.adminGroups.slice(midPoint);
 
   const handleAdminToggle = (user: User) => {
     const isLastAdmin = adminUsers.length <= 1 && user.isAdmin;
@@ -434,22 +438,30 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
 
   const onDragEnd = (result: DropResult) => {
     const { source, destination } = result;
+
     if (!destination) {
       return;
     }
 
-    if (
-      destination.droppableId === source.droppableId &&
-      destination.index === source.index
-    ) {
-      return;
+    let newCol1 = Array.from(columnOneGroups);
+    let newCol2 = Array.from(columnTwoGroups);
+
+    if (source.droppableId === destination.droppableId) {
+      // Reordering within the same column
+      const list = source.droppableId === 'admin-groups-col-1' ? newCol1 : newCol2;
+      const [movedItem] = list.splice(source.index, 1);
+      list.splice(destination.index, 0, movedItem);
+    } else {
+      // Moving between columns
+      const sourceList = source.droppableId === 'admin-groups-col-1' ? newCol1 : newCol2;
+      const destList = destination.droppableId === 'admin-groups-col-1' ? newCol1 : newCol2;
+      
+      const [movedItem] = sourceList.splice(source.index, 1);
+      destList.splice(destination.index, 0, movedItem);
     }
 
-    const items = Array.from(appSettings.adminGroups);
-    const [reorderedItem] = items.splice(source.index, 1);
-    items.splice(destination.index, 0, reorderedItem);
-
-    updateAppSettings({ adminGroups: items });
+    const finalGroups = [...newCol1, ...newCol2];
+    updateAppSettings({ adminGroups: finalGroups });
   };
 
   return (
@@ -493,37 +505,68 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
           </Card>
           
         <DragDropContext onDragEnd={onDragEnd}>
-            <StrictModeDroppable droppableId="admin-groups">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <StrictModeDroppable droppableId="admin-groups-col-1">
                 {(provided) => (
-                    <div
-                        {...provided.droppableProps}
-                        ref={provided.innerRef}
-                        className="flex flex-wrap -m-3"
-                    >
-                        {appSettings.adminGroups.map((group, index) => (
-                            <Draggable key={group.id} draggableId={group.id} index={index}>
-                                {(provided) => (
-                                    <div 
-                                        ref={provided.innerRef} 
-                                        {...provided.draggableProps} 
-                                        {...provided.dragHandleProps}
-                                        className="p-3 w-full md:w-1/2"
-                                    >
-                                        <AdminGroupCard
-                                            group={group}
-                                            rank={index + 1}
-                                            users={users}
-                                            onUpdate={handleUpdateAdminGroup}
-                                            onDelete={() => handleDeleteAdminGroup(group.id)}
-                                        />
-                                    </div>
-                                )}
-                            </Draggable>
-                        ))}
-                        {provided.placeholder}
-                    </div>
+                  <div 
+                    ref={provided.innerRef} 
+                    {...provided.droppableProps}
+                    className="space-y-6"
+                  >
+                    {columnOneGroups.map((group, index) => (
+                      <Draggable key={group.id} draggableId={group.id} index={index}>
+                        {(provided) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                          >
+                            <AdminGroupCard
+                              group={group}
+                              rank={index + 1}
+                              users={users}
+                              onUpdate={handleUpdateAdminGroup}
+                              onDelete={() => handleDeleteAdminGroup(group.id)}
+                            />
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </div>
                 )}
-            </StrictModeDroppable>
+              </StrictModeDroppable>
+              <StrictModeDroppable droppableId="admin-groups-col-2">
+                {(provided) => (
+                  <div 
+                    ref={provided.innerRef} 
+                    {...provided.droppableProps}
+                    className="space-y-6"
+                  >
+                    {columnTwoGroups.map((group, index) => (
+                      <Draggable key={group.id} draggableId={group.id} index={index}>
+                        {(provided) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                          >
+                            <AdminGroupCard
+                              group={group}
+                              rank={columnOneGroups.length + index + 1}
+                              users={users}
+                              onUpdate={handleUpdateAdminGroup}
+                              onDelete={() => handleDeleteAdminGroup(group.id)}
+                            />
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </StrictModeDroppable>
+            </div>
         </DragDropContext>
           
           <Dialog open={is2faDialogOpen} onOpenChange={(isOpen) => !isOpen && close2faDialog()}>
