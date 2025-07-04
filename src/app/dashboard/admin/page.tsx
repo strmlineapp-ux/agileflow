@@ -554,6 +554,13 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                 id: crypto.randomUUID(),
                 name: newName,
             };
+
+            // Find users to duplicate and update their roles
+            const usersToUpdate = users.filter(u => u.roles?.includes(groupToDuplicate.name));
+            usersToUpdate.forEach(user => {
+                const newRoles = [...(user.roles || []), newName];
+                updateUser(user.userId, { roles: newRoles });
+            });
             
             const sourceGroupIndex = appSettings.adminGroups.findIndex(g => g.id === draggableId);
             const newGroups = [...appSettings.adminGroups];

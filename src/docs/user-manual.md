@@ -82,7 +82,7 @@ Access your preferences by clicking your avatar in the bottom-left corner of the
 
 ### 8.1 Admin Management (`/dashboard/admin`)
 This is the central control panel for configuring the application itself.
-- **Admin Groups**: Create and manage high-level administrative groups. To assign users, you can either click the `add_circle` button on a group's card, or simply drag a user card and drop it into another group to add them. Dropping a user onto the 'Admins' card will promote them to a full Admin while keeping their existing group memberships.
+- **Admin Groups**: Create and manage high-level administrative groups. To assign users, you can either click the `add_circle` button on a group's card, or simply drag a user card and drop it into another group to add them. Dropping a user onto the 'Admins' card will promote them to a full Admin while keeping their existing group memberships. You can also instantly duplicate any group and its members by dragging the group card onto the "Add New Group" (+) button.
 - **Pages**: Configure the application's navigation. Create new pages, define their URL paths, and control who has access to them (by user, team, or admin group). You can intuitively reorder pages by dragging and dropping them in the grid. Key system pages like "Admin Management" are pinned and cannot be moved. You can also instantly duplicate any page by dragging it onto the "Add New Page" (+) button.
 - **Tabs**: Manage the reusable content blocks (tabs) that can be assigned to different pages. Edit their names, icons, and descriptions.
 
