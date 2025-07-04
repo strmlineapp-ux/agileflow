@@ -558,7 +558,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                             {isEditingName ? (
                                 <Input ref={nameInputRef} defaultValue={collection.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>
                             ) : (
-                                <CardTitle onClick={() => isOwned && setIsEditingName(true)} className={cn(isOwned && "cursor-pointer", "truncate")}>{collection.name}</CardTitle>
+                                <CardTitle onClick={() => isOwned && setIsEditingName(true)} className={cn(isOwned && "cursor-pointer")}>{collection.name}</CardTitle>
                             )}
                         </div>
                     </div>

@@ -251,7 +251,7 @@ function TeamCard({
     }, [allUsers, team.members]);
 
     return (
-        <Card className="flex flex-col">
+        <Card className="flex flex-col h-full">
             <CardHeader>
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -340,7 +340,7 @@ function TeamCard({
                     </StrictModeDroppable>
                 </div>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent className="flex-grow space-y-2">
                 <p className="text-sm font-medium text-muted-foreground">Members (click to toggle admin status)</p>
                  <StrictModeDroppable droppableId={`team-members-${team.id}`} type="user-card">
                     {(provided, snapshot) => (
@@ -428,6 +428,7 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
       }
       const newTeamData: Omit<Team, 'id'> = {
           ...JSON.parse(JSON.stringify(sourceTeam)),
+          name: newName,
       };
       addTeam(newTeamData);
       toast({ title: 'Success', description: `Team "${newName}" created.` });
@@ -523,8 +524,8 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
                         ref={provided.innerRef}
                         {...provided.droppableProps}
                         className={cn(
-                            "rounded-full transition-all p-1",
-                            snapshot.isDraggingOver && "ring-1 ring-primary bg-accent"
+                            "rounded-full transition-all p-0.5",
+                            snapshot.isDraggingOver && "ring-1 ring-border"
                         )}
                     >
                          <TooltipProvider>
@@ -819,6 +820,3 @@ function AddTeamDialog({ isOpen, onClose, allUsers, addTeam }: AddTeamDialogProp
         </Dialog>
     );
 }
-
-    
-
