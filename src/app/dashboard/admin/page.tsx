@@ -98,11 +98,36 @@ const UserAssignmentCard = ({ user, onRemove, isGroupAdmin, onSetGroupAdmin, can
 
 const AddUserToGroupButton = ({ usersToAdd, onAdd, groupName }: { usersToAdd: User[], onAdd: (user: User) => void, groupName: string }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) {
+      // Reset search when popover closes
+      setIsSearching(false);
+      setSearchTerm('');
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (isSearching && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [isSearching]);
 
   const handleSelect = (user: User) => {
     onAdd(user);
     setIsOpen(false);
   }
+
+  const filteredUsers = useMemo(() => {
+      if (!searchTerm) return usersToAdd;
+      return usersToAdd.filter(user => 
+        user.displayName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+  }, [usersToAdd, searchTerm]);
   
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -120,10 +145,29 @@ const AddUserToGroupButton = ({ usersToAdd, onAdd, groupName }: { usersToAdd: Us
         </Tooltip>
       </TooltipProvider>
       <PopoverContent className="p-0 w-80">
+        <div className="flex items-center gap-1 p-2 border-b">
+          {!isSearching ? (
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => setIsSearching(true)}>
+              <GoogleSymbol name="search" />
+            </Button>
+          ) : (
+            <div className="flex items-center gap-1 w-full">
+              <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+              <input
+                  ref={searchInputRef}
+                  placeholder="Search by name or email..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onBlur={() => !searchTerm && setIsSearching(false)}
+                  className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+              />
+            </div>
+          )}
+        </div>
         <ScrollArea className="h-64">
            <div className="p-1">
-            {usersToAdd.length > 0 ? usersToAdd.map(user => (
-              <div key={user.userId} onClick={() => handleSelect(user)} className="flex items-center gap-2 p-2 rounded-md group">
+            {filteredUsers.length > 0 ? filteredUsers.map(user => (
+              <div key={user.userId} onClick={() => handleSelect(user)} className="flex items-center gap-2 p-2 rounded-md group cursor-pointer">
                 <Avatar className="h-8 w-8"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0,2)}</AvatarFallback></Avatar>
                 <div>
                   <p className="text-sm font-medium group-hover:text-primary transition-colors">{user.displayName}</p>
@@ -131,7 +175,7 @@ const AddUserToGroupButton = ({ usersToAdd, onAdd, groupName }: { usersToAdd: Us
                 </div>
               </div>
             )) : (
-              <p className="text-center text-sm text-muted-foreground p-4">All users are assigned.</p>
+              <p className="text-center text-sm text-muted-foreground p-4">{searchTerm ? 'No matching users found.' : 'All users are assigned.'}</p>
             )}
             </div>
         </ScrollArea>
