@@ -381,7 +381,7 @@ function AdminGroupCard({
                                 {...provided.droppableProps}
                                 className={cn(
                                     "rounded-full transition-all p-0.5",
-                                    snapshot.isDraggingOver && "ring-2 ring-destructive"
+                                    snapshot.isDraggingOver && "ring-1 ring-destructive"
                                 )}
                             >
                                 <TooltipProvider>
@@ -404,7 +404,7 @@ function AdminGroupCard({
                 <CardContent 
                   ref={provided.innerRef}
                   {...provided.droppableProps}
-                  className={cn("space-y-4", snapshot.isDraggingOver && "ring-2 ring-border ring-inset rounded-b-lg")}
+                  className={cn("space-y-4", snapshot.isDraggingOver && "ring-1 ring-border ring-inset rounded-b-lg")}
                 >
                   {assignedUsers.map((user, index) => (
                     <UserAssignmentCard 
@@ -659,7 +659,7 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                                 <CardContent 
                                   ref={provided.innerRef}
                                   {...provided.droppableProps}
-                                  className={cn("space-y-4", snapshot.isDraggingOver && "ring-2 ring-border ring-inset rounded-b-lg")}
+                                  className={cn("space-y-4", snapshot.isDraggingOver && "ring-1 ring-border ring-inset rounded-b-lg")}
                                 >
                                   {adminUsers.map(user => (
                                     <UserAssignmentCard 
@@ -1209,7 +1209,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                                     {...provided.droppableProps}
                                     className={cn(
                                         "rounded-full transition-all p-0.5",
-                                        snapshot.isDraggingOver && "ring-2 ring-primary ring-offset-2 bg-accent"
+                                        snapshot.isDraggingOver && "ring-1 ring-primary ring-offset-1 bg-accent"
                                     )}
                                 >
                                     <TooltipProvider>

@@ -327,7 +327,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                         {...provided.droppableProps}
                         className={cn(
                             "rounded-full transition-all p-0.5",
-                            snapshot.isDraggingOver && "ring-2 ring-primary ring-offset-2 bg-accent"
+                            snapshot.isDraggingOver && "ring-1 ring-primary ring-offset-1 bg-accent"
                         )}
                     >
                         <TooltipProvider>
