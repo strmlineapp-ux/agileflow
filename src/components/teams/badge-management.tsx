@@ -48,10 +48,14 @@ function CompactSearchIconPicker({
   icon,
   color,
   onUpdateIcon,
+  buttonClassName,
+  iconClassName,
 }: {
   icon: string;
   color?: string;
   onUpdateIcon: (iconName: string) => void;
+  buttonClassName?: string;
+  iconClassName?: string;
 }) {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
@@ -88,10 +92,10 @@ function CompactSearchIconPicker({
         <Button
           variant="ghost"
           size="icon"
-          className="h-9 w-9 text-3xl"
+          className={cn("h-9 w-9", buttonClassName)}
           style={color ? { color } : {}}
         >
-          <GoogleSymbol name={icon} />
+          <GoogleSymbol name={icon} className={cn("text-3xl", iconClassName)} />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0">
@@ -272,7 +276,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3 flex-1">
                          <div className="relative">
-                            <CompactSearchIconPicker icon={badge.icon} color={badge.color} onUpdateIcon={(icon) => onUpdateBadge({ icon })} />
+                            <CompactSearchIconPicker icon={badge.icon} color={badge.color} onUpdateIcon={(icon) => onUpdateBadge({ icon })} buttonClassName="h-8 w-8" iconClassName="text-2xl" />
                              <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
                                 <PopoverTrigger asChild disabled={!isOwnedByMyTeam}><div className={cn("absolute -bottom-1 -right-0 h-5 w-5 rounded-full border-2 border-card", !isOwnedByMyTeam ? "cursor-not-allowed" : "cursor-pointer")} style={{ backgroundColor: badge.color }} /></PopoverTrigger>
                                 <PopoverContent className="w-auto p-2">
@@ -295,18 +299,20 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                 </TooltipProvider>
                             )}
                         </div>
-                        {isEditingName ? (
-                            <Input
-                                ref={nameInputRef}
-                                value={currentName}
-                                onMouseDown={(e) => e.stopPropagation()}
-                                onChange={(e) => setCurrentName(e.target.value)}
-                                onKeyDown={handleNameKeyDown}
-                                className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                            />
-                        ) : (
-                            <CardTitle onClick={() => isOwnedByMyTeam && setIsEditingName(true)} className={cn(isOwnedByMyTeam && "cursor-pointer")}>{badge.name}</CardTitle>
-                        )}
+                        <div className="flex-1 min-w-0">
+                            {isEditingName ? (
+                                <Input
+                                    ref={nameInputRef}
+                                    value={currentName}
+                                    onMouseDown={(e) => e.stopPropagation()}
+                                    onChange={(e) => setCurrentName(e.target.value)}
+                                    onKeyDown={handleNameKeyDown}
+                                    className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                                />
+                            ) : (
+                                <CardTitle onClick={() => isOwnedByMyTeam && setIsEditingName(true)} className={cn("text-2xl", isOwnedByMyTeam && "cursor-pointer")}>{badge.name}</CardTitle>
+                            )}
+                        </div>
                     </div>
                     <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onDelete(); }} className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive">
                         <GoogleSymbol name="delete" />
@@ -338,7 +344,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     
     const sharedIconAndColorEditor = (
         <div className="relative">
-            <CompactSearchIconPicker icon={badge.icon} color={badge.color} onUpdateIcon={(icon) => onUpdateBadge({ icon })} />
+            <CompactSearchIconPicker icon={badge.icon} color={badge.color} onUpdateIcon={(icon) => onUpdateBadge({ icon })} buttonClassName="h-8 w-8" iconClassName="text-xl" />
              <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
                 <PopoverTrigger asChild disabled={!isOwnedByMyTeam}><div className={cn("absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-muted", !isOwnedByMyTeam ? "cursor-not-allowed" : "cursor-pointer")} style={{ backgroundColor: badge.color }} /></PopoverTrigger>
                 <PopoverContent className="w-auto p-2">
@@ -526,6 +532,8 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                 icon={collection.icon} 
                                 color={collection.color} 
                                 onUpdateIcon={(icon) => onUpdateCollection(collection.id, { icon })}
+                                buttonClassName="h-8 w-8"
+                                iconClassName="text-2xl"
                             />
                             <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
                                 <PopoverTrigger asChild disabled={!isOwned}><div className={cn("absolute -bottom-1 -right-0 h-4 w-4 rounded-full border-2 border-card", !isOwned ? "cursor-not-allowed" : "cursor-pointer")} style={{ backgroundColor: collection.color }} /></PopoverTrigger>
@@ -558,10 +566,23 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                             {isEditingName ? (
                                 <Input ref={nameInputRef} defaultValue={collection.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>
                             ) : (
-                                <CardTitle onClick={() => isOwned && setIsEditingName(true)} className={cn(isOwned && "cursor-pointer")}>{collection.name}</CardTitle>
+                                <CardTitle onClick={() => isOwned && setIsEditingName(true)} className={cn("text-2xl", isOwned && "cursor-pointer")}>{collection.name}</CardTitle>
                             )}
                         </div>
                     </div>
+                     <DropdownMenu>
+                        <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 -mr-2 -mt-2"><GoogleSymbol name="more_vert" /></Button></DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => onUpdateCollection(collection.id, { viewMode: 'assorted' })}><GoogleSymbol name="view_module" className="mr-2 text-lg" />Assorted View</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => onUpdateCollection(collection.id, { viewMode: 'detailed' })}><GoogleSymbol name="view_comfy_alt" className="mr-2 text-lg" />Detailed View</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => onUpdateCollection(collection.id, { viewMode: 'list' })}><GoogleSymbol name="view_list" className="mr-2 text-lg" />List View</DropdownMenuItem>
+                            {isOwned && <DropdownMenuSeparator />}
+                            {isOwned && <DropdownMenuItem onClick={() => onDeleteCollection(collection.id)} className="text-destructive focus:text-destructive">
+                                <GoogleSymbol name="delete" className="mr-2 text-lg"/>
+                                Delete Collection
+                            </DropdownMenuItem>}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
                  <div className="flex items-center justify-between pt-2">
                     <div className="flex items-center gap-1">
@@ -618,20 +639,6 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                 </Tooltip>
                             </TooltipProvider>
                         ))}
-                        {isOwned && <Separator orientation="vertical" className="h-6 mx-1" />}
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><GoogleSymbol name="more_vert" /></Button></DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => onUpdateCollection(collection.id, { viewMode: 'assorted' })}><GoogleSymbol name="view_module" className="mr-2" />Assorted View</DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => onUpdateCollection(collection.id, { viewMode: 'detailed' })}><GoogleSymbol name="view_comfy_alt" className="mr-2" />Detailed View</DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => onUpdateCollection(collection.id, { viewMode: 'list' })}><GoogleSymbol name="view_list" className="mr-2" />List View</DropdownMenuItem>
-                                {isOwned && <DropdownMenuSeparator />}
-                                {isOwned && <DropdownMenuItem onClick={() => onDeleteCollection(collection.id)} className="text-destructive focus:text-destructive">
-                                    <GoogleSymbol name="delete" className="mr-2"/>
-                                    Delete Collection
-                                </DropdownMenuItem>}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
                     </div>
                 </div>
                  {collection.description && <CardDescription className="pt-2">{collection.description}</CardDescription>}
@@ -1158,3 +1165,4 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
         </DragDropContext>
     );
 }
+
