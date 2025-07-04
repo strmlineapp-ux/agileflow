@@ -129,7 +129,7 @@ The `Team` entity groups users together and defines a set of team-specific confi
 | `members: string[]` | An array of `userId`s for all members of the team. |
 | `teamAdmins: string[]` | A subset of `members` who have administrative privileges for this team. |
 | `allBadges: Badge[]` | The single source of truth for all `Badge` objects **owned** by this team. |
-| `badgeCollections: BadgeCollection[]` | An array of collections, which group the team's badges. |
+| `badgeCollections: BadgeCollection[]` | An array of `BadgeCollection` objects. This includes collections *owned* by the team, and *links* to collections owned by other teams. |
 
 ### BadgeCollection Entity
 A sub-entity of `Team`, this groups related Badges together. It can be owned by the team or shared with others.

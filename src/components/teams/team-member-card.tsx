@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { type User, type Team, type Badge } from '@/types';
 import { useUser } from '@/context/user-context';
 import { useToast } from '@/hooks/use-toast';
@@ -95,6 +95,24 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
     setIsEditingLabel(false);
   };
 
+  useEffect(() => {
+    if (!isEditingLabel) return;
+
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (labelInputRef.current && !labelInputRef.current.contains(event.target as Node)) {
+        handleSaveLabel();
+      }
+    };
+    
+    document.addEventListener("mousedown", handleOutsideClick);
+    labelInputRef.current?.focus();
+    labelInputRef.current?.select();
+    
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, [isEditingLabel]);
+
   const renderBadge = (badge: Badge, isAssigned: boolean) => (
     <TooltipProvider key={badge.id}>
       <Tooltip>
@@ -138,12 +156,11 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
                     <Input
                         ref={labelInputRef}
                         defaultValue={teamBadgesLabel}
-                        onBlur={handleSaveLabel}
                         onKeyDown={(e) => {
-                            if (e.key === 'Enter') handleSaveLabel();
-                            else if (e.key === 'Escape') setIsEditingLabel(false);
+                          if (e.key === 'Enter') handleSaveLabel();
+                          else if (e.key === 'Escape') setIsEditingLabel(false);
                         }}
-                        className="h-auto p-0 text-sm font-medium"
+                        className="h-auto p-0 text-sm font-medium border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
                     />
                 ) : (
                     <span

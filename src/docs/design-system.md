@@ -27,8 +27,9 @@ This pattern allows for seamless, direct text editing within the main applicatio
     - **Crucially, the input must have a transparent background and no borders or box-shadow**, ensuring it blends seamlessly into the UI.
 - **Behavior:**
     - Typing modifies the text value.
-    - Clicking anywhere outside the input field or pressing 'Enter' saves the changes and reverts the input back to a standard text element.
+    - Pressing 'Enter' saves the changes and reverts the input back to a standard text element.
     - Pressing 'Escape' cancels the edit without saving.
+    - **A `useEffect` hook must be implemented to add a 'mousedown' event listener to the document. This listener should check if the click occurred outside the input field's ref and, if so, trigger the save function. This ensures that clicking anywhere else on the page correctly dismisses and saves the editor.**
 - **Application:** Used for editing entity names, labels, and other simple text fields directly in the UI.
 
 ---
@@ -90,7 +91,9 @@ This is the consistent reference pattern for allowing a user to change both an i
 ### 7. Entity Sharing & Linking
 This pattern describes how a single entity (like a Badge or BadgeCollection) can exist in multiple contexts while maintaining a single source of truth.
 
-- **Mechanism**: Sharing is controlled at the `BadgeCollection` level. An owner of a collection can click a "Share" icon (`change_circle`) to toggle its shared status. This action does not create a copy, but rather makes the original collection and its badges visible to all other teams.
+- **Mechanism**: Sharing is controlled at the `BadgeCollection` level. An owner of a collection can click a "Share" icon (`change_circle`) to toggle its `isShared` status. This action makes the original collection and its badges visible in a "Shared Collections" side panel for all other teams. From this panel, other teams can:
+    - **Link the entire collection**: Dragging the collection's card from the panel to their main board adds a *link* to that collection to their team.
+    - **Link individual badges**: Dragging a single badge from a shared collection (either in the panel or from a linked collection on their board) and dropping it into one of their *owned* collections creates a link to that specific badge.
 - **Visual Cues**:
   - **Owned & Shared Externally (`upload`)**: An item created by the current team that has been explicitly shared with other teams is marked with an `upload` icon overlay. This indicates it is the "source of truth." **The color of this icon badge matches the owner team's color.**
   - **Internally Linked (`change_circle`)**: An item that is used in multiple places within the *same* team (e.g., a badge appearing in two collections) is marked with a `change_circle` icon overlay on its linked instances. The original instance does not get this icon unless it is also shared externally. **The color of this icon badge matches the owner team's color.**
@@ -99,8 +102,7 @@ This pattern describes how a single entity (like a Badge or BadgeCollection) can
 - **Behavior**:
   - Editing a shared item (e.g., changing a badge's name or icon) modifies the original "source of truth" item, and the changes are instantly reflected in all other places where it is used.
   - **Smart Deletion**: Deleting an item follows contextual rules:
-    - Deleting a *shared-to-you* instance only removes that specific instance from the current view. The original collection remains untouched.
-    - Deleting an *internally linked* instance only removes that specific link.
+    - Deleting a *shared-to-you* or *internally linked* instance only removes that specific link/instance. The original remains untouched.
     - Deleting the *original, shared* item (i.e., an item that is currently linked elsewhere) will trigger a confirmation dialog to prevent accidental removal of a widely-used resource.
     - Deleting an *original, un-shared* item is immediate and confirmed with a toaster notification.
 - **Application**: Used for sharing Badges and Badge Collections between Teams.
@@ -118,8 +120,8 @@ This is the application's perfected, gold-standard pattern for managing a collec
     -   **Interaction**: Users can drag any non-pinned card and drop it between other non-pinned cards to change its order. The grid reflows smoothly to show the drop position.
     -   **Top Guardrail**: If a card is dropped *before* the first pinned item, it is automatically repositioned to be *after* it.
     -   **Bottom Guardrail**: If a card is dropped *after* the last pinned item, it is automatically repositioned to be *before* it. This ensures the integrity of the pinned items.
--   **Drop Zone Highlighting**: Drop zones provide visual feedback when an item is dragged over them. To maintain a clean UI, highlights primarily use rings without background fills, except for duplication which is a special case.
-    -   **Standard & Duplication Zones (Reordering, Moving, Duplicating):** The drop area is highlighted with a `1px` inset, **colorless** ring using the standard border color (`ring-1 ring-border ring-inset`).
+-   **Drop Zone Highlighting**: Drop zones provide visual feedback when an item is dragged over them. To maintain a clean UI, highlights primarily use rings without background fills.
+    -   **Standard & Duplication Zones (Reordering, Moving, Duplicating):** The drop area is highlighted with a `1px` inset, **colorless** ring using the standard border color (`ring-1 ring-border ring-inset`). This is the universal style for all non-destructive drop actions.
     -   **Destructive Zones (Deleting):** The drop area is highlighted with a `1px` ring in the destructive theme color (`ring-1 ring-destructive`).
 -   **Drag-to-Duplicate**:
     -   **Interaction**: A designated "Add New" icon (`<Button>`) acts as a drop zone. While a card is being dragged, this zone becomes highlighted to indicate it can accept a drop.
