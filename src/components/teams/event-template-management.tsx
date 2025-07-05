@@ -84,7 +84,7 @@ function EventTemplateForm({
                 <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                     <PopoverTrigger asChild>
                         <Button variant="ghost" size="icon" className="p-0 shrink-0">
-                            <GoogleSymbol name={icon} className="text-4xl" weight={100} />
+                            <GoogleSymbol name={icon} className="text-8xl" weight={100} />
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-80 p-0">
@@ -106,9 +106,9 @@ function EventTemplateForm({
                                             setIcon(iconName);
                                             setIsIconPopoverOpen(false);
                                         }}
-                                        className="p-0"
+                                        className="h-4 w-4 p-0"
                                     >
-                                        <GoogleSymbol name={iconName} className="text-6xl" weight={100} />
+                                        <GoogleSymbol name={iconName} className="text-4xl" weight={100} />
                                     </Button>
                                 ))}
                             </div>

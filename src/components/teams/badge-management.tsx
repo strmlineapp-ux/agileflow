@@ -139,9 +139,9 @@ function CompactSearchIconPicker({
                                 onUpdateIcon(iconName);
                                 setIsPopoverOpen(false);
                                 }}
-                                className="p-0"
+                                className="h-4 w-4 p-0"
                             >
-                                <GoogleSymbol name={iconName} className="text-6xl" weight={100} />
+                                <GoogleSymbol name={iconName} className="text-4xl" weight={100} />
                             </Button>
                         </TooltipTrigger>
                         <TooltipContent>
@@ -689,7 +689,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                     color={collection.color} 
                                     onUpdateIcon={(icon) => onUpdateCollection(collection.id, { icon })}
                                     disabled={!isOwned}
-                                    iconClassName="text-6xl"
+                                    iconClassName="text-8xl"
                                 />
                                 <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
                                     <PopoverTrigger asChild disabled={!isOwned}><div className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card", !isOwned ? "cursor-not-allowed" : "cursor-pointer")} style={{ backgroundColor: collection.color }} /></PopoverTrigger>
