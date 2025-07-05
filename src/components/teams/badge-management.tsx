@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -495,16 +494,16 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     return (
         <div className="group relative inline-flex items-center gap-1 rounded-full border-2 py-0 px-1.5" style={{ borderColor: badge.color, color: badge.color }}>
             <div className="relative flex items-center justify-center">
-                <GoogleSymbol name={badge.icon} style={{color: badge.color}} className="text-[11px]" />
+                <GoogleSymbol name={badge.icon} style={{color: badge.color}} className="text-[10px]" />
                 {shareIcon && (
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <div
-                                    className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-background text-white flex items-center justify-center"
+                                    className="absolute -top-1 -right-1 h-3 w-3 rounded-full border border-background text-white flex items-center justify-center"
                                     style={{ backgroundColor: shareIconColor }}
                                 >
-                                    <GoogleSymbol name={shareIcon} style={{fontSize: '10px'}}/>
+                                    <GoogleSymbol name={shareIcon} style={{fontSize: '8px'}}/>
                                 </div>
                             </TooltipTrigger>
                             <TooltipContent><p>{shareIconTitle}</p></TooltipContent>
@@ -513,8 +512,8 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                 )}
             </div>
             {inlineNameEditor}
-            <button type="button" onClick={onDelete} className="ml-1 h-3.5 w-3.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full inline-flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" aria-label={`Delete ${badge.name}`}>
-                <GoogleSymbol name="close" className="text-[10px]" />
+            <button type="button" onClick={onDelete} className="ml-0.5 h-3.5 w-3.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full inline-flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" aria-label={`Delete ${badge.name}`}>
+                <GoogleSymbol name="close" className="text-[9px]" />
             </button>
         </div>
     );
@@ -695,21 +694,24 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                             )}
                         </div>
                         <div className="flex items-center gap-1">
-                            {isOwned && APPLICATIONS.map(app => (
+                            {APPLICATIONS.map(app => (
                                 <TooltipProvider key={app.key}>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className={cn("h-7 w-7", (collection.applications || []).includes(app.key) ? 'text-primary' : 'text-muted-foreground')}
-                                                onClick={() => handleToggleApplication(app.key)}
-                                            >
-                                                <GoogleSymbol name={app.icon} className="text-xl" />
-                                            </Button>
+                                            <span>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className={cn("h-7 w-7", (collection.applications || []).includes(app.key) ? 'text-primary' : 'text-muted-foreground')}
+                                                    onClick={() => onUpdateCollection(collection.id, { applications: (collection.applications || []).includes(app.key) ? (collection.applications || []).filter(a => a !== app.key) : [...(collection.applications || []), app.key] })}
+                                                    disabled={!isOwned}
+                                                >
+                                                    <GoogleSymbol name={app.icon} className="text-xl" />
+                                                </Button>
+                                            </span>
                                         </TooltipTrigger>
                                         <TooltipContent>
-                                            <p>Associate with {app.label}</p>
+                                            <p>{isOwned ? `Associate with ${app.label}` : 'Managed by owner team'}</p>
                                         </TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
@@ -1141,21 +1143,9 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
 
     return (
         <DragDropContext onDragEnd={onDragEnd}>
-            <div className="relative">
-                <div className="absolute top-0 right-0 z-10">
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)} className="h-8 w-8">
-                                    <GoogleSymbol name="dynamic_feed" />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent><p>Show Shared Collections</p></TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                </div>
-                <div className="space-y-6">
-                    <div className="flex items-center justify-between mb-6 pr-12">
+            <div className="flex gap-4">
+                <div className="flex-1 transition-all duration-300 flex flex-col gap-6">
+                    <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             {isEditingTitle ? (
                                 <Input
@@ -1224,129 +1214,138 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
                             )}
                         </div>
                     </div>
-
-                    <div className="flex gap-4">
-                        <div className="flex-1 transition-all duration-300">
-                            <StrictModeDroppable droppableId="collections-list" type="collection">
-                                {(provided, snapshot) => (
-                                    <div 
-                                        ref={provided.innerRef}
-                                        {...provided.droppableProps}
-                                        className={cn(
-                                            "grid gap-4 transition-all duration-300",
-                                            isSharedPanelOpen 
-                                                ? "grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2" 
-                                                : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
-                                            snapshot.isDraggingOver && "ring-1 ring-border ring-inset p-2 rounded-lg"
+                    
+                    <StrictModeDroppable droppableId="collections-list" type="collection">
+                        {(provided, snapshot) => (
+                            <div 
+                                ref={provided.innerRef}
+                                {...provided.droppableProps}
+                                className={cn(
+                                    "grid gap-4 transition-all duration-300",
+                                    isSharedPanelOpen 
+                                        ? "grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2" 
+                                        : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
+                                    snapshot.isDraggingOver && "ring-1 ring-border ring-inset p-2 rounded-lg"
+                                )}
+                            >
+                                {displayedCollections.map((collection, index) => (
+                                    <Draggable key={collection.id} draggableId={collection.id} index={index}>
+                                        {(provided, snapshot) => (
+                                            <div
+                                                ref={provided.innerRef}
+                                                {...provided.draggableProps}
+                                                className={cn("w-full", snapshot.isDragging && "shadow-xl")}
+                                            >
+                                                <BadgeCollectionCard
+                                                    dragHandleProps={provided.dragHandleProps}
+                                                    key={collection.id}
+                                                    collection={collection}
+                                                    allBadgesInTeam={allBadgesAvailableToTeam}
+                                                    teamId={team.id}
+                                                    teams={teams}
+                                                    onUpdateCollection={handleUpdateCollection}
+                                                    onDeleteCollection={handleDeleteCollection}
+                                                    onAddBadge={handleAddBadge}
+                                                    onUpdateBadge={handleUpdateBadge}
+                                                    onDeleteBadge={handleDeleteBadge}
+                                                    onToggleShare={handleToggleShare}
+                                                />
+                                            </div>
                                         )}
-                                    >
-                                        {displayedCollections.map((collection, index) => (
-                                            <Draggable key={collection.id} draggableId={collection.id} index={index}>
-                                                {(provided, snapshot) => (
-                                                    <div
-                                                        ref={provided.innerRef}
-                                                        {...provided.draggableProps}
-                                                        className={cn("w-full", snapshot.isDragging && "shadow-xl")}
-                                                    >
-                                                        <BadgeCollectionCard
-                                                            dragHandleProps={provided.dragHandleProps}
-                                                            key={collection.id}
-                                                            collection={collection}
-                                                            allBadgesInTeam={allBadgesAvailableToTeam}
-                                                            teamId={team.id}
-                                                            teams={teams}
-                                                            onUpdateCollection={handleUpdateCollection}
-                                                            onDeleteCollection={handleDeleteCollection}
-                                                            onAddBadge={handleAddBadge}
-                                                            onUpdateBadge={handleUpdateBadge}
-                                                            onDeleteBadge={handleDeleteBadge}
-                                                            onToggleShare={handleToggleShare}
-                                                        />
+                                    </Draggable>
+                                ))}
+                                {provided.placeholder}
+                            </div>
+                        )}
+                    </StrictModeDroppable>
+                </div>
+                
+                <div className="flex items-start gap-1">
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)} className="h-8 w-8 mt-1.5">
+                                    <GoogleSymbol name="dynamic_feed" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent><p>Show Shared Collections</p></TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                    <div className={cn(
+                        "transition-all duration-300",
+                        isSharedPanelOpen ? "w-96" : "w-0 overflow-hidden"
+                    )}>
+                        <StrictModeDroppable droppableId="shared-collections-panel" type="collection">
+                            {(provided, snapshot) => (
+                                <div 
+                                    ref={provided.innerRef} 
+                                    {...provided.droppableProps} 
+                                    className={cn("h-full rounded-lg", snapshot.isDraggingOver && "bg-accent/50 ring-2 ring-border ring-inset")}
+                                >
+                                    <Card className={cn("transition-opacity duration-300 h-full", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
+                                        <CardHeader>
+                                            <div className="flex items-center justify-between">
+                                                <CardTitle>Shared Collections</CardTitle>
+                                                {!isSharedSearching ? (
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => setIsSharedSearching(true)}>
+                                                        <GoogleSymbol name="search" />
+                                                    </Button>
+                                                ) : (
+                                                    <div className="flex items-center gap-1">
+                                                    <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                                                    <input
+                                                        ref={sharedSearchInputRef}
+                                                        placeholder="Search..."
+                                                        value={sharedSearchTerm}
+                                                        onChange={(e) => setSharedSearchTerm(e.target.value)}
+                                                        onBlur={() => !sharedSearchTerm && setIsSharedSearching(false)}
+                                                        className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                                                    />
                                                     </div>
                                                 )}
-                                            </Draggable>
-                                        ))}
-                                        {provided.placeholder}
-                                    </div>
-                                )}
-                            </StrictModeDroppable>
-                        </div>
-                        <div className={cn(
-                            "transition-all duration-300 overflow-hidden",
-                            isSharedPanelOpen ? "w-96" : "w-0"
-                        )}>
-                            <StrictModeDroppable droppableId="shared-collections-panel" type="collection">
-                                {(provided, snapshot) => (
-                                    <div 
-                                        ref={provided.innerRef} 
-                                        {...provided.droppableProps} 
-                                        className={cn("h-full rounded-lg", snapshot.isDraggingOver && "bg-accent/50 ring-2 ring-border ring-inset")}
-                                    >
-                                        <Card className={cn("transition-opacity duration-300 h-full", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
-                                            <CardHeader>
-                                                <div className="flex items-center justify-between">
-                                                    <CardTitle>Shared Collections</CardTitle>
-                                                     {!isSharedSearching ? (
-                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => setIsSharedSearching(true)}>
-                                                            <GoogleSymbol name="search" />
-                                                        </Button>
-                                                    ) : (
-                                                        <div className="flex items-center gap-1">
-                                                        <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
-                                                        <input
-                                                            ref={sharedSearchInputRef}
-                                                            placeholder="Search..."
-                                                            value={sharedSearchTerm}
-                                                            onChange={(e) => setSharedSearchTerm(e.target.value)}
-                                                            onBlur={() => !sharedSearchTerm && setIsSharedSearching(false)}
-                                                            className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
-                                                        />
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <CardDescription>Drag a collection to link it to your team.</CardDescription>
-                                            </CardHeader>
-                                            <CardContent className="h-full">
-                                                <div className="space-y-2">
-                                                    {sharedCollectionsFromOthers.map((collection, index) => {
-                                                        return (
-                                                            <Draggable key={collection.id} draggableId={collection.id} index={index}>
-                                                                {(provided, snapshot) => (
-                                                                    <div 
-                                                                        ref={provided.innerRef} 
-                                                                        {...provided.draggableProps} 
-                                                                        className={cn("w-full cursor-grab", snapshot.isDragging && "shadow-xl opacity-80")}
-                                                                    >
-                                                                       <BadgeCollectionCard
-                                                                            dragHandleProps={provided.dragHandleProps}
-                                                                            key={collection.id}
-                                                                            collection={collection}
-                                                                            allBadgesInTeam={allBadgesAvailableToTeam}
-                                                                            teamId={team.id}
-                                                                            teams={teams}
-                                                                            onUpdateCollection={handleUpdateCollection}
-                                                                            onDeleteCollection={handleDeleteCollection}
-                                                                            onAddBadge={handleAddBadge}
-                                                                            onUpdateBadge={handleUpdateBadge}
-                                                                            onDeleteBadge={handleDeleteBadge}
-                                                                            onToggleShare={handleToggleShare}
-                                                                            isSharedPreview={true}
-                                                                        />
-                                                                    </div>
-                                                                )}
-                                                            </Draggable>
-                                                        )
-                                                    })}
-                                                    {provided.placeholder}
-                                                    {sharedCollectionsFromOthers.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">No collections are being shared by other teams.</p>}
-                                                </div>
-                                            </CardContent>
-                                        </Card>
-                                        {provided.placeholder}
-                                    </div>
-                                )}
-                            </StrictModeDroppable>
-                        </div>
+                                            </div>
+                                            <CardDescription>Drag a collection to link it to your team.</CardDescription>
+                                        </CardHeader>
+                                        <CardContent className="h-full">
+                                            <div className="space-y-2">
+                                                {sharedCollectionsFromOthers.map((collection, index) => {
+                                                    return (
+                                                        <Draggable key={collection.id} draggableId={collection.id} index={index}>
+                                                            {(provided, snapshot) => (
+                                                                <div 
+                                                                    ref={provided.innerRef} 
+                                                                    {...provided.draggableProps} 
+                                                                    className={cn("w-full cursor-grab", snapshot.isDragging && "shadow-xl opacity-80")}
+                                                                >
+                                                                    <BadgeCollectionCard
+                                                                        dragHandleProps={provided.dragHandleProps}
+                                                                        key={collection.id}
+                                                                        collection={collection}
+                                                                        allBadgesInTeam={allBadgesAvailableToTeam}
+                                                                        teamId={team.id}
+                                                                        teams={teams}
+                                                                        onUpdateCollection={handleUpdateCollection}
+                                                                        onDeleteCollection={handleDeleteCollection}
+                                                                        onAddBadge={handleAddBadge}
+                                                                        onUpdateBadge={handleUpdateBadge}
+                                                                        onDeleteBadge={handleDeleteBadge}
+                                                                        onToggleShare={handleToggleShare}
+                                                                        isSharedPreview={true}
+                                                                    />
+                                                                </div>
+                                                            )}
+                                                        </Draggable>
+                                                    )
+                                                })}
+                                                {provided.placeholder}
+                                                {sharedCollectionsFromOthers.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">No collections are being shared by other teams.</p>}
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                    {provided.placeholder}
+                                </div>
+                            )}
+                        </StrictModeDroppable>
                     </div>
                 </div>
                 <Dialog open={!!collectionToDelete} onOpenChange={(isOpen) => !isOpen && setCollectionToDelete(null)}>
