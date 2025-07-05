@@ -326,7 +326,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                     {predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdateBadge({ color: c }); setIsColorPopoverOpen(false);}}/>))}
                                     <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
                                         <GoogleSymbol name="colorize" className="text-muted-foreground" />
-                                        <input
+                                        <Input
                                             type="color"
                                             value={badge.color}
                                             onChange={(e) => onUpdateBadge({ color: e.target.value })}
@@ -454,7 +454,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                         {predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdateBadge({ color: c }); setIsColorPopoverOpen(false);}}/>))}
                         <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
                             <GoogleSymbol name="colorize" className="text-muted-foreground" />
-                            <input
+                            <Input
                                 type="color"
                                 value={badge.color}
                                 onChange={(e) => onUpdateBadge({ color: e.target.value })}
@@ -534,19 +534,19 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                             ))}
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-2">
-                        <div className="grid grid-cols-8 gap-1">
-                            {predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdateBadge({ color: c }); setIsColorPopoverOpen(false);}}/>))}
-                            <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
-                                <GoogleSymbol name="colorize" className="text-muted-foreground" />
-                                <input
-                                    type="color"
-                                    value={badge.color}
-                                    onChange={(e) => onUpdateBadge({ color: e.target.value })}
-                                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"
-                                    aria-label="Custom color picker"
-                                />
+                            <div className="grid grid-cols-8 gap-1">
+                                {predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdateBadge({ color: c }); setIsColorPopoverOpen(false);}}/>))}
+                                <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
+                                    <GoogleSymbol name="colorize" className="text-muted-foreground" />
+                                    <Input
+                                        type="color"
+                                        value={badge.color}
+                                        onChange={(e) => onUpdateBadge({ color: e.target.value })}
+                                        className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"
+                                        aria-label="Custom color picker"
+                                    />
+                                </div>
                             </div>
-                        </div>
                         </PopoverContent>
                     </Popover>
                     {shareIcon && (
@@ -573,7 +573,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                 onClick={onDelete}
                 aria-label={`Delete ${badge.name}`}
             >
-                <GoogleSymbol name="close" className="text-xs" />
+                <GoogleSymbol name="delete" className="text-xs" />
             </button>
         </div>
     );
