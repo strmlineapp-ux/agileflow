@@ -1088,14 +1088,12 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
                         </div>
                     </div>
                 </CardHeader>
-                <CardContent className="flex-grow flex flex-col justify-end pt-2">
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs text-muted-foreground truncate">{page.path}</p>
-                       <div className="flex items-center">
-                          <PageAccessControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
-                          <PageTabsControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
-                       </div>
+                <CardContent className="flex-grow flex flex-col justify-between pt-2">
+                    <div className="flex items-center">
+                      <PageAccessControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
+                      <PageTabsControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
                     </div>
+                    <p className="text-xs text-muted-foreground truncate">{page.path}</p>
                 </CardContent>
             </Card>
             <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
