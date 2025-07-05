@@ -115,7 +115,7 @@ function CalendarCard({ calendar, onUpdate, onDelete }: { calendar: SharedCalend
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <PopoverTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-9 w-9 text-2xl">
+                                    <Button variant="ghost" size="icon" className="text-2xl">
                                         <GoogleSymbol name={calendar.icon} />
                                     </Button>
                                 </PopoverTrigger>
@@ -177,7 +177,7 @@ function CalendarCard({ calendar, onUpdate, onDelete }: { calendar: SharedCalend
           <TooltipProvider>
             <Tooltip>
                 <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive -mr-4 -mt-2" onClick={() => onDelete(calendar)}>
+                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive" onClick={() => onDelete(calendar)}>
                         <GoogleSymbol name="delete" className="text-4xl" weight={100} />
                         <span className="sr-only">Delete Calendar</span>
                     </Button>
@@ -308,12 +308,12 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
       <div className="space-y-6">
         <div className="flex items-center gap-2">
             {isEditingTitle ? (
-              <Input ref={titleInputRef} defaultValue={title} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
+              <Input ref={titleInputRef} defaultValue={title} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
             ) : (
               <TooltipProvider>
                   <Tooltip>
                       <TooltipTrigger asChild>
-                          <h3 className="text-2xl font-semibold tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{title}</h3>
+                          <h3 className="text-2xl font-thin tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{title}</h3>
                       </TooltipTrigger>
                       {tab.description && (
                           <TooltipContent><p className="max-w-xs">{tab.description}</p></TooltipContent>
@@ -397,3 +397,5 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
     </DragDropContext>
   );
 }
+
+    

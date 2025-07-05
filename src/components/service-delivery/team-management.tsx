@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -79,7 +80,7 @@ const AddMemberToTeamButton = ({ usersToAdd, onAdd, teamName }: { usersToAdd: Us
         <Tooltip>
           <TooltipTrigger asChild>
             <PopoverTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full">
+              <Button variant="ghost" size="icon" className="rounded-full">
                   <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
                   <span className="sr-only">Assign member to {teamName}</span>
               </Button>
@@ -91,7 +92,7 @@ const AddMemberToTeamButton = ({ usersToAdd, onAdd, teamName }: { usersToAdd: Us
       <PopoverContent className="p-0 w-80">
         <div className="flex items-center gap-1 p-2 border-b">
           {!isSearching ? (
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => setIsSearching(true)}>
+            <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={() => setIsSearching(true)}>
               <GoogleSymbol name="search" />
             </Button>
           ) : (
@@ -161,7 +162,7 @@ const MemberCard = ({ user, index, onRemove, onSetAdmin, isTeamAdmin }: { user: 
                 <TooltipProvider>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onRemove(user.userId); }} className="h-6 w-6 text-muted-foreground hover:text-destructive">
+                            <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onRemove(user.userId); }} className="text-muted-foreground hover:text-destructive">
                                 <GoogleSymbol name="cancel" className="text-4xl" weight={100} />
                             </Button>
                         </TooltipTrigger>
@@ -257,14 +258,14 @@ function TeamCard({
                          <div className="relative">
                             <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                                 <PopoverTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-9 w-9 text-3xl">
+                                    <Button variant="ghost" size="icon" className="text-3xl">
                                         <GoogleSymbol name={team.icon} />
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-80 p-0">
                                     <div className="flex items-center gap-1 p-2 border-b">
                                         {!isSearchingIcons ? (
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => setIsSearchingIcons(true)}>
+                                            <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={() => setIsSearchingIcons(true)}>
                                                 <GoogleSymbol name="search" />
                                             </Button>
                                         ) : (
@@ -326,7 +327,7 @@ function TeamCard({
                                 <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive" onClick={() => onDelete(team)}>
+                                    <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:text-destructive" onClick={() => onDelete(team)}>
                                         <GoogleSymbol name="delete" className="text-4xl" weight={100}/>
                                         <span className="sr-only">Delete Team or Drop User to Remove</span>
                                     </Button>
@@ -519,12 +520,12 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
     <DragDropContext onDragEnd={onDragEnd}>
         <div className="flex items-center gap-2 mb-6">
             {isEditingTitle ? (
-              <Input ref={titleInputRef} defaultValue={title} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
+              <Input ref={titleInputRef} defaultValue={title} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
             ) : (
                 <TooltipProvider>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <h2 className="text-2xl font-semibold tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{title}</h2>
+                            <h2 className="text-2xl font-thin tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{title}</h2>
                         </TooltipTrigger>
                         {tab.description && (
                             <TooltipContent><p className="max-w-xs">{tab.description}</p></TooltipContent>
@@ -545,7 +546,7 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
                          <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={handleAddTeam}>
+                                    <Button variant="ghost" size="icon" className="rounded-full" onClick={handleAddTeam}>
                                         <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
                                         <span className="sr-only">New Team or Drop to Duplicate</span>
                                     </Button>
@@ -591,7 +592,7 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
       <Dialog open={!!teamToDelete} onOpenChange={() => setTeamToDelete(null)}>
         <DialogContent className="max-w-md">
             <div className="absolute top-4 right-4">
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={handleDelete}>
+                <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={handleDelete}>
                     <GoogleSymbol name="delete" className="text-xl" />
                     <span className="sr-only">Delete Team</span>
                 </Button>
@@ -607,3 +608,5 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
     </DragDropContext>
   );
 }
+
+    
