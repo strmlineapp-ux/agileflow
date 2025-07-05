@@ -280,23 +280,33 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
         shareIconTitle = 'Linked from another collection in this team';
     }
     
-    const tooltipWrapper = (isTooltipDisabled: boolean, tooltipContent: string, children: React.ReactNode) => {
-        if (isTooltipDisabled) {
-            return <>{children}</>;
-        }
-        return (
-            <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        {/* Wrap in a span for disabled elements */}
-                        <span>{children}</span>
-                    </TooltipTrigger>
-                    <TooltipContent><p>{tooltipContent}</p></TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
-        );
-    }
-
+    const colorPickerContent = (
+        <PopoverContent className="w-auto p-2">
+            <div className="grid grid-cols-8 gap-1">
+                {predefinedColors.map(c => (
+                    <button
+                        key={c}
+                        className="h-6 w-6 rounded-full border"
+                        style={{ backgroundColor: c }}
+                        onClick={() => {
+                            onUpdateBadge({ color: c });
+                            setIsColorPopoverOpen(false);
+                        }}
+                    />
+                ))}
+                <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
+                    <GoogleSymbol name="colorize" className="text-muted-foreground" />
+                    <Input
+                        type="color"
+                        value={badge.color}
+                        onChange={(e) => onUpdateBadge({ color: e.target.value })}
+                        className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"
+                        aria-label="Custom color picker"
+                    />
+                </div>
+            </div>
+        </PopoverContent>
+    );
 
     if (viewMode === 'detailed') {
       return (
@@ -305,37 +315,39 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                          <div className="relative">
-                            {tooltipWrapper(!isEditable, "Properties are managed by the owner team.", (
-                                <CompactSearchIconPicker 
-                                    icon={badge.icon} 
-                                    color={badge.color} 
-                                    onUpdateIcon={(icon) => onUpdateBadge({ icon })}
-                                    disabled={!isEditable}
-                                    buttonClassName="h-8 w-8" 
-                                    iconClassName="text-2xl" 
-                                />
-                            ))}
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <span>
+                                            <CompactSearchIconPicker 
+                                                icon={badge.icon} 
+                                                color={badge.color} 
+                                                onUpdateIcon={(icon) => onUpdateBadge({ icon })}
+                                                disabled={!isEditable}
+                                                buttonClassName="h-8 w-8" 
+                                                iconClassName="text-2xl" 
+                                            />
+                                        </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent><p>{isEditable ? "Change Icon" : "Properties are managed by the owner team."}</p></TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
                             <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                                <PopoverTrigger asChild disabled={!isEditable}>
-                                    {tooltipWrapper(!isEditable, "Properties are managed by the owner team.", (
-                                        <div className={cn("absolute -bottom-1 -right-0 h-5 w-5 rounded-full border-2 border-card", isEditable ? "cursor-pointer" : "cursor-not-allowed")} style={{ backgroundColor: badge.color }} />
-                                    ))}
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-2">
-                                <div className="grid grid-cols-8 gap-1">
-                                    {predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdateBadge({ color: c }); setIsColorPopoverOpen(false);}}/>))}
-                                    <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
-                                        <GoogleSymbol name="colorize" className="text-muted-foreground" />
-                                        <Input
-                                            type="color"
-                                            value={badge.color}
-                                            onChange={(e) => onUpdateBadge({ color: e.target.value })}
-                                            className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"
-                                            aria-label="Custom color picker"
-                                        />
-                                    </div>
-                                </div>
-                                </PopoverContent>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <PopoverTrigger asChild disabled={!isEditable}>
+                                                <button
+                                                    className={cn("absolute -bottom-1 -right-0 h-5 w-5 rounded-full border-2 border-card", isEditable && "cursor-pointer")}
+                                                    style={{ backgroundColor: badge.color }}
+                                                    aria-label="Change badge color"
+                                                />
+                                            </PopoverTrigger>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>{isEditable ? 'Change Color' : 'Properties are managed by the owner team.'}</p></TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                                {colorPickerContent}
                             </Popover>
                             {shareIcon && (
                                 <TooltipProvider>
@@ -364,9 +376,14 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                     className="h-auto p-0 font-headline text-base font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
                                 />
                             ) : (
-                                tooltipWrapper(!isEditable, "Properties are managed by the owner team.", (
-                                    <CardTitle onClick={() => isEditable && setIsEditingName(true)} className={cn("text-base break-words", isEditable && "cursor-pointer")}>{badge.name}</CardTitle>
-                                ))
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <span onClick={() => isEditable && setIsEditingName(true)} className={cn("text-base break-words", isEditable && "cursor-pointer")}>{badge.name}</span>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>{isEditable ? "Click to edit" : "Properties are managed by the owner team."}</p></TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
                             )}
                         </div>
                     </div>
@@ -386,14 +403,19 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                         disabled={!isEditable}
                     />
                  ) : (
-                     tooltipWrapper(!isEditable, "Properties are managed by the owner team.", (
-                        <p 
-                            className={cn("text-sm text-muted-foreground min-h-[20px] break-words", isEditable && "cursor-text")} 
-                            onClick={() => isEditable && setIsEditingDescription(true)}
-                        >
-                            {badge.description || (isEditable ? 'Click to add description.' : 'No description.')}
-                        </p>
-                    ))
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <p 
+                                    className={cn("text-sm text-muted-foreground min-h-[20px] break-words", isEditable && "cursor-text")} 
+                                    onClick={() => isEditable && setIsEditingDescription(true)}
+                                >
+                                    {badge.description || (isEditable ? 'Click to add description.' : 'No description.')}
+                                </p>
+                            </TooltipTrigger>
+                             <TooltipContent><p>{isEditable ? "Click to edit" : "Properties are managed by the owner team."}</p></TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
                  )}
             </CardContent>
         </Card>
@@ -413,19 +435,24 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
         )}
       />
     ) : (
-      tooltipWrapper(!isEditable, "Properties are managed by the owner team.", (
-        <span
-            className={cn("font-semibold break-words text-sm", isEditable && "cursor-text")}
-            onClick={(e) => {
-            e.stopPropagation();
-            if (isEditable) {
-                setIsEditingName(true);
-            }
-            }}
-        >
-            {badge.name}
-        </span>
-      ))
+        <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <span
+                        className={cn("font-semibold break-words text-sm", isEditable && "cursor-text")}
+                        onClick={(e) => {
+                        e.stopPropagation();
+                        if (isEditable) {
+                            setIsEditingName(true);
+                        }
+                        }}
+                    >
+                        {badge.name}
+                    </span>
+                </TooltipTrigger>
+                <TooltipContent><p>{isEditable ? "Click to edit" : "Properties are managed by the owner team."}</p></TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
     );
 
 
@@ -433,37 +460,39 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
       return (
         <div className="group flex w-full items-start gap-4 p-2 rounded-md hover:bg-muted/50">
             <div className="relative">
-                {tooltipWrapper(!isEditable, "Properties are managed by the owner team.", (
-                    <CompactSearchIconPicker 
-                        icon={badge.icon} 
-                        color={badge.color} 
-                        onUpdateIcon={(icon) => onUpdateBadge({ icon })}
-                        disabled={!isEditable}
-                        buttonClassName="h-8 w-8" 
-                        iconClassName="text-xl" 
-                    />
-                ))}
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <span>
+                                <CompactSearchIconPicker 
+                                    icon={badge.icon} 
+                                    color={badge.color} 
+                                    onUpdateIcon={(icon) => onUpdateBadge({ icon })}
+                                    disabled={!isEditable}
+                                    buttonClassName="h-8 w-8" 
+                                    iconClassName="text-xl" 
+                                />
+                            </span>
+                        </TooltipTrigger>
+                        <TooltipContent><p>{isEditable ? "Change Icon" : "Properties are managed by the owner team."}</p></TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
                 <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                    <PopoverTrigger asChild disabled={!isEditable}>
-                        {tooltipWrapper(!isEditable, "Properties are managed by the owner team.", (
-                            <div className={cn("absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-card", isEditable ? "cursor-pointer" : "cursor-not-allowed")} style={{ backgroundColor: badge.color }} />
-                        ))}
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-2">
-                    <div className="grid grid-cols-8 gap-1">
-                        {predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdateBadge({ color: c }); setIsColorPopoverOpen(false);}}/>))}
-                        <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
-                            <GoogleSymbol name="colorize" className="text-muted-foreground" />
-                            <Input
-                                type="color"
-                                value={badge.color}
-                                onChange={(e) => onUpdateBadge({ color: e.target.value })}
-                                className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"
-                                aria-label="Custom color picker"
-                            />
-                        </div>
-                    </div>
-                    </PopoverContent>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <PopoverTrigger asChild disabled={!isEditable}>
+                                    <button
+                                        className={cn("absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-card", isEditable && "cursor-pointer")}
+                                        style={{ backgroundColor: badge.color }}
+                                        aria-label="Change badge color"
+                                    />
+                                </PopoverTrigger>
+                            </TooltipTrigger>
+                            <TooltipContent><p>{isEditable ? 'Change Color' : 'Properties are managed by the owner team.'}</p></TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                    {colorPickerContent}
                 </Popover>
                 {shareIcon && (
                     <TooltipProvider>
@@ -493,12 +522,17 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                         placeholder="Click to add a description."
                         disabled={!isEditable}
                     />
-                ) : (
-                     tooltipWrapper(!isEditable, "Properties are managed by the owner team.", (
-                        <p className={cn("text-sm text-muted-foreground min-h-[20px] break-words", isEditable && "cursor-text")} onClick={() => isEditable && setIsEditingDescription(true)}>
-                            {badge.description || (isEditable ? 'Click to add description.' : 'No description.')}
-                        </p>
-                    ))
+                 ) : (
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <p className={cn("text-sm text-muted-foreground min-h-[20px] break-words", isEditable && "cursor-text")} onClick={() => isEditable && setIsEditingDescription(true)}>
+                                    {badge.description || (isEditable ? 'Click to add description.' : 'No description.')}
+                                </p>
+                            </TooltipTrigger>
+                            <TooltipContent><p>{isEditable ? "Click to edit" : "Properties are managed by the owner team."}</p></TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
                  )}
             </div>
             <Button variant="ghost" size="icon" onClick={onDelete} className="h-8 w-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity">
@@ -514,40 +548,42 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
             <UiBadge
                 variant="outline"
                 style={{ color: badge.color, borderColor: badge.color }}
-                className="gap-1.5 p-1 px-3 rounded-full text-sm border-2"
+                className="gap-1.5 p-1 pl-3 pr-2 rounded-full text-sm border-2"
             >
                 <div className="relative">
-                    {tooltipWrapper(!isEditable, "Properties are managed by the owner team.", (
-                        <CompactSearchIconPicker 
-                            icon={badge.icon} 
-                            color={badge.color} 
-                            onUpdateIcon={(icon) => onUpdateBadge({ icon })}
-                            disabled={!isEditable}
-                            buttonClassName="h-6 w-6 -ml-1"
-                            iconClassName="text-base" 
-                        />
-                    ))}
-                    <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                        <PopoverTrigger asChild disabled={!isEditable}>
-                            {tooltipWrapper(!isEditable, "Properties are managed by the owner team.", (
-                                <div className={cn("absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-background", isEditable ? "cursor-pointer" : "cursor-not-allowed")} style={{ backgroundColor: badge.color }} />
-                            ))}
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-2">
-                            <div className="grid grid-cols-8 gap-1">
-                                {predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdateBadge({ color: c }); setIsColorPopoverOpen(false);}}/>))}
-                                <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
-                                    <GoogleSymbol name="colorize" className="text-muted-foreground" />
-                                    <Input
-                                        type="color"
-                                        value={badge.color}
-                                        onChange={(e) => onUpdateBadge({ color: e.target.value })}
-                                        className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"
-                                        aria-label="Custom color picker"
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <span>
+                                    <CompactSearchIconPicker 
+                                        icon={badge.icon} 
+                                        color={badge.color} 
+                                        onUpdateIcon={(icon) => onUpdateBadge({ icon })}
+                                        disabled={!isEditable}
+                                        buttonClassName="h-6 w-6 -ml-1"
+                                        iconClassName="text-base" 
                                     />
-                                </div>
-                            </div>
-                        </PopoverContent>
+                                </span>
+                            </TooltipTrigger>
+                            <TooltipContent><p>{isEditable ? "Change Icon" : "Properties are managed by the owner team."}</p></TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                    <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <PopoverTrigger asChild disabled={!isEditable}>
+                                        <button
+                                            className={cn("absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-background", isEditable && "cursor-pointer")}
+                                            style={{ backgroundColor: badge.color }}
+                                            aria-label="Change badge color"
+                                        />
+                                    </PopoverTrigger>
+                                </TooltipTrigger>
+                                <TooltipContent><p>{isEditable ? 'Change Color' : 'Properties are managed by the owner team.'}</p></TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                        {colorPickerContent}
                     </Popover>
                     {shareIcon && (
                         <TooltipProvider>
@@ -666,7 +702,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                     onUpdateIcon={(icon) => onUpdateCollection(collection.id, { icon })}
                                     disabled={!isOwned}
                                     buttonClassName="h-9 w-9"
-                                    iconClassName="text-2xl"
+                                    iconClassName="text-4xl"
                                 />
                                 <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
                                     <PopoverTrigger asChild disabled={!isOwned}><div className={cn("absolute -bottom-1 -right-0 h-4 w-4 rounded-full border-2 border-card", !isOwned ? "cursor-not-allowed" : "cursor-pointer")} style={{ backgroundColor: collection.color }} /></PopoverTrigger>
@@ -1132,22 +1168,6 @@ export const BadgeManagement = ({ team, tab }: { team: Team, tab: AppTab }) => {
             return;
         }
 
-        // --- REORDERING a collection ---
-        if (type === 'collection') {
-            if (source.droppableId !== destination.droppableId) return;
-            const reorderedCollections = Array.from(displayedCollections);
-            const [moved] = reorderedCollections.splice(source.index, 1);
-            reorderedCollections.splice(destination.index, 0, moved);
-            
-            const reorderedIds = reorderedCollections.map(c => c.id);
-            const finalOrder = team.badgeCollections
-                .filter(c => reorderedIds.includes(c.id))
-                .sort((a,b) => reorderedIds.indexOf(a.id) - reorderedIds.indexOf(b.id));
-
-            updateTeam(team.id, { badgeCollections: finalOrder });
-            return;
-        }
-        
         // --- MOVING a badge ---
         const destCollectionId = destination.droppableId;
         const allCollections = [...(team.badgeCollections || []), ...sharedCollectionsFromOthers];
