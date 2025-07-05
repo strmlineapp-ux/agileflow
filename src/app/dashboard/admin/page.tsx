@@ -428,7 +428,7 @@ function AdminGroupCard({
             <DialogContent className="max-w-md">
                 <div className="absolute top-4 right-4">
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={onDelete}>
-                        <GoogleSymbol name="delete" className="text-xl" />
+                        <GoogleSymbol name="delete" className="text-4xl" weight={100} />
                         <span className="sr-only">Delete Group</span>
                     </Button>
                 </div>
@@ -1107,7 +1107,7 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
                 <DialogContent className="max-w-md">
                     <div className="absolute top-4 right-4">
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => onDelete(page.id)}>
-                            <GoogleSymbol name="delete" className="text-xl" />
+                            <GoogleSymbol name="delete" className="text-4xl" weight={100} />
                             <span className="sr-only">Delete Page</span>
                         </Button>
                     </div>
@@ -1571,11 +1571,11 @@ export default function AdminPage() {
   return (
     <div className="flex flex-col gap-8">
       <div className="flex items-center gap-3">
-        <GoogleSymbol name={pageConfig.icon} className="text-3xl" />
+        <GoogleSymbol name={pageConfig.icon} className="text-6xl" />
         <TooltipProvider>
             <Tooltip>
                 <TooltipTrigger asChild>
-                    <h1 className="font-headline text-3xl font-semibold">{pageConfig.name}</h1>
+                    <h1 className="font-headline text-3xl font-thin">{pageConfig.name}</h1>
                 </TooltipTrigger>
                 {pageConfig.description && (
                     <TooltipContent><p className="max-w-xs">{pageConfig.description}</p></TooltipContent>

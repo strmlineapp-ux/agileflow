@@ -124,11 +124,11 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shrink-0">
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-3">
-              <GoogleSymbol name={pageConfig.icon} className="text-3xl" />
+              <GoogleSymbol name={pageConfig.icon} className="text-6xl" />
               <TooltipProvider>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                      <h1 className="font-headline text-3xl font-semibold">{pageConfig.name}</h1>
+                      <h1 className="font-headline text-3xl font-thin">{pageConfig.name}</h1>
                     </TooltipTrigger>
                     {pageConfig.description && (
                       <TooltipContent>

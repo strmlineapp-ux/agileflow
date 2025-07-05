@@ -107,7 +107,7 @@ export default function TeamPage() {
         <div className="flex items-center gap-3">
             <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-9 w-9 text-3xl shrink-0">
+                <Button variant="ghost" size="icon" className="h-16 w-16 text-6xl shrink-0">
                   <GoogleSymbol name={pageConfig.icon} />
                 </Button>
               </PopoverTrigger>
@@ -132,10 +132,10 @@ export default function TeamPage() {
                           defaultValue={team.name}
                           onBlur={handleSaveName}
                           onKeyDown={handleNameKeyDown}
-                          className="h-auto p-0 font-headline text-3xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                          className="h-auto p-0 font-headline text-3xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
                       />
                   ) : (
-                      <h1 className="font-headline text-3xl font-semibold cursor-pointer border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingName(true)}>
+                      <h1 className="font-headline text-3xl font-thin cursor-pointer border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingName(true)}>
                           {team.name} Team Management
                       </h1>
                   )}

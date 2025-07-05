@@ -73,7 +73,7 @@ export default function ServiceDeliveryPage() {
       <div className="flex items-center gap-3">
         <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
           <PopoverTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-9 w-9 text-3xl shrink-0">
+            <Button variant="ghost" size="icon" className="h-16 w-16 text-6xl shrink-0">
               <GoogleSymbol name={pageConfig.icon} />
             </Button>
           </PopoverTrigger>
@@ -90,12 +90,12 @@ export default function ServiceDeliveryPage() {
           </PopoverContent>
         </Popover>
         {isEditingTitle ? (
-          <Input ref={titleInputRef} defaultValue={pageConfig.name} onBlur={handleSaveTitle} onKeyDown={(e) => e.key === 'Enter' ? handleSaveTitle() : e.key === 'Escape' && setIsEditingTitle(false)} className="h-auto p-0 font-headline text-3xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
+          <Input ref={titleInputRef} defaultValue={pageConfig.name} onBlur={handleSaveTitle} onKeyDown={(e) => e.key === 'Enter' ? handleSaveTitle() : e.key === 'Escape' && setIsEditingTitle(false)} className="h-auto p-0 font-headline text-3xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
         ) : (
           <TooltipProvider>
             <Tooltip>
                 <TooltipTrigger asChild>
-                  <h1 className="font-headline text-3xl font-semibold cursor-pointer border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{pageConfig.name}</h1>
+                  <h1 className="font-headline text-3xl font-thin cursor-pointer border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{pageConfig.name}</h1>
                 </TooltipTrigger>
                 {pageConfig.description && (
                   <TooltipContent><p className="max-w-xs">{pageConfig.description}</p></TooltipContent>

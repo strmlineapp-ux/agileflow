@@ -18,11 +18,11 @@ export function OverviewContent({ tab: pageConfig }: { tab: AppPage }) {
   return (
     <div className="flex flex-col gap-6">
         <div className="flex items-center gap-3">
-          <GoogleSymbol name={pageConfig.icon} className="text-3xl" />
+          <GoogleSymbol name={pageConfig.icon} className="text-6xl" />
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <h1 className="font-headline text-3xl font-semibold">{pageConfig.name}</h1>
+                <h1 className="font-headline text-3xl font-thin">{pageConfig.name}</h1>
               </TooltipTrigger>
               {pageConfig.description && (
                 <TooltipContent>
@@ -37,7 +37,7 @@ export function OverviewContent({ tab: pageConfig }: { tab: AppPage }) {
           <Card key={stat.title}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-              <GoogleSymbol name={stat.icon} className="text-muted-foreground text-2xl" />
+              <GoogleSymbol name={stat.icon} className="text-2xl" />
             </CardHeader>
             <CardContent className="p-4 pt-0">
               <div className="text-2xl font-bold">{stat.value}</div>

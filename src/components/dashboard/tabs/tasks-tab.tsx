@@ -12,11 +12,11 @@ export function TasksContent({ tab: pageConfig }: { tab: AppPage }) {
     <div className="flex flex-col gap-6">
        <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <GoogleSymbol name={pageConfig.icon} className="text-3xl" />
+          <GoogleSymbol name={pageConfig.icon} className="text-6xl" />
            <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <h1 className="font-headline text-3xl font-semibold">{pageConfig.name}</h1>
+                <h1 className="font-headline text-3xl font-thin">{pageConfig.name}</h1>
               </TooltipTrigger>
               {pageConfig.description && (
                 <TooltipContent>

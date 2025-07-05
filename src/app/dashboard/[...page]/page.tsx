@@ -86,8 +86,8 @@ export default function DynamicPage() {
         return (
             <div className="flex flex-col gap-6">
                 <div className="flex items-center gap-3">
-                    <GoogleSymbol name={pageConfig.icon} className="text-3xl" />
-                    <h1 className="font-headline text-3xl font-semibold">{pageTitle}</h1>
+                    <GoogleSymbol name={pageConfig.icon} className="text-6xl" />
+                    <h1 className="font-headline text-3xl font-thin">{pageTitle}</h1>
                 </div>
             </div>
         );
@@ -107,8 +107,8 @@ export default function DynamicPage() {
     return (
         <div className="flex flex-col gap-6">
             <div className="flex items-center gap-3">
-                <GoogleSymbol name={pageConfig.icon} className="text-3xl" />
-                <h1 className="font-headline text-3xl font-semibold">{pageTitle}</h1>
+                <GoogleSymbol name={pageConfig.icon} className="text-6xl" />
+                <h1 className="font-headline text-3xl font-thin">{pageTitle}</h1>
             </div>
             <Tabs defaultValue={pageTabs[0]?.id} className="w-full">
                 <TabsList className="flex w-full">
