@@ -322,7 +322,19 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                     ))}
                                 </PopoverTrigger>
                                 <PopoverContent className="w-auto p-2">
-                                <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdateBadge({ color: c }); setIsColorPopoverOpen(false);}}/>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={badge.color} onChange={(e) => onUpdateBadge({ color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
+                                <div className="grid grid-cols-8 gap-1">
+                                    {predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdateBadge({ color: c }); setIsColorPopoverOpen(false);}}/>))}
+                                    <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
+                                        <GoogleSymbol name="colorize" className="text-muted-foreground" />
+                                        <input
+                                            type="color"
+                                            value={badge.color}
+                                            onChange={(e) => onUpdateBadge({ color: e.target.value })}
+                                            className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"
+                                            aria-label="Custom color picker"
+                                        />
+                                    </div>
+                                </div>
                                 </PopoverContent>
                             </Popover>
                             {shareIcon && (
@@ -388,46 +400,6 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
       );
     }
     
-    const sharedIconAndColorEditor = (
-        <div className="relative">
-             {tooltipWrapper(!isEditable, "Properties are managed by the owner team.", (
-                <CompactSearchIconPicker 
-                    icon={badge.icon} 
-                    color={badge.color} 
-                    onUpdateIcon={(icon) => onUpdateBadge({ icon })}
-                    disabled={!isEditable}
-                    buttonClassName="h-8 w-8" 
-                    iconClassName="text-xl" 
-                />
-            ))}
-             <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                <PopoverTrigger asChild disabled={!isEditable}>
-                    {tooltipWrapper(!isEditable, "Properties are managed by the owner team.", (
-                        <div className={cn("absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-muted", isEditable ? "cursor-pointer" : "cursor-not-allowed")} style={{ backgroundColor: badge.color }} />
-                    ))}
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-2">
-                <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdateBadge({ color: c }); setIsColorPopoverOpen(false);}}/>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={badge.color} onChange={(e) => onUpdateBadge({ color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
-                </PopoverContent>
-            </Popover>
-            {shareIcon && (
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <div
-                                className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-card text-white flex items-center justify-center"
-                                style={{ backgroundColor: shareIconColor }}
-                            >
-                                <GoogleSymbol name={shareIcon} style={{fontSize: '12px'}}/>
-                            </div>
-                        </TooltipTrigger>
-                        <TooltipContent><p>{shareIconTitle}</p></TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
-            )}
-        </div>
-    );
-    
     const inlineNameEditor = isEditingName && isEditable ? (
       <Input
         ref={nameInputRef}
@@ -437,14 +409,13 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
         onKeyDown={handleNameKeyDown}
         className={cn(
           "h-auto p-0 font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words",
-          viewMode === 'list' && 'text-base',
-          viewMode === 'assorted' && 'text-[11px] font-medium'
+          "text-sm"
         )}
       />
     ) : (
       tooltipWrapper(!isEditable, "Properties are managed by the owner team.", (
         <span
-            className={cn("font-semibold break-words", isEditable && "cursor-text", viewMode === 'assorted' && 'text-[11px] font-medium')}
+            className={cn("font-semibold break-words text-sm", isEditable && "cursor-text")}
             onClick={(e) => {
             e.stopPropagation();
             if (isEditable) {
@@ -461,7 +432,55 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     if (viewMode === 'list') {
       return (
         <div className="group flex w-full items-start gap-4 p-2 rounded-md hover:bg-muted/50">
-            {sharedIconAndColorEditor}
+            <div className="relative">
+                {tooltipWrapper(!isEditable, "Properties are managed by the owner team.", (
+                    <CompactSearchIconPicker 
+                        icon={badge.icon} 
+                        color={badge.color} 
+                        onUpdateIcon={(icon) => onUpdateBadge({ icon })}
+                        disabled={!isEditable}
+                        buttonClassName="h-8 w-8" 
+                        iconClassName="text-xl" 
+                    />
+                ))}
+                <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                    <PopoverTrigger asChild disabled={!isEditable}>
+                        {tooltipWrapper(!isEditable, "Properties are managed by the owner team.", (
+                            <div className={cn("absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-card", isEditable ? "cursor-pointer" : "cursor-not-allowed")} style={{ backgroundColor: badge.color }} />
+                        ))}
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-2">
+                    <div className="grid grid-cols-8 gap-1">
+                        {predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdateBadge({ color: c }); setIsColorPopoverOpen(false);}}/>))}
+                        <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
+                            <GoogleSymbol name="colorize" className="text-muted-foreground" />
+                            <input
+                                type="color"
+                                value={badge.color}
+                                onChange={(e) => onUpdateBadge({ color: e.target.value })}
+                                className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"
+                                aria-label="Custom color picker"
+                            />
+                        </div>
+                    </div>
+                    </PopoverContent>
+                </Popover>
+                {shareIcon && (
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <div
+                                    className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-card text-white flex items-center justify-center"
+                                    style={{ backgroundColor: shareIconColor }}
+                                >
+                                    <GoogleSymbol name={shareIcon} style={{fontSize: '12px'}}/>
+                                </div>
+                            </TooltipTrigger>
+                            <TooltipContent><p>{shareIconTitle}</p></TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                )}
+            </div>
             <div className="flex-1 space-y-1">
                 {inlineNameEditor}
                  {isEditingDescription && isEditable ? (
@@ -491,27 +510,69 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     
     // Assorted View
     return (
-        <div className="group relative inline-flex items-center gap-1 rounded-full border py-0 px-1" style={{ borderColor: badge.color, color: badge.color }}>
-            <div className="relative flex items-center justify-center">
-                <GoogleSymbol name={badge.icon} style={{color: badge.color}} className="text-[9px]" />
-                {shareIcon && (
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <div
-                                    className="absolute -top-1 -right-1 h-3 w-3 rounded-full border border-background text-white flex items-center justify-center"
-                                    style={{ backgroundColor: shareIconColor }}
-                                >
-                                    <GoogleSymbol name={shareIcon} style={{fontSize: '8px'}}/>
-                                </div>
-                            </TooltipTrigger>
-                            <TooltipContent><p>{shareIconTitle}</p></TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                )}
-            </div>
-            <span className="text-[10px] font-medium leading-tight">{badge.name}</span>
-            <button type="button" onClick={onDelete} className="ml-0.5 h-3 w-3 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full inline-flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" aria-label={`Delete ${badge.name}`}>
+        <div className="group relative">
+            <UiBadge
+                variant="outline"
+                style={{ color: badge.color, borderColor: badge.color }}
+                className="gap-1.5 p-1 px-3 rounded-full text-sm border-2"
+            >
+                <div className="relative">
+                    {tooltipWrapper(!isEditable, "Properties are managed by the owner team.", (
+                        <CompactSearchIconPicker 
+                            icon={badge.icon} 
+                            color={badge.color} 
+                            onUpdateIcon={(icon) => onUpdateBadge({ icon })}
+                            disabled={!isEditable}
+                            buttonClassName="h-6 w-6 -ml-1"
+                            iconClassName="text-base" 
+                        />
+                    ))}
+                    <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                        <PopoverTrigger asChild disabled={!isEditable}>
+                            {tooltipWrapper(!isEditable, "Properties are managed by the owner team.", (
+                                <div className={cn("absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-background", isEditable ? "cursor-pointer" : "cursor-not-allowed")} style={{ backgroundColor: badge.color }} />
+                            ))}
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-2">
+                        <div className="grid grid-cols-8 gap-1">
+                            {predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdateBadge({ color: c }); setIsColorPopoverOpen(false);}}/>))}
+                            <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
+                                <GoogleSymbol name="colorize" className="text-muted-foreground" />
+                                <input
+                                    type="color"
+                                    value={badge.color}
+                                    onChange={(e) => onUpdateBadge({ color: e.target.value })}
+                                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"
+                                    aria-label="Custom color picker"
+                                />
+                            </div>
+                        </div>
+                        </PopoverContent>
+                    </Popover>
+                    {shareIcon && (
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <div 
+                                        className="absolute -top-1 -right-1 h-4 w-4 rounded-full border border-background text-white flex items-center justify-center"
+                                        style={{ backgroundColor: shareIconColor }}
+                                    >
+                                        <GoogleSymbol name={shareIcon} style={{fontSize: '12px'}}/>
+                                    </div>
+                                </TooltipTrigger>
+                                <TooltipContent><p>{shareIconTitle}</p></TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    )}
+                </div>
+                {inlineNameEditor}
+            </UiBadge>
+            <button
+                type="button"
+                className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={onDelete}
+                aria-label={`Delete ${badge.name}`}
+            >
                 <GoogleSymbol name="close" className="text-xs" />
             </button>
         </div>
