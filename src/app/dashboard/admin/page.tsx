@@ -374,7 +374,7 @@ function AdminGroupCard({
                 </div>
                 <div className="flex items-center">
                     <AddUserToGroupButton usersToAdd={unassignedUsers} onAdd={handleGroupToggle} groupName={group.name} />
-                    <StrictModeDroppable droppableId={`delete-dropzone-${group.id}`} type="user-card">
+                    <StrictModeDroppable droppableId={`delete-dropzone-${group.id}`} type="user-card" isDropDisabled={false}>
                         {(provided, snapshot) => (
                             <div 
                                 ref={provided.innerRef} 
@@ -400,7 +400,7 @@ function AdminGroupCard({
               <CardDescription>Click a member to promote them to Group Admin for this group. Group Admins have elevated permissions.</CardDescription>
             </CardHeader>
             <CardContent className="flex-grow">
-                <StrictModeDroppable droppableId={`group-content-${group.id}`} type="user-card">
+                <StrictModeDroppable droppableId={`group-content-${group.id}`} type="user-card" isDropDisabled={false}>
                 {(provided, snapshot) => (
                     <div 
                     ref={provided.innerRef}
@@ -659,7 +659,7 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                         </Tooltip>
                     </TooltipProvider>
                 )}
-                 <StrictModeDroppable droppableId="duplicate-admin-group-zone" type="group-card">
+                 <StrictModeDroppable droppableId="duplicate-admin-group-zone" type="group-card" isDropDisabled={false}>
                     {(provided, snapshot) => (
                         <div 
                             ref={provided.innerRef} 
@@ -687,7 +687,7 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                 </StrictModeDroppable>
             </div>
             
-            <StrictModeDroppable droppableId="admin-groups-list" type="group-card">
+            <StrictModeDroppable droppableId="admin-groups-list" type="group-card" isDropDisabled={false}>
               {(provided) => (
                   <div ref={provided.innerRef} {...provided.droppableProps} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                       <div className="w-full">
@@ -700,7 +700,7 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                               <CardDescription>Assign or revoke Admin privileges. This is the highest level of access.</CardDescription>
                             </CardHeader>
                             <CardContent className="flex-grow">
-                                <StrictModeDroppable droppableId="admins-card-droppable" type="user-card">
+                                <StrictModeDroppable droppableId="admins-card-droppable" type="user-card" isDropDisabled={false}>
                                 {(provided, snapshot) => (
                                     <div 
                                     ref={provided.innerRef}
@@ -1258,7 +1258,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                                 </Tooltip>
                             </TooltipProvider>
                         )}
-                        <StrictModeDroppable droppableId="duplicate-page-zone">
+                        <StrictModeDroppable droppableId="duplicate-page-zone" isDropDisabled={false}>
                             {(provided, snapshot) => (
                                 <div 
                                     ref={provided.innerRef} 
@@ -1287,7 +1287,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                     </div>
                 </div>
                 
-                <StrictModeDroppable droppableId="pages-list">
+                <StrictModeDroppable droppableId="pages-list" isDropDisabled={false}>
                     {(provided) => (
                         <div
                             ref={provided.innerRef}
