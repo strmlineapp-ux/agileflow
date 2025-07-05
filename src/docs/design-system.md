@@ -24,7 +24,7 @@ This pattern allows for seamless, direct text editing within the main applicatio
 - **Trigger:** Clicking directly on a text element (e.g., a section title, a badge name, a phone number).
 - **Interaction:**
     - The text element transforms into an input field.
-    - The input field must be styled to perfectly match the font, size, weight, and color of the original text element it replaces.
+    - The input field must be styled to perfectly match the font, size, weight, and color of the original text element it replaces (e.g., using the `font-headline` class).
     - **Crucially, the input must have a transparent background and no borders or box-shadow**, ensuring it blends seamlessly into the UI.
 - **Behavior:**
     - Typing modifies the text value.
@@ -71,7 +71,7 @@ This pattern transforms standard form inputs into minimalist, text-like elements
 ### 5. Integrated Add Button
 This pattern replaces large, card-style "Add New" buttons with a more compact and contextually relevant control.
 
-- **Appearance:** A circular button containing a plus (`+`) or `add_circle` icon.
+- **Appearance:** A circular button containing a plus (`+`) or `add_circle` icon. It uses `text-4xl` and `weight={100}` for a large but light appearance.
 - **Placement:** Positioned directly adjacent to the title of the section or list it pertains to.
 - **Behavior:** Clicking the button initiates the process of adding a new item, typically by opening a dialog or form.
 - **Application:** Used for creating new items in a list or grid, such as adding a new team, priority strategy, or a badge to a collection.
@@ -83,7 +83,7 @@ This is the consistent reference pattern for allowing a user to change both an i
 
 - **Trigger:** A single, interactive unit composed of a primary icon button and a smaller color swatch badge overlaid on its corner.
 - **Interaction:**
-  - Clicking the main part of the button opens an icon picker popover. This popover uses the **Compact Search Input** pattern for filtering. **Crucially, each icon in the picker must have a tooltip that reveals its name on hover**, improving discoverability.
+  - Clicking the main part of the button opens an icon picker popover. This popover uses the **Compact Search Input** pattern for filtering. The icons inside this picker are rendered at `text-6xl` for clarity and ease of selection.
   - Clicking the color swatch badge opens a color picker popover.
 - **Application:** Used for editing team icons/colors, admin group icons/colors, and page icons/colors.
 
@@ -168,7 +168,7 @@ When a **high-risk destructive action** requires user confirmation (like deletin
 - **Description**: For primary navigation within a page (e.g., switching between "Admin Groups" and "Pages" on the Admin Management screen), tabs should be clear, full-width, and provide strong visual cues.
 - **Appearance**:
   - Each tab trigger includes both an icon and a text label.
-  - The icon is visually aligned with the text and uses the default text color.
+  - The icon is `text-4xl` with a `weight={100}` for a large but light appearance.
   - The active tab is indicated by colored text (`text-primary`).
   - The entire tab list has a subtle divider underneath it, separating it from the content below.
 - **Application**: Used for all main page-level tab navigation, such as on the Admin, Service Delivery, and Team Management pages.
@@ -221,19 +221,22 @@ This pattern describes the user interface for assigning and unassigning badges t
 
 ## Visual & Theming Elements
 
-### Icons & Hover Effects
+### Typography
+- **Headline Font**: All major titles (pages, tabs, prominent cards) use the **Roboto** font with a `light` weight (`font-light`), applied via the `font-headline` utility class. This is also maintained during inline editing for a seamless user experience.
+- **Body Font**: The standard body text for paragraphs and descriptions uses the **PT Sans** font, applied via the `font-body` utility class.
 
+### Icons & Hover Effects
 - **Icon Set**: We exclusively use **Google Material Symbols** via the `<GoogleSymbol />` component. This ensures a consistent visual language. The font library is a variable font, which means we can adjust its properties.
-- **Icon Styles**: The application loads the `Outlined`, `Rounded`, and `Sharp` styles from Google's library. You can specify which one to use with the `variant` prop. The `Outlined` style is the default.
-  - `<GoogleSymbol name="star" variant="rounded" />`
-  - `<GoogleSymbol name="star" variant="sharp" />`
+- **Icon Sizing & Weight**:
+  - A `weight={100}` is used for most action icons (`delete`, `edit`, `more_vert`) to maintain a light, clean aesthetic.
+  - Icons inside pickers (like the icon picker) are `text-6xl` for clarity and ease of selection.
+  - Large, circular 'Add New' buttons use `text-4xl` with a `weight={100}` for prominence.
 - **Filled Icons**: To use the filled style of an icon, pass the `filled` prop to the component: `<GoogleSymbol name="star" filled />`. This works with any of the three main styles.
 - **Hover Behavior**: The color of icons on hover is typically determined by their parent element. For example, an icon inside a `<Button variant="ghost">` will change to the primary theme color on hover because the button's text color changes, and the icon inherits that color. This creates a clean and predictable interaction.
 - **Destructive Actions**: Delete or other destructive action icons (like `delete`, `close`, `cancel`) are `text-muted-foreground` by default and become `text-destructive` on hover to provide a clear but not overwhelming visual warning.
 - **Tooltips for Clarity**: Icon-only buttons (those without visible text) and icons within pickers (like the **Icon Picker**) must always be wrapped in a `<Tooltip>` to provide context on their function. This is crucial for accessibility and user experience.
 
 ### Theming & Button Styles
-
 - **Theme Selection**: Users can choose between `light` and `dark` themes. This selection is presented as a set of tab-like buttons, each with an icon and a label. The active theme's button has its text and icon colored with the primary theme color.
 - **Custom Primary Color**: Users can select a custom primary color using a color picker popover, which is triggered by a ghost-style palette icon button. This custom color overrides the theme's default primary color.
 - **Primary Button Gradient**: Primary buttons have a special gradient effect on hover, which is unique to each theme. This provides a subtle but polished visual feedback for key actions.
@@ -260,8 +263,10 @@ This is the single source of truth for indicating user interaction state across 
 ### Subtle Visual Cues
 
 - **Lunch Break Pattern**: A subtle diagonal line pattern is used in calendar views to visually block out the typical lunch period (12:00 - 14:30). This serves as a non-intrusive reminder to avoid scheduling meetings during that time.
-- **Icon as Badge**: An icon displayed as a small, circular overlay on another element (e.g., an Avatar or another icon) to provide secondary information. The size of the icon within the badge should be large enough to be clearly identifiable while fitting neatly within its container.
-    - **Appearance**: A circular badge with a `border-2` of the parent element's background color (e.g., `border-card` or `border-background`) to create a "punched out" effect. The icon inside should be sized appropriately.
+- **Icon as Badge**: An icon displayed as a small, circular overlay on another element (e.g., an Avatar or another icon) to provide secondary information.
+    - **Appearance**: A circular badge with a `border-2` of the parent element's background color (e.g., `border-card` or `border-background`) to create a "punched out" effect. The icon inside should be sized proportionally.
+    - **Sizing**: The standard size for these badges (e.g., color-pickers, ownership status icons) is `h-5 w-5` (`20x20px`). The `GoogleSymbol` inside should be sized to fit, for example using `style={{fontSize: '14px'}}`.
     - **Placement**: Typically positioned on the bottom-right or top-right corner of the parent element.
-    - **Sizing**: The sizing is contextual. For larger elements like a collection card, a smaller badge (`h-5 w-5` with a 1px border) provides a subtle indicator. For more prominent elements like a badge icon in a detailed view, a larger overlay (`h-6 w-6` with a 2px border) is more appropriate.
     - **Application**: Used for displaying a shared status on a role icon or a `share` icon on a shared Badge.
+
+```
