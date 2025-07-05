@@ -150,7 +150,7 @@ function CalendarCard({ calendar, onUpdate, onDelete }: { calendar: SharedCalend
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <PopoverTrigger asChild><div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border border-card cursor-pointer" style={{ backgroundColor: calendar.color }} /></PopoverTrigger>
+                                <PopoverTrigger asChild><div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card cursor-pointer" style={{ backgroundColor: calendar.color }} /></PopoverTrigger>
                             </TooltipTrigger>
                             <TooltipContent><p>Change Color</p></TooltipContent>
                         </Tooltip>

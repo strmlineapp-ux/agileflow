@@ -350,7 +350,7 @@ function AdminGroupCard({
                                 <TooltipTrigger asChild>
                                     <PopoverTrigger asChild>
                                         <div 
-                                            className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border border-card cursor-pointer" 
+                                            className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card cursor-pointer" 
                                             aria-label="Change service admin color"
                                             style={{ backgroundColor: group.color }}
                                         />
@@ -1052,7 +1052,7 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild>
-                                                <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border border-card cursor-pointer" style={{ backgroundColor: page.color }} />
+                                                <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card cursor-pointer" style={{ backgroundColor: page.color }} />
                                             </PopoverTrigger>
                                         </TooltipTrigger>
                                         <TooltipContent><p>Change Color</p></TooltipContent>
@@ -1443,7 +1443,7 @@ export function TabItem({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string,
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <PopoverTrigger asChild>
-                                    <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border border-card cursor-pointer" style={{ backgroundColor: tab.color }} />
+                                    <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card cursor-pointer" style={{ backgroundColor: tab.color }} />
                                 </PopoverTrigger>
                             </TooltipTrigger>
                             <TooltipContent><p>Change Color</p></TooltipContent>
