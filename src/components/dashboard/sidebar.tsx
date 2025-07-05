@@ -33,6 +33,7 @@ export function Sidebar() {
 
     const visiblePages = appSettings.pages
         .filter(page => page.id !== 'page-settings') // Do not show settings icon in the main sidebar
+        .filter(page => page.componentKey || page.associatedTabs.length > 0) // Hide pages with no content
         .filter(page => hasAccess(viewAsUser, page, teams, appSettings.adminGroups));
 
     const adminPage = visiblePages.find(p => p.id === adminPageId);

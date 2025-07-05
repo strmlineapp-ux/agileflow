@@ -971,6 +971,7 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
     const iconSearchInputRef = useRef<HTMLInputElement>(null);
     
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const isSystemPage = useMemo(() => ['page-admin-management', 'page-notifications', 'page-settings'].includes(page.id), [page.id]);
     
     useEffect(() => {
         if (isEditingName) nameInputRef.current?.focus();
@@ -1071,10 +1072,16 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
                                     {isEditingName ? (
                                         <Input ref={nameInputRef} defaultValue={page.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 text-base font-semibold leading-none tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>
                                     ) : (
-                                        <CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer text-base truncate">{page.name}</CardTitle>
+                                        <CardTitle onClick={() => !isSystemPage && setIsEditingName(true)} className={cn("text-base break-words", !isSystemPage && "cursor-pointer")}>
+                                            {page.name}
+                                        </CardTitle>
                                     )}
-                                    <PageAccessControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
-                                    <PageTabsControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
+                                    {!isSystemPage && (
+                                        <>
+                                            <PageAccessControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
+                                            <PageTabsControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         </div>
