@@ -1,4 +1,5 @@
 
+
 import type {Config} from 'tailwindcss';
 
 export default {
@@ -18,6 +19,7 @@ export default {
     },
     extend: {
       fontSize: {
+        '8xl': ['6rem', { lineHeight: '1' }],
         '12xl': ['9rem', { lineHeight: '1' }],
       },
       fontFamily: {

@@ -143,7 +143,7 @@ function CompactSearchIconPicker({
                                 }}
                                 className="h-4 w-4 p-0"
                             >
-                                <GoogleSymbol name={iconName} className="text-4xl" weight={100} />
+                                <GoogleSymbol name={iconName} className="text-8xl" weight={100} />
                             </Button>
                         </TooltipTrigger>
                         <TooltipContent>
