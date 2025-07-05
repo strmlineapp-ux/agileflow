@@ -51,6 +51,7 @@ function CompactSearchIconPicker({
   buttonClassName,
   iconClassName,
   disabled = false,
+  weight,
 }: {
   icon: string;
   color?: string;
@@ -58,6 +59,7 @@ function CompactSearchIconPicker({
   buttonClassName?: string;
   iconClassName?: string;
   disabled?: boolean;
+  weight?: number;
 }) {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
@@ -98,7 +100,7 @@ function CompactSearchIconPicker({
           style={color ? { color } : {}}
           disabled={disabled}
         >
-          <GoogleSymbol name={icon} className={cn("text-3xl", iconClassName)} />
+          <GoogleSymbol name={icon} className={cn("text-3xl", iconClassName)} weight={weight} />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0">
@@ -689,7 +691,8 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                     color={collection.color} 
                                     onUpdateIcon={(icon) => onUpdateCollection(collection.id, { icon })}
                                     disabled={!isOwned}
-                                    iconClassName="text-8xl"
+                                    iconClassName="text-12xl"
+                                    weight={100}
                                 />
                                 <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
                                     <PopoverTrigger asChild disabled={!isOwned}><div className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card", !isOwned ? "cursor-not-allowed" : "cursor-pointer")} style={{ backgroundColor: collection.color }} /></PopoverTrigger>
@@ -1448,7 +1451,3 @@ export const BadgeManagement = ({ team, tab }: { team: Team, tab: AppTab }) => {
         </DragDropContext>
     );
 }
-
-    
-
-    

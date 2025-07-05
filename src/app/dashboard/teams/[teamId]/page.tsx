@@ -107,8 +107,8 @@ export default function TeamPage() {
         <div className="flex items-center gap-3">
             <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className="shrink-0">
-                  <GoogleSymbol name={pageConfig.icon} className="text-8xl" />
+                <Button variant="ghost" size="icon" className="shrink-0 h-12 w-12">
+                  <GoogleSymbol name={pageConfig.icon} className="text-12xl" weight={100} />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-80 p-0">
@@ -120,7 +120,7 @@ export default function TeamPage() {
                         </div>
                     )}
                 </div>
-                <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={pageConfig.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { updatePage({ icon: iconName }); setIsIconPopoverOpen(false);}} className="h-4 w-4"><GoogleSymbol name={iconName} className="text-4xl" /></Button>))}</div></ScrollArea>
+                <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={pageConfig.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { updatePage({ icon: iconName }); setIsIconPopoverOpen(false);}} className="h-4 w-4"><GoogleSymbol name={iconName} className="text-4xl" weight={100} /></Button>))}</div></ScrollArea>
               </PopoverContent>
             </Popover>
             <TooltipProvider>

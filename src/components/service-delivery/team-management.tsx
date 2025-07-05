@@ -258,8 +258,8 @@ function TeamCard({
                          <div className="relative">
                             <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                                 <PopoverTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="p-0">
-                                        <GoogleSymbol name={team.icon} className="text-8xl" weight={100} />
+                                    <Button variant="ghost" size="icon" className="p-0 h-12 w-12">
+                                        <GoogleSymbol name={team.icon} className="text-12xl" weight={100} />
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-80 p-0">
@@ -608,7 +608,3 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
     </DragDropContext>
   );
 }
-
-    
-
-    

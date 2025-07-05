@@ -17,6 +17,9 @@ export default {
       },
     },
     extend: {
+      fontSize: {
+        '12xl': ['9rem', { lineHeight: '1' }],
+      },
       fontFamily: {
         body: ['"PT Sans"', 'sans-serif'],
         headline: ['"Roboto"', 'sans-serif'],
