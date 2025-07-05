@@ -265,8 +265,6 @@ This is the single source of truth for indicating user interaction state across 
 - **Lunch Break Pattern**: A subtle diagonal line pattern is used in calendar views to visually block out the typical lunch period (12:00 - 14:30). This serves as a non-intrusive reminder to avoid scheduling meetings during that time.
 - **Icon as Badge**: An icon displayed as a small, circular overlay on another element (e.g., an Avatar or another icon) to provide secondary information.
     - **Appearance**: A circular badge with a `border-2` of the parent element's background color (e.g., `border-card` or `border-background`) to create a "punched out" effect. The icon inside should be sized proportionally.
-    - **Sizing**: The standard size for these badges (e.g., color-pickers, ownership status icons) is `h-5 w-5` (`20x20px`). The `GoogleSymbol` inside should be sized to fit, for example using `style={{fontSize: '14px'}}`.
+    - **Sizing**: The standard size for these badges (e.g., color-pickers, ownership status icons) is `h-4 w-4` (`16x16px`). The `GoogleSymbol` inside should be sized to fit, for example using `style={{fontSize: '10px'}}`.
     - **Placement**: Typically positioned on the bottom-right or top-right corner of the parent element.
     - **Application**: Used for displaying a shared status on a role icon or a `share` icon on a shared Badge.
-
-```
