@@ -177,7 +177,7 @@ function CalendarCard({ calendar, onUpdate, onDelete }: { calendar: SharedCalend
             <Tooltip>
                 <TooltipTrigger asChild>
                     <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive -mr-4 -mt-2" onClick={() => onDelete(calendar)}>
-                        <GoogleSymbol name="delete" />
+                        <GoogleSymbol name="delete" className="text-4xl" weight={100} />
                         <span className="sr-only">Delete Calendar</span>
                     </Button>
                 </TooltipTrigger>
@@ -334,7 +334,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={handleAddCalendar}>
-                                        <GoogleSymbol name="add_circle" className="text-xl" />
+                                        <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
                                         <span className="sr-only">New Calendar or Drop to Duplicate</span>
                                     </Button>
                                 </TooltipTrigger>

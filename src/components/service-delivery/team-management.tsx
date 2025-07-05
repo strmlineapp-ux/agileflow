@@ -80,7 +80,7 @@ const AddMemberToTeamButton = ({ usersToAdd, onAdd, teamName }: { usersToAdd: Us
           <TooltipTrigger asChild>
             <PopoverTrigger asChild>
               <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full">
-                  <GoogleSymbol name="add_circle" className="text-xl" />
+                  <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
                   <span className="sr-only">Assign member to {teamName}</span>
               </Button>
             </PopoverTrigger>
@@ -162,7 +162,7 @@ const MemberCard = ({ user, index, onRemove, onSetAdmin, isTeamAdmin }: { user: 
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onRemove(user.userId); }} className="h-6 w-6 text-muted-foreground hover:text-destructive">
-                                <GoogleSymbol name="cancel" className="text-sm" />
+                                <GoogleSymbol name="cancel" className="text-4xl" weight={100} />
                             </Button>
                         </TooltipTrigger>
                         <TooltipContent><p>Remove from team</p></TooltipContent>
@@ -313,7 +313,7 @@ function TeamCard({
                             <AddMemberToTeamButton usersToAdd={unassignedUsers} onAdd={(user) => onUpdate(team.id, { members: [...team.members, user.userId]})} teamName={team.name} />
                         </div>
                     </div>
-                     <StrictModeDroppable droppableId={`delete-user-dropzone-${team.id}`} type="user-card">
+                     <StrictModeDroppable droppableId={`delete-user-dropzone-${team.id}`} type="user-card" isDropDisabled={false}>
                         {(provided, snapshot) => (
                             <div
                                 ref={provided.innerRef}
@@ -327,7 +327,7 @@ function TeamCard({
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                     <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive" onClick={() => onDelete(team)}>
-                                        <GoogleSymbol name="delete" className="text-lg"/>
+                                        <GoogleSymbol name="delete" className="text-4xl" weight={100}/>
                                         <span className="sr-only">Delete Team or Drop User to Remove</span>
                                     </Button>
                                     </TooltipTrigger>
@@ -341,7 +341,7 @@ function TeamCard({
             </CardHeader>
             <CardContent className="flex-grow space-y-2">
                 <p className="text-sm font-medium text-muted-foreground">Members (click to toggle admin status)</p>
-                 <StrictModeDroppable droppableId={`team-members-${team.id}`} type="user-card">
+                 <StrictModeDroppable droppableId={`team-members-${team.id}`} type="user-card" isDropDisabled={false}>
                     {(provided, snapshot) => (
                     <div
                         ref={provided.innerRef}
@@ -532,7 +532,7 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
                     </Tooltip>
                 </TooltipProvider>
             )}
-            <StrictModeDroppable droppableId="duplicate-team-zone" type="team-card">
+            <StrictModeDroppable droppableId="duplicate-team-zone" type="team-card" isDropDisabled={false}>
                 {(provided, snapshot) => (
                     <div
                         ref={provided.innerRef}
@@ -546,7 +546,7 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={handleAddTeam}>
-                                        <GoogleSymbol name="add_circle" className="text-xl" />
+                                        <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
                                         <span className="sr-only">New Team or Drop to Duplicate</span>
                                     </Button>
                                 </TooltipTrigger>
@@ -559,7 +559,7 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
                 )}
             </StrictModeDroppable>
         </div>
-        <StrictModeDroppable droppableId="teams-list" type="team-card">
+        <StrictModeDroppable droppableId="teams-list" type="team-card" isDropDisabled={false}>
             {(provided) => (
                  <div 
                     className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"

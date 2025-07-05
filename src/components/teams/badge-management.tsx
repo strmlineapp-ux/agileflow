@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -388,7 +387,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                         </div>
                     </div>
                      <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onDelete(); }} className="h-7 w-7 text-muted-foreground hover:text-destructive absolute top-2 right-2">
-                        <GoogleSymbol name="delete" />
+                        <GoogleSymbol name="delete" className="text-4xl" weight={100} />
                     </Button>
                 </div>
             </CardHeader>
@@ -536,7 +535,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                  )}
             </div>
             <Button variant="ghost" size="icon" onClick={onDelete} className="h-8 w-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity">
-                <GoogleSymbol name="delete" />
+                <GoogleSymbol name="delete" className="text-4xl" weight={100} />
             </Button>
         </div>
       );
@@ -559,16 +558,20 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                         disabled={!isEditable}
                     />
                     <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                        <PopoverTrigger asChild disabled={!isEditable}>
-                            <button
-                                className={cn(
-                                    "absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card",
-                                    !isEditable ? "cursor-not-allowed" : "cursor-pointer"
-                                )}
-                                style={{ backgroundColor: badge.color }}
-                                aria-label="Change badge color"
-                            />
-                        </PopoverTrigger>
+                         <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                     <PopoverTrigger asChild disabled={!isEditable}>
+                                        <button
+                                            className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card", isEditable && "cursor-pointer")}
+                                            style={{ backgroundColor: badge.color }}
+                                            aria-label="Change badge color"
+                                        />
+                                    </PopoverTrigger>
+                                </TooltipTrigger>
+                                <TooltipContent><p>{isEditable ? 'Change Color' : 'Properties are managed by the owner team.'}</p></TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
                         {colorPickerContent}
                     </Popover>
                     {shareIcon && (
@@ -726,7 +729,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                         <CardTitle onClick={() => isOwned && setIsEditingName(true)} className={cn("text-2xl break-words", isOwned && "cursor-pointer")}>{collection.name}</CardTitle>
                                     )}
                                     {isOwned && !isSharedPreview && (
-                                        <StrictModeDroppable droppableId={`duplicate-badge-zone:${collection.id}`} type="badge">
+                                        <StrictModeDroppable droppableId={`duplicate-badge-zone:${collection.id}`} type="badge" isDropDisabled={false}>
                                             {(provided, snapshot) => (
                                                 <div
                                                     ref={provided.innerRef}
@@ -739,7 +742,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                                     <TooltipProvider>
                                                         <Tooltip>
                                                             <TooltipTrigger asChild>
-                                                                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => onAddBadge(collection.id)}><GoogleSymbol name="add_circle" className="text-xl" /><span className="sr-only">Add Badge</span></Button>
+                                                                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => onAddBadge(collection.id)}><GoogleSymbol name="add_circle" className="text-4xl" weight={100} /><span className="sr-only">Add Badge</span></Button>
                                                             </TooltipTrigger>
                                                             <TooltipContent><p>{snapshot.isDraggingOver ? 'Drop to Duplicate' : 'Add New Badge'}</p></TooltipContent>
                                                         </Tooltip>
@@ -753,7 +756,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                         </div>
                         <div className="flex items-center">
                             <DropdownMenu>
-                                <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 -mr-2"><GoogleSymbol name="more_vert" className="text-xl" /></Button></DropdownMenuTrigger>
+                                <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 -mr-2"><GoogleSymbol name="more_vert" className="text-4xl" weight={100} /></Button></DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                     <DropdownMenuItem onClick={() => onUpdateCollection(collection.id, { viewMode: 'assorted' })}><GoogleSymbol name="view_module" className="mr-2 text-lg" />Assorted View</DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => onUpdateCollection(collection.id, { viewMode: 'detailed' })}><GoogleSymbol name="view_comfy_alt" className="mr-2 text-lg" />Detailed View</DropdownMenuItem>
@@ -1235,7 +1238,7 @@ export const BadgeManagement = ({ team, tab }: { team: Team, tab: AppTab }) => {
                                     </Tooltip>
                                 </TooltipProvider>
                             )}
-                            <StrictModeDroppable droppableId="duplicate-collection-zone" type="collection">
+                            <StrictModeDroppable droppableId="duplicate-collection-zone" type="collection" isDropDisabled={false}>
                             {(provided, snapshot) => (
                                 <div
                                     ref={provided.innerRef}
@@ -1249,7 +1252,7 @@ export const BadgeManagement = ({ team, tab }: { team: Team, tab: AppTab }) => {
                                         <Tooltip>
                                             <TooltipTrigger asChild>
                                                 <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={handleAddCollection}>
-                                                    <GoogleSymbol name="add_circle" className="text-xl" />
+                                                    <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
                                                     <span className="sr-only">Add New Collection or Drop to Duplicate</span>
                                                 </Button>
                                             </TooltipTrigger>
@@ -1263,7 +1266,7 @@ export const BadgeManagement = ({ team, tab }: { team: Team, tab: AppTab }) => {
                         <div className="flex items-center gap-1">
                             {!isSearching ? (
                                 <Button variant="ghost" size="icon" onClick={() => setIsSearching(true)} className="h-8 w-8 text-muted-foreground">
-                                    <GoogleSymbol name="search" />
+                                    <GoogleSymbol name="search" className="text-4xl" weight={100} />
                                 </Button>
                             ) : (
                                 <div className="flex items-center gap-1">
@@ -1282,7 +1285,7 @@ export const BadgeManagement = ({ team, tab }: { team: Team, tab: AppTab }) => {
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                         <Button variant="ghost" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)} className="h-8 w-8">
-                                            <GoogleSymbol name="dynamic_feed" />
+                                            <GoogleSymbol name="dynamic_feed" className="text-4xl" weight={100} />
                                         </Button>
                                     </TooltipTrigger>
                                     <TooltipContent><p>Show Shared Collections</p></TooltipContent>
@@ -1291,7 +1294,7 @@ export const BadgeManagement = ({ team, tab }: { team: Team, tab: AppTab }) => {
                         </div>
                     </div>
                     
-                    <StrictModeDroppable droppableId="collections-list" type="collection">
+                    <StrictModeDroppable droppableId="collections-list" type="collection" isDropDisabled={false}>
                         {(provided, snapshot) => (
                             <div 
                                 ref={provided.innerRef}
@@ -1340,7 +1343,7 @@ export const BadgeManagement = ({ team, tab }: { team: Team, tab: AppTab }) => {
                     "transition-all duration-300",
                     isSharedPanelOpen ? "w-96" : "w-0 overflow-hidden"
                 )}>
-                    <StrictModeDroppable droppableId="shared-collections-panel" type="collection">
+                    <StrictModeDroppable droppableId="shared-collections-panel" type="collection" isDropDisabled={false}>
                         {(provided, snapshot) => (
                             <div 
                                 ref={provided.innerRef} 

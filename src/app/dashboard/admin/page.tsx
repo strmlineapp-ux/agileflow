@@ -84,7 +84,7 @@ const UserAssignmentCard = ({ user, index, onRemove, isGroupAdmin, onSetGroupAdm
                     aria-label={`Remove user`}
                     className="text-muted-foreground hover:text-destructive"
                 >
-                  <GoogleSymbol name="cancel" />
+                  <GoogleSymbol name="cancel" className="text-4xl" weight={100} />
                 </Button>
               </TooltipTrigger>
               <TooltipContent><p>Remove user</p></TooltipContent>
@@ -155,7 +155,7 @@ const AddUserToGroupButton = ({ usersToAdd, onAdd, groupName }: { usersToAdd: Us
           <TooltipTrigger asChild>
             <PopoverTrigger asChild>
               <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <GoogleSymbol name="add_circle" className="text-2xl" />
+                  <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
                   <span className="sr-only">Assign user to {groupName}</span>
               </Button>
             </PopoverTrigger>
@@ -387,7 +387,7 @@ function AdminGroupCard({
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setIsDeleteDialogOpen(true)}><GoogleSymbol name="delete" /></Button>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setIsDeleteDialogOpen(true)}><GoogleSymbol name="delete" className="text-4xl" weight={100} /></Button>
                                         </TooltipTrigger>
                                         <TooltipContent><p>{snapshot.isDraggingOver ? `Drop to remove user` : 'Delete Group'}</p></TooltipContent>
                                     </Tooltip>
@@ -673,7 +673,7 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                         <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={handleAddAdminGroup}>
-                                            <GoogleSymbol name="add_circle" className="text-xl" />
+                                            <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
                                             <span className="sr-only">Add New Group or Drop to Duplicate</span>
                                         </Button>
                                     </TooltipTrigger>
@@ -852,7 +852,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <PopoverTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-7 w-7"><GoogleSymbol name="group_add" /></Button>
+                            <Button variant="ghost" size="icon" className="h-7 w-7"><GoogleSymbol name="group_add" className="text-4xl" weight={100} /></Button>
                         </PopoverTrigger>
                     </TooltipTrigger>
                     <TooltipContent><p>Manage Page Access</p></TooltipContent>
@@ -927,7 +927,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
             <Tooltip>
                 <TooltipTrigger asChild>
                     <PopoverTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-7 w-7"><GoogleSymbol name="layers" /></Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7"><GoogleSymbol name="layers" className="text-4xl" weight={100} /></Button>
                     </PopoverTrigger>
                 </TooltipTrigger>
                 <TooltipContent><p>Manage Associated Tabs</p></TooltipContent>
@@ -1090,7 +1090,7 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                         <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => setIsDeleteDialogOpen(true)} disabled={isPinned}>
-                                            <GoogleSymbol name="delete" />
+                                            <GoogleSymbol name="delete" className="text-4xl" weight={100} />
                                         </Button>
                                     </TooltipTrigger>
                                     <TooltipContent><p>{isPinned ? 'This page is pinned' : 'Delete Page'}</p></TooltipContent>
@@ -1272,7 +1272,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                                         <Tooltip>
                                             <TooltipTrigger asChild>
                                                 <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={handleAddPage}>
-                                                    <GoogleSymbol name="add_circle" className="text-xl" />
+                                                    <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
                                                     <span className="sr-only">Add New Page</span>
                                                 </Button>
                                             </TooltipTrigger>
