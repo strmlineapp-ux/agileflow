@@ -118,7 +118,7 @@ This pattern describes how a single entity (like a Badge or BadgeCollection) can
 This is the application's perfected, gold-standard pattern for managing a collection of entities displayed as cards. It provides a fluid, intuitive, and grid-responsive way for users to reorder and duplicate items.
 
 -   **Layout**: Entities are presented in a responsive grid of cards (`<Card>`). The grid dynamically adjusts the number of columns to best fit the available screen space, typically using classes like `grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4`.
--   **Internal Card Layout**: Each card is structured for clarity. The header contains the primary entity identifier (icon and name) and top-level actions (like delete). The main content area contains secondary controls (like access management) at the top, and tertiary information (like a URL path) at the bottom.
+-   **Internal Card Layout**: Each card is structured for clarity. The header contains the primary entity identifier (icon and name), contextual controls (like page access or tab associations), and top-level actions (like delete). The main content area is used for tertiary information (like a URL path) which is anchored to the bottom.
 -   **Draggable & Pinned States**:
     -   **Draggable Cards**: Most cards can be freely reordered within the grid.
     -   **Pinned Cards**: Certain cards are designated as "pinned" and cannot be dragged. They act as fixed anchors in the layout.

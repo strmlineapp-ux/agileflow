@@ -1067,11 +1067,15 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
                                 </Popover>
                             </div>
                             <div className="flex-1 min-w-0">
-                                {isEditingName ? (
-                                    <Input ref={nameInputRef} defaultValue={page.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 text-base font-semibold leading-none tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>
-                                ) : (
-                                    <CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer text-base truncate">{page.name}</CardTitle>
-                                )}
+                                <div className="flex items-center gap-1">
+                                    {isEditingName ? (
+                                        <Input ref={nameInputRef} defaultValue={page.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 text-base font-semibold leading-none tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>
+                                    ) : (
+                                        <CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer text-base truncate">{page.name}</CardTitle>
+                                    )}
+                                    <PageAccessControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
+                                    <PageTabsControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
+                                </div>
                             </div>
                         </div>
                         <div className="flex items-center">
@@ -1088,11 +1092,7 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
                         </div>
                     </div>
                 </CardHeader>
-                <CardContent className="flex-grow flex flex-col justify-between pt-2">
-                    <div className="flex items-center">
-                      <PageAccessControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
-                      <PageTabsControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
-                    </div>
+                <CardContent className="flex-grow flex flex-col justify-end pt-2">
                     <p className="text-xs text-muted-foreground truncate">{page.path}</p>
                 </CardContent>
             </Card>
