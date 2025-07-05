@@ -685,37 +685,39 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                 </StrictModeDroppable>
                             )}
                         </div>
-                        <div className="flex items-center gap-1">
-                            {APPLICATIONS.map(app => (
-                                <TooltipProvider key={app.key}>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <span>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className={cn("h-7 w-7", (collection.applications || []).includes(app.key) ? 'text-primary' : 'text-muted-foreground')}
-                                                    onClick={() => onUpdateCollection(collection.id, { applications: (collection.applications || []).includes(app.key) ? (collection.applications || []).filter(a => a !== app.key) : [...(collection.applications || []), app.key] })}
-                                                    disabled={isSharedPreview}
-                                                >
-                                                    <GoogleSymbol name={app.icon} className="text-xl" />
-                                                </Button>
-                                            </span>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                            <p>Associate with {app.label}</p>
-                                        </TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                            ))}
-                        </div>
+                        {!isSharedPreview && (
+                            <div className="flex items-center gap-1">
+                                {APPLICATIONS.map(app => (
+                                    <TooltipProvider key={app.key}>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <span>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className={cn("h-7 w-7", (collection.applications || []).includes(app.key) ? 'text-primary' : 'text-muted-foreground')}
+                                                        onClick={() => onUpdateCollection(collection.id, { applications: (collection.applications || []).includes(app.key) ? (collection.applications || []).filter(a => a !== app.key) : [...(collection.applications || []), app.key] })}
+                                                        disabled={isSharedPreview}
+                                                    >
+                                                        <GoogleSymbol name={app.icon} className="text-xl" />
+                                                    </Button>
+                                                </span>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>Associate with {app.label}</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                ))}
+                            </div>
+                        )}
                     </div>
                     {collection.description && <CardDescription className="pt-2">{collection.description}</CardDescription>}
                 </CardHeader>
             </div>
             <CardContent className="flex-grow">
                 <StrictModeDroppable droppableId={collection.id} type="badge" isDropDisabled={isSharedPreview}>
-                    {(provided) => (
+                    {(provided, snapshot) => (
                          <div
                             ref={provided.innerRef}
                             {...provided.droppableProps}
@@ -1189,13 +1191,13 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
                             )}
                             </StrictModeDroppable>
                         </div>
-                        <div className={cn("flex items-center gap-1 transition-all duration-300", isSharedPanelOpen && "mr-[34px]")}>
+                        <div className={cn("flex items-center gap-1 transition-all duration-300", isSharedPanelOpen && "mr-12")}>
                             {!isSearching ? (
                                 <Button variant="ghost" size="icon" onClick={() => setIsSearching(true)} className="h-8 w-8 text-muted-foreground">
                                     <GoogleSymbol name="search" />
                                 </Button>
                             ) : (
-                                <div className="flex items-center gap-1 w-56 p-1 rounded-md">
+                                <div className="flex items-center gap-1">
                                     <GoogleSymbol name="search" className="text-muted-foreground" />
                                     <input
                                         ref={searchInputRef}
@@ -1203,7 +1205,7 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                         onBlur={() => { if (!searchTerm) setIsSearching(false); }}
-                                        className="w-full h-full bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                                        className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
                                     />
                                 </div>
                             )}
