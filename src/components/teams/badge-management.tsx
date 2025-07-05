@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -332,7 +333,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                                 className="absolute -top-1.5 -right-1.5 h-6 w-6 rounded-full border-2 border-card flex items-center justify-center text-white"
                                                 style={{ backgroundColor: shareIconColor }}
                                             >
-                                                <GoogleSymbol name={shareIcon} style={{ fontSize: '16px' }}/>
+                                                <GoogleSymbol name={shareIcon} style={{fontSize: '16px'}}/>
                                             </div>
                                         </TooltipTrigger>
                                         <TooltipContent><p>{shareIconTitle}</p></TooltipContent>
@@ -357,6 +358,9 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                             )}
                         </div>
                     </div>
+                     <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onDelete(); }} className="h-7 w-7 text-muted-foreground hover:text-destructive -mr-2 -mt-2">
+                        <GoogleSymbol name="delete" />
+                    </Button>
                 </div>
             </CardHeader>
             <CardContent className="space-y-4 pt-0 flex-grow">
@@ -380,11 +384,6 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                     ))
                  )}
             </CardContent>
-             <CardFooter className="justify-end">
-                <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onDelete(); }} className="h-7 w-7 text-muted-foreground hover:text-destructive">
-                    <GoogleSymbol name="delete" />
-                </Button>
-            </CardFooter>
         </Card>
       );
     }
@@ -727,7 +726,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                 "min-h-[60px] rounded-md border-2 border-dashed border-transparent p-2",
                                 collection.viewMode === 'assorted' && "flex flex-wrap gap-2 items-start",
                                 collection.viewMode === 'list' && "flex flex-col gap-1",
-                                collection.viewMode === 'detailed' && "grid grid-cols-1 md:grid-cols-2 gap-4"
+                                collection.viewMode === 'detailed' && "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
                             )}>
                             {collectionBadges.map((badge, index) => (
                                 <Draggable key={`${badge.id}::${collection.id}`} draggableId={`${badge.id}::${collection.id}`} index={index} isDragDisabled={isSharedPreview}>
