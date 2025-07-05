@@ -82,7 +82,7 @@ This is the consistent reference pattern for allowing a user to change both an i
 
 - **Trigger:** A single, interactive unit composed of a primary icon button and a smaller color swatch badge overlaid on its corner.
 - **Interaction:**
-  - Clicking the main part of the button opens an icon picker popover. This popover uses the **Compact Search Input** pattern for filtering.
+  - Clicking the main part of the button opens an icon picker popover. This popover uses the **Compact Search Input** pattern for filtering. **Crucially, each icon in the picker must have a tooltip that reveals its name on hover**, improving discoverability.
   - Clicking the color swatch badge opens a color picker popover.
 - **Application:** Used for editing team icons/colors, admin group icons/colors, and page icons/colors.
 
@@ -91,8 +91,11 @@ This is the consistent reference pattern for allowing a user to change both an i
 ### 7. Entity Sharing & Linking
 This pattern describes how a single entity (like a Badge or BadgeCollection) can exist in multiple contexts while maintaining a single source of truth.
 
-- **Mechanism**: Sharing is controlled at the `BadgeCollection` level. An owner of a collection can click a "Share" icon (`share`) in the card's menu or drag the collection card onto the "Shared Collections" side panel to make it globally available. This action makes the original collection and its badges visible in the shared panel for all other teams. From this panel, other teams can:
-    - **Link the entire collection**: Dragging the collection's card from the panel to their main board adds a *link* to that collection to their team. This does not create a copy; it's a pointer to the original shared collection.
+- **Mechanism**: Sharing is controlled at the `BadgeCollection` level. An owner of a collection can perform one of two actions to make it globally available:
+    1.  Select "Share Collection" from the card's dropdown menu.
+    2.  Drag the owned collection card and drop it onto the "Shared Collections" side panel.
+- **Linking**: Once shared, a collection appears in the side panel for all other teams. From this panel, other teams can:
+    - **Link the entire collection**: Dragging the collection's card from the panel to their main board adds a *link* to that collection to their team. This is a pointer, not a copy.
     - **Link individual badges**: Dragging a single badge from a shared collection (either in the panel or from a linked collection on their board) and dropping it into one of their *owned* collections creates a link to that specific badge.
 - **Visual Cues**:
   - **Owned & Shared Externally (`upload`)**: An item created by the current team that has been explicitly shared with other teams is marked with an `upload` icon overlay. This indicates it is the "source of truth." **The color of this icon badge matches the owner team's color.**
@@ -101,6 +104,7 @@ This pattern describes how a single entity (like a Badge or BadgeCollection) can
   - **Owned and Not Shared/Linked**: An item that is owned and exists only in its original location does not get an icon.
 - **Behavior**:
   - Editing a shared item (e.g., changing a badge's name or icon) modifies the original "source of truth" item, and the changes are instantly reflected in all other places where it is used.
+  - **Local Overrides**: The `applications` for a linked collection (e.g., "Team Members", "Events") can be modified locally without affecting the original, allowing teams to customize how they use a shared resource.
   - **Smart Deletion**: Deleting an item follows contextual rules:
     - Deleting a *shared-to-you* or *internally linked* instance only removes that specific link/instance. The original remains untouched. This is a low-risk action confirmed via a `Compact Action Dialog`.
     - Deleting the *original, shared* item (i.e., an item that is currently linked elsewhere) will trigger a high-risk `AlertDialog` to prevent accidental removal of a widely-used resource.
@@ -178,6 +182,30 @@ When a **high-risk destructive action** requires user confirmation (like deletin
   - The tab's component is responsible for displaying the page's title and icon, effectively promoting its header to become the page's header.
 - **Application**: Applied automatically to any page in the dynamic routing system (`/dashboard/[...page]`) that meets the single-tab condition. This creates a more integrated and less cluttered UI.
 
+---
+
+### 13. Responsive Header Controls
+This pattern describes how a group of controls in a page header can intelligently adapt to changes in the layout, such as the opening and closing of a side panel.
+
+- **Trigger**: Expanding or collapsing a panel that affects the main content area's width.
+- **Behavior**:
+  - **Grid Awareness**: The page's main content area (e.g., a card grid) dynamically adjusts the number of columns it displays to best fit the available space.
+  - **Control Repositioning**: Header controls are grouped together. This entire group intelligently repositions itself to stay aligned with the edge of the content grid it controls. For example, when a right-hand panel opens, the grid shrinks, and the control group moves left to remain aligned with the grid's new right edge.
+- **Application**: Used on the **Badge Management** page to keep the search and panel-toggle icons aligned with the collection grid as the "Shared Collections" panel is opened and closed.
+
+---
+
+### 14. Compact Badge Pills
+This pattern is a specialized, ultra-compact version of the standard `<Badge>` component, used for displaying multiple badges in a dense layout, such as the "assorted" view mode in Badge Collections.
+
+- **Appearance**: A very thin, pill-shaped badge with minimal padding. It contains a small icon and a short text label.
+- **Sizing**:
+    - The pill has a reduced height and horizontal padding (`py-0 px-1`).
+    - The icon inside is small (e.g., `text-[9px]`).
+    - The text label is also small (e.g., `text-[10px]`).
+- **Interaction**: A small, circular delete button appears on hover, allowing the user to remove the badge.
+- **Application**: Used in the "assorted" view of **Badge Collections** to display many badges in a compact, scannable format.
+
 ## Visual & Theming Elements
 
 ### Icons & Hover Effects
@@ -189,7 +217,7 @@ When a **high-risk destructive action** requires user confirmation (like deletin
 - **Filled Icons**: To use the filled style of an icon, pass the `filled` prop to the component: `<GoogleSymbol name="star" filled />`. This works with any of the three main styles.
 - **Hover Behavior**: The color of icons on hover is typically determined by their parent element. For example, an icon inside a `<Button variant="ghost">` will change to the primary theme color on hover because the button's text color changes, and the icon inherits that color. This creates a clean and predictable interaction.
 - **Destructive Actions**: Delete or other destructive action icons (like `delete`, `close`, `cancel`) are `text-muted-foreground` by default and become `text-destructive` on hover to provide a clear but not overwhelming visual warning.
-- **Tooltips for Clarity**: Icon-only buttons (those without visible text) must always be wrapped in a `<Tooltip>` to provide context on their function. This is crucial for accessibility and user experience.
+- **Tooltips for Clarity**: Icon-only buttons (those without visible text) and icons within pickers (like the **Icon Picker**) must always be wrapped in a `<Tooltip>` to provide context on their function. This is crucial for accessibility and user experience.
 
 ### Theming & Button Styles
 
@@ -223,3 +251,4 @@ This is the single source of truth for indicating user interaction state across 
     - **Appearance**: A circular badge (e.g., `h-5 w-5`) with a `border-2` of the parent element's background color (e.g., `border-card` or `border-background`) to create a "punched out" effect. The icon inside should be sized appropriately (e.g., `font-size: 14px` or similar, depending on container).
     - **Placement**: Typically positioned on the bottom-right or top-right corner of the parent element.
     - **Application**: Used for displaying a user's admin group on their avatar, a shared group status on a role icon, or a `share` icon on a shared Badge.
+

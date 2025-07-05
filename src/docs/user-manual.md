@@ -95,10 +95,13 @@ This is the central hub for global application settings.
 ### 8.3 Team Management (`/dashboard/teams/[teamId]`)
 This page is for managing the specifics of an individual team.
 - **Team Members**: View all members of the team. If you have permission, you can assign and unassign badges to users by clicking on them. Badges are now conveniently grouped by their parent collection. You can also click the "Team Badges" label to customize it for your team.
-- **Badge Management**: Create and manage your team's badge collections in an intuitive, card-based grid.
-  - **Sharing**: To make a collection of badges available to all other teams, either select "Share Collection" from its dropdown menu or drag the entire card onto the Shared Collections panel on the right.
-  - **Using Shared Collections**: Click the `dynamic_feed` icon in the header to open the Shared Collections panel. From here, you can drag a shared collection onto your main board to *link* it to your team. You can also drag individual badges from any shared collection and drop them into one of your owned collections to create a link. To create an independent *copy* of any collection (shared or not), drag it onto the "Add New Collection" button.
-  - **Unlinking a Collection**: To remove a linked collection from your team, select "Unlink Collection" from its dropdown menu. This will not delete the original.
+- **Badge Management**: Create and manage your team's badge collections in an intuitive, card-based grid. The grid and its controls are fully responsive, adapting as you open and close the "Shared Collections" panel.
+  - **Sharing a Collection**: To make one of your collections available to all other teams, you can either select "Share Collection" from its dropdown menu or drag the entire card and drop it onto the "Shared Collections" panel on the right.
+  - **Using Shared Resources**: Click the `dynamic_feed` icon in the header to open the Shared Collections panel. This panel shows collections shared by other teams. From here, you can:
+      - **Link a full collection**: Drag a collection card from the panel to your main board to *link* it to your team.
+      - **Link a single badge**: Drag an individual badge from any shared collection (in the panel or on your board) and drop it into one of your *owned* collections to create a link.
+  - **Duplicating a Collection**: To create an independent *copy* of any collection (owned, linked, or from the shared panel), simply drag it and drop it onto the "Add New Collection" (+) button.
+  - **Unlinking a Collection**: To remove a linked collection from your team, select "Unlink Collection" from its dropdown menu. This will not delete the original shared item.
 - **Pinned Locations**: Pin locations to the team's Production Schedule. You can also designate locations as "check locations."
 - **Workstations**: Manage a list of bookable workstations or machines for the team.
 - **Event Templates**: Create reusable templates for common events. You can edit a template's name by clicking on it directly. Click the edit icon on the template card to manage its requested roles.
