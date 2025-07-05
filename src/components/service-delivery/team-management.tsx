@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -373,7 +372,7 @@ function TeamCard({
 }
 
 export function TeamManagement({ tab }: { tab: AppTab }) {
-  const { users, teams, addTeam, updateTeam, deleteTeam, updateAppTab, appSettings } = useUser();
+  const { users, teams, addTeam, updateTeam, deleteTeam, reorderTeams, updateAppTab, appSettings } = useUser();
   const { toast } = useToast();
 
   const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
@@ -454,22 +453,21 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
       const { source, destination, draggableId, type } = result;
       if (!destination) return;
   
-      if (type === 'team-card' && destination.droppableId === 'duplicate-team-zone') {
-          const teamToDuplicate = teams.find(t => t.id === draggableId);
-          if (teamToDuplicate) {
-            handleDuplicateTeam(teamToDuplicate);
-          }
-          return;
-      }
-      
       if (type === 'team-card') {
-          if (source.droppableId !== destination.droppableId) return;
-          const reorderedTeams = Array.from(teams);
-          const [movedItem] = reorderedTeams.splice(source.index, 1);
-          reorderedTeams.splice(destination.index, 0, movedItem);
-          // In a real app, we would persist this new order. For now, it's just a visual reorder in local state.
-          // Note: reorderTeams is not a function in context, so this is just a placeholder for a state update.
-          toast({ title: "Reordering teams is not implemented yet." });
+          if (destination.droppableId === 'duplicate-team-zone') {
+              const teamToDuplicate = teams.find(t => t.id === draggableId);
+              if (teamToDuplicate) {
+                handleDuplicateTeam(teamToDuplicate);
+              }
+              return;
+          }
+          
+          if (source.droppableId === 'teams-list' && destination.droppableId === 'teams-list') {
+              const reordered = Array.from(teams);
+              const [movedItem] = reordered.splice(source.index, 1);
+              reordered.splice(destination.index, 0, movedItem);
+              reorderTeams(reordered);
+          }
           return;
       }
       

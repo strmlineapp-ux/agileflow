@@ -24,6 +24,7 @@ interface UserContextType {
   addTeam: (teamData: Omit<Team, 'id'>) => Promise<void>;
   updateTeam: (teamId: string, teamData: Partial<Team>) => Promise<void>;
   deleteTeam: (teamId: string) => Promise<void>;
+  reorderTeams: (reorderedTeams: Team[]) => Promise<void>;
   notifications: Notification[];
   setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>;
   userStatusAssignments: Record<string, UserStatusAssignment[]>;
@@ -183,6 +184,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setTeams(current => current.filter(t => t.id !== teamId));
   }, []);
 
+  const reorderTeams = useCallback(async (reordered: Team[]) => {
+      await simulateApi();
+      setTeams(reordered);
+  }, []);
 
   const addCalendar = useCallback(async (newCalendarData: Omit<SharedCalendar, 'id'>) => {
     const newCalendar: SharedCalendar = {
@@ -342,6 +347,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     addTeam,
     updateTeam,
     deleteTeam,
+    reorderTeams,
     notifications,
     setNotifications,
     userStatusAssignments,
@@ -369,7 +375,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }), [
     loading, realUser, viewAsUser, users, allBadges, allRolesAndBadges, teams, notifications, userStatusAssignments,
     calendars, events, locations, allBookableLocations, appSettings,
-    addTeam, updateTeam, deleteTeam, setNotifications, setUserStatusAssignments, addUser,
+    addTeam, updateTeam, deleteTeam, reorderTeams, setNotifications, setUserStatusAssignments, addUser,
     updateUser, linkGoogleCalendar, reorderCalendars, addCalendar, updateCalendar, deleteCalendar,
     addEvent, updateEvent, deleteEvent, addLocation, deleteLocation,
     getPriorityDisplay, updateAppSettings, updateAppTab

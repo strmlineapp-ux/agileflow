@@ -117,7 +117,7 @@ This pattern describes how a single entity (like a Badge or BadgeCollection) can
 ### 8. Draggable Card Management (The Gold Standard)
 This is the application's perfected, gold-standard pattern for managing a collection of entities displayed as cards. It provides a fluid, intuitive, and grid-responsive way for users to reorder and duplicate items.
 
--   **Layout**: Entities are presented in a responsive grid of cards (`<Card>`).
+-   **Layout**: Entities are presented in a responsive grid of cards (`<Card>`). The grid dynamically adjusts the number of columns to best fit the available screen space, typically using classes like `grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4`.
 -   **Draggable & Pinned States**:
     -   **Draggable Cards**: Most cards can be freely reordered within the grid.
     -   **Pinned Cards**: Certain cards are designated as "pinned" and cannot be dragged. They act as fixed anchors in the layout.

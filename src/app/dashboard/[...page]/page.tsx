@@ -89,9 +89,6 @@ export default function DynamicPage() {
                     <GoogleSymbol name={pageConfig.icon} className="text-3xl" />
                     <h1 className="font-headline text-3xl font-semibold">{pageTitle}</h1>
                 </div>
-                <div className="flex items-center justify-center h-64 border-2 border-dashed rounded-lg">
-                    <p className="text-muted-foreground">This page has no content. Add tabs in Admin Management.</p>
-                </div>
             </div>
         );
     }

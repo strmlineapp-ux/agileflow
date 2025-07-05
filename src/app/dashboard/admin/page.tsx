@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -690,7 +689,7 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
             
             <StrictModeDroppable droppableId="admin-groups-list" type="group-card">
               {(provided) => (
-                  <div ref={provided.innerRef} {...provided.droppableProps} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  <div ref={provided.innerRef} {...provided.droppableProps} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                       <div className="w-full">
                         <Card className="h-full flex flex-col">
                             <CardHeader>
@@ -1076,8 +1075,6 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
                             </div>
                         </div>
                         <div className="flex items-center">
-                            <PageAccessControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
-                            <PageTabsControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
                             <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
@@ -1091,8 +1088,14 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
                         </div>
                     </div>
                 </CardHeader>
-                <CardContent className="flex-grow flex flex-col justify-end">
-                    <p className="text-xs text-muted-foreground truncate">{page.path}</p>
+                <CardContent className="flex-grow flex flex-col justify-end pt-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-muted-foreground truncate">{page.path}</p>
+                       <div className="flex items-center">
+                          <PageAccessControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
+                          <PageTabsControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
+                       </div>
+                    </div>
                 </CardContent>
             </Card>
             <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
