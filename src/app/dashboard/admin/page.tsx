@@ -313,8 +313,8 @@ function AdminGroupCard({
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <PopoverTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="h-9 w-9 text-2xl text-muted-foreground hover:text-foreground">
-                                        <GoogleSymbol name={group.icon} />
+                                        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                                        <GoogleSymbol name={group.icon} className="text-4xl" weight={100} />
                                         </Button>
                                     </PopoverTrigger>
                                 </TooltipTrigger>
@@ -341,7 +341,7 @@ function AdminGroupCard({
                                     </div>
                                 )}
                             </div>
-                            <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={group.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate({ ...group, icon: iconName }); setIsIconPopoverOpen(false); }} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
+                            <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={group.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate({ ...group, icon: iconName }); setIsIconPopoverOpen(false); }} className="p-0"><GoogleSymbol name={iconName} className="text-6xl" weight={100} /></Button>))}</div></ScrollArea>
                         </PopoverContent>
                     </Popover>
                     <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
@@ -375,7 +375,7 @@ function AdminGroupCard({
                 </div>
                 <div className="flex items-center">
                     <AddUserToGroupButton usersToAdd={unassignedUsers} onAdd={handleGroupToggle} groupName={group.name} />
-                    <StrictModeDroppable droppableId={`delete-dropzone-${group.id}`} type="user-card" isDropDisabled={false}>
+                    <StrictModeDroppable droppableId={`delete-dropzone-${group.id}`} type="user-card" isDropDisabled={false} isCombineEnabled={false}>
                         {(provided, snapshot) => (
                             <div 
                                 ref={provided.innerRef} 
@@ -401,7 +401,7 @@ function AdminGroupCard({
               <CardDescription>Click a member to promote them to Group Admin for this group. Group Admins have elevated permissions.</CardDescription>
             </CardHeader>
             <CardContent className="flex-grow">
-                <StrictModeDroppable droppableId={`group-content-${group.id}`} type="user-card" isDropDisabled={false}>
+                <StrictModeDroppable droppableId={`group-content-${group.id}`} type="user-card" isDropDisabled={false} isCombineEnabled={false}>
                 {(provided, snapshot) => (
                     <div 
                     ref={provided.innerRef}
@@ -647,7 +647,7 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
         <div className="space-y-6">
             <div className="flex items-center gap-2">
                 {isEditingTitle ? (
-                  <Input ref={titleInputRef} defaultValue={tab.name} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
+                  <Input ref={titleInputRef} defaultValue={tab.name} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} />
                 ) : (
                     <TooltipProvider>
                         <Tooltip>
@@ -660,7 +660,7 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                         </Tooltip>
                     </TooltipProvider>
                 )}
-                 <StrictModeDroppable droppableId="duplicate-admin-group-zone" type="group-card" isDropDisabled={false}>
+                 <StrictModeDroppable droppableId="duplicate-admin-group-zone" type="group-card" isDropDisabled={false} isCombineEnabled={false}>
                     {(provided, snapshot) => (
                         <div 
                             ref={provided.innerRef} 
@@ -688,7 +688,7 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                 </StrictModeDroppable>
             </div>
             
-            <StrictModeDroppable droppableId="admin-groups-list" type="group-card" isDropDisabled={false}>
+            <StrictModeDroppable droppableId="admin-groups-list" type="group-card" isDropDisabled={false} isCombineEnabled={false}>
               {(provided) => (
                   <div ref={provided.innerRef} {...provided.droppableProps} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                       <div className="w-full">
@@ -701,7 +701,7 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                               <CardDescription>Assign or revoke Admin privileges. This is the highest level of access.</CardDescription>
                             </CardHeader>
                             <CardContent className="flex-grow">
-                                <StrictModeDroppable droppableId="admins-card-droppable" type="user-card" isDropDisabled={false}>
+                                <StrictModeDroppable droppableId="admins-card-droppable" type="user-card" isDropDisabled={false} isCombineEnabled={false}>
                                 {(provided, snapshot) => (
                                     <div 
                                     ref={provided.innerRef}
@@ -1016,8 +1016,8 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
                                         <Tooltip>
                                             <TooltipTrigger asChild>
                                                 <PopoverTrigger asChild>
-                                                    <Button variant="ghost" size="icon" className="h-9 w-9 text-2xl">
-                                                        <GoogleSymbol name={page.icon} />
+                                                    <Button variant="ghost" size="icon">
+                                                        <GoogleSymbol name={page.icon} className="text-4xl" weight={100} />
                                                     </Button>
                                                 </PopoverTrigger>
                                             </TooltipTrigger>
@@ -1044,7 +1044,7 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
                                                 </div>
                                             )}
                                         </div>
-                                      <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={page.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(page.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
+                                      <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={page.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(page.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="p-0"><GoogleSymbol name={iconName} className="text-6xl" weight={100} /></Button>))}</div></ScrollArea>
                                     </PopoverContent>
                                 </Popover>
                                 <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
@@ -1071,9 +1071,9 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-1">
                                     {isEditingName ? (
-                                        <Input ref={nameInputRef} defaultValue={page.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 text-base font-semibold leading-none tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>
+                                        <Input ref={nameInputRef} defaultValue={page.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 text-base font-semibold leading-none tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 font-headline"/>
                                     ) : (
-                                        <CardTitle onClick={() => !isSystemPage && setIsEditingName(true)} className={cn("text-base break-words", !isSystemPage && "cursor-pointer")}>
+                                        <CardTitle onClick={() => !isSystemPage && setIsEditingName(true)} className={cn("text-base break-words font-headline", !isSystemPage && "cursor-pointer")}>
                                             {page.name}
                                         </CardTitle>
                                     )}
@@ -1259,7 +1259,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                                 </Tooltip>
                             </TooltipProvider>
                         )}
-                        <StrictModeDroppable droppableId="duplicate-page-zone" isDropDisabled={false}>
+                        <StrictModeDroppable droppableId="duplicate-page-zone" isDropDisabled={false} isCombineEnabled={false}>
                             {(provided, snapshot) => (
                                 <div 
                                     ref={provided.innerRef} 
@@ -1288,7 +1288,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                     </div>
                 </div>
                 
-                <StrictModeDroppable droppableId="pages-list" isDropDisabled={false}>
+                <StrictModeDroppable droppableId="pages-list" isDropDisabled={false} isCombineEnabled={false}>
                     {(provided) => (
                         <div
                             ref={provided.innerRef}
@@ -1407,8 +1407,8 @@ export function TabItem({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string,
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <PopoverTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="text-xl" style={{ color: tab.color }}>
-                                        <GoogleSymbol name={tab.icon} />
+                                    <Button variant="ghost" size="icon" style={{ color: tab.color }}>
+                                        <GoogleSymbol name={tab.icon} className="text-4xl" weight={100} />
                                     </Button>
                                 </PopoverTrigger>
                             </TooltipTrigger>
@@ -1435,7 +1435,7 @@ export function TabItem({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string,
                                 </div>
                             )}
                         </div>
-                        <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={tab.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(tab.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
+                        <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={tab.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(tab.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="p-0"><GoogleSymbol name={iconName} className="text-6xl" weight={100} /></Button>))}</div></ScrollArea>
                     </PopoverContent>
                 </Popover>
                 <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
@@ -1462,9 +1462,9 @@ export function TabItem({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string,
             <div className="flex-1 space-y-1">
                 <div className="flex items-center justify-between">
                      {isEditingName ? (
-                        <Input ref={nameInputRef} defaultValue={tab.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
+                        <Input ref={nameInputRef} defaultValue={tab.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 font-headline" />
                     ) : (
-                        <span className="font-semibold cursor-pointer" onClick={() => setIsEditingName(true)}>{tab.name}</span>
+                        <span className="font-semibold cursor-pointer font-headline" onClick={() => setIsEditingName(true)}>{tab.name}</span>
                     )}
                     <Badge variant="outline">{tab.componentKey}</Badge>
                 </div>

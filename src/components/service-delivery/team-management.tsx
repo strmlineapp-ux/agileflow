@@ -282,7 +282,7 @@ function TeamCard({
                                             </div>
                                         )}
                                     </div>
-                                    <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={team.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(team.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="text-3xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
+                                    <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={team.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(team.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="p-0"><GoogleSymbol name={iconName} className="text-6xl" weight={100} /></Button>))}</div></ScrollArea>
                                 </PopoverContent>
                             </Popover>
                             <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
@@ -314,7 +314,7 @@ function TeamCard({
                             <AddMemberToTeamButton usersToAdd={unassignedUsers} onAdd={(user) => onUpdate(team.id, { members: [...team.members, user.userId]})} teamName={team.name} />
                         </div>
                     </div>
-                     <StrictModeDroppable droppableId={`delete-user-dropzone-${team.id}`} type="user-card" isDropDisabled={false}>
+                     <StrictModeDroppable droppableId={`delete-user-dropzone-${team.id}`} type="user-card" isDropDisabled={false} isCombineEnabled={false}>
                         {(provided, snapshot) => (
                             <div
                                 ref={provided.innerRef}
@@ -342,7 +342,7 @@ function TeamCard({
             </CardHeader>
             <CardContent className="flex-grow space-y-2">
                 <p className="text-sm font-medium text-muted-foreground">Members (click to toggle admin status)</p>
-                 <StrictModeDroppable droppableId={`team-members-${team.id}`} type="user-card" isDropDisabled={false}>
+                 <StrictModeDroppable droppableId={`team-members-${team.id}`} type="user-card" isDropDisabled={false} isCombineEnabled={false}>
                     {(provided, snapshot) => (
                     <div
                         ref={provided.innerRef}
@@ -533,7 +533,7 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
                     </Tooltip>
                 </TooltipProvider>
             )}
-            <StrictModeDroppable droppableId="duplicate-team-zone" type="team-card" isDropDisabled={false}>
+            <StrictModeDroppable droppableId="duplicate-team-zone" type="team-card" isDropDisabled={false} isCombineEnabled={false}>
                 {(provided, snapshot) => (
                     <div
                         ref={provided.innerRef}
@@ -560,7 +560,7 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
                 )}
             </StrictModeDroppable>
         </div>
-        <StrictModeDroppable droppableId="teams-list" type="team-card" isDropDisabled={false}>
+        <StrictModeDroppable droppableId="teams-list" type="team-card" isDropDisabled={false} isCombineEnabled={false}>
             {(provided) => (
                  <div 
                     className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"

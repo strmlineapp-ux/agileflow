@@ -143,7 +143,7 @@ function CalendarCard({ calendar, onUpdate, onDelete }: { calendar: SharedCalend
                             </div>
                             )}
                         </div>
-                        <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={calendar.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(calendar.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="text-3xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
+                        <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={calendar.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(calendar.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="p-0"><GoogleSymbol name={iconName} className="text-6xl" weight={100} /></Button>))}</div></ScrollArea>
                     </PopoverContent>
                 </Popover>
                 <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
@@ -321,7 +321,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                   </Tooltip>
               </TooltipProvider>
             )}
-            <StrictModeDroppable droppableId="duplicate-calendar-zone" isDropDisabled={false}>
+            <StrictModeDroppable droppableId="duplicate-calendar-zone" isDropDisabled={false} isCombineEnabled={false}>
                 {(provided, snapshot) => (
                     <div
                         ref={provided.innerRef}
@@ -348,7 +348,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                 )}
             </StrictModeDroppable>
         </div>
-        <StrictModeDroppable droppableId="calendars-list" isDropDisabled={false}>
+        <StrictModeDroppable droppableId="calendars-list" isDropDisabled={false} isCombineEnabled={false}>
             {(provided) => (
                 <div
                     className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"

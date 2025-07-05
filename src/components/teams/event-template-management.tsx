@@ -15,6 +15,7 @@ import { Badge } from '../ui/badge';
 import { Popover, PopoverTrigger, PopoverContent } from '../ui/popover';
 import { ScrollArea } from '../ui/scroll-area';
 import { googleSymbolNames } from '@/lib/google-symbols';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 function EventTemplateForm({ 
   team, 
@@ -105,9 +106,9 @@ function EventTemplateForm({
                                             setIcon(iconName);
                                             setIsIconPopoverOpen(false);
                                         }}
-                                        className="text-3xl"
+                                        className="p-0"
                                     >
-                                        <GoogleSymbol name={iconName} />
+                                        <GoogleSymbol name={iconName} className="text-6xl" weight={100} />
                                     </Button>
                                 ))}
                             </div>
@@ -142,7 +143,7 @@ function EventTemplateForm({
               <Popover open={isAddRolePopoverOpen} onOpenChange={setIsAddRolePopoverOpen}>
                 <PopoverTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full">
-                        <GoogleSymbol name="add" className="text-lg" />
+                        <GoogleSymbol name="add" className="text-lg" weight={100} />
                     </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-[250px] p-0" align="start">
