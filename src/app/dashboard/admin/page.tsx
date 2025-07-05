@@ -1587,7 +1587,7 @@ export default function AdminPage() {
         <TabsList className="flex w-full">
           {pageTabs.map(tab => (
             <TabsTrigger key={tab.id} value={tab.id} className="flex-1 gap-2">
-              <GoogleSymbol name={tab.icon} className="text-lg" />
+              <GoogleSymbol name={tab.icon} className="text-4xl" weight={100} />
               <span>{tab.name}</span>
             </TabsTrigger>
           ))}

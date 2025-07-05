@@ -99,7 +99,7 @@ export function Sidebar() {
                         isActive && 'text-primary'
                       )}
                     >
-                      <GoogleSymbol name={item.icon} className="text-2xl" />
+                      <GoogleSymbol name={item.icon} className="text-4xl" weight={100} />
                       {isNotifications && unreadCount > 0 && (
                         <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary p-0 text-xs text-primary-foreground">
                           {unreadCount}
