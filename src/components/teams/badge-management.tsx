@@ -353,10 +353,10 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <div 
-                                                className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full border-2 border-card flex items-center justify-center text-white"
+                                                className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full border border-card flex items-center justify-center text-white"
                                                 style={{ backgroundColor: shareIconColor }}
                                             >
-                                                <GoogleSymbol name={shareIcon} style={{fontSize: '14px'}}/>
+                                                <GoogleSymbol name={shareIcon} style={{fontSize: '8px'}}/>
                                             </div>
                                         </TooltipTrigger>
                                         <TooltipContent><p>{shareIconTitle}</p></TooltipContent>
@@ -497,10 +497,10 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <div
-                                    className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full border-2 border-card text-white flex items-center justify-center"
+                                    className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full border border-card flex items-center justify-center text-white"
                                     style={{ backgroundColor: shareIconColor }}
                                 >
-                                    <GoogleSymbol name={shareIcon} style={{fontSize: '14px'}} />
+                                    <GoogleSymbol name={shareIcon} style={{fontSize: '8px'}} />
                                 </div>
                             </TooltipTrigger>
                             <TooltipContent><p>{shareIconTitle}</p></TooltipContent>
@@ -577,10 +577,10 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <div
-                                        className="absolute -top-1 -right-1 h-5 w-5 rounded-full border-2 border-card flex items-center justify-center text-white"
+                                        className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full border border-card flex items-center justify-center text-white"
                                         style={{ backgroundColor: shareIconColor }}
                                     >
-                                        <GoogleSymbol name={shareIcon} style={{fontSize: '14px'}} />
+                                        <GoogleSymbol name={shareIcon} style={{fontSize: '8px'}} />
                                     </div>
                                 </TooltipTrigger>
                                 <TooltipContent><p>{shareIconTitle}</p></TooltipContent>
@@ -707,10 +707,10 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                         <Tooltip>
                                             <TooltipTrigger asChild>
                                                 <div 
-                                                    className="absolute -top-1.5 -right-1.5 h-4 w-4 rounded-full border-2 border-card flex items-center justify-center text-white"
+                                                    className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full border border-card flex items-center justify-center text-white"
                                                     style={{ backgroundColor: shareIconColor }}
                                                 >
-                                                    <GoogleSymbol name={shareIcon} style={{fontSize: '10px'}}/>
+                                                    <GoogleSymbol name={shareIcon} style={{fontSize: '8px'}}/>
                                                 </div>
                                             </TooltipTrigger>
                                             <TooltipContent><p>{shareIconTitle}</p></TooltipContent>
@@ -1448,5 +1448,7 @@ export const BadgeManagement = ({ team, tab }: { team: Team, tab: AppTab }) => {
         </DragDropContext>
     );
 }
+
+    
 
     
