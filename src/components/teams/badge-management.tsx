@@ -739,7 +739,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                                     <TooltipProvider>
                                                         <Tooltip>
                                                             <TooltipTrigger asChild>
-                                                                <Button variant="ghost" size="icon" onClick={() => onAddBadge(collection.id)}><GoogleSymbol name="add_circle" /><span className="sr-only">Add Badge</span></Button>
+                                                                <Button variant="ghost" size="icon" onClick={() => onAddBadge(collection.id)}><GoogleSymbol name="add_circle" className="text-4xl" weight={100} /><span className="sr-only">Add Badge</span></Button>
                                                             </TooltipTrigger>
                                                             <TooltipContent><p>{snapshot.isDraggingOver ? 'Drop to Duplicate' : 'Add New Badge'}</p></TooltipContent>
                                                         </Tooltip>
@@ -753,7 +753,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                         </div>
                         <div className="flex items-center">
                             <DropdownMenu>
-                                <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><GoogleSymbol name="more_vert" /></Button></DropdownMenuTrigger>
+                                <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><GoogleSymbol name="more_vert" weight={100} /></Button></DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                     <DropdownMenuItem onClick={() => onUpdateCollection(collection.id, { viewMode: 'assorted' })}><GoogleSymbol name="view_module" className="mr-2 text-lg" />Assorted View</DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => onUpdateCollection(collection.id, { viewMode: 'detailed' })}><GoogleSymbol name="view_comfy_alt" className="mr-2 text-lg" />Detailed View</DropdownMenuItem>
@@ -1249,7 +1249,7 @@ export const BadgeManagement = ({ team, tab }: { team: Team, tab: AppTab }) => {
                                         <Tooltip>
                                             <TooltipTrigger asChild>
                                                 <Button variant="ghost" size="icon" onClick={handleAddCollection}>
-                                                    <GoogleSymbol name="add_circle" />
+                                                    <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
                                                     <span className="sr-only">Add New Collection or Drop to Duplicate</span>
                                                 </Button>
                                             </TooltipTrigger>
@@ -1282,7 +1282,7 @@ export const BadgeManagement = ({ team, tab }: { team: Team, tab: AppTab }) => {
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                         <Button variant="ghost" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)}>
-                                            <GoogleSymbol name="dynamic_feed" />
+                                            <GoogleSymbol name="dynamic_feed" weight={100} />
                                         </Button>
                                     </TooltipTrigger>
                                     <TooltipContent><p>Show Shared Collections</p></TooltipContent>
@@ -1448,5 +1448,3 @@ export const BadgeManagement = ({ team, tab }: { team: Team, tab: AppTab }) => {
         </DragDropContext>
     );
 }
-
-    
