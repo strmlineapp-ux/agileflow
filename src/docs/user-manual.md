@@ -83,27 +83,31 @@ Access your preferences by clicking your avatar in the bottom-left corner of the
 
 ### 8.1 Admin Management (`/dashboard/admin`)
 This is the central control panel for configuring the application itself.
-- **Admin Groups**: Create and manage high-level administrative groups. To assign users, you can either click the `add_circle` button on a group's card, or simply drag a user card and drop it into another group to add them. Dropping a user onto the 'Admins' card will promote them to a full Admin while keeping their existing group memberships. You can also instantly duplicate any group and its members by dragging the group card onto the "Add New Group" (+) button.
+- **Admin Groups**: Create and manage high-level administrative groups in a dynamic grid. The main "Admins" card is pinned, but all other groups can be reordered via drag-and-drop.
+  - **Assigning Users**: To assign a user to a group, you can either click the `add_circle` button on a group's card, or simply drag a user card and drop it into another group. Dropping a user onto the 'Admins' card will promote them to a full Admin while keeping their existing group memberships.
+  - **Duplicating Groups**: You can instantly duplicate any group and all its members by dragging the group's card and dropping it onto the "Add New Group" (+) button.
 - **Pages**: Configure the application's navigation. Create new pages, define their URL path, and control who has access to them (by user, team, or admin group). You can intuitively reorder pages by dragging and dropping them in the grid. Key system pages like "Admin Management" are pinned and cannot be moved. You can also instantly duplicate any page by dragging it onto the "Add New Page" (+) button.
 - **Tabs**: Manage the reusable content blocks (tabs) that can be assigned to different pages. Edit their names, icons, and descriptions.
 
 ### 8.2 Service Delivery Management (`/dashboard/service-delivery`)
 This is the central hub for global application settings.
 - **Manage Calendars**: Create, edit, or delete shared calendars using our intuitive card-based system. You can reorder calendars by dragging and dropping them, or instantly duplicate any calendar by dragging it onto the "Add New Calendar" (+) button.
-- **Manage Teams**: Create new teams, edit existing team details, and manage members. To add a user to a team, you can either click the `add_circle` icon on the team's card or simply drag a user from one team card and drop them onto another. Dropping a user on the delete icon of a team card will remove them from that team.
+- **Manage Teams**: Create new teams, edit existing team details, and manage members.
+  - **Adding Teams**: Clicking the "Add New Team" (+) button will instantly create a new team card, ready for you to configure.
+  - **Assigning Members**: To add a user to a team, you can either click the `add_circle` icon on the team's card or simply drag a user from one team card and drop them onto another. Dropping a user on the delete icon of a team card will remove them from that team.
 
 ### 8.3 Team Management (`/dashboard/teams/[teamId]`)
 This page is for managing the specifics of an individual team.
-- **Team Members**: View all members of the team. If you have permission, you can assign and unassign badges to users by clicking on them. Badges are now conveniently grouped by their parent collection. You can also click the "Team Badges" label to customize it for your team.
+- **Team Members**: View all members of the team. For each member, you can see the badges they've been assigned, which are now conveniently grouped by their parent collection (e.g., "Audio & Video Production", "Skills"). If you have permission, you can click on any badge pill—assigned or unassigned—to toggle it for that team member.
 - **Badge Management**: Create and manage your team's badge collections in an intuitive, card-based grid. The grid and its controls are fully responsive, adapting as you open and close the "Shared Collections" panel.
   - **Adding a Badge**: To add a new badge to a collection, click the `add_circle` icon located directly next to the collection's name.
+  - **Associating a Collection**: The icons in the header of each collection card (e.g., a calendar or checklist icon) show which parts of the app the badges within that collection can be applied to. Click these icons to toggle their association.
   - **Sharing a Collection**: To make one of your collections available to all other teams, you can either select "Share Collection" from its dropdown menu or drag the entire card and drop it onto the "Shared Collections" panel on the right.
   - **Using Shared Resources**: Click the `dynamic_feed` icon in the header to open the Shared Collections panel. This panel shows collections shared by other teams. From here, you can:
       - **Link a full collection**: Drag a collection card from the panel to your main board to *link* it to your team.
       - **Link a single badge**: Drag an individual badge from any shared collection (in the panel or on your board) and drop it into one of your *owned* collections to create a link.
   - **Duplicating a Collection**: To create an independent *copy* of any collection (owned, linked, or from the shared panel), simply drag it and drop it onto the "Add New Collection" (+) button.
   - **Unlinking a Collection**: To remove a linked collection from your team, select "Unlink Collection" from its dropdown menu. This will not delete the original shared item.
-  - **Associating a Collection**: The icons in the header of each collection card (e.g., a calendar or checklist icon) show which parts of the app the badges within that collection can be applied to. Click these icons to toggle their association.
 - **Pinned Locations**: Pin locations to the team's Production Schedule. You can also designate locations as "check locations."
 - **Workstations**: Manage a list of bookable workstations or machines for the team.
 - **Event Templates**: Create reusable templates for common events. You can edit a template's name by clicking on it directly. Click the edit icon on the template card to manage its requested roles.

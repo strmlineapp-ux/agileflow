@@ -376,7 +376,6 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
   const { users, teams, addTeam, updateTeam, deleteTeam, updateAppTab, appSettings } = useUser();
   const { toast } = useToast();
 
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
 
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -400,9 +399,26 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
     if (e.key === 'Enter') handleSaveTitle();
     else if (e.key === 'Escape') setIsEditingTitle(false);
   };
-
-  const openAddDialog = () => {
-    setIsAddDialogOpen(true);
+  
+  const handleAddTeam = () => {
+    const teamCount = teams.length;
+    const newTeamData: Omit<Team, 'id'> = {
+        name: `New Team ${teamCount + 1}`,
+        icon: 'group',
+        color: predefinedColors[teamCount % predefinedColors.length],
+        members: [],
+        teamAdmins: [],
+        locationCheckManagers: [],
+        allBadges: [],
+        badgeCollections: [],
+        pinnedLocations: [],
+        checkLocations: [],
+        locationAliases: {},
+        workstations: [],
+        eventTemplates: [],
+    };
+    addTeam(newTeamData);
+    toast({ title: 'Success', description: `Team "${newTeamData.name}" created.` });
   };
 
   const openDeleteDialog = (team: Team) => {
@@ -525,13 +541,13 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
                         {...provided.droppableProps}
                         className={cn(
                             "rounded-full transition-all p-0.5",
-                            snapshot.isDraggingOver && "ring-1 ring-border"
+                            snapshot.isDraggingOver && "ring-1 ring-border ring-inset"
                         )}
                     >
                          <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={openAddDialog}>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={handleAddTeam}>
                                         <GoogleSymbol name="add_circle" className="text-xl" />
                                         <span className="sr-only">New Team or Drop to Duplicate</span>
                                     </Button>
@@ -574,16 +590,6 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
                 </div>
             )}
         </StrictModeDroppable>
-
-      {isAddDialogOpen && (
-          <AddTeamDialog 
-            isOpen={isAddDialogOpen}
-            onClose={() => setIsAddDialogOpen(false)}
-            allUsers={users}
-            addTeam={addTeam}
-          />
-      )}
-
       <Dialog open={!!teamToDelete} onOpenChange={() => setTeamToDelete(null)}>
         <DialogContent className="max-w-md">
             <div className="absolute top-4 right-4">
@@ -602,221 +608,4 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
       </Dialog>
     </DragDropContext>
   );
-}
-
-type AddTeamDialogProps = {
-    isOpen: boolean;
-    onClose: () => void;
-    allUsers: User[];
-    addTeam: (teamData: Omit<Team, 'id'>) => Promise<void>;
-};
-
-function AddTeamDialog({ isOpen, onClose, allUsers, addTeam }: AddTeamDialogProps) {
-    const [name, setName] = useState('');
-    const [icon, setIcon] = useState<string>('group');
-    const [color, setColor] = useState<string>('#64748B');
-    const [members, setMembers] = useState<string[]>([]);
-    const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
-    const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
-    const [isMemberPopoverOpen, setIsMemberPopoverOpen] = useState(false);
-    const [memberSearch, setMemberSearch] = useState('');
-    const [iconSearch, setIconSearch] = useState('');
-    const [isSearchingIcons, setIsSearchingIcons] = useState(false);
-    const iconSearchInputRef = useRef<HTMLInputElement>(null);
-    const { toast } = useToast();
-
-    useEffect(() => {
-        if (!isIconPopoverOpen) {
-            setIsSearchingIcons(false);
-            setIconSearch('');
-        }
-    }, [isIconPopoverOpen]);
-
-    useEffect(() => {
-        if (isSearchingIcons) iconSearchInputRef.current?.focus();
-    }, [isSearchingIcons]);
-
-    const handleMemberToggleInPopover = (userId: string, isChecked: boolean) => {
-        setMembers(prev => isChecked ? [...prev, userId] : prev.filter(id => id !== userId));
-    };
-
-    const handleSave = () => {
-        if (!name.trim()) {
-            toast({ variant: "destructive", title: "Error", description: "Team name cannot be empty." });
-            return;
-        }
-
-        const teamData = {
-            name,
-            icon,
-            color,
-            members,
-            teamAdmins: [],
-            locationCheckManagers: [],
-            allBadges: [],
-            badgeCollections: [],
-            pinnedLocations: [],
-            checkLocations: [],
-            locationAliases: {},
-            workstations: [],
-            eventTemplates: [],
-        };
-        addTeam(teamData);
-        toast({ title: "Success", description: `Team "${name}" created.` });
-        onClose();
-    };
-
-    const filteredUsers = useMemo(() => {
-        if (!memberSearch) return allUsers;
-        return allUsers.filter(user =>
-            user.displayName.toLowerCase().includes(memberSearch.toLowerCase()) ||
-            user.email.toLowerCase().includes(memberSearch.toLowerCase())
-        );
-    }, [allUsers, memberSearch]);
-
-    const filteredIcons = useMemo(() => {
-        if (!iconSearch) return googleSymbolNames;
-        return googleSymbolNames.filter(iconName =>
-            iconName.toLowerCase().includes(iconSearch.toLowerCase())
-        );
-    }, [iconSearch]);
-
-    return (
-        <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="max-w-md">
-                 <div className="absolute top-4 right-4">
-                    <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8" 
-                        onClick={handleSave}
-                    >
-                        <GoogleSymbol name="check" className="text-xl" />
-                        <span className="sr-only">Save Changes</span>
-                    </Button>
-                </div>
-                <DialogHeader>
-                    <UIDialogTitle>New Team</UIDialogTitle>
-                    <DialogDescription>Create a new team and assign its initial members.</DialogDescription>
-                </DialogHeader>
-
-                <div className="grid gap-6 pt-2">
-                    <div className="flex items-center gap-2">
-                        <div className="relative">
-                            <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
-                                <PopoverTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-9 w-9 text-2xl"
-                                    style={{ color }}
-                                >
-                                    <GoogleSymbol name={icon} />
-                                </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-80 p-0">
-                                    <div className="flex items-center gap-1 p-2 border-b">
-                                        {!isSearchingIcons ? (
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => setIsSearchingIcons(true)}>
-                                                <GoogleSymbol name="search" />
-                                            </Button>
-                                        ) : (
-                                            <div className="flex items-center gap-1 w-full">
-                                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
-                                                <input
-                                                    ref={iconSearchInputRef}
-                                                    placeholder="Search icons..."
-                                                    value={iconSearch}
-                                                    onChange={(e) => setIconSearch(e.target.value)}
-                                                    onBlur={() => !iconSearch && setIsSearchingIcons(false)}
-                                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
-                                                />
-                                            </div>
-                                        )}
-                                    </div>
-                                    <ScrollArea className="h-64">
-                                    <div className="grid grid-cols-6 gap-1 p-2">
-                                        {filteredIcons.slice(0, 300).map((iconName) => (
-                                        <Button
-                                            key={iconName}
-                                            variant={icon === iconName ? "default" : "ghost"}
-                                            size="icon"
-                                            onClick={() => {
-                                            setIcon(iconName);
-                                            setIsIconPopoverOpen(false);
-                                            }}
-                                            className="text-2xl"
-                                        >
-                                            <GoogleSymbol name={iconName} />
-                                        </Button>
-                                        ))}
-                                    </div>
-                                    </ScrollArea>
-                                </PopoverContent>
-                            </Popover>
-                            <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                                <PopoverTrigger asChild>
-                                    <div className="absolute -bottom-1 -right-0 h-4 w-4 rounded-full border-2 border-card cursor-pointer" style={{ backgroundColor: color }} />
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-2">
-                                <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {setColor(c); setIsColorPopoverOpen(false);}}/>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={color} onChange={(e) => setColor(e.target.value)} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
-                                </PopoverContent>
-                            </Popover>
-                        </div>
-                        
-                        <Input
-                            id="team-name"
-                            placeholder="Team Name"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            className="text-lg font-semibold flex-1"
-                        />
-                    </div>
-                    
-                    <div className="space-y-2">
-                        <Popover open={isMemberPopoverOpen} onOpenChange={setIsMemberPopoverOpen}>
-                            <PopoverTrigger asChild>
-                                <Button variant="outline" className="w-full justify-start">
-                                    <GoogleSymbol name="group_add" className="mr-2" />
-                                    {members.length > 0 ? `${members.length} members selected` : 'Select Members'}
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-[300px] p-0" align="start">
-                                <div className="p-2">
-                                    <Input
-                                    placeholder="Search users..."
-                                    value={memberSearch}
-                                    onChange={(e) => setMemberSearch(e.target.value)}
-                                    />
-                                </div>
-                                <ScrollArea className="h-48">
-                                    <div className="p-1">
-                                    {filteredUsers.map(user => (
-                                        <div
-                                            key={user.userId}
-                                            onClick={() => handleMemberToggleInPopover(user.userId, !members.includes(user.userId))}
-                                            className="flex cursor-pointer items-center gap-2 rounded-md p-2 hover:bg-accent"
-                                        >
-                                            <div className={cn("w-4 h-4 rounded-sm border border-primary flex items-center justify-center", members.includes(user.userId) && "bg-primary text-primary-foreground")}>
-                                                {members.includes(user.userId) && <GoogleSymbol name="check" className="text-xs" />}
-                                            </div>
-                                            <Avatar className="h-8 w-8">
-                                                <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
-                                                <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                                            </Avatar>
-                                            <div>
-                                                <p className="text-sm font-medium">{user.displayName}</p>
-                                                <p className="text-xs text-muted-foreground">{user.email}</p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                    </div>
-                                </ScrollArea>
-                            </PopoverContent>
-                        </Popover>
-                    </div>
-                </div>
-            </DialogContent>
-        </Dialog>
-    );
 }

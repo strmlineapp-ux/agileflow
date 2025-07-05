@@ -303,7 +303,7 @@ function AdminGroupCard({
 
     return (
         <>
-        <Card>
+        <Card className="h-full flex flex-col">
             <CardHeader>
               <div className="flex items-center gap-2">
                 <div className="relative">
@@ -400,28 +400,30 @@ function AdminGroupCard({
               </div>
               <CardDescription>Click a member to promote them to Group Admin for this group. Group Admins have elevated permissions.</CardDescription>
             </CardHeader>
-            <StrictModeDroppable droppableId={`group-content-${group.id}`} type="user-card">
-              {(provided, snapshot) => (
-                <CardContent 
-                  ref={provided.innerRef}
-                  {...provided.droppableProps}
-                  className={cn("space-y-4", snapshot.isDraggingOver && "ring-1 ring-border ring-inset rounded-b-lg")}
-                >
-                  {assignedUsers.map((user, index) => (
-                    <UserAssignmentCard 
-                        key={user.userId} 
-                        index={index}
-                        user={user} 
-                        onRemove={handleGroupToggle}
-                        isGroupAdmin={(group.groupAdmins || []).includes(user.userId)}
-                        onSetGroupAdmin={handleSetGroupAdmin}
-                        isDraggable={true}
-                    />
-                  ))}
-                  {provided.placeholder}
-                </CardContent>
-              )}
-            </StrictModeDroppable>
+            <CardContent className="flex-grow">
+                <StrictModeDroppable droppableId={`group-content-${group.id}`} type="user-card">
+                {(provided, snapshot) => (
+                    <div 
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                    className={cn("space-y-4 rounded-b-lg", snapshot.isDraggingOver && "ring-1 ring-border ring-inset")}
+                    >
+                    {assignedUsers.map((user, index) => (
+                        <UserAssignmentCard 
+                            key={user.userId} 
+                            index={index}
+                            user={user} 
+                            onRemove={handleGroupToggle}
+                            isGroupAdmin={(group.groupAdmins || []).includes(user.userId)}
+                            onSetGroupAdmin={handleSetGroupAdmin}
+                            isDraggable={true}
+                        />
+                    ))}
+                    {provided.placeholder}
+                    </div>
+                )}
+                </StrictModeDroppable>
+            </CardContent>
           </Card>
           <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
             <DialogContent className="max-w-md">
@@ -572,7 +574,7 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
         return;
       }
       
-      if (source.droppableId !== destination.droppableId) return;
+      if (source.droppableId !== destination.droppableId || source.droppableId !== 'admin-groups-list') return;
       
       const allGroups = appSettings.adminGroups;
       const [movedItem] = allGroups.splice(source.index, 1);
@@ -665,7 +667,7 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                             {...provided.droppableProps}
                             className={cn(
                                 "rounded-full transition-all p-0.5",
-                                snapshot.isDraggingOver && "ring-1 ring-border"
+                                snapshot.isDraggingOver && "ring-1 ring-border ring-inset"
                             )}
                         >
                             <TooltipProvider>
@@ -688,9 +690,9 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
             
             <StrictModeDroppable droppableId="admin-groups-list" type="group-card">
               {(provided) => (
-                  <div ref={provided.innerRef} {...provided.droppableProps} className="flex flex-wrap -m-3">
-                      <div className="w-full md:w-1/2 p-3">
-                        <Card>
+                  <div ref={provided.innerRef} {...provided.droppableProps} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                      <div className="w-full">
+                        <Card className="h-full flex flex-col">
                             <CardHeader>
                               <div className="flex items-center gap-2">
                                 <CardTitle>Admins</CardTitle>
@@ -698,33 +700,35 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                               </div>
                               <CardDescription>Assign or revoke Admin privileges. This is the highest level of access.</CardDescription>
                             </CardHeader>
-                            <StrictModeDroppable droppableId="admins-card-droppable" type="user-card">
-                              {(provided, snapshot) => (
-                                <CardContent 
-                                  ref={provided.innerRef}
-                                  {...provided.droppableProps}
-                                  className={cn("space-y-4", snapshot.isDraggingOver && "ring-1 ring-border ring-inset rounded-b-lg")}
-                                >
-                                  {adminUsers.map(user => (
-                                    <UserAssignmentCard 
-                                      key={user.userId} 
-                                      user={user} 
-                                      onRemove={handleAdminToggle}
-                                      isGroupAdmin={false}
-                                      canRemove={adminUsers.length > 1}
-                                    />
-                                  ))}
-                                  {provided.placeholder}
-                                </CardContent>
-                              )}
-                            </StrictModeDroppable>
+                            <CardContent className="flex-grow">
+                                <StrictModeDroppable droppableId="admins-card-droppable" type="user-card">
+                                {(provided, snapshot) => (
+                                    <div 
+                                    ref={provided.innerRef}
+                                    {...provided.droppableProps}
+                                    className={cn("space-y-4 rounded-b-lg", snapshot.isDraggingOver && "ring-1 ring-border ring-inset")}
+                                    >
+                                    {adminUsers.map(user => (
+                                        <UserAssignmentCard 
+                                        key={user.userId} 
+                                        user={user} 
+                                        onRemove={handleAdminToggle}
+                                        isGroupAdmin={false}
+                                        canRemove={adminUsers.length > 1}
+                                        />
+                                    ))}
+                                    {provided.placeholder}
+                                    </div>
+                                )}
+                                </StrictModeDroppable>
+                            </CardContent>
                           </Card>
                       </div>
 
                     {appSettings.adminGroups.map((group, index) => (
                       <Draggable key={group.id} draggableId={group.id} index={index} type="group-card">
-                        {(provided) => (
-                          <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} className="w-full md:w-1/2 p-3">
+                        {(provided, snapshot) => (
+                          <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} className={cn("w-full", snapshot.isDragging && "shadow-xl")}>
                             <AdminGroupCard group={group} users={users} onUpdate={handleUpdateAdminGroup} onDelete={() => handleDeleteAdminGroup(group.id)} />
                           </div>
                         )}
@@ -1071,24 +1075,24 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
                                 )}
                             </div>
                         </div>
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => setIsDeleteDialogOpen(true)} disabled={isPinned}>
-                                        <GoogleSymbol name="delete" />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent><p>{isPinned ? 'This page is pinned' : 'Delete Page'}</p></TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
+                        <div className="flex items-center">
+                            <PageAccessControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
+                            <PageTabsControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => setIsDeleteDialogOpen(true)} disabled={isPinned}>
+                                            <GoogleSymbol name="delete" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent><p>{isPinned ? 'This page is pinned' : 'Delete Page'}</p></TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        </div>
                     </div>
                 </CardHeader>
                 <CardContent className="flex-grow flex flex-col justify-end">
                     <p className="text-xs text-muted-foreground truncate">{page.path}</p>
-                    <div className="flex items-center gap-2 mt-2">
-                        <PageAccessControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
-                        <PageTabsControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
-                    </div>
                 </CardContent>
             </Card>
             <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
@@ -1253,7 +1257,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                                     {...provided.droppableProps}
                                     className={cn(
                                         "rounded-full transition-all p-0.5",
-                                        snapshot.isDraggingOver && "ring-1 ring-border"
+                                        snapshot.isDraggingOver && "ring-1 ring-border ring-inset"
                                     )}
                                 >
                                     <TooltipProvider>

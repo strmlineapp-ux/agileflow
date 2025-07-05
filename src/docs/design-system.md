@@ -105,7 +105,7 @@ This pattern describes how a single entity (like a Badge or BadgeCollection) can
   - **Owned and Not Shared/Linked**: An item that is owned and exists only in its original location does not get an icon.
 - **Behavior**:
   - Editing a shared item (e.g., changing a badge's name or icon) modifies the original "source of truth" item, and the changes are instantly reflected in all other places where it is used.
-  - **Local Overrides**: The `applications` for a linked collection (e.g., "Team Members", "Events") can be modified locally without affecting the original, allowing teams to customize how they use a shared resource.
+  - **Local Overrides**: The `applications` for a linked collection (e.g., "Team Members", "Events") can be modified locally without affecting the original, allowing teams to customize how they use a shared resource. These associated application icons are located in the `BadgeCollection` card header, above the description.
   - **Smart Deletion**: Deleting an item follows contextual rules:
     - Deleting a *shared-to-you* or *internally linked* instance only removes that specific link/instance. This is a low-risk action confirmed via a `Compact Action Dialog`.
     - Deleting the *original, shared* item (i.e., an item that is currently linked elsewhere) will trigger a high-risk `AlertDialog` to prevent accidental removal of a widely-used resource.
@@ -132,7 +132,7 @@ This is the application's perfected, gold-standard pattern for managing a collec
     -   **Interaction**: A designated "Add New" icon (`<Button>`) acts as a drop zone. While a card is being dragged, this zone becomes highlighted to indicate it can accept a drop.
     -   **Behavior**: Dropping any card (pinned or not) onto this zone creates a deep, independent copy of the original. The new card is given a unique ID, a modified name (e.g., with `(Copy)`), and is placed immediately after the original in the list.
 -   **Layout Stability**: To prevent "janky" or shifting layouts during a drag operation (especially when dragging an item out of one card and over another), ensure that the container cards (e.g., `TeamCard`) maintain a consistent height. This can be achieved by using `flexbox` properties (e.g., `h-full` on the card and `flex-grow` on its main content area) to make the content container fill the available space, even when a draggable item is temporarily removed from the layout.
--   **Application**: This is the required pattern for managing Pages, Calendars, and Teams.
+-   **Application**: This is the required pattern for managing Pages, Calendars, Teams, and Admin Groups.
 
 ---
 
@@ -206,6 +206,17 @@ This pattern is a specialized, ultra-compact version of the standard `<Badge>` c
     - The text label is also small (e.g., `text-[10px]`).
 - **Interaction**: A small, circular delete button appears on hover, allowing the user to remove the badge.
 - **Application**: Used in the "assorted" view of **Badge Collections** to display many badges in a compact, scannable format.
+
+---
+### 15. Team Member Badge Assignment
+This pattern describes the user interface for assigning and unassigning badges to team members.
+- **Layout**: Within each `TeamMemberCard`, badges are grouped visually by their parent `BadgeCollection`. Each collection is displayed with its name as a sub-header.
+- **Interaction**:
+    - **Click to Toggle**: A user with the correct permissions can click on any badge pill—assigned or unassigned—to toggle its state for that team member.
+    - **Visual States**:
+        - **Assigned Badges**: Appear with a solid, colored border and a filled background, indicating a "selected" state.
+        - **Unassigned Badges**: Appear with a dashed border and a transparent background, indicating an "available" but unselected state.
+- **Application**: Used on the **Team Members** tab within each team's management page.
 
 ## Visual & Theming Elements
 
