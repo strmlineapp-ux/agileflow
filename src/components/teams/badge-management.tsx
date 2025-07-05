@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -129,18 +128,26 @@ function CompactSearchIconPicker({
         <ScrollArea className="h-64">
           <div className="grid grid-cols-6 gap-1 p-2">
             {filteredIcons.slice(0, 300).map((iconName) => (
-              <Button
-                key={iconName}
-                variant={icon === iconName ? "default" : "ghost"}
-                size="icon"
-                onClick={() => {
-                  onUpdateIcon(iconName);
-                  setIsPopoverOpen(false);
-                }}
-                className="text-2xl"
-              >
-                <GoogleSymbol name={iconName} />
-              </Button>
+                <TooltipProvider key={iconName}>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant={icon === iconName ? "default" : "ghost"}
+                                size="icon"
+                                onClick={() => {
+                                onUpdateIcon(iconName);
+                                setIsPopoverOpen(false);
+                                }}
+                                className="text-2xl"
+                            >
+                                <GoogleSymbol name={iconName} />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>{iconName}</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
             ))}
           </div>
         </ScrollArea>
@@ -243,7 +250,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
 
     const isShared = useMemo(() => {
         if (!isOwnedByMyTeam) return false;
-        const ownerCollection = ownerTeam.badgeCollections.find(c => c.id === badge.ownerCollectionId);
+        const ownerCollection = ownerTeam?.badgeCollections.find(c => c.id === badge.ownerCollectionId);
         return !!ownerCollection?.isShared;
     }, [badge.ownerCollectionId, isOwnedByMyTeam, ownerTeam]);
     
@@ -489,9 +496,9 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     
     // Assorted View
     return (
-        <div className="group relative inline-flex items-center gap-1.5 rounded-full border-2 py-1 px-2" style={{ borderColor: badge.color, color: badge.color }}>
+        <div className="group relative inline-flex items-center gap-1 rounded-full border-2 py-0.5 px-2" style={{ borderColor: badge.color, color: badge.color }}>
             <div className="relative flex items-center justify-center">
-                <GoogleSymbol name={badge.icon} style={{color: badge.color}} className="text-sm" />
+                <GoogleSymbol name={badge.icon} style={{color: badge.color}} className="text-xs" />
                 {shareIcon && (
                     <TooltipProvider>
                         <Tooltip>
@@ -510,8 +517,8 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
             </div>
             {inlineNameEditor}
             {!isSharedPreview && (
-                <button type="button" onClick={onDelete} className="ml-1 h-5 w-5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full inline-flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" aria-label={`Delete ${badge.name}`}>
-                    <GoogleSymbol name="close" className="text-sm" />
+                <button type="button" onClick={onDelete} className="ml-1 h-4 w-4 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full inline-flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" aria-label={`Delete ${badge.name}`}>
+                    <GoogleSymbol name="close" className="text-xs" />
                 </button>
             )}
         </div>
@@ -613,7 +620,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                     onUpdateIcon={(icon) => onUpdateCollection(collection.id, { icon })}
                                     disabled={isSharedPreview || !isOwned}
                                     buttonClassName="h-8 w-8 text-2xl"
-                                    iconClassName="text-2xl"
+                                    iconClassName="text-xl"
                                 />
                                 <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
                                     <PopoverTrigger asChild disabled={!isOwned || isSharedPreview}><div className={cn("absolute -bottom-1 -right-0 h-4 w-4 rounded-full border-2 border-card", !isOwned || isSharedPreview ? "cursor-not-allowed" : "cursor-pointer")} style={{ backgroundColor: collection.color }} /></PopoverTrigger>
@@ -632,9 +639,9 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                             <TooltipTrigger asChild>
                                                 <div 
                                                     className="absolute -top-1.5 -right-1.5 h-6 w-6 rounded-full border-2 border-card flex items-center justify-center text-white"
-                                                    style={{ backgroundColor: ownerTeam?.color }}
+                                                    style={{ backgroundColor: shareIconColor }}
                                                 >
-                                                    <GoogleSymbol name={ownerTeam?.icon} style={{ fontSize: '14px' }}/>
+                                                    <GoogleSymbol name={shareIcon} style={{ fontSize: '14px' }}/>
                                                 </div>
                                             </TooltipTrigger>
                                             <TooltipContent><p>{shareIconTitle}</p></TooltipContent>
@@ -672,7 +679,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                         <div
                                             ref={provided.innerRef}
                                             {...provided.droppableProps}
-                                            className={cn("rounded-full p-0.5", snapshot.isDraggingOver && "ring-1 ring-primary bg-accent")}
+                                            className={cn("rounded-full p-0.5", snapshot.isDraggingOver && "ring-1 ring-border ring-inset")}
                                         >
                                             <TooltipProvider>
                                                 <Tooltip>
@@ -725,7 +732,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                 </CardHeader>
             </div>
             <CardContent className="flex-grow">
-                <StrictModeDroppable droppableId={collection.id} type="badge" isDropDisabled={isSharedPreview}>
+                <StrictModeDroppable droppableId={collection.id} type="badge">
                     {(provided) => (
                          <div
                             ref={provided.innerRef}
@@ -737,7 +744,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                 collection.viewMode === 'detailed' && "grid grid-cols-1 md:grid-cols-2 gap-4"
                             )}>
                             {collectionBadges.map((badge, index) => (
-                                <Draggable key={`${badge.id}::${collection.id}`} draggableId={`${badge.id}::${collection.id}`} index={index} isDragDisabled={isSharedPreview}>
+                                <Draggable key={`${badge.id}::${collection.id}`} draggableId={`${badge.id}::${collection.id}`} index={index} isDragDisabled={false}>
                                     {(provided, snapshot) => (<div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} className={cn(snapshot.isDragging && "opacity-80")}>
                                         <BadgeDisplayItem 
                                             badge={badge} 
@@ -974,17 +981,6 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
         }
     }, [allBadgesAvailableToTeam, teams, team.badgeCollections, updateTeam, toast, confirmPermanentDelete]);
     
-    
-    const handleLinkSharedCollection = useCallback((collection: BadgeCollection) => {
-        if (team.badgeCollections.some(c => c.id === collection.id)) {
-            toast({ title: "Already Linked", description: `Your team is already using the "${collection.name}" collection.` });
-            return;
-        }
-        const newCollections = [...team.badgeCollections, collection];
-        updateTeam(team.id, { badgeCollections: newCollections });
-        toast({ title: "Collection Linked", description: `"${collection.name}" is now available to your team.` });
-    }, [team.badgeCollections, updateTeam, team.id, toast]);
-    
     const handleToggleShare = (collectionId: string) => {
         const collection = team.badgeCollections.find(c => c.id === collectionId);
         if (!collection) return;
@@ -1002,9 +998,36 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
         if (!destination) return;
         
         if (type === 'collection' && source.droppableId === 'shared-collections-panel' && destination.droppableId === 'collections-list') {
-            const collectionToLink = sharedCollectionsFromOthers.find(c => c.id === draggableId);
-            if (collectionToLink) {
-                handleLinkSharedCollection(collectionToLink);
+            const collectionToDuplicate = sharedCollectionsFromOthers.find(c => c.id === draggableId);
+            if (collectionToDuplicate) {
+                const newCollectionId = crypto.randomUUID();
+                
+                const newBadges: Badge[] = (collectionToDuplicate.badgeIds || [])
+                    .map(badgeId => {
+                        const originalBadge = allBadgesAvailableToTeam.find(b => b.id === badgeId);
+                        if (!originalBadge) return null;
+                        return {
+                            ...JSON.parse(JSON.stringify(originalBadge)),
+                            id: crypto.randomUUID(),
+                            ownerCollectionId: newCollectionId,
+                        };
+                    })
+                    .filter((b): b is Badge => !!b);
+
+                const newCollection: BadgeCollection = {
+                    ...JSON.parse(JSON.stringify(collectionToDuplicate)),
+                    id: newCollectionId,
+                    ownerTeamId: team.id,
+                    isShared: false,
+                    badgeIds: newBadges.map(b => b.id),
+                };
+
+                updateTeam(team.id, {
+                    allBadges: [...team.allBadges, ...newBadges],
+                    badgeCollections: [...team.badgeCollections, newCollection],
+                });
+
+                toast({ title: 'Collection Copied', description: `A copy of "${collectionToDuplicate.name}" was created for your team.` });
             }
             return;
         }
@@ -1108,71 +1131,69 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
     return (
         <DragDropContext onDragEnd={onDragEnd}>
             <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        {isEditingTitle ? (
-                            <Input
-                                ref={titleInputRef}
-                                defaultValue={tab.name}
-                                onBlur={handleSaveTitle}
-                                onKeyDown={handleTitleKeyDown}
-                                className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                            />
-                        ) : (
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <h2 className="text-2xl font-semibold tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
-                                    </TooltipTrigger>
-                                    {tab.description && (
-                                    <TooltipContent>
-                                        <p className="max-w-xs">{tab.description}</p>
-                                    </TooltipContent>
-                                    )}
-                                </Tooltip>
-                            </TooltipProvider>
-                        )}
-                         <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={handleAddCollection}>
-                            <GoogleSymbol name="add_circle" className="text-xl" />
-                            <span className="sr-only">New Collection</span>
-                        </Button>
-                    </div>
-
-                    <div className={cn("flex items-center justify-end gap-1", isSharedPanelOpen && "flex-1")}>
-                        <div className="flex-1 flex items-center justify-end">
-                            {!isSearching ? (
-                                <Button variant="ghost" size="icon" onClick={() => setIsSearching(true)} className="h-8 w-8">
-                                    <GoogleSymbol name="search" />
-                                </Button>
-                            ) : (
-                                <div className="flex items-center gap-1 w-56 p-1 rounded-md">
-                                    <GoogleSymbol name="search" className="text-muted-foreground" />
-                                    <input
-                                        ref={searchInputRef}
-                                        placeholder="Search collections..."
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                        onBlur={() => { if (!searchTerm) setIsSearching(false); }}
-                                        className="w-full h-full bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
-                                    />
-                                </div>
-                            )}
-                        </div>
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)} className="h-8 w-8">
-                                        <GoogleSymbol name="dynamic_feed" />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent><p>Show Shared Collections</p></TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    </div>
-                </div>
-
                 <div className="flex gap-4">
                     <div className="flex-1 transition-all duration-300">
+                        <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center gap-2">
+                                {isEditingTitle ? (
+                                    <Input
+                                        ref={titleInputRef}
+                                        defaultValue={tab.name}
+                                        onBlur={handleSaveTitle}
+                                        onKeyDown={handleTitleKeyDown}
+                                        className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                                    />
+                                ) : (
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <h2 className="text-2xl font-semibold tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
+                                            </TooltipTrigger>
+                                            {tab.description && (
+                                            <TooltipContent>
+                                                <p className="max-w-xs">{tab.description}</p>
+                                            </TooltipContent>
+                                            )}
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                )}
+                                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={handleAddCollection}>
+                                    <GoogleSymbol name="add_circle" className="text-xl" />
+                                    <span className="sr-only">New Collection</span>
+                                </Button>
+                            </div>
+
+                             <div className="flex items-center gap-1">
+                                {!isSearching ? (
+                                    <Button variant="ghost" size="icon" onClick={() => setIsSearching(true)} className="h-8 w-8">
+                                        <GoogleSymbol name="search" />
+                                    </Button>
+                                ) : (
+                                    <div className="flex items-center gap-1 w-56 p-1 rounded-md">
+                                        <GoogleSymbol name="search" className="text-muted-foreground" />
+                                        <input
+                                            ref={searchInputRef}
+                                            placeholder="Search collections..."
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value)}
+                                            onBlur={() => { if (!searchTerm) setIsSearching(false); }}
+                                            className="w-full h-full bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                                        />
+                                    </div>
+                                )}
+                                 <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button variant="ghost" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)} className="h-8 w-8">
+                                                <GoogleSymbol name="dynamic_feed" />
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>Show Shared Collections</p></TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            </div>
+                        </div>
+
                         <StrictModeDroppable droppableId="collections-list" type="collection">
                             {(provided, snapshot) => (
                                 <div 
@@ -1181,8 +1202,8 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
                                     className={cn(
                                         "grid gap-4 transition-all duration-300",
                                         isSharedPanelOpen 
-                                            ? "grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3" 
-                                            : "grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5",
+                                            ? "grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2" 
+                                            : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
                                         snapshot.isDraggingOver && "ring-1 ring-border ring-inset p-2 rounded-lg"
                                     )}
                                 >
@@ -1192,8 +1213,6 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
                                                 <div
                                                     ref={provided.innerRef}
                                                     {...provided.draggableProps}
-                                                    // This is intentionally left blank. The handle is on the header.
-                                                    // {...provided.dragHandleProps} 
                                                     className={cn("w-full", snapshot.isDragging && "shadow-xl")}
                                                 >
                                                     <BadgeCollectionCard
@@ -1221,7 +1240,7 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
                     </div>
                     <div className={cn(
                         "transition-all duration-300 overflow-hidden",
-                        isSharedPanelOpen ? "w-80" : "w-0"
+                        isSharedPanelOpen ? "w-96" : "w-0"
                     )}>
                         <Card className={cn("transition-opacity duration-300", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
                             <CardHeader>
@@ -1245,7 +1264,7 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
                                         </div>
                                     )}
                                 </div>
-                                <CardDescription>Drag a collection to your board to link it to your team.</CardDescription>
+                                <CardDescription>Drag a collection to copy it to your team.</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <StrictModeDroppable droppableId="shared-collections-panel" type="collection">
