@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -706,10 +707,10 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                         <Tooltip>
                                             <TooltipTrigger asChild>
                                                 <div 
-                                                    className="absolute -top-1.5 -right-1.5 h-8 w-8 rounded-full border-2 border-card flex items-center justify-center text-white"
+                                                    className="absolute -top-1.5 -right-1.5 h-4 w-4 rounded-full border-2 border-card flex items-center justify-center text-white"
                                                     style={{ backgroundColor: shareIconColor }}
                                                 >
-                                                    <GoogleSymbol name={shareIcon} className="text-xl"/>
+                                                    <GoogleSymbol name={shareIcon} style={{fontSize: '10px'}}/>
                                                 </div>
                                             </TooltipTrigger>
                                             <TooltipContent><p>{shareIconTitle}</p></TooltipContent>
