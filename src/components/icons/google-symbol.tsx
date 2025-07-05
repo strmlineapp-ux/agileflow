@@ -14,7 +14,7 @@ export const GoogleSymbol = React.forwardRef<
     variant?: GoogleSymbolVariant;
     weight?: number;
   } & React.HTMLAttributes<HTMLSpanElement>
->(({ name, className, filled, variant = 'outlined', weight = 100, ...props }, ref) => {
+>(({ name, className, filled, variant = 'outlined', weight = 400, ...props }, ref) => {
   const style: React.CSSProperties & { fontVariationSettings?: string } = { ...props.style };
   
   const settings = [];
