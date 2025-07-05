@@ -329,10 +329,10 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <div 
-                                                className="absolute -top-1 -right-1 h-5 w-5 rounded-full border-2 border-card flex items-center justify-center text-white"
+                                                className="absolute -top-1.5 -right-1.5 h-6 w-6 rounded-full border-2 border-card flex items-center justify-center text-white"
                                                 style={{ backgroundColor: shareIconColor }}
                                             >
-                                                <GoogleSymbol name={shareIcon} style={{ fontSize: '14px' }}/>
+                                                <GoogleSymbol name={shareIcon} style={{ fontSize: '16px' }}/>
                                             </div>
                                         </TooltipTrigger>
                                         <TooltipContent><p>{shareIconTitle}</p></TooltipContent>
@@ -481,7 +481,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                             {badge.description || (isEditable ? 'Click to add description.' : 'No description.')}
                         </p>
                     ))
-                )}
+                 )}
             </div>
             <Button variant="ghost" size="icon" onClick={onDelete} className="h-8 w-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity">
                 <GoogleSymbol name="delete" />
@@ -513,7 +513,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
             </div>
             <span className="text-[10px] font-medium leading-tight">{badge.name}</span>
             <button type="button" onClick={onDelete} className="ml-0.5 h-3 w-3 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full inline-flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" aria-label={`Delete ${badge.name}`}>
-                <GoogleSymbol name="close" className="text-[8px]" />
+                <GoogleSymbol name="close" className="text-xs" />
             </button>
         </div>
     );
@@ -605,8 +605,8 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                     color={collection.color} 
                                     onUpdateIcon={(icon) => onUpdateCollection(collection.id, { icon })}
                                     disabled={!isOwned}
-                                    buttonClassName="h-8 w-8 text-2xl"
-                                    iconClassName="text-xl"
+                                    buttonClassName="h-9 w-9"
+                                    iconClassName="text-2xl"
                                 />
                                 <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
                                     <PopoverTrigger asChild disabled={!isOwned}><div className={cn("absolute -bottom-1 -right-0 h-4 w-4 rounded-full border-2 border-card", !isOwned ? "cursor-not-allowed" : "cursor-pointer")} style={{ backgroundColor: collection.color }} /></PopoverTrigger>
@@ -624,7 +624,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                         <Tooltip>
                                             <TooltipTrigger asChild>
                                                 <div 
-                                                    className="absolute -top-1.5 -right-1.5 h-6 w-6 rounded-full border-2 border-card flex items-center justify-center text-white"
+                                                    className="absolute -top-1 -right-1 h-5 w-5 rounded-full border border-card flex items-center justify-center text-white"
                                                     style={{ backgroundColor: shareIconColor }}
                                                 >
                                                     <GoogleSymbol name={shareIcon} style={{ fontSize: '14px' }}/>
@@ -643,24 +643,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                 )}
                             </div>
                         </div>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 -mr-2 -mt-2"><GoogleSymbol name="more_vert" className="text-xl" /></Button></DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => onUpdateCollection(collection.id, { viewMode: 'assorted' })}><GoogleSymbol name="view_module" className="mr-2 text-lg" />Assorted View</DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => onUpdateCollection(collection.id, { viewMode: 'detailed' })}><GoogleSymbol name="view_comfy_alt" className="mr-2 text-lg" />Detailed View</DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => onUpdateCollection(collection.id, { viewMode: 'list' })}><GoogleSymbol name="view_list" className="mr-2 text-lg" />List View</DropdownMenuItem>
-                                {isOwned && <DropdownMenuSeparator />}
-                                {isOwned && <DropdownMenuItem onClick={() => onToggleShare(collection.id)}><GoogleSymbol name={collection.isShared ? 'share_off' : 'share'} className="mr-2 text-lg"/>{collection.isShared ? 'Unshare Collection' : 'Share Collection'}</DropdownMenuItem>}
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => onDeleteCollection(collection.id)} className="text-destructive focus:text-destructive">
-                                    <GoogleSymbol name="delete" className="mr-2 text-lg"/>
-                                    {isOwned ? "Delete Collection" : "Unlink Collection"}
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                    <div className="flex items-center justify-between pt-2">
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center">
                             {isOwned && !isSharedPreview && (
                                 <StrictModeDroppable droppableId={`duplicate-badge-zone:${collection.id}`} type="badge" isDropDisabled={!isOwned}>
                                     {(provided, snapshot) => (
@@ -684,33 +667,22 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                     )}
                                 </StrictModeDroppable>
                             )}
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 -mr-2"><GoogleSymbol name="more_vert" className="text-xl" /></Button></DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => onUpdateCollection(collection.id, { viewMode: 'assorted' })}><GoogleSymbol name="view_module" className="mr-2 text-lg" />Assorted View</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => onUpdateCollection(collection.id, { viewMode: 'detailed' })}><GoogleSymbol name="view_comfy_alt" className="mr-2 text-lg" />Detailed View</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => onUpdateCollection(collection.id, { viewMode: 'list' })}><GoogleSymbol name="view_list" className="mr-2 text-lg" />List View</DropdownMenuItem>
+                                    {isOwned && <DropdownMenuSeparator />}
+                                    {isOwned && <DropdownMenuItem onClick={() => onToggleShare(collection.id)}><GoogleSymbol name={collection.isShared ? 'share_off' : 'share'} className="mr-2 text-lg"/>{collection.isShared ? 'Unshare Collection' : 'Share Collection'}</DropdownMenuItem>}
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onClick={() => onDeleteCollection(collection.id)} className="text-destructive focus:text-destructive">
+                                        <GoogleSymbol name="delete" className="mr-2 text-lg"/>
+                                        {isOwned ? "Delete Collection" : "Unlink Collection"}
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </div>
-                        {!isSharedPreview && (
-                            <div className="flex items-center gap-1">
-                                {APPLICATIONS.map(app => (
-                                    <TooltipProvider key={app.key}>
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <span>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className={cn("h-7 w-7", (collection.applications || []).includes(app.key) ? 'text-primary' : 'text-muted-foreground')}
-                                                        onClick={() => onUpdateCollection(collection.id, { applications: (collection.applications || []).includes(app.key) ? (collection.applications || []).filter(a => a !== app.key) : [...(collection.applications || []), app.key] })}
-                                                        disabled={isSharedPreview}
-                                                    >
-                                                        <GoogleSymbol name={app.icon} className="text-xl" />
-                                                    </Button>
-                                                </span>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                                <p>Associate with {app.label}</p>
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
-                                ))}
-                            </div>
-                        )}
                     </div>
                     {collection.description && <CardDescription className="pt-2">{collection.description}</CardDescription>}
                 </CardHeader>
@@ -747,6 +719,34 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                     )}
                 </StrictModeDroppable>
             </CardContent>
+             <CardFooter>
+                 {!isSharedPreview && (
+                    <div className="flex items-center gap-1">
+                        {APPLICATIONS.map(app => (
+                            <TooltipProvider key={app.key}>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <span>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className={cn("h-7 w-7", (collection.applications || []).includes(app.key) ? 'text-primary' : 'text-muted-foreground')}
+                                                onClick={() => onUpdateCollection(collection.id, { applications: (collection.applications || []).includes(app.key) ? (collection.applications || []).filter(a => a !== app.key) : [...(collection.applications || []), app.key] })}
+                                                disabled={isSharedPreview}
+                                            >
+                                                <GoogleSymbol name={app.icon} className="text-xl" />
+                                            </Button>
+                                        </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Associate with {app.label}</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        ))}
+                    </div>
+                )}
+            </CardFooter>
         </Card>
     );
 }

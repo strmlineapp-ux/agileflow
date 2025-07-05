@@ -14,6 +14,7 @@ The application favors a compact, information-dense layout. Card components are 
 -   **Gold Standard**: The login form (`/login`) serves as the ideal example of "perfect" padding. It has a larger header area and tighter content padding (`p-2`) which makes the card feel like a single, cohesive unit.
 -   **Global Default**: To align with this, the global default `CardContent` padding has been reduced from `p-6` to a tighter `p-4`. This affects all cards in the app, creating a more consistent look.
 -   **Contextual Overrides**: Specific components may use even tighter padding (like `p-2` or `p-0` for lists and grids) when it enhances clarity and aligns with the compact design philosophy.
+-   **Text Wrapping**: Card titles and descriptions should gracefully handle long text by wrapping. The `break-words` utility should be used on titles to prevent layout issues from long, unbroken strings.
 
 ---
 
@@ -106,7 +107,7 @@ This pattern describes how a single entity (like a Badge or BadgeCollection) can
   - Editing a shared item (e.g., changing a badge's name or icon) modifies the original "source of truth" item, and the changes are instantly reflected in all other places where it is used.
   - **Local Overrides**: The `applications` for a linked collection (e.g., "Team Members", "Events") can be modified locally without affecting the original, allowing teams to customize how they use a shared resource.
   - **Smart Deletion**: Deleting an item follows contextual rules:
-    - Deleting a *shared-to-you* or *internally linked* instance only removes that specific link/instance. The original remains untouched. This is a low-risk action confirmed via a `Compact Action Dialog`.
+    - Deleting a *shared-to-you* or *internally linked* instance only removes that specific link/instance. This is a low-risk action confirmed via a `Compact Action Dialog`.
     - Deleting the *original, shared* item (i.e., an item that is currently linked elsewhere) will trigger a high-risk `AlertDialog` to prevent accidental removal of a widely-used resource.
     - Deleting an *original, un-shared* item is a low-risk action confirmed via a `Compact Action Dialog`.
 - **Application**: Used for sharing Badges and Badge Collections between Teams.
@@ -248,7 +249,7 @@ This is the single source of truth for indicating user interaction state across 
 
 - **Lunch Break Pattern**: A subtle diagonal line pattern is used in calendar views to visually block out the typical lunch period (12:00 - 14:30). This serves as a non-intrusive reminder to avoid scheduling meetings during that time.
 - **Icon as Badge**: An icon displayed as a small, circular overlay on another element (e.g., an Avatar or another icon) to provide secondary information. The size of the icon within the badge should be large enough to be clearly identifiable while fitting neatly within its container.
-    - **Appearance**: A circular badge (e.g., `h-5 w-5`) with a `border-2` of the parent element's background color (e.g., `border-card` or `border-background`) to create a "punched out" effect. The icon inside should be sized appropriately (e.g., `font-size: 14px` or similar, depending on container).
+    - **Appearance**: A circular badge with a `border-2` of the parent element's background color (e.g., `border-card` or `border-background`) to create a "punched out" effect. The icon inside should be sized appropriately.
     - **Placement**: Typically positioned on the bottom-right or top-right corner of the parent element.
-    - **Application**: Used for displaying a user's admin group on their avatar, a shared group status on a role icon, or a `share` icon on a shared Badge.
-
+    - **Sizing**: The sizing is contextual. For larger elements like a collection card, a smaller badge (`h-5 w-5` with a 1px border) provides a subtle indicator. For more prominent elements like a badge icon in a detailed view, a larger overlay (`h-6 w-6` with a 2px border) is more appropriate.
+    - **Application**: Used for displaying a shared status on a role icon or a `share` icon on a shared Badge.
