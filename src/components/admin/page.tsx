@@ -314,7 +314,7 @@ function AdminGroupCard({
                                 <TooltipTrigger asChild>
                                     <PopoverTrigger asChild>
                                         <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground h-12 w-12">
-                                        <GoogleSymbol name={group.icon} className="text-12xl" weight={100} />
+                                        <GoogleSymbol name={group.icon} className="text-6xl" weight={100} />
                                         </Button>
                                     </PopoverTrigger>
                                 </TooltipTrigger>
@@ -341,7 +341,7 @@ function AdminGroupCard({
                                     </div>
                                 )}
                             </div>
-                            <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={group.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate({ ...group, icon: iconName }); setIsIconPopoverOpen(false); }} className="h-4 w-4 p-0"><GoogleSymbol name={iconName} className="text-8xl" weight={100} /></Button>))}</div></ScrollArea>
+                            <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={group.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate({ ...group, icon: iconName }); setIsIconPopoverOpen(false); }} className="h-8 w-8 p-0"><GoogleSymbol name={iconName} className="text-4xl" weight={100} /></Button>))}</div></ScrollArea>
                         </PopoverContent>
                     </Popover>
                     <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
@@ -1017,7 +1017,7 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
                                             <TooltipTrigger asChild>
                                                 <PopoverTrigger asChild>
                                                     <Button variant="ghost" size="icon" className="h-12 w-12">
-                                                        <GoogleSymbol name={page.icon} className="text-12xl" weight={100} />
+                                                        <GoogleSymbol name={page.icon} className="text-6xl" weight={100} />
                                                     </Button>
                                                 </PopoverTrigger>
                                             </TooltipTrigger>
@@ -1044,7 +1044,7 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
                                                 </div>
                                             )}
                                         </div>
-                                      <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={page.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(page.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="h-4 w-4 p-0"><GoogleSymbol name={iconName} className="text-8xl" weight={100} /></Button>))}</div></ScrollArea>
+                                      <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={page.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(page.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="h-8 w-8 p-0"><GoogleSymbol name={iconName} className="text-4xl" weight={100} /></Button>))}</div></ScrollArea>
                                     </PopoverContent>
                                 </Popover>
                                 <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
@@ -1408,7 +1408,7 @@ export function TabItem({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string,
                             <TooltipTrigger asChild>
                                 <PopoverTrigger asChild>
                                     <Button variant="ghost" size="icon" style={{ color: tab.color }} className="h-12 w-12">
-                                        <GoogleSymbol name={tab.icon} className="text-12xl" weight={100} />
+                                        <GoogleSymbol name={tab.icon} className="text-6xl" weight={100} />
                                     </Button>
                                 </PopoverTrigger>
                             </TooltipTrigger>
@@ -1435,7 +1435,7 @@ export function TabItem({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string,
                                 </div>
                             )}
                         </div>
-                        <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={tab.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(tab.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="h-4 w-4 p-0"><GoogleSymbol name={iconName} className="text-8xl" weight={100} /></Button>))}</div></ScrollArea>
+                        <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={tab.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(tab.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="h-8 w-8 p-0"><GoogleSymbol name={iconName} className="text-4xl" weight={100} /></Button>))}</div></ScrollArea>
                     </PopoverContent>
                 </Popover>
                 <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
@@ -1617,4 +1617,5 @@ const AdminPageSkeleton = () => (
       </div>
     </div>
 );
+
 
