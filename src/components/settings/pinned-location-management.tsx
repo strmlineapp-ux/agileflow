@@ -139,10 +139,10 @@ export function PinnedLocationManagement({ team, tab }: { team: Team, tab: AppTa
                   defaultValue={tab.name}
                   onBlur={handleSaveTitle}
                   onKeyDown={handleTitleKeyDown}
-                  className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                  className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
               />
           ) : (
-              <h2 className="text-2xl font-semibold tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>
+              <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>
                   {tab.name}
               </h2>
           )}
@@ -155,8 +155,8 @@ export function PinnedLocationManagement({ team, tab }: { team: Team, tab: AppTa
               Pinned & Check Locations
                <Popover open={isAddPopoverOpen} onOpenChange={setIsAddPopoverOpen}>
                 <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" disabled={!canManage}>
-                    <GoogleSymbol name="add_circle" className="text-xl" />
+                  <Button variant="ghost" size="icon" className="p-0" disabled={!canManage}>
+                    <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
                     <span className="sr-only">Pin a location</span>
                   </Button>
                 </PopoverTrigger>
@@ -219,7 +219,7 @@ export function PinnedLocationManagement({ team, tab }: { team: Team, tab: AppTa
                       <Button 
                         variant="ghost" 
                         size="icon" 
-                        className={cn("h-5 w-5 rounded-full shrink-0", checkLocationNames.has(name) ? 'hover:bg-primary-foreground/20' : 'hover:bg-secondary-foreground/10' )}
+                        className={cn("p-0 shrink-0", checkLocationNames.has(name) ? 'hover:bg-primary-foreground/20' : 'hover:bg-secondary-foreground/10' )}
                         onClick={() => canManage && handleToggleCheckLocation(name)}
                       >
                         <GoogleSymbol name={checkLocationNames.has(name) ? 'check_circle' : 'circle'} className="text-sm" />
@@ -228,7 +228,7 @@ export function PinnedLocationManagement({ team, tab }: { team: Team, tab: AppTa
                       <Button 
                         variant="ghost" 
                         size="icon" 
-                        className={cn("h-5 w-5 rounded-full shrink-0", checkLocationNames.has(name) ? 'hover:bg-primary-foreground/20' : 'hover:bg-secondary-foreground/10' )}
+                        className={cn("p-0 shrink-0", checkLocationNames.has(name) ? 'hover:bg-primary-foreground/20' : 'hover:bg-secondary-foreground/10' )}
                         onClick={() => canManage && handleUnpinLocation(name)}
                       >
                         <GoogleSymbol name="cancel" className="text-sm" />

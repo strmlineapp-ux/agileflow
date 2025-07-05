@@ -6,12 +6,13 @@ import { useState, useRef, useEffect } from 'react';
 import { useUser } from '@/context/user-context';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { type Team, type AppTab } from '@/types';
 import { GoogleSymbol } from '../icons/google-symbol';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }) {
   const { updateTeam, updateAppTab } = useUser();
@@ -113,12 +114,19 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
                 defaultValue={tab.name}
                 onBlur={handleSaveTitle}
                 onKeyDown={handleTitleKeyDown}
-                className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
             />
         ) : (
-            <h2 className="text-2xl font-semibold tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>
-                {tab.name}
-            </h2>
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
+                    </TooltipTrigger>
+                    {tab.description && (
+                        <TooltipContent><p className="max-w-xs">{tab.description}</p></TooltipContent>
+                    )}
+                </Tooltip>
+            </TooltipProvider>
         )}
       </div>
       <Card>
@@ -127,8 +135,8 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
             <div>
               <CardTitle className="flex items-center gap-2">
                   Workstation List
-                   <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => setIsAddDialogOpen(true)}>
-                    <GoogleSymbol name="add_circle" className="text-xl" />
+                   <Button variant="ghost" size="icon" className="p-0" onClick={() => setIsAddDialogOpen(true)}>
+                    <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
                     <span className="sr-only">Add New Workstation</span>
                   </Button>
               </CardTitle>
@@ -141,7 +149,7 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
         <CardContent>
           <div className="flex flex-wrap gap-2 min-h-[40px] p-2 border rounded-md bg-muted/50">
             {teamWorkstations.length > 0 ? teamWorkstations.map(ws => (
-              <div key={ws} className="group relative flex items-center gap-2 rounded-full border-2 p-1 pl-2 bg-secondary text-secondary-foreground">
+              <div key={ws} className="group relative flex items-center gap-2 rounded-full border-2 p-1 pl-2 bg-muted text-muted-foreground">
                 {editingWorkstation === ws ? (
                     <Input
                         ref={workstationInputRef}
@@ -157,7 +165,7 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
                 )}
                  <button
                     type="button"
-                    className="ml-1 h-5 w-5 hover:bg-secondary-foreground/20 rounded-full inline-flex items-center justify-center opacity-50 group-hover:opacity-100 transition-opacity"
+                    className="ml-1 h-5 w-5 hover:bg-destructive/20 rounded-full inline-flex items-center justify-center opacity-50 group-hover:opacity-100 transition-opacity"
                     onClick={() => setWorkstationToDelete(ws)}
                   >
                     <GoogleSymbol name="close" className="text-xs" />
@@ -174,8 +182,8 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent>
            <div className="absolute top-4 right-4">
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSaveNew}>
-                  <GoogleSymbol name="check" className="text-xl" />
+              <Button variant="ghost" size="icon" className="p-0" onClick={handleSaveNew}>
+                  <GoogleSymbol name="check" className="text-4xl" weight={100} />
                   <span className="sr-only">Save</span>
               </Button>
           </div>
@@ -194,20 +202,22 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={!!workstationToDelete} onOpenChange={(isOpen) => !isOpen && setWorkstationToDelete(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the workstation "{workstationToDelete}".
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={handleDelete}>Continue</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <Dialog open={!!workstationToDelete} onOpenChange={(isOpen) => !isOpen && setWorkstationToDelete(null)}>
+        <DialogContent className="max-w-md">
+            <div className="absolute top-4 right-4">
+                <Button variant="ghost" size="icon" className="p-0 text-destructive hover:bg-destructive/10" onClick={handleDelete}>
+                    <GoogleSymbol name="delete" className="text-4xl" weight={100} />
+                    <span className="sr-only">Delete Workstation</span>
+                </Button>
+            </div>
+            <DialogHeader>
+                <DialogTitle>Delete Workstation?</DialogTitle>
+                <DialogDescription>
+                    This will permanently delete the workstation "{workstationToDelete}". This action cannot be undone.
+                </DialogDescription>
+            </DialogHeader>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

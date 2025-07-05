@@ -66,8 +66,8 @@ function EventTemplateForm({
   return (
     <>
       <div className="absolute top-4 right-4">
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSaveClick}>
-            <GoogleSymbol name="check" className="text-xl" />
+        <Button variant="ghost" size="icon" className="p-0" onClick={handleSaveClick}>
+            <GoogleSymbol name="check" className="text-4xl" weight={100} />
             <span className="sr-only">Save Template</span>
         </Button>
       </div>
@@ -82,8 +82,8 @@ function EventTemplateForm({
             <div className="flex items-center gap-2 border rounded-md px-2 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
                 <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                     <PopoverTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-                            <GoogleSymbol name={icon} />
+                        <Button variant="ghost" size="icon" className="p-0 shrink-0">
+                            <GoogleSymbol name={icon} className="text-4xl" />
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-80 p-0">
@@ -105,7 +105,7 @@ function EventTemplateForm({
                                             setIcon(iconName);
                                             setIsIconPopoverOpen(false);
                                         }}
-                                        className="text-2xl"
+                                        className="text-3xl"
                                     >
                                         <GoogleSymbol name={iconName} />
                                     </Button>
@@ -274,10 +274,10 @@ export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab
                 defaultValue={tab.name}
                 onBlur={handleSaveTitle}
                 onKeyDown={handleTitleKeyDown}
-                className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
             />
         ) : (
-            <h2 className="text-2xl font-semibold tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>
+            <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>
                 {tab.name}
             </h2>
         )}
@@ -288,8 +288,8 @@ export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab
                 <div>
                   <CardTitle className="flex items-center gap-2">
                       Event Templates
-                       <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={openAddDialog}>
-                        <GoogleSymbol name="add_circle" className="text-xl" />
+                       <Button variant="ghost" size="icon" className="p-0" onClick={openAddDialog}>
+                        <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
                         <span className="sr-only">New Template</span>
                       </Button>
                   </CardTitle>
@@ -331,22 +331,22 @@ export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab
                                 <Button
                                   variant="ghost" 
                                   size="icon" 
-                                  className="h-8 w-8 text-muted-foreground"
+                                  className="text-muted-foreground p-0"
                                   onClick={() => openEditDialog(template)}
                                 >
-                                    <GoogleSymbol name="edit" />
+                                    <GoogleSymbol name="edit" className="text-4xl" weight={100} />
                                     <span className="sr-only">Edit roles for {template.name}</span>
                                 </Button>
                                 <Button 
                                   variant="ghost" 
                                   size="icon" 
-                                  className="h-8 w-8 text-destructive hover:text-destructive"
+                                  className="text-destructive hover:text-destructive p-0"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setDeletingTemplate(template);
                                   }}
                                 >
-                                    <GoogleSymbol name="delete" />
+                                    <GoogleSymbol name="delete" className="text-4xl" weight={100} />
                                     <span className="sr-only">Delete {template.name}</span>
                                 </Button>
                             </div>
@@ -387,8 +387,8 @@ export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab
       <Dialog open={!!deletingTemplate} onOpenChange={(isOpen) => !isOpen && setDeletingTemplate(null)}>
         <DialogContent className="max-w-md">
             <div className="absolute top-4 right-4">
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={handleDeleteTemplate}>
-                    <GoogleSymbol name="delete" className="text-xl" />
+                <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10 p-0" onClick={handleDeleteTemplate}>
+                    <GoogleSymbol name="delete" className="text-4xl" weight={100} />
                     <span className="sr-only">Delete Template</span>
                 </Button>
             </div>

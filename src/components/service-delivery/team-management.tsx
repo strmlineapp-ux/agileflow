@@ -80,7 +80,7 @@ const AddMemberToTeamButton = ({ usersToAdd, onAdd, teamName }: { usersToAdd: Us
         <Tooltip>
           <TooltipTrigger asChild>
             <PopoverTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-full">
+              <Button variant="ghost" size="icon" className="rounded-full p-0">
                   <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
                   <span className="sr-only">Assign member to {teamName}</span>
               </Button>
@@ -162,7 +162,7 @@ const MemberCard = ({ user, index, onRemove, onSetAdmin, isTeamAdmin }: { user: 
                 <TooltipProvider>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onRemove(user.userId); }} className="text-muted-foreground hover:text-destructive">
+                            <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onRemove(user.userId); }} className="text-muted-foreground hover:text-destructive p-0">
                                 <GoogleSymbol name="cancel" className="text-4xl" weight={100} />
                             </Button>
                         </TooltipTrigger>
@@ -258,8 +258,8 @@ function TeamCard({
                          <div className="relative">
                             <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                                 <PopoverTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="text-3xl">
-                                        <GoogleSymbol name={team.icon} />
+                                    <Button variant="ghost" size="icon" className="p-0">
+                                        <GoogleSymbol name={team.icon} className="text-4xl" />
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-80 p-0">
@@ -282,7 +282,7 @@ function TeamCard({
                                             </div>
                                         )}
                                     </div>
-                                    <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={team.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(team.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
+                                    <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={team.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(team.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="text-3xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
                                 </PopoverContent>
                             </Popover>
                             <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
@@ -327,7 +327,7 @@ function TeamCard({
                                 <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:text-destructive" onClick={() => onDelete(team)}>
+                                    <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:text-destructive p-0" onClick={() => onDelete(team)}>
                                         <GoogleSymbol name="delete" className="text-4xl" weight={100}/>
                                         <span className="sr-only">Delete Team or Drop User to Remove</span>
                                     </Button>
@@ -525,7 +525,7 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
                 <TooltipProvider>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <h2 className="text-2xl font-thin tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{title}</h2>
+                            <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{title}</h2>
                         </TooltipTrigger>
                         {tab.description && (
                             <TooltipContent><p className="max-w-xs">{tab.description}</p></TooltipContent>
@@ -546,7 +546,7 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
                          <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="rounded-full" onClick={handleAddTeam}>
+                                    <Button variant="ghost" size="icon" className="rounded-full p-0" onClick={handleAddTeam}>
                                         <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
                                         <span className="sr-only">New Team or Drop to Duplicate</span>
                                     </Button>
@@ -592,8 +592,8 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
       <Dialog open={!!teamToDelete} onOpenChange={() => setTeamToDelete(null)}>
         <DialogContent className="max-w-md">
             <div className="absolute top-4 right-4">
-                <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={handleDelete}>
-                    <GoogleSymbol name="delete" className="text-xl" />
+                <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10 p-0" onClick={handleDelete}>
+                    <GoogleSymbol name="delete" className="text-4xl" weight={100} />
                     <span className="sr-only">Delete Team</span>
                 </Button>
             </div>

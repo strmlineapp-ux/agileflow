@@ -115,8 +115,8 @@ function CalendarCard({ calendar, onUpdate, onDelete }: { calendar: SharedCalend
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <PopoverTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="text-2xl">
-                                        <GoogleSymbol name={calendar.icon} />
+                                    <Button variant="ghost" size="icon" className="p-0">
+                                        <GoogleSymbol name={calendar.icon} className="text-4xl" />
                                     </Button>
                                 </PopoverTrigger>
                             </TooltipTrigger>
@@ -143,7 +143,7 @@ function CalendarCard({ calendar, onUpdate, onDelete }: { calendar: SharedCalend
                             </div>
                             )}
                         </div>
-                        <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={calendar.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(calendar.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
+                        <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={calendar.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(calendar.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="text-3xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
                     </PopoverContent>
                 </Popover>
                 <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
@@ -177,7 +177,7 @@ function CalendarCard({ calendar, onUpdate, onDelete }: { calendar: SharedCalend
           <TooltipProvider>
             <Tooltip>
                 <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive" onClick={() => onDelete(calendar)}>
+                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive p-0" onClick={() => onDelete(calendar)}>
                         <GoogleSymbol name="delete" className="text-4xl" weight={100} />
                         <span className="sr-only">Delete Calendar</span>
                     </Button>
@@ -313,7 +313,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
               <TooltipProvider>
                   <Tooltip>
                       <TooltipTrigger asChild>
-                          <h3 className="text-2xl font-thin tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{title}</h3>
+                          <h3 className="font-headline text-2xl font-thin tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{title}</h3>
                       </TooltipTrigger>
                       {tab.description && (
                           <TooltipContent><p className="max-w-xs">{tab.description}</p></TooltipContent>
@@ -334,7 +334,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="rounded-full" onClick={handleAddCalendar}>
+                                    <Button variant="ghost" size="icon" className="rounded-full p-0" onClick={handleAddCalendar}>
                                         <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
                                         <span className="sr-only">New Calendar or Drop to Duplicate</span>
                                     </Button>
@@ -381,8 +381,8 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="max-w-md">
           <div className="absolute top-4 right-4">
-              <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={handleDelete}>
-                  <GoogleSymbol name="delete" className="text-xl" />
+              <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10 p-0" onClick={handleDelete}>
+                  <GoogleSymbol name="delete" className="text-4xl" weight={100} />
                   <span className="sr-only">Delete Calendar</span>
               </Button>
           </div>
