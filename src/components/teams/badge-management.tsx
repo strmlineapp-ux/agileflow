@@ -349,11 +349,11 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                     onMouseDown={(e) => e.stopPropagation()}
                                     onChange={(e) => setCurrentName(e.target.value)}
                                     onKeyDown={handleNameKeyDown}
-                                    className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
+                                    className="h-auto p-0 font-headline text-base font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
                                 />
                             ) : (
                                 tooltipWrapper(!isEditable, "Properties are managed by the owner team.", (
-                                    <CardTitle onClick={() => isEditable && setIsEditingName(true)} className={cn("text-2xl break-words", isEditable && "cursor-pointer")}>{badge.name}</CardTitle>
+                                    <CardTitle onClick={() => isEditable && setIsEditingName(true)} className={cn("text-base break-words", isEditable && "cursor-pointer")}>{badge.name}</CardTitle>
                                 ))
                             )}
                         </div>
@@ -726,7 +726,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                 "min-h-[60px] rounded-md border-2 border-dashed border-transparent p-2",
                                 collection.viewMode === 'assorted' && "flex flex-wrap gap-2 items-start",
                                 collection.viewMode === 'list' && "flex flex-col gap-1",
-                                collection.viewMode === 'detailed' && "grid grid-cols-1 lg:grid-cols-2 gap-4"
+                                collection.viewMode === 'detailed' && "grid grid-cols-1 md:grid-cols-2 gap-4"
                             )}>
                             {collectionBadges.map((badge, index) => (
                                 <Draggable key={`${badge.id}::${collection.id}`} draggableId={`${badge.id}::${collection.id}`} index={index} isDragDisabled={isSharedPreview}>
