@@ -91,7 +91,7 @@ This is the consistent reference pattern for allowing a user to change both an i
 ### 7. Entity Sharing & Linking
 This pattern describes how a single entity (like a Badge or BadgeCollection) can exist in multiple contexts while maintaining a single source of truth.
 
-- **Mechanism**: Sharing is controlled at the `BadgeCollection` level. An owner of a collection can click a "Share" icon (`change_circle`) to toggle its `isShared` status. This action makes the original collection and its badges visible in a "Shared Collections" side panel for all other teams. From this panel, other teams can:
+- **Mechanism**: Sharing is controlled at the `BadgeCollection` level. An owner of a collection can click a "Share" icon (`share`) in the card's menu or drag the collection card onto the "Shared Collections" side panel to make it globally available. This action makes the original collection and its badges visible in the shared panel for all other teams. From this panel, other teams can:
     - **Link the entire collection**: Dragging the collection's card from the panel to their main board adds a *link* to that collection to their team. This does not create a copy; it's a pointer to the original shared collection.
     - **Link individual badges**: Dragging a single badge from a shared collection (either in the panel or from a linked collection on their board) and dropping it into one of their *owned* collections creates a link to that specific badge.
 - **Visual Cues**:
