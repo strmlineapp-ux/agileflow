@@ -609,7 +609,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                 onClick={onDelete}
                 aria-label={`Delete ${badge.name}`}
             >
-                <GoogleSymbol name="delete" className="text-xs" />
+                <GoogleSymbol name="close" className="text-xs" />
             </button>
         </div>
     );
@@ -701,7 +701,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                     color={collection.color} 
                                     onUpdateIcon={(icon) => onUpdateCollection(collection.id, { icon })}
                                     disabled={!isOwned}
-                                    buttonClassName="h-9 w-9"
+                                    buttonClassName="h-12 w-12"
                                     iconClassName="text-4xl"
                                 />
                                 <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
