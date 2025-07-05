@@ -559,7 +559,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                         disabled={!isEditable}
                     />
                     <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                        <PopoverTrigger asChild>
+                        <PopoverTrigger asChild disabled={!isEditable}>
                             <button
                                 className={cn(
                                     "absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card",
@@ -567,7 +567,6 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                 )}
                                 style={{ backgroundColor: badge.color }}
                                 aria-label="Change badge color"
-                                disabled={!isEditable}
                             />
                         </PopoverTrigger>
                         {colorPickerContent}
@@ -593,7 +592,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
             
             <button
                 type="button"
-                className="absolute top-0 left-0 h-4 w-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute top-0 right-0 h-4 w-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                 onClick={onDelete}
                 aria-label={`Delete ${badge.name}`}
             >
