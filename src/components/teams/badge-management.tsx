@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -14,7 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { ScrollArea } from '../ui/scroll-area';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { cn } from '@/lib/utils';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '../ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '../ui/dropdown-menu';
 import { Textarea } from '../ui/textarea';
 import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProps } from 'react-beautiful-dnd';
 import { Separator } from '../ui/separator';
@@ -107,10 +106,10 @@ function CompactSearchIconPicker({
              <Button
                 variant="ghost"
                 size="icon"
-                className="text-muted-foreground p-0"
+                className="text-muted-foreground"
                 onClick={() => setIsSearching(true)}
               >
-                <GoogleSymbol name="search" className="text-4xl" weight={100} />
+                <GoogleSymbol name="search" />
               </Button>
            ) : (
             <div className="flex items-center gap-1 w-full">
@@ -141,7 +140,7 @@ function CompactSearchIconPicker({
                                 }}
                                 className="p-0"
                             >
-                                <GoogleSymbol name={iconName} className="text-6xl" />
+                                <GoogleSymbol name={iconName} className="text-6xl" weight={100} />
                             </Button>
                         </TooltipTrigger>
                         <TooltipContent>
@@ -353,10 +352,10 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <div 
-                                                className="absolute -top-1.5 -right-1.5 h-6 w-6 rounded-full border-2 border-card flex items-center justify-center text-white"
+                                                className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full border-2 border-card flex items-center justify-center text-white"
                                                 style={{ backgroundColor: shareIconColor }}
                                             >
-                                                <GoogleSymbol name={shareIcon} style={{fontSize: '16px'}}/>
+                                                <GoogleSymbol name={shareIcon} style={{fontSize: '14px'}}/>
                                             </div>
                                         </TooltipTrigger>
                                         <TooltipContent><p>{shareIconTitle}</p></TooltipContent>
@@ -372,7 +371,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                     onMouseDown={(e) => e.stopPropagation()}
                                     onChange={(e) => setCurrentName(e.target.value)}
                                     onKeyDown={handleNameKeyDown}
-                                    className="h-auto p-0 font-headline text-base font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
+                                    className="h-auto p-0 text-base border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
                                 />
                             ) : (
                                 <TooltipProvider>
@@ -386,8 +385,8 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                             )}
                         </div>
                     </div>
-                     <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onDelete(); }} className="text-muted-foreground hover:text-destructive absolute top-2 right-2 p-0">
-                        <GoogleSymbol name="delete" className="text-4xl" weight={100} />
+                     <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onDelete(); }} className="text-muted-foreground hover:text-destructive absolute top-2 right-2">
+                        <GoogleSymbol name="delete" />
                     </Button>
                 </div>
             </CardHeader>
@@ -429,7 +428,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
         onChange={(e) => setCurrentName(e.target.value)}
         onKeyDown={handleNameKeyDown}
         className={cn(
-          "h-auto p-0 font-headline font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words",
+          "h-auto p-0 border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words",
           "text-sm"
         )}
       />
@@ -481,7 +480,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                             <TooltipTrigger asChild>
                                 <PopoverTrigger asChild disabled={!isEditable}>
                                     <button
-                                        className={cn("absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-card", isEditable && "cursor-pointer")}
+                                        className={cn("absolute -bottom-0.5 -right-0.5 h-5 w-5 rounded-full border-2 border-card", isEditable && "cursor-pointer")}
                                         style={{ backgroundColor: badge.color }}
                                         aria-label="Change badge color"
                                     />
@@ -497,10 +496,10 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <div
-                                    className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-card text-white flex items-center justify-center"
+                                    className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full border-2 border-card text-white flex items-center justify-center"
                                     style={{ backgroundColor: shareIconColor }}
                                 >
-                                    <GoogleSymbol name={shareIcon} className="text-[10px]" />
+                                    <GoogleSymbol name={shareIcon} style={{fontSize: '14px'}} />
                                 </div>
                             </TooltipTrigger>
                             <TooltipContent><p>{shareIconTitle}</p></TooltipContent>
@@ -533,8 +532,8 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                     </TooltipProvider>
                  )}
             </div>
-            <Button variant="ghost" size="icon" onClick={onDelete} className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity p-0">
-                <GoogleSymbol name="delete" className="text-4xl" weight={100} />
+            <Button variant="ghost" size="icon" onClick={onDelete} className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity">
+                <GoogleSymbol name="delete" />
             </Button>
         </div>
       );
@@ -561,7 +560,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                 <TooltipTrigger asChild>
                                     <PopoverTrigger asChild disabled={!isEditable}>
                                         <button
-                                            className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card", isEditable && "cursor-pointer")}
+                                            className={cn("absolute -bottom-1 -right-1 h-5 w-5 rounded-full border-2 border-card", isEditable && "cursor-pointer")}
                                             style={{ backgroundColor: badge.color }}
                                             aria-label="Change badge color"
                                         />
@@ -577,10 +576,10 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <div
-                                        className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-card flex items-center justify-center text-white"
+                                        className="absolute -top-1 -right-1 h-5 w-5 rounded-full border-2 border-card flex items-center justify-center text-white"
                                         style={{ backgroundColor: shareIconColor }}
                                     >
-                                        <GoogleSymbol name={shareIcon} className="text-[10px]" />
+                                        <GoogleSymbol name={shareIcon} style={{fontSize: '14px'}} />
                                     </div>
                                 </TooltipTrigger>
                                 <TooltipContent><p>{shareIconTitle}</p></TooltipContent>
@@ -707,10 +706,10 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                         <Tooltip>
                                             <TooltipTrigger asChild>
                                                 <div 
-                                                    className="absolute -top-1.5 -right-1.5 h-4 w-4 rounded-full border-2 border-card flex items-center justify-center text-white"
+                                                    className="absolute -top-1.5 -right-1.5 h-8 w-8 rounded-full border-2 border-card flex items-center justify-center text-white"
                                                     style={{ backgroundColor: shareIconColor }}
                                                 >
-                                                    <GoogleSymbol name={shareIcon} className="text-[10px]" />
+                                                    <GoogleSymbol name={shareIcon} className="text-xl"/>
                                                 </div>
                                             </TooltipTrigger>
                                             <TooltipContent><p>{shareIconTitle}</p></TooltipContent>
@@ -739,7 +738,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                                     <TooltipProvider>
                                                         <Tooltip>
                                                             <TooltipTrigger asChild>
-                                                                <Button variant="ghost" size="icon" className="p-0 rounded-full" onClick={() => onAddBadge(collection.id)}><GoogleSymbol name="add_circle" className="text-4xl" weight={100} /><span className="sr-only">Add Badge</span></Button>
+                                                                <Button variant="ghost" size="icon" onClick={() => onAddBadge(collection.id)}><GoogleSymbol name="add_circle" /><span className="sr-only">Add Badge</span></Button>
                                                             </TooltipTrigger>
                                                             <TooltipContent><p>{snapshot.isDraggingOver ? 'Drop to Duplicate' : 'Add New Badge'}</p></TooltipContent>
                                                         </Tooltip>
@@ -753,7 +752,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                         </div>
                         <div className="flex items-center">
                             <DropdownMenu>
-                                <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="p-0"><GoogleSymbol name="more_vert" className="text-4xl" weight={100} /></Button></DropdownMenuTrigger>
+                                <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><GoogleSymbol name="more_vert" /></Button></DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                     <DropdownMenuItem onClick={() => onUpdateCollection(collection.id, { viewMode: 'assorted' })}><GoogleSymbol name="view_module" className="mr-2 text-lg" />Assorted View</DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => onUpdateCollection(collection.id, { viewMode: 'detailed' })}><GoogleSymbol name="view_comfy_alt" className="mr-2 text-lg" />Detailed View</DropdownMenuItem>
@@ -1248,8 +1247,8 @@ export const BadgeManagement = ({ team, tab }: { team: Team, tab: AppTab }) => {
                                     <TooltipProvider>
                                         <Tooltip>
                                             <TooltipTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="p-0 rounded-full" onClick={handleAddCollection}>
-                                                    <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
+                                                <Button variant="ghost" size="icon" onClick={handleAddCollection}>
+                                                    <GoogleSymbol name="add_circle" />
                                                     <span className="sr-only">Add New Collection or Drop to Duplicate</span>
                                                 </Button>
                                             </TooltipTrigger>
@@ -1262,8 +1261,8 @@ export const BadgeManagement = ({ team, tab }: { team: Team, tab: AppTab }) => {
                         </div>
                         <div className="flex items-center gap-1">
                             {!isSearching ? (
-                                <Button variant="ghost" size="icon" onClick={() => setIsSearching(true)} className="text-muted-foreground p-0">
-                                    <GoogleSymbol name="search" className="text-4xl" weight={100} />
+                                <Button variant="ghost" size="icon" onClick={() => setIsSearching(true)} className="text-muted-foreground">
+                                    <GoogleSymbol name="search" />
                                 </Button>
                             ) : (
                                 <div className="flex items-center gap-1">
@@ -1281,8 +1280,8 @@ export const BadgeManagement = ({ team, tab }: { team: Team, tab: AppTab }) => {
                              <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="p-0" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)}>
-                                            <GoogleSymbol name="dynamic_feed" className="text-4xl" weight={100} />
+                                        <Button variant="ghost" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)}>
+                                            <GoogleSymbol name="dynamic_feed" />
                                         </Button>
                                     </TooltipTrigger>
                                     <TooltipContent><p>Show Shared Collections</p></TooltipContent>
@@ -1352,12 +1351,12 @@ export const BadgeManagement = ({ team, tab }: { team: Team, tab: AppTab }) => {
                                         <div className="flex items-center justify-between">
                                             <CardTitle>Shared Collections</CardTitle>
                                             {!isSharedSearching ? (
-                                                <Button variant="ghost" size="icon" className="text-muted-foreground p-0" onClick={() => setIsSharedSearching(true)}>
-                                                    <GoogleSymbol name="search" className="text-4xl" weight={100} />
+                                                <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={() => setIsSharedSearching(true)}>
+                                                    <GoogleSymbol name="search" />
                                                 </Button>
                                             ) : (
                                                 <div className="flex items-center gap-1">
-                                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                                                <GoogleSymbol name="search" className="text-muted-foreground" />
                                                 <input
                                                     ref={sharedSearchInputRef}
                                                     placeholder="Search..."
@@ -1415,8 +1414,8 @@ export const BadgeManagement = ({ team, tab }: { team: Team, tab: AppTab }) => {
                 <Dialog open={!!collectionToDelete} onOpenChange={(isOpen) => !isOpen && setCollectionToDelete(null)}>
                     <DialogContent className="max-w-md">
                         <div className="absolute top-4 right-4">
-                            <Button variant="ghost" size="icon" className="p-0 text-destructive hover:bg-destructive/10" onClick={confirmDeleteCollection}>
-                                <GoogleSymbol name="delete" className="text-4xl" weight={100} />
+                            <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={confirmDeleteCollection}>
+                                <GoogleSymbol name="delete" />
                                 <span className="sr-only">Delete Collection</span>
                             </Button>
                         </div>
@@ -1431,8 +1430,8 @@ export const BadgeManagement = ({ team, tab }: { team: Team, tab: AppTab }) => {
                 <Dialog open={!!badgeToDelete} onOpenChange={(isOpen) => !isOpen && setBadgeToDelete(null)}>
                     <DialogContent>
                         <div className="absolute top-4 right-4">
-                            <Button variant="ghost" size="icon" className="p-0 text-destructive hover:bg-destructive/10" onClick={() => { if (badgeToDelete) confirmPermanentDelete(badgeToDelete.badgeId); }}>
-                                <GoogleSymbol name="delete" className="text-4xl" weight={100} />
+                            <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={() => { if (badgeToDelete) confirmPermanentDelete(badgeToDelete.badgeId); }}>
+                                <GoogleSymbol name="delete" />
                                 <span className="sr-only">Delete Badge Permanently</span>
                             </Button>
                         </div>
@@ -1448,3 +1447,5 @@ export const BadgeManagement = ({ team, tab }: { team: Team, tab: AppTab }) => {
         </DragDropContext>
     );
 }
+
+    
