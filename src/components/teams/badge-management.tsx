@@ -544,22 +544,56 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     
     // Assorted View
     return (
-        <div className="group relative">
-             <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                <PopoverTrigger asChild disabled={!isEditable}>
-                    <UiBadge
-                        variant={'outline'}
-                        style={{ color: badge.color, borderColor: badge.color }}
-                        className="gap-1.5 p-1 pl-3 pr-2 rounded-full text-sm border-2"
-                    >
-                        {badge.name}
-                    </UiBadge>
+        <div className="group relative p-1.5">
+            <UiBadge
+                variant={'outline'}
+                style={{ color: badge.color, borderColor: badge.color }}
+                className="flex items-center gap-1 p-1 pl-2 pr-2 rounded-full text-sm border-2 h-8"
+            >
+                <CompactSearchIconPicker
+                    icon={badge.icon}
+                    onUpdateIcon={(icon) => onUpdateBadge({ icon })}
+                    buttonClassName="h-6 w-6"
+                    iconClassName="text-base"
+                    disabled={!isEditable}
+                />
+                {inlineNameEditor}
+            </UiBadge>
+            
+            <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                <PopoverTrigger asChild>
+                    <button
+                        className={cn(
+                            "absolute bottom-0 right-0 h-5 w-5 rounded-full border-2 border-card",
+                            !isEditable ? "cursor-not-allowed" : "cursor-pointer"
+                        )}
+                        style={{ backgroundColor: badge.color }}
+                        aria-label="Change badge color"
+                        disabled={!isEditable}
+                    />
                 </PopoverTrigger>
                 {colorPickerContent}
             </Popover>
+
+            {shareIcon && (
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <div
+                                className="absolute top-0 right-0 h-5 w-5 rounded-full border-2 border-card flex items-center justify-center text-white"
+                                style={{ backgroundColor: shareIconColor }}
+                            >
+                                <GoogleSymbol name={shareIcon} style={{ fontSize: '14px' }} />
+                            </div>
+                        </TooltipTrigger>
+                        <TooltipContent><p>{shareIconTitle}</p></TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+            )}
+            
             <button
                 type="button"
-                className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute top-0 left-0 h-4 w-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                 onClick={onDelete}
                 aria-label={`Delete ${badge.name}`}
             >
@@ -655,8 +689,8 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                     color={collection.color} 
                                     onUpdateIcon={(icon) => onUpdateCollection(collection.id, { icon })}
                                     disabled={!isOwned}
-                                    buttonClassName="h-12 w-12"
-                                    iconClassName="text-4xl"
+                                    buttonClassName="h-16 w-16"
+                                    iconClassName="text-6xl"
                                 />
                                 <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
                                     <PopoverTrigger asChild disabled={!isOwned}><div className={cn("absolute -bottom-1 -right-0 h-4 w-4 rounded-full border-2 border-card", !isOwned ? "cursor-not-allowed" : "cursor-pointer")} style={{ backgroundColor: collection.color }} /></PopoverTrigger>
@@ -693,7 +727,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                         <CardTitle onClick={() => isOwned && setIsEditingName(true)} className={cn("text-2xl break-words", isOwned && "cursor-pointer")}>{collection.name}</CardTitle>
                                     )}
                                     {isOwned && !isSharedPreview && (
-                                        <StrictModeDroppable droppableId={`duplicate-badge-zone:${collection.id}`} type="badge" isDropDisabled={!isOwned}>
+                                        <StrictModeDroppable droppableId={`duplicate-badge-zone:${collection.id}`} type="badge">
                                             {(provided, snapshot) => (
                                                 <div
                                                     ref={provided.innerRef}
