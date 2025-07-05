@@ -74,7 +74,7 @@ export default function ServiceDeliveryPage() {
         <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
           <PopoverTrigger asChild>
             <Button variant="ghost" size="icon" className="shrink-0">
-              <GoogleSymbol name={pageConfig.icon} className="text-6xl" />
+              <GoogleSymbol name={pageConfig.icon} className="text-8xl" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-80 p-0">
@@ -86,7 +86,7 @@ export default function ServiceDeliveryPage() {
                     </div>
                 )}
             </div>
-            <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={pageConfig.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { updatePage({ icon: iconName }); setIsIconPopoverOpen(false);}} className="text-2xl"><GoogleSymbol name={iconName} /></Button>))}</div></ScrollArea>
+            <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={pageConfig.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { updatePage({ icon: iconName }); setIsIconPopoverOpen(false);}} className="h-4 w-4"><GoogleSymbol name={iconName} className="text-4xl" /></Button>))}</div></ScrollArea>
           </PopoverContent>
         </Popover>
         {isEditingTitle ? (
