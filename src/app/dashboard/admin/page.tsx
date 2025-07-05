@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -154,7 +155,7 @@ const AddUserToGroupButton = ({ usersToAdd, onAdd, groupName }: { usersToAdd: Us
         <Tooltip>
           <TooltipTrigger asChild>
             <PopoverTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
+              <Button variant="ghost" size="icon">
                   <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
                   <span className="sr-only">Assign user to {groupName}</span>
               </Button>
@@ -166,7 +167,7 @@ const AddUserToGroupButton = ({ usersToAdd, onAdd, groupName }: { usersToAdd: Us
       <PopoverContent className="p-0 w-80">
         <div className="flex items-center gap-1 p-2 border-b">
           {!isSearching ? (
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => setIsSearching(true)}>
+            <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={() => setIsSearching(true)}>
               <GoogleSymbol name="search" />
             </Button>
           ) : (
@@ -302,7 +303,7 @@ function AdminGroupCard({
 
     return (
         <>
-        <Card className="h-full flex flex-col">
+        <Card className="flex flex-col h-full">
             <CardHeader>
               <div className="flex items-center gap-2">
                 <div className="relative">
@@ -323,7 +324,7 @@ function AdminGroupCard({
                         <PopoverContent className="w-80 p-0">
                             <div className="flex items-center gap-1 p-2 border-b">
                                 {!isSearchingIcons ? (
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => setIsSearchingIcons(true)}>
+                                    <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={() => setIsSearchingIcons(true)}>
                                         <GoogleSymbol name="search" />
                                     </Button>
                                 ) : (
@@ -387,7 +388,7 @@ function AdminGroupCard({
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setIsDeleteDialogOpen(true)}><GoogleSymbol name="delete" className="text-4xl" weight={100} /></Button>
+                                            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive" onClick={() => setIsDeleteDialogOpen(true)}><GoogleSymbol name="delete" className="text-4xl" weight={100} /></Button>
                                         </TooltipTrigger>
                                         <TooltipContent><p>{snapshot.isDraggingOver ? `Drop to remove user` : 'Delete Group'}</p></TooltipContent>
                                     </Tooltip>
@@ -427,7 +428,7 @@ function AdminGroupCard({
           <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
             <DialogContent className="max-w-md">
                 <div className="absolute top-4 right-4">
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={onDelete}>
+                    <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={onDelete}>
                         <GoogleSymbol name="delete" className="text-4xl" weight={100} />
                         <span className="sr-only">Delete Group</span>
                     </Button>
@@ -672,7 +673,7 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                             <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={handleAddAdminGroup}>
+                                        <Button variant="ghost" size="icon" className="rounded-full" onClick={handleAddAdminGroup}>
                                             <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
                                             <span className="sr-only">Add New Group or Drop to Duplicate</span>
                                         </Button>
@@ -691,7 +692,7 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
               {(provided) => (
                   <div ref={provided.innerRef} {...provided.droppableProps} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                       <div className="w-full">
-                        <Card className="h-full flex flex-col">
+                        <Card className="flex flex-col h-full">
                             <CardHeader>
                               <div className="flex items-center gap-2">
                                 <CardTitle>Admins</CardTitle>
@@ -744,7 +745,7 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleVerify2fa}>
+                                    <Button variant="ghost" size="icon" onClick={handleVerify2fa}>
                                         <GoogleSymbol name="check" className="text-xl" />
                                         <span className="sr-only">Verify Code</span>
                                     </Button>
@@ -827,7 +828,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
     const renderSearchControl = () => (
          <div className="p-2 border-b">
             {!isSearching ? (
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => setIsSearching(true)}>
+                <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={() => setIsSearching(true)}>
                     <GoogleSymbol name="search" />
                 </Button>
             ) : (
@@ -852,7 +853,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <PopoverTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-7 w-7"><GoogleSymbol name="group_add" className="text-4xl" weight={100} /></Button>
+                            <Button variant="ghost" size="icon"><GoogleSymbol name="group_add" className="text-4xl" weight={100} /></Button>
                         </PopoverTrigger>
                     </TooltipTrigger>
                     <TooltipContent><p>Manage Page Access</p></TooltipContent>
@@ -927,7 +928,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
             <Tooltip>
                 <TooltipTrigger asChild>
                     <PopoverTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-7 w-7"><GoogleSymbol name="layers" className="text-4xl" weight={100} /></Button>
+                        <Button variant="ghost" size="icon"><GoogleSymbol name="layers" className="text-4xl" weight={100} /></Button>
                     </PopoverTrigger>
                 </TooltipTrigger>
                 <TooltipContent><p>Manage Associated Tabs</p></TooltipContent>
@@ -1026,7 +1027,7 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
                                     <PopoverContent className="w-80 p-0">
                                         <div className="flex items-center gap-1 p-2 border-b">
                                             {!isSearchingIcons ? (
-                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => setIsSearchingIcons(true)}>
+                                                <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={() => setIsSearchingIcons(true)}>
                                                     <GoogleSymbol name="search" />
                                                 </Button>
                                             ) : (
@@ -1089,7 +1090,7 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
                             <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => setIsDeleteDialogOpen(true)} disabled={isPinned}>
+                                        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive" onClick={() => setIsDeleteDialogOpen(true)} disabled={isPinned}>
                                             <GoogleSymbol name="delete" className="text-4xl" weight={100} />
                                         </Button>
                                     </TooltipTrigger>
@@ -1106,7 +1107,7 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
             <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                 <DialogContent className="max-w-md">
                     <div className="absolute top-4 right-4">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => onDelete(page.id)}>
+                        <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={() => onDelete(page.id)}>
                             <GoogleSymbol name="delete" className="text-4xl" weight={100} />
                             <span className="sr-only">Delete Page</span>
                         </Button>
@@ -1271,7 +1272,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                                     <TooltipProvider>
                                         <Tooltip>
                                             <TooltipTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={handleAddPage}>
+                                                <Button variant="ghost" size="icon" className="rounded-full" onClick={handleAddPage}>
                                                     <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
                                                     <span className="sr-only">Add New Page</span>
                                                 </Button>
@@ -1406,7 +1407,7 @@ export function TabItem({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string,
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <PopoverTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-xl" style={{ color: tab.color }}>
+                                    <Button variant="ghost" size="icon" className="text-xl" style={{ color: tab.color }}>
                                         <GoogleSymbol name={tab.icon} />
                                     </Button>
                                 </PopoverTrigger>
@@ -1417,7 +1418,7 @@ export function TabItem({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string,
                      <PopoverContent className="w-80 p-0">
                         <div className="flex items-center gap-1 p-2 border-b">
                             {!isSearchingIcons ? (
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => setIsSearchingIcons(true)}>
+                                <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={() => setIsSearchingIcons(true)}>
                                     <GoogleSymbol name="search" />
                                 </Button>
                             ) : (

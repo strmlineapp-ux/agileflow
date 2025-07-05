@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -125,7 +126,7 @@ function CalendarCard({ calendar, onUpdate, onDelete }: { calendar: SharedCalend
                     <PopoverContent className="w-80 p-0">
                         <div className="flex items-center gap-1 p-2 border-b">
                             {!isSearching ? (
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => setIsSearching(true)}>
+                            <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={() => setIsSearching(true)}>
                                 <GoogleSymbol name="search" />
                             </Button>
                             ) : (
@@ -320,7 +321,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                   </Tooltip>
               </TooltipProvider>
             )}
-            <StrictModeDroppable droppableId="duplicate-calendar-zone">
+            <StrictModeDroppable droppableId="duplicate-calendar-zone" isDropDisabled={false}>
                 {(provided, snapshot) => (
                     <div
                         ref={provided.innerRef}
@@ -333,7 +334,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={handleAddCalendar}>
+                                    <Button variant="ghost" size="icon" className="rounded-full" onClick={handleAddCalendar}>
                                         <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
                                         <span className="sr-only">New Calendar or Drop to Duplicate</span>
                                     </Button>
@@ -347,7 +348,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                 )}
             </StrictModeDroppable>
         </div>
-        <StrictModeDroppable droppableId="calendars-list">
+        <StrictModeDroppable droppableId="calendars-list" isDropDisabled={false}>
             {(provided) => (
                 <div
                     className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
@@ -380,7 +381,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="max-w-md">
           <div className="absolute top-4 right-4">
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={handleDelete}>
+              <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={handleDelete}>
                   <GoogleSymbol name="delete" className="text-xl" />
                   <span className="sr-only">Delete Calendar</span>
               </Button>
