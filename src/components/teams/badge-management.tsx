@@ -337,7 +337,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild disabled={!isEditable}>
                                                 <button
-                                                    className={cn("absolute -bottom-1 -right-0 h-5 w-5 rounded-full border-2 border-card", isEditable && "cursor-pointer")}
+                                                    className={cn("absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border border-card", isEditable && "cursor-pointer")}
                                                     style={{ backgroundColor: badge.color }}
                                                     aria-label="Change badge color"
                                                 />
@@ -481,7 +481,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                             <TooltipTrigger asChild>
                                 <PopoverTrigger asChild disabled={!isEditable}>
                                     <button
-                                        className={cn("absolute -bottom-0.5 -right-0.5 h-5 w-5 rounded-full border-2 border-card", isEditable && "cursor-pointer")}
+                                        className={cn("absolute -bottom-0 -right-0 h-3 w-3 rounded-full border border-card", isEditable && "cursor-pointer")}
                                         style={{ backgroundColor: badge.color }}
                                         aria-label="Change badge color"
                                     />
@@ -561,7 +561,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                 <TooltipTrigger asChild>
                                     <PopoverTrigger asChild disabled={!isEditable}>
                                         <button
-                                            className={cn("absolute -bottom-1 -right-1 h-5 w-5 rounded-full border-2 border-card", isEditable && "cursor-pointer")}
+                                            className={cn("absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border border-card", isEditable && "cursor-pointer")}
                                             style={{ backgroundColor: badge.color }}
                                             aria-label="Change badge color"
                                         />
@@ -692,7 +692,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                     iconClassName="text-6xl"
                                 />
                                 <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                                    <PopoverTrigger asChild disabled={!isOwned}><div className={cn("absolute -bottom-1 -right-0 h-4 w-4 rounded-full border-2 border-card", !isOwned ? "cursor-not-allowed" : "cursor-pointer")} style={{ backgroundColor: collection.color }} /></PopoverTrigger>
+                                    <PopoverTrigger asChild disabled={!isOwned}><div className={cn("absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border border-card", !isOwned ? "cursor-not-allowed" : "cursor-pointer")} style={{ backgroundColor: collection.color }} /></PopoverTrigger>
                                     <PopoverContent className="w-auto p-2">
                                         <div className="grid grid-cols-8 gap-1">
                                             {predefinedColors.map(color => (
@@ -1448,3 +1448,5 @@ export const BadgeManagement = ({ team, tab }: { team: Team, tab: AppTab }) => {
         </DragDropContext>
     );
 }
+
+    

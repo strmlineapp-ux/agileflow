@@ -287,7 +287,7 @@ function TeamCard({
                             </Popover>
                             <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
                                 <PopoverTrigger asChild>
-                                    <div className="absolute -bottom-1 -right-0 h-4 w-4 rounded-full border-2 border-card cursor-pointer" style={{ backgroundColor: team.color }} />
+                                    <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border border-card cursor-pointer" style={{ backgroundColor: team.color }} />
                                 </PopoverTrigger>
                                 <PopoverContent className="w-auto p-2">
                                     <div className="grid grid-cols-8 gap-1">
@@ -608,5 +608,7 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
     </DragDropContext>
   );
 }
+
+    
 
     

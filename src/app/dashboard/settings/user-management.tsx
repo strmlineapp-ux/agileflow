@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, Fragment, useRef, useEffect } from 'react';
@@ -12,11 +13,11 @@ import { useUser } from '@/context/user-context';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { GoogleSymbol } from '@/components/icons/google-symbol';
-import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { GoogleSymbol } from '../icons/google-symbol';
+import { Badge } from '../ui/badge';
+import { Label } from '../ui/label';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 
 const predefinedColors = [
     '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
@@ -353,3 +354,5 @@ export function UserManagement() {
         </>
     )
 }
+
+    
