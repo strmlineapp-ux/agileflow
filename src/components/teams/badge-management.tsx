@@ -726,7 +726,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                 "min-h-[60px] rounded-md border-2 border-dashed border-transparent p-2",
                                 collection.viewMode === 'assorted' && "flex flex-wrap gap-2 items-start",
                                 collection.viewMode === 'list' && "flex flex-col gap-1",
-                                collection.viewMode === 'detailed' && "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+                                collection.viewMode === 'detailed' && "grid grid-cols-1 sm:grid-cols-2 gap-4"
                             )}>
                             {collectionBadges.map((badge, index) => (
                                 <Draggable key={`${badge.id}::${collection.id}`} draggableId={`${badge.id}::${collection.id}`} index={index} isDragDisabled={isSharedPreview}>
