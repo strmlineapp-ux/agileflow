@@ -548,48 +548,48 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
             <UiBadge
                 variant={'outline'}
                 style={{ color: badge.color, borderColor: badge.color }}
-                className="flex items-center gap-1 p-1 pl-2 pr-2 rounded-full text-sm border-2 h-8"
+                className="flex items-center gap-1.5 p-1 pl-2 pr-2 rounded-full text-sm border-2 h-8"
             >
-                <CompactSearchIconPicker
-                    icon={badge.icon}
-                    onUpdateIcon={(icon) => onUpdateBadge({ icon })}
-                    buttonClassName="h-6 w-6"
-                    iconClassName="text-base"
-                    disabled={!isEditable}
-                />
-                {inlineNameEditor}
-            </UiBadge>
-            
-            <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                <PopoverTrigger asChild>
-                    <button
-                        className={cn(
-                            "absolute bottom-0 right-0 h-5 w-5 rounded-full border-2 border-card",
-                            !isEditable ? "cursor-not-allowed" : "cursor-pointer"
-                        )}
-                        style={{ backgroundColor: badge.color }}
-                        aria-label="Change badge color"
+                <div className="relative">
+                    <CompactSearchIconPicker
+                        icon={badge.icon}
+                        onUpdateIcon={(icon) => onUpdateBadge({ icon })}
+                        buttonClassName="h-6 w-6"
+                        iconClassName="text-base"
                         disabled={!isEditable}
                     />
-                </PopoverTrigger>
-                {colorPickerContent}
-            </Popover>
-
-            {shareIcon && (
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <div
-                                className="absolute top-0 right-0 h-5 w-5 rounded-full border-2 border-card flex items-center justify-center text-white"
-                                style={{ backgroundColor: shareIconColor }}
-                            >
-                                <GoogleSymbol name={shareIcon} style={{ fontSize: '14px' }} />
-                            </div>
-                        </TooltipTrigger>
-                        <TooltipContent><p>{shareIconTitle}</p></TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
-            )}
+                    <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                        <PopoverTrigger asChild>
+                            <button
+                                className={cn(
+                                    "absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card",
+                                    !isEditable ? "cursor-not-allowed" : "cursor-pointer"
+                                )}
+                                style={{ backgroundColor: badge.color }}
+                                aria-label="Change badge color"
+                                disabled={!isEditable}
+                            />
+                        </PopoverTrigger>
+                        {colorPickerContent}
+                    </Popover>
+                    {shareIcon && (
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <div
+                                        className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-card flex items-center justify-center text-white"
+                                        style={{ backgroundColor: shareIconColor }}
+                                    >
+                                        <GoogleSymbol name={shareIcon} style={{ fontSize: '12px' }} />
+                                    </div>
+                                </TooltipTrigger>
+                                <TooltipContent><p>{shareIconTitle}</p></TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    )}
+                </div>
+                {inlineNameEditor}
+            </UiBadge>
             
             <button
                 type="button"
