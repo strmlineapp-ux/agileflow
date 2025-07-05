@@ -492,9 +492,9 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     
     // Assorted View
     return (
-        <div className="group relative inline-flex items-center gap-1 rounded-full border-2 py-0 px-1.5" style={{ borderColor: badge.color, color: badge.color }}>
+        <div className="group relative inline-flex items-center gap-1 rounded-full border-2 py-0 px-1" style={{ borderColor: badge.color, color: badge.color }}>
             <div className="relative flex items-center justify-center">
-                <GoogleSymbol name={badge.icon} style={{color: badge.color}} className="text-[10px]" />
+                <GoogleSymbol name={badge.icon} style={{color: badge.color}} className="text-[9px]" />
                 {shareIcon && (
                     <TooltipProvider>
                         <Tooltip>
@@ -511,9 +511,9 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                     </TooltipProvider>
                 )}
             </div>
-            {inlineNameEditor}
-            <button type="button" onClick={onDelete} className="ml-0.5 h-3.5 w-3.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full inline-flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" aria-label={`Delete ${badge.name}`}>
-                <GoogleSymbol name="close" className="text-[9px]" />
+            <span className="text-[10px] font-medium leading-tight">{badge.name}</span>
+            <button type="button" onClick={onDelete} className="ml-0.5 h-3 w-3 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full inline-flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" aria-label={`Delete ${badge.name}`}>
+                <GoogleSymbol name="close" className="text-[8px]" />
             </button>
         </div>
     );
@@ -576,14 +576,6 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
         { key: 'tasks', icon: 'checklist', label: 'Tasks' },
         { key: 'badges', icon: 'style', label: 'Badges' },
     ];
-
-    const handleToggleApplication = (application: BadgeApplication) => {
-        const currentApplications = collection.applications || [];
-        const newApplications = currentApplications.includes(application)
-            ? currentApplications.filter(app => app !== application)
-            : [...currentApplications, application];
-        onUpdateCollection(collection.id, { applications: newApplications });
-    };
 
     const isOwned = collection.ownerTeamId === teamId;
     const isShared = collection.isShared;
@@ -669,7 +661,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                     </div>
                     <div className="flex items-center justify-between pt-2">
                         <div className="flex items-center gap-1">
-                            {isOwned && (
+                            {isOwned && !isSharedPreview && (
                                 <StrictModeDroppable droppableId={`duplicate-badge-zone:${collection.id}`} type="badge" isDropDisabled={!isOwned}>
                                     {(provided, snapshot) => (
                                         <div
@@ -677,7 +669,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                             {...provided.droppableProps}
                                             className={cn(
                                                 "rounded-full p-0.5",
-                                                snapshot.isDraggingOver && "ring-1 ring-border ring-inset"
+                                                snapshot.isDraggingOver && "ring-1 ring-primary bg-accent"
                                             )}
                                         >
                                             <TooltipProvider>
@@ -704,14 +696,14 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                                     size="icon"
                                                     className={cn("h-7 w-7", (collection.applications || []).includes(app.key) ? 'text-primary' : 'text-muted-foreground')}
                                                     onClick={() => onUpdateCollection(collection.id, { applications: (collection.applications || []).includes(app.key) ? (collection.applications || []).filter(a => a !== app.key) : [...(collection.applications || []), app.key] })}
-                                                    disabled={!isOwned}
+                                                    disabled={isSharedPreview}
                                                 >
                                                     <GoogleSymbol name={app.icon} className="text-xl" />
                                                 </Button>
                                             </span>
                                         </TooltipTrigger>
                                         <TooltipContent>
-                                            <p>{isOwned ? `Associate with ${app.label}` : 'Managed by owner team'}</p>
+                                            <p>Associate with {app.label}</p>
                                         </TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
@@ -722,7 +714,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                 </CardHeader>
             </div>
             <CardContent className="flex-grow">
-                <StrictModeDroppable droppableId={collection.id} type="badge">
+                <StrictModeDroppable droppableId={collection.id} type="badge" isDropDisabled={isSharedPreview}>
                     {(provided) => (
                          <div
                             ref={provided.innerRef}
@@ -734,7 +726,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                 collection.viewMode === 'detailed' && "grid grid-cols-1 md:grid-cols-2 gap-4"
                             )}>
                             {collectionBadges.map((badge, index) => (
-                                <Draggable key={`${badge.id}::${collection.id}`} draggableId={`${badge.id}::${collection.id}`} index={index}>
+                                <Draggable key={`${badge.id}::${collection.id}`} draggableId={`${badge.id}::${collection.id}`} index={index} isDragDisabled={isSharedPreview}>
                                     {(provided, snapshot) => (<div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} className={cn(snapshot.isDragging && "opacity-80")}>
                                         <BadgeDisplayItem 
                                             badge={badge} 
@@ -909,7 +901,7 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
         return teams
             .filter(t => t.id !== team.id)
             .flatMap(t => t.badgeCollections || [])
-            .filter(c => c.isShared && c.ownerTeamId !== team.id && !linkedCollectionIds.has(c.id))
+            .filter(c => c.isShared && !linkedCollectionIds.has(c.id))
             .filter(c => c.name.toLowerCase().includes(sharedSearchTerm.toLowerCase()));
     }, [teams, team.id, linkedCollectionIds, sharedSearchTerm]);
     
@@ -987,6 +979,7 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
     
         if (!destination) return;
 
+        // --- Dragging from ANYWHERE to the SHARED PANEL ---
         if (type === 'collection' && destination.droppableId === 'shared-collections-panel') {
             const collectionToShare = team.badgeCollections.find(c => c.id === draggableId);
             if (collectionToShare && !collectionToShare.isShared) {
@@ -994,7 +987,7 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
             }
             return;
         }
-        
+
         // --- Dragging from SHARED PANEL to MAIN BOARD ---
         if (type === 'collection' && source.droppableId === 'shared-collections-panel' && destination.droppableId === 'collections-list') {
             const collectionToLink = sharedCollectionsFromOthers.find(c => c.id === draggableId);
@@ -1013,62 +1006,64 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
             return;
         }
 
+        // --- DUPLICATING a collection ---
+        if (type === 'collection' && destination.droppableId === 'duplicate-collection-zone') {
+             const sourceCollection = [...(team.badgeCollections || []), ...sharedCollectionsFromOthers].find(c => c.id === draggableId);
+             if (sourceCollection) {
+                 const newId = crypto.randomUUID();
+                 const newBadges = sourceCollection.badgeIds.map(bId => {
+                     const originalBadge = allBadgesAvailableToTeam.find(b => b.id === bId);
+                     return { 
+                         ...(originalBadge || {}), 
+                         id: crypto.randomUUID(), 
+                         ownerCollectionId: newId 
+                     };
+                 });
+                 
+                 const newCollection: BadgeCollection = {
+                     ...JSON.parse(JSON.stringify(sourceCollection)),
+                     id: newId,
+                     name: `${sourceCollection.name} (Copy)`,
+                     ownerTeamId: team.id,
+                     isShared: false,
+                     badgeIds: newBadges.map(b => b.id),
+                 };
+
+                 updateTeam(team.id, { 
+                     badgeCollections: [...team.badgeCollections, newCollection],
+                     allBadges: [...team.allBadges, ...newBadges],
+                 });
+                 toast({ title: 'Collection Copied', description: 'An independent copy was created.' });
+             }
+             return;
+        }
+
         const badgeId = draggableId.split('::')[0];
         const sourceCollectionId = source.droppableId;
         
-        // --- DUPLICATING a badge or collection ---
-        if (destination.droppableId.startsWith('duplicate-')) {
-            if (destination.droppableId.startsWith('duplicate-badge-zone:')) {
-                const collectionId = destination.droppableId.split(':')[1];
-                const sourceBadge = allBadgesAvailableToTeam.find(b => b.id === badgeId);
-      
-                if (sourceBadge && collectionId) {
-                    const newBadge = {
-                        ...JSON.parse(JSON.stringify(sourceBadge)),
-                        id: crypto.randomUUID(),
-                        name: `${sourceBadge.name} (Copy)`,
-                        ownerCollectionId: collectionId,
-                    };
-                    
-                    const newAllBadges = [...team.allBadges, newBadge];
-                    const newCollections = team.badgeCollections.map(c => {
-                        if (c.id === collectionId) {
-                            return { ...c, badgeIds: [newBadge.id, ...c.badgeIds] };
-                        }
-                        return c;
-                    });
-                    
-                    updateTeam(team.id, { allBadges: newAllBadges, badgeCollections: newCollections });
-                    toast({ title: 'Badge Duplicated' });
-                }
-            } else if (destination.droppableId === 'duplicate-collection-zone') {
-                 const sourceCollection = [...(team.badgeCollections || []), ...sharedCollectionsFromOthers].find(c => c.id === draggableId);
-                 if (sourceCollection) {
-                     const newId = crypto.randomUUID();
-                     const newBadges = sourceCollection.badgeIds.map(bId => {
-                         const originalBadge = allBadgesAvailableToTeam.find(b => b.id === bId);
-                         return { 
-                             ...(originalBadge || {}), 
-                             id: crypto.randomUUID(), 
-                             ownerCollectionId: newId 
-                         };
-                     });
-                     
-                     const newCollection: BadgeCollection = {
-                         ...JSON.parse(JSON.stringify(sourceCollection)),
-                         id: newId,
-                         name: `${sourceCollection.name} (Copy)`,
-                         ownerTeamId: team.id,
-                         isShared: false,
-                         badgeIds: newBadges.map(b => b.id),
-                     };
-
-                     updateTeam(team.id, { 
-                         badgeCollections: [...team.badgeCollections, newCollection],
-                         allBadges: [...team.allBadges, ...newBadges],
-                     });
-                     toast({ title: 'Collection Copied', description: 'An independent copy was created.' });
-                 }
+        // --- DUPLICATING a badge ---
+        if (destination.droppableId.startsWith('duplicate-badge-zone:')) {
+            const collectionId = destination.droppableId.split(':')[1];
+            const sourceBadge = allBadgesAvailableToTeam.find(b => b.id === badgeId);
+  
+            if (sourceBadge && collectionId) {
+                const newBadge = {
+                    ...JSON.parse(JSON.stringify(sourceBadge)),
+                    id: crypto.randomUUID(),
+                    name: `${sourceBadge.name} (Copy)`,
+                    ownerCollectionId: collectionId,
+                };
+                
+                const newAllBadges = [...team.allBadges, newBadge];
+                const newCollections = team.badgeCollections.map(c => {
+                    if (c.id === collectionId) {
+                        return { ...c, badgeIds: [newBadge.id, ...c.badgeIds] };
+                    }
+                    return c;
+                });
+                
+                updateTeam(team.id, { allBadges: newAllBadges, badgeCollections: newCollections });
+                toast({ title: 'Badge Duplicated' });
             }
             return;
         }
@@ -1176,7 +1171,7 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
                                     {...provided.droppableProps}
                                     className={cn(
                                         "rounded-full p-0.5",
-                                        snapshot.isDraggingOver && "ring-1 ring-border ring-inset"
+                                        snapshot.isDraggingOver && "ring-1 ring-primary bg-accent"
                                     )}
                                 >
                                     <TooltipProvider>
@@ -1194,7 +1189,7 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
                             )}
                             </StrictModeDroppable>
                         </div>
-                        <div className="flex items-center gap-1">
+                        <div className={cn("flex items-center gap-1 transition-all duration-300", isSharedPanelOpen && "mr-[34px]")}>
                             {!isSearching ? (
                                 <Button variant="ghost" size="icon" onClick={() => setIsSearching(true)} className="h-8 w-8 text-muted-foreground">
                                     <GoogleSymbol name="search" />
@@ -1280,7 +1275,7 @@ export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
                                 <div 
                                     ref={provided.innerRef} 
                                     {...provided.droppableProps} 
-                                    className={cn("h-full rounded-lg", snapshot.isDraggingOver && "bg-accent/50 ring-2 ring-border ring-inset")}
+                                    className={cn("h-full rounded-lg transition-all", snapshot.isDraggingOver && "bg-accent/50 ring-2 ring-border ring-inset")}
                                 >
                                     <Card className={cn("transition-opacity duration-300 h-full", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
                                         <CardHeader>

@@ -134,6 +134,7 @@ export const mockAppSettings: AppSettings = {
   tabs: mockTabs,
   calendarManagementLabel: 'Manage Calendars',
   teamManagementLabel: 'Team Management',
+  strategyLabel: 'Strategy Management',
 };
 
 export const mockUsers: User[] = [
@@ -406,7 +407,7 @@ export const mockTeams: Team[] = [
             ],
             isShared: false,
         }],
-        userBadgesLabel: 'Assigned Skills',
+        userBadgesLabel: 'Badges',
         pinnedLocations: ['Auditorium', 'ACR', 'Event Space 1 (S2)', 'Event Space 2 (S2)', 'Event Space 3 (R7)', 'Event Space 4 (R7)', 'Training Room', 'Apgar', 'Locke'],
         checkLocations: ['Training Room', 'Apgar', 'Locke'],
         locationAliases: {},
