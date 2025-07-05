@@ -97,7 +97,7 @@ This pattern describes how a single entity (like a Badge or BadgeCollection) can
     2.  Drag the owned collection card and drop it onto the "Shared Collections" side panel.
 - **Linking**: Once shared, a collection appears in the side panel for all other teams. From this panel, other teams can:
     - **Link the entire collection**: Dragging the collection's card from the panel to their main board adds a *link* to that collection to their team. This is a pointer, not a copy.
-    - **Link individual badges**: Dragging a single badge from a shared collection (either in the panel or from a linked collection on their board) and dropping it into one of their *owned* collections creates a link to that specific badge.
+    - **Link individual badges**: Dragging a single badge from a shared collection (either in the panel or on their board) and dropping it into one of their *owned* collections creates a link to that specific badge.
 - **Visual Cues**:
   - **Owned & Shared Externally (`upload`)**: An item created by the current team that has been explicitly shared with other teams is marked with an `upload` icon overlay. This indicates it is the "source of truth." **The color of this icon badge matches the owner team's color.**
   - **Internally Linked (`change_circle`)**: An item that is used in multiple places within the *same* team (e.g., a badge appearing in two collections) is marked with a `change_circle` icon overlay on its linked instances. The original instance does not get this icon unless it is also shared externally. **The color of this icon badge matches the owner team's color.**

@@ -636,37 +636,39 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                 )}
                             </div>
                             <div className="flex-1 min-w-0">
-                                {isEditingName ? (
-                                    <Input ref={nameInputRef} defaultValue={collection.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"/>
-                                ) : (
-                                    <CardTitle onClick={() => isOwned && setIsEditingName(true)} className={cn("text-2xl break-words", isOwned && "cursor-pointer")}>{collection.name}</CardTitle>
-                                )}
+                                <div className="flex items-center gap-2">
+                                    {isEditingName ? (
+                                        <Input ref={nameInputRef} defaultValue={collection.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"/>
+                                    ) : (
+                                        <CardTitle onClick={() => isOwned && setIsEditingName(true)} className={cn("text-2xl break-words", isOwned && "cursor-pointer")}>{collection.name}</CardTitle>
+                                    )}
+                                    {isOwned && !isSharedPreview && (
+                                        <StrictModeDroppable droppableId={`duplicate-badge-zone:${collection.id}`} type="badge" isDropDisabled={!isOwned}>
+                                            {(provided, snapshot) => (
+                                                <div
+                                                    ref={provided.innerRef}
+                                                    {...provided.droppableProps}
+                                                    className={cn(
+                                                        "rounded-full p-0.5",
+                                                        snapshot.isDraggingOver && "ring-1 ring-border ring-inset"
+                                                    )}
+                                                >
+                                                    <TooltipProvider>
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => onAddBadge(collection.id)}><GoogleSymbol name="add_circle" className="text-xl" /><span className="sr-only">Add Badge</span></Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent><p>{snapshot.isDraggingOver ? 'Drop to Duplicate' : 'Add New Badge'}</p></TooltipContent>
+                                                        </Tooltip>
+                                                    </TooltipProvider>
+                                                </div>
+                                            )}
+                                        </StrictModeDroppable>
+                                    )}
+                                </div>
                             </div>
                         </div>
                         <div className="flex items-center">
-                            {isOwned && !isSharedPreview && (
-                                <StrictModeDroppable droppableId={`duplicate-badge-zone:${collection.id}`} type="badge" isDropDisabled={!isOwned}>
-                                    {(provided, snapshot) => (
-                                        <div
-                                            ref={provided.innerRef}
-                                            {...provided.droppableProps}
-                                            className={cn(
-                                                "rounded-full p-0.5",
-                                                snapshot.isDraggingOver && "ring-1 ring-border ring-inset"
-                                            )}
-                                        >
-                                            <TooltipProvider>
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => onAddBadge(collection.id)}><GoogleSymbol name="add_circle" className="text-xl" /><span className="sr-only">Add Badge</span></Button>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent><p>{snapshot.isDraggingOver ? 'Drop to Duplicate' : 'Add New Badge'}</p></TooltipContent>
-                                                </Tooltip>
-                                            </TooltipProvider>
-                                        </div>
-                                    )}
-                                </StrictModeDroppable>
-                            )}
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 -mr-2"><GoogleSymbol name="more_vert" className="text-xl" /></Button></DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
@@ -684,7 +686,35 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                             </DropdownMenu>
                         </div>
                     </div>
-                    {collection.description && <CardDescription className="pt-2">{collection.description}</CardDescription>}
+                    <div className="pt-2">
+                        {!isSharedPreview && (
+                            <div className="flex items-center gap-1 mb-2">
+                                {APPLICATIONS.map(app => (
+                                    <TooltipProvider key={app.key}>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <span>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className={cn("h-7 w-7", (collection.applications || []).includes(app.key) ? 'text-primary' : 'text-muted-foreground')}
+                                                        onClick={() => onUpdateCollection(collection.id, { applications: (collection.applications || []).includes(app.key) ? (collection.applications || []).filter(a => a !== app.key) : [...(collection.applications || []), app.key] })}
+                                                        disabled={isSharedPreview}
+                                                    >
+                                                        <GoogleSymbol name={app.icon} className="text-xl" />
+                                                    </Button>
+                                                </span>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>Associate with {app.label}</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                ))}
+                            </div>
+                        )}
+                        {collection.description && <CardDescription>{collection.description}</CardDescription>}
+                    </div>
                 </CardHeader>
             </div>
             <CardContent className="flex-grow">
@@ -719,39 +749,11 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                     )}
                 </StrictModeDroppable>
             </CardContent>
-             <CardFooter>
-                 {!isSharedPreview && (
-                    <div className="flex items-center gap-1">
-                        {APPLICATIONS.map(app => (
-                            <TooltipProvider key={app.key}>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <span>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className={cn("h-7 w-7", (collection.applications || []).includes(app.key) ? 'text-primary' : 'text-muted-foreground')}
-                                                onClick={() => onUpdateCollection(collection.id, { applications: (collection.applications || []).includes(app.key) ? (collection.applications || []).filter(a => a !== app.key) : [...(collection.applications || []), app.key] })}
-                                                disabled={isSharedPreview}
-                                            >
-                                                <GoogleSymbol name={app.icon} className="text-xl" />
-                                            </Button>
-                                        </span>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p>Associate with {app.label}</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                        ))}
-                    </div>
-                )}
-            </CardFooter>
         </Card>
     );
 }
 
-export function BadgeManagement({ team, tab }: { team: Team, tab: AppTab }) {
+export const BadgeManagement = ({ team, tab }: { team: Team, tab: AppTab }) => {
     const { teams, updateTeam, updateAppTab } = useUser();
     const { toast } = useToast();
     
