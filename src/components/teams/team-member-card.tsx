@@ -142,7 +142,7 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
     <>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-lg font-medium">{member.displayName}</CardTitle>
+          <CardTitle className="text-lg font-headline font-thin">{member.displayName}</CardTitle>
           <Avatar className="h-12 w-12">
             <AvatarImage src={member.avatarUrl} alt={member.displayName} data-ai-hint="user avatar" />
             <AvatarFallback>{member.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
@@ -160,7 +160,7 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
                           if (e.key === 'Enter') handleSaveLabel();
                           else if (e.key === 'Escape') setIsEditingLabel(false);
                         }}
-                        className="h-auto p-0 text-sm font-medium border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                        className="h-auto p-0 text-sm font-medium font-headline font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
                     />
                 ) : (
                     <span

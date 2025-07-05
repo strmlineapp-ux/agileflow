@@ -259,7 +259,7 @@ function TeamCard({
                             <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                                 <PopoverTrigger asChild>
                                     <Button variant="ghost" size="icon" className="p-0">
-                                        <GoogleSymbol name={team.icon} className="text-4xl" />
+                                        <GoogleSymbol name={team.icon} className="text-4xl" weight={100} />
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-80 p-0">
@@ -304,10 +304,10 @@ function TeamCard({
                                     defaultValue={team.name}
                                     onBlur={handleSaveName}
                                     onKeyDown={handleNameKeyDown}
-                                    className="h-auto p-0 text-xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                                    className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
                                 />
                             ) : (
-                                <CardTitle className="text-xl cursor-pointer truncate" onClick={() => setIsEditingName(true)}>
+                                <CardTitle className="text-xl font-headline font-thin cursor-pointer truncate" onClick={() => setIsEditingName(true)}>
                                     {team.name}
                                 </CardTitle>
                             )}

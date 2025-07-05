@@ -139,7 +139,7 @@ function CompactSearchIconPicker({
                                 onUpdateIcon(iconName);
                                 setIsPopoverOpen(false);
                                 }}
-                                className="text-2xl"
+                                className="text-3xl"
                             >
                                 <GoogleSymbol name={iconName} />
                             </Button>
@@ -372,7 +372,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                     onMouseDown={(e) => e.stopPropagation()}
                                     onChange={(e) => setCurrentName(e.target.value)}
                                     onKeyDown={handleNameKeyDown}
-                                    className="h-auto p-0 font-headline text-base font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
+                                    className="h-auto p-0 font-headline text-base font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
                                 />
                             ) : (
                                 <TooltipProvider>
@@ -429,7 +429,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
         onChange={(e) => setCurrentName(e.target.value)}
         onKeyDown={handleNameKeyDown}
         className={cn(
-          "h-auto p-0 font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words",
+          "h-auto p-0 font-headline font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words",
           "text-sm"
         )}
       />
@@ -707,10 +707,10 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                         <Tooltip>
                                             <TooltipTrigger asChild>
                                                 <div 
-                                                    className="absolute -top-1 -right-1.5 h-8 w-8 rounded-full border-2 border-card flex items-center justify-center text-white"
+                                                    className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-card flex items-center justify-center text-white"
                                                     style={{ backgroundColor: shareIconColor }}
                                                 >
-                                                    <GoogleSymbol name={shareIcon} className="text-xl"/>
+                                                    <GoogleSymbol name={shareIcon} className="text-sm"/>
                                                 </div>
                                             </TooltipTrigger>
                                             <TooltipContent><p>{shareIconTitle}</p></TooltipContent>
@@ -723,7 +723,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                     {isEditingName ? (
                                         <Input ref={nameInputRef} defaultValue={collection.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"/>
                                     ) : (
-                                        <CardTitle onClick={() => isOwned && setIsEditingName(true)} className={cn("text-2xl font-thin break-words", isOwned && "cursor-pointer")}>{collection.name}</CardTitle>
+                                        <CardTitle onClick={() => isOwned && setIsEditingName(true)} className={cn("text-2xl font-headline font-thin break-words", isOwned && "cursor-pointer")}>{collection.name}</CardTitle>
                                     )}
                                     {isOwned && !isSharedPreview && (
                                         <StrictModeDroppable droppableId={`duplicate-badge-zone:${collection.id}`} type="badge" isDropDisabled={isSharedPreview}>
@@ -1225,7 +1225,7 @@ export const BadgeManagement = ({ team, tab }: { team: Team, tab: AppTab }) => {
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <h2 className="text-2xl font-thin tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
+                                            <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
                                         </TooltipTrigger>
                                         {tab.description && (
                                         <TooltipContent>

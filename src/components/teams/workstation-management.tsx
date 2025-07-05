@@ -113,13 +113,13 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
                 defaultValue={tab.name}
                 onBlur={handleSaveTitle}
                 onKeyDown={handleTitleKeyDown}
-                className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
             />
         ) : (
             <TooltipProvider>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <h2 className="text-2xl font-semibold tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
+                        <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
                     </TooltipTrigger>
                     {tab.description && (
                         <TooltipContent><p className="max-w-xs">{tab.description}</p></TooltipContent>
@@ -134,8 +134,8 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
             <div>
               <CardTitle className="flex items-center gap-2">
                   Workstation List
-                   <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => setIsAddDialogOpen(true)}>
-                    <GoogleSymbol name="add_circle" className="text-xl" />
+                   <Button variant="ghost" size="icon" className="p-0" onClick={() => setIsAddDialogOpen(true)}>
+                    <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
                     <span className="sr-only">Add New Workstation</span>
                   </Button>
               </CardTitle>
@@ -155,7 +155,7 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
                         defaultValue={ws}
                         onBlur={handleSaveEdit}
                         onKeyDown={handleEditKeyDown}
-                        className="h-5 p-0 bg-transparent text-sm border-0 shadow-none focus-visible:ring-0"
+                        className="h-5 p-0 bg-transparent text-sm font-headline font-thin border-0 shadow-none focus-visible:ring-0"
                     />
                 ) : (
                     <span className="font-medium text-sm cursor-text" onClick={() => setEditingWorkstation(ws)}>
@@ -181,8 +181,8 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent>
            <div className="absolute top-4 right-4">
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSaveNew}>
-                  <GoogleSymbol name="check" className="text-xl" />
+              <Button variant="ghost" size="icon" className="p-0" onClick={handleSaveNew}>
+                  <GoogleSymbol name="check" className="text-4xl" weight={100} />
                   <span className="sr-only">Save</span>
               </Button>
           </div>
@@ -204,8 +204,8 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
       <Dialog open={!!workstationToDelete} onOpenChange={(isOpen) => !isOpen && setWorkstationToDelete(null)}>
         <DialogContent className="max-w-md">
             <div className="absolute top-4 right-4">
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={handleDelete}>
-                    <GoogleSymbol name="delete" className="text-xl" />
+                <Button variant="ghost" size="icon" className="p-0 text-destructive hover:bg-destructive/10" onClick={handleDelete}>
+                    <GoogleSymbol name="delete" className="text-4xl" weight={100} />
                     <span className="sr-only">Delete Workstation</span>
                 </Button>
             </div>

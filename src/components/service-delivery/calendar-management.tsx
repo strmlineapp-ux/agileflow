@@ -116,7 +116,7 @@ function CalendarCard({ calendar, onUpdate, onDelete }: { calendar: SharedCalend
                             <TooltipTrigger asChild>
                                 <PopoverTrigger asChild>
                                     <Button variant="ghost" size="icon" className="p-0">
-                                        <GoogleSymbol name={calendar.icon} className="text-4xl" />
+                                        <GoogleSymbol name={calendar.icon} className="text-4xl" weight={100} />
                                     </Button>
                                 </PopoverTrigger>
                             </TooltipTrigger>
@@ -166,10 +166,10 @@ function CalendarCard({ calendar, onUpdate, onDelete }: { calendar: SharedCalend
                 defaultValue={calendar.name}
                 onBlur={handleSaveName}
                 onKeyDown={handleNameKeyDown}
-                className="h-auto p-0 text-xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
               />
             ) : (
-              <CardTitle className="text-xl cursor-pointer" onClick={() => setIsEditingName(true)}>
+              <CardTitle className="text-xl font-headline font-thin cursor-pointer" onClick={() => setIsEditingName(true)}>
                 {calendar.name}
               </CardTitle>
             )}
@@ -195,7 +195,7 @@ function CalendarCard({ calendar, onUpdate, onDelete }: { calendar: SharedCalend
               defaultValue={calendar.defaultEventTitle}
               onBlur={handleSaveTitle}
               onKeyDown={handleTitleKeyDown}
-              className="h-auto p-0 text-sm italic border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+              className="h-auto p-0 text-sm italic font-body border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
               placeholder="Click to set default title"
             />
           ) : (

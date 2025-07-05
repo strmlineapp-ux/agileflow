@@ -83,7 +83,7 @@ function EventTemplateForm({
                 <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                     <PopoverTrigger asChild>
                         <Button variant="ghost" size="icon" className="p-0 shrink-0">
-                            <GoogleSymbol name={icon} className="text-4xl" />
+                            <GoogleSymbol name={icon} className="text-4xl" weight={100} />
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-80 p-0">
@@ -277,9 +277,18 @@ export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab
                 className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
             />
         ) : (
-            <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>
-                {tab.name}
-            </h2>
+             <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>
+                            {tab.name}
+                        </h2>
+                    </TooltipTrigger>
+                    {tab.description && (
+                        <TooltipContent><p className="max-w-xs">{tab.description}</p></TooltipContent>
+                    )}
+                </Tooltip>
+            </TooltipProvider>
         )}
       </div>
       <Card>
@@ -318,7 +327,7 @@ export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab
                                                 if (e.key === 'Enter') handleSaveTemplateName(template.id);
                                                 else if (e.key === 'Escape') setEditingTemplateNameId(null);
                                             }}
-                                            className="h-auto p-0 bg-transparent text-base font-semibold border-0 rounded-none shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 text-primary-foreground"
+                                            className="h-auto p-0 bg-transparent text-base font-headline font-thin border-0 rounded-none shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 text-primary-foreground"
                                         />
                                     ) : (
                                         <span className="cursor-text" onClick={(e) => { e.stopPropagation(); setEditingTemplateNameId(template.id); }}>
