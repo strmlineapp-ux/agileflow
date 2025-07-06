@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -8,9 +9,100 @@ import { Input } from '@/components/ui/input';
 import { type Team, type AppTab } from '@/types';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { format, addHours, startOfDay } from 'date-fns';
+
+const TimelineHourHeader = () => {
+  const hours = Array.from({ length: 24 }, (_, i) => i);
+  const timeFormat = 'HH:mm'; // Fixed 24h for simplicity in this new component
+  return (
+    <div className="flex sticky top-0 bg-card z-10 border-b">
+      <div className="w-40 shrink-0 border-r p-2 font-medium">Item</div>
+      {hours.map(hour => (
+        <div key={hour} className="shrink-0 text-left p-2 border-r w-24">
+          <span className="text-xs text-muted-foreground">
+            {format(addHours(startOfDay(new Date()), hour), timeFormat)}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const TimelineRow = ({ name }: { name: string }) => {
+  return (
+    <div className="flex border-b">
+      <div className="w-40 shrink-0 border-r p-2 flex items-center">
+        {name}
+      </div>
+      <div className="flex-1 relative h-10">
+        {/* Placeholder for timeline items */}
+      </div>
+    </div>
+  )
+}
+
+function EditableTimelineView({ timeline, onNameChange, onDelete }: {
+  timeline: { id: string, name: string };
+  onNameChange: (id: string, newName: string) => void;
+  onDelete: (id: string) => void;
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isEditing) {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    }
+  }, [isEditing]);
+
+  const handleSave = () => {
+    const newName = inputRef.current?.value.trim();
+    if (newName && newName !== timeline.name) {
+      onNameChange(timeline.id, newName);
+    }
+    setIsEditing(false);
+  };
+  
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          {isEditing ? (
+            <Input
+              ref={inputRef}
+              defaultValue={timeline.name}
+              onBlur={handleSave}
+              onKeyDown={(e) => {
+                if(e.key === 'Enter') handleSave();
+                if(e.key === 'Escape') setIsEditing(false);
+              }}
+              className="h-auto p-0 text-xl font-headline font-thin border-0 shadow-none bg-transparent"
+            />
+          ) : (
+            <CardTitle className="font-headline font-thin text-xl cursor-pointer" onClick={() => setIsEditing(true)}>{timeline.name}</CardTitle>
+          )}
+          <Button variant="ghost" size="icon" className="text-destructive" onClick={() => onDelete(timeline.id)}>
+            <GoogleSymbol name="delete" />
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="p-0">
+        <div className="overflow-x-auto">
+          <div className="min-w-[2440px]">
+            <TimelineHourHeader />
+            <TimelineRow name="Row 1" />
+            <TimelineRow name="Row 2" />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
 
 export function TimelineManagement({ team, tab }: { team: Team, tab: AppTab }) {
   const { updateAppTab } = useUser();
+  const [timelines, setTimelines] = useState<{id: string, name: string}[]>([]);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
 
@@ -30,6 +122,18 @@ export function TimelineManagement({ team, tab }: { team: Team, tab: AppTab }) {
     if (e.key === 'Enter') handleSaveTitle();
     else if (e.key === 'Escape') setIsEditingTitle(false);
   };
+
+  const addTimeline = () => {
+    setTimelines(prev => [...prev, { id: crypto.randomUUID(), name: `New Timeline ${prev.length + 1}` }]);
+  }
+
+  const updateTimelineName = (id: string, newName: string) => {
+    setTimelines(prev => prev.map(t => t.id === id ? { ...t, name: newName } : t));
+  }
+
+  const deleteTimeline = (id: string) => {
+    setTimelines(prev => prev.filter(t => t.id !== id));
+  }
 
   return (
     <div className="space-y-6">
@@ -54,30 +158,28 @@ export function TimelineManagement({ team, tab }: { team: Team, tab: AppTab }) {
                 </Tooltip>
             </TooltipProvider>
         )}
+         <Button variant="ghost" size="icon" className="p-0" onClick={addTimeline}>
+          <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
+          <span className="sr-only">New Timeline</span>
+        </Button>
       </div>
-      <Card>
-        <CardHeader>
-          <div className="flex items-start justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                  Custom Timelines
-                   <Button variant="ghost" size="icon" className="p-0">
-                    <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
-                    <span className="sr-only">New Timeline</span>
-                  </Button>
-              </CardTitle>
-              <CardDescription>
-                Design and manage custom timelines for different production workflows.
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-            <div className="flex items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 text-muted-foreground min-h-[150px]">
-                <p>Timeline management functionality coming soon.</p>
-            </div>
-        </CardContent>
-      </Card>
+
+      {timelines.length === 0 ? (
+         <div className="flex items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 text-muted-foreground min-h-[150px]">
+            <p>No timelines yet. Click the '+' button to add one.</p>
+         </div>
+      ) : (
+        <div className="space-y-8">
+          {timelines.map(timeline => (
+            <EditableTimelineView 
+              key={timeline.id} 
+              timeline={timeline}
+              onNameChange={updateTimelineName}
+              onDelete={deleteTimeline}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

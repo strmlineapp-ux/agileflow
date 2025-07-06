@@ -67,48 +67,22 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         return;
       }
 
-      // Use the derived lists directly from `useMemo`
-      const listToReorder = source.droppableId === 'admins-list' ? admins : members;
+      const isAdminList = source.droppableId === 'admins-list';
+      const listToReorder = isAdminList ? admins : members;
+      
       const reorderedList = Array.from(listToReorder);
       const [movedItem] = reorderedList.splice(source.index, 1);
       reorderedList.splice(destination.index, 0, movedItem);
 
       // Reconstruct the full ordered list of IDs
-      const newAdmins = source.droppableId === 'admins-list' ? reorderedList : admins;
-      const newMembers = source.droppableId === 'members-list' ? reorderedList : members;
+      const newAdmins = isAdminList ? reorderedList : admins;
+      const newMembers = !isAdminList ? reorderedList : members;
+      
+      // Combine the two lists to get the new full `members` order for the team
       const newMemberIds = [...newAdmins, ...newMembers].map(m => m.userId);
 
-      // Update the single source of truth in the context
       updateTeam(team.id, { members: newMemberIds });
     };
-
-    const renderMemberList = (userList: User[], droppableId: string, idPrefix: string) => (
-      <StrictModeDroppable droppableId={droppableId} isDropDisabled={false}>
-        {(provided) => (
-          <div 
-            ref={provided.innerRef} 
-            {...provided.droppableProps} 
-            className="flex flex-wrap -m-3"
-          >
-            {userList.map((member, index) => (
-              <Draggable key={member.userId} draggableId={`${idPrefix}-${member.userId}`} index={index} ignoreContainerClipping={false}>
-                {(provided, snapshot) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.draggableProps}
-                    {...provided.dragHandleProps}
-                    className={cn("p-3 basis-full md:basis-1/2 lg:basis-1/3 flex-grow-0 flex-shrink-0", snapshot.isDragging && "opacity-80 shadow-xl")}
-                  >
-                    <TeamMemberCard member={member} team={team} />
-                  </div>
-                )}
-              </Draggable>
-            ))}
-            {provided.placeholder}
-          </div>
-        )}
-      </StrictModeDroppable>
-    );
 
     return (
       <DragDropContext onDragEnd={onDragEnd}>
@@ -132,18 +106,64 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                 )}
             </div>
             
-            <div className="space-y-4">
-              <h3 className="font-headline font-thin text-xl">Team Admins</h3>
-              {admins.length > 0 ? renderMemberList(admins, 'admins-list', 'admin') : (
-                <div className="text-sm text-muted-foreground p-4 border border-dashed rounded-lg text-center">No team admins assigned.</div>
-              )}
-            </div>
+            <div className="flex flex-col lg:flex-row gap-6">
+                <div className="lg:w-1/3 lg:max-w-sm space-y-4">
+                    <h3 className="font-headline font-thin text-xl">Team Admins</h3>
+                    {admins.length > 0 ? (
+                        <StrictModeDroppable droppableId="admins-list">
+                            {(provided) => (
+                                <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-4">
+                                    {admins.map((member, index) => (
+                                        <Draggable key={member.userId} draggableId={`admin-${member.userId}`} index={index} ignoreContainerClipping={false}>
+                                        {(provided, snapshot) => (
+                                            <div
+                                            ref={provided.innerRef}
+                                            {...provided.draggableProps}
+                                            {...provided.dragHandleProps}
+                                            className={cn(snapshot.isDragging && "opacity-80 shadow-xl")}
+                                            >
+                                            <TeamMemberCard member={member} team={team} />
+                                            </div>
+                                        )}
+                                        </Draggable>
+                                    ))}
+                                    {provided.placeholder}
+                                </div>
+                            )}
+                        </StrictModeDroppable>
+                    ) : (
+                        <div className="text-sm text-muted-foreground p-4 border border-dashed rounded-lg text-center">No team admins assigned.</div>
+                    )}
+                </div>
 
-            <div className="space-y-4">
-              <h3 className="font-headline font-thin text-xl">Members</h3>
-              {members.length > 0 ? renderMemberList(members, 'members-list', 'member') : (
-                <div className="text-sm text-muted-foreground p-4 border border-dashed rounded-lg text-center">No other members in this team.</div>
-              )}
+                <div className="flex-1 space-y-4">
+                    <h3 className="font-headline font-thin text-xl">Members</h3>
+                    {members.length > 0 ? (
+                        <StrictModeDroppable droppableId="members-list">
+                            {(provided) => (
+                                <div ref={provided.innerRef} {...provided.droppableProps} className="flex flex-wrap -m-3">
+                                {members.map((member, index) => (
+                                    <Draggable key={member.userId} draggableId={`member-${member.userId}`} index={index} ignoreContainerClipping={false}>
+                                    {(provided, snapshot) => (
+                                        <div
+                                        ref={provided.innerRef}
+                                        {...provided.draggableProps}
+                                        {...provided.dragHandleProps}
+                                        className={cn("p-3 basis-full md:basis-1/2 flex-grow-0 flex-shrink-0", snapshot.isDragging && "opacity-80 shadow-xl")}
+                                        >
+                                        <TeamMemberCard member={member} team={team} />
+                                        </div>
+                                    )}
+                                    </Draggable>
+                                ))}
+                                {provided.placeholder}
+                                </div>
+                            )}
+                        </StrictModeDroppable>
+                    ) : (
+                        <div className="text-sm text-muted-foreground p-4 border border-dashed rounded-lg text-center">No other members in this team.</div>
+                    )}
+                </div>
             </div>
         </div>
       </DragDropContext>
