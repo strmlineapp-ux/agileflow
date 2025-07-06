@@ -128,7 +128,7 @@ export function Sidebar() {
                                     <AvatarFallback>{viewAsUser.displayName.slice(0,2).toUpperCase()}</AvatarFallback>
                                 </Avatar>
                                 <span className={cn(
-                                    "absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-card",
+                                    "absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-background",
                                     viewAsUser.googleCalendarLinked ? "bg-green-500" : "bg-gray-400"
                                 )} />
                             </div>
