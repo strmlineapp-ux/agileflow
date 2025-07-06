@@ -1684,5 +1684,3 @@ const AdminPageSkeleton = () => (
       </div>
     </div>
 );
-
-    

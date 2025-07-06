@@ -105,7 +105,7 @@ const UserAssignmentCard = ({ user, index, onRemove, isGroupAdmin, onSetGroupAdm
 
   if (isDraggable && index !== undefined && draggableId) {
     return (
-      <Draggable draggableId={draggableId} index={index} type="user-card">
+      <Draggable draggableId={draggableId} index={index} type="user-card" ignoreContainerClipping={false}>
         {(provided, snapshot) => (
           <div
             ref={provided.innerRef}
@@ -707,7 +707,7 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                       </div>
 
                     {appSettings.adminGroups.map((group, index) => (
-                      <Draggable key={group.id} draggableId={group.id} index={index} type="group-card">
+                      <Draggable key={group.id} draggableId={group.id} index={index} type="group-card" ignoreContainerClipping={false}>
                         {(provided, snapshot) => (
                           <div 
                             ref={provided.innerRef} 
@@ -1307,7 +1307,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                             {appSettings.pages.map((page, index) => {
                                 const isPinned = pinnedIds.includes(page.id);
                                 return (
-                                    <Draggable key={page.id} draggableId={page.id} index={index} isDragDisabled={isPinned}>
+                                    <Draggable key={page.id} draggableId={page.id} index={index} isDragDisabled={isPinned} ignoreContainerClipping={false}>
                                         {(provided, snapshot) => (
                                             <div
                                                 ref={provided.innerRef}
@@ -1586,7 +1586,7 @@ export const TabsManagement = ({ tab }: { tab: AppTab }) => {
                     {(provided) => (
                         <div {...provided.droppableProps} ref={provided.innerRef} className="flex flex-wrap -m-3">
                             {appSettings.tabs.map((appTab, index) => (
-                                <Draggable key={appTab.id} draggableId={appTab.id} index={index}>
+                                <Draggable key={appTab.id} draggableId={appTab.id} index={index} ignoreContainerClipping={false}>
                                     {(provided, snapshot) => (
                                         <div
                                             ref={provided.innerRef}
