@@ -165,7 +165,7 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
                 <Button variant="ghost" size="sm" onClick={goToToday}>Today</Button>
                 <Button variant="ghost" size="icon" onClick={handleNext}><GoogleSymbol name="chevron_right" weight={100} /></Button>
             </div>
-            <p className="text-muted-foreground text-sm font-medium">{dateRange}</p>
+            <p className="text-muted-foreground text-sm font-normal">{dateRange}</p>
           </div>
           <div className="flex items-center gap-2">
               <TooltipProvider>

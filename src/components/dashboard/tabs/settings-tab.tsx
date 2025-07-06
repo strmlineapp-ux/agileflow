@@ -10,7 +10,7 @@ export function SettingsContent({ tab: pageConfig }: { tab: AppPage }) {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-3">
-        <GoogleSymbol name={pageConfig.icon} className="text-6xl" />
+        <GoogleSymbol name={pageConfig.icon} className="text-6xl" weight={100} />
         <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>

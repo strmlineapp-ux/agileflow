@@ -124,23 +124,22 @@ const UserAssignmentCard = ({ user, index, onRemove, isGroupAdmin, onSetGroupAdm
 
 const AddUserToGroupButton = ({ usersToAdd, onAdd, groupName }: { usersToAdd: User[], onAdd: (user: User) => void, groupName: string }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isSearching, setIsSearching] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!isOpen) {
-      // Reset search when popover closes
-      setIsSearching(false);
-      setSearchTerm('');
+    if (isOpen) {
+        // Use a timeout to ensure the input is rendered and visible before focusing
+        const timer = setTimeout(() => {
+            if (searchInputRef.current) {
+                searchInputRef.current.focus();
+            }
+        }, 100);
+        return () => clearTimeout(timer);
+    } else {
+        setSearchTerm('');
     }
   }, [isOpen]);
-
-  useEffect(() => {
-    if (isSearching && searchInputRef.current) {
-      searchInputRef.current.focus();
-    }
-  }, [isSearching]);
 
   const handleSelect = (user: User) => {
     onAdd(user);
@@ -172,23 +171,14 @@ const AddUserToGroupButton = ({ usersToAdd, onAdd, groupName }: { usersToAdd: Us
       </TooltipProvider>
       <PopoverContent className="p-0 w-80">
         <div className="flex items-center gap-1 p-2 border-b">
-          {!isSearching ? (
-            <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={() => setIsSearching(true)}>
-              <GoogleSymbol name="search" />
-            </Button>
-          ) : (
-            <div className="flex items-center gap-1 w-full">
-              <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
-              <input
-                  ref={searchInputRef}
-                  placeholder="Search by name or email..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  onBlur={() => !searchTerm && setIsSearching(false)}
-                  className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
-              />
-            </div>
-          )}
+            <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+            <input
+                ref={searchInputRef}
+                placeholder="Search by name or email..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+            />
         </div>
         <ScrollArea className="h-64">
            <div className="p-1">
@@ -196,7 +186,7 @@ const AddUserToGroupButton = ({ usersToAdd, onAdd, groupName }: { usersToAdd: Us
               <div key={user.userId} onClick={() => handleSelect(user)} className="flex items-center gap-2 p-2 rounded-md group cursor-pointer">
                 <Avatar className="h-8 w-8"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0,2)}</AvatarFallback></Avatar>
                 <div>
-                  <p className="text-sm font-normal group-hover:text-primary transition-colors">{user.displayName}</p>
+                  <p className="font-normal group-hover:text-primary transition-colors">{user.displayName}</p>
                   <p className="text-xs text-muted-foreground">{user.email}</p>
                 </div>
               </div>
@@ -235,7 +225,6 @@ function AdminGroupCard({
     const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
 
     // Icon Search State
-    const [isSearchingIcons, setIsSearchingIcons] = useState(false);
     const [iconSearch, setIconSearch] = useState('');
     const iconSearchInputRef = useRef<HTMLInputElement>(null);
 
@@ -254,17 +243,12 @@ function AdminGroupCard({
     
     useEffect(() => {
         if (!isIconPopoverOpen) {
-            setIsSearchingIcons(false);
             setIconSearch('');
         } else {
             // Auto-focus search when popover opens
             setTimeout(() => iconSearchInputRef.current?.focus(), 100);
         }
     }, [isIconPopoverOpen]);
-
-    useEffect(() => {
-        if (isSearchingIcons) iconSearchInputRef.current?.focus();
-    }, [isSearchingIcons]);
 
     const handleSaveName = () => {
         const input = nameInputRef.current;
@@ -356,23 +340,14 @@ function AdminGroupCard({
                                 </TooltipProvider>
                                 <PopoverContent className="w-80 p-0">
                                     <div className="flex items-center gap-1 p-2 border-b">
-                                        {!isSearchingIcons ? (
-                                            <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={() => setIsSearchingIcons(true)}>
-                                                <GoogleSymbol name="search" />
-                                            </Button>
-                                        ) : (
-                                            <div className="flex items-center gap-1 w-full">
-                                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
-                                                <input
-                                                    ref={iconSearchInputRef}
-                                                    placeholder="Search icons..."
-                                                    value={iconSearch}
-                                                    onChange={(e) => setIconSearch(e.target.value)}
-                                                    onBlur={() => !iconSearch && setIsSearchingIcons(false)}
-                                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
-                                                />
-                                            </div>
-                                        )}
+                                        <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                                        <input
+                                            ref={iconSearchInputRef}
+                                            placeholder="Search icons..."
+                                            value={iconSearch}
+                                            onChange={(e) => setIconSearch(e.target.value)}
+                                            className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                                        />
                                     </div>
                                     <ScrollArea className="h-64">
                                       <div className="grid grid-cols-6 gap-1 p-2">
@@ -732,8 +707,8 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
             
             <StrictModeDroppable droppableId="admin-groups-list" type="group-card" isDropDisabled={false} isCombineEnabled={false}>
               {(provided) => (
-                  <div ref={provided.innerRef} {...provided.droppableProps} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                      <div className="w-full">
+                  <div ref={provided.innerRef} {...provided.droppableProps} className="flex flex-wrap gap-6">
+                      <div className="w-full flex-grow basis-full md:basis-[calc(50%-1.5rem)] lg:basis-[calc(33.333%-1.5rem)] xl:basis-[calc(25%-1.5rem)]">
                         <Card className="flex flex-col h-full">
                             <CardHeader>
                               <div className="flex items-center gap-2">
@@ -770,7 +745,15 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                     {appSettings.adminGroups.map((group, index) => (
                       <Draggable key={group.id} draggableId={group.id} index={index} type="group-card">
                         {(provided, snapshot) => (
-                          <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} className={cn("w-full", snapshot.isDragging && "shadow-xl")}>
+                          <div 
+                            ref={provided.innerRef} 
+                            {...provided.draggableProps} 
+                            {...provided.dragHandleProps} 
+                            className={cn(
+                                "w-full flex-grow basis-full md:basis-[calc(50%-1.5rem)] lg:basis-[calc(33.333%-1.5rem)] xl:basis-[calc(25%-1.5rem)]", 
+                                snapshot.isDragging && "shadow-xl"
+                            )}
+                          >
                             <AdminGroupCard group={group} users={users} onUpdate={handleUpdateAdminGroup} onDelete={() => handleDeleteAdminGroup(group.id)} />
                           </div>
                         )}
@@ -840,20 +823,18 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [activeTab, setActiveTab] = useState("users");
-    const [isSearching, setIsSearching] = useState(false);
     const searchInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        if (isOpen && !isSearching) {
-            // This is a bit of a trick to make it focus when the popover opens
-            // and the search isn't already active from a previous interaction.
-            setTimeout(() => searchInputRef.current?.focus(), 100);
+        if (isOpen) {
+            const timer = setTimeout(() => {
+                if (searchInputRef.current) {
+                    searchInputRef.current.focus();
+                }
+            }, 100);
+            return () => clearTimeout(timer);
         }
-    }, [isOpen, isSearching]);
-
-    const handleBlurSearch = () => {
-        if (!searchTerm) setIsSearching(false);
-    }
+    }, [isOpen, activeTab]);
 
     const access = page.access;
 
@@ -873,23 +854,16 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
 
     const renderSearchControl = () => (
          <div className="p-2 border-b">
-            {!isSearching ? (
-                <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={() => setIsSearching(true)}>
-                    <GoogleSymbol name="search" />
-                </Button>
-            ) : (
-                <div className="flex items-center gap-1 w-full">
-                  <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
-                  <input
-                      ref={searchInputRef}
-                      placeholder="Search..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      onBlur={handleBlurSearch}
-                      className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
-                  />
-              </div>
-            )}
+            <div className="flex items-center gap-1 w-full">
+              <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+              <input
+                  ref={searchInputRef}
+                  placeholder="Search..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+              />
+          </div>
         </div>
     );
 
@@ -1013,7 +987,6 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
     
-    const [isSearchingIcons, setIsSearchingIcons] = useState(false);
     const [iconSearch, setIconSearch] = useState('');
     const iconSearchInputRef = useRef<HTMLInputElement>(null);
     
@@ -1025,18 +998,12 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
     }, [isEditingName]);
 
     useEffect(() => {
-        if (!isIconPopoverOpen) {
-            setIsSearchingIcons(false);
-            setIconSearch('');
-        } else {
-            // Auto-focus search when popover opens
+        if (isIconPopoverOpen) {
             setTimeout(() => iconSearchInputRef.current?.focus(), 100);
+        } else {
+            setIconSearch('');
         }
     }, [isIconPopoverOpen]);
-
-    useEffect(() => {
-        if (isSearchingIcons) iconSearchInputRef.current?.focus();
-    }, [isSearchingIcons]);
 
     const handleSaveName = () => {
         const newName = nameInputRef.current?.value.trim();
@@ -1074,23 +1041,14 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
                                 </TooltipProvider>
                                 <PopoverContent className="w-80 p-0">
                                     <div className="flex items-center gap-1 p-2 border-b">
-                                        {!isSearchingIcons ? (
-                                            <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={() => setIsSearchingIcons(true)}>
-                                                <GoogleSymbol name="search" />
-                                            </Button>
-                                        ) : (
-                                            <div className="flex items-center gap-1 w-full">
-                                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
-                                                <input
-                                                    ref={iconSearchInputRef}
-                                                    placeholder="Search icons..."
-                                                    value={iconSearch}
-                                                    onChange={(e) => setIconSearch(e.target.value)}
-                                                    onBlur={() => !iconSearch && setIsSearchingIcons(false)}
-                                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
-                                                />
-                                            </div>
-                                        )}
+                                        <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                                        <input
+                                            ref={iconSearchInputRef}
+                                            placeholder="Search icons..."
+                                            value={iconSearch}
+                                            onChange={(e) => setIconSearch(e.target.value)}
+                                            className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                                        />
                                     </div>
                                     <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (
                                     <TooltipProvider key={iconName}>
@@ -1357,7 +1315,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                         <div
                             ref={provided.innerRef}
                             {...provided.droppableProps}
-                            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4"
+                            className="flex flex-wrap gap-4"
                         >
                             {appSettings.pages.map((page, index) => {
                                 const isPinned = pinnedIds.includes(page.id);
@@ -1369,7 +1327,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                                                 {...provided.draggableProps}
                                                 {...provided.dragHandleProps}
                                                 className={cn(
-                                                    "w-full",
+                                                    "flex-grow basis-full sm:basis-[calc(50%-0.5rem)] md:basis-[calc(33.33%-0.66rem)] lg:basis-[calc(25%-0.75rem)] xl:basis-[calc(20%-0.8rem)]",
                                                     isPinned && "opacity-70",
                                                     draggingItemId === page.id && "opacity-50"
                                                 )}
@@ -1404,7 +1362,6 @@ function TabCard({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string, data: 
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
     
-    const [isSearchingIcons, setIsSearchingIcons] = useState(false);
     const [iconSearch, setIconSearch] = useState('');
     const iconSearchInputRef = useRef<HTMLInputElement>(null);
 
@@ -1420,17 +1377,12 @@ function TabCard({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string, data: 
     }, [isEditingDescription]);
     
     useEffect(() => {
-        if (!isIconPopoverOpen) {
-            setIsSearchingIcons(false);
-            setIconSearch('');
-        } else {
+        if (isIconPopoverOpen) {
              setTimeout(() => iconSearchInputRef.current?.focus(), 100);
+        } else {
+            setIconSearch('');
         }
     }, [isIconPopoverOpen]);
-
-    useEffect(() => {
-        if (isSearchingIcons) iconSearchInputRef.current?.focus();
-    }, [isSearchingIcons]);
 
     const handleSaveName = () => {
         const newName = nameInputRef.current?.value.trim();
@@ -1485,23 +1437,14 @@ function TabCard({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string, data: 
                                 </TooltipProvider>
                                 <PopoverContent className="w-80 p-0">
                                     <div className="flex items-center gap-1 p-2 border-b">
-                                        {!isSearchingIcons ? (
-                                            <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={() => setIsSearchingIcons(true)}>
-                                                <GoogleSymbol name="search" />
-                                            </Button>
-                                        ) : (
-                                            <div className="flex items-center gap-1 w-full">
-                                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
-                                                <input
-                                                    ref={iconSearchInputRef}
-                                                    placeholder="Search icons..."
-                                                    value={iconSearch}
-                                                    onChange={(e) => setIconSearch(e.target.value)}
-                                                    onBlur={() => !iconSearch && setIsSearchingIcons(false)}
-                                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
-                                                />
-                                            </div>
-                                        )}
+                                        <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                                        <input
+                                            ref={iconSearchInputRef}
+                                            placeholder="Search icons..."
+                                            value={iconSearch}
+                                            onChange={(e) => setIconSearch(e.target.value)}
+                                            className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                                        />
                                     </div>
                                     <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (
                                     <TooltipProvider key={iconName}>
@@ -1634,14 +1577,15 @@ export const TabsManagement = ({ tab }: { tab: AppTab }) => {
                 </div>
                 <StrictModeDroppable droppableId="tabs-list">
                     {(provided) => (
-                        <div {...provided.droppableProps} ref={provided.innerRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div {...provided.droppableProps} ref={provided.innerRef} className="flex flex-wrap gap-6">
                             {appSettings.tabs.map((appTab, index) => (
                                 <Draggable key={appTab.id} draggableId={appTab.id} index={index}>
                                     {(provided) => (
                                         <div
-                                        ref={provided.innerRef}
-                                        {...provided.draggableProps}
-                                        {...provided.dragHandleProps}
+                                            ref={provided.innerRef}
+                                            {...provided.draggableProps}
+                                            {...provided.dragHandleProps}
+                                            className="w-full flex-grow basis-full md:basis-[calc(50%-1.5rem)] lg:basis-[calc(33.333%-1.5rem)]"
                                         >
                                             <TabCard
                                                 tab={appTab}

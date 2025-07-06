@@ -50,7 +50,6 @@ function CalendarCard({ calendar, onUpdate, onDelete }: { calendar: SharedCalend
   const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
   
   const [iconSearch, setIconSearch] = useState('');
-  const [isSearchingIcons, setIsSearchingIcons] = useState(false);
   const iconSearchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -60,10 +59,6 @@ function CalendarCard({ calendar, onUpdate, onDelete }: { calendar: SharedCalend
       setIconSearch('');
     }
   }, [isIconPopoverOpen]);
-
-  useEffect(() => {
-      if (isSearchingIcons) iconSearchInputRef.current?.focus();
-  }, [isSearchingIcons]);
 
   const filteredIcons = googleSymbolNames.filter(name => name.toLowerCase().includes(iconSearch.toLowerCase()));
 
@@ -122,23 +117,14 @@ function CalendarCard({ calendar, onUpdate, onDelete }: { calendar: SharedCalend
                     </TooltipProvider>
                     <PopoverContent className="w-80 p-0">
                         <div className="flex items-center gap-1 p-2 border-b">
-                          {!isSearchingIcons ? (
-                            <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={() => setIsSearchingIcons(true)}>
-                                <GoogleSymbol name="search" />
-                            </Button>
-                          ) : (
-                            <div className="flex items-center gap-1 w-full">
-                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
-                                <input
-                                    ref={iconSearchInputRef}
-                                    placeholder="Search icons..."
-                                    value={iconSearch}
-                                    onChange={(e) => setIconSearch(e.target.value)}
-                                    onBlur={() => !iconSearch && setIsSearchingIcons(false)}
-                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
-                                />
-                            </div>
-                          )}
+                            <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                            <input
+                                ref={iconSearchInputRef}
+                                placeholder="Search icons..."
+                                value={iconSearch}
+                                onChange={(e) => setIconSearch(e.target.value)}
+                                className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                            />
                         </div>
                         <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={calendar.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(calendar.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="h-8 w-8 p-0"><GoogleSymbol name={iconName} className="text-4xl" weight={100} /></Button>))}</div></ScrollArea>
                     </PopoverContent>
@@ -348,7 +334,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
         <StrictModeDroppable droppableId="calendars-list" isDropDisabled={false} isCombineEnabled={false}>
             {(provided) => (
                 <div
-                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                    className="flex flex-wrap gap-6"
                     ref={provided.innerRef}
                     {...provided.droppableProps}
                 >
@@ -359,6 +345,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                                     ref={provided.innerRef}
                                     {...provided.draggableProps}
                                     {...provided.dragHandleProps}
+                                    className="w-full flex-grow basis-full md:basis-[calc(50%-1.5rem)] lg:basis-[calc(33.333%-1.5rem)]"
                                 >
                                     <CalendarCard
                                         calendar={calendar}

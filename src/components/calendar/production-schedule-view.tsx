@@ -97,7 +97,7 @@ const ManageStatusDialog = ({ isOpen, onOpenChange, day, initialAssignments, use
                                                     <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
                                                     <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
                                                 </Avatar>
-                                                <span className="font-medium">{user.displayName}</span>
+                                                <span className="font-normal">{user.displayName}</span>
                                                 <UserStatusBadge status={status}>{status}</UserStatusBadge>
                                             </div>
                                             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleRemoveStatusAssignment(userId)}>
@@ -221,7 +221,7 @@ const ProductionScheduleLocationRow = React.memo(({
                 </Button>
             </PopoverTrigger>
             <PopoverContent className="w-56 p-0">
-                <div className="p-2 border-b"><p className="text-sm font-medium text-center">{alias || location}</p></div>
+                <div className="p-2 border-b"><p className="text-sm font-normal text-center">{alias || location}</p></div>
                 <div className="flex flex-col gap-1 max-h-48 overflow-y-auto p-1">
                     {dailyCheckUsers.length > 0 ? dailyCheckUsers.filter(user => user.userId !== assignedUserId).map(user => (
                         <Button key={user.userId} variant="ghost" className="justify-start h-8" onClick={() => handleAssignCheck(dayIso, location, user.userId)}>
@@ -240,7 +240,7 @@ const ProductionScheduleLocationRow = React.memo(({
             <div className="w-[160px] shrink-0 p-2 border-r flex items-start justify-between bg-card sticky left-0 z-30">
                 <div className="flex items-start gap-1 cursor-pointer flex-1 min-w-0" onClick={() => toggleLocationCollapse(dayIso, location)}>
                     {isLocationCollapsed ? <GoogleSymbol name="chevron_right" className="mt-1" /> : <GoogleSymbol name="expand_more" className="mt-1" />}
-                    <p className="font-medium text-sm" title={alias ? location : undefined}>{alias || location}</p>
+                    <p className="font-normal text-sm" title={alias ? location : undefined}>{alias || location}</p>
                 </div>
                  {canManageThisLocation ? assignmentControl : assignedUser && <div className="h-6 text-xs px-1.5 flex items-center justify-center text-muted-foreground">{`${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}`}</div>}
             </div>
@@ -617,7 +617,7 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
                                         const pill = canManageThisCheckLocation ? (
                                             <Popover key={location}><PopoverTrigger asChild><Button variant={assignedUser ? "default" : "outline"} size="sm" className={cn("rounded-full h-8", isTempCheck && "border-dashed")}>{pillContent}</Button></PopoverTrigger>
                                                 <PopoverContent className="w-56 p-0">
-                                                    <div className="p-2 border-b"><p className="text-sm font-medium text-center">{locationAliasMap[location] || location}</p></div>
+                                                    <div className="p-2 border-b"><p className="text-sm font-normal text-center">{locationAliasMap[location] || location}</p></div>
                                                     <div className="flex flex-col gap-1 max-h-48 overflow-y-auto p-1">
                                                         {dailyCheckUsers.length > 0 ? dailyCheckUsers.filter(user => user.userId !== assignedUserId).map(user => (
                                                             <Button key={user.userId} variant="ghost" className="justify-start h-8" onClick={() => handleAssignCheck(dayIso, location, user.userId)}>
@@ -700,7 +700,7 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
                             <div className="overflow-x-auto" ref={el => dayScrollerRefs.current.set(dayIso, el)}>
                                 <div style={{ width: `${LOCATION_LABEL_WIDTH_PX + (24 * hourWidth)}px`}}>
                                     <CardHeader className="p-0 border-b sticky top-0 bg-card z-20 flex flex-row">
-                                        <div className="w-[160px] shrink-0 border-r p-2 flex items-center font-semibold text-sm sticky left-0 bg-card z-30 cursor-pointer gap-2" onClick={() => toggleDayCollapse(dayIso)}>
+                                        <div className="w-[160px] shrink-0 border-r p-2 flex items-center font-normal text-sm sticky left-0 bg-card z-30 cursor-pointer gap-2" onClick={() => toggleDayCollapse(dayIso)}>
                                            {isDayCollapsed ? <GoogleSymbol name="chevron_right" /> : <GoogleSymbol name="expand_more" />}
                                            <span className={cn({ "text-primary": isDayToday })}>{format(day, 'EEE, MMMM d, yyyy').toUpperCase()}</span>
                                         </div>

@@ -162,9 +162,9 @@ export const WeekView = React.memo(({ date, containerRef, zoomLevel, onEasyBooki
                         const isDayHoliday = isHoliday(day);
                         return (
                             <div key={day.toString()} className={cn("text-center p-2 border-l relative", { "bg-muted/10": index % 2 !== 0 }, { "bg-muted/50": isWeekend || isDayHoliday })}>
-                                <p className={cn("text-sm font-medium", { "text-muted-foreground/50": isWeekend || isDayHoliday })}>{format(day, 'EEE')}</p>
+                                <p className={cn("text-sm font-normal", { "text-muted-foreground/50": isWeekend || isDayHoliday })}>{format(day, 'EEE')}</p>
                                 <p className={cn(
-                                    "text-2xl font-semibold",
+                                    "text-2xl font-normal",
                                     isToday(day) && 'text-primary bg-primary/10 rounded-full',
                                      { "text-muted-foreground/50": isWeekend || isDayHoliday }
                                 )}>
@@ -276,7 +276,7 @@ export const WeekView = React.memo(({ date, containerRef, zoomLevel, onEasyBooki
                                                         </div>
                                                     )}
                                                 </div>
-                                                <p className="font-semibold text-xs truncate leading-tight">{event.title}</p>
+                                                <p className="font-normal text-xs truncate leading-tight">{event.title}</p>
                                                 <p className="text-[10px] opacity-90 truncate">{format(event.startTime, timeFormatEvent)} - {format(event.endTime, timeFormatEvent)}</p>
                                             </div>
                                         )
