@@ -33,15 +33,13 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const titleInputRef = useRef<HTMLInputElement>(null);
     
-    const [teamMembers, setTeamMembers] = useState<User[]>([]);
-
-    useEffect(() => {
-      const members = team.members
-        .map(id => users.find(u => u.userId === id))
-        .filter((u): u is User => !!u);
-      setTeamMembers(members);
+    // Derive members directly from context/props to ensure a single source of truth.
+    const teamMembers = useMemo(() => {
+        return team.members
+            .map(id => users.find(u => u.userId === id))
+            .filter((u): u is User => !!u);
     }, [users, team.members]);
-    
+
     const admins = useMemo(() => teamMembers.filter(m => team.teamAdmins?.includes(m.userId)), [teamMembers, team.teamAdmins]);
     const members = useMemo(() => teamMembers.filter(m => !team.teamAdmins?.includes(m.userId)), [teamMembers, team.teamAdmins]);
 
@@ -68,18 +66,18 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         return;
       }
 
+      // Use the derived lists directly from `useMemo`
       const listToReorder = source.droppableId === 'admins-list' ? admins : members;
       const reorderedList = Array.from(listToReorder);
       const [movedItem] = reorderedList.splice(source.index, 1);
       reorderedList.splice(destination.index, 0, movedItem);
 
+      // Reconstruct the full ordered list of IDs
       const newAdmins = source.droppableId === 'admins-list' ? reorderedList : admins;
       const newMembers = source.droppableId === 'members-list' ? reorderedList : members;
+      const newMemberIds = [...newAdmins, ...newMembers].map(m => m.userId);
 
-      const newTeamMembers = [...newAdmins, ...newMembers];
-      const newMemberIds = newTeamMembers.map(m => m.userId);
-
-      setTeamMembers(newTeamMembers);
+      // Update the single source of truth in the context
       updateTeam(team.id, { members: newMemberIds });
     };
 
