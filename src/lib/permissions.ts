@@ -82,37 +82,19 @@ export const hasAccess = (user: User, item: AppPage | AppTab, teams: Team[], adm
 
     // Direct user assignment always grants access
     if (access.users.includes(user.userId)) return true;
-
-    // Team-based access
-    const userHasTeamAccess = teams.some(team => {
-        if (!access.teams.includes(team.id)) return false;
-        const teamHasAdmins = (team.teamAdmins || []).length > 0;
-        if (teamHasAdmins) {
-            // If admins exist, only they have access
-            return (team.teamAdmins || []).includes(user.userId);
-        } else {
-            // If no admins exist, all members have access
-            return team.members.includes(user.userId);
-        }
-    });
-    if (userHasTeamAccess) return true;
     
     // Group-based access
-    const userHasGroupAccess = access.adminGroups.some(groupName => {
-        const group = adminGroups.find(g => g.name === groupName);
-        if (!group) return false;
+    if (access.adminGroups.some(groupName => (user.roles || []).includes(groupName))) {
+        return true;
+    }
 
-        const groupHasAdmins = (group.groupAdmins || []).length > 0;
-        
-        if (groupHasAdmins) {
-            // If group admins exist, only they have access
-            return (group.groupAdmins || []).includes(user.userId);
-        } else {
-            // If no group admins exist, all members of the group have access
-            return (user.roles || []).includes(groupName);
-        }
-    });
-    if (userHasGroupAccess) return true;
+    // Team-based access
+    // This now simply checks for membership. More granular permissions (like teamAdmin)
+    // should be checked within the component itself, not for page/tab visibility.
+    const userTeamIds = new Set(teams.filter(t => t.members.includes(user.userId)).map(t => t.id));
+    if (access.teams.some(teamId => userTeamIds.has(teamId))) {
+        return true;
+    }
     
     // Default to no access
     return false;

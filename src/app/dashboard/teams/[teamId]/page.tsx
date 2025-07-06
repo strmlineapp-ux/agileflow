@@ -1,5 +1,6 @@
 
 
+
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
@@ -20,6 +21,7 @@ import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { hasAccess } from '@/lib/permissions';
 
 const componentMap: Record<string, React.ComponentType<{ team: any, tab: AppTab }>> = {
   team_members: TeamMembersView,
@@ -99,10 +101,7 @@ export default function TeamPage() {
     );
   }
   
-  const isTeamAdmin = team.teamAdmins?.includes(viewAsUser.userId);
-  const isServiceAdmin = appSettings.adminGroups.some(group => viewAsUser.roles?.includes(group.name));
-  const canViewPage = viewAsUser.isAdmin || isServiceAdmin || isTeamAdmin;
-
+  const canViewPage = hasAccess(viewAsUser, pageConfig, teams, appSettings.adminGroups);
   if (!canViewPage) {
      return null; // Navigation is filtered, so this prevents direct URL access.
   }

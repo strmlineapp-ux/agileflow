@@ -1,5 +1,6 @@
 
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -16,6 +17,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { hasAccess } from '@/lib/permissions';
 
 
 // This is a mapping from the componentKey in our AppTab model to the actual component to render.
@@ -28,7 +30,7 @@ const componentMap: Record<string, React.ComponentType<{ tab: AppTab }>> = {
 const PAGE_ID = 'page-service-delivery';
 
 export default function ServiceDeliveryPage() {
-  const { appSettings, updateAppSettings, loading } = useUser();
+  const { viewAsUser, teams, appSettings, updateAppSettings, loading } = useUser();
 
   const pageConfig = appSettings.pages.find(p => p.id === PAGE_ID);
   
@@ -71,6 +73,11 @@ export default function ServiceDeliveryPage() {
         <Skeleton className="h-64 w-full" />
       </div>
     );
+  }
+  
+  const canViewPage = hasAccess(viewAsUser, pageConfig, teams, appSettings.adminGroups);
+  if (!canViewPage) {
+    return null; // Don't render if user doesn't have access
   }
 
   const pageTabs = appSettings.tabs.filter(t => pageConfig.associatedTabs.includes(t.id));

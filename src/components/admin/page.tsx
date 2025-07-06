@@ -1,5 +1,6 @@
 
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -301,7 +302,7 @@ function AdminGroupCard({
     };
 
     return (
-        <Card className="flex flex-col h-full bg-transparent group">
+        <Card className="flex flex-col h-full bg-transparent group relative">
             <CardHeader>
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
@@ -356,7 +357,7 @@ function AdminGroupCard({
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild>
-                                                <div 
+                                                <button
                                                     className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background cursor-pointer" 
                                                     aria-label="Change service admin color"
                                                     style={{ backgroundColor: group.color }}
@@ -1099,7 +1100,7 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                         <PopoverTrigger asChild>
-                                            <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background cursor-pointer" style={{ backgroundColor: page.color }} />
+                                            <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background cursor-pointer" style={{ backgroundColor: page.color }} />
                                         </PopoverTrigger>
                                     </TooltipTrigger>
                                     <TooltipContent><p>Change Color</p></TooltipContent>
@@ -1461,100 +1462,97 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
     const filteredIcons = useMemo(() => googleSymbolNames.filter(icon => icon.toLowerCase().includes(iconSearch.toLowerCase())), [iconSearch]);
 
     return (
-        <Card className={cn("flex flex-col h-full bg-transparent", isDragging && "shadow-xl")}>
-            <CardHeader>
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="relative">
-                            <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <PopoverTrigger asChild>
-                                                 <button className="h-12 w-12 flex items-center justify-center">
-                                                    <GoogleSymbol name={tab.icon} className="text-6xl" weight={100} />
-                                                </button>
-                                            </PopoverTrigger>
-                                        </TooltipTrigger>
-                                        <TooltipContent><p>Change Icon</p></TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                                <PopoverContent className="w-80 p-0">
-                                    <div className="flex items-center gap-1 p-2 border-b">
-                                        <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
-                                        <input
-                                            ref={iconSearchInputRef}
-                                            placeholder="Search icons..."
-                                            value={iconSearch}
-                                            onChange={(e) => setIconSearch(e.target.value)}
-                                            className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
-                                        />
-                                    </div>
-                                    <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (
-                                    <TooltipProvider key={iconName}>
-                                        <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Button
-                                            variant={tab.icon === iconName ? "default" : "ghost"}
-                                            size="icon"
-                                            onClick={() => { onUpdate(tab.id, { icon: iconName }); setIsIconPopoverOpen(false);}}
-                                            className="h-8 w-8 p-0"
-                                            >
-                                            <GoogleSymbol name={iconName} className="text-4xl" weight={100} />
-                                            </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent><p>{iconName}</p></TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
-                                    ))}</div></ScrollArea>
-                                </PopoverContent>
-                            </Popover>
-                            <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <PopoverTrigger asChild>
-                                                <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background cursor-pointer" style={{ backgroundColor: tab.color }} />
-                                            </PopoverTrigger>
-                                        </TooltipTrigger>
-                                        <TooltipContent><p>Change Color</p></TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                                <PopoverContent className="w-auto p-2">
-                                    <div className="grid grid-cols-8 gap-1">
-                                        {predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => { onUpdate(tab.id, { color: c }); setIsColorPopoverOpen(false); }}/>))}
-                                        <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
-                                            <GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={tab.color} onChange={(e) => onUpdate(tab.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/>
-                                        </div>
-                                    </div>
-                                </PopoverContent>
-                            </Popover>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                             {isEditingName ? (
-                                <Input ref={nameInputRef} defaultValue={tab.name} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-normal border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 font-headline" />
-                            ) : (
-                                <CardTitle className="font-headline cursor-pointer text-lg font-thin" onClick={() => setIsEditingName(true)}>{tab.name}</CardTitle>
-                            )}
-                        </div>
-                    </div>
-                    <Badge variant="outline">{tab.componentKey}</Badge>
+        <Card className={cn("bg-transparent", isDragging && "shadow-xl")}>
+            <CardContent className="p-2 flex items-center gap-4">
+                <div className="relative">
+                    <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <PopoverTrigger asChild>
+                                        <button className="h-10 w-10 flex items-center justify-center">
+                                            <GoogleSymbol name={tab.icon} className="text-4xl" weight={100} />
+                                        </button>
+                                    </PopoverTrigger>
+                                </TooltipTrigger>
+                                <TooltipContent><p>Change Icon</p></TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                        <PopoverContent className="w-80 p-0">
+                            <div className="flex items-center gap-1 p-2 border-b">
+                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                                <input
+                                    ref={iconSearchInputRef}
+                                    placeholder="Search icons..."
+                                    value={iconSearch}
+                                    onChange={(e) => setIconSearch(e.target.value)}
+                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                                />
+                            </div>
+                            <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (
+                            <TooltipProvider key={iconName}>
+                                <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                    variant={tab.icon === iconName ? "default" : "ghost"}
+                                    size="icon"
+                                    onClick={() => { onUpdate(tab.id, { icon: iconName }); setIsIconPopoverOpen(false);}}
+                                    className="h-8 w-8 p-0"
+                                    >
+                                    <GoogleSymbol name={iconName} className="text-4xl" weight={100} />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent><p>{iconName}</p></TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                            ))}</div></ScrollArea>
+                        </PopoverContent>
+                    </Popover>
+                    <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <PopoverTrigger asChild>
+                                        <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background cursor-pointer" style={{ backgroundColor: tab.color }} />
+                                    </PopoverTrigger>
+                                </TooltipTrigger>
+                                <TooltipContent><p>Change Color</p></TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                        <PopoverContent className="w-auto p-2">
+                            <div className="grid grid-cols-8 gap-1">
+                                {predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => { onUpdate(tab.id, { color: c }); setIsColorPopoverOpen(false); }}/>))}
+                                <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
+                                    <GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={tab.color} onChange={(e) => onUpdate(tab.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/>
+                                </div>
+                            </div>
+                        </PopoverContent>
+                    </Popover>
                 </div>
-            </CardHeader>
-            <CardContent className="flex-grow space-y-1">
-                {isEditingDescription ? (
-                    <Textarea 
-                        ref={descriptionTextareaRef}
-                        defaultValue={tab.description}
-                        onKeyDown={handleDescriptionKeyDown}
-                        className="p-0 text-sm text-muted-foreground border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 resize-none"
-                        placeholder="Click to add a description."
-                    />
-                ) : (
-                    <p className="text-sm text-muted-foreground cursor-text min-h-[20px]" onClick={() => setIsEditingDescription(true)}>
-                        {tab.description || 'Click to add a description.'}
-                    </p>
-                )}
+                <div className="flex-1 min-w-0 space-y-1">
+                    <div className="flex items-center justify-between">
+                         {isEditingName ? (
+                            <Input ref={nameInputRef} defaultValue={tab.name} onKeyDown={handleNameKeyDown} onBlur={handleSaveName} className="h-auto p-0 font-normal border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 font-headline" />
+                        ) : (
+                            <h3 className="font-headline cursor-text text-base font-thin" onClick={() => setIsEditingName(true)}>{tab.name}</h3>
+                        )}
+                        <Badge variant="outline">{tab.componentKey}</Badge>
+                    </div>
+                    {isEditingDescription ? (
+                        <Textarea 
+                            ref={descriptionTextareaRef}
+                            defaultValue={tab.description}
+                            onBlur={handleSaveDescription}
+                            onKeyDown={handleDescriptionKeyDown}
+                            className="p-0 text-sm text-muted-foreground border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 resize-none"
+                            placeholder="Click to add a description."
+                        />
+                    ) : (
+                        <p className="text-sm text-muted-foreground cursor-text min-h-[20px]" onClick={() => setIsEditingDescription(true)}>
+                            {tab.description || 'Click to add a description.'}
+                        </p>
+                    )}
+                </div>
             </CardContent>
         </Card>
     );
@@ -1697,76 +1695,3 @@ export const TabsManagement = ({ tab }: { tab: AppTab }) => {
     );
 };
 // #endregion
-
-const componentMap: Record<string, React.ComponentType<{ tab: AppTab }>> = {
-  adminGroups: AdminGroupsManagement,
-  pages: PagesManagement,
-  tabs: TabsManagement,
-};
-
-const PAGE_ID = 'page-admin-management';
-
-export default function AdminPage() {
-  const { viewAsUser, loading, appSettings } = useUser();
-  
-  if (loading) {
-    return <AdminPageSkeleton />;
-  }
-
-  const pageConfig = appSettings.pages.find(p => p.id === PAGE_ID);
-
-  if (!viewAsUser.isAdmin || !pageConfig) {
-    return null; // Navigation is filtered, so this prevents direct URL access.
-  }
-
-  const pageTabs = appSettings.tabs.filter(t => pageConfig.associatedTabs.includes(t.id));
-
-  return (
-    <div className="flex flex-col gap-8">
-      <div className="flex items-center gap-3">
-        <GoogleSymbol name={pageConfig.icon} className="text-6xl" weight={100} />
-        <TooltipProvider>
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <h1 className="font-headline text-3xl font-thin">{pageConfig.name}</h1>
-                </TooltipTrigger>
-                {pageConfig.description && (
-                    <TooltipContent><p className="max-w-xs">{pageConfig.description}</p></TooltipContent>
-                )}
-            </Tooltip>
-        </TooltipProvider>
-      </div>
-      <Tabs defaultValue={pageTabs[0]?.id} className="w-full">
-        <TabsList className="flex w-full">
-          {pageTabs.map(tab => (
-            <TabsTrigger key={tab.id} value={tab.id} className="flex-1 gap-2">
-              <GoogleSymbol name={tab.icon} className="text-4xl" weight={100} />
-              <span>{tab.name}</span>
-            </TabsTrigger>
-          ))}
-        </TabsList>
-        {pageTabs.map(tab => {
-          const ContentComponent = componentMap[tab.componentKey];
-          return (
-            <TabsContent key={tab.id} value={tab.id} className="mt-6">
-              {ContentComponent ? <ContentComponent tab={tab} /> : <div>Component for {tab.name} not found.</div>}
-            </TabsContent>
-          );
-        })}
-      </Tabs>
-    </div>
-  );
-}
-
-const AdminPageSkeleton = () => (
-    <div className="flex flex-col gap-8">
-      <Skeleton className="h-10 w-72" />
-      <Skeleton className="h-10 w-full" />
-      <div className="flex flex-wrap gap-6">
-        <Skeleton className="h-64 basis-full md:basis-[calc(50%-0.75rem)] lg:basis-[calc(33.333%-1rem)]" />
-        <Skeleton className="h-64 basis-full md:basis-[calc(50%-0.75rem)] lg:basis-[calc(33.333%-1rem)]" />
-        <Skeleton className="h-64 basis-full md:basis-[calc(50%-0.75rem)] lg:basis-[calc(33.333%-1rem)]" />
-      </div>
-    </div>
-);
-
