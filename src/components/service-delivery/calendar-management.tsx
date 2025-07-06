@@ -41,7 +41,7 @@ const predefinedColors = [
     '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
 ];
 
-function CalendarCard({ calendar, onUpdate, onDelete }: { calendar: SharedCalendar; onUpdate: (id: string, data: Partial<SharedCalendar>) => void; onDelete: (calendar: SharedCalendar) => void; }) {
+function CalendarCard({ calendar, onUpdate, onDelete, isDragging }: { calendar: SharedCalendar; onUpdate: (id: string, data: Partial<SharedCalendar>) => void; onDelete: (calendar: SharedCalendar) => void; isDragging?: boolean; }) {
   const [isEditingName, setIsEditingName] = useState(false);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -98,7 +98,7 @@ function CalendarCard({ calendar, onUpdate, onDelete }: { calendar: SharedCalend
   };
 
   return (
-    <Card className="flex flex-col group bg-transparent">
+    <Card className={cn("flex flex-col group bg-transparent", isDragging && "shadow-xl")}>
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
@@ -343,7 +343,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                 >
                     {calendars.map((calendar, index) => (
                         <Draggable key={calendar.id} draggableId={calendar.id} index={index}>
-                            {(provided) => (
+                            {(provided, snapshot) => (
                                 <div
                                     ref={provided.innerRef}
                                     {...provided.draggableProps}
@@ -354,6 +354,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                                         calendar={calendar}
                                         onUpdate={handleUpdate}
                                         onDelete={openDeleteDialog}
+                                        isDragging={snapshot.isDragging}
                                     />
                                 </div>
                             )}

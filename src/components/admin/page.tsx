@@ -205,12 +205,14 @@ function AdminGroupCard({
   group,
   users, 
   onUpdate, 
-  onDelete
+  onDelete,
+  isDragging
 }: { 
   group: AdminGroup; 
   users: User[]; 
   onUpdate: (updatedGroup: AdminGroup) => void;
   onDelete: () => void;
+  isDragging?: boolean;
 }) {
     const { toast } = useToast();
     const { updateUser } = useUser();
@@ -299,7 +301,7 @@ function AdminGroupCard({
     };
 
     return (
-        <Card className="flex flex-col h-full bg-transparent">
+        <Card className={cn("flex flex-col h-full bg-transparent", isDragging && "shadow-xl")}>
             <CardHeader>
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
@@ -713,12 +715,9 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                             ref={provided.innerRef} 
                             {...provided.draggableProps} 
                             {...provided.dragHandleProps} 
-                            className={cn(
-                                "basis-full md:basis-[calc(50%-0.75rem)] lg:basis-[calc(33.333%-1rem)] flex-grow-0", 
-                                snapshot.isDragging && "shadow-xl"
-                            )}
+                            className="basis-full md:basis-[calc(50%-0.75rem)] lg:basis-[calc(33.333%-1rem)] flex-grow-0"
                           >
-                            <AdminGroupCard group={group} users={users} onUpdate={handleUpdateAdminGroup} onDelete={() => handleDeleteAdminGroup(group)} />
+                            <AdminGroupCard group={group} users={users} onUpdate={handleUpdateAdminGroup} onDelete={() => handleDeleteAdminGroup(group)} isDragging={snapshot.isDragging} />
                           </div>
                         )}
                       </Draggable>
@@ -1149,7 +1148,6 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
     const { toast } = useToast();
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const titleInputRef = useRef<HTMLInputElement>(null);
-    const [draggingItemId, setDraggingItemId] = useState<string | null>(null);
 
     const pinnedIds = useMemo(() => ['page-admin-management', 'page-notifications', 'page-settings'], []);
 
@@ -1204,7 +1202,6 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
     };
     
     const onDragEnd = (result: DropResult) => {
-        setDraggingItemId(null);
         const { source, destination, draggableId } = result;
     
         if (!destination) return;
@@ -1255,7 +1252,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
     };
 
     return (
-        <DragDropContext onDragStart={(start) => setDraggingItemId(start.draggableId)} onDragEnd={onDragEnd}>
+        <DragDropContext onDragEnd={onDragEnd}>
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -1320,8 +1317,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                                                 {...provided.dragHandleProps}
                                                 className={cn(
                                                     "basis-full sm:basis-[calc(50%-0.5rem)] md:basis-[calc(33.333%-0.667rem)] lg:basis-[calc(25%-0.75rem)] xl:basis-[calc(20%-0.8rem)] flex-grow-0",
-                                                    isPinned && "opacity-70",
-                                                    draggingItemId === page.id && "opacity-50"
+                                                    isPinned && "opacity-70"
                                                 )}
                                             >
                                                 <PageCard
@@ -1348,7 +1344,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
 
 // #region Tabs Management Tab
 
-function TabCard({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string, data: Partial<AppTab>) => void }) {
+function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: string, data: Partial<AppTab>) => void; isDragging?: boolean; }) {
     const [isEditingName, setIsEditingName] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
@@ -1431,7 +1427,7 @@ function TabCard({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string, data: 
     const filteredIcons = useMemo(() => googleSymbolNames.filter(icon => icon.toLowerCase().includes(iconSearch.toLowerCase())), [iconSearch]);
 
     return (
-        <Card className="flex flex-col h-full bg-transparent">
+        <Card className={cn("flex flex-col h-full bg-transparent", isDragging && "shadow-xl")}>
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -1593,7 +1589,7 @@ export const TabsManagement = ({ tab }: { tab: AppTab }) => {
                         <div {...provided.droppableProps} ref={provided.innerRef} className="flex flex-wrap gap-6">
                             {appSettings.tabs.map((appTab, index) => (
                                 <Draggable key={appTab.id} draggableId={appTab.id} index={index}>
-                                    {(provided) => (
+                                    {(provided, snapshot) => (
                                         <div
                                             ref={provided.innerRef}
                                             {...provided.draggableProps}
@@ -1603,6 +1599,7 @@ export const TabsManagement = ({ tab }: { tab: AppTab }) => {
                                             <TabCard
                                                 tab={appTab}
                                                 onUpdate={handleUpdateTab}
+                                                isDragging={snapshot.isDragging}
                                             />
                                         </div>
                                     )}

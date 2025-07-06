@@ -171,11 +171,13 @@ function TeamCard({
     allUsers, 
     onUpdate, 
     onDelete, 
+    isDragging
 }: { 
     team: Team, 
     allUsers: User[], 
     onUpdate: (id: string, data: Partial<Team>) => void, 
     onDelete: (team: Team) => void,
+    isDragging?: boolean,
 }) {
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isEditingName, setIsEditingName] = useState(false);
@@ -236,7 +238,7 @@ function TeamCard({
     }, [allUsers, team.members]);
 
     return (
-        <Card className="flex flex-col h-full bg-transparent group">
+        <Card className={cn("flex flex-col h-full bg-transparent group", isDragging && "shadow-xl")}>
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -545,7 +547,7 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
                 >
                     {teams.map((team, index) => (
                          <Draggable key={team.id} draggableId={team.id} index={index}>
-                            {(provided) => (
+                            {(provided, snapshot) => (
                                 <div
                                     ref={provided.innerRef}
                                     {...provided.draggableProps}
@@ -557,6 +559,7 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
                                         allUsers={users} 
                                         onUpdate={handleUpdate} 
                                         onDelete={openDeleteDialog}
+                                        isDragging={snapshot.isDragging}
                                     />
                                 </div>
                             )}
