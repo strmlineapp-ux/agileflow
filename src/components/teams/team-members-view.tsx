@@ -81,7 +81,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
       updateTeam(team.id, { members: newMemberIds });
     };
 
-    const renderMemberList = (userList: User[], droppableId: string) => (
+    const renderMemberList = (userList: User[], droppableId: string, idPrefix: string) => (
       <StrictModeDroppable droppableId={droppableId} isDropDisabled={false}>
         {(provided) => (
           <div 
@@ -90,7 +90,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
             className="flex flex-wrap -m-3"
           >
             {userList.map((member, index) => (
-              <Draggable key={member.userId} draggableId={member.userId} index={index} ignoreContainerClipping={false}>
+              <Draggable key={member.userId} draggableId={`${idPrefix}-${member.userId}`} index={index} ignoreContainerClipping={false}>
                 {(provided, snapshot) => (
                   <div
                     ref={provided.innerRef}
@@ -133,14 +133,14 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
             
             <div className="space-y-4">
               <h3 className="font-headline font-thin text-xl">Team Admins</h3>
-              {admins.length > 0 ? renderMemberList(admins, 'admins-list') : (
+              {admins.length > 0 ? renderMemberList(admins, 'admins-list', 'admin') : (
                 <div className="text-sm text-muted-foreground p-4 border border-dashed rounded-lg text-center">No team admins assigned.</div>
               )}
             </div>
 
             <div className="space-y-4">
               <h3 className="font-headline font-thin text-xl">Members</h3>
-              {members.length > 0 ? renderMemberList(members, 'members-list') : (
+              {members.length > 0 ? renderMemberList(members, 'members-list', 'member') : (
                 <div className="text-sm text-muted-foreground p-4 border border-dashed rounded-lg text-center">No other members in this team.</div>
               )}
             </div>
