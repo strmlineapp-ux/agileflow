@@ -337,7 +337,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
         <StrictModeDroppable droppableId="calendars-list" isDropDisabled={false} isCombineEnabled={false}>
             {(provided) => (
                 <div
-                    className="flex flex-wrap gap-6"
+                    className="flex flex-wrap -m-3"
                     ref={provided.innerRef}
                     {...provided.droppableProps}
                 >
@@ -348,7 +348,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                                     ref={provided.innerRef}
                                     {...provided.draggableProps}
                                     {...provided.dragHandleProps}
-                                    className="basis-full md:basis-[calc(50%-0.75rem)] lg:basis-[calc(33.333%-1rem)] flex-grow-0"
+                                    className="p-3 basis-full md:basis-1/2 lg:basis-1/3"
                                 >
                                     <CalendarCard
                                         calendar={calendar}

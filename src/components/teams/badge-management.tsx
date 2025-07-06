@@ -81,15 +81,13 @@ function CompactSearchIconPicker({
   return (
     <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
       <PopoverTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className={cn("p-0", buttonClassName)}
+        <button
+          className={cn("p-0 flex items-center justify-center", buttonClassName)}
           style={color ? { color } : {}}
           disabled={disabled}
         >
           <GoogleSymbol name={icon} className={cn("text-3xl", iconClassName)} weight={weight} />
-        </Button>
+        </button>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0">
         <div className="flex items-center gap-1 p-2 border-b">
@@ -1280,8 +1278,8 @@ export const BadgeManagement = ({ team, tab }: { team: Team, tab: AppTab }) => {
                     <StrictModeDroppable droppableId="collections-list" type="collection" isDropDisabled={false} isCombineEnabled={false}>
                         {(provided, snapshot) => (
                             <div 
-                                ref={provided.innerRef}
-                                {...provided.droppableProps}
+                                ref={provided.innerRef} 
+                                {...provided.droppableProps} 
                                 className={cn(
                                     "flex flex-wrap -m-2 transition-all duration-300",
                                     snapshot.isDraggingOver && "ring-1 ring-border ring-inset p-2 rounded-lg"
@@ -1294,9 +1292,8 @@ export const BadgeManagement = ({ team, tab }: { team: Team, tab: AppTab }) => {
                                                 ref={provided.innerRef}
                                                 {...provided.draggableProps}
                                                 className={cn(
-                                                    "w-full p-2 transition-all duration-300",
-                                                    isSharedPanelOpen ? "lg:w-1/2" : "lg:w-1/3",
-                                                    snapshot.isDragging && "shadow-xl"
+                                                    "p-2 w-full transition-all duration-300",
+                                                    isSharedPanelOpen ? "lg:w-1/2" : "lg:w-1/3"
                                                 )}
                                             >
                                                 <BadgeCollectionCard
@@ -1332,7 +1329,7 @@ export const BadgeManagement = ({ team, tab }: { team: Team, tab: AppTab }) => {
                             <div 
                                 ref={provided.innerRef} 
                                 {...provided.droppableProps} 
-                                className={cn("h-full rounded-lg transition-all", snapshot.isDraggingOver && "bg-accent/50 ring-2 ring-border ring-inset")}
+                                className={cn("h-full rounded-lg transition-all", snapshot.isDraggingOver && "ring-1 ring-border ring-inset")}
                             >
                                 <Card className={cn("transition-opacity duration-300 h-full bg-transparent", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
                                     <CardHeader>

@@ -309,9 +309,9 @@ function AdminGroupCard({
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-12 w-12 text-6xl">
-                                                    <GoogleSymbol name={group.icon} className="text-12xl" weight={100} />
-                                                </Button>
+                                                <button className="h-12 w-12 flex items-center justify-center">
+                                                    <GoogleSymbol name={group.icon} className="text-6xl" weight={100} />
+                                                </button>
                                             </PopoverTrigger>
                                         </TooltipTrigger>
                                         <TooltipContent><p>Change Icon</p></TooltipContent>
@@ -670,8 +670,8 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
             
             <StrictModeDroppable droppableId="admin-groups-list" type="group-card" isDropDisabled={false} isCombineEnabled={false}>
               {(provided) => (
-                  <div ref={provided.innerRef} {...provided.droppableProps} className="flex flex-wrap gap-6">
-                      <div className="basis-full md:basis-[calc(50%-0.75rem)] lg:basis-[calc(33.333%-1rem)]">
+                  <div ref={provided.innerRef} {...provided.droppableProps} className="flex flex-wrap -m-3">
+                      <div className="p-3 basis-full md:basis-1/2 lg:basis-1/3">
                         <Card className="flex flex-col h-full bg-transparent">
                             <CardHeader>
                               <div className="flex items-center gap-2">
@@ -713,10 +713,7 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                             ref={provided.innerRef} 
                             {...provided.draggableProps} 
                             {...provided.dragHandleProps} 
-                            className={cn(
-                                "basis-full md:basis-[calc(50%-0.75rem)] lg:basis-[calc(33.333%-1rem)]", 
-                                snapshot.isDragging && "shadow-xl"
-                            )}
+                            className="p-3 basis-full md:basis-1/2 lg:basis-1/3"
                           >
                             <AdminGroupCard group={group} users={users} onUpdate={handleUpdateAdminGroup} onDelete={() => handleDeleteAdminGroup(group)} />
                           </div>
@@ -1023,9 +1020,9 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-12 w-12 text-6xl">
-                                                    <GoogleSymbol name={page.icon} className="text-12xl" weight={100} />
-                                                </Button>
+                                                <button className="h-12 w-12 flex items-center justify-center">
+                                                    <GoogleSymbol name={page.icon} className="text-6xl" weight={100} />
+                                                </button>
                                             </PopoverTrigger>
                                         </TooltipTrigger>
                                         <TooltipContent><p>Change Icon</p></TooltipContent>
@@ -1149,7 +1146,6 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
     const { toast } = useToast();
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const titleInputRef = useRef<HTMLInputElement>(null);
-    const [draggingItemId, setDraggingItemId] = useState<string | null>(null);
 
     const pinnedIds = useMemo(() => ['page-admin-management', 'page-notifications', 'page-settings'], []);
 
@@ -1204,7 +1200,6 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
     };
     
     const onDragEnd = (result: DropResult) => {
-        setDraggingItemId(null);
         const { source, destination, draggableId } = result;
     
         if (!destination) return;
@@ -1255,7 +1250,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
     };
 
     return (
-        <DragDropContext onDragStart={(start) => setDraggingItemId(start.draggableId)} onDragEnd={onDragEnd}>
+        <DragDropContext onDragEnd={onDragEnd}>
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -1307,7 +1302,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                         <div
                             ref={provided.innerRef}
                             {...provided.droppableProps}
-                            className="flex flex-wrap gap-4"
+                            className="flex flex-wrap -m-2"
                         >
                             {appSettings.pages.map((page, index) => {
                                 const isPinned = pinnedIds.includes(page.id);
@@ -1319,9 +1314,8 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                                                 {...provided.draggableProps}
                                                 {...provided.dragHandleProps}
                                                 className={cn(
-                                                    "basis-full sm:basis-[calc(50%-0.5rem)] md:basis-[calc(33.33%-0.667rem)] lg:basis-[calc(25%-0.75rem)] xl:basis-[calc(20%-0.8rem)]",
-                                                    isPinned && "opacity-70",
-                                                    draggingItemId === page.id && "opacity-50"
+                                                    "p-2 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5",
+                                                    isPinned && "opacity-70"
                                                 )}
                                             >
                                                 <PageCard
@@ -1348,7 +1342,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
 
 // #region Tabs Management Tab
 
-function TabCard({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string, data: Partial<AppTab>) => void }) {
+function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: string, data: Partial<AppTab>) => void; isDragging?: boolean; }) {
     const [isEditingName, setIsEditingName] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
@@ -1431,7 +1425,7 @@ function TabCard({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string, data: 
     const filteredIcons = useMemo(() => googleSymbolNames.filter(icon => icon.toLowerCase().includes(iconSearch.toLowerCase())), [iconSearch]);
 
     return (
-        <Card className="flex flex-col h-full bg-transparent">
+        <Card className={cn("flex flex-col h-full bg-transparent", isDragging && "shadow-xl")}>
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -1441,9 +1435,9 @@ function TabCard({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string, data: 
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-12 w-12 text-6xl">
-                                                    <GoogleSymbol name={tab.icon} className="text-12xl" weight={100} />
-                                                </Button>
+                                                 <button className="h-12 w-12 flex items-center justify-center">
+                                                    <GoogleSymbol name={tab.icon} className="text-6xl" weight={100} />
+                                                </button>
                                             </PopoverTrigger>
                                         </TooltipTrigger>
                                         <TooltipContent><p>Change Icon</p></TooltipContent>
@@ -1590,19 +1584,20 @@ export const TabsManagement = ({ tab }: { tab: AppTab }) => {
                 </div>
                 <StrictModeDroppable droppableId="tabs-list" isDropDisabled={false}>
                     {(provided) => (
-                        <div {...provided.droppableProps} ref={provided.innerRef} className="flex flex-wrap gap-6">
+                        <div {...provided.droppableProps} ref={provided.innerRef} className="flex flex-wrap -m-3">
                             {appSettings.tabs.map((appTab, index) => (
                                 <Draggable key={appTab.id} draggableId={appTab.id} index={index}>
-                                    {(provided) => (
+                                    {(provided, snapshot) => (
                                         <div
                                             ref={provided.innerRef}
                                             {...provided.draggableProps}
                                             {...provided.dragHandleProps}
-                                            className="basis-full md:basis-[calc(50%-0.75rem)] lg:basis-[calc(33.333%-1rem)]"
+                                            className="p-3 basis-full md:basis-1/2 lg:basis-1/3"
                                         >
                                             <TabCard
                                                 tab={appTab}
                                                 onUpdate={handleUpdateTab}
+                                                isDragging={snapshot.isDragging}
                                             />
                                         </div>
                                     )}

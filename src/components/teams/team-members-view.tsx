@@ -96,7 +96,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                     <div 
                       ref={provided.innerRef} 
                       {...provided.droppableProps} 
-                      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                      className="flex flex-wrap -m-3"
                     >
                         {teamMembers.map((member, index) => (
                             <Draggable key={member.userId} draggableId={member.userId} index={index}>
@@ -105,7 +105,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                                   ref={provided.innerRef}
                                   {...provided.draggableProps}
                                   {...provided.dragHandleProps}
-                                  className={cn(snapshot.isDragging && "opacity-80 shadow-xl")}
+                                  className={cn("p-3 basis-full md:basis-1/2 lg:basis-1/3", snapshot.isDragging && "opacity-80 shadow-xl")}
                                 >
                                   <TeamMemberCard member={member} team={team} />
                                 </div>
