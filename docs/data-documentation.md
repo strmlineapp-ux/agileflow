@@ -1,8 +1,9 @@
 # AgileFlow: Data Documentation
 
-This document provides a detailed breakdown of the data structures, entities, and their relationships within the AgileFlow application. It serves as a technical reference for understanding how data flows through the system and interacts with internal and external services.
+This document provides a detailed breakdown of the data structures, entities, and their relationships within the AgileFlow application. The data architecture is designed for a **Firestore (NoSQL) database environment**, which influences how data is structured and related. It serves as a technical reference for understanding how data flows through the system and interacts with internal and external services.
 
 ## User Entity
+**Firestore Collection**: `/users/{userId}`
 
 The `User` is the central entity in the AgileFlow application. A user's identity, roles, and preferences dictate their experience and permissions throughout the system.
 
@@ -22,9 +23,10 @@ This table details the information stored directly within each `User` object.
 | `phone?: string` | **Google Service.** The user's contact phone number. This is designed to be populated from the user's **Google Account profile** **after the user grants the necessary permissions**. |
 | `location?: string` | **Google Service.** The user's primary work location. This is designed to be populated from the user's **Google Account profile** (from their address information) **after the user grants the necessary permissions**. |
 | `googleCalendarLinked: boolean` | **Google Service.** A flag that is set to `true` only after the user successfully completes an OAuth consent flow via **Firebase Authentication** to grant the app permission to access their Google Calendar. |
-| `roles?: string[]` | **Internal.** An array of role name strings. This is a flat list that includes both System-Level roles (e.g., "Service Admin") and team-specific Badges (e.g., "Camera"). The application determines the role's meaning and properties by looking it up in `AppSettings` or the relevant `Team` object. |
+| `roles?: string[]` | **Internal.** An array of strings that includes the names of any `AdminGroup`s the user belongs to and any `Badge`s they have been assigned. The application determines the name's meaning and properties by looking it up in `AppSettings` or the relevant `Team` object. |
 | `directReports?: string[]` | **Internal.** An array of `userId`s for users who report directly to this user. This is currently informational. |
-| `theme?: 'light' \| 'dark' \| ...` | **Internal.** A UI preference for the app's color scheme. |
+| `theme?: 'light' \| 'dark'` | **Internal.** A UI preference for the app's color scheme. |
+| `primaryColor?: string` | **Internal.** A user-selected hex color code that overrides the default primary color of their chosen theme. |
 | `defaultCalendarView?: 'month' \| 'week' \| ...` | **Internal.** A UI preference for the default calendar layout. |
 | `easyBooking?: boolean` | **Internal.** A UI preference for enabling quick event creation from the calendar. |
 | `timeFormat?: '12h' \| '24h'` | **Internal.** A UI preference for displaying time in 12-hour or 24-hour format. |
@@ -33,12 +35,12 @@ This table details the information stored directly within each `User` object.
 
 The application uses a combination of the `isAdmin` flag and the `roles` array to dictate a user's permissions and capabilities. There are two main categories:
 
-1.  **System-Level Roles**
-    *   **Description**: These are high-privilege roles that grant broad, application-wide permissions. They are checked directly in the code to control access to entire pages or administrative features.
+1.  **Admin Groups & Roles**
+    *   **Description**: These are high-privilege groups that grant broad, application-wide permissions. They are checked directly in the code to control access to entire pages or administrative features.
     *   **Types**:
         *   **Admin**: The highest-level role, controlled by the `isAdmin` boolean flag on the `User` object. It grants universal access.
-        *   **Custom Admin Roles** (e.g., "Service Admin"): These roles are defined as `CustomAdminRole` objects within `AppSettings`. They allow for a granular hierarchy of permissions between the main `Admin` and standard users.
-    *   **Management**: The `Admin` status is managed on the **Admin Management** page. Custom Admin Roles are also created, ordered, and assigned to users on this page. Assigning a user to one of these roles adds the role's `name` to the user's `roles` array.
+        *   **Admin Groups** (e.g., "Service Admin"): These groups are defined as `AdminGroup` objects within `AppSettings`. They allow for a granular hierarchy of permissions between the main `Admin` and standard users.
+    *   **Management**: The `Admin` status is managed on the **Admin Management** page. Custom Admin Groups are also created, ordered, and assigned to users on this page. Assigning a user to one of these groups adds the group's `name` to the user's `roles` array.
 
 2.  **Badges (Team-Specific)**
     *   **Description**: These are functional roles (now called "Badges") defined within a specific `Team` and are used for contextual assignments, such as assigning a "Camera Operator" to a specific event. They are grouped into **Badge Collections**.
@@ -53,49 +55,81 @@ This section describes how a `User`'s actions connect them to other data entitie
 | :--- | :--- |
 | **Login** | The `LoginForm`'s "Sign in with Google" button triggers **Firebase Authentication**. This service handles the entire OAuth flow with Google, authenticating the user and providing a secure token and basic profile information. |
 | **Event Creation & Google Meet** | In the `EventForm`, the "Meet link" option calls the `createMeetLink` Genkit AI flow. In a production system, this flow would make an authenticated call to the **Google Calendar API** to create an event and generate a Google Meet URL. The prototype currently simulates this. |
-| **Linking Google Calendar** | In `UserManagement`, clicking to connect a calendar initiates the `linkGoogleCalendar` function. This uses **Firebase Authentication** to specifically request the `calendar.readonly` scope from Google, which is required to read a user's calendar data. |
-| **Team Membership** | A user is associated with a `Team` via the `members`, `teamAdmins`, and `locationCheckManagers` arrays within the `Team` object. |
+| **Linking Google Calendar** | In the `UserManagement` settings, clicking to connect a calendar initiates the `linkGoogleCalendar` function. This uses **Firebase Authentication** to specifically request the `calendar.readonly` scope from Google, which is required to read a user's calendar data. |
+| **Team Membership** | A user is associated with a `Team` via the `members`, `teamAdmins`, and `locationCheckManagers` arrays within the `Team` object. This is a standard NoSQL approach, storing an array of IDs to avoid database joins. |
 | **Event Association** | A user is linked to an `Event` as its `createdBy`, as an `attendee`, or through `roleAssignments`. |
 | **Task Association** | A user is linked to a `Task` as its `createdBy` or through the `assignedTo` array. |
 | **Notification Source** | A user is the source of notifications generated by their actions (e.g., "Alice Johnson mentioned you..."). Admins receive system-level notifications like access requests. |
 
 ### Implicit Permissions & Contextual Data
 
-Not all user capabilities are stored directly as a field on the `User` object. Many permissions and statuses are determined contextually or are managed in other parts of the application's state.
+Not all user capabilities are stored directly as a field on the `User` object. Many permissions and statuses are determined contextually or are managed in other parts of the application's state. This client-side logic complements the NoSQL data model.
 
 | Capability | Where Data is Stored & How It's Used |
 | :--- | :--- |
-| **Absence Statuses** (e.g., `PTO`, `Sick`) | **Storage:** This data is **not stored on the `User` object**. It is managed in the `userStatusAssignments` state within the `UserContext`, which is a dictionary keyed by date (`YYYY-MM-DD`).<br>**Usage:** The `ProductionScheduleView` allows authorized managers to assign these statuses to users for specific days. The calendar then uses this data to visually indicate a user's availability. |
-| **Access to Pages** (e.g., `/admin`) | **Storage:** This is **not stored directly as data**. Access control is handled directly in the UI components.<br>**Usage:** Components like the `Sidebar` and the page layouts contain logic that checks the current user's `isAdmin` flag or `roles` array (e.g., `user.isAdmin`). If the required role is not present, the link or the entire page is not rendered. |
+| **Absence Statuses** (e.g., `PTO`, `Sick`) | **Storage:** This data is **not stored on the `User` object**. It is managed in the `userStatusAssignments` state within the `UserContext`, which is a dictionary keyed by date (`YYYY-MM-DD`). In a production Firestore environment, this might be a subcollection under a `/user-statuses` collection for efficient querying by date.<br>**Usage:** The `ProductionScheduleView` allows authorized managers to assign these statuses to users for specific days. The calendar then uses this data to visually indicate a user's availability. |
+| **Access to Pages & Tabs** | **Storage:** Page and Tab access is now entirely dynamic and is configured within each `AppPage` and `AppTab` object inside `AppSettings`. Each item has an `access` object containing arrays of `userId`s, `teamId`s, and `adminGroup` names that are allowed to view it.<br>**Usage:** A central permission checker (`hasAccess`) evaluates these rules against the current user's properties (`userId`, team memberships, `roles` array). This determines if an item is rendered and if a user can access its URL directly. An empty `access` object makes an item public to all logged-in users. Importantly, access to a page **does not automatically grant access to its tabs**. The application checks tab permissions independently. |
 | **Interaction Permissions** (e.g., editing an event, managing a team) | **Storage:** This is also **not stored directly**. Permissions are derived by combining user roles with the context of a specific data item.<br>**Usage:** The application uses helper functions (like `canManageEventOnCalendar`) that check if a user's `userId` is in a `Team`'s `teamAdmins` list or if the user has a system-level role like `Admin`. This determines whether UI elements like "Edit" buttons are displayed. |
 
+## Shared Calendar Entity
+**Firestore Collection**: `/calendars/{calendarId}`
+
+This entity represents an internal AgileFlow calendar. It acts as a logical container for events within the application and can be linked to a real, external Google Calendar for future synchronization. These are managed on the **Service Delivery** page.
+
+| Data Point | Description & Link to Services |
+| :--- | :--- |
+| `id: string` | **Internal.** A unique identifier for the AgileFlow calendar. |
+| `name: string` | **Internal.** The display name for the calendar within the application. |
+| `icon: string` | **Internal.** The Google Symbol name for the calendar's icon. |
+| `color: string` | **Internal.** The hex color code used for this calendar's events in the UI. |
+| `googleCalendarId?: string` | **External (Google Calendar).** The unique ID of the Google Calendar that this internal calendar is linked to. This ID can be found in the settings of a shared Google Calendar and typically looks like an email address (e.g., `your-calendar-id@group.calendar.google.com`). This is the key for enabling event synchronization. |
+| `managers?: string[]` | **Internal.** An array of `userId`s for users who can manage this calendar's events and settings. |
+| `defaultEventTitle?: string` | **Internal.** A placeholder string for the title of new events created on this calendar. |
+| `roleAssignmentsLabel?: string` | **Internal.** A custom label for the "Role Assignments" section in the event details view. |
+
+
 ## Application-Wide Settings
+**Firestore Document**: `/app-settings/global` (A singleton document)
 
 This entity, `AppSettings`, holds global configuration data that allows for customization of the application's terminology and appearance without altering the core codebase. These settings are managed on the **Admin Management** and **Service Delivery** pages.
 
 ### AppSettings Data
 
-| Data Point | Description & Link to Services |
+| Data Point | Description |
 | :--- | :--- |
-| `customAdminRoles: CustomAdminRole[]` | **Internal.** An array of objects defining custom administrative roles. This allows admins to create a hierarchy of roles between the system `Admin` and standard users. Each role has a name, icon, and color, which are editable on the Admin Management page. |
-| `linkGroups: Record<string, LinkGroup>` | **Internal.** A dictionary that stores the shared properties (icon and color) for linked `CustomAdminRole` entities. The key is the `linkGroupId`. |
-| `calendarManagementLabel?: string` | **Internal.** An alias for the "Calendar Management" tab on the Service Delivery page. |
-| `teamManagementLabel?: string` | **Internal.** An alias for the "Team Management" tab on the Service Delivery page. |
-| `strategyLabel?: string` | **Internal.** An alias for the "Strategy" tab on the Service Delivery page. |
+| `adminGroups: AdminGroup[]` | An array of objects defining custom administrative groups. This allows admins to create a hierarchy between the system `Admin` and standard users. Each group has a name, icon, and color, which are editable on the Admin Management page. |
+| `pages: AppPage[]` | **The core of the dynamic navigation.** This is an array of objects defining every page in the application. The order of pages in this array directly corresponds to their order in the sidebar navigation. The order is managed on the **Admin Management** page using the "Draggable Card Management" UI pattern. Each page object includes its name, icon, URL path, access control rules, and a list of associated `tab.id`s that should be rendered on it. |
+| `tabs: AppTab[]` | **The core of the dynamic content.** This is an array of objects defining all reusable content tabs. Each object includes the tab's name, icon, a `componentKey` that maps it to a React component, and its own `access` rules. |
+| `calendarManagementLabel?: string` | An alias for the "Manage Calendars" tab on the Service Delivery page. |
+| `teamManagementLabel?: string` | An alias for the "Team Management" tab on the Service Delivery page. |
+| `strategyLabel?: string` | An alias for the "Strategy" tab on the Service Delivery page. |
 
-### CustomAdminRole Entity
-A sub-entity of `AppSettings`, `CustomAdminRole` defines a single, dynamic administrative level.
+### AppTab Entity
+A sub-entity of `AppSettings`, `AppTab` defines a single, reusable content block.
 
 | Data Point | Description |
 | :--- | :--- |
-| `id: string` | **Internal.** A unique identifier for the custom role. |
-| `name: string` | **Internal.** The display name for the role (e.g., "Service Admin", "Service Admin+"). This is editable inline on the Admin Management page. |
-| `icon: string` | **Internal.** The Google Symbol name for the icon associated with the role. |
+| `id: string` | A unique identifier for the tab. |
+| `name: string` | The display name for the tab. |
+| `icon: string` | The Google Symbol name for the tab's icon. |
+| `color: string` | The hex color for the tab's icon. |
+| `description?: string` | An optional description for the tab, often used for tooltips. |
+| `componentKey: string` | A key that maps this tab to a specific React component to render its content. |
+| `access?: AccessControl` | **Optional.** An object containing arrays of `userId`s, `teamId`s, and `adminGroup` names that can view this tab. If omitted, access is considered public or inherited from the page. |
+
+### AdminGroup Entity
+A sub-entity of `AppSettings`, `AdminGroup` defines a single, dynamic administrative level.
+
+| Data Point | Description |
+| :--- | :--- |
+| `id: string` | **Internal.** A unique identifier for the custom group. |
+| `name: string` | **Internal.** The display name for the group (e.g., "Service Admin", "Service Admin+"). This is editable inline on the Admin Management page. |
+| `icon: string` | **Internal.** The Google Symbol name for the icon associated with the group. |
 | `color: string` | **Internal.** The hex color code for the icon's badge. |
-| `linkGroupId?: string` | **Internal.** An identifier used to group multiple `CustomAdminRole` entities at the same hierarchical level. If present, it points to a key in `AppSettings.linkGroups`. |
-| `teamAdmins?: string[]` | **Internal.** An array of `userId`s for users who have been designated as a "Team Admin" for this specific role level. This is managed on the Admin Management page. |
+| `groupAdmins?: string[]` | **Internal.** An array of `userId`s for users who have been designated as an "Admin" for this specific group, granting them elevated permissions for pages associated with this group. |
 
 ## Team Entity
+**Firestore Collection**: `/teams/{teamId}`
 
 The `Team` entity groups users together and defines a set of team-specific configurations, most notably their functional **Badges**.
 
@@ -106,23 +140,38 @@ The `Team` entity groups users together and defines a set of team-specific confi
 | `id: string` | A unique identifier for the team. |
 | `name: string` | The display name of the team. |
 | `icon: string` | The Google Symbol name for the team's icon. |
+| `color: string` | The hex color for the team's icon. |
 | `members: string[]` | An array of `userId`s for all members of the team. |
 | `teamAdmins: string[]` | A subset of `members` who have administrative privileges for this team. |
-| `badgeCollections: BadgeCollection[]` | An array of collections, which group the team's functional **Badges**. For now, there is one collection per team: "Skills". |
+| `allBadges: Badge[]` | The single source of truth for all `Badge` objects **owned** by this team. |
+| `badgeCollections: BadgeCollection[]` | An array of `BadgeCollection` objects. This includes collections *owned* by the team, and *links* to collections owned by other teams. |
+| `userBadgesLabel?: string` | A custom label for the "Team Badges" section on the Team Members tab. |
 
 ### BadgeCollection Entity
-A sub-entity of `Team`, this groups related Badges together.
+A sub-entity of `Team`, this groups related Badges together. It can be owned by the team or shared with others.
 
 | Data Point | Description |
 | :--- | :--- |
+| `id: string` | A unique identifier for the collection. |
+| `ownerTeamId: string` | The `teamId` of the team that owns the source of truth for this collection. |
+| `isShared?: boolean` | **Internal.** If `true`, this collection and its badges will be visible to all other teams in the application. Sharing is controlled by the owner team. |
 | `name: string` | The name of the collection (e.g., "Skills"). |
-| `badges: Badge[]` | An array of `Badge` objects belonging to this collection. |
+| `icon: string` | The Google Symbol name for the collection's icon. |
+| `color: string` | The hex color for the collection's icon. |
+| `badgeIds: string[]` | An array of `badgeId`s belonging to this collection. This can include badges owned by this team or linked from other shared collections. |
+| `applications?: BadgeApplication[]` | Defines where badges from this collection can be applied (e.g., 'Team Members', 'Events'). For linked collections, this is a local override; changing it does not affect the original shared collection. |
+| `viewMode: 'assorted' \| 'detailed' \| 'list'` | **Internal.** A UI preference for how to display the badges within this collection. |
+| `description?: string` | An optional description for the collection. |
+
 
 ### Badge Entity
-This represents a specific, functional role or skill within a team.
+This represents a specific, functional role or skill within a team. The single source of truth for a badge is stored in the `allBadges` array of its owner's `Team` object.
 
 | Data Point | Description |
 | :--- | :--- |
+| `id: string` | A unique identifier for the badge. |
+| `ownerCollectionId: string` | The `collectionId` of the badge's original, "source-of-truth" collection. |
 | `name: string` | The display name for the badge (e.g., "Camera", "Audio"). |
 | `icon: string` | The Google Symbol name for the badge's icon. |
 | `color: string` | The hex color code for the badge's icon and outline. |
+| `description?: string` | An optional description shown in tooltips. |

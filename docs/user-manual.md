@@ -68,36 +68,32 @@ The **Notifications** page keeps you informed.
 
 ## 7. Settings & Preferences
 
-### 7.1 User Preferences
-Access your preferences by clicking your avatar in the bottom-left corner of the sidebar.
+Access your preferences by clicking your avatar in the bottom-left corner of the sidebar and selecting **"Account Settings"**. This page allows you to customize your experience and manage your profile.
+
 - **Change Colour Scheme**: Choose between `light` and `dark` themes. You can also select a custom primary color to override the theme's default.
 - **Set Default Calendar View**: Select which calendar view you want to see when you log in.
 - **Set Time Format**: Choose between 12-hour and 24-hour time display.
 - **Enable Easy Booking**: Toggle the quick-create event feature.
-
-### 7.2 User Management Page
-Navigate to **Settings > User Management** from the sidebar (availability depends on permissions).
-- **View All Users**: See a list of all users in the system.
-- **Edit Contact Info**: Click the arrow on a user row to expand it. You can edit your own contact phone number.
-- **Link Google Calendar**: Click the grey dot on your avatar to link your Google Calendar, which enables features like creating Meet links.
+- **Edit Contact Info**: Click the arrow on your user row to expand it. You can edit your own contact phone number.
+- **Link Google Calendar**: To connect your Google Calendar, click the grey status dot on your avatar. A tooltip will confirm the action. A simulated Google sign-in will appear and, once complete, will enable features like creating Google Meet links for your events.
 
 ## 8. Management Pages (Admin & Manager Roles)
 
 ### 8.1 Admin Management (`/dashboard/admin`)
 This is the central control panel for configuring the application itself.
-- **Admin Groups**: Create and manage high-level administrative groups. To assign users, click the `add_circle` button on a group's card; you can then search for users by name or email in the popover that appears.
-- **Pages**: Configure the application's navigation. Create new pages, define their URL paths, and control who has access to them (by user, team, or admin group). You can intuitively reorder pages by dragging and dropping them in the grid. Key system pages like "Admin Management" are pinned and cannot be moved. You can also instantly duplicate any page by dragging it onto the "Add New Page" (+) button.
-- **Tabs**: Manage the reusable content blocks (tabs) that can be assigned to different pages. Edit their names, icons, and descriptions.
+- **Admin Groups**: Create and manage high-level administrative groups. To delete a group, hover over its card and click the `delete` icon that appears in the corner.
+- **Pages**: Configure the application's navigation. Create new pages, define their URL path, and control who has access to them (by user, team, or admin group). You can intuitively reorder pages by dragging and dropping them in the grid. Key system pages like "Admin Management" are pinned and cannot be moved. You can also instantly duplicate any page by dragging it onto the "Add New Page" (+) button. The "Manage Associated Tabs" popover now has a search bar to help you find tabs quickly.
+- **Tabs**: Manage the reusable content blocks (tabs) in a simple list view. Use the search bar to find a specific tab to edit.
 
 ### 8.2 Service Delivery Management (`/dashboard/service-delivery`)
 This is the central hub for global application settings.
-- **Manage Calendars**: Create, edit, or delete shared calendars. You can set a calendar's color, default event title, and assign managers.
-- **Manage Teams**: Create new teams, edit existing team details (name, icon), and assign members and managers.
+- **Manage Calendars**: Create, edit, or delete shared calendars. Hover over a calendar card and click the `delete` icon to remove it.
+- **Manage Teams**: Create new teams, edit existing team details, and manage members. Hover over a team card and click the `delete` icon to remove it.
 
 ### 8.3 Team Management (`/dashboard/teams/[teamId]`)
 This page is for managing the specifics of an individual team.
-- **Team Members**: View all members of the team and manage their team-specific badges.
-- **Badge Management**: Create or edit the custom badges available for this team (e.g., `Camera`, `Audio`).
+- **Team Members**: View all members of the team, with Team Admins always sorted to the top. For each member, you can see the badges they've been assigned, which are conveniently grouped by their parent collection.
+- **Badge Management**: Create and manage your team's badge collections. To add a new badge to a collection, click the `add_circle` icon located directly next to the collection's name.
 - **Pinned Locations**: Pin locations to the team's Production Schedule. You can also designate locations as "check locations."
 - **Workstations**: Manage a list of bookable workstations or machines for the team.
 - **Event Templates**: Create reusable templates for common events. You can edit a template's name by clicking on it directly. Click the edit icon on the template card to manage its requested roles.

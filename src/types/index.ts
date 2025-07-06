@@ -1,5 +1,4 @@
 
-
 import type React from 'react';
 
 export interface AdminGroup {
@@ -17,6 +16,11 @@ export interface AppTab {
   color: string;
   description?: string;
   componentKey: 'calendars' | 'teams' | 'team_members' | 'badges' | 'locations' | 'workstations' | 'templates' | 'adminGroups' | 'pages' | 'tabs' | 'overview' | 'tasks' | 'notifications' | 'settings' | 'calendar';
+  access?: {
+    users: string[];
+    teams: string[];
+    adminGroups: string[];
+  };
 }
 
 export interface AppPage {

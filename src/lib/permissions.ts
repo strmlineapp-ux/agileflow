@@ -1,4 +1,4 @@
-import { type User, type AppPage, type SharedCalendar, type Team, type AdminGroup } from '@/types';
+import { type User, type AppPage, type SharedCalendar, type Team, type AdminGroup, type AppTab } from '@/types';
 
 /**
  * Checks if a user has permission to manage events (create, edit, delete) on a specific calendar.
@@ -57,37 +57,35 @@ export const getAllUserRoles = (user: User, teams: Team[]): string[] => {
 
 
 /**
- * Checks if a user has permission to view a page based on its access rules.
+ * Checks if a user has permission to view a page or a tab based on its access rules.
  * @param user The user to check.
- * @param page The page configuration.
+ * @param item The AppPage or AppTab configuration.
  * @param teams The list of all teams.
  * @param adminGroups The list of all admin groups.
  * @returns `true` if the user has access, `false` otherwise.
  */
-export const hasAccess = (user: User, page: AppPage, teams: Team[], adminGroups: AdminGroup[]): boolean => {
+export const hasAccess = (user: User, item: AppPage | AppTab, teams: Team[], adminGroups: AdminGroup[]): boolean => {
     // System admin has universal access
     if (user.isAdmin) return true;
 
-    // Check for pages with no specific restrictions (accessible to all authenticated users)
-    const hasNoRestrictions =
-        page.access.users.length === 0 &&
-        page.access.teams.length === 0 &&
-        page.access.adminGroups.length === 0;
+    // Special case for the admin management page, which is only for admins
+    if ('path' in item && item.id === 'page-admin-management') {
+        return user.isAdmin;
+    }
 
-    if (hasNoRestrictions) {
-        // Exception for Admin Management page, which should only be for admins.
-        if (page.id === 'page-admin-management') {
-            return user.isAdmin;
-        }
+    const access = item.access;
+
+    // If no specific access rules are defined, we assume it's accessible
+    if (!access || (access.users.length === 0 && access.teams.length === 0 && access.adminGroups.length === 0)) {
         return true;
     }
 
     // Direct user assignment always grants access
-    if (page.access.users.includes(user.userId)) return true;
+    if (access.users.includes(user.userId)) return true;
 
     // Team-based access
     const userHasTeamAccess = teams.some(team => {
-        if (!page.access.teams.includes(team.id)) return false;
+        if (!access.teams.includes(team.id)) return false;
         const teamHasAdmins = (team.teamAdmins || []).length > 0;
         if (teamHasAdmins) {
             // If admins exist, only they have access
@@ -100,7 +98,7 @@ export const hasAccess = (user: User, page: AppPage, teams: Team[], adminGroups:
     if (userHasTeamAccess) return true;
     
     // Group-based access
-    const userHasGroupAccess = page.access.adminGroups.some(groupName => {
+    const userHasGroupAccess = access.adminGroups.some(groupName => {
         const group = adminGroups.find(g => g.name === groupName);
         if (!group) return false;
 

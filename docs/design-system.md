@@ -43,7 +43,7 @@ This pattern provides a clean, minimal interface for search functionality, espec
   - The input field appears with a transparent background and no borders or box-shadow, to maintain a minimal, "inline text" look.
 - **Behavior:**
   - The input field **must** automatically gain focus as soon as its parent popover or container becomes visible. This is achieved using a `useEffect` hook that triggers `searchInputRef.current?.focus()` after a short `setTimeout` (e.g., 100ms) to ensure the element is rendered and ready.
-- **Application:** Used for filtering lists of icons, users, or other filterable content within popovers and other compact spaces.
+- **Application:** Used for filtering lists of icons, users, or other filterable content within popovers and other compact spaces. This pattern is also used in the "Manage Associated Tabs" popover on the Pages Management tab.
 
 ---
 
@@ -80,7 +80,7 @@ This is the consistent reference pattern for allowing a user to change both an i
 
 - **Trigger:** A single, interactive unit composed of a primary icon button and a smaller color swatch badge overlaid on its corner.
 - **Interaction:**
-  - Clicking the main part of the button opens an icon picker popover. This popover uses the **Compact Search Input** pattern for filtering. The icons inside this picker are rendered at `text-4xl` with a `weight={100}` inside `h-8 w-8` buttons for clarity and ease of selection.
+  - Clicking the main part of the button opens an icon picker popover. The trigger button is a `h-16 w-16` button with a large `text-8xl` icon inside, providing a prominent click target. This popover uses the **Compact Search Input** pattern for filtering. The icons inside this picker are rendered at `text-4xl` with a `weight={100}` inside `h-8 w-8` buttons for clarity and ease of selection.
   - Clicking the color swatch badge opens a color picker popover.
 - **Application:** Used for editing team icons/colors, admin group icons/colors, and page icons/colors.
 
@@ -114,7 +114,8 @@ This pattern describes how a single entity (like a Badge or BadgeCollection) can
 ### 8. Draggable Card Management (The Gold Standard)
 This is the application's perfected, gold-standard pattern for managing a collection of entities displayed as cards. It provides a fluid, intuitive, and grid-responsive way for users to reorder and duplicate items.
 
--   **Layout**: Entities are presented in a responsive grid of cards. To ensure stability during drag operations, especially across multiple rows, the container must use a `flex flex-wrap` layout instead of CSS Grid. Each draggable card item is then given a `basis` property (e.g., `basis-full md:basis-[calc(50%-0.75rem)]`) to create the responsive columns. **Crucially, `flex-grow` should be avoided on these items**, as it can cause the grid to reflow unstably when an item is being dragged.
+-   **Layout**: Entities are presented in a responsive grid of cards. To ensure a stable layout during drag operations, the container must use a `flex flex-wrap` layout with negative margins (e.g., `-m-2` or `-m-3`). Each draggable item then receives corresponding padding (e.g., `p-2` or `p-3`) and a `flex-basis-*` utility (e.g., `basis-full md:basis-1/2 lg:basis-1/3`). **It is critical that items also have `flex-shrink-0` and `flex-grow-0` to prevent them from resizing and causing the layout to "jank" or reflow.**
+-   **Visual Feedback**: To provide feedback without disrupting layout, visual changes (like a `shadow-xl`) should be applied directly to the inner component based on the `snapshot.isDragging` prop provided by `react-beautiful-dnd`.
 -   **Internal Card Layout**: Each card is structured for clarity. The header contains the primary entity identifier (icon and name) and contextual controls (like page access or tab associations, which are positioned inline after the title). The main content area is used for tertiary information (like a URL path) which is anchored to the bottom.
 -   **User Item Display**: When users are displayed as items within a management card (e.g., `AdminGroupCard` or `TeamCard`), they are presented **without a border**. Each user item must display their avatar, full name, and professional title underneath the name for consistency.
 -   **Unique Draggable IDs**: It is critical that every `Draggable` component has a globally unique `draggableId`. If the same item (e.g., a user) can appear in multiple lists, you must create a unique ID for each instance. A common pattern is to combine the list's ID with the item's ID (e.g., `draggableId={'${list.id}-${item.id}'}`). This prevents the drag-and-drop library from trying to move all instances of the item simultaneously.
@@ -129,8 +130,8 @@ This is the application's perfected, gold-standard pattern for managing a collec
     -   **Standard & Duplication Zones (Reordering, Moving, Duplicating):** The drop area is highlighted with a `1px` inset, **colorless** ring using the standard border color (`ring-1 ring-border ring-inset`). This is the universal style for all non-destructive drop actions.
     -   **Destructive Zones (Deleting):** The drop area is highlighted with a `1px` ring in the destructive theme color (`ring-1 ring-destructive`).
 -   **Contextual Hover Actions**: To maintain a clean default UI, action icons like "Remove User" or "Delete Group" must appear only when hovering over their specific context.
-    - **Item-level**: A "remove" or "cancel" icon appears in the top-right corner of a list item (e.g., a user card or a badge) *only* when the user hovers over that specific item. This is achieved by adding a `group` class to the *individual item's container*. The icon button inside is then styled with `opacity-0 group-hover:opacity-100`. It is critical that parent containers (like the main card) do **not** also have a `group` class if it is not intended to trigger the item's hover state, as nested group classes can cause all item icons to appear at once.
-    - **Card-level**: Deleting an entire card (like a Team or Collection) is a high-impact action. To prevent accidental clicks, this functionality should be placed within a `more_vert` dropdown menu in the card's header, not triggered by a direct hover.
+    - **Item-level**: A "remove" or "cancel" icon appears in the top-right corner of a list item (e.g., a user card or a badge) *only* when the user hovers over that specific item. This is achieved by adding a `group` class to the *individual item's container*. The icon button inside is then styled with `opacity-0 group-hover:opacity-100`.
+    - **Card-level**: To enable quick management, a "delete" icon button appears in the top-right corner of management cards (e.g., Teams, Calendars, Admin Groups) when the user hovers over the card. The `relative` class must be added to the card's root element to ensure the `absolute` positioned button is anchored correctly.
 -   **Drag-to-Duplicate**:
     -   **Interaction**: A designated "Add New" icon (`<Button>`) acts as a drop zone. While a card is being dragged, this zone becomes highlighted to indicate it can accept a drop.
     -   **Behavior**: Dropping any card (pinned or not) onto this zone creates a deep, independent copy of the original. The new card is given a unique ID, a modified name (e.g., with `(Copy)`), and is placed immediately after the original in the list.
@@ -167,7 +168,7 @@ When a **high-risk destructive action** requires user confirmation (like deletin
 ---
 
 ### 11. Icon Tabs for Page Navigation
-- **Description**: For primary navigation within a page (e.g., switching between "Admin Groups" and "Pages" on the Admin Management screen), tabs should be clear, full-width, and provide strong visual cues.
+- **Description**: For primary navigation within a page (e.g., switching between "Admin Groups" and "Pages" on the Admin Management screen), tabs should be clear, full-width, and provide strong visual cues. For management pages with lists of items (like the Tabs page), a simple list view with a search bar is preferred.
 - **Appearance**:
   - Each tab trigger includes both an icon and a text label.
   - The icon is `text-4xl` with a `weight={100}` for a large but light appearance.
@@ -213,7 +214,7 @@ This pattern is a specialized, ultra-compact version of the standard `<Badge>` c
 ---
 ### 15. Team Member Badge Assignment
 This pattern describes the user interface for assigning and unassigning badges to team members.
-- **Layout**: Within each `TeamMemberCard`, badges are grouped visually by their parent `BadgeCollection`. Each collection is displayed with its name as a sub-header.
+- **Layout**: Within each `TeamMemberCard`, badges are grouped visually by their parent `BadgeCollection`. Each collection is displayed with its name as a sub-header. Team Admins are always sorted to the top of the member list.
 - **Interaction**:
     - **Click to Toggle**: A user with the correct permissions can click on any badge pill—assigned or unassigned—to toggle its state for that team member.
     - **Visual States**:

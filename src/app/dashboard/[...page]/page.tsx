@@ -8,6 +8,7 @@ import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { type AppTab, type AppPage } from '@/types';
+import { hasAccess } from '@/lib/permissions';
 
 // Import all possible tab components
 import { AdminGroupsManagement, PagesManagement, TabsManagement } from '@/app/dashboard/admin/page';
@@ -49,7 +50,7 @@ const componentMap: Record<string, React.ComponentType<any>> = {
 
 export default function DynamicPage() {
     const params = useParams();
-    const { loading, appSettings, teams } = useUser();
+    const { loading, appSettings, teams, viewAsUser } = useUser();
     
     const slug = Array.isArray(params.page) ? params.page.join('/') : (params.page || '');
     const currentPath = `/dashboard/${slug}`;
@@ -71,7 +72,10 @@ export default function DynamicPage() {
         return <div className="p-4">404 - Page not found for path: {currentPath}</div>;
     }
     
-    const pageTabs = appSettings.tabs.filter(t => pageConfig.associatedTabs.includes(t.id));
+    const pageTabs = appSettings.tabs
+      .filter(t => pageConfig.associatedTabs.includes(t.id))
+      .filter(t => hasAccess(viewAsUser, t, teams, appSettings.adminGroups));
+      
     const pageTitle = pageConfig.isDynamic && team ? `${team.name} ${pageConfig.name}` : pageConfig.name;
 
     // Render page with no tabs (single view)
