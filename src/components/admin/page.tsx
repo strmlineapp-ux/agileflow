@@ -129,11 +129,13 @@ const AddUserToGroupButton = ({ usersToAdd, onAdd, groupName }: { usersToAdd: Us
 
   useEffect(() => {
     if (isOpen) {
-        setTimeout(() => {
+        // Use a timeout to ensure the input is rendered and visible before focusing
+        const timer = setTimeout(() => {
             if (searchInputRef.current) {
                 searchInputRef.current.focus();
             }
         }, 100);
+        return () => clearTimeout(timer);
     } else {
         setSearchTerm('');
     }
@@ -219,23 +221,25 @@ function AdminGroupCard({
     
     const [isEditingName, setIsEditingName] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
+    const [isEditingDescription, setIsEditingDescription] = useState(false);
+    const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
 
     // Icon Search State
     const [iconSearch, setIconSearch] = useState('');
     const iconSearchInputRef = useRef<HTMLInputElement>(null);
-
+    
     const handleSaveName = useCallback(() => {
-      const input = nameInputRef.current;
-      if (!input || !input.value.trim()) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Group name cannot be empty.' });
+        const input = nameInputRef.current;
+        if (!input || !input.value.trim()) {
+          toast({ variant: 'destructive', title: 'Error', description: 'Group name cannot be empty.' });
+          setIsEditingName(false);
+          return;
+        }
+        if (input.value.trim() !== group.name) {
+            onUpdate({ ...group, name: input.value.trim() });
+            toast({ title: 'Success', description: 'Group name updated.' });
+        }
         setIsEditingName(false);
-        return;
-      }
-      if (input.value.trim() !== group.name) {
-        onUpdate({ ...group, name: input.value.trim() });
-        toast({ title: 'Success', description: 'Group name updated.' });
-      }
-      setIsEditingName(false);
     }, [group, onUpdate, toast]);
     
     useEffect(() => {
@@ -260,12 +264,41 @@ function AdminGroupCard({
             setIconSearch('');
         }
     }, [isIconPopoverOpen]);
+    
+    const handleSaveDescription = useCallback(() => {
+        const newDescription = descriptionTextareaRef.current?.value.trim();
+        if (newDescription !== group.description) {
+            onUpdate({ ...group, description: newDescription });
+        }
+        setIsEditingDescription(false);
+    }, [group.description, onUpdate]);
+
+    useEffect(() => {
+        if (!isEditingDescription) return;
+        const handleOutsideClick = (event: MouseEvent) => {
+            if (descriptionTextareaRef.current && !descriptionTextareaRef.current.contains(event.target as Node)) {
+                handleSaveDescription();
+            }
+        };
+        document.addEventListener("mousedown", handleOutsideClick);
+        descriptionTextareaRef.current?.focus();
+        descriptionTextareaRef.current?.select();
+        return () => {
+            document.removeEventListener("mousedown", handleOutsideClick);
+        };
+    }, [isEditingDescription, handleSaveDescription]);
 
     const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Enter') {
-          handleSaveName();
+        if (e.key === 'Enter') handleSaveName();
+        else if (e.key === 'Escape') setIsEditingName(false);
+    };
+    
+    const handleDescriptionKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSaveDescription();
         } else if (e.key === 'Escape') {
-          setIsEditingName(false);
+            setIsEditingDescription(false);
         }
     };
     
@@ -379,7 +412,7 @@ function AdminGroupCard({
                         </div>
                         <div className="flex-1">
                              <div className="flex items-center gap-1">
-                                {isEditingName ? (<Input ref={nameInputRef} defaultValue={group.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-lg font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>) : (<CardTitle onClick={() => setIsEditingName(true)} className="font-headline cursor-pointer text-lg font-thin">{group.name}</CardTitle>)}
+                                {isEditingName ? (<Input ref={nameInputRef} defaultValue={group.name} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-lg font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>) : (<CardTitle onClick={() => setIsEditingName(true)} className="font-headline cursor-pointer text-lg font-thin">{group.name}</CardTitle>)}
                                 <AddUserToGroupButton usersToAdd={unassignedUsers} onAdd={handleGroupToggle} groupName={group.name} />
                             </div>
                         </div>
@@ -400,6 +433,19 @@ function AdminGroupCard({
                         </Tooltip>
                     </TooltipProvider>
                 </div>
+                 {isEditingDescription ? (
+                    <Textarea
+                        ref={descriptionTextareaRef}
+                        defaultValue={group.description}
+                        onKeyDown={handleDescriptionKeyDown}
+                        className="text-sm text-muted-foreground p-0 border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 resize-none min-h-[40px]"
+                        placeholder="Click to add a description for this group..."
+                    />
+                ) : (
+                    <CardDescription className="cursor-text" onClick={() => setIsEditingDescription(true)}>
+                        {group.description || 'Click to add a description for this group...'}
+                    </CardDescription>
+                )}
             </CardHeader>
             <CardContent className="flex-grow">
                 <StrictModeDroppable droppableId={`group-content-${group.id}`} type="user-card" isDropDisabled={false} isCombineEnabled={false}>
@@ -407,7 +453,7 @@ function AdminGroupCard({
                     <div 
                     ref={provided.innerRef}
                     {...provided.droppableProps}
-                    className={cn("space-y-4 rounded-b-lg", snapshot.isDraggingOver && "ring-1 ring-border ring-inset")}
+                    className={cn("space-y-4 rounded-b-lg min-h-[60px]", snapshot.isDraggingOver && "ring-1 ring-border ring-inset")}
                     >
                     {assignedUsers.map((user, index) => (
                         <UserAssignmentCard 
@@ -681,7 +727,6 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                                 <CardTitle className="font-headline font-thin text-lg">Admins</CardTitle>
                                 <AddUserToGroupButton usersToAdd={nonAdminUsers} onAdd={handleAdminToggle} groupName="Admin" />
                               </div>
-                              <CardDescription>Assign or revoke Admin privileges. This is the highest level of access.</CardDescription>
                             </CardHeader>
                             <CardContent className="flex-grow">
                                 <StrictModeDroppable droppableId="admins-card-droppable" type="user-card" isDropDisabled={false} isCombineEnabled={false}>
@@ -689,7 +734,7 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                                     <div 
                                     ref={provided.innerRef}
                                     {...provided.droppableProps}
-                                    className={cn("space-y-4 rounded-b-lg", snapshot.isDraggingOver && "ring-1 ring-border ring-inset")}
+                                    className={cn("space-y-4 rounded-b-lg min-h-[60px]", snapshot.isDraggingOver && "ring-1 ring-border ring-inset")}
                                     >
                                     {adminUsers.map(user => (
                                         <UserAssignmentCard 
@@ -793,11 +838,12 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
 
     useEffect(() => {
         if (isOpen) {
-            setTimeout(() => {
+            const timer = setTimeout(() => {
                 if (searchInputRef.current) {
                     searchInputRef.current.focus();
                 }
             }, 100);
+            return () => clearTimeout(timer);
         }
     }, [isOpen, activeTab]);
 
@@ -958,20 +1004,12 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const isSystemPage = useMemo(() => ['page-admin-management', 'page-notifications', 'page-settings'].includes(page.id), [page.id]);
     
-    useEffect(() => {
-        if (isIconPopoverOpen) {
-            setTimeout(() => iconSearchInputRef.current?.focus(), 100);
-        } else {
-            setIconSearch('');
-        }
-    }, [isIconPopoverOpen]);
-    
     const handleSaveName = useCallback(() => {
-      const newName = nameInputRef.current?.value.trim();
-      if (newName && newName !== page.name) {
-        onUpdate(page.id, { name: newName });
-      }
-      setIsEditingName(false);
+        const newName = nameInputRef.current?.value.trim();
+        if (newName && newName !== page.name) {
+            onUpdate(page.id, { name: newName });
+        }
+        setIsEditingName(false);
     }, [page.id, page.name, onUpdate]);
 
     useEffect(() => {
@@ -988,6 +1026,14 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
             document.removeEventListener("mousedown", handleOutsideClick);
         };
     }, [isEditingName, handleSaveName]);
+    
+    useEffect(() => {
+        if (isIconPopoverOpen) {
+            setTimeout(() => iconSearchInputRef.current?.focus(), 100);
+        } else {
+            setIconSearch('');
+        }
+    }, [isIconPopoverOpen]);
 
     const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') handleSaveName();
@@ -1069,7 +1115,7 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1">
                                 {isEditingName ? (
-                                    <Input ref={nameInputRef} defaultValue={page.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-base font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"/>
+                                    <Input ref={nameInputRef} defaultValue={page.name} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-base font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"/>
                                 ) : (
                                     <CardTitle onClick={() => !isSystemPage && setIsEditingName(true)} className={cn("font-headline text-base break-words font-thin", !isSystemPage && "cursor-pointer")}>
                                         {page.name}
@@ -1343,14 +1389,22 @@ function TabCard({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string, data: 
 
     const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
     const [isEditingDescription, setIsEditingDescription] = useState(false);
-    
+
     const handleSaveName = useCallback(() => {
-      const newName = nameInputRef.current?.value.trim();
-      if (newName && newName !== tab.name) {
-        onUpdate(tab.id, { name: newName });
-      }
-      setIsEditingName(false);
+        const newName = nameInputRef.current?.value.trim();
+        if (newName && newName !== tab.name) {
+            onUpdate(tab.id, { name: newName });
+        }
+        setIsEditingName(false);
     }, [tab.id, tab.name, onUpdate]);
+    
+    const handleSaveDescription = useCallback(() => {
+        const newDescription = descriptionTextareaRef.current?.value.trim();
+        if (newDescription !== tab.description) {
+            onUpdate(tab.id, { description: newDescription });
+        }
+        setIsEditingDescription(false);
+    }, [tab.id, tab.description, onUpdate]);
 
     useEffect(() => {
         if (!isEditingName) return;
@@ -1367,14 +1421,6 @@ function TabCard({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string, data: 
         };
     }, [isEditingName, handleSaveName]);
     
-    const handleSaveDescription = useCallback(() => {
-      const newDescription = descriptionTextareaRef.current?.value.trim();
-      if (newDescription !== tab.description) {
-        onUpdate(tab.id, { description: newDescription });
-      }
-      setIsEditingDescription(false);
-    }, [tab.id, tab.description, onUpdate]);
-
     useEffect(() => {
         if (!isEditingDescription) return;
         const handleOutsideClick = (event: MouseEvent) => {
@@ -1486,7 +1532,7 @@ function TabCard({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string, data: 
                         </div>
                         <div className="flex-1 min-w-0">
                              {isEditingName ? (
-                                <Input ref={nameInputRef} defaultValue={tab.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-normal border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 font-headline" />
+                                <Input ref={nameInputRef} defaultValue={tab.name} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-normal border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 font-headline" />
                             ) : (
                                 <CardTitle className="font-headline cursor-pointer text-lg font-thin" onClick={() => setIsEditingName(true)}>{tab.name}</CardTitle>
                             )}
@@ -1500,7 +1546,6 @@ function TabCard({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string, data: 
                     <Textarea 
                         ref={descriptionTextareaRef}
                         defaultValue={tab.description}
-                        onBlur={handleSaveDescription}
                         onKeyDown={handleDescriptionKeyDown}
                         className="p-0 text-sm text-muted-foreground border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 resize-none"
                         placeholder="Click to add a description."

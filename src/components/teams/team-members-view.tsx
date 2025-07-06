@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProps } from 'react-beautiful-dnd';
 import { cn } from '@/lib/utils';
+import { GoogleSymbol } from '../icons/google-symbol';
 
 // Wrapper to fix issues with react-beautiful-dnd and React 18 Strict Mode
 const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {

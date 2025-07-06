@@ -1,3 +1,4 @@
+
 import { Badge, type BadgeProps } from '@/components/ui/badge';
 import { type Task } from '@/types';
 import { cn } from '@/lib/utils';
@@ -22,7 +23,7 @@ export function TaskStatusBadge({ status }: { status: Task['status'] }) {
   return (
     <Badge
       variant={config.variant}
-      className={cn('border-transparent', config.className)}
+      className={cn('border-transparent font-normal', config.className)}
     >
       {config.label}
     </Badge>

@@ -2,7 +2,7 @@
 
 'use client';
 
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useUser } from '@/context/user-context';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CalendarManagement } from '@/components/service-delivery/calendar-management';
@@ -35,10 +35,17 @@ export default function ServiceDeliveryPage() {
   // Header Editing State
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
-  const [isSearchingIcons, setIsSearchingIcons] = useState(false);
   const [iconSearch, setIconSearch] = useState('');
   const titleInputRef = useRef<HTMLInputElement>(null);
   const iconSearchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isIconPopoverOpen) {
+        setTimeout(() => iconSearchInputRef.current?.focus(), 100);
+    } else {
+        setIconSearch('');
+    }
+  }, [isIconPopoverOpen]);
 
   const updatePage = (data: Partial<AppPage>) => {
     if (!pageConfig) return;
@@ -79,14 +86,19 @@ export default function ServiceDeliveryPage() {
           </PopoverTrigger>
           <PopoverContent className="w-80 p-0">
             <div className="flex items-center gap-1 p-2 border-b">
-                {!isSearchingIcons ? ( <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={() => setIsSearchingIcons(true)}> <GoogleSymbol name="search" /> </Button> ) : (
-                    <div className="flex items-center gap-1 w-full">
-                        <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
-                        <input ref={iconSearchInputRef} placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} onBlur={() => !iconSearch && setIsSearchingIcons(false)} className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0" />
-                    </div>
-                )}
+                <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                <input ref={iconSearchInputRef} placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0" />
             </div>
-            <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={pageConfig.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { updatePage({ icon: iconName }); setIsIconPopoverOpen(false);}} className="h-4 w-4"><GoogleSymbol name={iconName} className="text-8xl" weight={100} /></Button>))}</div></ScrollArea>
+            <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (
+                <TooltipProvider key={iconName}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant={pageConfig.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { updatePage({ icon: iconName }); setIsIconPopoverOpen(false);}} className="h-8 w-8 p-0"><GoogleSymbol name={iconName} className="text-4xl" weight={100} /></Button>
+                    </TooltipTrigger>
+                    <TooltipContent><p>{iconName}</p></TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+            ))}</div></ScrollArea>
           </PopoverContent>
         </Popover>
         {isEditingTitle ? (

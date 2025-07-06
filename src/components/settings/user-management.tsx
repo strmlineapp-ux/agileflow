@@ -216,7 +216,7 @@ export function UserManagement() {
                                                     style={roleInfo ? { color: roleInfo.color, borderColor: roleInfo.color } : {}}
                                                     className="rounded-full gap-1 text-xs py-0.5 px-2"
                                                 >
-                                                    {roleInfo && <GoogleSymbol name={roleInfo.icon} className="text-sm" />}
+                                                    {roleInfo && <GoogleSymbol name={roleInfo.icon} className="text-sm" weight={100} />}
                                                     <span>{role}</span>
                                                 </Badge>
                                                 );
