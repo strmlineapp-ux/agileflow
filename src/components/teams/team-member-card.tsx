@@ -141,17 +141,21 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
   return (
     <>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-lg font-headline font-thin">{member.displayName}</CardTitle>
-          <Avatar className="h-12 w-12">
-            <AvatarImage src={member.avatarUrl} alt={member.displayName} data-ai-hint="user avatar" />
-            <AvatarFallback>{member.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-          </Avatar>
+        <CardHeader>
+          <div className="flex items-center gap-4">
+            <Avatar className="h-12 w-12">
+              <AvatarImage src={member.avatarUrl} alt={member.displayName} data-ai-hint="user avatar" />
+              <AvatarFallback>{member.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+            </Avatar>
+            <div>
+              <CardTitle className="text-lg font-headline font-thin">{member.displayName}</CardTitle>
+              <p className="text-sm text-muted-foreground">{member.title}</p>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">{member.title}</p>
           <div className="mt-4 space-y-2">
-             <h4 className="text-sm font-medium">
+             <h4 className="text-sm font-normal">
                 {isEditingLabel && canManageRoles ? (
                     <Input
                         ref={labelInputRef}
@@ -160,7 +164,7 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
                           if (e.key === 'Enter') handleSaveLabel();
                           else if (e.key === 'Escape') setIsEditingLabel(false);
                         }}
-                        className="h-auto p-0 text-sm font-medium font-headline font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                        className="h-auto p-0 text-sm font-normal font-headline font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
                     />
                 ) : (
                     <span

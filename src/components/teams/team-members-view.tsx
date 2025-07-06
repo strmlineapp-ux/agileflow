@@ -3,18 +3,41 @@
 'use client';
 
 import { useUser } from '@/context/user-context';
-import { type Team, type AppTab } from '@/types';
+import { type Team, type AppTab, type User } from '@/types';
 import { TeamMemberCard } from './team-member-card';
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProps } from 'react-beautiful-dnd';
+import { cn } from '@/lib/utils';
+
+// Wrapper to fix issues with react-beautiful-dnd and React 18 Strict Mode
+const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
+  const [enabled, setEnabled] = useState(false);
+  useEffect(() => {
+    const animation = requestAnimationFrame(() => setEnabled(true));
+    return () => {
+      cancelAnimationFrame(animation);
+      setEnabled(false);
+    };
+  }, []);
+  if (!enabled) {
+    return null;
+  }
+  return <Droppable {...props}>{children}</Droppable>;
+};
+
 
 export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
-    const { users, updateAppTab } = useUser();
+    const { users, updateAppTab, updateTeam } = useUser();
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const titleInputRef = useRef<HTMLInputElement>(null);
     
-    const teamMembers = users.filter(u => team.members.includes(u.userId));
+    const [teamMembers, setTeamMembers] = useState<User[]>([]);
+
+    useEffect(() => {
+      setTeamMembers(users.filter(u => team.members.includes(u.userId)));
+    }, [users, team.members]);
 
     useEffect(() => {
         if (isEditingTitle) titleInputRef.current?.focus();
@@ -32,8 +55,22 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         if (e.key === 'Enter') handleSaveTitle();
         else if (e.key === 'Escape') setIsEditingTitle(false);
     };
+    
+    const onDragEnd = (result: DropResult) => {
+        const { source, destination } = result;
+        if (!destination) return;
+        
+        const reorderedMembers = Array.from(teamMembers);
+        const [movedItem] = reorderedMembers.splice(source.index, 1);
+        reorderedMembers.splice(destination.index, 0, movedItem);
+        
+        setTeamMembers(reorderedMembers);
+        const newMemberIds = reorderedMembers.map(m => m.userId);
+        updateTeam(team.id, { members: newMemberIds });
+    };
 
     return (
+      <DragDropContext onDragEnd={onDragEnd}>
         <div className="space-y-6">
             <div className="flex items-center gap-2 mb-6">
                 {isEditingTitle ? (
@@ -53,11 +90,32 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                   </TooltipProvider>
                 )}
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {teamMembers.map(member => (
-                    <TeamMemberCard key={member.userId} member={member} team={team} />
-                ))}
-            </div>
+            <StrictModeDroppable droppableId="team-members-list">
+                {(provided) => (
+                    <div 
+                      ref={provided.innerRef} 
+                      {...provided.droppableProps} 
+                      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                    >
+                        {teamMembers.map((member, index) => (
+                            <Draggable key={member.userId} draggableId={member.userId} index={index}>
+                              {(provided, snapshot) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  className={cn(snapshot.isDragging && "opacity-80 shadow-xl")}
+                                >
+                                  <TeamMemberCard member={member} team={team} />
+                                </div>
+                              )}
+                            </Draggable>
+                        ))}
+                        {provided.placeholder}
+                    </div>
+                )}
+            </StrictModeDroppable>
         </div>
+      </DragDropContext>
     );
 }

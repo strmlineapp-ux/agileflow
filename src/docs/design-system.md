@@ -13,7 +13,7 @@ The application favors a compact, information-dense layout. Card components are 
 
 -   **Gold Standard**: The login form (`/login`) serves as the ideal example of "perfect" padding. It has a larger header area and tighter content padding (`p-2`) which makes the card feel like a single, cohesive unit.
 -   **Global Default**: To align with this, the global default `CardContent` padding has been reduced from `p-6` to a tighter `p-4`. This affects all cards in the app, creating a more consistent look.
--   **Contextual Overrides**: Specific components may use even tighter padding (like `p-2` or `p-0` for lists and grids) when it enhances clarity and aligns with the compact design philosophy.
+-   **Card Backgrounds**: Cards use a `bg-transparent` background, relying on their `border` for definition. This creates a lighter, more modern UI.
 -   **Text Wrapping**: Card titles and descriptions should gracefully handle long text by wrapping. The `break-words` utility should be used on titles to prevent layout issues from long, unbroken strings.
 
 ---
@@ -38,14 +38,12 @@ This pattern allows for seamless, direct text editing within the main applicatio
 ### 3. Compact Search Input
 This pattern provides a clean, minimal interface for search functionality, especially in UIs where space is a consideration or a full search bar is not always needed.
 
-- **Trigger:** Clicking a search icon (`search`).
 - **Interaction:**
-  - The search icon is replaced by an inline search input field, with the search icon now appearing inside the input's bounds to maintain context.
+  - The search input field is always present within its container (e.g., a popover) but may be visually understated.
   - The input field appears with a transparent background and no borders or box-shadow, to maintain a minimal, "inline text" look.
 - **Behavior:**
-  - The input field automatically gains focus using a `useEffect` hook, making it ready for typing immediately.
+  - The input field **must** automatically gain focus as soon as its parent popover or container becomes visible. This is achieved using a `useEffect` hook that triggers `searchInputRef.current?.focus()` after a short `setTimeout` (e.g., 100ms) to ensure the element is rendered and ready.
   - Typing into the field filters the relevant content on the page in real-time.
-  - Clicking outside the input (`onBlur`) when it is empty will cause it to revert back to the simple search icon. If the field contains text, it remains visible.
 - **Application:** Used for filtering lists of icons, users, or other filterable content within popovers and other compact spaces.
 
 ---
@@ -117,9 +115,9 @@ This pattern describes how a single entity (like a Badge or BadgeCollection) can
 ### 8. Draggable Card Management (The Gold Standard)
 This is the application's perfected, gold-standard pattern for managing a collection of entities displayed as cards. It provides a fluid, intuitive, and grid-responsive way for users to reorder and duplicate items.
 
--   **Layout**: Entities are presented in a responsive grid of cards (`<Card>`). The grid dynamically adjusts the number of columns to best fit the available screen space, typically using classes like `grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4`.
+-   **Layout**: Entities are presented in a responsive grid of cards. To ensure stability during drag operations, especially across multiple rows, the container must use a `flex flex-wrap` layout instead of CSS Grid. Each draggable card item is then given `flex-grow` and `basis` properties to create the responsive columns (e.g., `flex-grow basis-full md:basis-[calc(50%-1.5rem)]`).
 -   **Internal Card Layout**: Each card is structured for clarity. The header contains the primary entity identifier (icon and name) and contextual controls (like page access or tab associations, which are positioned inline after the title). The main content area is used for tertiary information (like a URL path) which is anchored to the bottom.
--   **User Item Display**: When users are displayed as items within a management card (e.g., `AdminGroupCard`), they are presented without a border. Each user item should display their avatar, full name, and professional title.
+-   **User Item Display**: When users are displayed as items within a management card (e.g., `AdminGroupCard` or `TeamCard`), they are presented **without a border**. Each user item must display their avatar, full name, and professional title underneath the name for consistency.
 -   **Draggable & Pinned States**:
     -   **Draggable Cards**: Most cards can be freely reordered within the grid.
     -   **Pinned Cards**: Certain cards are designated as "pinned" and cannot be dragged. They act as fixed anchors in the layout.
@@ -130,7 +128,9 @@ This is the application's perfected, gold-standard pattern for managing a collec
 -   **Drop Zone Highlighting**: Drop zones provide visual feedback when an item is dragged over them. To maintain a clean UI, highlights primarily use rings without background fills.
     -   **Standard & Duplication Zones (Reordering, Moving, Duplicating):** The drop area is highlighted with a `1px` inset, **colorless** ring using the standard border color (`ring-1 ring-border ring-inset`). This is the universal style for all non-destructive drop actions.
     -   **Destructive Zones (Deleting):** The drop area is highlighted with a `1px` ring in the destructive theme color (`ring-1 ring-destructive`).
--   **Contextual Hover Actions**: To maintain a clean default UI, action icons like "Remove User" or "Delete Group" appear only when hovering over the relevant element (the user row or the card header, respectively). These icons are placed in the top-right corner of the element.
+-   **Contextual Hover Actions**: To maintain a clean default UI, action icons like "Remove User" or "Delete Group" must appear only when hovering over their specific context.
+    - **Item-level**: A "remove" or "cancel" icon appears in the top-right corner of a list item (e.g., a user card) *only* when the user hovers over that specific item.
+    - **Card-level**: A "delete" icon appears in the top-right corner of the main card's header *only* when the user hovers over the header area or the card's general background.
 -   **Drag-to-Duplicate**:
     -   **Interaction**: A designated "Add New" icon (`<Button>`) acts as a drop zone. While a card is being dragged, this zone becomes highlighted to indicate it can accept a drop.
     -   **Behavior**: Dropping any card (pinned or not) onto this zone creates a deep, independent copy of the original. The new card is given a unique ID, a modified name (e.g., with `(Copy)`), and is placed immediately after the original in the list.
@@ -226,7 +226,7 @@ This pattern describes the user interface for assigning and unassigning badges t
 ### Typography
 - **Font**: The application exclusively uses the **Roboto** font family for a clean and consistent look.
 - **Headline Font**: All major titles (pages, tabs, prominent cards) use the `font-headline` utility class, which is configured to use a `font-thin` weight (`font-weight: 100`). This is also maintained during inline editing for a seamless user experience.
-- **Body Font**: Standard body text uses the `font-body` utility class, which defaults to a regular font weight.
+- **Body Font**: All standard body text, labels, and buttons now use a `font-normal` weight. All instances of `font-semibold` or `font-bold` have been removed to create a softer, more modern aesthetic.
 
 ### Icons & Hover Effects
 - **Icon Set**: We exclusively use **Google Material Symbols** via the `<GoogleSymbol />` component. This ensures a consistent visual language. The font library is a variable font, which means we can adjust its properties.
@@ -268,7 +268,7 @@ This is the single source of truth for indicating user interaction state across 
 
 - **Lunch Break Pattern**: A subtle diagonal line pattern is used in calendar views to visually block out the typical lunch period (12:00 - 14:30). This serves as a non-intrusive reminder to avoid scheduling meetings during that time.
 - **Icon as Badge**: An icon displayed as a small, circular overlay on another element (e.g., an Avatar or another icon) to provide secondary information.
-    - **Appearance**: A circular badge with a `border-2` of the parent element's background color (e.g., `border-card` or `border-background`) to create a "punched out" effect. The icon inside should be sized proportionally.
+    - **Appearance**: A circular badge with a `border-2` of the parent element's background color (e.g., `border-background`) to create a "punched out" effect. The icon inside should be sized proportionally.
     - **Sizing**: The standard size for these badges (e.g., color-pickers, ownership status icons) is `h-4 w-4` (`16x16px`). The `GoogleSymbol` inside should be sized to fit, for example using `style={{fontSize: '10px'}}`.
     - **Placement**: Typically positioned on the bottom-right or top-right corner of the parent element.
     - **Application**: Used for displaying a user's admin group status, a shared status on a role icon, or a `share` icon on a shared Badge.

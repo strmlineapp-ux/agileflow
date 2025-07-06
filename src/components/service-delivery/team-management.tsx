@@ -44,24 +44,16 @@ const predefinedColors = [
 
 const AddMemberToTeamButton = ({ usersToAdd, onAdd, teamName }: { usersToAdd: User[], onAdd: (user: User) => void, teamName: string }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isSearching, setIsSearching] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!isOpen) {
-      setIsSearching(false);
-      setSearchTerm('');
-    } else if (isOpen && !isSearching) {
+    if (isOpen) {
         setTimeout(() => searchInputRef.current?.focus(), 100);
+    } else {
+        setSearchTerm('');
     }
-  }, [isOpen, isSearching]);
-
-  useEffect(() => {
-    if (isSearching && searchInputRef.current) {
-      searchInputRef.current.focus();
-    }
-  }, [isSearching]);
+  }, [isOpen]);
 
   const handleSelect = (user: User) => {
     onAdd(user);
@@ -93,23 +85,14 @@ const AddMemberToTeamButton = ({ usersToAdd, onAdd, teamName }: { usersToAdd: Us
       </TooltipProvider>
       <PopoverContent className="p-0 w-80">
         <div className="flex items-center gap-1 p-2 border-b">
-          {!isSearching ? (
-            <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={() => setIsSearching(true)}>
-              <GoogleSymbol name="search" />
-            </Button>
-          ) : (
-            <div className="flex items-center gap-1 w-full">
-              <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
-              <input
-                  ref={searchInputRef}
-                  placeholder="Search by name or email..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  onBlur={() => !searchTerm && setIsSearching(false)}
-                  className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
-              />
-            </div>
-          )}
+            <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+            <input
+                ref={searchInputRef}
+                placeholder="Search by name or email..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+            />
         </div>
         <ScrollArea className="h-64">
            <div className="p-1">
@@ -162,6 +145,7 @@ const MemberCard = ({ user, index, onRemove, onSetAdmin, isTeamAdmin }: { user: 
                     </div>
                     <div>
                         <p className="font-normal text-sm">{user.displayName}</p>
+                        <p className="text-xs text-muted-foreground">{user.title || 'No title provided'}</p>
                     </div>
                 </div>
                 <TooltipProvider>
@@ -197,23 +181,17 @@ function TeamCard({
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
     const [iconSearch, setIconSearch] = useState('');
-    const [isSearchingIcons, setIsSearchingIcons] = useState(false);
     const iconSearchInputRef = useRef<HTMLInputElement>(null);
     
     const teamMembers = team.members.map(id => allUsers.find(u => u.userId === id)).filter(Boolean) as User[];
     
      useEffect(() => {
-        if (!isIconPopoverOpen) {
-            setIsSearchingIcons(false);
-            setIconSearch('');
-        } else {
+        if (isIconPopoverOpen) {
              setTimeout(() => iconSearchInputRef.current?.focus(), 100);
+        } else {
+            setIconSearch('');
         }
     }, [isIconPopoverOpen]);
-
-    useEffect(() => {
-        if (isSearchingIcons) iconSearchInputRef.current?.focus();
-    }, [isSearchingIcons]);
 
     const filteredIcons = useMemo(() => {
         if (!iconSearch) return googleSymbolNames;
@@ -263,43 +241,43 @@ function TeamCard({
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                          <div className="relative">
                             <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
-                                <PopoverTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="p-0 h-12 w-12">
-                                        <GoogleSymbol name={team.icon} className="text-12xl" weight={100} />
-                                    </Button>
-                                </PopoverTrigger>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <PopoverTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="p-0 h-12 w-12">
+                                                    <GoogleSymbol name={team.icon} className="text-12xl" weight={100} />
+                                                </Button>
+                                            </PopoverTrigger>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>Change Icon</p></TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
                                 <PopoverContent className="w-80 p-0">
                                     <div className="flex items-center gap-1 p-2 border-b">
-                                        {!isSearchingIcons ? (
-                                            <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={() => setIsSearchingIcons(true)}>
-                                                <GoogleSymbol name="search" />
-                                            </Button>
-                                        ) : (
-                                            <div className="flex items-center gap-1 w-full">
-                                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
-                                                <input
-                                                    ref={iconSearchInputRef}
-                                                    placeholder="Search icons..."
-                                                    value={iconSearch}
-                                                    onChange={(e) => setIconSearch(e.target.value)}
-                                                    onBlur={() => !iconSearch && setIsSearchingIcons(false)}
-                                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
-                                                />
-                                            </div>
-                                        )}
+                                        <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                                        <input
+                                            ref={iconSearchInputRef}
+                                            placeholder="Search icons..."
+                                            value={iconSearch}
+                                            onChange={(e) => setIconSearch(e.target.value)}
+                                            className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                                        />
                                     </div>
                                     <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={team.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(team.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="h-8 w-8 p-0"><GoogleSymbol name={iconName} className="text-4xl" weight={100} /></Button>))}</div></ScrollArea>
                                 </PopoverContent>
                             </Popover>
                             <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                                <PopoverTrigger asChild>
-                                    <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card cursor-pointer" style={{ backgroundColor: team.color }} />
-                                </PopoverTrigger>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <PopoverTrigger asChild><div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background cursor-pointer" style={{ backgroundColor: team.color }} /></PopoverTrigger>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>Change Color</p></TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
                                 <PopoverContent className="w-auto p-2">
-                                    <div className="grid grid-cols-8 gap-1">
-                                        {predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdate(team.id, { color: c }); setIsColorPopoverOpen(false);}}/>))}
-                                        <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={team.color} onChange={(e) => onUpdate(team.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div>
-                                    </div>
+                                    <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdate(team.id, { color: c }); setIsColorPopoverOpen(false);}}/>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={team.color} onChange={(e) => onUpdate(team.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
                                 </PopoverContent>
                             </Popover>
                         </div>
@@ -569,7 +547,7 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
         <StrictModeDroppable droppableId="teams-list" type="team-card" isDropDisabled={false} isCombineEnabled={false}>
             {(provided) => (
                  <div 
-                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                    className="flex flex-wrap gap-6"
                     ref={provided.innerRef}
                     {...provided.droppableProps}
                 >
@@ -580,6 +558,7 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
                                     ref={provided.innerRef}
                                     {...provided.draggableProps}
                                     {...provided.dragHandleProps}
+                                     className="w-full flex-grow basis-full md:basis-[calc(50%-1.5rem)] lg:basis-[calc(33.333%-1.5rem)]"
                                 >
                                     <TeamCard 
                                         team={team} 
