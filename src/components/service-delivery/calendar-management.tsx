@@ -131,7 +131,9 @@ function CalendarCard({ calendar, onUpdate, onDelete, isDragging }: { calendar: 
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background cursor-pointer" style={{ backgroundColor: calendar.color }} />
+                                <PopoverTrigger asChild>
+                                    <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background cursor-pointer" style={{ backgroundColor: calendar.color }} />
+                                </PopoverTrigger>
                             </TooltipTrigger>
                             <TooltipContent><p>Change Color</p></TooltipContent>
                         </Tooltip>
