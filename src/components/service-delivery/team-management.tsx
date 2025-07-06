@@ -144,31 +144,35 @@ const MemberCard = ({ user, index, onRemove, onSetAdmin, isTeamAdmin }: { user: 
                 role="button"
                 onClick={() => onSetAdmin(user.userId)}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSetAdmin(user.userId); } }}
-                className={cn(
-                "transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50",
-                isTeamAdmin && "ring-1 ring-primary"
-                )}
+                className="transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
             >
                 <CardContent className="p-2 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <Avatar className="h-8 w-8">
-                        <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
-                        <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                        <p className="font-medium text-sm">{user.displayName}</p>
+                    <div className="flex items-center gap-3">
+                        <div className="relative">
+                            <Avatar className="h-8 w-8">
+                                <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
+                                <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                            {isTeamAdmin && (
+                                <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card flex items-center justify-center bg-primary text-primary-foreground">
+                                    <GoogleSymbol name="key" style={{fontSize: '10px'}}/>
+                                </div>
+                            )}
+                        </div>
+                        <div>
+                            <p className="font-medium text-sm">{user.displayName}</p>
+                        </div>
                     </div>
-                </div>
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onRemove(user.userId); }} className="text-muted-foreground hover:text-destructive p-0">
-                                <GoogleSymbol name="cancel" className="text-4xl" weight={100} />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent><p>Remove from team</p></TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onRemove(user.userId); }} className="text-muted-foreground hover:text-destructive p-0">
+                                    <GoogleSymbol name="cancel" className="text-4xl" weight={100} />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent><p>Remove from team</p></TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
                 </CardContent>
             </Card>
             </div>
