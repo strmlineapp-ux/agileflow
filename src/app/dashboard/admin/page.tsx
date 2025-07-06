@@ -1359,7 +1359,9 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
 // #endregion
 
 // #region Tabs Management Tab
-export function TabItem({ tab, onUpdate, dragHandleProps }: { tab: AppTab; onUpdate: (id: string, data: Partial<AppTab>) => void; dragHandleProps?: any; }) {
+
+const TabItem = React.forwardRef<HTMLDivElement, { tab: AppTab; onUpdate: (id: string, data: Partial<AppTab>) => void } & React.HTMLAttributes<HTMLDivElement>>(
+    ({ tab, onUpdate, className, ...props }, ref) => {
     const [isEditingName, setIsEditingName] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
@@ -1426,10 +1428,7 @@ export function TabItem({ tab, onUpdate, dragHandleProps }: { tab: AppTab; onUpd
     const filteredIcons = useMemo(() => googleSymbolNames.filter(icon => icon.toLowerCase().includes(iconSearch.toLowerCase())), [iconSearch]);
 
     return (
-        <div className="flex items-center p-3 gap-4">
-            <div {...dragHandleProps} className="cursor-grab text-muted-foreground">
-                <GoogleSymbol name="drag_indicator" />
-            </div>
+        <div ref={ref} className={cn("flex items-center p-3 gap-4 cursor-grab", className)} {...props}>
             <div className="relative mt-1">
                 <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                     <TooltipProvider>
@@ -1530,7 +1529,9 @@ export function TabItem({ tab, onUpdate, dragHandleProps }: { tab: AppTab; onUpd
             </div>
         </div>
     );
-}
+});
+TabItem.displayName = 'TabItem';
+
 
 export const TabsManagement = ({ tab }: { tab: AppTab }) => {
     const { appSettings, updateAppSettings, updateAppTab } = useUser();
@@ -1597,9 +1598,13 @@ export const TabsManagement = ({ tab }: { tab: AppTab }) => {
                               {appSettings.tabs.map((tab, index) => (
                                   <Draggable key={tab.id} draggableId={tab.id} index={index}>
                                       {(provided) => (
-                                          <div ref={provided.innerRef} {...provided.draggableProps} >
-                                              <TabItem tab={tab} onUpdate={handleUpdateTab} dragHandleProps={provided.dragHandleProps} />
-                                          </div>
+                                          <TabItem
+                                            ref={provided.innerRef}
+                                            {...provided.draggableProps}
+                                            {...provided.dragHandleProps}
+                                            tab={tab}
+                                            onUpdate={handleUpdateTab}
+                                          />
                                       )}
                                   </Draggable>
                               ))}
@@ -1686,3 +1691,6 @@ const AdminPageSkeleton = () => (
       </div>
     </div>
 );
+
+
+    
