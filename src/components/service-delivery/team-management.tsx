@@ -235,7 +235,7 @@ function TeamCard({
     }, [allUsers, team.members]);
 
     return (
-        <Card className="flex flex-col h-full group">
+        <Card className="flex flex-col h-full bg-transparent group">
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 flex-1 min-w-0">

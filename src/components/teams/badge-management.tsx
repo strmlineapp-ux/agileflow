@@ -286,7 +286,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
 
     if (viewMode === 'detailed') {
       return (
-        <div className="group h-full flex flex-col rounded-lg text-card-foreground">
+        <div className="group h-full flex flex-col rounded-lg">
             <CardHeader>
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -313,7 +313,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild disabled={!isEditable}>
                                                 <button
-                                                    className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background", isEditable && "cursor-pointer")}
+                                                    className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card", isEditable && "cursor-pointer")}
                                                     style={{ backgroundColor: badge.color }}
                                                     aria-label="Change badge color"
                                                 />
@@ -329,7 +329,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <div 
-                                                className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-background flex items-center justify-center text-white"
+                                                className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-card flex items-center justify-center text-white"
                                                 style={{ backgroundColor: shareIconColor }}
                                             >
                                                 <GoogleSymbol name={shareIcon} style={{fontSize: '10px'}}/>
@@ -654,7 +654,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
     }
     
     return (
-        <Card className="h-full flex flex-col group">
+        <Card className="h-full flex flex-col">
             <div {...dragHandleProps}>
                 <CardHeader>
                     <div className="flex items-start justify-between">

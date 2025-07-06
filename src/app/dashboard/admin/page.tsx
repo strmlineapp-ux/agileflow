@@ -56,7 +56,7 @@ const UserAssignmentCard = ({ user, index, onRemove, isGroupAdmin, onSetGroupAdm
         tabIndex={onSetGroupAdmin ? 0 : -1}
         role={onSetGroupAdmin ? "button" : undefined}
         className={cn(
-            "transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50 bg-transparent group relative rounded-lg",
+            "transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50 group relative rounded-lg",
             onSetGroupAdmin && "cursor-pointer"
         )}
         onClick={onSetGroupAdmin ? () => onSetGroupAdmin(user) : undefined}
@@ -221,8 +221,6 @@ function AdminGroupCard({
     
     const [isEditingName, setIsEditingName] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
-    const [isEditingDescription, setIsEditingDescription] = useState(false);
-    const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
 
     // Icon Search State
     const [iconSearch, setIconSearch] = useState('');
@@ -264,42 +262,10 @@ function AdminGroupCard({
             setIconSearch('');
         }
     }, [isIconPopoverOpen]);
-    
-    const handleSaveDescription = useCallback(() => {
-        const newDescription = descriptionTextareaRef.current?.value.trim();
-        if (newDescription !== group.description) {
-            onUpdate({ ...group, description: newDescription });
-        }
-        setIsEditingDescription(false);
-    }, [group.description, onUpdate]);
-
-    useEffect(() => {
-        if (!isEditingDescription) return;
-        const handleOutsideClick = (event: MouseEvent) => {
-            if (descriptionTextareaRef.current && !descriptionTextareaRef.current.contains(event.target as Node)) {
-                handleSaveDescription();
-            }
-        };
-        document.addEventListener("mousedown", handleOutsideClick);
-        descriptionTextareaRef.current?.focus();
-        descriptionTextareaRef.current?.select();
-        return () => {
-            document.removeEventListener("mousedown", handleOutsideClick);
-        };
-    }, [isEditingDescription, handleSaveDescription]);
 
     const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') handleSaveName();
         else if (e.key === 'Escape') setIsEditingName(false);
-    };
-    
-    const handleDescriptionKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            handleSaveDescription();
-        } else if (e.key === 'Escape') {
-            setIsEditingDescription(false);
-        }
     };
     
     const filteredIcons = useMemo(() => {
@@ -333,7 +299,7 @@ function AdminGroupCard({
     };
 
     return (
-        <Card className="flex flex-col h-full group">
+        <Card className="flex flex-col h-full bg-transparent">
             <CardHeader>
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
@@ -433,19 +399,6 @@ function AdminGroupCard({
                         </Tooltip>
                     </TooltipProvider>
                 </div>
-                 {isEditingDescription ? (
-                    <Textarea
-                        ref={descriptionTextareaRef}
-                        defaultValue={group.description}
-                        onKeyDown={handleDescriptionKeyDown}
-                        className="text-sm text-muted-foreground p-0 border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 resize-none min-h-[40px]"
-                        placeholder="Click to add a description for this group..."
-                    />
-                ) : (
-                    <CardDescription className="cursor-text" onClick={() => setIsEditingDescription(true)}>
-                        {group.description || 'Click to add a description for this group...'}
-                    </CardDescription>
-                )}
             </CardHeader>
             <CardContent className="flex-grow">
                 <StrictModeDroppable droppableId={`group-content-${group.id}`} type="user-card" isDropDisabled={false} isCombineEnabled={false}>
@@ -721,7 +674,7 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
               {(provided) => (
                   <div ref={provided.innerRef} {...provided.droppableProps} className="flex flex-wrap gap-6">
                       <div className="w-full flex-grow basis-full md:basis-[calc(50%-1.5rem)] lg:basis-[calc(33.333%-1.5rem)] xl:basis-[calc(25%-1.5rem)]">
-                        <Card className="flex flex-col h-full">
+                        <Card className="flex flex-col h-full bg-transparent">
                             <CardHeader>
                               <div className="flex items-center gap-2">
                                 <CardTitle className="font-headline font-thin text-lg">Admins</CardTitle>
@@ -1043,7 +996,7 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
     const filteredIcons = useMemo(() => googleSymbolNames.filter(icon => icon.toLowerCase().includes(iconSearch.toLowerCase())), [iconSearch]);
 
     return (
-        <Card className={cn("flex flex-col h-full group", isDragging && 'shadow-xl')}>
+        <Card className={cn("flex flex-col h-full group bg-transparent", isDragging && 'shadow-xl')}>
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -1461,7 +1414,7 @@ function TabCard({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string, data: 
     const filteredIcons = useMemo(() => googleSymbolNames.filter(icon => icon.toLowerCase().includes(iconSearch.toLowerCase())), [iconSearch]);
 
     return (
-        <Card className="flex flex-col h-full">
+        <Card className="flex flex-col h-full bg-transparent">
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
