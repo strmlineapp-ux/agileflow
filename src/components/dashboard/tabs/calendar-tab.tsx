@@ -124,7 +124,7 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shrink-0">
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-3">
-              <GoogleSymbol name={pageConfig.icon} className="text-6xl" />
+              <GoogleSymbol name={pageConfig.icon} className="text-6xl" weight={100} />
               <TooltipProvider>
                 <Tooltip>
                     <TooltipTrigger asChild>

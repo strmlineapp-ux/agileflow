@@ -86,7 +86,16 @@ export default function ServiceDeliveryPage() {
                     </div>
                 )}
             </div>
-            <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={pageConfig.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { updatePage({ icon: iconName }); setIsIconPopoverOpen(false);}} className="h-8 w-8 p-0"><GoogleSymbol name={iconName} className="text-4xl" weight={100} /></Button>))}</div></ScrollArea>
+            <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (
+                <TooltipProvider key={iconName}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant={pageConfig.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { updatePage({ icon: iconName }); setIsIconPopoverOpen(false);}} className="h-8 w-8 p-0"><GoogleSymbol name={iconName} className="text-4xl" weight={100} /></Button>
+                    </TooltipTrigger>
+                    <TooltipContent><p>{iconName}</p></TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+            ))}</div></ScrollArea>
           </PopoverContent>
         </Popover>
         {isEditingTitle ? (

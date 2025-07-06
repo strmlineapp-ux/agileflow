@@ -231,6 +231,8 @@ function AdminGroupCard({
     
     const [isEditingName, setIsEditingName] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
+    const [isEditingDescription, setIsEditingDescription] = useState(false);
+    const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
 
     // Icon Search State
     const [isSearchingIcons, setIsSearchingIcons] = useState(false);
@@ -243,6 +245,12 @@ function AdminGroupCard({
           nameInputRef.current.select();
         }
     }, [isEditingName]);
+
+    useEffect(() => {
+        if (isEditingDescription && descriptionTextareaRef.current) {
+            descriptionTextareaRef.current.select();
+        }
+    }, [isEditingDescription]);
     
     useEffect(() => {
         if (!isIconPopoverOpen) {
@@ -274,6 +282,23 @@ function AdminGroupCard({
           handleSaveName();
         } else if (e.key === 'Escape') {
           setIsEditingName(false);
+        }
+    };
+
+    const handleSaveDescription = () => {
+        const newDescription = descriptionTextareaRef.current?.value.trim();
+        if (newDescription !== group.description) {
+            onUpdate({ ...group, description: newDescription });
+        }
+        setIsEditingDescription(false);
+    };
+
+    const handleDescriptionKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSaveDescription();
+        } else if (e.key === 'Escape') {
+            setIsEditingDescription(false);
         }
     };
     
@@ -417,7 +442,20 @@ function AdminGroupCard({
                         </Tooltip>
                     </TooltipProvider>
                 </div>
-                <CardDescription>Click a member to promote them to Group Admin for this group. Group Admins have elevated permissions.</CardDescription>
+                 {isEditingDescription ? (
+                    <Textarea
+                        ref={descriptionTextareaRef}
+                        defaultValue={group.description}
+                        onBlur={handleSaveDescription}
+                        onKeyDown={handleDescriptionKeyDown}
+                        className="text-sm text-muted-foreground p-0 border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 resize-none min-h-[40px]"
+                        placeholder="Click to add a description for this group..."
+                    />
+                ) : (
+                    <CardDescription className="cursor-text" onClick={() => setIsEditingDescription(true)}>
+                        {group.description || 'Click to add a description for this group...'}
+                    </CardDescription>
+                )}
             </CardHeader>
             <CardContent className="flex-grow">
                 <StrictModeDroppable droppableId={`group-content-${group.id}`} type="user-card" isDropDisabled={false} isCombineEnabled={false}>
@@ -980,9 +1018,9 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
     }, [isEditingName]);
 
     useEffect(() => {
-        if (!isIconPopoverOpen) {
-            setIsSearchingIcons(false);
+        if (isIconPopoverOpen) {
             setIconSearch('');
+            setIsSearchingIcons(false);
         }
     }, [isIconPopoverOpen]);
 
@@ -1372,7 +1410,7 @@ function TabCard({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string, data: 
     }, [isEditingDescription]);
     
     useEffect(() => {
-        if (!isIconPopoverOpen) {
+        if (isIconPopoverOpen) {
             setIsSearchingIcons(false);
             setIconSearch('');
         }

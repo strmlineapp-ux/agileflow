@@ -165,9 +165,9 @@ export function UserManagement() {
                         <AccordionContent>
                            <CardContent className="pt-0">
                                <div className="border-t pt-4">
-                                <div className="p-2 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                                <div className="p-2 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
                                     {/* Left Column */}
-                                    <div className="space-y-6">
+                                    <div className="space-y-4">
                                         <div>
                                             <Label className="text-xs text-muted-foreground">Title</Label>
                                             <p className="text-sm font-medium">{user.title || <span className="italic text-muted-foreground">Not provided</span>}</p>
@@ -226,7 +226,7 @@ export function UserManagement() {
                                         </div>
                                     </div>
                                     {/* Right Column */}
-                                    <div className="space-y-6">
+                                    <div className="space-y-4">
                                         {isCurrentUser && (
                                         <>
                                             <div className="flex items-center gap-2">
@@ -354,5 +354,3 @@ export function UserManagement() {
         </>
     )
 }
-
-    
