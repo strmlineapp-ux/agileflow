@@ -292,7 +292,7 @@ export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab
             </TooltipProvider>
         )}
       </div>
-      <Card className="bg-transparent">
+      <Card>
         <CardHeader>
             <div className="flex items-center justify-between">
                 <div>

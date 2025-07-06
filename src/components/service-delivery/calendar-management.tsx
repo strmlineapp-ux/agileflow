@@ -108,9 +108,9 @@ function CalendarCard({ calendar, onUpdate, onDelete, isDragging }: { calendar: 
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <PopoverTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="p-0 h-12 w-12">
-                                        <GoogleSymbol name={calendar.icon} className="text-12xl" weight={100} />
-                                    </Button>
+                                    <button className="h-12 w-12 flex items-center justify-center">
+                                        <GoogleSymbol name={calendar.icon} className="text-6xl" weight={100} />
+                                    </button>
                                 </PopoverTrigger>
                             </TooltipTrigger>
                             <TooltipContent><p>Change Icon</p></TooltipContent>

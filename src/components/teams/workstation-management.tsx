@@ -7,6 +7,7 @@ import { useUser } from '@/context/user-context';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { type Team, type AppTab } from '@/types';
@@ -116,12 +117,10 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
                 className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
             />
         ) : (
-             <TooltipProvider>
+            <TooltipProvider>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>
-                            {tab.name}
-                        </h2>
+                        <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
                     </TooltipTrigger>
                     {tab.description && (
                         <TooltipContent><p className="max-w-xs">{tab.description}</p></TooltipContent>
@@ -130,7 +129,7 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
             </TooltipProvider>
         )}
       </div>
-      <Card className="bg-transparent">
+      <Card>
         <CardHeader>
           <div className="flex items-start justify-between">
             <div>
@@ -222,4 +221,3 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
     </>
   );
 }
-

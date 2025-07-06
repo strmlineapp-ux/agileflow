@@ -311,9 +311,9 @@ function AdminGroupCard({
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-12 w-12 text-6xl">
-                                                    <GoogleSymbol name={group.icon} className="text-12xl" weight={100} />
-                                                </Button>
+                                                <button className="h-12 w-12 flex items-center justify-center">
+                                                    <GoogleSymbol name={group.icon} className="text-6xl" weight={100} />
+                                                </button>
                                             </PopoverTrigger>
                                         </TooltipTrigger>
                                         <TooltipContent><p>Change Icon</p></TooltipContent>
@@ -1022,9 +1022,9 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-12 w-12 text-6xl">
-                                                    <GoogleSymbol name={page.icon} className="text-12xl" weight={100} />
-                                                </Button>
+                                                <button className="h-12 w-12 flex items-center justify-center">
+                                                    <GoogleSymbol name={page.icon} className="text-6xl" weight={100} />
+                                                </button>
                                             </PopoverTrigger>
                                         </TooltipTrigger>
                                         <TooltipContent><p>Change Icon</p></TooltipContent>
@@ -1437,9 +1437,9 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-12 w-12 text-6xl">
-                                                    <GoogleSymbol name={tab.icon} className="text-12xl" weight={100} />
-                                                </Button>
+                                                 <button className="h-12 w-12 flex items-center justify-center">
+                                                    <GoogleSymbol name={tab.icon} className="text-6xl" weight={100} />
+                                                </button>
                                             </PopoverTrigger>
                                         </TooltipTrigger>
                                         <TooltipContent><p>Change Icon</p></TooltipContent>
