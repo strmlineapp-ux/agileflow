@@ -24,7 +24,7 @@ This pattern allows for seamless, direct text editing within the main applicatio
 - **Trigger:** Clicking directly on a text element (e.g., a section title, a badge name, a phone number).
 - **Interaction:**
     - The text element transforms into an input field.
-    - The input field must be styled to perfectly match the font, size, weight, and color of the original text element it replaces (e.g., using the `font-headline` class).
+    - The input field must be styled to perfectly match the font, size, weight, and color of the original text element it replaces (e.g., using the `font-headline font-thin` classes).
     - **Crucially, the input must have a transparent background and no borders or box-shadow**, ensuring it blends seamlessly into the UI.
 - **Behavior:**
     - Typing modifies the text value.
@@ -222,8 +222,9 @@ This pattern describes the user interface for assigning and unassigning badges t
 ## Visual & Theming Elements
 
 ### Typography
-- **Headline Font**: All major titles (pages, tabs, prominent cards) use the **Roboto** font with a `font-thin` weight (`font-weight: 300` in the base CSS, not `100`), applied via the `font-headline` utility class. This is also maintained during inline editing for a seamless user experience.
-- **Body Font**: The standard body text for paragraphs and descriptions uses the **PT Sans** font, applied via the `font-body` utility class.
+- **Font**: The application exclusively uses the **Roboto** font family for a clean and consistent look.
+- **Headline Font**: All major titles (pages, tabs, prominent cards) use the `font-headline` utility class, which is configured to use a `font-thin` weight (`font-weight: 100`). This is also maintained during inline editing for a seamless user experience.
+- **Body Font**: Standard body text uses the `font-body` utility class, which defaults to a regular font weight.
 
 ### Icons & Hover Effects
 - **Icon Set**: We exclusively use **Google Material Symbols** via the `<GoogleSymbol />` component. This ensures a consistent visual language. The font library is a variable font, which means we can adjust its properties.
@@ -247,7 +248,7 @@ This pattern describes the user interface for assigning and unassigning badges t
 This is the single source of truth for indicating user interaction state across the entire application.
 
 -   **Keyboard Focus (`focus-visible`)**: All interactive elements (buttons, inputs, checkboxes, custom cards, etc.) share a consistent focus indicator. When an element is focused via keyboard navigation, a subtle, `1px` ring with 50% opacity appears directly on its border (`focus-visible:ring-1 focus-visible:ring-ring/50`). This provides a clean, minimal, and non-intrusive focus indicator that aligns with the app's elegant aesthetic.
--   **Selected/Highlighted State**: To indicate a persistently selected or highlighted state (e.g., the designated "Group Admin" in a list), a similar `1px` ring is used, but with the primary theme color (`ring-1 ring-primary`). This creates a clear visual connection between the temporary focus state and the persistent selected state.
+-   **Selected/Highlighted State**: To indicate a persistently selected or highlighted state (e.g., the designated "Group Admin" in a list), a clear icon badge (e.g., a "key" icon) is used, typically overlaid on the user's avatar. This avoids visually noisy outlines and provides a clear, universally understood symbol for elevated status.
 
 ### List Item States (Dropdowns & Popovers)
 - **Hover & Focus**: When hovering over or navigating to list items (like in dropdowns or popovers) using the keyboard, the item's text color changes to `text-primary`. **No background highlight is applied**, ensuring a clean and consistent look across the application.
@@ -268,5 +269,5 @@ This is the single source of truth for indicating user interaction state across 
     - **Appearance**: A circular badge with a `border-2` of the parent element's background color (e.g., `border-card` or `border-background`) to create a "punched out" effect. The icon inside should be sized proportionally.
     - **Sizing**: The standard size for these badges (e.g., color-pickers, ownership status icons) is `h-4 w-4` (`16x16px`). The `GoogleSymbol` inside should be sized to fit, for example using `style={{fontSize: '10px'}}`.
     - **Placement**: Typically positioned on the bottom-right or top-right corner of the parent element.
-    - **Application**: Used for displaying a shared status on a role icon or a `share` icon on a shared Badge.
+    - **Application**: Used for displaying a user's admin group status, a shared status on a role icon, or a `share` icon on a shared Badge.
 -   **Badges in Assorted View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.

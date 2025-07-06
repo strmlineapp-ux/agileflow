@@ -56,7 +56,7 @@ const UserAssignmentCard = ({ user, index, onRemove, isGroupAdmin, onSetGroupAdm
         tabIndex={onSetGroupAdmin ? 0 : -1}
         role={onSetGroupAdmin ? "button" : undefined}
         className={cn(
-            "transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50 bg-card group relative rounded-lg shadow-sm",
+            "transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50 bg-card group relative rounded-lg",
             onSetGroupAdmin && "cursor-pointer"
         )}
         onClick={onSetGroupAdmin ? () => onSetGroupAdmin(user) : undefined}
@@ -310,93 +310,95 @@ function AdminGroupCard({
     return (
         <Card className="flex flex-col h-full group">
             <CardHeader>
-                <div className="flex items-center gap-2">
-                    <div className="relative">
-                        <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <PopoverTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="h-12 w-12 text-6xl">
-                                                <GoogleSymbol name={group.icon} className="text-12xl" weight={100} />
+                <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-2">
+                        <div className="relative">
+                            <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <PopoverTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="h-12 w-12 text-6xl">
+                                                    <GoogleSymbol name={group.icon} className="text-12xl" weight={100} />
+                                                </Button>
+                                            </PopoverTrigger>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>Change Icon</p></TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                                <PopoverContent className="w-80 p-0">
+                                    <div className="flex items-center gap-1 p-2 border-b">
+                                        {!isSearchingIcons ? (
+                                            <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={() => setIsSearchingIcons(true)}>
+                                                <GoogleSymbol name="search" />
                                             </Button>
-                                        </PopoverTrigger>
-                                    </TooltipTrigger>
-                                    <TooltipContent><p>Change Icon</p></TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                            <PopoverContent className="w-80 p-0">
-                                <div className="flex items-center gap-1 p-2 border-b">
-                                    {!isSearchingIcons ? (
-                                        <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={() => setIsSearchingIcons(true)}>
-                                            <GoogleSymbol name="search" />
-                                        </Button>
-                                    ) : (
-                                        <div className="flex items-center gap-1 w-full">
-                                            <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
-                                            <input
-                                                ref={iconSearchInputRef}
-                                                placeholder="Search icons..."
-                                                value={iconSearch}
-                                                onChange={(e) => setIconSearch(e.target.value)}
-                                                onBlur={() => !iconSearch && setIsSearchingIcons(false)}
-                                                className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
-                                            />
-                                        </div>
-                                    )}
+                                        ) : (
+                                            <div className="flex items-center gap-1 w-full">
+                                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                                                <input
+                                                    ref={iconSearchInputRef}
+                                                    placeholder="Search icons..."
+                                                    value={iconSearch}
+                                                    onChange={(e) => setIconSearch(e.target.value)}
+                                                    onBlur={() => !iconSearch && setIsSearchingIcons(false)}
+                                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <ScrollArea className="h-64">
+                                      <div className="grid grid-cols-6 gap-1 p-2">
+                                        {filteredIcons.slice(0, 300).map((iconName) => (
+                                          <TooltipProvider key={iconName}>
+                                            <Tooltip>
+                                              <TooltipTrigger asChild>
+                                                <Button
+                                                  variant={group.icon === iconName ? "default" : "ghost"}
+                                                  size="icon"
+                                                  onClick={() => { onUpdate({ ...group, icon: iconName }); setIsIconPopoverOpen(false); }}
+                                                  className="h-8 w-8 p-0"
+                                                >
+                                                  <GoogleSymbol name={iconName} className="text-4xl" weight={100} />
+                                                </Button>
+                                              </TooltipTrigger>
+                                              <TooltipContent><p>{iconName}</p></TooltipContent>
+                                            </Tooltip>
+                                          </TooltipProvider>
+                                        ))}
+                                      </div>
+                                    </ScrollArea>
+                                </PopoverContent>
+                            </Popover>
+                            <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <PopoverTrigger asChild>
+                                                <div 
+                                                    className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card cursor-pointer" 
+                                                    aria-label="Change service admin color"
+                                                    style={{ backgroundColor: group.color }}
+                                                />
+                                            </PopoverTrigger>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>Change Color</p></TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                                <PopoverContent className="w-auto p-2">
+                                <div className="grid grid-cols-8 gap-1">
+                                    {predefinedColors.map(color => (<button key={color} className="h-6 w-6 rounded-full border" style={{ backgroundColor: color }} onClick={() => { onUpdate({ ...group, color: color }); setIsColorPopoverOpen(false); }} aria-label={`Set color to ${color}`}/>))}
+                                    <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
+                                    <GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={group.color} onChange={(e) => onUpdate({ ...group, color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" aria-label="Custom color picker"/>
+                                    </div>
                                 </div>
-                                <ScrollArea className="h-64">
-                                  <div className="grid grid-cols-6 gap-1 p-2">
-                                    {filteredIcons.slice(0, 300).map((iconName) => (
-                                      <TooltipProvider key={iconName}>
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <Button
-                                              variant={group.icon === iconName ? "default" : "ghost"}
-                                              size="icon"
-                                              onClick={() => { onUpdate({ ...group, icon: iconName }); setIsIconPopoverOpen(false); }}
-                                              className="h-8 w-8 p-0"
-                                            >
-                                              <GoogleSymbol name={iconName} className="text-4xl" weight={100} />
-                                            </Button>
-                                          </TooltipTrigger>
-                                          <TooltipContent><p>{iconName}</p></TooltipContent>
-                                        </Tooltip>
-                                      </TooltipProvider>
-                                    ))}
-                                  </div>
-                                </ScrollArea>
-                            </PopoverContent>
-                        </Popover>
-                        <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <PopoverTrigger asChild>
-                                            <div 
-                                                className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card cursor-pointer" 
-                                                aria-label="Change service admin color"
-                                                style={{ backgroundColor: group.color }}
-                                            />
-                                        </PopoverTrigger>
-                                    </TooltipTrigger>
-                                    <TooltipContent><p>Change Color</p></TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                            <PopoverContent className="w-auto p-2">
-                            <div className="grid grid-cols-8 gap-1">
-                                {predefinedColors.map(color => (<button key={color} className="h-6 w-6 rounded-full border" style={{ backgroundColor: color }} onClick={() => { onUpdate({ ...group, color: color }); setIsColorPopoverOpen(false); }} aria-label={`Set color to ${color}`}/>))}
-                                <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
-                                <GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={group.color} onChange={(e) => onUpdate({ ...group, color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" aria-label="Custom color picker"/>
-                                </div>
+                                </PopoverContent>
+                            </Popover>
+                        </div>
+                        <div className="flex-1">
+                             <div className="flex items-center gap-1">
+                                {isEditingName ? (<Input ref={nameInputRef} defaultValue={group.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-lg font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>) : (<CardTitle onClick={() => setIsEditingName(true)} className="font-headline cursor-pointer text-lg font-thin">{group.name}</CardTitle>)}
+                                <AddUserToGroupButton usersToAdd={unassignedUsers} onAdd={handleGroupToggle} groupName={group.name} />
                             </div>
-                            </PopoverContent>
-                        </Popover>
-                    </div>
-                    <div className="flex-1">
-                         <div className="flex items-center gap-1">
-                            {isEditingName ? (<Input ref={nameInputRef} defaultValue={group.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 text-lg font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>) : (<CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer text-lg font-thin">{group.name}</CardTitle>)}
-                            <AddUserToGroupButton usersToAdd={unassignedUsers} onAdd={handleGroupToggle} groupName={group.name} />
                         </div>
                     </div>
                      <TooltipProvider>
@@ -694,7 +696,7 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                         <Card className="flex flex-col h-full">
                             <CardHeader>
                               <div className="flex items-center gap-2">
-                                <CardTitle className="font-thin text-lg">Admins</CardTitle>
+                                <CardTitle className="font-headline font-thin text-lg">Admins</CardTitle>
                                 <AddUserToGroupButton usersToAdd={nonAdminUsers} onAdd={handleAdminToggle} groupName="Admin" />
                               </div>
                               <CardDescription>Assign or revoke Admin privileges. This is the highest level of access.</CardDescription>
@@ -1006,115 +1008,119 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
     return (
         <Card className={cn("flex flex-col h-full group", isDragging && 'shadow-xl')}>
             <CardHeader>
-                <div className="flex items-center gap-2">
-                    <div className="relative">
-                        <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
-                            <TooltipProvider>
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <div className="relative">
+                            <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <PopoverTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="h-12 w-12 text-6xl">
+                                                    <GoogleSymbol name={page.icon} className="text-12xl" weight={100} />
+                                                </Button>
+                                            </PopoverTrigger>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>Change Icon</p></TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                                <PopoverContent className="w-80 p-0">
+                                    <div className="flex items-center gap-1 p-2 border-b">
+                                        {!isSearchingIcons ? (
+                                            <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={() => setIsSearchingIcons(true)}>
+                                                <GoogleSymbol name="search" />
+                                            </Button>
+                                        ) : (
+                                            <div className="flex items-center gap-1 w-full">
+                                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                                                <input
+                                                    ref={iconSearchInputRef}
+                                                    placeholder="Search icons..."
+                                                    value={iconSearch}
+                                                    onChange={(e) => setIconSearch(e.target.value)}
+                                                    onBlur={() => !iconSearch && setIsSearchingIcons(false)}
+                                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (
+                                    <TooltipProvider key={iconName}>
+                                        <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button
+                                            variant={page.icon === iconName ? "default" : "ghost"}
+                                            size="icon"
+                                            onClick={() => { onUpdate(page.id, { icon: iconName }); setIsIconPopoverOpen(false);}}
+                                            className="h-8 w-8 p-0"
+                                            >
+                                            <GoogleSymbol name={iconName} className="text-4xl" weight={100} />
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>{iconName}</p></TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                    ))}</div></ScrollArea>
+                                </PopoverContent>
+                            </Popover>
+                            <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                                <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                         <PopoverTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="h-12 w-12 text-6xl">
-                                                <GoogleSymbol name={page.icon} className="text-12xl" weight={100} />
-                                            </Button>
+                                            <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card cursor-pointer" style={{ backgroundColor: page.color }} />
                                         </PopoverTrigger>
                                     </TooltipTrigger>
-                                    <TooltipContent><p>Change Icon</p></TooltipContent>
+                                    <TooltipContent><p>Change Color</p></TooltipContent>
                                 </Tooltip>
-                            </TooltipProvider>
-                            <PopoverContent className="w-80 p-0">
-                                <div className="flex items-center gap-1 p-2 border-b">
-                                    {!isSearchingIcons ? (
-                                        <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={() => setIsSearchingIcons(true)}>
-                                            <GoogleSymbol name="search" />
-                                        </Button>
-                                    ) : (
-                                        <div className="flex items-center gap-1 w-full">
-                                            <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
-                                            <input
-                                                ref={iconSearchInputRef}
-                                                placeholder="Search icons..."
-                                                value={iconSearch}
-                                                onChange={(e) => setIconSearch(e.target.value)}
-                                                onBlur={() => !iconSearch && setIsSearchingIcons(false)}
-                                                className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
-                                            />
-                                        </div>
-                                    )}
-                                </div>
-                                <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (
-                                <TooltipProvider key={iconName}>
-                                    <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button
-                                        variant={page.icon === iconName ? "default" : "ghost"}
-                                        size="icon"
-                                        onClick={() => { onUpdate(page.id, { icon: iconName }); setIsIconPopoverOpen(false);}}
-                                        className="h-8 w-8 p-0"
-                                        >
-                                        <GoogleSymbol name={iconName} className="text-4xl" weight={100} />
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent><p>{iconName}</p></TooltipContent>
-                                    </Tooltip>
                                 </TooltipProvider>
-                                ))}</div></ScrollArea>
-                            </PopoverContent>
-                        </Popover>
-                        <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                            <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <PopoverTrigger asChild>
-                                        <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card cursor-pointer" style={{ backgroundColor: page.color }} />
-                                    </PopoverTrigger>
-                                </TooltipTrigger>
-                                <TooltipContent><p>Change Color</p></TooltipContent>
-                            </Tooltip>
-                            </TooltipProvider>
-                            <PopoverContent className="w-auto p-2">
-                                <div className="grid grid-cols-8 gap-1">
-                                    {predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => { onUpdate(page.id, { color: c }); setIsColorPopoverOpen(false); }}/>))}
-                                    <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
-                                        <GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={page.color} onChange={(e) => onUpdate(page.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/>
+                                <PopoverContent className="w-auto p-2">
+                                    <div className="grid grid-cols-8 gap-1">
+                                        {predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => { onUpdate(page.id, { color: c }); setIsColorPopoverOpen(false); }}/>))}
+                                        <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
+                                            <GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={page.color} onChange={(e) => onUpdate(page.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/>
+                                        </div>
                                     </div>
-                                </div>
-                            </PopoverContent>
-                        </Popover>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1">
-                            {isEditingName ? (
-                                <Input ref={nameInputRef} defaultValue={page.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 text-base font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>
-                            ) : (
-                                <CardTitle onClick={() => !isSystemPage && setIsEditingName(true)} className={cn("text-base break-words font-thin", !isSystemPage && "cursor-pointer")}>
-                                    {page.name}
-                                </CardTitle>
-                            )}
+                                </PopoverContent>
+                            </Popover>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1">
+                                {isEditingName ? (
+                                    <Input ref={nameInputRef} defaultValue={page.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-base font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"/>
+                                ) : (
+                                    <CardTitle onClick={() => !isSystemPage && setIsEditingName(true)} className={cn("font-headline text-base break-words font-thin", !isSystemPage && "cursor-pointer")}>
+                                        {page.name}
+                                    </CardTitle>
+                                )}
+                            </div>
                         </div>
                     </div>
-                    {!isSystemPage && (
-                        <>
-                            <PageAccessControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
-                            <PageTabsControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
-                        </>
-                    )}
-                    {!isPinned && (
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-8 w-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                                        onClick={() => setIsDeleteDialogOpen(true)}
-                                    >
-                                        <GoogleSymbol name="delete" className="text-lg" weight={100} />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent><p>Delete Page</p></TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    )}
+                    <div className="flex items-center">
+                        {!isSystemPage && (
+                            <>
+                                <PageAccessControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
+                                <PageTabsControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
+                            </>
+                        )}
+                        {!isPinned && (
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                                            onClick={() => setIsDeleteDialogOpen(true)}
+                                        >
+                                            <GoogleSymbol name="delete" className="text-lg" weight={100} />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent><p>Delete Page</p></TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        )}
+                    </div>
                 </div>
             </CardHeader>
             <CardContent className="flex-grow flex flex-col justify-end pt-2">

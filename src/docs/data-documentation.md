@@ -25,7 +25,7 @@ This table details the information stored directly within each `User` object.
 | `googleCalendarLinked: boolean` | **Google Service.** A flag that is set to `true` only after the user successfully completes an OAuth consent flow via **Firebase Authentication** to grant the app permission to access their Google Calendar. |
 | `roles?: string[]` | **Internal.** An array of strings that includes the names of any `AdminGroup`s the user belongs to and any `Badge`s they have been assigned. The application determines the name's meaning and properties by looking it up in `AppSettings` or the relevant `Team` object. |
 | `directReports?: string[]` | **Internal.** An array of `userId`s for users who report directly to this user. This is currently informational. |
-| `theme?: 'light' \| 'dark' \| ...` | **Internal.** A UI preference for the app's color scheme. |
+| `theme?: 'light' \| 'dark'` | **Internal.** A UI preference for the app's color scheme. |
 | `primaryColor?: string` | **Internal.** A user-selected hex color code that overrides the default primary color of their chosen theme. |
 | `defaultCalendarView?: 'month' \| 'week' \| ...` | **Internal.** A UI preference for the default calendar layout. |
 | `easyBooking?: boolean` | **Internal.** A UI preference for enabling quick event creation from the calendar. |

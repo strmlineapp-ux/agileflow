@@ -139,42 +139,40 @@ const MemberCard = ({ user, index, onRemove, onSetAdmin, isTeamAdmin }: { user: 
                 {...provided.dragHandleProps}
                 className={cn(snapshot.isDragging && "opacity-80")}
             >
-            <Card
+            <div
                 tabIndex={0}
                 role="button"
                 onClick={() => onSetAdmin(user.userId)}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSetAdmin(user.userId); } }}
-                className="transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
+                className="transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50 p-2 flex items-center justify-between rounded-lg group"
             >
-                <CardContent className="p-2 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="relative">
-                            <Avatar className="h-8 w-8">
-                                <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
-                                <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                            </Avatar>
-                            {isTeamAdmin && (
-                                <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card flex items-center justify-center bg-primary text-primary-foreground">
-                                    <GoogleSymbol name="key" style={{fontSize: '10px'}}/>
-                                </div>
-                            )}
-                        </div>
-                        <div>
-                            <p className="font-medium text-sm">{user.displayName}</p>
-                        </div>
+                <div className="flex items-center gap-3">
+                    <div className="relative">
+                        <Avatar className="h-8 w-8">
+                            <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
+                            <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                        {isTeamAdmin && (
+                            <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card flex items-center justify-center bg-primary text-primary-foreground">
+                                <GoogleSymbol name="key" style={{fontSize: '10px'}}/>
+                            </div>
+                        )}
                     </div>
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onRemove(user.userId); }} className="text-muted-foreground hover:text-destructive p-0">
-                                    <GoogleSymbol name="cancel" className="text-4xl" weight={100} />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent><p>Remove from team</p></TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                </CardContent>
-            </Card>
+                    <div>
+                        <p className="font-medium text-sm">{user.displayName}</p>
+                    </div>
+                </div>
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onRemove(user.userId); }} className="text-muted-foreground hover:text-destructive p-0 h-6 w-6 opacity-0 group-hover:opacity-100">
+                                <GoogleSymbol name="cancel" className="text-lg" weight={100} />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent><p>Remove from team</p></TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+            </div>
             </div>
         )}
         </Draggable>
@@ -255,9 +253,9 @@ function TeamCard({
     }, [allUsers, team.members]);
 
     return (
-        <Card className="flex flex-col h-full">
+        <Card className="flex flex-col h-full group">
             <CardHeader>
-                <div className="flex items-start justify-between">
+                <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                          <div className="relative">
                             <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
@@ -308,10 +306,10 @@ function TeamCard({
                                     defaultValue={team.name}
                                     onBlur={handleSaveName}
                                     onKeyDown={handleNameKeyDown}
-                                    className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                                    className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
                                 />
                             ) : (
-                                <CardTitle className="text-xl font-headline font-thin cursor-pointer truncate" onClick={() => setIsEditingName(true)}>
+                                <CardTitle className="font-headline text-xl font-thin cursor-pointer truncate" onClick={() => setIsEditingName(true)}>
                                     {team.name}
                                 </CardTitle>
                             )}
@@ -324,17 +322,17 @@ function TeamCard({
                                 ref={provided.innerRef}
                                 {...provided.droppableProps}
                                 className={cn(
-                                    "rounded-full transition-all p-0.5",
+                                    "rounded-full transition-all",
                                     snapshot.isDraggingOver && "ring-1 ring-destructive"
                                 )}
                             >
                                 <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:text-destructive p-0" onClick={() => onDelete(team)}>
-                                        <GoogleSymbol name="delete" className="text-4xl" weight={100}/>
-                                        <span className="sr-only">Delete Team or Drop User to Remove</span>
-                                    </Button>
+                                        <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:text-destructive p-0 opacity-0 group-hover:opacity-100" onClick={() => onDelete(team)}>
+                                            <GoogleSymbol name="delete" className="text-4xl" weight={100}/>
+                                            <span className="sr-only">Delete Team or Drop User to Remove</span>
+                                        </Button>
                                     </TooltipTrigger>
                                     <TooltipContent><p>{snapshot.isDraggingOver ? `Drop to remove user` : 'Delete Team'}</p></TooltipContent>
                                 </Tooltip>

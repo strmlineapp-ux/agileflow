@@ -63,7 +63,7 @@ export function Header() {
                 <TooltipTrigger asChild>
                     <SheetTrigger asChild>
                         <Button size="icon" variant="outline" className="sm:hidden">
-                            <GoogleSymbol name="menu" />
+                            <GoogleSymbol name="menu" weight={100} />
                             <span className="sr-only">Toggle Menu</span>
                         </Button>
                     </SheetTrigger>
@@ -94,7 +94,7 @@ export function Header() {
 
             {adminPage && (
               <Link href={adminPage.path} className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
-                <GoogleSymbol name={adminPage.icon} className="text-2xl" />
+                <GoogleSymbol name={adminPage.icon} className="text-2xl" weight={100} />
                 {adminPage.name}
               </Link>
             )}
@@ -102,7 +102,7 @@ export function Header() {
             {staticPages.map(page => (
                 <Link key={page.id} href={page.path} className="flex items-center justify-between gap-4 px-2.5 text-muted-foreground hover:text-foreground">
                   <div className="flex items-center gap-4">
-                    <GoogleSymbol name={page.icon} className="text-2xl" />
+                    <GoogleSymbol name={page.icon} className="text-2xl" weight={100} />
                     {page.name}
                   </div>
                   {page.id === 'page-notifications' && unreadCount > 0 && (
@@ -115,7 +115,7 @@ export function Header() {
 
             {teamManagementPage && userManagedTeams.map(team => (
               <Link key={`${teamManagementPage.id}-${team.id}`} href={`${teamManagementPage.path}/${team.id}`} className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
-                  <GoogleSymbol name={team.icon} className="text-2xl" />
+                  <GoogleSymbol name={team.icon} className="text-2xl" weight={100} />
                   {team.name}
               </Link>
             ))}

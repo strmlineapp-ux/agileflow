@@ -1,5 +1,4 @@
 
-
 import type {Config} from 'tailwindcss';
 
 export default {
@@ -23,7 +22,7 @@ export default {
         '12xl': ['9rem', { lineHeight: '1' }],
       },
       fontFamily: {
-        body: ['"PT Sans"', 'sans-serif'],
+        body: ['"Roboto"', 'sans-serif'],
         headline: ['"Roboto"', 'sans-serif'],
       },
       fontWeight: {
