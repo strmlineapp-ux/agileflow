@@ -43,7 +43,6 @@ This pattern provides a clean, minimal interface for search functionality, espec
   - The input field appears with a transparent background and no borders or box-shadow, to maintain a minimal, "inline text" look.
 - **Behavior:**
   - The input field **must** automatically gain focus as soon as its parent popover or container becomes visible. This is achieved using a `useEffect` hook that triggers `searchInputRef.current?.focus()` after a short `setTimeout` (e.g., 100ms) to ensure the element is rendered and ready.
-  - Typing into the field filters the relevant content on the page in real-time.
 - **Application:** Used for filtering lists of icons, users, or other filterable content within popovers and other compact spaces.
 
 ---
@@ -118,6 +117,7 @@ This is the application's perfected, gold-standard pattern for managing a collec
 -   **Layout**: Entities are presented in a responsive grid of cards. To ensure stability during drag operations, especially across multiple rows, the container must use a `flex flex-wrap` layout instead of CSS Grid. Each draggable card item is then given `flex-grow` and `basis` properties to create the responsive columns (e.g., `flex-grow basis-full md:basis-[calc(50%-1.5rem)]`).
 -   **Internal Card Layout**: Each card is structured for clarity. The header contains the primary entity identifier (icon and name) and contextual controls (like page access or tab associations, which are positioned inline after the title). The main content area is used for tertiary information (like a URL path) which is anchored to the bottom.
 -   **User Item Display**: When users are displayed as items within a management card (e.g., `AdminGroupCard` or `TeamCard`), they are presented **without a border**. Each user item must display their avatar, full name, and professional title underneath the name for consistency.
+-   **Unique Draggable IDs**: It is critical that every `Draggable` component has a globally unique `draggableId`. If the same item (e.g., a user) can appear in multiple lists, you must create a unique ID for each instance. A common pattern is to combine the list's ID with the item's ID (e.g., `draggableId={'${list.id}-${item.id}'}`). This prevents the drag-and-drop library from trying to move all instances of the item simultaneously.
 -   **Draggable & Pinned States**:
     -   **Draggable Cards**: Most cards can be freely reordered within the grid.
     -   **Pinned Cards**: Certain cards are designated as "pinned" and cannot be dragged. They act as fixed anchors in the layout.
@@ -129,7 +129,7 @@ This is the application's perfected, gold-standard pattern for managing a collec
     -   **Standard & Duplication Zones (Reordering, Moving, Duplicating):** The drop area is highlighted with a `1px` inset, **colorless** ring using the standard border color (`ring-1 ring-border ring-inset`). This is the universal style for all non-destructive drop actions.
     -   **Destructive Zones (Deleting):** The drop area is highlighted with a `1px` ring in the destructive theme color (`ring-1 ring-destructive`).
 -   **Contextual Hover Actions**: To maintain a clean default UI, action icons like "Remove User" or "Delete Group" must appear only when hovering over their specific context.
-    - **Item-level**: A "remove" or "cancel" icon appears in the top-right corner of a list item (e.g., a user card or a badge) *only* when the user hovers over that specific item. This is achieved by adding a `group` class to the item's container and using `opacity-0 group-hover:opacity-100` on the icon button.
+    - **Item-level**: A "remove" or "cancel" icon appears in the top-right corner of a list item (e.g., a user card or a badge) *only* when the user hovers over that specific item. This is achieved by adding a `group` class to the *individual item's container*. The icon button inside is then styled with `opacity-0 group-hover:opacity-100`. It is critical that parent containers (like the main card) do **not** also have a `group` class if it is not intended to trigger the item's hover state, as nested group classes can cause all item icons to appear at once.
     - **Card-level**: Deleting an entire card (like a Team or Collection) is a high-impact action. To prevent accidental clicks, this functionality should be placed within a `more_vert` dropdown menu in the card's header, not triggered by a direct hover.
 -   **Drag-to-Duplicate**:
     -   **Interaction**: A designated "Add New" icon (`<Button>`) acts as a drop zone. While a card is being dragged, this zone becomes highlighted to indicate it can accept a drop.
@@ -273,3 +273,4 @@ This is the single source of truth for indicating user interaction state across 
     - **Placement**: Typically positioned on the bottom-right or top-right corner of the parent element.
     - **Application**: Used for displaying a user's admin group status, a shared status on a role icon, or a `share` icon on a shared Badge.
 -   **Badges in Assorted View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
+

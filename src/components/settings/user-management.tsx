@@ -119,7 +119,7 @@ export function UserManagement() {
             {users.map(user => {
               const isCurrentUser = user.userId === realUser.userId;
               return (
-                <Card key={user.userId}>
+                <Card key={user.userId} className="bg-transparent">
                   <Accordion type="single" collapsible className="w-full">
                     <AccordionItem value="details" className="border-none">
                       <CardHeader>
@@ -155,7 +155,7 @@ export function UserManagement() {
                                 </Tooltip>
                             </TooltipProvider>
                             <div>
-                                <p className="font-normal text-lg">{user.displayName}</p>
+                                <p className="font-semibold text-lg">{user.displayName}</p>
                                 <p className="text-sm text-muted-foreground">{user.email}</p>
                             </div>
                           </div>
@@ -165,12 +165,12 @@ export function UserManagement() {
                         <AccordionContent>
                            <CardContent className="pt-0">
                                <div className="border-t pt-4">
-                                <div className="p-2 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
+                                <div className="p-2 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
                                     {/* Left Column */}
-                                    <div className="space-y-2">
+                                    <div className="space-y-4">
                                         <div>
                                             <Label className="text-xs text-muted-foreground">Title</Label>
-                                            <p className="text-sm font-normal">{user.title || <span className="italic text-muted-foreground">Not provided</span>}</p>
+                                            <p className="text-sm font-medium">{user.title || <span className="italic text-muted-foreground">Not provided</span>}</p>
                                         </div>
                                         <div>
                                             <Label className="text-xs text-muted-foreground">Contact</Label>
@@ -216,7 +216,7 @@ export function UserManagement() {
                                                     style={roleInfo ? { color: roleInfo.color, borderColor: roleInfo.color } : {}}
                                                     className="rounded-full gap-1 text-xs py-0.5 px-2"
                                                 >
-                                                    {roleInfo && <GoogleSymbol name={roleInfo.icon} className="text-sm" weight={100} />}
+                                                    {roleInfo && <GoogleSymbol name={roleInfo.icon} className="text-sm" />}
                                                     <span>{role}</span>
                                                 </Badge>
                                                 );
@@ -226,7 +226,7 @@ export function UserManagement() {
                                         </div>
                                     </div>
                                     {/* Right Column */}
-                                    <div className="space-y-2">
+                                    <div className="space-y-4">
                                         {isCurrentUser && (
                                         <>
                                             <div className="flex items-center gap-2">

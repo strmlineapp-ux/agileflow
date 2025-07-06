@@ -33,7 +33,7 @@ export function LocationCheckManagerManagement({ team }: { team: Team }) {
 
   return (
     <>
-      <Card>
+      <Card className="bg-transparent">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             Location Check Managers

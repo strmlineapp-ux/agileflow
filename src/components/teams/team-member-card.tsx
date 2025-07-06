@@ -140,7 +140,7 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
 
   return (
     <>
-      <Card>
+      <Card className="bg-transparent">
         <CardHeader>
           <div className="flex items-center gap-4">
             <Avatar className="h-12 w-12">

@@ -292,7 +292,7 @@ export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab
             </TooltipProvider>
         )}
       </div>
-      <Card>
+      <Card className="bg-transparent">
         <CardHeader>
             <div className="flex items-center justify-between">
                 <div>
@@ -313,7 +313,7 @@ export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {templates.length > 0 ? (
               templates.map(template => (
-                <Card key={template.id} className="flex flex-col">
+                <Card key={template.id} className="flex flex-col bg-transparent">
                     <CardHeader>
                         <div className="flex items-start justify-between">
                              <CardTitle className="flex-1 min-w-0">

@@ -130,7 +130,7 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
             </TooltipProvider>
         )}
       </div>
-      <Card>
+      <Card className="bg-transparent">
         <CardHeader>
           <div className="flex items-start justify-between">
             <div>

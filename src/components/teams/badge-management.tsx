@@ -654,7 +654,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
     }
     
     return (
-        <Card className="h-full flex flex-col">
+        <Card className="h-full flex flex-col bg-transparent">
             <div {...dragHandleProps}>
                 <CardHeader>
                     <div className="flex items-start justify-between">
@@ -1334,7 +1334,7 @@ export const BadgeManagement = ({ team, tab }: { team: Team, tab: AppTab }) => {
                                 {...provided.droppableProps} 
                                 className={cn("h-full rounded-lg transition-all", snapshot.isDraggingOver && "bg-accent/50 ring-2 ring-border ring-inset")}
                             >
-                                <Card className={cn("transition-opacity duration-300 h-full", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
+                                <Card className={cn("transition-opacity duration-300 h-full bg-transparent", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
                                     <CardHeader>
                                         <div className="flex items-center justify-between">
                                             <CardTitle>Shared Collections</CardTitle>

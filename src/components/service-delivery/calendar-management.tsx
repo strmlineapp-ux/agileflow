@@ -97,7 +97,7 @@ function CalendarCard({ calendar, onUpdate, onDelete }: { calendar: SharedCalend
   };
 
   return (
-    <Card className="flex flex-col group">
+    <Card className="flex flex-col group bg-transparent">
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
