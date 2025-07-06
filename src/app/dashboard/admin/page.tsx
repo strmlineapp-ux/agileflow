@@ -52,17 +52,17 @@ const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
 // #region Admin Groups Management Tab
 const UserAssignmentCard = ({ user, index, onRemove, isGroupAdmin, onSetGroupAdmin, canRemove = true, isDraggable = false }: { user: User; index?: number; onRemove: (user: User) => void; isGroupAdmin: boolean; onSetGroupAdmin?: (user: User) => void; canRemove?: boolean; isDraggable?: boolean }) => {
   const cardContent = (
-    <Card 
+    <div 
         tabIndex={onSetGroupAdmin ? 0 : -1}
         role={onSetGroupAdmin ? "button" : undefined}
         className={cn(
-            "transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50 bg-card group relative",
+            "transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50 bg-card group relative rounded-lg shadow-sm",
             onSetGroupAdmin && "cursor-pointer"
         )}
         onClick={onSetGroupAdmin ? () => onSetGroupAdmin(user) : undefined}
         onKeyDown={onSetGroupAdmin ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSetGroupAdmin(user); } } : undefined}
     >
-      <CardContent className="p-2 flex items-center justify-between">
+      <div className="p-2 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="relative">
             <Avatar>
@@ -80,7 +80,7 @@ const UserAssignmentCard = ({ user, index, onRemove, isGroupAdmin, onSetGroupAdm
             <p className="text-sm text-muted-foreground">{user.email}</p>
           </div>
         </div>
-      </CardContent>
+      </div>
        {canRemove && (
           <TooltipProvider>
             <Tooltip>
@@ -99,7 +99,7 @@ const UserAssignmentCard = ({ user, index, onRemove, isGroupAdmin, onSetGroupAdm
             </Tooltip>
           </TooltipProvider>
         )}
-    </Card>
+    </div>
   );
 
   if (isDraggable && index !== undefined) {
@@ -1229,28 +1229,22 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
     
         if (destination.droppableId === 'pages-list' && source.droppableId === 'pages-list') {
             const pages = appSettings.pages;
-            const fromIndex = source.index;
+            
             let toIndex = destination.index;
             
-            // Constraint 1: Can't drop before Admin Management (which is at index 0)
-            if (toIndex === 0) {
-                toIndex = 1;
+            const firstDraggableIndex = pages.findIndex(p => !pinnedIds.includes(p.id));
+            if (toIndex < firstDraggableIndex) {
+                toIndex = firstDraggableIndex;
             }
 
-            // Constraint 2: Can't drop on or after the notifications page
-            const notificationsIndex = pages.findIndex(p => p.id === 'page-notifications');
-            if (notificationsIndex !== -1 && toIndex >= notificationsIndex) {
-                toIndex = notificationsIndex;
+            const lastDraggableIndex = pages.findLastIndex(p => !pinnedIds.includes(p.id));
+            if (toIndex > lastDraggableIndex) {
+                toIndex = lastDraggableIndex;
             }
 
-            // Reorder the array with the corrected index
             const reorderedPages = Array.from(pages);
-            const [movedItem] = reorderedPages.splice(fromIndex, 1);
-            
-            // The destination index needs to be adjusted if the item was moved from before it
-            const finalInsertionIndex = fromIndex < toIndex ? toIndex - 1 : toIndex;
-            
-            reorderedPages.splice(finalInsertionIndex, 0, movedItem);
+            const [movedItem] = reorderedPages.splice(source.index, 1);
+            reorderedPages.splice(toIndex, 0, movedItem);
 
             updateAppSettings({ pages: reorderedPages });
         }
