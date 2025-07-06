@@ -170,7 +170,7 @@ export function UserManagement() {
                                     <div className="space-y-2">
                                         <div>
                                             <Label className="text-xs text-muted-foreground">Title</Label>
-                                            <p className="text-sm font-medium">{user.title || <span className="italic text-muted-foreground">Not provided</span>}</p>
+                                            <p className="text-sm font-normal">{user.title || <span className="italic text-muted-foreground">Not provided</span>}</p>
                                         </div>
                                         <div>
                                             <Label className="text-xs text-muted-foreground">Contact</Label>

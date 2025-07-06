@@ -450,24 +450,26 @@ function AdminGroupCard({
             <CardContent className="flex-grow">
                 <StrictModeDroppable droppableId={`group-content-${group.id}`} type="user-card" isDropDisabled={false} isCombineEnabled={false}>
                 {(provided, snapshot) => (
-                    <div 
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
-                    className={cn("space-y-4 rounded-b-lg min-h-[60px]", snapshot.isDraggingOver && "ring-1 ring-border ring-inset")}
-                    >
-                    {assignedUsers.map((user, index) => (
-                        <UserAssignmentCard 
-                            key={user.userId} 
-                            index={index}
-                            user={user} 
-                            onRemove={handleGroupToggle}
-                            isGroupAdmin={(group.groupAdmins || []).includes(user.userId)}
-                            onSetGroupAdmin={handleSetGroupAdmin}
-                            isDraggable={true}
-                        />
-                    ))}
-                    {provided.placeholder}
-                    </div>
+                    <ScrollArea className="h-full">
+                        <div 
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                        className={cn("space-y-4 rounded-b-lg min-h-[60px]", snapshot.isDraggingOver && "ring-1 ring-border ring-inset")}
+                        >
+                        {assignedUsers.map((user, index) => (
+                            <UserAssignmentCard 
+                                key={user.userId} 
+                                index={index}
+                                user={user} 
+                                onRemove={handleGroupToggle}
+                                isGroupAdmin={(group.groupAdmins || []).includes(user.userId)}
+                                onSetGroupAdmin={handleSetGroupAdmin}
+                                isDraggable={true}
+                            />
+                        ))}
+                        {provided.placeholder}
+                        </div>
+                    </ScrollArea>
                 )}
                 </StrictModeDroppable>
             </CardContent>
@@ -731,22 +733,24 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                             <CardContent className="flex-grow">
                                 <StrictModeDroppable droppableId="admins-card-droppable" type="user-card" isDropDisabled={false} isCombineEnabled={false}>
                                 {(provided, snapshot) => (
-                                    <div 
-                                    ref={provided.innerRef}
-                                    {...provided.droppableProps}
-                                    className={cn("space-y-4 rounded-b-lg min-h-[60px]", snapshot.isDraggingOver && "ring-1 ring-border ring-inset")}
-                                    >
-                                    {adminUsers.map(user => (
-                                        <UserAssignmentCard 
-                                        key={user.userId} 
-                                        user={user} 
-                                        onRemove={handleAdminToggle}
-                                        isGroupAdmin={false}
-                                        canRemove={adminUsers.length > 1}
-                                        />
-                                    ))}
-                                    {provided.placeholder}
-                                    </div>
+                                    <ScrollArea className="h-full">
+                                        <div 
+                                        ref={provided.innerRef}
+                                        {...provided.droppableProps}
+                                        className={cn("space-y-4 rounded-b-lg min-h-[60px]", snapshot.isDraggingOver && "ring-1 ring-border ring-inset")}
+                                        >
+                                        {adminUsers.map(user => (
+                                            <UserAssignmentCard 
+                                            key={user.userId} 
+                                            user={user} 
+                                            onRemove={handleAdminToggle}
+                                            isGroupAdmin={false}
+                                            canRemove={adminUsers.length > 1}
+                                            />
+                                        ))}
+                                        {provided.placeholder}
+                                        </div>
+                                    </ScrollArea>
                                 )}
                                 </StrictModeDroppable>
                             </CardContent>
