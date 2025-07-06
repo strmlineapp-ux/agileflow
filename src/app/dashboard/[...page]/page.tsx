@@ -11,7 +11,7 @@ import { type AppTab, type AppPage } from '@/types';
 import { hasAccess } from '@/lib/permissions';
 
 // Import all possible tab components
-import { AdminGroupsManagement, PagesManagement, TabsManagement } from '@/app/dashboard/admin/page';
+import { AdminGroupsManagement, PagesManagement, TabsManagement } from '@/components/admin/page';
 import { CalendarManagement } from '@/components/service-delivery/calendar-management';
 import { TeamManagement as ServiceDeliveryTeamManagement } from '@/components/service-delivery/team-management';
 import { TeamMembersView } from '@/components/teams/team-members-view';
