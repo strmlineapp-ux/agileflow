@@ -571,7 +571,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                 onClick={onDelete}
                 aria-label={`Delete ${badge.name}`}
             >
-                <GoogleSymbol name="delete" className="text-xs" />
+                <GoogleSymbol name="close" className="text-xs" />
             </button>
         </div>
     );

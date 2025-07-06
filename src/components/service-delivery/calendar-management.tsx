@@ -2,7 +2,7 @@
 
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useUser } from '@/context/user-context';
 import { type SharedCalendar, type AppTab } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,7 +17,6 @@ import { googleSymbolNames } from '@/lib/google-symbols';
 import { ScrollArea } from '../ui/scroll-area';
 import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProps } from 'react-beautiful-dnd';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '../ui/dropdown-menu';
 
 // Wrapper to fix issues with react-beautiful-dnd and React 18 Strict Mode
 const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
@@ -61,7 +60,7 @@ function CalendarCard({ calendar, onUpdate, onDelete, isDragging }: { calendar: 
     }
   }, [isIconPopoverOpen]);
 
-  const filteredIcons = googleSymbolNames.filter(name => name.toLowerCase().includes(iconSearch.toLowerCase()));
+  const filteredIcons = useMemo(() => googleSymbolNames.filter(name => name.toLowerCase().includes(iconSearch.toLowerCase())), [iconSearch]);
 
   useEffect(() => {
     if (isEditingName) nameInputRef.current?.focus();
@@ -107,11 +106,9 @@ function CalendarCard({ calendar, onUpdate, onDelete, isDragging }: { calendar: 
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <PopoverTrigger asChild>
-                                    <button className="h-12 w-12 flex items-center justify-center">
-                                        <GoogleSymbol name={calendar.icon} className="text-6xl" weight={100} />
-                                    </button>
-                                </PopoverTrigger>
+                                <button className="h-12 w-12 flex items-center justify-center">
+                                    <GoogleSymbol name={calendar.icon} className="text-6xl" weight={100} />
+                                </button>
                             </TooltipTrigger>
                             <TooltipContent><p>Change Icon</p></TooltipContent>
                         </Tooltip>
@@ -134,13 +131,13 @@ function CalendarCard({ calendar, onUpdate, onDelete, isDragging }: { calendar: 
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <PopoverTrigger asChild><div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background cursor-pointer" style={{ backgroundColor: calendar.color }} /></PopoverTrigger>
+                                <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background cursor-pointer" style={{ backgroundColor: calendar.color }} />
                             </TooltipTrigger>
                             <TooltipContent><p>Change Color</p></TooltipContent>
                         </Tooltip>
                     </TooltipProvider>
                     <PopoverContent className="w-auto p-2">
-                    <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdate(calendar.id, { color: c }); setIsColorPopoverOpen(false);}}/>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={calendar.color} onChange={(e) => onUpdate(calendar.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
+                    <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdate(calendar.id, { color: c }); setIsColorPopoverOpen(false);}}></button>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={calendar.color} onChange={(e) => onUpdate(calendar.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
                     </PopoverContent>
                 </Popover>
             </div>
