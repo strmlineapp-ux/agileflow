@@ -127,6 +127,7 @@ export interface Team {
   locationAliases?: { [key:string]: string };
   workstations?: string[];
   eventTemplates?: EventTemplate[];
+  timelines?: { id: string; name: string }[];
 }
 
 export interface Task {

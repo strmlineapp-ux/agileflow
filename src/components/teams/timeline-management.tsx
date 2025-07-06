@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -13,7 +12,7 @@ import { format, addHours, startOfDay } from 'date-fns';
 
 const TimelineHourHeader = () => {
   const hours = Array.from({ length: 24 }, (_, i) => i);
-  const timeFormat = 'HH:mm'; // Fixed 24h for simplicity in this new component
+  const timeFormat = 'HH:mm';
   return (
     <div className="flex sticky top-0 bg-card z-10 border-b">
       <div className="w-40 shrink-0 border-r p-2 font-medium">Item</div>
@@ -101,10 +100,11 @@ function EditableTimelineView({ timeline, onNameChange, onDelete }: {
 }
 
 export function TimelineManagement({ team, tab }: { team: Team, tab: AppTab }) {
-  const { updateAppTab } = useUser();
-  const [timelines, setTimelines] = useState<{id: string, name: string}[]>([]);
+  const { updateTeam, updateAppTab } = useUser();
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
+
+  const timelines = team.timelines || [];
 
   useEffect(() => {
     if (isEditingTitle) titleInputRef.current?.focus();
@@ -124,15 +124,18 @@ export function TimelineManagement({ team, tab }: { team: Team, tab: AppTab }) {
   };
 
   const addTimeline = () => {
-    setTimelines(prev => [...prev, { id: crypto.randomUUID(), name: `New Timeline ${prev.length + 1}` }]);
+    const newTimeline = { id: crypto.randomUUID(), name: `New Timeline ${timelines.length + 1}` };
+    updateTeam(team.id, { timelines: [...timelines, newTimeline] });
   }
 
   const updateTimelineName = (id: string, newName: string) => {
-    setTimelines(prev => prev.map(t => t.id === id ? { ...t, name: newName } : t));
+    const newTimelines = timelines.map(t => t.id === id ? { ...t, name: newName } : t);
+    updateTeam(team.id, { timelines: newTimelines });
   }
 
   const deleteTimeline = (id: string) => {
-    setTimelines(prev => prev.filter(t => t.id !== id));
+    const newTimelines = timelines.filter(t => t.id !== id);
+    updateTeam(team.id, { timelines: newTimelines });
   }
 
   return (

@@ -404,6 +404,10 @@ export const mockTeams: Team[] = [
         eventTemplates: [
             { id: 'template-1', name: 'Basic Studio Shoot', icon: 'theaters', requestedRoles: ['Video Director', 'Edit Events'] },
             { id: 'template-2', name: 'Voice Over Record', icon: 'record_voice_over', requestedRoles: ['Post-Production'] }
+        ],
+        timelines: [
+          { id: 'tl-1', name: 'Commercial Shoot Workflow' },
+          { id: 'tl-2', name: 'Animation Pipeline' },
         ]
     },
     {
@@ -439,7 +443,8 @@ export const mockTeams: Team[] = [
         eventTemplates: [
             { id: 'template-3', name: 'Standard Live Event', icon: 'podcasts', requestedRoles: ['TD', 'ES Operator', 'Camera', 'Audio'] },
             { id: 'template-4', name: 'Auditorium Presentation', icon: 'slideshow', requestedRoles: ['TD', 'Content Op'] }
-        ]
+        ],
+        timelines: [],
     },
     {
         id: 'productions',

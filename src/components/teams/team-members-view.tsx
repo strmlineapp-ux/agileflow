@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { useUser } from '@/context/user-context';
@@ -114,7 +112,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                             {(provided) => (
                                 <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-4">
                                     {admins.map((member, index) => (
-                                        <Draggable key={member.userId} draggableId={`admin-${member.userId}`} index={index} ignoreContainerClipping={false}>
+                                        <Draggable key={member.userId} draggableId={`admin-${member.userId}`} index={index}>
                                         {(provided, snapshot) => (
                                             <div
                                             ref={provided.innerRef}
@@ -143,7 +141,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                             {(provided) => (
                                 <div ref={provided.innerRef} {...provided.droppableProps} className="flex flex-wrap -m-3">
                                 {members.map((member, index) => (
-                                    <Draggable key={member.userId} draggableId={`member-${member.userId}`} index={index} ignoreContainerClipping={false}>
+                                    <Draggable key={member.userId} draggableId={`member-${member.userId}`} index={index}>
                                     {(provided, snapshot) => (
                                         <div
                                         ref={provided.innerRef}
