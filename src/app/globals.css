@@ -61,7 +61,7 @@
     @apply bg-background text-foreground;
   }
   .font-headline {
-      @apply font-light;
+      @apply font-thin;
   }
 }
 

@@ -1,6 +1,4 @@
 
-
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -87,9 +85,9 @@ export default function ServiceDeliveryPage() {
       <div className="flex items-center gap-3">
         <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
           <PopoverTrigger asChild>
-            <Button variant="ghost" size="icon" className="shrink-0 h-12 w-12">
-              <GoogleSymbol name={pageConfig.icon} className="text-12xl" weight={100} />
-            </Button>
+            <button className="shrink-0 h-12 w-12 flex items-center justify-center">
+              <GoogleSymbol name={pageConfig.icon} className="text-6xl" weight={100} />
+            </button>
           </PopoverTrigger>
           <PopoverContent className="w-80 p-0">
             <div className="flex items-center gap-1 p-2 border-b">
