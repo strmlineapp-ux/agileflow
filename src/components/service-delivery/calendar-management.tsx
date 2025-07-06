@@ -7,7 +7,7 @@ import { useUser } from '@/context/user-context';
 import { type SharedCalendar, type AppTab } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle as UIDialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { GoogleSymbol } from '../icons/google-symbol';
@@ -371,7 +371,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
               </Button>
           </div>
           <DialogHeader>
-              <DialogTitle>Delete "{editingCalendar?.name}"?</DialogTitle>
+              <UIDialogTitle>Delete "{editingCalendar?.name}"?</UIDialogTitle>
               <DialogDescription>
                 This action cannot be undone. This will permanently delete the calendar and all of its associated events.
               </DialogDescription>
