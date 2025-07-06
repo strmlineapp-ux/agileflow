@@ -550,7 +550,7 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
                                     ref={provided.innerRef}
                                     {...provided.draggableProps}
                                     {...provided.dragHandleProps}
-                                     className="basis-full md:basis-[calc(50%-1.5rem)] lg:basis-[calc(33.333%-1.5rem)]"
+                                     className="basis-full md:basis-[calc(50%-0.75rem)] lg:basis-[calc(33.333%-1rem)]"
                                 >
                                     <TeamCard 
                                         team={team} 
@@ -585,4 +585,3 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
     </DragDropContext>
   );
 }
-

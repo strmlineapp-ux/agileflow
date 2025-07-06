@@ -671,7 +671,7 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
             <StrictModeDroppable droppableId="admin-groups-list" type="group-card" isDropDisabled={false} isCombineEnabled={false}>
               {(provided) => (
                   <div ref={provided.innerRef} {...provided.droppableProps} className="flex flex-wrap gap-6">
-                      <div className="basis-full md:basis-[calc(50%-1.5rem)] lg:basis-[calc(33.333%-1.5rem)] xl:basis-[calc(25%-1.5rem)]">
+                      <div className="basis-full md:basis-[calc(50%-0.75rem)] lg:basis-[calc(33.333%-1rem)]">
                         <Card className="flex flex-col h-full bg-transparent">
                             <CardHeader>
                               <div className="flex items-center gap-2">
@@ -679,28 +679,30 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                                 <AddUserToGroupButton usersToAdd={nonAdminUsers} onAdd={handleAdminToggle} groupName="Admin" />
                               </div>
                             </CardHeader>
-                            <CardContent className="flex-grow">
-                                <StrictModeDroppable droppableId="admins-card-droppable" type="user-card" isDropDisabled={false} isCombineEnabled={false}>
-                                {(provided, snapshot) => (
-                                    <div 
-                                    ref={provided.innerRef}
-                                    {...provided.droppableProps}
-                                    className={cn("space-y-4 rounded-b-lg min-h-[60px]", snapshot.isDraggingOver && "ring-1 ring-border ring-inset")}
-                                    >
-                                    {adminUsers.map(user => (
-                                        <UserAssignmentCard 
-                                        key={user.userId} 
-                                        user={user} 
-                                        onRemove={handleAdminToggle}
-                                        isGroupAdmin={false}
-                                        canRemove={adminUsers.length > 1}
-                                        />
-                                    ))}
-                                    {provided.placeholder}
-                                    </div>
-                                )}
-                                </StrictModeDroppable>
-                            </CardContent>
+                            <ScrollArea className="flex-grow">
+                              <CardContent>
+                                  <StrictModeDroppable droppableId="admins-card-droppable" type="user-card" isDropDisabled={false} isCombineEnabled={false}>
+                                  {(provided, snapshot) => (
+                                      <div 
+                                      ref={provided.innerRef}
+                                      {...provided.droppableProps}
+                                      className={cn("space-y-4 rounded-b-lg min-h-[60px]", snapshot.isDraggingOver && "ring-1 ring-border ring-inset")}
+                                      >
+                                      {adminUsers.map(user => (
+                                          <UserAssignmentCard 
+                                          key={user.userId} 
+                                          user={user} 
+                                          onRemove={handleAdminToggle}
+                                          isGroupAdmin={false}
+                                          canRemove={adminUsers.length > 1}
+                                          />
+                                      ))}
+                                      {provided.placeholder}
+                                      </div>
+                                  )}
+                                  </StrictModeDroppable>
+                              </CardContent>
+                            </ScrollArea>
                           </Card>
                       </div>
 
@@ -712,7 +714,7 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                             {...provided.draggableProps} 
                             {...provided.dragHandleProps} 
                             className={cn(
-                                "basis-full md:basis-[calc(50%-1.5rem)] lg:basis-[calc(33.333%-1.5rem)] xl:basis-[calc(25%-1.5rem)]", 
+                                "basis-full md:basis-[calc(50%-0.75rem)] lg:basis-[calc(33.333%-1rem)]", 
                                 snapshot.isDragging && "shadow-xl"
                             )}
                           >
@@ -1317,7 +1319,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                                                 {...provided.draggableProps}
                                                 {...provided.dragHandleProps}
                                                 className={cn(
-                                                    "basis-full sm:basis-[calc(50%-0.5rem)] md:basis-[calc(33.33%-0.66rem)] lg:basis-[calc(25%-0.75rem)] xl:basis-[calc(20%-0.8rem)]",
+                                                    "basis-full sm:basis-[calc(50%-0.5rem)] md:basis-[calc(33.33%-0.667rem)] lg:basis-[calc(25%-0.75rem)] xl:basis-[calc(20%-0.8rem)]",
                                                     isPinned && "opacity-70",
                                                     draggingItemId === page.id && "opacity-50"
                                                 )}
@@ -1596,7 +1598,7 @@ export const TabsManagement = ({ tab }: { tab: AppTab }) => {
                                             ref={provided.innerRef}
                                             {...provided.draggableProps}
                                             {...provided.dragHandleProps}
-                                            className="w-full basis-full md:basis-[calc(50%-1.5rem)] lg:basis-[calc(33.333%-1.5rem)]"
+                                            className="basis-full md:basis-[calc(50%-0.75rem)] lg:basis-[calc(33.333%-1rem)]"
                                         >
                                             <TabCard
                                                 tab={appTab}
@@ -1681,9 +1683,9 @@ const AdminPageSkeleton = () => (
       <Skeleton className="h-10 w-72" />
       <Skeleton className="h-10 w-full" />
       <div className="flex flex-wrap gap-6">
-        <Skeleton className="h-64 w-full flex-grow basis-full md:basis-[calc(50%-1.5rem)] lg:basis-[calc(33.333%-1.5rem)]" />
-        <Skeleton className="h-64 w-full flex-grow basis-full md:basis-[calc(50%-1.5rem)] lg:basis-[calc(33.333%-1.5rem)]" />
-        <Skeleton className="h-64 w-full flex-grow basis-full md:basis-[calc(50%-1.5rem)] lg:basis-[calc(33.333%-1.5rem)]" />
+        <Skeleton className="h-64 basis-full md:basis-[calc(50%-0.75rem)] lg:basis-[calc(33.333%-1rem)]" />
+        <Skeleton className="h-64 basis-full md:basis-[calc(50%-0.75rem)] lg:basis-[calc(33.333%-1rem)]" />
+        <Skeleton className="h-64 basis-full md:basis-[calc(50%-0.75rem)] lg:basis-[calc(33.333%-1rem)]" />
       </div>
     </div>
 );
