@@ -91,7 +91,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                   </TooltipProvider>
                 )}
             </div>
-            <StrictModeDroppable droppableId="team-members-list">
+            <StrictModeDroppable droppableId="team-members-list" isDropDisabled={false}>
                 {(provided) => (
                     <div 
                       ref={provided.innerRef} 

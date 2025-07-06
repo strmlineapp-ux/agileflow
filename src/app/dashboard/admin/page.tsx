@@ -23,6 +23,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 
 // #region Helper Components and Constants
 const predefinedColors = [
@@ -1585,7 +1586,7 @@ export const TabsManagement = ({ tab }: { tab: AppTab }) => {
                     </TooltipProvider>
                 )}
                 </div>
-                <StrictModeDroppable droppableId="tabs-list">
+                <StrictModeDroppable droppableId="tabs-list" isDropDisabled={false}>
                     {(provided) => (
                         <div {...provided.droppableProps} ref={provided.innerRef} className="flex flex-wrap gap-6">
                             {appSettings.tabs.map((appTab, index) => (
@@ -1686,4 +1687,3 @@ const AdminPageSkeleton = () => (
       </div>
     </div>
 );
-
