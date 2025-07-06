@@ -1419,5 +1419,3 @@ export const BadgeManagement = ({ team, tab }: { team: Team, tab: AppTab }) => {
         </DragDropContext>
     );
 }
-
-    

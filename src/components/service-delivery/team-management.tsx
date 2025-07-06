@@ -586,5 +586,3 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
     </DragDropContext>
   );
 }
-
-    

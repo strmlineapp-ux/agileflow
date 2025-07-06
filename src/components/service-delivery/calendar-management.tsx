@@ -381,5 +381,3 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
     </DragDropContext>
   );
 }
-
-    
