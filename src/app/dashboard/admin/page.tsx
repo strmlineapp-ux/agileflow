@@ -50,7 +50,7 @@ const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
 // #endregion
 
 // #region Admin Groups Management Tab
-const UserAssignmentCard = ({ user, index, onRemove, isGroupAdmin, onSetGroupAdmin, canRemove = true, isDraggable = false }: { user: User; index?: number; onRemove: (user: User) => void; isGroupAdmin: boolean; onSetGroupAdmin?: (user: User) => void; canRemove?: boolean; isDraggable?: boolean }) => {
+const UserAssignmentCard = ({ user, index, onRemove, isGroupAdmin, onSetGroupAdmin, canRemove = true, isDraggable = false, draggableId }: { user: User; index?: number; onRemove: (user: User) => void; isGroupAdmin: boolean; onSetGroupAdmin?: (user: User) => void; canRemove?: boolean; isDraggable?: boolean; draggableId?: string }) => {
   const cardContent = (
     <div 
         tabIndex={onSetGroupAdmin ? 0 : -1}
@@ -102,9 +102,9 @@ const UserAssignmentCard = ({ user, index, onRemove, isGroupAdmin, onSetGroupAdm
     </div>
   );
 
-  if (isDraggable && index !== undefined) {
+  if (isDraggable && index !== undefined && draggableId) {
     return (
-      <Draggable draggableId={`user-${user.userId}`} index={index} type="user-card">
+      <Draggable draggableId={draggableId} index={index} type="user-card">
         {(provided, snapshot) => (
           <div
             ref={provided.innerRef}
@@ -413,6 +413,7 @@ function AdminGroupCard({
                             key={user.userId} 
                             index={index}
                             user={user} 
+                            draggableId={`user-${group.id}-${user.userId}`}
                             onRemove={handleGroupToggle}
                             isGroupAdmin={(group.groupAdmins || []).includes(user.userId)}
                             onSetGroupAdmin={handleSetGroupAdmin}
@@ -583,7 +584,10 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
     }
 
     if (type === 'user-card') {
-      const userId = draggableId.replace('user-', '');
+      const parts = draggableId.split('-');
+      const userId = parts.pop();
+      if (!userId) return;
+
       const sourceDroppableId = source.droppableId;
       const destinationDroppableId = destination.droppableId;
         
