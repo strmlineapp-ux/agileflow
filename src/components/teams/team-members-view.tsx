@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useUser } from '@/context/user-context';
@@ -40,19 +39,11 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
       const members = team.members
         .map(id => users.find(u => u.userId === id))
         .filter((u): u is User => !!u);
-      
-      // Sort members to put admins first, then by their order in the members array.
-      members.sort((a, b) => {
-        const aIsAdmin = team.teamAdmins?.includes(a.userId) ?? false;
-        const bIsAdmin = team.teamAdmins?.includes(b.userId) ?? false;
-        if (aIsAdmin && !bIsAdmin) return -1;
-        if (!aIsAdmin && bIsAdmin) return 1;
-        // If both are admins or not, maintain the original order from team.members
-        return team.members.indexOf(a.userId) - team.members.indexOf(b.userId);
-      });
-      
       setTeamMembers(members);
-    }, [users, team.members, team.teamAdmins]);
+    }, [users, team.members]);
+    
+    const admins = useMemo(() => teamMembers.filter(m => team.teamAdmins?.includes(m.userId)), [teamMembers, team.teamAdmins]);
+    const members = useMemo(() => teamMembers.filter(m => !team.teamAdmins?.includes(m.userId)), [teamMembers, team.teamAdmins]);
 
     useEffect(() => {
         if (isEditingTitle) titleInputRef.current?.focus();
@@ -72,26 +63,53 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
     };
     
     const onDragEnd = (result: DropResult) => {
-        const { source, destination } = result;
-        if (!destination) return;
-        
-        const reorderedMembers = Array.from(teamMembers);
-        const [movedItem] = reorderedMembers.splice(source.index, 1);
-        reorderedMembers.splice(destination.index, 0, movedItem);
+      const { source, destination } = result;
+      if (!destination || source.droppableId !== destination.droppableId) {
+        return;
+      }
 
-        // Re-sort to enforce admins are always at the top
-        reorderedMembers.sort((a, b) => {
-          const aIsAdmin = team.teamAdmins?.includes(a.userId) ?? false;
-          const bIsAdmin = team.teamAdmins?.includes(b.userId) ?? false;
-          if (aIsAdmin && !bIsAdmin) return -1;
-          if (!aIsAdmin && bIsAdmin) return 1;
-          return 0; // Maintain D&D order within admin/non-admin groups
-        });
+      const listToReorder = source.droppableId === 'admins-list' ? admins : members;
+      const reorderedList = Array.from(listToReorder);
+      const [movedItem] = reorderedList.splice(source.index, 1);
+      reorderedList.splice(destination.index, 0, movedItem);
 
-        setTeamMembers(reorderedMembers);
-        const newMemberIds = reorderedMembers.map(m => m.userId);
-        updateTeam(team.id, { members: newMemberIds });
+      const newAdmins = source.droppableId === 'admins-list' ? reorderedList : admins;
+      const newMembers = source.droppableId === 'members-list' ? reorderedList : members;
+
+      const newTeamMembers = [...newAdmins, ...newMembers];
+      const newMemberIds = newTeamMembers.map(m => m.userId);
+
+      setTeamMembers(newTeamMembers);
+      updateTeam(team.id, { members: newMemberIds });
     };
+
+    const renderMemberList = (userList: User[], droppableId: string) => (
+      <StrictModeDroppable droppableId={droppableId} isDropDisabled={false}>
+        {(provided) => (
+          <div 
+            ref={provided.innerRef} 
+            {...provided.droppableProps} 
+            className="flex flex-wrap -m-3"
+          >
+            {userList.map((member, index) => (
+              <Draggable key={member.userId} draggableId={member.userId} index={index} ignoreContainerClipping={false}>
+                {(provided, snapshot) => (
+                  <div
+                    ref={provided.innerRef}
+                    {...provided.draggableProps}
+                    {...provided.dragHandleProps}
+                    className={cn("p-3 basis-full md:basis-1/2 lg:basis-1/3", snapshot.isDragging && "opacity-80 shadow-xl")}
+                  >
+                    <TeamMemberCard member={member} team={team} />
+                  </div>
+                )}
+              </Draggable>
+            ))}
+            {provided.placeholder}
+          </div>
+        )}
+      </StrictModeDroppable>
+    );
 
     return (
       <DragDropContext onDragEnd={onDragEnd}>
@@ -114,34 +132,21 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                   </TooltipProvider>
                 )}
             </div>
-            <StrictModeDroppable droppableId="team-members-list" isDropDisabled={false}>
-                {(provided) => (
-                    <div 
-                      ref={provided.innerRef} 
-                      {...provided.droppableProps} 
-                      className="flex flex-wrap -m-3"
-                    >
-                        {teamMembers.map((member, index) => (
-                            <Draggable key={member.userId} draggableId={member.userId} index={index} ignoreContainerClipping={false}>
-                              {(provided, snapshot) => (
-                                <div
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  {...provided.dragHandleProps}
-                                  className={cn("p-3 basis-full md:basis-1/2 lg:basis-1/3", snapshot.isDragging && "opacity-80 shadow-xl")}
-                                >
-                                  <TeamMemberCard member={member} team={team} />
-                                </div>
-                              )}
-                            </Draggable>
-                        ))}
-                        {provided.placeholder}
-                    </div>
-                )}
-            </StrictModeDroppable>
+            
+            <div className="space-y-4">
+              <h3 className="font-headline font-thin text-xl">Team Admins</h3>
+              {admins.length > 0 ? renderMemberList(admins, 'admins-list') : (
+                <div className="text-sm text-muted-foreground p-4 border border-dashed rounded-lg text-center">No team admins assigned.</div>
+              )}
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="font-headline font-thin text-xl">Members</h3>
+              {members.length > 0 ? renderMemberList(members, 'members-list') : (
+                <div className="text-sm text-muted-foreground p-4 border border-dashed rounded-lg text-center">No other members in this team.</div>
+              )}
+            </div>
         </div>
       </DragDropContext>
     );
 }
-
-    
