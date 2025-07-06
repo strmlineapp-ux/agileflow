@@ -129,8 +129,8 @@ This is the application's perfected, gold-standard pattern for managing a collec
     -   **Standard & Duplication Zones (Reordering, Moving, Duplicating):** The drop area is highlighted with a `1px` inset, **colorless** ring using the standard border color (`ring-1 ring-border ring-inset`). This is the universal style for all non-destructive drop actions.
     -   **Destructive Zones (Deleting):** The drop area is highlighted with a `1px` ring in the destructive theme color (`ring-1 ring-destructive`).
 -   **Contextual Hover Actions**: To maintain a clean default UI, action icons like "Remove User" or "Delete Group" must appear only when hovering over their specific context.
-    - **Item-level**: A "remove" or "cancel" icon appears in the top-right corner of a list item (e.g., a user card) *only* when the user hovers over that specific item.
-    - **Card-level**: A "delete" icon appears in the top-right corner of the main card's header *only* when the user hovers over the header area or the card's general background.
+    - **Item-level**: A "remove" or "cancel" icon appears in the top-right corner of a list item (e.g., a user card or a badge) *only* when the user hovers over that specific item. This is achieved by adding a `group` class to the item's container and using `opacity-0 group-hover:opacity-100` on the icon button.
+    - **Card-level**: A "delete" icon appears in the top-right corner of the main card's header *only* when the user hovers over the header area or the card's general background. This uses the same `group` hover pattern on the card itself.
 -   **Drag-to-Duplicate**:
     -   **Interaction**: A designated "Add New" icon (`<Button>`) acts as a drop zone. While a card is being dragged, this zone becomes highlighted to indicate it can accept a drop.
     -   **Behavior**: Dropping any card (pinned or not) onto this zone creates a deep, independent copy of the original. The new card is given a unique ID, a modified name (e.g., with `(Copy)`), and is placed immediately after the original in the list.
