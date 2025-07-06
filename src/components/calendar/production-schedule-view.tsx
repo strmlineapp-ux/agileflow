@@ -217,7 +217,7 @@ const ProductionScheduleLocationRow = React.memo(({
          <Popover>
             <PopoverTrigger asChild>
                 <Button variant="ghost" size={assignedUser ? "sm" : "icon"} className={cn("h-6 text-xs", assignedUser ? "w-auto px-1.5" : "w-6 ml-1")}>
-                    {assignedUser ? `${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}` : <GoogleSymbol name="person_add" />}
+                    {assignedUser ? `${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}` : <GoogleSymbol name="person_add" weight={100} />}
                 </Button>
             </PopoverTrigger>
             <PopoverContent className="w-56 p-0">
@@ -608,7 +608,7 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
                                             <>
                                                 {locationAliasMap[location] || location}
                                                 {assignedUser && <span className="ml-2 font-normal text-muted-foreground">({`${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}`})</span>}
-                                                {!assignedUser && canManageThisCheckLocation && <GoogleSymbol name="person_add" className="ml-2" />}
+                                                {!assignedUser && canManageThisCheckLocation && <GoogleSymbol name="person_add" weight={100} className="ml-2" />}
                                             </>
                                         );
                                         
@@ -644,9 +644,16 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
                                     {canManageAnyCheckLocation && (
                                         <Popover open={addCheckPopoverOpen[dayIso] || false} onOpenChange={(isOpen) => setAddCheckPopoverOpen(prev => ({ ...prev, [dayIso]: isOpen }))}>
                                             <PopoverTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-                                                    <GoogleSymbol name="playlist_add_check_circle" />
-                                                </Button>
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+                                                                <GoogleSymbol name="playlist_add_check_circle" weight={100} />
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent><p>Add Temporary Check</p></TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
                                             </PopoverTrigger>
                                             <PopoverContent className="w-[300px] p-0">
                                                 <div className="p-2 border-b">
@@ -678,7 +685,16 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
                                         const user = users.find(u => u.userId === userId);
                                         return user ? <UserStatusBadge key={userId} status={status}>{user.displayName}</UserStatusBadge> : null;
                                     })}
-                                    {canManageStatus && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenStatusDialog(dayIso)}><GoogleSymbol name="account_circle_off" /><span className="sr-only">Edit user statuses</span></Button>}
+                                    {canManageStatus && 
+                                        <TooltipProvider>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenStatusDialog(dayIso)}><GoogleSymbol name="account_circle_off" weight={100} /><span className="sr-only">Edit user statuses</span></Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent><p>Manage User Statuses</p></TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
+                                    }
                                 </div>
                             </div>
                             <div className="overflow-x-auto" ref={el => dayScrollerRefs.current.set(dayIso, el)}>
@@ -734,8 +750,3 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
     );
 });
 ProductionScheduleView.displayName = 'ProductionScheduleView';
-
-
-
-
-

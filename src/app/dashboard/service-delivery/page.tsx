@@ -2,7 +2,7 @@
 
 'use client';
 
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useUser } from '@/context/user-context';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CalendarManagement } from '@/components/service-delivery/calendar-management';
@@ -39,6 +39,12 @@ export default function ServiceDeliveryPage() {
   const [iconSearch, setIconSearch] = useState('');
   const titleInputRef = useRef<HTMLInputElement>(null);
   const iconSearchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isSearchingIcons && iconSearchInputRef.current) {
+      iconSearchInputRef.current.focus();
+    }
+  }, [isSearchingIcons]);
 
   const updatePage = (data: Partial<AppPage>) => {
     if (!pageConfig) return;

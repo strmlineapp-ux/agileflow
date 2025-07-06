@@ -52,6 +52,12 @@ export default function TeamPage() {
     }
   }, [isEditingName]);
 
+  useEffect(() => {
+    if (isSearchingIcons && iconSearchInputRef.current) {
+      iconSearchInputRef.current.focus();
+    }
+  }, [isSearchingIcons]);
+
   const handleSaveName = () => {
     if (team && nameInputRef.current) {
         const newName = nameInputRef.current.value.trim();

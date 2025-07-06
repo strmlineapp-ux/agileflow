@@ -1018,9 +1018,9 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
     }, [isEditingName]);
 
     useEffect(() => {
-        if (isIconPopoverOpen) {
-            setIconSearch('');
+        if (!isIconPopoverOpen) {
             setIsSearchingIcons(false);
+            setIconSearch('');
         }
     }, [isIconPopoverOpen]);
 
@@ -1410,7 +1410,7 @@ function TabCard({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string, data: 
     }, [isEditingDescription]);
     
     useEffect(() => {
-        if (isIconPopoverOpen) {
+        if (!isIconPopoverOpen) {
             setIsSearchingIcons(false);
             setIconSearch('');
         }
