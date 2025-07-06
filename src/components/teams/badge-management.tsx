@@ -682,7 +682,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                         <Tooltip>
                                             <TooltipTrigger asChild>
                                                 <div 
-                                                    className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-background flex items-center justify-center text-white"
+                                                    className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-card flex items-center justify-center text-white"
                                                     style={{ backgroundColor: shareIconColor }}
                                                 >
                                                     <GoogleSymbol name={shareIcon} style={{fontSize: '10px'}}/>
