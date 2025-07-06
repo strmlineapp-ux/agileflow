@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -69,7 +70,7 @@ export function NotificationList() {
                 <AvatarFallback>{notification.user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
               </Avatar>
               <div className="grid gap-1 flex-1">
-                <p className="text-sm">
+                <p className="text-sm font-normal">
                   <span className="font-normal">{notification.user.displayName}</span>
                   {' '}
                   {notification.content}

@@ -52,8 +52,10 @@ const AddMemberToTeamButton = ({ usersToAdd, onAdd, teamName }: { usersToAdd: Us
     if (!isOpen) {
       setIsSearching(false);
       setSearchTerm('');
+    } else if (isOpen && !isSearching) {
+        setTimeout(() => searchInputRef.current?.focus(), 100);
     }
-  }, [isOpen]);
+  }, [isOpen, isSearching]);
 
   useEffect(() => {
     if (isSearching && searchInputRef.current) {
@@ -115,7 +117,7 @@ const AddMemberToTeamButton = ({ usersToAdd, onAdd, teamName }: { usersToAdd: Us
               <div key={user.userId} onClick={() => handleSelect(user)} className="flex items-center gap-2 p-2 rounded-md group cursor-pointer">
                 <Avatar className="h-8 w-8"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0,2)}</AvatarFallback></Avatar>
                 <div>
-                  <p className="text-sm font-medium group-hover:text-primary transition-colors">{user.displayName}</p>
+                  <p className="text-sm font-normal group-hover:text-primary transition-colors">{user.displayName}</p>
                   <p className="text-xs text-muted-foreground">{user.email}</p>
                 </div>
               </div>
@@ -159,7 +161,7 @@ const MemberCard = ({ user, index, onRemove, onSetAdmin, isTeamAdmin }: { user: 
                         )}
                     </div>
                     <div>
-                        <p className="font-medium text-sm">{user.displayName}</p>
+                        <p className="font-normal text-sm">{user.displayName}</p>
                     </div>
                 </div>
                 <TooltipProvider>
@@ -204,6 +206,8 @@ function TeamCard({
         if (!isIconPopoverOpen) {
             setIsSearchingIcons(false);
             setIconSearch('');
+        } else {
+             setTimeout(() => iconSearchInputRef.current?.focus(), 100);
         }
     }, [isIconPopoverOpen]);
 
@@ -343,7 +347,7 @@ function TeamCard({
                 </div>
             </CardHeader>
             <CardContent className="flex-grow space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">Members (click to toggle admin status)</p>
+                <p className="text-sm font-normal text-muted-foreground">Members (click to toggle admin status)</p>
                  <StrictModeDroppable droppableId={`team-members-${team.id}`} type="user-card" isDropDisabled={false} isCombineEnabled={false}>
                     {(provided, snapshot) => (
                     <div

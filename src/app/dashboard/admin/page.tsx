@@ -76,7 +76,7 @@ const UserAssignmentCard = ({ user, index, onRemove, isGroupAdmin, onSetGroupAdm
             )}
           </div>
           <div>
-            <p className="font-semibold">{user.displayName}</p>
+            <p className="font-normal">{user.displayName}</p>
             <p className="text-sm text-muted-foreground">{user.title || 'No title provided'}</p>
           </div>
         </div>
@@ -196,7 +196,7 @@ const AddUserToGroupButton = ({ usersToAdd, onAdd, groupName }: { usersToAdd: Us
               <div key={user.userId} onClick={() => handleSelect(user)} className="flex items-center gap-2 p-2 rounded-md group cursor-pointer">
                 <Avatar className="h-8 w-8"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0,2)}</AvatarFallback></Avatar>
                 <div>
-                  <p className="text-sm font-medium group-hover:text-primary transition-colors">{user.displayName}</p>
+                  <p className="text-sm font-normal group-hover:text-primary transition-colors">{user.displayName}</p>
                   <p className="text-xs text-muted-foreground">{user.email}</p>
                 </div>
               </div>
@@ -256,6 +256,9 @@ function AdminGroupCard({
         if (!isIconPopoverOpen) {
             setIsSearchingIcons(false);
             setIconSearch('');
+        } else {
+            // Auto-focus search when popover opens
+            setTimeout(() => iconSearchInputRef.current?.focus(), 100);
         }
     }, [isIconPopoverOpen]);
 
@@ -841,8 +844,12 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
     const searchInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        if (isSearching) searchInputRef.current?.focus();
-    }, [isSearching]);
+        if (isOpen && !isSearching) {
+            // This is a bit of a trick to make it focus when the popover opens
+            // and the search isn't already active from a previous interaction.
+            setTimeout(() => searchInputRef.current?.focus(), 100);
+        }
+    }, [isOpen, isSearching]);
 
     const handleBlurSearch = () => {
         if (!searchTerm) setIsSearching(false);
@@ -913,7 +920,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                           return (
                             <div key={user.userId} className="flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer" style={{ color: isSelected ? 'hsl(var(--primary))' : undefined }} onClick={() => handleToggle('users', user.userId)}>
                               <Avatar className="h-7 w-7"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0,2)}</AvatarFallback></Avatar>
-                              <span className="font-medium">{user.displayName}</span>
+                              <span className="font-normal">{user.displayName}</span>
                             </div>
                           )
                         })}</div></ScrollArea>
@@ -925,7 +932,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                           return (
                             <div key={team.id} className="flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer" style={{ color: isSelected ? team.color : undefined }} onClick={() => handleToggle('teams', team.id)}>
                               <GoogleSymbol name={team.icon} className="text-xl" />
-                              <span className="font-medium">{team.name}</span>
+                              <span className="font-normal">{team.name}</span>
                             </div>
                           )
                         })}</div></ScrollArea>
@@ -937,7 +944,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                           return (
                             <div key={group.id} className="flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer" style={{ color: isSelected ? group.color : undefined }} onClick={() => handleToggle('adminGroups', group.name)}>
                               <GoogleSymbol name={group.icon} className="text-xl" />
-                              <span className="font-medium">{group.name}</span>
+                              <span className="font-normal">{group.name}</span>
                             </div>
                           )
                         })}</div></ScrollArea>
@@ -988,7 +995,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
                     onClick={() => handleToggle(tab.id)}
                 >
                     <GoogleSymbol name={tab.icon} className="text-xl" />
-                    <span className="font-medium">{tab.name}</span>
+                    <span className="font-normal">{tab.name}</span>
                 </div>
               );
             })}
@@ -1021,6 +1028,9 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
         if (!isIconPopoverOpen) {
             setIsSearchingIcons(false);
             setIconSearch('');
+        } else {
+            // Auto-focus search when popover opens
+            setTimeout(() => iconSearchInputRef.current?.focus(), 100);
         }
     }, [isIconPopoverOpen]);
 
@@ -1413,6 +1423,8 @@ function TabCard({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string, data: 
         if (!isIconPopoverOpen) {
             setIsSearchingIcons(false);
             setIconSearch('');
+        } else {
+             setTimeout(() => iconSearchInputRef.current?.focus(), 100);
         }
     }, [isIconPopoverOpen]);
 
@@ -1533,7 +1545,7 @@ function TabCard({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string, data: 
                         </div>
                         <div className="flex-1 min-w-0">
                              {isEditingName ? (
-                                <Input ref={nameInputRef} defaultValue={tab.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 font-headline" />
+                                <Input ref={nameInputRef} defaultValue={tab.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-normal border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 font-headline" />
                             ) : (
                                 <CardTitle className="font-headline cursor-pointer text-lg font-thin" onClick={() => setIsEditingName(true)}>{tab.name}</CardTitle>
                             )}

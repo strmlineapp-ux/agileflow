@@ -67,10 +67,10 @@ function CompactSearchIconPicker({
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (isSearching && searchInputRef.current) {
-      searchInputRef.current.focus();
+    if (isPopoverOpen && !isSearching) {
+        setTimeout(() => searchInputRef.current?.focus(), 100);
     }
-  }, [isSearching]);
+  }, [isPopoverOpen, isSearching]);
   
   useEffect(() => {
       if (!isPopoverOpen) {
@@ -312,7 +312,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
 
     if (viewMode === 'detailed') {
       return (
-        <Card className="group h-full flex flex-col">
+        <div className="group h-full flex flex-col rounded-lg bg-card text-card-foreground shadow-sm">
             <CardHeader>
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -374,13 +374,13 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                     onMouseDown={(e) => e.stopPropagation()}
                                     onChange={(e) => setCurrentName(e.target.value)}
                                     onKeyDown={handleNameKeyDown}
-                                    className="h-auto p-0 text-base border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
+                                    className="h-auto p-0 text-base font-normal border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
                                 />
                             ) : (
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <span onClick={() => isEditable && setIsEditingName(true)} className={cn("text-base break-words", isEditable && "cursor-pointer")}>{badge.name}</span>
+                                            <span onClick={() => isEditable && setIsEditingName(true)} className={cn("text-base break-words font-normal", isEditable && "cursor-pointer")}>{badge.name}</span>
                                         </TooltipTrigger>
                                         <TooltipContent><p>{isEditable ? "Click to edit" : "Properties are managed by the owner team."}</p></TooltipContent>
                                     </Tooltip>
@@ -419,7 +419,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                     </TooltipProvider>
                  )}
             </CardContent>
-        </Card>
+        </div>
       );
     }
     
@@ -432,7 +432,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
         onKeyDown={handleNameKeyDown}
         className={cn(
           "h-auto p-0 border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words",
-          "text-sm"
+          "text-sm font-normal"
         )}
       />
     ) : (
@@ -440,7 +440,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
             <Tooltip>
                 <TooltipTrigger asChild>
                     <span
-                        className={cn("font-semibold break-words text-sm", isEditable && "cursor-text")}
+                        className={cn("font-normal break-words text-sm", isEditable && "cursor-text")}
                         onClick={(e) => {
                         e.stopPropagation();
                         if (isEditable) {

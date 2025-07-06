@@ -74,7 +74,7 @@ export function Sidebar() {
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-14 flex-col border-r bg-card sm:flex">
       <nav className="flex flex-col items-center gap-4 px-2 py-4">
-        <Link href="/dashboard/calendar" className="group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base">
+        <Link href="/dashboard/calendar" className="group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-normal text-primary-foreground md:h-8 md:w-8 md:text-base">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-accent">
             <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             <path d="M2 17L12 22L22 17" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -141,7 +141,7 @@ export function Sidebar() {
             <DropdownMenuContent side="right" align="end" className="w-64">
                 <DropdownMenuLabel className="font-thin">
                     <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">{viewAsUser.displayName}</p>
+                        <p className="text-sm font-normal leading-none">{viewAsUser.displayName}</p>
                         <p className="text-xs leading-none text-muted-foreground">{viewAsUser.email}</p>
                     </div>
                 </DropdownMenuLabel>

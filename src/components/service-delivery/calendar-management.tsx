@@ -50,15 +50,20 @@ function CalendarCard({ calendar, onUpdate, onDelete }: { calendar: SharedCalend
   const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
   
   const [iconSearch, setIconSearch] = useState('');
-  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [isSearchingIcons, setIsSearchingIcons] = useState(false);
+  const iconSearchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isIconPopoverOpen) {
-      setTimeout(() => searchInputRef.current?.focus(), 100);
+      setTimeout(() => iconSearchInputRef.current?.focus(), 100);
     } else {
       setIconSearch('');
     }
   }, [isIconPopoverOpen]);
+
+  useEffect(() => {
+      if (isSearchingIcons) iconSearchInputRef.current?.focus();
+  }, [isSearchingIcons]);
 
   const filteredIcons = googleSymbolNames.filter(name => name.toLowerCase().includes(iconSearch.toLowerCase()));
 
@@ -97,7 +102,7 @@ function CalendarCard({ calendar, onUpdate, onDelete }: { calendar: SharedCalend
   };
 
   return (
-    <Card className="flex flex-col">
+    <Card className="flex flex-col group">
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
@@ -117,14 +122,23 @@ function CalendarCard({ calendar, onUpdate, onDelete }: { calendar: SharedCalend
                     </TooltipProvider>
                     <PopoverContent className="w-80 p-0">
                         <div className="flex items-center gap-1 p-2 border-b">
-                            <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
-                            <input
-                                ref={searchInputRef}
-                                placeholder="Search icons..."
-                                value={iconSearch}
-                                onChange={(e) => setIconSearch(e.target.value)}
-                                className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
-                            />
+                          {!isSearchingIcons ? (
+                            <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={() => setIsSearchingIcons(true)}>
+                                <GoogleSymbol name="search" />
+                            </Button>
+                          ) : (
+                            <div className="flex items-center gap-1 w-full">
+                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                                <input
+                                    ref={iconSearchInputRef}
+                                    placeholder="Search icons..."
+                                    value={iconSearch}
+                                    onChange={(e) => setIconSearch(e.target.value)}
+                                    onBlur={() => !iconSearch && setIsSearchingIcons(false)}
+                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                                />
+                            </div>
+                          )}
                         </div>
                         <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={calendar.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(calendar.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="h-8 w-8 p-0"><GoogleSymbol name={iconName} className="text-4xl" weight={100} /></Button>))}</div></ScrollArea>
                     </PopoverContent>
@@ -152,7 +166,7 @@ function CalendarCard({ calendar, onUpdate, onDelete }: { calendar: SharedCalend
                 className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
               />
             ) : (
-              <CardTitle className="cursor-pointer" onClick={() => setIsEditingName(true)}>
+              <CardTitle className="font-headline text-xl font-thin cursor-pointer" onClick={() => setIsEditingName(true)}>
                 {calendar.name}
               </CardTitle>
             )}
@@ -311,7 +325,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                         {...provided.droppableProps}
                         className={cn(
                             "rounded-full transition-all p-0.5",
-                            snapshot.isDraggingOver && "ring-1 ring-border"
+                            snapshot.isDraggingOver && "ring-1 ring-border ring-inset"
                         )}
                     >
                         <TooltipProvider>
@@ -345,7 +359,6 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                                     ref={provided.innerRef}
                                     {...provided.draggableProps}
                                     {...provided.dragHandleProps}
-                                    className="group"
                                 >
                                     <CalendarCard
                                         calendar={calendar}
