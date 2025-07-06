@@ -57,7 +57,6 @@ const UserAssignmentCard = ({ user, index, onRemove, isGroupAdmin, onSetGroupAdm
         role={onSetGroupAdmin ? "button" : undefined}
         className={cn(
             "transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50 bg-card",
-            onSetGroupAdmin && isGroupAdmin && "ring-1 ring-primary",
             onSetGroupAdmin && "cursor-pointer"
         )}
         onClick={onSetGroupAdmin ? () => onSetGroupAdmin(user) : undefined}
@@ -70,8 +69,8 @@ const UserAssignmentCard = ({ user, index, onRemove, isGroupAdmin, onSetGroupAdm
             <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
           </Avatar>
           <div>
-            <p className="font-semibold">{user.displayName}</p>
-            <p className="text-sm text-muted-foreground">{user.email}</p>
+            <p className={cn("font-semibold", onSetGroupAdmin && isGroupAdmin && "text-primary")}>{user.displayName}</p>
+            <p className={cn("text-sm text-muted-foreground", onSetGroupAdmin && isGroupAdmin && "text-primary/70")}>{user.email}</p>
           </div>
         </div>
         {canRemove && (
@@ -302,146 +301,133 @@ function AdminGroupCard({
     };
 
     return (
-        <>
-        <Card className="flex flex-col h-full">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <div className="relative">
-                  <div className="relative">
-                    <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <PopoverTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
-                                        <GoogleSymbol name={group.icon} className="text-8xl" weight={100} />
+        <div className="relative group h-full">
+            <Card className="flex flex-col h-full">
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <div className="relative">
+                      <div className="relative">
+                        <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <PopoverTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                                            <GoogleSymbol name={group.icon} className="text-8xl" weight={100} />
+                                            </Button>
+                                        </PopoverTrigger>
+                                    </TooltipTrigger>
+                                    <TooltipContent><p>Change Icon</p></TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                            <PopoverContent className="w-80 p-0">
+                                <div className="flex items-center gap-1 p-2 border-b">
+                                    {!isSearchingIcons ? (
+                                        <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={() => setIsSearchingIcons(true)}>
+                                            <GoogleSymbol name="search" />
                                         </Button>
-                                    </PopoverTrigger>
-                                </TooltipTrigger>
-                                <TooltipContent><p>Change Icon</p></TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                        <PopoverContent className="w-80 p-0">
-                            <div className="flex items-center gap-1 p-2 border-b">
-                                {!isSearchingIcons ? (
-                                    <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={() => setIsSearchingIcons(true)}>
-                                        <GoogleSymbol name="search" />
-                                    </Button>
-                                ) : (
-                                    <div className="flex items-center gap-1 w-full">
-                                        <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
-                                        <input
-                                            ref={iconSearchInputRef}
-                                            placeholder="Search icons..."
-                                            value={iconSearch}
-                                            onChange={(e) => setIconSearch(e.target.value)}
-                                            onBlur={() => !iconSearch && setIsSearchingIcons(false)}
-                                            className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
-                                        />
-                                    </div>
-                                )}
+                                    ) : (
+                                        <div className="flex items-center gap-1 w-full">
+                                            <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                                            <input
+                                                ref={iconSearchInputRef}
+                                                placeholder="Search icons..."
+                                                value={iconSearch}
+                                                onChange={(e) => setIconSearch(e.target.value)}
+                                                onBlur={() => !iconSearch && setIsSearchingIcons(false)}
+                                                className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                                <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={group.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate({ ...group, icon: iconName }); setIsIconPopoverOpen(false); }} className="h-8 w-8 p-0"><GoogleSymbol name={iconName} className="text-4xl" weight={100} /></Button>))}</div></ScrollArea>
+                            </PopoverContent>
+                        </Popover>
+                        <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <PopoverTrigger asChild>
+                                            <div 
+                                                className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card cursor-pointer" 
+                                                aria-label="Change service admin color"
+                                                style={{ backgroundColor: group.color }}
+                                            />
+                                        </PopoverTrigger>
+                                    </TooltipTrigger>
+                                    <TooltipContent><p>Change Color</p></TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                            <PopoverContent className="w-auto p-2">
+                            <div className="grid grid-cols-8 gap-1">
+                                {predefinedColors.map(color => (<button key={color} className="h-6 w-6 rounded-full border" style={{ backgroundColor: color }} onClick={() => { onUpdate({ ...group, color: color }); setIsColorPopoverOpen(false); }} aria-label={`Set color to ${color}`}/>))}
+                                <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
+                                <GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={group.color} onChange={(e) => onUpdate({ ...group, color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" aria-label="Custom color picker"/>
+                                </div>
                             </div>
-                            <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={group.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate({ ...group, icon: iconName }); setIsIconPopoverOpen(false); }} className="h-8 w-8 p-0"><GoogleSymbol name={iconName} className="text-4xl" weight={100} /></Button>))}</div></ScrollArea>
-                        </PopoverContent>
-                    </Popover>
-                    <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <PopoverTrigger asChild>
-                                        <div 
-                                            className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card cursor-pointer" 
-                                            aria-label="Change service admin color"
-                                            style={{ backgroundColor: group.color }}
-                                        />
-                                    </PopoverTrigger>
-                                </TooltipTrigger>
-                                <TooltipContent><p>Change Color</p></TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                        <PopoverContent className="w-auto p-2">
-                        <div className="grid grid-cols-8 gap-1">
-                            {predefinedColors.map(color => (<button key={color} className="h-6 w-6 rounded-full border" style={{ backgroundColor: color }} onClick={() => { onUpdate({ ...group, color: color }); setIsColorPopoverOpen(false); }} aria-label={`Set color to ${color}`}/>))}
-                            <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
-                            <GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={group.color} onChange={(e) => onUpdate({ ...group, color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" aria-label="Custom color picker"/>
-                            </div>
-                        </div>
-                        </PopoverContent>
-                    </Popover>
-                  </div>
-                </div>
-                <div className="flex-1">
-                    {isEditingName ? (<Input ref={nameInputRef} defaultValue={group.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 text-lg font-semibold leading-none tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>) : (<CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer text-lg">{group.name}</CardTitle>)}
-                </div>
-                <div className="flex items-center">
-                    <AddUserToGroupButton usersToAdd={unassignedUsers} onAdd={handleGroupToggle} groupName={group.name} />
-                    <StrictModeDroppable droppableId={`delete-dropzone-${group.id}`} type="user-card" isDropDisabled={false} isCombineEnabled={false}>
-                        {(provided, snapshot) => (
-                            <div 
-                                ref={provided.innerRef} 
-                                {...provided.droppableProps}
-                                className={cn(
-                                    "rounded-full transition-all p-0.5",
-                                    snapshot.isDraggingOver && "ring-1 ring-destructive"
-                                )}
-                            >
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive" onClick={() => setIsDeleteDialogOpen(true)}><GoogleSymbol name="delete" className="text-4xl" weight={100} /></Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent><p>{snapshot.isDraggingOver ? `Drop to remove user` : 'Delete Group'}</p></TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                            </div>
-                        )}
-                    </StrictModeDroppable>
-                </div>
-              </div>
-              <CardDescription>Click a member to promote them to Group Admin for this group. Group Admins have elevated permissions.</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-grow">
-                <StrictModeDroppable droppableId={`group-content-${group.id}`} type="user-card" isDropDisabled={false} isCombineEnabled={false}>
-                {(provided, snapshot) => (
-                    <div 
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
-                    className={cn("space-y-4 rounded-b-lg", snapshot.isDraggingOver && "ring-1 ring-border ring-inset")}
-                    >
-                    {assignedUsers.map((user, index) => (
-                        <UserAssignmentCard 
-                            key={user.userId} 
-                            index={index}
-                            user={user} 
-                            onRemove={handleGroupToggle}
-                            isGroupAdmin={(group.groupAdmins || []).includes(user.userId)}
-                            onSetGroupAdmin={handleSetGroupAdmin}
-                            isDraggable={true}
-                        />
-                    ))}
-                    {provided.placeholder}
+                            </PopoverContent>
+                        </Popover>
+                      </div>
                     </div>
-                )}
-                </StrictModeDroppable>
-            </CardContent>
-          </Card>
-          <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-            <DialogContent className="max-w-md">
-                <div className="absolute top-4 right-4">
-                    <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={onDelete}>
-                        <GoogleSymbol name="delete" className="text-4xl" weight={100} />
-                        <span className="sr-only">Delete Group</span>
-                    </Button>
-                </div>
-                <DialogHeader>
-                    <DialogTitle>Delete "{group.name}"?</DialogTitle>
-                    <DialogDescription>
-                        This will permanently delete the group and unassign all users. This action cannot be undone.
-                    </DialogDescription>
-                </DialogHeader>
-            </DialogContent>
-        </Dialog>
-        </>
+                    <div className="flex-1">
+                        <div className="flex items-center gap-1">
+                            {isEditingName ? (<Input ref={nameInputRef} defaultValue={group.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 text-lg font-semibold leading-none tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>) : (<CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer text-lg">{group.name}</CardTitle>)}
+                            <AddUserToGroupButton usersToAdd={unassignedUsers} onAdd={handleGroupToggle} groupName={group.name} />
+                        </div>
+                    </div>
+                  </div>
+                  <CardDescription>Click a member to promote them to Group Admin for this group. Group Admins have elevated permissions.</CardDescription>
+                </CardHeader>
+                <CardContent className="flex-grow">
+                    <StrictModeDroppable droppableId={`group-content-${group.id}`} type="user-card" isDropDisabled={false} isCombineEnabled={false}>
+                    {(provided, snapshot) => (
+                        <div 
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                        className={cn("space-y-4 rounded-b-lg", snapshot.isDraggingOver && "ring-1 ring-border ring-inset")}
+                        >
+                        {assignedUsers.map((user, index) => (
+                            <UserAssignmentCard 
+                                key={user.userId} 
+                                index={index}
+                                user={user} 
+                                onRemove={handleGroupToggle}
+                                isGroupAdmin={(group.groupAdmins || []).includes(user.userId)}
+                                onSetGroupAdmin={handleSetGroupAdmin}
+                                isDraggable={true}
+                            />
+                        ))}
+                        {provided.placeholder}
+                        </div>
+                    )}
+                    </StrictModeDroppable>
+                </CardContent>
+            </Card>
+            <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsDeleteDialogOpen(true)}
+                className="absolute top-2 right-2 rounded-full h-8 w-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+                <GoogleSymbol name="delete" className="text-4xl" weight={100} />
+            </Button>
+            <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                <DialogContent className="max-w-md">
+                    <div className="absolute top-4 right-4">
+                        <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={onDelete}>
+                            <GoogleSymbol name="delete" className="text-4xl" weight={100} />
+                            <span className="sr-only">Delete Group</span>
+                        </Button>
+                    </div>
+                    <DialogHeader>
+                        <DialogTitle>Delete "{group.name}"?</DialogTitle>
+                        <DialogDescription>
+                            This will permanently delete the group and unassign all users. This action cannot be undone.
+                        </DialogDescription>
+                    </DialogHeader>
+                </DialogContent>
+            </Dialog>
+        </div>
     );
 }
 
@@ -621,23 +607,6 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
         updateUser(user.userId, { roles: newRoles });
         toast({ title: 'User Added to Group', description: `${user.displayName} added to "${destGroup.name}".` });
         return;
-      }
-
-      if (destinationDroppableId.startsWith('delete-dropzone-')) {
-        const destGroupId = destinationDroppableId.replace('delete-dropzone-', '');
-        const sourceGroupId = source.droppableId.replace('group-content-', '');
-            
-        if (destGroupId !== sourceGroupId) {
-          toast({ title: 'Invalid Action', description: 'Can only remove a user from their own group.' });
-          return;
-        }
-            
-        const group = appSettings.adminGroups.find(g => g.id === destGroupId);
-        if (!group) return;
-
-        const newRoles = (user.roles || []).filter(r => r !== group.name);
-        updateUser(user.userId, { roles: newRoles });
-        toast({ title: 'User Removed', description: `${user.displayName} removed from "${group.name}".` });
       }
     }
   };
@@ -1016,8 +985,8 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
                                         <Tooltip>
                                             <TooltipTrigger asChild>
                                                 <PopoverTrigger asChild>
-                                                    <Button variant="ghost" size="icon">
-                                                        <GoogleSymbol name={page.icon} className="text-8xl" weight={100} />
+                                                    <Button variant="ghost" size="icon" className="h-12 w-12">
+                                                        <GoogleSymbol name={page.icon} className="text-6xl" weight={100} />
                                                     </Button>
                                                 </PopoverTrigger>
                                             </TooltipTrigger>
@@ -1407,8 +1376,8 @@ export function TabItem({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string,
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <PopoverTrigger asChild>
-                                    <Button variant="ghost" size="icon" style={{ color: tab.color }}>
-                                        <GoogleSymbol name={tab.icon} className="text-4xl" weight={100} />
+                                    <Button variant="ghost" size="icon" style={{ color: tab.color }} className="h-12 w-12">
+                                        <GoogleSymbol name={tab.icon} className="text-6xl" weight={100} />
                                     </Button>
                                 </PopoverTrigger>
                             </TooltipTrigger>
@@ -1572,7 +1541,7 @@ export default function AdminPage() {
   return (
     <div className="flex flex-col gap-8">
       <div className="flex items-center gap-3">
-        <GoogleSymbol name={pageConfig.icon} className="text-6xl" />
+        <GoogleSymbol name={pageConfig.icon} className="text-6xl" weight={100} />
         <TooltipProvider>
             <Tooltip>
                 <TooltipTrigger asChild>
