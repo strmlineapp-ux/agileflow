@@ -377,6 +377,8 @@ export const mockTeams: Team[] = [
         color: '#10B981',
         members: ['1', '2', '6'],
         teamAdmins: ['1', '2'],
+        teamAdminsLabel: 'Studio Admins',
+        membersLabel: 'Studio Crew',
         locationCheckManagers: ['1'],
         allBadges: [
             ...studioProdBadges,
@@ -417,6 +419,8 @@ export const mockTeams: Team[] = [
         color: '#3B82F6',
         members: ['1', '2', '3', '4'],
         teamAdmins: ['1', '2'],
+        teamAdminsLabel: 'Team Admins',
+        membersLabel: 'Members',
         locationCheckManagers: ['2'],
         allBadges: [
             ...liveEventsBadges,
@@ -453,6 +457,8 @@ export const mockTeams: Team[] = [
         color: '#EC4899',
         members: ['2', '3', '5'],
         teamAdmins: ['2'],
+        teamAdminsLabel: 'Team Admins',
+        membersLabel: 'Members',
         locationCheckManagers: [],
         allBadges: [],
         badgeCollections: [],

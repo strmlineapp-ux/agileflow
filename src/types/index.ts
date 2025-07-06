@@ -118,6 +118,8 @@ export interface Team {
   color: string;
   members: string[]; // array of userIds
   teamAdmins?: string[]; // array of userIds who are admins for this team
+  teamAdminsLabel?: string;
+  membersLabel?: string;
   locationCheckManagers: string[]; // array of userIds who can manage check locations
   allBadges: Badge[]; // The single source of truth for all badges in this team
   badgeCollections: BadgeCollection[]; // Groups of badges, containing badge IDs

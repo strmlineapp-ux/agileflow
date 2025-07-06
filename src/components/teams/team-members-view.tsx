@@ -1,9 +1,10 @@
+
 'use client';
 
 import { useUser } from '@/context/user-context';
 import { type Team, type AppTab, type User } from '@/types';
 import { TeamMemberCard } from './team-member-card';
-import React, { useRef, useState, useEffect, useMemo } from 'react';
+import React, { useRef, useState, useEffect, useMemo, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProps } from 'react-beautiful-dnd';
@@ -29,8 +30,19 @@ const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
 
 export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
     const { users, updateAppTab, updateTeam } = useUser();
+    
+    // States for inline editing page tab title
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const titleInputRef = useRef<HTMLInputElement>(null);
+    
+    // States for inline editing sub-headers
+    const [isEditingAdminsLabel, setIsEditingAdminsLabel] = useState(false);
+    const [isEditingMembersLabel, setIsEditingMembersLabel] = useState(false);
+    const adminsLabelInputRef = useRef<HTMLInputElement>(null);
+    const membersLabelInputRef = useRef<HTMLInputElement>(null);
+
+    const teamAdminsLabel = team.teamAdminsLabel || 'Team Admins';
+    const membersLabel = team.membersLabel || 'Members';
     
     // Derive members directly from context/props to ensure a single source of truth.
     const teamMembers = useMemo(() => {
@@ -44,7 +56,9 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
 
     useEffect(() => {
         if (isEditingTitle) titleInputRef.current?.focus();
-    }, [isEditingTitle]);
+        if (isEditingAdminsLabel) adminsLabelInputRef.current?.focus();
+        if (isEditingMembersLabel) membersLabelInputRef.current?.focus();
+    }, [isEditingTitle, isEditingAdminsLabel, isEditingMembersLabel]);
 
     const handleSaveTitle = () => {
         const newName = titleInputRef.current?.value.trim();
@@ -57,6 +71,32 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
     const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') handleSaveTitle();
         else if (e.key === 'Escape') setIsEditingTitle(false);
+    };
+    
+    const handleSaveAdminsLabel = useCallback(() => {
+        const newLabel = adminsLabelInputRef.current?.value.trim();
+        if (newLabel && newLabel !== teamAdminsLabel) {
+            updateTeam(team.id, { teamAdminsLabel: newLabel });
+        }
+        setIsEditingAdminsLabel(false);
+    }, [team.id, teamAdminsLabel, updateTeam]);
+
+    const handleAdminsLabelKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') handleSaveAdminsLabel();
+        else if (e.key === 'Escape') setIsEditingAdminsLabel(false);
+    };
+    
+    const handleSaveMembersLabel = useCallback(() => {
+        const newLabel = membersLabelInputRef.current?.value.trim();
+        if (newLabel && newLabel !== membersLabel) {
+            updateTeam(team.id, { membersLabel: newLabel });
+        }
+        setIsEditingMembersLabel(false);
+    }, [team.id, membersLabel, updateTeam]);
+
+    const handleMembersLabelKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') handleSaveMembersLabel();
+        else if (e.key === 'Escape') setIsEditingMembersLabel(false);
     };
     
     const onDragEnd = (result: DropResult) => {
@@ -106,13 +146,25 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
             
             <div className="flex flex-col lg:flex-row gap-6">
                 <div className="lg:w-1/3 lg:max-w-sm space-y-4">
-                    <h3 className="font-headline font-thin text-xl">Team Admins</h3>
+                    {isEditingAdminsLabel ? (
+                        <Input
+                            ref={adminsLabelInputRef}
+                            defaultValue={teamAdminsLabel}
+                            onBlur={handleSaveAdminsLabel}
+                            onKeyDown={handleAdminsLabelKeyDown}
+                            className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                        />
+                    ) : (
+                         <h3 className="font-headline font-thin text-xl cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingAdminsLabel(true)}>
+                            {teamAdminsLabel}
+                         </h3>
+                    )}
                     {admins.length > 0 ? (
                         <StrictModeDroppable droppableId="admins-list">
                             {(provided) => (
                                 <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-4">
                                     {admins.map((member, index) => (
-                                        <Draggable key={member.userId} draggableId={`admin-${member.userId}`} index={index}>
+                                        <Draggable key={member.userId} draggableId={`admin-${member.userId}`} index={index} ignoreContainerClipping={false}>
                                         {(provided, snapshot) => (
                                             <div
                                             ref={provided.innerRef}
@@ -135,13 +187,25 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                 </div>
 
                 <div className="flex-1 space-y-4">
-                    <h3 className="font-headline font-thin text-xl">Members</h3>
+                     {isEditingMembersLabel ? (
+                        <Input
+                            ref={membersLabelInputRef}
+                            defaultValue={membersLabel}
+                            onBlur={handleSaveMembersLabel}
+                            onKeyDown={handleMembersLabelKeyDown}
+                            className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                        />
+                    ) : (
+                         <h3 className="font-headline font-thin text-xl cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingMembersLabel(true)}>
+                            {membersLabel}
+                         </h3>
+                    )}
                     {members.length > 0 ? (
                         <StrictModeDroppable droppableId="members-list">
                             {(provided) => (
                                 <div ref={provided.innerRef} {...provided.droppableProps} className="flex flex-wrap -m-3">
                                 {members.map((member, index) => (
-                                    <Draggable key={member.userId} draggableId={`member-${member.userId}`} index={index}>
+                                    <Draggable key={member.userId} draggableId={`member-${member.userId}`} index={index} ignoreContainerClipping={false}>
                                     {(provided, snapshot) => (
                                         <div
                                         ref={provided.innerRef}
