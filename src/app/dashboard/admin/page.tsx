@@ -1529,10 +1529,19 @@ export const TabsManagement = ({ tab }: { tab: AppTab }) => {
     const { appSettings, updateAppSettings, updateAppTab } = useUser();
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const titleInputRef = useRef<HTMLInputElement>(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [isSearching, setIsSearching] = useState(false);
+    const searchInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (isEditingTitle) titleInputRef.current?.focus();
     }, [isEditingTitle]);
+    
+    useEffect(() => {
+        if (isSearching) {
+            setTimeout(() => searchInputRef.current?.focus(), 100);
+        }
+    }, [isSearching]);
 
     const handleSaveTitle = () => {
         const newName = titleInputRef.current?.value.trim();
@@ -1552,6 +1561,14 @@ export const TabsManagement = ({ tab }: { tab: AppTab }) => {
         updateAppSettings({ tabs: newTabs });
     }, [appSettings.tabs, updateAppSettings]);
 
+    const filteredTabs = useMemo(() => {
+        if (!searchTerm) return appSettings.tabs;
+        return appSettings.tabs.filter(tab => 
+            tab.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            tab.description?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [appSettings.tabs, searchTerm]);
+
     const onDragEnd = (result: DropResult) => {
       const { source, destination } = result;
       if (!destination || source.index === destination.index) return;
@@ -1566,43 +1583,75 @@ export const TabsManagement = ({ tab }: { tab: AppTab }) => {
     return (
         <DragDropContext onDragEnd={onDragEnd}>
             <div className="space-y-8">
-                <div className="flex items-center gap-2">
-                {isEditingTitle ? (
-                    <Input ref={titleInputRef} defaultValue={tab.name} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
-                ) : (
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                            <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p className="max-w-xs">{tab.description}</p>
-                            </TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                )}
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                    {isEditingTitle ? (
+                        <Input ref={titleInputRef} defaultValue={tab.name} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
+                    ) : (
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p className="max-w-xs">{tab.description}</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    )}
+                    </div>
+                     <div className="flex items-center">
+                        {isSearching ? (
+                            <div className="flex items-center gap-1 p-2 border-b w-64">
+                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                                <input
+                                    ref={searchInputRef}
+                                    placeholder="Search by name or desc..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    onBlur={() => { if (!searchTerm) setIsSearching(false); }}
+                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                                />
+                            </div>
+                        ) : (
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button variant="ghost" size="icon" onClick={() => setIsSearching(true)}>
+                                            <GoogleSymbol name="search" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent><p>Search Tabs</p></TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        )}
+                    </div>
                 </div>
                 <StrictModeDroppable droppableId="tabs-list" isDropDisabled={false}>
                     {(provided) => (
-                        <div {...provided.droppableProps} ref={provided.innerRef} className="flex flex-wrap -m-3">
-                            {appSettings.tabs.map((appTab, index) => (
-                                <Draggable key={appTab.id} draggableId={appTab.id} index={index} ignoreContainerClipping={false}>
-                                    {(provided, snapshot) => (
-                                        <div
-                                            ref={provided.innerRef}
-                                            {...provided.draggableProps}
-                                            {...provided.dragHandleProps}
-                                            className="p-3 basis-full md:basis-1/2 lg:basis-1/3"
-                                        >
-                                            <TabCard
-                                                tab={appTab}
-                                                onUpdate={handleUpdateTab}
-                                                isDragging={snapshot.isDragging}
-                                            />
-                                        </div>
-                                    )}
-                                </Draggable>
-                            ))}
+                        <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-4">
+                            {filteredTabs.length > 0 ? (
+                                filteredTabs.map((appTab, index) => (
+                                    <Draggable key={appTab.id} draggableId={appTab.id} index={index} ignoreContainerClipping={false}>
+                                        {(provided, snapshot) => (
+                                            <div
+                                                ref={provided.innerRef}
+                                                {...provided.draggableProps}
+                                                {...provided.dragHandleProps}
+                                                className={snapshot.isDragging ? "shadow-xl" : ""}
+                                            >
+                                                <TabCard
+                                                    tab={appTab}
+                                                    onUpdate={handleUpdateTab}
+                                                    isDragging={snapshot.isDragging}
+                                                />
+                                            </div>
+                                        )}
+                                    </Draggable>
+                                ))
+                            ) : (
+                                <p className="text-center text-muted-foreground p-4">No tabs found.</p>
+                            )}
                             {provided.placeholder}
                         </div>
                     )}
