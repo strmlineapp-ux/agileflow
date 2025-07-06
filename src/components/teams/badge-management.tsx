@@ -701,27 +701,14 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                         <CardTitle onClick={() => isOwned && setIsEditingName(true)} className={cn("text-2xl font-headline font-thin break-words", isOwned && "cursor-pointer")}>{collection.name}</CardTitle>
                                     )}
                                     {isOwned && !isSharedPreview && (
-                                        <StrictModeDroppable droppableId={`duplicate-badge-zone:${collection.id}`} type="badge" isDropDisabled={isSharedPreview} isCombineEnabled={false}>
-                                            {(provided, snapshot) => (
-                                                <div
-                                                    ref={provided.innerRef}
-                                                    {...provided.droppableProps}
-                                                    className={cn(
-                                                        "rounded-full p-0.5",
-                                                        snapshot.isDraggingOver && "ring-1 ring-border ring-inset"
-                                                    )}
-                                                >
-                                                    <TooltipProvider>
-                                                        <Tooltip>
-                                                            <TooltipTrigger asChild>
-                                                                <Button variant="ghost" size="icon" onClick={() => onAddBadge(collection.id)}><GoogleSymbol name="add_circle" className="text-4xl" weight={100} /><span className="sr-only">Add Badge</span></Button>
-                                                            </TooltipTrigger>
-                                                            <TooltipContent><p>{snapshot.isDraggingOver ? 'Drop to Duplicate' : 'Add New Badge'}</p></TooltipContent>
-                                                        </Tooltip>
-                                                    </TooltipProvider>
-                                                </div>
-                                            )}
-                                        </StrictModeDroppable>
+                                        <TooltipProvider>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Button variant="ghost" size="icon" onClick={() => onAddBadge(collection.id)}><GoogleSymbol name="add_circle" className="text-4xl" weight={100} /><span className="sr-only">Add Badge</span></Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent><p>Add New Badge</p></TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
                                     )}
                                 </div>
                             </div>

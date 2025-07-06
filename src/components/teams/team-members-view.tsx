@@ -5,7 +5,7 @@
 import { useUser } from '@/context/user-context';
 import { type Team, type AppTab, type User } from '@/types';
 import { TeamMemberCard } from './team-member-card';
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProps } from 'react-beautiful-dnd';
@@ -37,8 +37,22 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
     const [teamMembers, setTeamMembers] = useState<User[]>([]);
 
     useEffect(() => {
-      setTeamMembers(users.filter(u => team.members.includes(u.userId)));
-    }, [users, team.members]);
+      const members = team.members
+        .map(id => users.find(u => u.userId === id))
+        .filter((u): u is User => !!u);
+      
+      // Sort members to put admins first, then by their order in the members array.
+      members.sort((a, b) => {
+        const aIsAdmin = team.teamAdmins?.includes(a.userId) ?? false;
+        const bIsAdmin = team.teamAdmins?.includes(b.userId) ?? false;
+        if (aIsAdmin && !bIsAdmin) return -1;
+        if (!aIsAdmin && bIsAdmin) return 1;
+        // If both are admins or not, maintain the original order from team.members
+        return team.members.indexOf(a.userId) - team.members.indexOf(b.userId);
+      });
+      
+      setTeamMembers(members);
+    }, [users, team.members, team.teamAdmins]);
 
     useEffect(() => {
         if (isEditingTitle) titleInputRef.current?.focus();
@@ -64,7 +78,16 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         const reorderedMembers = Array.from(teamMembers);
         const [movedItem] = reorderedMembers.splice(source.index, 1);
         reorderedMembers.splice(destination.index, 0, movedItem);
-        
+
+        // Re-sort to enforce admins are always at the top
+        reorderedMembers.sort((a, b) => {
+          const aIsAdmin = team.teamAdmins?.includes(a.userId) ?? false;
+          const bIsAdmin = team.teamAdmins?.includes(b.userId) ?? false;
+          if (aIsAdmin && !bIsAdmin) return -1;
+          if (!aIsAdmin && bIsAdmin) return 1;
+          return 0; // Maintain D&D order within admin/non-admin groups
+        });
+
         setTeamMembers(reorderedMembers);
         const newMemberIds = reorderedMembers.map(m => m.userId);
         updateTeam(team.id, { members: newMemberIds });

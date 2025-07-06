@@ -205,12 +205,14 @@ function AdminGroupCard({
   group,
   users, 
   onUpdate, 
-  onDelete
+  onDelete,
+  isDeletable
 }: { 
   group: AdminGroup; 
   users: User[]; 
   onUpdate: (updatedGroup: AdminGroup) => void;
   onDelete: () => void;
+  isDeletable: boolean;
 }) {
     const { toast } = useToast();
     const { updateUser } = useUser();
@@ -299,7 +301,7 @@ function AdminGroupCard({
     };
 
     return (
-        <Card className="flex flex-col h-full bg-transparent">
+        <Card className="flex flex-col h-full bg-transparent group">
             <CardHeader>
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
@@ -308,11 +310,9 @@ function AdminGroupCard({
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <PopoverTrigger asChild>
-                                                <button className="h-12 w-12 flex items-center justify-center">
-                                                    <GoogleSymbol name={group.icon} className="text-6xl" weight={100} />
-                                                </button>
-                                            </PopoverTrigger>
+                                            <button className="h-12 w-12 flex items-center justify-center">
+                                                <GoogleSymbol name={group.icon} className="text-6xl" weight={100} />
+                                            </button>
                                         </TooltipTrigger>
                                         <TooltipContent><p>Change Icon</p></TooltipContent>
                                     </Tooltip>
@@ -383,19 +383,20 @@ function AdminGroupCard({
                             </div>
                         </div>
                     </div>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 absolute top-2 right-2">
-                                <GoogleSymbol name="more_vert" weight={100} />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive">
-                                <GoogleSymbol name="delete" className="mr-2 text-base" weight={100} />
-                                Delete Group
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                     {isDeletable && (
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 absolute top-2 right-2 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100" onClick={onDelete}>
+                                        <GoogleSymbol name="delete" className="text-lg" weight={100} />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Delete Group</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    )}
                 </div>
             </CardHeader>
             <ScrollArea className="flex-grow">
@@ -715,7 +716,13 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                             {...provided.dragHandleProps} 
                             className="p-3 basis-full md:basis-1/2 lg:basis-1/3"
                           >
-                            <AdminGroupCard group={group} users={users} onUpdate={handleUpdateAdminGroup} onDelete={() => handleDeleteAdminGroup(group)} />
+                            <AdminGroupCard 
+                                group={group} 
+                                users={users} 
+                                onUpdate={handleUpdateAdminGroup} 
+                                onDelete={() => handleDeleteAdminGroup(group)}
+                                isDeletable={appSettings.adminGroups.length > 1}
+                            />
                           </div>
                         )}
                       </Draggable>
@@ -909,7 +916,25 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
 
 function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: Partial<AppPage>) => void }) {
   const { appSettings } = useUser();
-  
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+        setTimeout(() => searchInputRef.current?.focus(), 100);
+    } else {
+        setSearchTerm('');
+    }
+  }, [isOpen]);
+
+  const filteredTabs = useMemo(() => {
+    if (!searchTerm) return appSettings.tabs;
+    return appSettings.tabs.filter(tab =>
+      tab.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [appSettings.tabs, searchTerm]);
+
   const handleToggle = (tabId: string) => {
     const currentIds = new Set(page.associatedTabs || []);
     if (currentIds.has(tabId)) {
@@ -921,22 +946,33 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
   };
   
   return (
-    <Popover>
-        <TooltipProvider>
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <PopoverTrigger asChild>
-                        <Button variant="ghost" size="icon"><GoogleSymbol name="layers" className="text-4xl" weight={100} /></Button>
-                    </PopoverTrigger>
-                </TooltipTrigger>
-                <TooltipContent><p>Manage Associated Tabs</p></TooltipContent>
-            </Tooltip>
-        </TooltipProvider>
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <TooltipProvider>
+          <Tooltip>
+              <TooltipTrigger asChild>
+                  <PopoverTrigger asChild>
+                      <Button variant="ghost" size="icon"><GoogleSymbol name="layers" className="text-4xl" weight={100} /></Button>
+                  </PopoverTrigger>
+              </TooltipTrigger>
+              <TooltipContent><p>Manage Associated Tabs</p></TooltipContent>
+          </Tooltip>
+      </TooltipProvider>
       <PopoverContent className="w-80 p-0">
-        <div className="p-2 border-b"><Label>Associated Tabs</Label></div>
+        <div className="p-2 border-b">
+          <div className="flex items-center gap-1 w-full">
+            <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+            <input
+                ref={searchInputRef}
+                placeholder="Search tabs..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+            />
+          </div>
+        </div>
         <ScrollArea className="h-64">
           <div className="p-1 space-y-1">
-            {appSettings.tabs.map(tab => {
+            {filteredTabs.map(tab => {
               const isAssociated = (page.associatedTabs || []).includes(tab.id);
               
               return (
@@ -1529,10 +1565,19 @@ export const TabsManagement = ({ tab }: { tab: AppTab }) => {
     const { appSettings, updateAppSettings, updateAppTab } = useUser();
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const titleInputRef = useRef<HTMLInputElement>(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [isSearching, setIsSearching] = useState(false);
+    const searchInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (isEditingTitle) titleInputRef.current?.focus();
     }, [isEditingTitle]);
+    
+    useEffect(() => {
+        if (isSearching) {
+            setTimeout(() => searchInputRef.current?.focus(), 100);
+        }
+    }, [isSearching]);
 
     const handleSaveTitle = () => {
         const newName = titleInputRef.current?.value.trim();
@@ -1552,6 +1597,14 @@ export const TabsManagement = ({ tab }: { tab: AppTab }) => {
         updateAppSettings({ tabs: newTabs });
     }, [appSettings.tabs, updateAppSettings]);
 
+    const filteredTabs = useMemo(() => {
+        if (!searchTerm) return appSettings.tabs;
+        return appSettings.tabs.filter(tab => 
+            tab.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            tab.description?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [appSettings.tabs, searchTerm]);
+
     const onDragEnd = (result: DropResult) => {
       const { source, destination } = result;
       if (!destination || source.index === destination.index) return;
@@ -1566,43 +1619,75 @@ export const TabsManagement = ({ tab }: { tab: AppTab }) => {
     return (
         <DragDropContext onDragEnd={onDragEnd}>
             <div className="space-y-8">
-                <div className="flex items-center gap-2">
-                {isEditingTitle ? (
-                    <Input ref={titleInputRef} defaultValue={tab.name} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
-                ) : (
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                            <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p className="max-w-xs">{tab.description}</p>
-                            </TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                )}
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                    {isEditingTitle ? (
+                        <Input ref={titleInputRef} defaultValue={tab.name} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
+                    ) : (
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p className="max-w-xs">{tab.description}</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    )}
+                    </div>
+                     <div className="flex items-center">
+                        {isSearching ? (
+                            <div className="flex items-center gap-1 p-2 border-b w-64">
+                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                                <input
+                                    ref={searchInputRef}
+                                    placeholder="Search by name or desc..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    onBlur={() => { if (!searchTerm) setIsSearching(false); }}
+                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                                />
+                            </div>
+                        ) : (
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button variant="ghost" size="icon" onClick={() => setIsSearching(true)}>
+                                            <GoogleSymbol name="search" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent><p>Search Tabs</p></TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        )}
+                    </div>
                 </div>
                 <StrictModeDroppable droppableId="tabs-list" isDropDisabled={false}>
                     {(provided) => (
-                        <div {...provided.droppableProps} ref={provided.innerRef} className="flex flex-wrap -m-3">
-                            {appSettings.tabs.map((appTab, index) => (
-                                <Draggable key={appTab.id} draggableId={appTab.id} index={index} ignoreContainerClipping={false}>
-                                    {(provided, snapshot) => (
-                                        <div
-                                            ref={provided.innerRef}
-                                            {...provided.draggableProps}
-                                            {...provided.dragHandleProps}
-                                            className="p-3 basis-full md:basis-1/2 lg:basis-1/3"
-                                        >
-                                            <TabCard
-                                                tab={appTab}
-                                                onUpdate={handleUpdateTab}
-                                                isDragging={snapshot.isDragging}
-                                            />
-                                        </div>
-                                    )}
-                                </Draggable>
-                            ))}
+                        <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-4">
+                            {filteredTabs.length > 0 ? (
+                                filteredTabs.map((appTab, index) => (
+                                    <Draggable key={appTab.id} draggableId={appTab.id} index={index} ignoreContainerClipping={false}>
+                                        {(provided, snapshot) => (
+                                            <div
+                                                ref={provided.innerRef}
+                                                {...provided.draggableProps}
+                                                {...provided.dragHandleProps}
+                                                className={snapshot.isDragging ? "shadow-xl" : ""}
+                                            >
+                                                <TabCard
+                                                    tab={appTab}
+                                                    onUpdate={handleUpdateTab}
+                                                    isDragging={snapshot.isDragging}
+                                                />
+                                            </div>
+                                        )}
+                                    </Draggable>
+                                ))
+                            ) : (
+                                <p className="text-center text-muted-foreground p-4">No tabs found.</p>
+                            )}
                             {provided.placeholder}
                         </div>
                     )}
@@ -1684,3 +1769,4 @@ const AdminPageSkeleton = () => (
       </div>
     </div>
 );
+

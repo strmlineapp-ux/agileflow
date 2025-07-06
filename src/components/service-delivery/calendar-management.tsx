@@ -158,19 +158,18 @@ function CalendarCard({ calendar, onUpdate, onDelete, isDragging }: { calendar: 
               </CardTitle>
             )}
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
-                    <GoogleSymbol name="more_vert" weight={100} />
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onDelete(calendar)} className="text-destructive focus:text-destructive">
-                    <GoogleSymbol name="delete" className="mr-2 text-lg" weight={100}/>
-                    Delete
-                </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+           <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive absolute top-2 right-2 opacity-0 group-hover:opacity-100" onClick={() => onDelete(calendar)}>
+                            <GoogleSymbol name="delete" className="text-lg" weight={100} />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>Delete Calendar</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
         </div>
       </CardHeader>
       <CardContent className="flex-grow space-y-4">
