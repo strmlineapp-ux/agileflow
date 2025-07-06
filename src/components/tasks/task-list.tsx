@@ -69,7 +69,7 @@ export function TaskList({ limit }: { limit?: number }) {
           <TableBody>
             {tasks.map((task) => (
               <TableRow key={task.taskId}>
-                <TableCell className="font-medium">{task.title}</TableCell>
+                <TableCell className="font-normal">{task.title}</TableCell>
                 <TableCell>
                   <div>
                     {task.assignedTo.map((user) => {
@@ -138,7 +138,7 @@ export function TaskList({ limit }: { limit?: number }) {
 
                 return (
                     <div key={status}>
-                        <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                        <h3 className="text-xl font-normal mb-4 flex items-center gap-2">
                            <span>{statusLabels[status]}</span>
                            <Badge variant="secondary">{tasksInGroup.length}</Badge>
                         </h3>

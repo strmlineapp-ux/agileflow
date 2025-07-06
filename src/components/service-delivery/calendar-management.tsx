@@ -49,24 +49,16 @@ function CalendarCard({ calendar, onUpdate, onDelete }: { calendar: SharedCalend
   const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
   const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
   
-  const [isSearching, setIsSearching] = useState(false);
   const [iconSearch, setIconSearch] = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!isIconPopoverOpen) {
-        setIsSearching(false);
-        setIconSearch('');
+    if (isIconPopoverOpen) {
+      setTimeout(() => searchInputRef.current?.focus(), 100);
+    } else {
+      setIconSearch('');
     }
   }, [isIconPopoverOpen]);
-  
-  useEffect(() => {
-    if (isSearching) searchInputRef.current?.focus();
-  }, [isSearching]);
-
-  const handleBlurSearch = () => {
-    if (!iconSearch) setIsSearching(false);
-  }
 
   const filteredIcons = googleSymbolNames.filter(name => name.toLowerCase().includes(iconSearch.toLowerCase()));
 
@@ -125,23 +117,14 @@ function CalendarCard({ calendar, onUpdate, onDelete }: { calendar: SharedCalend
                     </TooltipProvider>
                     <PopoverContent className="w-80 p-0">
                         <div className="flex items-center gap-1 p-2 border-b">
-                            {!isSearching ? (
-                            <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={() => setIsSearching(true)}>
-                                <GoogleSymbol name="search" />
-                            </Button>
-                            ) : (
-                             <div className="flex items-center gap-1 w-full">
-                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
-                                <input
-                                    ref={searchInputRef}
-                                    placeholder="Search icons..."
-                                    value={iconSearch}
-                                    onChange={(e) => setIconSearch(e.target.value)}
-                                    onBlur={handleBlurSearch}
-                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
-                                />
-                            </div>
-                            )}
+                            <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                            <input
+                                ref={searchInputRef}
+                                placeholder="Search icons..."
+                                value={iconSearch}
+                                onChange={(e) => setIconSearch(e.target.value)}
+                                className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                            />
                         </div>
                         <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={calendar.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(calendar.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="h-8 w-8 p-0"><GoogleSymbol name={iconName} className="text-4xl" weight={100} /></Button>))}</div></ScrollArea>
                     </PopoverContent>
@@ -169,7 +152,7 @@ function CalendarCard({ calendar, onUpdate, onDelete }: { calendar: SharedCalend
                 className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
               />
             ) : (
-              <CardTitle className="text-xl font-headline font-thin cursor-pointer" onClick={() => setIsEditingName(true)}>
+              <CardTitle className="cursor-pointer" onClick={() => setIsEditingName(true)}>
                 {calendar.name}
               </CardTitle>
             )}
@@ -177,7 +160,7 @@ function CalendarCard({ calendar, onUpdate, onDelete }: { calendar: SharedCalend
           <TooltipProvider>
             <Tooltip>
                 <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive p-0" onClick={() => onDelete(calendar)}>
+                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive p-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => onDelete(calendar)}>
                         <GoogleSymbol name="delete" className="text-4xl" weight={100} />
                         <span className="sr-only">Delete Calendar</span>
                     </Button>
@@ -195,7 +178,7 @@ function CalendarCard({ calendar, onUpdate, onDelete }: { calendar: SharedCalend
               defaultValue={calendar.defaultEventTitle}
               onBlur={handleSaveTitle}
               onKeyDown={handleTitleKeyDown}
-              className="h-auto p-0 text-sm italic font-body border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+              className="h-auto p-0 text-sm italic font-normal border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
               placeholder="Click to set default title"
             />
           ) : (
@@ -362,6 +345,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                                     ref={provided.innerRef}
                                     {...provided.draggableProps}
                                     {...provided.dragHandleProps}
+                                    className="group"
                                 >
                                     <CalendarCard
                                         calendar={calendar}

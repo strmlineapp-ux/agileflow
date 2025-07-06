@@ -70,7 +70,7 @@ export function NotificationList() {
               </Avatar>
               <div className="grid gap-1 flex-1">
                 <p className="text-sm">
-                  <span className="font-semibold">{notification.user.displayName}</span>
+                  <span className="font-normal">{notification.user.displayName}</span>
                   {' '}
                   {notification.content}
                 </p>
@@ -92,10 +92,10 @@ export function NotificationList() {
                         </>
                       )}
                       {notification.status === 'approved' && (
-                        <span className="text-sm font-semibold text-green-600">Approved</span>
+                        <span className="text-sm font-normal text-green-600">Approved</span>
                       )}
                       {notification.status === 'rejected' && (
-                        <span className="text-sm font-semibold text-red-600">Rejected</span>
+                        <span className="text-sm font-normal text-red-600">Rejected</span>
                       )}
                     </div>
                   )}

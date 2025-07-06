@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -84,7 +85,7 @@ const EventDisplayView = ({ event }: { event: Event }) => {
                     {event.location && (
                         <div className="flex items-start gap-4">
                             <GoogleSymbol name="location_on" className="text-2xl text-muted-foreground mt-0.5" />
-                            <p className="font-medium">{event.location}</p>
+                            <p className="font-normal">{event.location}</p>
                         </div>
                     )}
                     
@@ -101,13 +102,13 @@ const EventDisplayView = ({ event }: { event: Event }) => {
                             <div className="flex items-start gap-4">
                                 <GoogleSymbol name="badge" className="text-2xl text-muted-foreground mt-0.5" />
                                 <div className="flex-1">
-                                    <p className="font-medium mb-2">{roleAssignmentsLabel}</p>
+                                    <p className="font-normal mb-2">{roleAssignmentsLabel}</p>
                                     <div className="space-y-2">
                                         {Object.entries(event.roleAssignments).map(([role, userId]) => {
                                             const user = users.find(u => u.userId === userId);
                                             return (
                                                 <div key={role} className="flex items-center gap-2 text-sm">
-                                                    <span className="font-semibold w-24">{role}:</span>
+                                                    <span className="font-normal w-24">{role}:</span>
                                                     {user ? (
                                                         <div className="flex items-center gap-2">
                                                             <Avatar className="h-6 w-6"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
@@ -129,7 +130,7 @@ const EventDisplayView = ({ event }: { event: Event }) => {
                             <div className="flex items-start gap-4">
                                 <GoogleSymbol name="group" className="text-2xl text-muted-foreground mt-0.5" />
                                 <div className="flex-1">
-                                    <p className="font-medium mb-2">{guestsToDisplay.length} Guests</p>
+                                    <p className="font-normal mb-2">{guestsToDisplay.length} Guests</p>
                                     <div className="space-y-2">
                                         {guestsToDisplay.map(attendee => (
                                             <div key={attendee.email} className="flex items-center gap-3">
@@ -152,12 +153,12 @@ const EventDisplayView = ({ event }: { event: Event }) => {
                             <div className="flex items-start gap-4">
                                  <GoogleSymbol name="attachment" className="text-2xl text-muted-foreground mt-0.5" />
                                 <div className="flex-1">
-                                    <p className="font-medium mb-2">{event.attachments.length} Attachments</p>
+                                    <p className="font-normal mb-2">{event.attachments.length} Attachments</p>
                                     <div className="space-y-2">
                                         {event.attachments.map((att, index) => (
                                             <a key={index} href={att.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-2 rounded-md hover:bg-muted">
                                                 {attachmentIcons[att.type]}
-                                                <span className="text-sm font-medium underline-offset-4 hover:underline">{att.name}</span>
+                                                <span className="text-sm font-normal underline-offset-4 hover:underline">{att.name}</span>
                                             </a>
                                         ))}
                                     </div>
