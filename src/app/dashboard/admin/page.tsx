@@ -92,7 +92,7 @@ const UserAssignmentCard = ({ user, index, onRemove, isGroupAdmin, onSetGroupAdm
                     aria-label={`Remove user`}
                     className="absolute top-1 right-1 h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
                 >
-                  <GoogleSymbol name="cancel" className="text-lg" />
+                  <GoogleSymbol name="cancel" className="text-lg" weight={100} />
                 </Button>
               </TooltipTrigger>
               <TooltipContent><p>Remove user</p></TooltipContent>
@@ -394,9 +394,11 @@ function AdminGroupCard({
                         </Popover>
                     </div>
                     <div className="flex-1">
-                        {isEditingName ? (<Input ref={nameInputRef} defaultValue={group.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 text-lg font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>) : (<CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer text-lg font-thin">{group.name}</CardTitle>)}
+                         <div className="flex items-center gap-1">
+                            {isEditingName ? (<Input ref={nameInputRef} defaultValue={group.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 text-lg font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>) : (<CardTitle onClick={() => setIsEditingName(true)} className="cursor-pointer text-lg font-thin">{group.name}</CardTitle>)}
+                            <AddUserToGroupButton usersToAdd={unassignedUsers} onAdd={handleGroupToggle} groupName={group.name} />
+                        </div>
                     </div>
-                    <AddUserToGroupButton usersToAdd={unassignedUsers} onAdd={handleGroupToggle} groupName={group.name} />
                      <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
@@ -406,7 +408,7 @@ function AdminGroupCard({
                                     onClick={() => setIsDeleteDialogOpen(true)}
                                     className="h-8 w-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
                                 >
-                                    <GoogleSymbol name="delete" className="text-lg" />
+                                    <GoogleSymbol name="delete" className="text-lg" weight={100} />
                                 </Button>
                             </TooltipTrigger>
                             <TooltipContent><p>Delete Group</p></TooltipContent>
@@ -692,7 +694,7 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                         <Card className="flex flex-col h-full">
                             <CardHeader>
                               <div className="flex items-center gap-2">
-                                <CardTitle className="font-thin">Admins</CardTitle>
+                                <CardTitle className="font-thin text-lg">Admins</CardTitle>
                                 <AddUserToGroupButton usersToAdd={nonAdminUsers} onAdd={handleAdminToggle} groupName="Admin" />
                               </div>
                               <CardDescription>Assign or revoke Admin privileges. This is the highest level of access.</CardDescription>
@@ -1082,9 +1084,9 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1">
                             {isEditingName ? (
-                                <Input ref={nameInputRef} defaultValue={page.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 text-base font-headline font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>
+                                <Input ref={nameInputRef} defaultValue={page.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 text-base font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>
                             ) : (
-                                <CardTitle onClick={() => !isSystemPage && setIsEditingName(true)} className={cn("text-base break-words font-headline font-thin", !isSystemPage && "cursor-pointer")}>
+                                <CardTitle onClick={() => !isSystemPage && setIsEditingName(true)} className={cn("text-base break-words font-thin", !isSystemPage && "cursor-pointer")}>
                                     {page.name}
                                 </CardTitle>
                             )}
@@ -1106,7 +1108,7 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
                                         className="h-8 w-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
                                         onClick={() => setIsDeleteDialogOpen(true)}
                                     >
-                                        <GoogleSymbol name="delete" className="text-lg" />
+                                        <GoogleSymbol name="delete" className="text-lg" weight={100} />
                                     </Button>
                                 </TooltipTrigger>
                                 <TooltipContent><p>Delete Page</p></TooltipContent>
