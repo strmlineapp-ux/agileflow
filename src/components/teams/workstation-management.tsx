@@ -222,3 +222,4 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
     </>
   );
 }
+

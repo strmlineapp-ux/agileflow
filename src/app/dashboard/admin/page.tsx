@@ -217,7 +217,6 @@ function AdminGroupCard({
     // Popover States
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
-    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     
     const [isEditingName, setIsEditingName] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
@@ -383,64 +382,48 @@ function AdminGroupCard({
                             </div>
                         </div>
                     </div>
-                     <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => setIsDeleteDialogOpen(true)}
-                                    className="h-8 w-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                                >
-                                    <GoogleSymbol name="delete" className="text-lg" weight={100} />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent><p>Delete Group</p></TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 absolute top-2 right-2">
+                                <GoogleSymbol name="more_vert" weight={100} />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive">
+                                <GoogleSymbol name="delete" className="mr-2 text-base" weight={100} />
+                                Delete Group
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </CardHeader>
-            <CardContent className="flex-grow">
-                <StrictModeDroppable droppableId={`group-content-${group.id}`} type="user-card" isDropDisabled={false} isCombineEnabled={false}>
-                {(provided, snapshot) => (
-                    <div 
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
-                    className={cn("space-y-4 rounded-b-lg min-h-[60px]", snapshot.isDraggingOver && "ring-1 ring-border ring-inset")}
-                    >
-                    {assignedUsers.map((user, index) => (
-                        <UserAssignmentCard 
-                            key={user.userId} 
-                            index={index}
-                            user={user} 
-                            draggableId={`user-${group.id}-${user.userId}`}
-                            onRemove={handleGroupToggle}
-                            isGroupAdmin={(group.groupAdmins || []).includes(user.userId)}
-                            onSetGroupAdmin={handleSetGroupAdmin}
-                            isDraggable={true}
-                        />
-                    ))}
-                    {provided.placeholder}
-                    </div>
-                )}
-                </StrictModeDroppable>
-            </CardContent>
-             <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-                <DialogContent className="max-w-md">
-                    <div className="absolute top-4 right-4">
-                        <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={onDelete}>
-                            <GoogleSymbol name="delete" className="text-4xl" weight={100} />
-                            <span className="sr-only">Delete Group</span>
-                        </Button>
-                    </div>
-                    <DialogHeader>
-                        <DialogTitle>Delete "{group.name}"?</DialogTitle>
-                        <DialogDescription>
-                            This will permanently delete the group and unassign all users. This action cannot be undone.
-                        </DialogDescription>
-                    </DialogHeader>
-                </DialogContent>
-            </Dialog>
+            <ScrollArea className="flex-grow">
+                <CardContent>
+                    <StrictModeDroppable droppableId={`group-content-${group.id}`} type="user-card" isDropDisabled={false} isCombineEnabled={false}>
+                    {(provided, snapshot) => (
+                        <div 
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                        className={cn("space-y-4 rounded-b-lg min-h-[60px]", snapshot.isDraggingOver && "ring-1 ring-border ring-inset")}
+                        >
+                        {assignedUsers.map((user, index) => (
+                            <UserAssignmentCard 
+                                key={user.userId} 
+                                index={index}
+                                user={user} 
+                                draggableId={`user-${group.id}-${user.userId}`}
+                                onRemove={handleGroupToggle}
+                                isGroupAdmin={(group.groupAdmins || []).includes(user.userId)}
+                                onSetGroupAdmin={handleSetGroupAdmin}
+                                isDraggable={true}
+                            />
+                        ))}
+                        {provided.placeholder}
+                        </div>
+                    )}
+                    </StrictModeDroppable>
+                </CardContent>
+            </ScrollArea>
         </Card>
     );
 }
@@ -456,6 +439,8 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
   
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [groupToDelete, setGroupToDelete] = useState<AdminGroup | null>(null);
 
   useEffect(() => {
     if (isEditingTitle) titleInputRef.current?.focus();
@@ -535,10 +520,18 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
       updateAppSettings({ adminGroups: newGroups });
   }
 
-  const handleDeleteAdminGroup = (groupId: string) => {
-      const newGroups = appSettings.adminGroups.filter(g => g.id !== groupId);
+  const handleDeleteAdminGroup = (group: AdminGroup) => {
+      setGroupToDelete(group);
+      setIsDeleteDialogOpen(true);
+  }
+
+  const confirmDeleteGroup = () => {
+      if (!groupToDelete) return;
+      const newGroups = appSettings.adminGroups.filter(g => g.id !== groupToDelete.id);
       updateAppSettings({ adminGroups: newGroups });
-      toast({ title: 'Success', description: 'Admin group deleted.' });
+      toast({ title: 'Success', description: `Admin group "${groupToDelete.name}" deleted.` });
+      setIsDeleteDialogOpen(false);
+      setGroupToDelete(null);
   }
 
   const onDragEnd = (result: DropResult) => {
@@ -677,7 +670,7 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
             <StrictModeDroppable droppableId="admin-groups-list" type="group-card" isDropDisabled={false} isCombineEnabled={false}>
               {(provided) => (
                   <div ref={provided.innerRef} {...provided.droppableProps} className="flex flex-wrap gap-6">
-                      <div className="w-full flex-grow basis-full md:basis-[calc(50%-1.5rem)] lg:basis-[calc(33.333%-1.5rem)] xl:basis-[calc(25%-1.5rem)]">
+                      <div className="basis-full md:basis-[calc(50%-1.5rem)] lg:basis-[calc(33.333%-1.5rem)] xl:basis-[calc(25%-1.5rem)]">
                         <Card className="flex flex-col h-full bg-transparent">
                             <CardHeader>
                               <div className="flex items-center gap-2">
@@ -718,11 +711,11 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                             {...provided.draggableProps} 
                             {...provided.dragHandleProps} 
                             className={cn(
-                                "w-full flex-grow basis-full md:basis-[calc(50%-1.5rem)] lg:basis-[calc(33.333%-1.5rem)] xl:basis-[calc(25%-1.5rem)]", 
+                                "basis-full md:basis-[calc(50%-1.5rem)] lg:basis-[calc(33.333%-1.5rem)] xl:basis-[calc(25%-1.5rem)]", 
                                 snapshot.isDragging && "shadow-xl"
                             )}
                           >
-                            <AdminGroupCard group={group} users={users} onUpdate={handleUpdateAdminGroup} onDelete={() => handleDeleteAdminGroup(group.id)} />
+                            <AdminGroupCard group={group} users={users} onUpdate={handleUpdateAdminGroup} onDelete={() => handleDeleteAdminGroup(group)} />
                           </div>
                         )}
                       </Draggable>
@@ -732,6 +725,23 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
               )}
             </StrictModeDroppable>
           
+            <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                <DialogContent className="max-w-md">
+                    <div className="absolute top-4 right-4">
+                        <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={confirmDeleteGroup}>
+                            <GoogleSymbol name="delete" className="text-4xl" weight={100} />
+                            <span className="sr-only">Delete Group</span>
+                        </Button>
+                    </div>
+                    <DialogHeader>
+                        <DialogTitle>Delete "{groupToDelete?.name}"?</DialogTitle>
+                        <DialogDescription>
+                            This will permanently delete the group and unassign all users. This action cannot be undone.
+                        </DialogDescription>
+                    </DialogHeader>
+                </DialogContent>
+            </Dialog>
+
               <Dialog open={is2faDialogOpen} onOpenChange={(isOpen) => !isOpen && close2faDialog()}>
                 <DialogContent className="max-w-sm">
                     <div className="absolute top-4 right-4">
@@ -1306,7 +1316,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                                                 {...provided.draggableProps}
                                                 {...provided.dragHandleProps}
                                                 className={cn(
-                                                    "flex-grow basis-full sm:basis-[calc(50%-0.5rem)] md:basis-[calc(33.33%-0.66rem)] lg:basis-[calc(25%-0.75rem)] xl:basis-[calc(20%-0.8rem)]",
+                                                    "basis-full sm:basis-[calc(50%-0.5rem)] md:basis-[calc(33.33%-0.66rem)] lg:basis-[calc(25%-0.75rem)] xl:basis-[calc(20%-0.8rem)]",
                                                     isPinned && "opacity-70",
                                                     draggingItemId === page.id && "opacity-50"
                                                 )}
@@ -1585,7 +1595,7 @@ export const TabsManagement = ({ tab }: { tab: AppTab }) => {
                                             ref={provided.innerRef}
                                             {...provided.draggableProps}
                                             {...provided.dragHandleProps}
-                                            className="w-full flex-grow basis-full md:basis-[calc(50%-1.5rem)] lg:basis-[calc(33.333%-1.5rem)]"
+                                            className="w-full basis-full md:basis-[calc(50%-1.5rem)] lg:basis-[calc(33.333%-1.5rem)]"
                                         >
                                             <TabCard
                                                 tab={appTab}
@@ -1676,3 +1686,4 @@ const AdminPageSkeleton = () => (
       </div>
     </div>
 );
+

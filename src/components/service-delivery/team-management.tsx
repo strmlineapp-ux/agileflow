@@ -18,6 +18,7 @@ import { GoogleSymbol } from '../icons/google-symbol';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProps } from 'react-beautiful-dnd';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '../ui/dropdown-menu';
 
 // Wrapper to fix issues with react-beautiful-dnd and React 18 Strict Mode
 const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
@@ -298,60 +299,51 @@ function TeamCard({
                             <AddMemberToTeamButton usersToAdd={unassignedUsers} onAdd={(user) => onUpdate(team.id, { members: [...team.members, user.userId]})} teamName={team.name} />
                         </div>
                     </div>
-                     <StrictModeDroppable droppableId={`delete-user-dropzone-${team.id}`} type="user-card" isDropDisabled={false} isCombineEnabled={false}>
-                        {(provided, snapshot) => (
-                            <div
-                                ref={provided.innerRef}
-                                {...provided.droppableProps}
-                                className={cn(
-                                    "rounded-full transition-all",
-                                    snapshot.isDraggingOver && "ring-1 ring-destructive"
-                                )}
-                            >
-                                <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:text-destructive p-0 opacity-0 group-hover:opacity-100" onClick={() => onDelete(team)}>
-                                            <GoogleSymbol name="delete" className="text-4xl" weight={100}/>
-                                            <span className="sr-only">Delete Team or Drop User to Remove</span>
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent><p>{snapshot.isDraggingOver ? `Drop to remove user` : 'Delete Team'}</p></TooltipContent>
-                                </Tooltip>
-                                </TooltipProvider>
-                            </div>
-                        )}
-                    </StrictModeDroppable>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 absolute top-2 right-2">
+                                <GoogleSymbol name="more_vert" weight={100} />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => onDelete(team)} className="text-destructive focus:text-destructive">
+                                <GoogleSymbol name="delete" className="mr-2 text-lg" weight={100} />
+                                Delete Team
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </CardHeader>
-            <CardContent className="flex-grow space-y-2">
-                <p className="text-sm font-normal text-muted-foreground">Members (click to toggle admin status)</p>
-                 <StrictModeDroppable droppableId={`team-members-${team.id}`} type="user-card" isDropDisabled={false} isCombineEnabled={false}>
-                    {(provided, snapshot) => (
-                    <div
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                        className={cn(
-                            "space-y-2 rounded-md p-1 min-h-[50px]",
-                            snapshot.isDraggingOver && "ring-1 ring-border ring-inset"
+            <ScrollArea className="flex-grow">
+                <CardContent>
+                    <p className="text-sm font-normal text-muted-foreground">Members (click to toggle admin status)</p>
+                     <StrictModeDroppable droppableId={`team-members-${team.id}`} type="user-card" isDropDisabled={false} isCombineEnabled={false}>
+                        {(provided, snapshot) => (
+                        <div
+                            ref={provided.innerRef}
+                            {...provided.droppableProps}
+                            className={cn(
+                                "space-y-2 rounded-md p-1 min-h-[50px]",
+                                snapshot.isDraggingOver && "ring-1 ring-border ring-inset"
+                            )}
+                        >
+                            {teamMembers.map((user, index) => (
+                            <MemberCard
+                                key={user.userId}
+                                user={user}
+                                index={index}
+                                onRemove={(userId) => handleMemberToggle(userId)}
+                                onSetAdmin={(userId) => handleAdminToggle(userId)}
+                                isTeamAdmin={(team.teamAdmins || []).includes(user.userId)}
+                            />
+                            ))}
+                            {provided.placeholder}
+                            {teamMembers.length === 0 && <p className="text-sm text-muted-foreground italic text-center p-4">No members assigned.</p>}
+                        </div>
                         )}
-                    >
-                        {teamMembers.map((user, index) => (
-                        <MemberCard
-                            key={user.userId}
-                            user={user}
-                            index={index}
-                            onRemove={(userId) => handleMemberToggle(userId)}
-                            onSetAdmin={(userId) => handleAdminToggle(userId)}
-                            isTeamAdmin={(team.teamAdmins || []).includes(user.userId)}
-                        />
-                        ))}
-                        {provided.placeholder}
-                        {teamMembers.length === 0 && <p className="text-sm text-muted-foreground italic text-center p-4">No members assigned.</p>}
-                    </div>
-                    )}
-                </StrictModeDroppable>
-            </CardContent>
+                    </StrictModeDroppable>
+                </CardContent>
+            </ScrollArea>
         </Card>
     );
 }
@@ -558,7 +550,7 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
                                     ref={provided.innerRef}
                                     {...provided.draggableProps}
                                     {...provided.dragHandleProps}
-                                     className="w-full flex-grow basis-full md:basis-[calc(50%-1.5rem)] lg:basis-[calc(33.333%-1.5rem)]"
+                                     className="basis-full md:basis-[calc(50%-1.5rem)] lg:basis-[calc(33.333%-1.5rem)]"
                                 >
                                     <TeamCard 
                                         team={team} 
@@ -593,3 +585,4 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
     </DragDropContext>
   );
 }
+

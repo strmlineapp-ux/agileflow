@@ -17,6 +17,7 @@ import { googleSymbolNames } from '@/lib/google-symbols';
 import { ScrollArea } from '../ui/scroll-area';
 import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProps } from 'react-beautiful-dnd';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '../ui/dropdown-menu';
 
 // Wrapper to fix issues with react-beautiful-dnd and React 18 Strict Mode
 const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
@@ -157,17 +158,19 @@ function CalendarCard({ calendar, onUpdate, onDelete }: { calendar: SharedCalend
               </CardTitle>
             )}
           </div>
-          <TooltipProvider>
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive p-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => onDelete(calendar)}>
-                        <GoogleSymbol name="delete" className="text-4xl" weight={100} />
-                        <span className="sr-only">Delete Calendar</span>
-                    </Button>
-                </TooltipTrigger>
-                <TooltipContent>Delete Calendar</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+                    <GoogleSymbol name="more_vert" weight={100} />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => onDelete(calendar)} className="text-destructive focus:text-destructive">
+                    <GoogleSymbol name="delete" className="mr-2 text-lg" weight={100}/>
+                    Delete
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </CardHeader>
       <CardContent className="flex-grow space-y-4">
@@ -345,7 +348,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                                     ref={provided.innerRef}
                                     {...provided.draggableProps}
                                     {...provided.dragHandleProps}
-                                    className="w-full flex-grow basis-full md:basis-[calc(50%-1.5rem)] lg:basis-[calc(33.333%-1.5rem)]"
+                                    className="basis-full md:basis-[calc(50%-1.5rem)] lg:basis-[calc(33.333%-1.5rem)]"
                                 >
                                     <CalendarCard
                                         calendar={calendar}
@@ -381,3 +384,4 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
     </DragDropContext>
   );
 }
+

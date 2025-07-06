@@ -29,3 +29,4 @@ export function SettingsContent({ tab: pageConfig }: { tab: AppPage }) {
     </div>
   );
 }
+
