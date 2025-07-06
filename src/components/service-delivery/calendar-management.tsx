@@ -97,7 +97,7 @@ function CalendarCard({ calendar, onUpdate, onDelete, isDragging }: { calendar: 
   };
 
   return (
-    <Card className={cn("flex flex-col group bg-transparent", isDragging && "shadow-xl")}>
+    <Card className={cn("flex flex-col group bg-transparent relative", isDragging && "shadow-xl")}>
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
@@ -131,9 +131,7 @@ function CalendarCard({ calendar, onUpdate, onDelete, isDragging }: { calendar: 
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <PopoverTrigger asChild>
-                                    <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background cursor-pointer" style={{ backgroundColor: calendar.color }} />
-                                </PopoverTrigger>
+                                <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background cursor-pointer" style={{ backgroundColor: calendar.color }} />
                             </TooltipTrigger>
                             <TooltipContent><p>Change Color</p></TooltipContent>
                         </Tooltip>

@@ -301,7 +301,7 @@ function AdminGroupCard({
     };
 
     return (
-        <Card className="flex flex-col h-full bg-transparent group">
+        <Card className="flex flex-col h-full bg-transparent group relative">
             <CardHeader>
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">

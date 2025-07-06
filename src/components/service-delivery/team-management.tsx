@@ -237,7 +237,7 @@ function TeamCard({
     }, [allUsers, team.members]);
 
     return (
-        <Card className={cn("flex flex-col h-full bg-transparent group", isDragging && "shadow-xl")}>
+        <Card className={cn("flex flex-col h-full bg-transparent group relative", isDragging && "shadow-xl")}>
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -273,7 +273,7 @@ function TeamCard({
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <PopoverTrigger asChild><button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background cursor-pointer" style={{ backgroundColor: team.color }} /></PopoverTrigger>
+                                            <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background cursor-pointer" style={{ backgroundColor: team.color }} />
                                         </TooltipTrigger>
                                         <TooltipContent><p>Change Color</p></TooltipContent>
                                     </Tooltip>
