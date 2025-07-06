@@ -116,7 +116,7 @@ function CalendarCard({ calendar, onUpdate, onDelete }: { calendar: SharedCalend
                             <TooltipTrigger asChild>
                                 <PopoverTrigger asChild>
                                     <Button variant="ghost" size="icon" className="p-0 h-12 w-12">
-                                        <GoogleSymbol name={calendar.icon} className="text-6xl" weight={100} />
+                                        <GoogleSymbol name={calendar.icon} className="text-12xl" weight={100} />
                                     </Button>
                                 </PopoverTrigger>
                             </TooltipTrigger>
