@@ -77,7 +77,7 @@ const UserAssignmentCard = ({ user, index, onRemove, isGroupAdmin, onSetGroupAdm
           </div>
           <div>
             <p className="font-semibold">{user.displayName}</p>
-            <p className="text-sm text-muted-foreground">{user.email}</p>
+            <p className="text-sm text-muted-foreground">{user.title || 'No title provided'}</p>
           </div>
         </div>
       </div>
@@ -1350,14 +1350,12 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
 
 // #region Tabs Management Tab
 
-const TabItem = React.forwardRef<HTMLDivElement, { tab: AppTab; onUpdate: (id: string, data: Partial<AppTab>) => void } & React.HTMLAttributes<HTMLDivElement>>(
-    ({ tab, onUpdate, className, ...props }, ref) => {
+function TabCard({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string, data: Partial<AppTab>) => void }) {
     const [isEditingName, setIsEditingName] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
     
-    // Icon Search State
     const [isSearchingIcons, setIsSearchingIcons] = useState(false);
     const [iconSearch, setIconSearch] = useState('');
     const iconSearchInputRef = useRef<HTMLInputElement>(null);
@@ -1383,7 +1381,6 @@ const TabItem = React.forwardRef<HTMLDivElement, { tab: AppTab; onUpdate: (id: s
     useEffect(() => {
         if (isSearchingIcons) iconSearchInputRef.current?.focus();
     }, [isSearchingIcons]);
-
 
     const handleSaveName = () => {
         const newName = nameInputRef.current?.value.trim();
@@ -1418,111 +1415,114 @@ const TabItem = React.forwardRef<HTMLDivElement, { tab: AppTab; onUpdate: (id: s
     const filteredIcons = useMemo(() => googleSymbolNames.filter(icon => icon.toLowerCase().includes(iconSearch.toLowerCase())), [iconSearch]);
 
     return (
-        <Card ref={ref} className={cn("cursor-grab", className)} {...props}>
-            <CardContent className="p-3 flex items-center gap-4">
-                <div className="relative mt-1">
-                    <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <PopoverTrigger asChild>
-                                        <Button variant="ghost" size="icon" style={{ color: tab.color }} className="h-12 w-12 text-6xl">
-                                            <GoogleSymbol name={tab.icon} className="text-12xl" weight={100} />
-                                        </Button>
-                                    </PopoverTrigger>
-                                </TooltipTrigger>
-                                <TooltipContent><p>Change Icon</p></TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                        <PopoverContent className="w-80 p-0">
-                            <div className="flex items-center gap-1 p-2 border-b">
-                                {!isSearchingIcons ? (
-                                    <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={() => setIsSearchingIcons(true)}>
-                                        <GoogleSymbol name="search" />
-                                    </Button>
-                                ) : (
-                                    <div className="flex items-center gap-1 w-full">
-                                        <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
-                                        <input
-                                            ref={iconSearchInputRef}
-                                            placeholder="Search icons..."
-                                            value={iconSearch}
-                                            onChange={(e) => setIconSearch(e.target.value)}
-                                            onBlur={() => !iconSearch && setIsSearchingIcons(false)}
-                                            className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
-                                        />
-                                    </div>
-                                )}
-                            </div>
-                            <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (
-                                <TooltipProvider key={iconName}>
+        <Card className="flex flex-col h-full">
+            <CardHeader>
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="relative">
+                            <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
+                                <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                        <Button
+                                            <PopoverTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="h-12 w-12 text-6xl">
+                                                    <GoogleSymbol name={tab.icon} className="text-12xl" weight={100} />
+                                                </Button>
+                                            </PopoverTrigger>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>Change Icon</p></TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                                <PopoverContent className="w-80 p-0">
+                                    <div className="flex items-center gap-1 p-2 border-b">
+                                        {!isSearchingIcons ? (
+                                            <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={() => setIsSearchingIcons(true)}>
+                                                <GoogleSymbol name="search" />
+                                            </Button>
+                                        ) : (
+                                            <div className="flex items-center gap-1 w-full">
+                                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                                                <input
+                                                    ref={iconSearchInputRef}
+                                                    placeholder="Search icons..."
+                                                    value={iconSearch}
+                                                    onChange={(e) => setIconSearch(e.target.value)}
+                                                    onBlur={() => !iconSearch && setIsSearchingIcons(false)}
+                                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (
+                                    <TooltipProvider key={iconName}>
+                                        <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button
                                             variant={tab.icon === iconName ? "default" : "ghost"}
                                             size="icon"
                                             onClick={() => { onUpdate(tab.id, { icon: iconName }); setIsIconPopoverOpen(false);}}
                                             className="h-8 w-8 p-0"
-                                        >
+                                            >
                                             <GoogleSymbol name={iconName} className="text-4xl" weight={100} />
-                                        </Button>
+                                            </Button>
                                         </TooltipTrigger>
                                         <TooltipContent><p>{iconName}</p></TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                    ))}</div></ScrollArea>
+                                </PopoverContent>
+                            </Popover>
+                            <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <PopoverTrigger asChild>
+                                                <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card cursor-pointer" style={{ backgroundColor: tab.color }} />
+                                            </PopoverTrigger>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>Change Color</p></TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
-                            ))}</div></ScrollArea>
-                        </PopoverContent>
-                    </Popover>
-                    <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <PopoverTrigger asChild>
-                                        <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card cursor-pointer" style={{ backgroundColor: tab.color }} />
-                                    </PopoverTrigger>
-                                </TooltipTrigger>
-                                <TooltipContent><p>Change Color</p></TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                        <PopoverContent className="w-auto p-2">
-                            <div className="grid grid-cols-8 gap-1">
-                                {predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => { onUpdate(tab.id, { color: c }); setIsColorPopoverOpen(false); }}/>))}
-                                <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
-                                    <GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={tab.color} onChange={(e) => onUpdate(tab.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/>
-                                </div>
-                            </div>
-                        </PopoverContent>
-                    </Popover>
-                </div>
-                <div className="flex-1 space-y-1">
-                    <div className="flex items-center justify-between">
-                        {isEditingName ? (
-                            <Input ref={nameInputRef} defaultValue={tab.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 font-headline" />
-                        ) : (
-                            <span className="font-semibold cursor-pointer font-headline" onClick={() => setIsEditingName(true)}>{tab.name}</span>
-                        )}
-                        <Badge variant="outline">{tab.componentKey}</Badge>
+                                <PopoverContent className="w-auto p-2">
+                                    <div className="grid grid-cols-8 gap-1">
+                                        {predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => { onUpdate(tab.id, { color: c }); setIsColorPopoverOpen(false); }}/>))}
+                                        <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
+                                            <GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={tab.color} onChange={(e) => onUpdate(tab.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/>
+                                        </div>
+                                    </div>
+                                </PopoverContent>
+                            </Popover>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                             {isEditingName ? (
+                                <Input ref={nameInputRef} defaultValue={tab.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 font-headline" />
+                            ) : (
+                                <CardTitle className="font-headline cursor-pointer text-lg font-thin" onClick={() => setIsEditingName(true)}>{tab.name}</CardTitle>
+                            )}
+                        </div>
                     </div>
-                    {isEditingDescription ? (
-                        <Textarea 
-                            ref={descriptionTextareaRef}
-                            defaultValue={tab.description}
-                            onBlur={handleSaveDescription}
-                            onKeyDown={handleDescriptionKeyDown}
-                            className="p-0 text-sm text-muted-foreground border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 resize-none"
-                            placeholder="Click to add a description."
-                        />
-                    ) : (
-                        <p className="text-sm text-muted-foreground cursor-text min-h-[20px]" onClick={() => setIsEditingDescription(true)}>
-                            {tab.description || 'Click to add a description.'}
-                        </p>
-                    )}
+                    <Badge variant="outline">{tab.componentKey}</Badge>
                 </div>
+            </CardHeader>
+            <CardContent className="flex-grow space-y-1">
+                {isEditingDescription ? (
+                    <Textarea 
+                        ref={descriptionTextareaRef}
+                        defaultValue={tab.description}
+                        onBlur={handleSaveDescription}
+                        onKeyDown={handleDescriptionKeyDown}
+                        className="p-0 text-sm text-muted-foreground border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 resize-none"
+                        placeholder="Click to add a description."
+                    />
+                ) : (
+                    <p className="text-sm text-muted-foreground cursor-text min-h-[20px]" onClick={() => setIsEditingDescription(true)}>
+                        {tab.description || 'Click to add a description.'}
+                    </p>
+                )}
             </CardContent>
         </Card>
     );
-});
-TabItem.displayName = 'TabItem';
+};
 
 
 export const TabsManagement = ({ tab }: { tab: AppTab }) => {
@@ -1584,17 +1584,20 @@ export const TabsManagement = ({ tab }: { tab: AppTab }) => {
                 </div>
                 <StrictModeDroppable droppableId="tabs-list">
                     {(provided) => (
-                        <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-4">
-                            {appSettings.tabs.map((tab, index) => (
-                                <Draggable key={tab.id} draggableId={tab.id} index={index}>
+                        <div {...provided.droppableProps} ref={provided.innerRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {appSettings.tabs.map((appTab, index) => (
+                                <Draggable key={appTab.id} draggableId={appTab.id} index={index}>
                                     {(provided) => (
-                                        <TabItem
+                                        <div
                                         ref={provided.innerRef}
                                         {...provided.draggableProps}
                                         {...provided.dragHandleProps}
-                                        tab={tab}
-                                        onUpdate={handleUpdateTab}
-                                        />
+                                        >
+                                            <TabCard
+                                                tab={appTab}
+                                                onUpdate={handleUpdateTab}
+                                            />
+                                        </div>
                                     )}
                                 </Draggable>
                             ))}

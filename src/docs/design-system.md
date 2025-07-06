@@ -42,8 +42,8 @@ This pattern provides a clean, minimal interface for search functionality, espec
 - **Interaction:**
   - The search icon is replaced by an inline search input field, with the search icon now appearing inside the input's bounds to maintain context.
   - The input field appears with a transparent background and no borders or box-shadow, to maintain a minimal, "inline text" look.
-  - The input field automatically gains focus.
 - **Behavior:**
+  - The input field automatically gains focus using a `useEffect` hook, making it ready for typing immediately.
   - Typing into the field filters the relevant content on the page in real-time.
   - Clicking outside the input (`onBlur`) when it is empty will cause it to revert back to the simple search icon. If the field contains text, it remains visible.
 - **Application:** Used for filtering lists of icons, users, or other filterable content within popovers and other compact spaces.
@@ -119,6 +119,7 @@ This is the application's perfected, gold-standard pattern for managing a collec
 
 -   **Layout**: Entities are presented in a responsive grid of cards (`<Card>`). The grid dynamically adjusts the number of columns to best fit the available screen space, typically using classes like `grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4`.
 -   **Internal Card Layout**: Each card is structured for clarity. The header contains the primary entity identifier (icon and name) and contextual controls (like page access or tab associations, which are positioned inline after the title). The main content area is used for tertiary information (like a URL path) which is anchored to the bottom.
+-   **User Item Display**: When users are displayed as items within a management card (e.g., `AdminGroupCard`), they are presented without a border. Each user item should display their avatar, full name, and professional title.
 -   **Draggable & Pinned States**:
     -   **Draggable Cards**: Most cards can be freely reordered within the grid.
     -   **Pinned Cards**: Certain cards are designated as "pinned" and cannot be dragged. They act as fixed anchors in the layout.
@@ -129,11 +130,12 @@ This is the application's perfected, gold-standard pattern for managing a collec
 -   **Drop Zone Highlighting**: Drop zones provide visual feedback when an item is dragged over them. To maintain a clean UI, highlights primarily use rings without background fills.
     -   **Standard & Duplication Zones (Reordering, Moving, Duplicating):** The drop area is highlighted with a `1px` inset, **colorless** ring using the standard border color (`ring-1 ring-border ring-inset`). This is the universal style for all non-destructive drop actions.
     -   **Destructive Zones (Deleting):** The drop area is highlighted with a `1px` ring in the destructive theme color (`ring-1 ring-destructive`).
+-   **Contextual Hover Actions**: To maintain a clean default UI, action icons like "Remove User" or "Delete Group" appear only when hovering over the relevant element (the user row or the card header, respectively). These icons are placed in the top-right corner of the element.
 -   **Drag-to-Duplicate**:
     -   **Interaction**: A designated "Add New" icon (`<Button>`) acts as a drop zone. While a card is being dragged, this zone becomes highlighted to indicate it can accept a drop.
     -   **Behavior**: Dropping any card (pinned or not) onto this zone creates a deep, independent copy of the original. The new card is given a unique ID, a modified name (e.g., with `(Copy)`), and is placed immediately after the original in the list.
 -   **Layout Stability**: To prevent "janky" or shifting layouts during a drag operation (especially when dragging an item out of one card and over another), ensure that the container cards (e.g., `TeamCard`) maintain a consistent height. This can be achieved by using `flexbox` properties (e.g., `h-full` on the card and `flex-grow` on its main content area) to make the content container fill the available space, even when a draggable item is temporarily removed from the layout.
--   **Application**: This is the required pattern for managing Pages, Calendars, Teams, and Admin Groups.
+-   **Application**: This is the required pattern for managing Pages, Calendars, Teams, Admin Groups, and Tabs.
 
 ---
 
