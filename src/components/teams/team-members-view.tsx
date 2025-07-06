@@ -97,7 +97,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                     ref={provided.innerRef}
                     {...provided.draggableProps}
                     {...provided.dragHandleProps}
-                    className={cn("p-3 basis-full md:basis-1/2 lg:basis-1/3", snapshot.isDragging && "opacity-80 shadow-xl")}
+                    className={cn("p-3 basis-full md:basis-1/2 lg:basis-1/3 flex-grow-0 flex-shrink-0", snapshot.isDragging && "opacity-80 shadow-xl")}
                   >
                     <TeamMemberCard member={member} team={team} />
                   </div>

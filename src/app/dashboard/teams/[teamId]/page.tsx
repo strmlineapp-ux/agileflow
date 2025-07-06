@@ -1,6 +1,5 @@
 
 
-
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
@@ -13,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { WorkstationManagement } from '@/components/settings/workstation-management';
 import { EventTemplateManagement } from '@/components/teams/event-template-management';
+import { TimelineManagement } from '@/components/teams/timeline-management';
 import { Input } from '@/components/ui/input';
 import { AppTab, type AppPage } from '@/types';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -29,6 +29,7 @@ const componentMap: Record<string, React.ComponentType<{ team: any, tab: AppTab 
   locations: PinnedLocationManagement,
   workstations: WorkstationManagement,
   templates: EventTemplateManagement,
+  timeline: TimelineManagement,
 };
 
 const PAGE_ID = 'page-team-management';
