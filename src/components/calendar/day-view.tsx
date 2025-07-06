@@ -70,7 +70,7 @@ const DayViewLocationRow = React.memo(({
                 onClick={() => toggleLocationCollapse(location)}
             >
                 {isCollapsed ? <GoogleSymbol name="chevron_right" className="text-lg mt-1" /> : <GoogleSymbol name="expand_more" className="text-lg mt-1" />}
-                <p className="font-medium text-sm">{location}</p>
+                <p className="font-normal text-sm">{location}</p>
             </div>
             <div className={cn("relative flex-1", isCollapsed ? "h-10" : "min-h-[5rem] py-1")} onClick={(e) => handleEasyBookingClick(e, 'standard', day, location)}>
                 {Array.from({ length: 23 }).map((_, hour) => (
@@ -114,7 +114,7 @@ const DayViewLocationRow = React.memo(({
                                                                     className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-background flex items-center justify-center"
                                                                     style={{ backgroundColor: roleColor, color: getContrastColor(roleColor || '#ffffff') }}
                                                                 >
-                                                                    <GoogleSymbol name={roleIcon} style={{fontSize: '10px'}} />
+                                                                    <GoogleSymbol name={roleIcon} style={{fontSize: '10px'}}/>
                                                                 </div>
                                                             )}
                                                         </div>
@@ -132,7 +132,7 @@ const DayViewLocationRow = React.memo(({
                                     </div>
                                 )}
                             </div>
-                            <p className="font-semibold text-xs truncate leading-tight">{event.title}</p>
+                            <p className="font-normal text-xs truncate leading-tight">{event.title}</p>
                             <p className="text-[10px] opacity-90">{format(event.startTime, timeFormatEvent)} - {format(event.endTime, timeFormatEvent)}</p>
                         </div>
                     )
@@ -342,7 +342,7 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
         <Card>
             <div style={{ width: `${LOCATION_LABEL_WIDTH_PX + (24 * hourWidth)}px`}}>
                 <CardHeader className="p-0 border-b sticky top-0 bg-card z-20 flex flex-row">
-                    <div className="w-[160px] shrink-0 border-r p-2 flex items-center font-medium text-sm sticky left-0 bg-card z-30">Location</div>
+                    <div className="w-[160px] shrink-0 border-r p-2 flex items-center font-normal text-sm sticky left-0 bg-card z-30">Location</div>
                     {hours.map(hour => (
                         <div key={hour} className="shrink-0 text-left p-2 border-r" style={{ width: `${hourWidth}px` }}>
                             <span className="text-xs text-muted-foreground">{format(addHours(startOfDay(date), hour), timeFormatTimeline)}</span>
@@ -493,7 +493,7 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
                                                     </div>
                                                 )}
                                             </div>
-                                            <p className="font-semibold text-xs truncate leading-tight">{event.title}</p>
+                                            <p className="font-normal text-xs truncate leading-tight">{event.title}</p>
                                             <p className="text-[10px] opacity-90">{format(event.startTime, timeFormatEvent)} - {format(event.endTime, timeFormatEvent)}</p>
                                         </div>
                                     )

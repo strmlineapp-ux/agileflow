@@ -305,7 +305,7 @@ const ProductionScheduleLocationRow = React.memo(({
                                     </div>
                                 )}
                             </div>
-                            <p className="font-semibold text-xs truncate leading-tight">{event.title}</p>
+                            <p className="font-normal text-xs truncate leading-tight">{event.title}</p>
                             <p className="text-[10px] opacity-90">{format(event.startTime, timeFormatEvent)} - {format(event.endTime, timeFormatEvent)}</p>
                         </div>
                     )

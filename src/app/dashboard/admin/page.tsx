@@ -453,7 +453,7 @@ function AdminGroupCard({
                     <div 
                     ref={provided.innerRef}
                     {...provided.droppableProps}
-                    className={cn("space-y-4 rounded-b-lg", snapshot.isDraggingOver && "ring-1 ring-border ring-inset")}
+                    className={cn("space-y-4 rounded-b-lg min-h-[60px]", snapshot.isDraggingOver && "ring-1 ring-border ring-inset")}
                     >
                     {assignedUsers.map((user, index) => (
                         <UserAssignmentCard 
@@ -727,7 +727,6 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                                 <CardTitle className="font-headline font-thin text-lg">Admins</CardTitle>
                                 <AddUserToGroupButton usersToAdd={nonAdminUsers} onAdd={handleAdminToggle} groupName="Admin" />
                               </div>
-                              <CardDescription>Assign or revoke Admin privileges. This is the highest level of access.</CardDescription>
                             </CardHeader>
                             <CardContent className="flex-grow">
                                 <StrictModeDroppable droppableId="admins-card-droppable" type="user-card" isDropDisabled={false} isCombineEnabled={false}>
@@ -735,7 +734,7 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                                     <div 
                                     ref={provided.innerRef}
                                     {...provided.droppableProps}
-                                    className={cn("space-y-4 rounded-b-lg", snapshot.isDraggingOver && "ring-1 ring-border ring-inset")}
+                                    className={cn("space-y-4 rounded-b-lg min-h-[60px]", snapshot.isDraggingOver && "ring-1 ring-border ring-inset")}
                                     >
                                     {adminUsers.map(user => (
                                         <UserAssignmentCard 
@@ -1621,7 +1620,7 @@ export const TabsManagement = ({ tab }: { tab: AppTab }) => {
                 </div>
                 <StrictModeDroppable droppableId="tabs-list">
                     {(provided) => (
-                        <div {...provided.droppableProps} ref={provided.innerRef} className="flex flex-col gap-6">
+                        <div {...provided.droppableProps} ref={provided.innerRef} className="flex flex-wrap gap-6">
                             {appSettings.tabs.map((appTab, index) => (
                                 <Draggable key={appTab.id} draggableId={appTab.id} index={index}>
                                     {(provided) => (
@@ -1629,6 +1628,7 @@ export const TabsManagement = ({ tab }: { tab: AppTab }) => {
                                             ref={provided.innerRef}
                                             {...provided.draggableProps}
                                             {...provided.dragHandleProps}
+                                            className="w-full flex-grow basis-full md:basis-[calc(50%-1.5rem)] lg:basis-[calc(33.333%-1.5rem)]"
                                         >
                                             <TabCard
                                                 tab={appTab}
