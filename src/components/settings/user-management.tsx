@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, Fragment, useRef, useEffect } from 'react';
@@ -164,9 +165,9 @@ export function UserManagement() {
                         <AccordionContent>
                            <CardContent className="pt-0">
                                <div className="border-t pt-4">
-                                <div className="p-2 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                                <div className="p-2 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
                                     {/* Left Column */}
-                                    <div className="space-y-6">
+                                    <div className="space-y-4">
                                         <div>
                                             <Label className="text-xs text-muted-foreground">Title</Label>
                                             <p className="text-sm font-medium">{user.title || <span className="italic text-muted-foreground">Not provided</span>}</p>
@@ -225,7 +226,7 @@ export function UserManagement() {
                                         </div>
                                     </div>
                                     {/* Right Column */}
-                                    <div className="space-y-6">
+                                    <div className="space-y-4">
                                         {isCurrentUser && (
                                         <>
                                             <div className="flex items-center gap-2">
@@ -235,7 +236,7 @@ export function UserManagement() {
                                                             <TooltipTrigger asChild>
                                                                 <PopoverTrigger asChild>
                                                                     <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" style={{ color: 'hsl(var(--primary))' }}>
-                                                                        <GoogleSymbol name="palette" />
+                                                                        <GoogleSymbol name="palette" weight={100} />
                                                                     </Button>
                                                                 </PopoverTrigger>
                                                             </TooltipTrigger>
@@ -267,7 +268,7 @@ export function UserManagement() {
                                                             realUser.theme === theme.name ? "text-primary" : ""
                                                             )}
                                                         >
-                                                            <GoogleSymbol name={theme.icon} className="text-lg" />
+                                                            <GoogleSymbol name={theme.icon} className="text-lg" weight={100} />
                                                             {theme.label}
                                                         </Button>
                                                         ))}
@@ -279,7 +280,7 @@ export function UserManagement() {
                                                     <Tooltip>
                                                         <TooltipTrigger asChild>
                                                             <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 text-muted-foreground cursor-default hover:bg-transparent">
-                                                                <GoogleSymbol name="edit_calendar" className="text-xl" />
+                                                                <GoogleSymbol name="edit_calendar" className="text-xl" weight={100} />
                                                             </Button>
                                                         </TooltipTrigger>
                                                         <TooltipContent>
@@ -304,7 +305,7 @@ export function UserManagement() {
                                                     <Tooltip>
                                                         <TooltipTrigger asChild>
                                                           <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 text-muted-foreground cursor-default hover:bg-transparent">
-                                                              <GoogleSymbol name="schedule" className="text-xl" />
+                                                              <GoogleSymbol name="schedule" className="text-xl" weight={100} />
                                                           </Button>
                                                         </TooltipTrigger>
                                                         <TooltipContent>
@@ -327,7 +328,7 @@ export function UserManagement() {
                                                   <Tooltip>
                                                     <TooltipTrigger asChild>
                                                       <Button variant="ghost" onClick={() => updateUser(realUser.userId, { easyBooking: !realUser.easyBooking })} className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
-                                                          <GoogleSymbol name={realUser.easyBooking ? 'toggle_on' : 'toggle_off'} className="text-2xl" />
+                                                          <GoogleSymbol name={realUser.easyBooking ? 'toggle_on' : 'toggle_off'} className="text-2xl" weight={100} />
                                                           <span className="text-sm">Easy Booking</span>
                                                       </Button>
                                                     </TooltipTrigger>

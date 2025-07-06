@@ -138,7 +138,7 @@ const MemberCard = ({ user, index, onRemove, onSetAdmin, isTeamAdmin }: { user: 
                             <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         {isTeamAdmin && (
-                            <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card flex items-center justify-center bg-primary text-primary-foreground">
+                            <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background flex items-center justify-center bg-primary text-primary-foreground">
                                 <GoogleSymbol name="key" style={{fontSize: '10px'}}/>
                             </div>
                         )}

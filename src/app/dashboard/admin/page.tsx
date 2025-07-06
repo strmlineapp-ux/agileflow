@@ -56,7 +56,7 @@ const UserAssignmentCard = ({ user, index, onRemove, isGroupAdmin, onSetGroupAdm
         tabIndex={onSetGroupAdmin ? 0 : -1}
         role={onSetGroupAdmin ? "button" : undefined}
         className={cn(
-            "transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50 bg-card group relative rounded-lg",
+            "transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50 bg-transparent group relative rounded-lg",
             onSetGroupAdmin && "cursor-pointer"
         )}
         onClick={onSetGroupAdmin ? () => onSetGroupAdmin(user) : undefined}
@@ -70,7 +70,7 @@ const UserAssignmentCard = ({ user, index, onRemove, isGroupAdmin, onSetGroupAdm
               <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
             </Avatar>
             {isGroupAdmin && (
-              <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card flex items-center justify-center bg-primary text-primary-foreground">
+              <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background flex items-center justify-center bg-primary text-primary-foreground">
                   <GoogleSymbol name="key" style={{fontSize: '10px'}}/>
               </div>
             )}
@@ -227,30 +227,8 @@ function AdminGroupCard({
     // Icon Search State
     const [iconSearch, setIconSearch] = useState('');
     const iconSearchInputRef = useRef<HTMLInputElement>(null);
-
-    useEffect(() => {
-        if (isEditingName && nameInputRef.current) {
-          nameInputRef.current.focus();
-          nameInputRef.current.select();
-        }
-    }, [isEditingName]);
-
-    useEffect(() => {
-        if (isEditingDescription && descriptionTextareaRef.current) {
-            descriptionTextareaRef.current.select();
-        }
-    }, [isEditingDescription]);
     
-    useEffect(() => {
-        if (!isIconPopoverOpen) {
-            setIconSearch('');
-        } else {
-            // Auto-focus search when popover opens
-            setTimeout(() => iconSearchInputRef.current?.focus(), 100);
-        }
-    }, [isIconPopoverOpen]);
-
-    const handleSaveName = () => {
+    const handleSaveName = useCallback(() => {
         const input = nameInputRef.current;
         if (!input || !input.value.trim()) {
           toast({ variant: 'destructive', title: 'Error', description: 'Group name cannot be empty.' });
@@ -262,24 +240,59 @@ function AdminGroupCard({
             toast({ title: 'Success', description: 'Group name updated.' });
         }
         setIsEditingName(false);
-    };
-
-    const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Enter') {
+    }, [group, onUpdate, toast]);
+    
+    useEffect(() => {
+      if (!isEditingName) return;
+      const handleOutsideClick = (event: MouseEvent) => {
+        if (nameInputRef.current && !nameInputRef.current.contains(event.target as Node)) {
           handleSaveName();
-        } else if (e.key === 'Escape') {
-          setIsEditingName(false);
         }
-    };
-
-    const handleSaveDescription = () => {
+      };
+      document.addEventListener("mousedown", handleOutsideClick);
+      nameInputRef.current?.focus();
+      nameInputRef.current?.select();
+      return () => {
+        document.removeEventListener("mousedown", handleOutsideClick);
+      };
+    }, [isEditingName, handleSaveName]);
+    
+    useEffect(() => {
+        if (isIconPopoverOpen) {
+            setTimeout(() => iconSearchInputRef.current?.focus(), 100);
+        } else {
+            setIconSearch('');
+        }
+    }, [isIconPopoverOpen]);
+    
+    const handleSaveDescription = useCallback(() => {
         const newDescription = descriptionTextareaRef.current?.value.trim();
         if (newDescription !== group.description) {
             onUpdate({ ...group, description: newDescription });
         }
         setIsEditingDescription(false);
-    };
+    }, [group.description, onUpdate]);
 
+    useEffect(() => {
+        if (!isEditingDescription) return;
+        const handleOutsideClick = (event: MouseEvent) => {
+            if (descriptionTextareaRef.current && !descriptionTextareaRef.current.contains(event.target as Node)) {
+                handleSaveDescription();
+            }
+        };
+        document.addEventListener("mousedown", handleOutsideClick);
+        descriptionTextareaRef.current?.focus();
+        descriptionTextareaRef.current?.select();
+        return () => {
+            document.removeEventListener("mousedown", handleOutsideClick);
+        };
+    }, [isEditingDescription, handleSaveDescription]);
+
+    const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') handleSaveName();
+        else if (e.key === 'Escape') setIsEditingName(false);
+    };
+    
     const handleDescriptionKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
@@ -378,7 +391,7 @@ function AdminGroupCard({
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild>
                                                 <div 
-                                                    className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card cursor-pointer" 
+                                                    className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background cursor-pointer" 
                                                     aria-label="Change service admin color"
                                                     style={{ backgroundColor: group.color }}
                                                 />
@@ -399,7 +412,7 @@ function AdminGroupCard({
                         </div>
                         <div className="flex-1">
                              <div className="flex items-center gap-1">
-                                {isEditingName ? (<Input ref={nameInputRef} defaultValue={group.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-lg font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>) : (<CardTitle onClick={() => setIsEditingName(true)} className="font-headline cursor-pointer text-lg font-thin">{group.name}</CardTitle>)}
+                                {isEditingName ? (<Input ref={nameInputRef} defaultValue={group.name} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-lg font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>) : (<CardTitle onClick={() => setIsEditingName(true)} className="font-headline cursor-pointer text-lg font-thin">{group.name}</CardTitle>)}
                                 <AddUserToGroupButton usersToAdd={unassignedUsers} onAdd={handleGroupToggle} groupName={group.name} />
                             </div>
                         </div>
@@ -424,7 +437,6 @@ function AdminGroupCard({
                     <Textarea
                         ref={descriptionTextareaRef}
                         defaultValue={group.description}
-                        onBlur={handleSaveDescription}
                         onKeyDown={handleDescriptionKeyDown}
                         className="text-sm text-muted-foreground p-0 border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 resize-none min-h-[40px]"
                         placeholder="Click to add a description for this group..."
@@ -993,10 +1005,29 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const isSystemPage = useMemo(() => ['page-admin-management', 'page-notifications', 'page-settings'].includes(page.id), [page.id]);
     
-    useEffect(() => {
-        if (isEditingName) nameInputRef.current?.focus();
-    }, [isEditingName]);
+    const handleSaveName = useCallback(() => {
+        const newName = nameInputRef.current?.value.trim();
+        if (newName && newName !== page.name) {
+            onUpdate(page.id, { name: newName });
+        }
+        setIsEditingName(false);
+    }, [page.id, page.name, onUpdate]);
 
+    useEffect(() => {
+        if (!isEditingName) return;
+        const handleOutsideClick = (event: MouseEvent) => {
+            if (nameInputRef.current && !nameInputRef.current.contains(event.target as Node)) {
+                handleSaveName();
+            }
+        };
+        document.addEventListener("mousedown", handleOutsideClick);
+        nameInputRef.current?.focus();
+        nameInputRef.current?.select();
+        return () => {
+            document.removeEventListener("mousedown", handleOutsideClick);
+        };
+    }, [isEditingName, handleSaveName]);
+    
     useEffect(() => {
         if (isIconPopoverOpen) {
             setTimeout(() => iconSearchInputRef.current?.focus(), 100);
@@ -1004,14 +1035,6 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
             setIconSearch('');
         }
     }, [isIconPopoverOpen]);
-
-    const handleSaveName = () => {
-        const newName = nameInputRef.current?.value.trim();
-        if (newName && newName !== page.name) {
-            onUpdate(page.id, { name: newName });
-        }
-        setIsEditingName(false);
-    };
 
     const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') handleSaveName();
@@ -1074,7 +1097,7 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                         <PopoverTrigger asChild>
-                                            <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card cursor-pointer" style={{ backgroundColor: page.color }} />
+                                            <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background cursor-pointer" style={{ backgroundColor: page.color }} />
                                         </PopoverTrigger>
                                     </TooltipTrigger>
                                     <TooltipContent><p>Change Color</p></TooltipContent>
@@ -1093,7 +1116,7 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1">
                                 {isEditingName ? (
-                                    <Input ref={nameInputRef} defaultValue={page.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-base font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"/>
+                                    <Input ref={nameInputRef} defaultValue={page.name} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-base font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"/>
                                 ) : (
                                     <CardTitle onClick={() => !isSystemPage && setIsEditingName(true)} className={cn("font-headline text-base break-words font-thin", !isSystemPage && "cursor-pointer")}>
                                         {page.name}
@@ -1368,14 +1391,52 @@ function TabCard({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string, data: 
     const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
     const [isEditingDescription, setIsEditingDescription] = useState(false);
 
-    useEffect(() => {
-        if (isEditingName) nameInputRef.current?.focus();
-    }, [isEditingName]);
+    const handleSaveName = useCallback(() => {
+        const newName = nameInputRef.current?.value.trim();
+        if (newName && newName !== tab.name) {
+            onUpdate(tab.id, { name: newName });
+        }
+        setIsEditingName(false);
+    }, [tab.id, tab.name, onUpdate]);
+    
+    const handleSaveDescription = useCallback(() => {
+        const newDescription = descriptionTextareaRef.current?.value.trim();
+        if (newDescription !== tab.description) {
+            onUpdate(tab.id, { description: newDescription });
+        }
+        setIsEditingDescription(false);
+    }, [tab.id, tab.description, onUpdate]);
 
     useEffect(() => {
-        if (isEditingDescription) descriptionTextareaRef.current?.focus();
-    }, [isEditingDescription]);
+        if (!isEditingName) return;
+        const handleOutsideClick = (event: MouseEvent) => {
+            if (nameInputRef.current && !nameInputRef.current.contains(event.target as Node)) {
+                handleSaveName();
+            }
+        };
+        document.addEventListener("mousedown", handleOutsideClick);
+        nameInputRef.current?.focus();
+        nameInputRef.current?.select();
+        return () => {
+            document.removeEventListener("mousedown", handleOutsideClick);
+        };
+    }, [isEditingName, handleSaveName]);
     
+    useEffect(() => {
+        if (!isEditingDescription) return;
+        const handleOutsideClick = (event: MouseEvent) => {
+            if (descriptionTextareaRef.current && !descriptionTextareaRef.current.contains(event.target as Node)) {
+                handleSaveDescription();
+            }
+        };
+        document.addEventListener("mousedown", handleOutsideClick);
+        descriptionTextareaRef.current?.focus();
+        descriptionTextareaRef.current?.select();
+        return () => {
+            document.removeEventListener("mousedown", handleOutsideClick);
+        };
+    }, [isEditingDescription, handleSaveDescription]);
+
     useEffect(() => {
         if (isIconPopoverOpen) {
              setTimeout(() => iconSearchInputRef.current?.focus(), 100);
@@ -1384,25 +1445,9 @@ function TabCard({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string, data: 
         }
     }, [isIconPopoverOpen]);
 
-    const handleSaveName = () => {
-        const newName = nameInputRef.current?.value.trim();
-        if (newName && newName !== tab.name) {
-            onUpdate(tab.id, { name: newName });
-        }
-        setIsEditingName(false);
-    };
-
     const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') handleSaveName();
         else if (e.key === 'Escape') setIsEditingName(false);
-    };
-    
-    const handleSaveDescription = () => {
-        const newDescription = descriptionTextareaRef.current?.value.trim();
-        if (newDescription !== tab.description) {
-            onUpdate(tab.id, { description: newDescription });
-        }
-        setIsEditingDescription(false);
     };
 
     const handleDescriptionKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -1470,7 +1515,7 @@ function TabCard({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string, data: 
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild>
-                                                <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card cursor-pointer" style={{ backgroundColor: tab.color }} />
+                                                <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background cursor-pointer" style={{ backgroundColor: tab.color }} />
                                             </PopoverTrigger>
                                         </TooltipTrigger>
                                         <TooltipContent><p>Change Color</p></TooltipContent>
@@ -1488,7 +1533,7 @@ function TabCard({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string, data: 
                         </div>
                         <div className="flex-1 min-w-0">
                              {isEditingName ? (
-                                <Input ref={nameInputRef} defaultValue={tab.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-normal border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 font-headline" />
+                                <Input ref={nameInputRef} defaultValue={tab.name} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-normal border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 font-headline" />
                             ) : (
                                 <CardTitle className="font-headline cursor-pointer text-lg font-thin" onClick={() => setIsEditingName(true)}>{tab.name}</CardTitle>
                             )}
@@ -1502,7 +1547,6 @@ function TabCard({ tab, onUpdate }: { tab: AppTab; onUpdate: (id: string, data: 
                     <Textarea 
                         ref={descriptionTextareaRef}
                         defaultValue={tab.description}
-                        onBlur={handleSaveDescription}
                         onKeyDown={handleDescriptionKeyDown}
                         className="p-0 text-sm text-muted-foreground border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 resize-none"
                         placeholder="Click to add a description."
@@ -1577,7 +1621,7 @@ export const TabsManagement = ({ tab }: { tab: AppTab }) => {
                 </div>
                 <StrictModeDroppable droppableId="tabs-list">
                     {(provided) => (
-                        <div {...provided.droppableProps} ref={provided.innerRef} className="flex flex-wrap gap-6">
+                        <div {...provided.droppableProps} ref={provided.innerRef} className="flex flex-col gap-6">
                             {appSettings.tabs.map((appTab, index) => (
                                 <Draggable key={appTab.id} draggableId={appTab.id} index={index}>
                                     {(provided) => (
@@ -1585,7 +1629,6 @@ export const TabsManagement = ({ tab }: { tab: AppTab }) => {
                                             ref={provided.innerRef}
                                             {...provided.draggableProps}
                                             {...provided.dragHandleProps}
-                                            className="w-full flex-grow basis-full md:basis-[calc(50%-1.5rem)] lg:basis-[calc(33.333%-1.5rem)]"
                                         >
                                             <TabCard
                                                 tab={appTab}
@@ -1669,10 +1712,10 @@ const AdminPageSkeleton = () => (
     <div className="flex flex-col gap-8">
       <Skeleton className="h-10 w-72" />
       <Skeleton className="h-10 w-full" />
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        <Skeleton className="h-64 w-full" />
-        <Skeleton className="h-64 w-full" />
-        <Skeleton className="h-64 w-full" />
+      <div className="flex flex-wrap gap-6">
+        <Skeleton className="h-64 w-full flex-grow basis-full md:basis-[calc(50%-1.5rem)] lg:basis-[calc(33.333%-1.5rem)]" />
+        <Skeleton className="h-64 w-full flex-grow basis-full md:basis-[calc(50%-1.5rem)] lg:basis-[calc(33.333%-1.5rem)]" />
+        <Skeleton className="h-64 w-full flex-grow basis-full md:basis-[calc(50%-1.5rem)] lg:basis-[calc(33.333%-1.5rem)]" />
       </div>
     </div>
 );
