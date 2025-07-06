@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import Link from 'next/link';
@@ -138,7 +139,7 @@ export function Sidebar() {
               </Tooltip>
             </TooltipProvider>
             <DropdownMenuContent side="right" align="end" className="w-64">
-                <DropdownMenuLabel className="font-normal">
+                <DropdownMenuLabel className="font-thin">
                     <div className="flex flex-col space-y-1">
                         <p className="text-sm font-medium leading-none">{viewAsUser.displayName}</p>
                         <p className="text-xs leading-none text-muted-foreground">{viewAsUser.email}</p>
@@ -146,7 +147,7 @@ export function Sidebar() {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <div className="px-2 py-1.5">
-                    <p className="text-xs text-muted-foreground mb-2">Badges</p>
+                    <p className="text-xs text-muted-foreground mb-2 font-thin">Badges</p>
                     <div className="flex flex-wrap gap-1">
                         {(viewAsUser.roles && viewAsUser.roles.length > 0) ? (
                             viewAsUser.roles.map(roleName => {
@@ -157,53 +158,53 @@ export function Sidebar() {
                                         variant="outline"
                                         style={roleInfo ? { color: roleInfo.color, borderColor: roleInfo.color } : {}}
                                         className={cn(
-                                            "rounded-full gap-1 text-xs py-0.5 px-2",
+                                            "rounded-full gap-1 text-xs py-0.5 px-2 font-thin",
                                             !roleInfo && "opacity-75"
                                         )}
                                     >
-                                        {roleInfo && <GoogleSymbol name={roleInfo.icon} className="text-sm" />}
-                                        <span>{roleName}</span>
+                                        {roleInfo && <GoogleSymbol name={roleInfo.icon} className="text-sm" weight={100} />}
+                                        <span className="font-thin">{roleName}</span>
                                     </Badge>
                                 )
                             })
                         ) : (
-                            <p className="text-xs text-muted-foreground italic">No roles or badges assigned</p>
+                            <p className="text-xs text-muted-foreground italic font-thin">No roles or badges assigned</p>
                         )}
                     </div>
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                    <Link href="/dashboard/settings">
-                        <GoogleSymbol name="manage_accounts" className="mr-2 text-lg" />
+                    <Link href="/dashboard/settings" className="font-thin">
+                        <GoogleSymbol name="manage_accounts" className="mr-2 text-lg" weight={100} />
                         <span>Account Settings</span>
                     </Link>
                 </DropdownMenuItem>
                 
                 {realUser.userId === viewAsUser.userId && (
-                  <DropdownMenuItem onSelect={() => linkGoogleCalendar(realUser.userId)} disabled={realUser.googleCalendarLinked}>
-                    <GoogleSymbol name={realUser.googleCalendarLinked ? "link" : "link_off"} className="mr-2 text-lg" />
+                  <DropdownMenuItem onSelect={() => linkGoogleCalendar(realUser.userId)} disabled={realUser.googleCalendarLinked} className="font-thin">
+                    <GoogleSymbol name={realUser.googleCalendarLinked ? "link" : "link_off"} className="mr-2 text-lg" weight={100} />
                     <span>{realUser.googleCalendarLinked ? "Calendar Linked" : "Link Google Calendar"}</span>
                   </DropdownMenuItem>
                 )}
 
                 {realUser.isAdmin && (
                   <DropdownMenuSub>
-                    <DropdownMenuSubTrigger>
-                      <GoogleSymbol name="how_to_reg" className="mr-2 text-lg" />
+                    <DropdownMenuSubTrigger className="font-thin">
+                      <GoogleSymbol name="how_to_reg" className="mr-2 text-lg" weight={100} />
                       <span>View as</span>
                     </DropdownMenuSubTrigger>
                     <DropdownMenuPortal>
                       <DropdownMenuSubContent>
                         {isViewingAsSomeoneElse && (
                           <>
-                            <DropdownMenuItem onSelect={() => setViewAsUser(realUser.userId)}>
+                            <DropdownMenuItem onSelect={() => setViewAsUser(realUser.userId)} className="font-thin">
                               Return to your view ({realUser.displayName})
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                           </>
                         )}
                         {users.filter(u => u.userId !== realUser.userId).map(user => (
-                          <DropdownMenuItem key={user.userId} onSelect={() => setViewAsUser(user.userId)}>
+                          <DropdownMenuItem key={user.userId} onSelect={() => setViewAsUser(user.userId)} className="font-thin">
                             {user.displayName}
                           </DropdownMenuItem>
                         ))}
@@ -214,8 +215,8 @@ export function Sidebar() {
                 
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                    <Link href="/login">
-                        <GoogleSymbol name="logout" className="mr-2 text-lg" />
+                    <Link href="/login" className="font-thin">
+                        <GoogleSymbol name="logout" className="mr-2 text-lg" weight={100} />
                         <span>Logout</span>
                     </Link>
                 </DropdownMenuItem>
