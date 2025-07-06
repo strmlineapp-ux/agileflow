@@ -788,7 +788,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                 collection.viewMode === 'detailed' && "flex flex-wrap -m-2"
                             )}>
                             {collectionBadges.map((badge, index) => (
-                                <Draggable key={`${badge.id}::${collection.id}`} draggableId={`${badge.id}::${collection.id}`} index={index} isDragDisabled={isSharedPreview}>
+                                <Draggable key={`${badge.id}::${collection.id}`} draggableId={`${badge.id}::${collection.id}`} index={index} isDragDisabled={isSharedPreview} ignoreContainerClipping={false}>
                                     {(provided, snapshot) => (
                                     <div 
                                       ref={provided.innerRef} 
@@ -1286,7 +1286,7 @@ export const BadgeManagement = ({ team, tab }: { team: Team, tab: AppTab }) => {
                                 )}
                             >
                                 {displayedCollections.map((collection, index) => (
-                                    <Draggable key={collection.id} draggableId={collection.id} index={index}>
+                                    <Draggable key={collection.id} draggableId={collection.id} index={index} ignoreContainerClipping={false}>
                                         {(provided, snapshot) => (
                                             <div
                                                 ref={provided.innerRef}
@@ -1359,7 +1359,7 @@ export const BadgeManagement = ({ team, tab }: { team: Team, tab: AppTab }) => {
                                         <div className="space-y-2">
                                             {sharedCollectionsFromOthers.map((collection, index) => {
                                                 return (
-                                                    <Draggable key={collection.id} draggableId={collection.id} index={index}>
+                                                    <Draggable key={collection.id} draggableId={collection.id} index={index} ignoreContainerClipping={false}>
                                                         {(provided, snapshot) => (
                                                             <div 
                                                                 ref={provided.innerRef} 
@@ -1432,3 +1432,5 @@ export const BadgeManagement = ({ team, tab }: { team: Team, tab: AppTab }) => {
         </DragDropContext>
     );
 }
+
+    

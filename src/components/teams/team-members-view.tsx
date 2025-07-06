@@ -99,7 +99,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                       className="flex flex-wrap -m-3"
                     >
                         {teamMembers.map((member, index) => (
-                            <Draggable key={member.userId} draggableId={member.userId} index={index}>
+                            <Draggable key={member.userId} draggableId={member.userId} index={index} ignoreContainerClipping={false}>
                               {(provided, snapshot) => (
                                 <div
                                   ref={provided.innerRef}
@@ -120,3 +120,5 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
       </DragDropContext>
     );
 }
+
+    

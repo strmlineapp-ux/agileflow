@@ -117,7 +117,7 @@ const AddMemberToTeamButton = ({ usersToAdd, onAdd, teamName }: { usersToAdd: Us
 
 const MemberCard = ({ user, index, onRemove, onSetAdmin, isTeamAdmin }: { user: User; index: number; onRemove: (userId: string) => void; onSetAdmin: (userId: string) => void; isTeamAdmin: boolean }) => {
     return (
-        <Draggable draggableId={`user-${user.userId}`} index={index} type="user-card">
+        <Draggable draggableId={`user-${user.userId}`} index={index} type="user-card" ignoreContainerClipping={false}>
         {(provided, snapshot) => (
             <div
                 ref={provided.innerRef}
@@ -546,7 +546,7 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
                     {...provided.droppableProps}
                 >
                     {teams.map((team, index) => (
-                         <Draggable key={team.id} draggableId={team.id} index={index}>
+                         <Draggable key={team.id} draggableId={team.id} index={index} ignoreContainerClipping={false}>
                             {(provided, snapshot) => (
                                 <div
                                     ref={provided.innerRef}
@@ -588,3 +588,5 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
     </DragDropContext>
   );
 }
+
+    

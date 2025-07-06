@@ -342,7 +342,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                     {...provided.droppableProps}
                 >
                     {calendars.map((calendar, index) => (
-                        <Draggable key={calendar.id} draggableId={calendar.id} index={index}>
+                        <Draggable key={calendar.id} draggableId={calendar.id} index={index} ignoreContainerClipping={false}>
                             {(provided, snapshot) => (
                                 <div
                                     ref={provided.innerRef}
@@ -385,3 +385,5 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
     </DragDropContext>
   );
 }
+
+    

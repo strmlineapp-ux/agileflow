@@ -105,7 +105,7 @@ const UserAssignmentCard = ({ user, index, onRemove, isGroupAdmin, onSetGroupAdm
 
   if (isDraggable && index !== undefined && draggableId) {
     return (
-      <Draggable draggableId={draggableId} index={index} type="user-card">
+      <Draggable draggableId={draggableId} index={index} type="user-card" ignoreContainerClipping={false}>
         {(provided, snapshot) => (
           <div
             ref={provided.innerRef}
@@ -205,14 +205,12 @@ function AdminGroupCard({
   group,
   users, 
   onUpdate, 
-  onDelete,
-  isDragging
+  onDelete
 }: { 
   group: AdminGroup; 
   users: User[]; 
   onUpdate: (updatedGroup: AdminGroup) => void;
   onDelete: () => void;
-  isDragging?: boolean;
 }) {
     const { toast } = useToast();
     const { updateUser } = useUser();
@@ -301,7 +299,7 @@ function AdminGroupCard({
     };
 
     return (
-        <Card className={cn("flex flex-col h-full bg-transparent", isDragging && "shadow-xl")}>
+        <Card className="flex flex-col h-full bg-transparent">
             <CardHeader>
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
@@ -672,8 +670,8 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
             
             <StrictModeDroppable droppableId="admin-groups-list" type="group-card" isDropDisabled={false} isCombineEnabled={false}>
               {(provided) => (
-                  <div ref={provided.innerRef} {...provided.droppableProps} className="flex flex-wrap gap-6">
-                      <div className="basis-full md:basis-[calc(50%-0.75rem)] lg:basis-[calc(33.333%-1rem)] flex-grow-0">
+                  <div ref={provided.innerRef} {...provided.droppableProps} className="flex flex-wrap -m-3">
+                      <div className="p-3 basis-full md:basis-1/2 lg:basis-1/3">
                         <Card className="flex flex-col h-full bg-transparent">
                             <CardHeader>
                               <div className="flex items-center gap-2">
@@ -709,15 +707,15 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                       </div>
 
                     {appSettings.adminGroups.map((group, index) => (
-                      <Draggable key={group.id} draggableId={group.id} index={index} type="group-card">
+                      <Draggable key={group.id} draggableId={group.id} index={index} type="group-card" ignoreContainerClipping={false}>
                         {(provided, snapshot) => (
                           <div 
                             ref={provided.innerRef} 
                             {...provided.draggableProps} 
                             {...provided.dragHandleProps} 
-                            className="basis-full md:basis-[calc(50%-0.75rem)] lg:basis-[calc(33.333%-1rem)] flex-grow-0"
+                            className="p-3 basis-full md:basis-1/2 lg:basis-1/3"
                           >
-                            <AdminGroupCard group={group} users={users} onUpdate={handleUpdateAdminGroup} onDelete={() => handleDeleteAdminGroup(group)} isDragging={snapshot.isDragging} />
+                            <AdminGroupCard group={group} users={users} onUpdate={handleUpdateAdminGroup} onDelete={() => handleDeleteAdminGroup(group)} />
                           </div>
                         )}
                       </Draggable>
@@ -1304,19 +1302,19 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                         <div
                             ref={provided.innerRef}
                             {...provided.droppableProps}
-                            className="flex flex-wrap gap-4"
+                            className="flex flex-wrap -m-2"
                         >
                             {appSettings.pages.map((page, index) => {
                                 const isPinned = pinnedIds.includes(page.id);
                                 return (
-                                    <Draggable key={page.id} draggableId={page.id} index={index} isDragDisabled={isPinned}>
+                                    <Draggable key={page.id} draggableId={page.id} index={index} isDragDisabled={isPinned} ignoreContainerClipping={false}>
                                         {(provided, snapshot) => (
                                             <div
                                                 ref={provided.innerRef}
                                                 {...provided.draggableProps}
                                                 {...provided.dragHandleProps}
                                                 className={cn(
-                                                    "basis-full sm:basis-[calc(50%-0.5rem)] md:basis-[calc(33.333%-0.667rem)] lg:basis-[calc(25%-0.75rem)] xl:basis-[calc(20%-0.8rem)] flex-grow-0",
+                                                    "p-2 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5",
                                                     isPinned && "opacity-70"
                                                 )}
                                             >
@@ -1586,15 +1584,15 @@ export const TabsManagement = ({ tab }: { tab: AppTab }) => {
                 </div>
                 <StrictModeDroppable droppableId="tabs-list" isDropDisabled={false}>
                     {(provided) => (
-                        <div {...provided.droppableProps} ref={provided.innerRef} className="flex flex-wrap gap-6">
+                        <div {...provided.droppableProps} ref={provided.innerRef} className="flex flex-wrap -m-3">
                             {appSettings.tabs.map((appTab, index) => (
-                                <Draggable key={appTab.id} draggableId={appTab.id} index={index}>
+                                <Draggable key={appTab.id} draggableId={appTab.id} index={index} ignoreContainerClipping={false}>
                                     {(provided, snapshot) => (
                                         <div
                                             ref={provided.innerRef}
                                             {...provided.draggableProps}
                                             {...provided.dragHandleProps}
-                                            className="basis-full md:basis-[calc(50%-0.75rem)] lg:basis-[calc(33.333%-1rem)] flex-grow-0"
+                                            className="p-3 basis-full md:basis-1/2 lg:basis-1/3"
                                         >
                                             <TabCard
                                                 tab={appTab}
@@ -1686,3 +1684,5 @@ const AdminPageSkeleton = () => (
       </div>
     </div>
 );
+
+    
