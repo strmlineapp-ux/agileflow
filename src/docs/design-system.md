@@ -87,11 +87,13 @@ This is the consistent reference pattern for allowing a user to change both an i
 ---
 
 ### 7. Entity Sharing & Linking
-This is the application's required reference pattern for allowing a single entity (like a **Team** or **Badge Collection**) to be managed, shared with other users/teams, and linked into different contexts while maintaining a single source of truth.
+This pattern describes how a single entity (like a **Team** or **Badge Collection**) can exist in multiple contexts while maintaining a single source of truth. It works in tandem with the **Draggable Card Management** pattern.
 
 - **Mechanism**:
-    - **Sharing**: The owner of an item can share it with all other users by dragging its card from the main management board and dropping it into the "Shared Items" side panel. This action sets an `isShared` flag on the item but **does not remove it from the owner's board**.
-    - **Linking**: The "Shared Items" panel acts as a discovery pool. Other users can see shared items in this panel and drag them onto their own management board. This creates a *link* to the original item, not a copy.
+    - **Sharing via Side Panel**: The primary UI for sharing is a side panel that acts as a "discovery pool". The owner of an item can share it by dragging its card from their main management board and dropping it into this "Shared Items" panel.
+        - **Behavior**: This action sets an `isShared` flag on the item but **does not remove it from the owner's board**. The item's visual state updates to show it is shared.
+        - **Side Panel Content**: The side panel displays all items shared by *other* users/teams, allowing the current user to discover and link them. It does **not** show items that the current user already has on their own management board.
+    - **Linking**: A user can link a shared item to their own context by dragging it from the "Shared Items" panel and dropping it onto their management board. This creates a *link* to the original item, not a copy.
 - **Visual Cues**:
   - **Owned & Shared Externally (`upload`)**: An item created by the current user/team that has been explicitly shared with others is marked with an `upload` icon overlay. This indicates it is the "source of truth." **The color of this icon badge matches the owner's color.**
   - **Internally Linked (`change_circle`)**: An item that is used in multiple places within the *same* context (e.g., a badge appearing in two collections on one team's board) is marked with a `change_circle` icon overlay on its linked instances. **The color of this icon badge matches the owner's color.**
@@ -109,7 +111,7 @@ This is the application's required reference pattern for allowing a single entit
 ---
 
 ### 8. Draggable Card Management (The Gold Standard)
-This is the application's perfected, gold-standard pattern for managing a collection of entities displayed as cards. It provides a fluid, intuitive, and grid-responsive way for users to reorder and duplicate items.
+This is the application's perfected, gold-standard pattern for managing a collection of entities displayed as cards. It provides a fluid, intuitive, and grid-responsive way for users to reorder, duplicate, and assign items. It is the required pattern for managing Pages, Calendars, Teams, Admin Groups, and Badge Collections.
 
 -   **Layout**: Entities are presented in a responsive grid of cards. To ensure stability during drag operations, especially across multiple rows, the container must use a `flex flex-wrap` layout instead of CSS Grid. Each draggable card item is then given a `basis` property (e.g., `basis-full md:basis-[calc(50%-0.75rem)]`) to create the responsive columns. **Crucially, `flex-grow-0` must be used on these items**, as this prevents the remaining items in a row from expanding and causing the grid to reflow unstably when an item is being dragged.
 -   **Visual Feedback**: To provide feedback without disrupting layout, visual changes (like a `shadow`) should be applied directly to the inner component based on the `snapshot.isDragging` prop provided by `react-beautiful-dnd`. The draggable wrapper itself should remain untouched.
@@ -132,6 +134,9 @@ This is the application's perfected, gold-standard pattern for managing a collec
 -   **Drag-to-Duplicate**:
     -   **Interaction**: A designated "Add New" icon (`<Button>`) acts as a drop zone. While a card is being dragged, this zone becomes highlighted to indicate it can accept a drop.
     -   **Behavior**: Dropping any card (pinned or not) onto this zone creates a deep, independent copy of the original. The new card is given a unique ID, a modified name (e.g., with `(Copy)`), and is placed immediately after the original in the list.
+-   **Drag-to-Assign**: This pattern allows sub-items (like **Users** or **Badges**) to be moved between different parent cards.
+    - **Interaction**: A user can drag an item (e.g., a User) from one card's list.
+    - **Behavior**: As the item is dragged over another card, that card's drop zone becomes highlighted. Dropping the item assigns it to the new card's collection. The original item may be removed or remain, depending on the context (e.g., assigning a user to a new admin group might not remove them from the old one). This is handled by the `onDragEnd` logic.
 -   **Layout Stability**: To prevent "janky" or shifting layouts during a drag operation (especially when dragging an item out of one card and over another), ensure that the container cards (e.g., `TeamCard`) maintain a consistent height. This is achieved by making the card a `flex flex-col` container and giving its main content area `flex-grow` to make it fill the available space, even when a draggable item is temporarily removed. A `ScrollArea` can be used within the content to manage overflow if the list is long.
 -   **Application**: This is the required pattern for managing Pages, Calendars, Teams, Admin Groups, and Badge Collections.
 
@@ -187,7 +192,7 @@ When a **high-risk destructive action** requires user confirmation (like deletin
 ---
 
 ### 13. Responsive Header Controls
-This pattern describes how a group of controls in a page header can intelligently adapt to changes in the layout, such as the opening and closing of a side panel.
+This pattern describes how a group of controls in a page header can intelligently adapt to changes in the layout, such as the opening and closing of a side panel. It is the required header pattern for pages that use the **Draggable Card Management** and **Entity Sharing & Linking** patterns.
 
 - **Trigger**: Expanding or collapsing a panel that affects the main content area's width.
 - **Behavior**:
@@ -271,3 +276,4 @@ This is the single source of truth for indicating user interaction state across 
     - **Placement**: This is context-dependent. Color-pickers are typically placed on the bottom-right corner of their parent icon. Ownership status icons are typically placed on the top-left corner to create visual balance.
     - **Application**: Used for displaying a user's admin group status, a shared status on a role icon, or a `share` icon on a shared Badge.
 -   **Badges in Assorted View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
+
