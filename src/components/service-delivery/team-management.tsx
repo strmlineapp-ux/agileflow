@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
@@ -116,7 +115,6 @@ function TeamCard({
     onAddUser,
     onSetAdmin,
     dragHandleProps,
-    isSharedPreview = false,
 }: { 
     team: Team, 
     users: User[],
@@ -127,9 +125,8 @@ function TeamCard({
     onAddUser: (teamId: string, userId: string) => void;
     onSetAdmin: (teamId: string, userId: string) => void;
     dragHandleProps?: any,
-    isSharedPreview?: boolean,
 }) {
-    const { viewAsUser, teams, appSettings } = useUser();
+    const { viewAsUser } = useUser();
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isEditingName, setIsEditingName] = useState(false);
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
@@ -138,15 +135,15 @@ function TeamCard({
     const addUserSearchInputRef = useRef<HTMLInputElement>(null);
     
     const isOwned = useMemo(() => {
-        if (isSharedPreview || !viewAsUser) return false;
+        if (!viewAsUser) return false;
         if(viewAsUser.isAdmin) return true;
         
         const owner = team.owner || { type: 'team', id: team.id }; // Fallback for older data
 
         switch (owner.type) {
             case 'team':
-                const ownerTeam = teams.find(t => t.id === owner.id);
-                return ownerTeam?.teamAdmins?.includes(viewAsUser.userId) || false;
+                const ownerTeam = users.find(u => u.userId === owner.id); // This is wrong, owner.id is a team ID
+                return team.teamAdmins?.includes(viewAsUser.userId) || false;
             case 'admin_group':
                 return (viewAsUser.roles || []).includes(owner.name);
             case 'user':
@@ -154,7 +151,7 @@ function TeamCard({
             default:
                 return false;
         }
-    }, [team.owner, teams, viewAsUser, isSharedPreview]);
+    }, [team, users, viewAsUser]);
 
     const canManageAdmins = isOwned || (team.teamAdmins || []).includes(viewAsUser.userId);
 
@@ -185,37 +182,9 @@ function TeamCard({
         if (e.key === 'Enter') handleSaveName();
         else if (e.key === 'Escape') setIsEditingName(false);
     };
-    
-    let shareIcon: string | null = null;
-    let shareIconTitle: string = '';
-    let shareIconColor: string | undefined = '#64748B';
-
-    if (team.isShared) {
-        const owner = team.owner || { type: 'team', id: team.id };
-        if(owner.type === 'team' && owner.id === team.id) { // Self-owned and shared
-            shareIcon = 'upload';
-            shareIconTitle = `Owned by this team and shared`;
-            shareIconColor = team.color;
-        } else if (owner.type !== 'team' || owner.id !== team.id) { // Owned by someone else
-            shareIcon = 'downloading';
-            if(owner.type === 'team') {
-                const ownerTeam = teams.find(t => t.id === owner.id);
-                shareIconTitle = `Shared from ${ownerTeam?.name || 'another team'}`;
-                shareIconColor = ownerTeam?.color;
-            } else if (owner.type === 'admin_group') {
-                const ownerGroup = appSettings.adminGroups.find(g => g.name === owner.name);
-                shareIconTitle = `Shared from ${ownerGroup?.name || 'an admin group'}`;
-                shareIconColor = ownerGroup?.color;
-            } else if (owner.type === 'user') {
-                const ownerUser = users.find(u => u.userId === owner.id);
-                shareIconTitle = `Shared by ${ownerUser?.displayName || 'a user'}`;
-                shareIconColor = ownerUser?.primaryColor;
-            }
-        }
-    }
 
     return (
-        <Card className="flex flex-col group bg-transparent relative">
+        <Card className="flex flex-col h-full group bg-transparent relative">
             <div {...dragHandleProps}>
                 <CardHeader>
                     <div className="flex items-start justify-between">
@@ -246,21 +215,6 @@ function TeamCard({
                                     <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdate(team.id, { color: c }); setIsColorPopoverOpen(false);}}></button>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={team.color} onChange={(e) => onUpdate(team.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
                                     </PopoverContent>
                                 </Popover>
-                                {shareIcon && team.isShared && (
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <div 
-                                                className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-card flex items-center justify-center text-white"
-                                                style={{ backgroundColor: shareIconColor }}
-                                            >
-                                                <GoogleSymbol name={shareIcon} style={{fontSize: '10px'}}/>
-                                            </div>
-                                        </TooltipTrigger>
-                                        <TooltipContent><p>{shareIconTitle}</p></TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                            )}
                             </div>
                             <div className="flex items-center gap-1 flex-1 min-w-0">
                                 {isEditingName && isOwned ? (
@@ -353,7 +307,7 @@ function TeamCard({
                                     snapshot.isDraggingOver && "ring-1 ring-border ring-inset"
                                 )}>
                                 {teamMembers.map((user, index) => (
-                                    <Draggable key={user.userId} draggableId={`user-${team.id}-${user.userId}`} index={index} isDragDisabled={!isOwned}>
+                                    <Draggable key={user.userId} draggableId={`user-${team.id}-${user.userId}`} index={index} isDragDisabled={!isOwned} ignoreContainerClipping={false}>
                                         {(provided, snapshot) => (
                                             <div
                                                 ref={provided.innerRef}
@@ -390,8 +344,6 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const titleInputRef = useRef<HTMLInputElement>(null);
     const title = appSettings.teamManagementLabel || tab.name;
-
-    const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
 
     useEffect(() => {
         if (isEditingTitle) titleInputRef.current?.focus();
@@ -485,32 +437,9 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
         setTeamToDelete(null);
     };
     
-    const ownedTeams = useMemo(() => teams.filter(team => {
-        if(viewAsUser.isAdmin) return true;
-        const owner = team.owner || { type: 'team', id: team.id };
-        if(owner.type === 'user') return owner.id === viewAsUser.userId;
-        if(owner.type === 'admin_group') return (viewAsUser.roles || []).includes(owner.name);
-        if(owner.type === 'team') {
-            const ownerTeam = teams.find(t => t.id === owner.id);
-            return (ownerTeam?.teamAdmins || []).includes(viewAsUser.userId);
-        }
-        return false;
-    }), [teams, viewAsUser]);
-
-    const ownedTeamIds = new Set(ownedTeams.map(t => t.id));
-    const sharedTeams = teams.filter(team => team.isShared && !ownedTeamIds.has(t.id));
-
     const onDragEnd = (result: DropResult) => {
         const { source, destination, draggableId, type } = result;
         if (!destination) return;
-
-        if (type === 'team-card' && destination.droppableId === 'shared-teams-panel') {
-            const teamToShare = teams.find(t => t.id === draggableId);
-            if (teamToShare && !teamToShare.isShared) {
-                handleToggleShare(teamToShare);
-            }
-            return;
-        }
 
         if (type === 'team-card' && destination.droppableId === 'duplicate-team-zone') {
             const teamToDuplicate = teams.find(t => t.id === draggableId);
@@ -530,14 +459,10 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
         }
         
         if (type === 'team-card' && source.droppableId === 'teams-list' && destination.droppableId === 'teams-list') {
-            const reorderedOwnedTeams = Array.from(ownedTeams);
-            const [movedItem] = reorderedOwnedTeams.splice(source.index, 1);
-            reorderedOwnedTeams.splice(destination.index, 0, movedItem);
-            
-            const currentOwnedTeamIds = new Set(reorderedOwnedTeams.map(t => t.id));
-            const otherTeams = teams.filter(t => !currentOwnedTeamIds.has(t.id));
-
-            reorderTeams([...reorderedOwnedTeams, ...otherTeams]);
+            const reorderedTeams = Array.from(teams);
+            const [movedItem] = reorderedTeams.splice(source.index, 1);
+            reorderedTeams.splice(destination.index, 0, movedItem);
+            reorderTeams(reorderedTeams);
             return;
         }
         
@@ -551,150 +476,78 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
 
     return (
         <DragDropContext onDragEnd={onDragEnd}>
-            <div className="flex gap-4">
-                <div className="flex-1 transition-all duration-300 flex flex-col gap-6">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            {isEditingTitle ? (
-                              <Input ref={titleInputRef} defaultValue={title} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
-                            ) : (
-                              <TooltipProvider>
-                                  <Tooltip>
-                                      <TooltipTrigger asChild>
-                                          <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{title}</h2>
-                                      </TooltipTrigger>
-                                      {tab.description && (
-                                          <TooltipContent><p className="max-w-xs">{tab.description}</p></TooltipContent>
-                                      )}
-                                  </Tooltip>
-                              </TooltipProvider>
-                            )}
-                            <StrictModeDroppable droppableId="duplicate-team-zone" type="team-card" isDropDisabled={false}>
-                                {(provided, snapshot) => (
-                                    <div
-                                        ref={provided.innerRef}
-                                        {...provided.droppableProps}
-                                        className={cn(
-                                            "rounded-full transition-all p-0.5",
-                                            snapshot.isDraggingOver && "ring-1 ring-border ring-inset"
-                                        )}
-                                    >
-                                        <TooltipProvider>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <Button variant="ghost" size="icon" className="rounded-full p-0" onClick={handleAddTeam}>
-                                                        <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
-                                                        <span className="sr-only">New Team or Drop to Duplicate</span>
-                                                    </Button>
-                                                </TooltipTrigger>
-                                                <TooltipContent><p>{snapshot.isDraggingOver ? 'Drop to Duplicate' : 'Add New Team'}</p></TooltipContent>
-                                            </Tooltip>
-                                        </TooltipProvider>
-                                    </div>
+            <div className="space-y-6">
+                <div className="flex items-center gap-2">
+                    {isEditingTitle ? (
+                      <Input ref={titleInputRef} defaultValue={title} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
+                    ) : (
+                      <TooltipProvider>
+                          <Tooltip>
+                              <TooltipTrigger asChild>
+                                  <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{title}</h2>
+                              </TooltipTrigger>
+                              {tab.description && (
+                                  <TooltipContent><p className="max-w-xs">{tab.description}</p></TooltipContent>
+                              )}
+                          </Tooltip>
+                      </TooltipProvider>
+                    )}
+                    <StrictModeDroppable droppableId="duplicate-team-zone" type="team-card" isDropDisabled={false}>
+                        {(provided, snapshot) => (
+                            <div
+                                ref={provided.innerRef}
+                                {...provided.droppableProps}
+                                className={cn(
+                                    "rounded-full transition-all p-0.5",
+                                    snapshot.isDraggingOver && "ring-1 ring-border ring-inset"
                                 )}
-                            </StrictModeDroppable>
-                        </div>
-                         <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)}>
-                                        <GoogleSymbol name="dynamic_feed" weight={100} />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent><p>Show Shared Teams</p></TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    </div>
-
-                    <StrictModeDroppable droppableId="teams-list" type="team-card" isDropDisabled={false}>
-                        {(provided, snapshot) => (
-                             <div className={cn("flex flex-wrap -m-3", snapshot.isDraggingOver && "ring-1 ring-border ring-inset rounded-lg")} ref={provided.innerRef} {...provided.droppableProps}>
-                                {ownedTeams.map((team, index) => (
-                                     <Draggable key={team.id} draggableId={team.id} index={index}>
-                                        {(provided, snapshot) => (
-                                            <div
-                                                ref={provided.innerRef}
-                                                {...provided.draggableProps}
-                                                className={cn(
-                                                    "p-3 basis-full md:basis-1/2 flex-grow-0 flex-shrink-0",
-                                                    isSharedPanelOpen ? "lg:basis-full" : "lg:basis-1/3"
-                                                )}
-                                            >
-                                                <TeamCard 
-                                                    team={team} 
-                                                    users={users}
-                                                    onUpdate={handleUpdate} 
-                                                    onDelete={handleDelete}
-                                                    onToggleShare={handleToggleShare}
-                                                    onRemoveUser={handleRemoveUserFromTeam}
-                                                    onAddUser={handleAddUserToTeam}
-                                                    onSetAdmin={handleSetAdmin}
-                                                    dragHandleProps={provided.dragHandleProps}
-                                                />
-                                            </div>
-                                        )}
-                                    </Draggable>
-                                ))}
-                                {provided.placeholder}
-                            </div>
-                        )}
-                    </StrictModeDroppable>
-                </div>
-                
-                <div className={cn(
-                    "transition-all duration-300",
-                    isSharedPanelOpen ? "w-96 p-2" : "w-0"
-                )}>
-                    <StrictModeDroppable droppableId="shared-teams-panel" type="team-card">
-                        {(provided, snapshot) => (
-                            <div 
-                                ref={provided.innerRef} 
-                                {...provided.droppableProps} 
-                                className={cn("h-full rounded-lg transition-all", snapshot.isDraggingOver && "ring-1 ring-border ring-inset")}
                             >
-                                <Card className={cn("transition-opacity duration-300 h-full bg-transparent", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
-                                    <CardHeader>
-                                        <CardTitle>Shared Teams</CardTitle>
-                                        <CardDescription>Drag an owned team here to share it with everyone.</CardDescription>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="space-y-2">
-                                            {sharedTeams.map((team, index) => {
-                                                return (
-                                                    <Draggable key={team.id} draggableId={team.id} index={index}>
-                                                        {(provided, snapshot) => (
-                                                            <div 
-                                                                ref={provided.innerRef} 
-                                                                {...provided.draggableProps} 
-                                                                className={cn("w-full cursor-grab", snapshot.isDragging && "shadow-xl opacity-80")}
-                                                            >
-                                                                <TeamCard 
-                                                                    dragHandleProps={provided.dragHandleProps}
-                                                                    team={team} 
-                                                                    users={users}
-                                                                    onUpdate={handleUpdate} 
-                                                                    onDelete={handleDelete}
-                                                                    onToggleShare={handleToggleShare}
-                                                                    onRemoveUser={handleRemoveUserFromTeam}
-                                                                    onAddUser={handleAddUserToTeam}
-                                                                    onSetAdmin={handleSetAdmin}
-                                                                    isSharedPreview={true}
-                                                                />
-                                                            </div>
-                                                        )}
-                                                    </Draggable>
-                                                )
-                                            })}
-                                            {provided.placeholder}
-                                            {sharedTeams.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">No teams are being shared.</p>}
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                                {provided.placeholder}
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="rounded-full p-0" onClick={handleAddTeam}>
+                                                <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
+                                                <span className="sr-only">New Team or Drop to Duplicate</span>
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>{snapshot.isDraggingOver ? 'Drop to Duplicate' : 'Add New Team'}</p></TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
                             </div>
                         )}
                     </StrictModeDroppable>
                 </div>
+
+                <StrictModeDroppable droppableId="teams-list" type="team-card" isDropDisabled={false}>
+                    {(provided) => (
+                         <div className="flex flex-wrap -m-3" ref={provided.innerRef} {...provided.droppableProps}>
+                            {teams.map((team, index) => (
+                                 <Draggable key={team.id} draggableId={team.id} index={index} ignoreContainerClipping={false}>
+                                    {(provided, snapshot) => (
+                                        <div
+                                            ref={provided.innerRef}
+                                            {...provided.draggableProps}
+                                            className="p-3 basis-full md:basis-1/2 lg:basis-1/3 flex-grow-0 flex-shrink-0"
+                                        >
+                                            <TeamCard 
+                                                team={team} 
+                                                users={users}
+                                                onUpdate={handleUpdate} 
+                                                onDelete={handleDelete}
+                                                onToggleShare={handleToggleShare}
+                                                onRemoveUser={handleRemoveUserFromTeam}
+                                                onAddUser={handleAddUserToTeam}
+                                                onSetAdmin={handleSetAdmin}
+                                                dragHandleProps={provided.dragHandleProps}
+                                            />
+                                        </div>
+                                    )}
+                                </Draggable>
+                            ))}
+                            {provided.placeholder}
+                        </div>
+                    )}
+                </StrictModeDroppable>
             </div>
             <Dialog open={!!teamToDelete} onOpenChange={() => setTeamToDelete(null)}>
                 <DialogContent className="max-w-md">
