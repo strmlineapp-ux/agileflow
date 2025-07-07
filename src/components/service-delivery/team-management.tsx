@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
@@ -218,8 +219,8 @@ function TeamCard({
     }
 
     return (
-        <Card className={cn("flex flex-col h-full bg-transparent group relative")}>
-            <div {...dragHandleProps}>
+        <Card className="flex flex-col group bg-transparent relative">
+            <div {...dragHandleProps} onClick={onToggleExpand} className="cursor-pointer">
                 <CardHeader>
                     <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -283,17 +284,6 @@ function TeamCard({
                             </div>
                         </div>
                         <div className="flex items-center">
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={(e) => { e.stopPropagation(); onToggleExpand(); }}>
-                                            <GoogleSymbol name={isExpanded ? 'unfold_less' : 'unfold_more'} weight={100} />
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent><p>{isExpanded ? 'Collapse' : 'Expand'}</p></TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-
                             <Popover open={isAddUserPopoverOpen} onOpenChange={setIsAddUserPopoverOpen}>
                                 <TooltipProvider>
                                     <Tooltip>
