@@ -3,7 +3,7 @@
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useUser } from '@/context/user-context';
-import { type Team, type User, type AppTab, type AppPage } from '@/types';
+import { type Team, type User, type AppTab, type AppPage, type AppSettings } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle as UIDialogTitle } from '@/components/ui/dialog';
@@ -41,13 +41,42 @@ const predefinedColors = [
     '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
 ];
 
-function UserCard({ user, onRemove, teamId }: { user: User; onRemove: (teamId: string, userId: string) => void; teamId: string; }) {
+function UserCard({ 
+    user, 
+    onRemove, 
+    teamId,
+    isTeamAdmin,
+    onSetAdmin,
+    canManageAdmins,
+}: { 
+    user: User; 
+    onRemove: (teamId: string, userId: string) => void; 
+    teamId: string;
+    isTeamAdmin: boolean;
+    onSetAdmin: (userId: string) => void;
+    canManageAdmins: boolean;
+}) {
   return (
-      <div className="group relative flex items-center gap-2 p-1 rounded-md">
-          <Avatar className="h-8 w-8">
-              <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
-              <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-          </Avatar>
+      <div 
+        className={cn(
+            "group relative flex items-center gap-2 p-1 rounded-md transition-colors",
+            canManageAdmins && "cursor-pointer hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
+        )}
+        onClick={() => canManageAdmins && onSetAdmin(user.userId)}
+        onKeyDown={(e) => { if(canManageAdmins && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onSetAdmin(user.userId);}}}
+        tabIndex={canManageAdmins ? 0 : -1}
+      >
+          <div className="relative">
+            <Avatar className="h-8 w-8">
+                <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
+                <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+            </Avatar>
+             {isTeamAdmin && (
+              <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background flex items-center justify-center bg-primary text-primary-foreground">
+                  <GoogleSymbol name="key" style={{fontSize: '10px'}}/>
+              </div>
+            )}
+          </div>
           <div>
               <p className="font-medium text-sm">{user.displayName}</p>
               <p className="text-xs text-muted-foreground">{user.title}</p>
@@ -59,7 +88,7 @@ function UserCard({ user, onRemove, teamId }: { user: User; onRemove: (teamId: s
                         variant="ghost"
                         size="icon"
                         className="absolute top-0 right-0 h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={() => onRemove(teamId, user.userId)}
+                        onClick={(e) => { e.stopPropagation(); onRemove(teamId, user.userId);}}
                     >
                         <GoogleSymbol name="cancel" className="text-lg" weight={100} />
                     </Button>
@@ -93,6 +122,7 @@ function TeamCard({
     isSharedPreview?: boolean,
 }) {
     const { viewAsUser, teams, appSettings } = useUser();
+    const { toast } = useToast();
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isEditingName, setIsEditingName] = useState(false);
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
@@ -101,6 +131,24 @@ function TeamCard({
     const addUserSearchInputRef = useRef<HTMLInputElement>(null);
     const [isExpanded, setIsExpanded] = useState(false);
 
+    const isOwned = useMemo(() => {
+        if (isSharedPreview || !viewAsUser) return false;
+        
+        switch (team.owner.type) {
+            case 'team':
+                const ownerTeam = teams.find(t => t.id === team.owner.id);
+                return ownerTeam?.teamAdmins?.includes(viewAsUser.userId) || viewAsUser.isAdmin;
+            case 'admin_group':
+                return viewAsUser.isAdmin || (viewAsUser.roles || []).includes(team.owner.name);
+            case 'user':
+                const ownerUser = users.find(u => u.userId === team.owner.id);
+                return ownerUser?.userId === viewAsUser.userId
+            default:
+                return false;
+        }
+    }, [team.owner, teams, users, viewAsUser, isSharedPreview]);
+
+    const canManageAdmins = isOwned || (team.teamAdmins || []).includes(viewAsUser.userId);
 
     const teamMembers = useMemo(() => team.members.map(id => users.find(u => u.userId === id)).filter((u): u is User => !!u), [team.members, users]);
     const availableUsersToAdd = useMemo(() => users.filter(u => !team.members.includes(u.userId) && u.displayName.toLowerCase().includes(userSearch.toLowerCase())), [users, team.members, userSearch]);
@@ -129,30 +177,49 @@ function TeamCard({
         if (e.key === 'Enter') handleSaveName();
         else if (e.key === 'Escape') setIsEditingName(false);
     };
+
+     const handleSetAdmin = (userId: string) => {
+        if (!canManageAdmins) return;
+        const currentAdmins = team.teamAdmins || [];
+        const isAlreadyAdmin = currentAdmins.includes(userId);
+        
+        if (isAlreadyAdmin && currentAdmins.length === 1) {
+            toast({ variant: 'destructive', title: 'Cannot Remove Last Admin', description: 'A team must have at least one admin.' });
+            return;
+        }
+
+        const newAdmins = isAlreadyAdmin
+            ? currentAdmins.filter(id => id !== userId)
+            : [...currentAdmins, userId];
+            
+        onUpdate(team.id, { teamAdmins: newAdmins });
+    };
     
     let shareIcon: string | null = null;
     let shareIconTitle: string = '';
     let shareIconColor: string | undefined = '#64748B';
 
-    if (team.owner.type === 'team' && team.owner.id === team.id && team.isShared) { // Self-owned and shared
-        shareIcon = 'upload';
-        shareIconTitle = `Owned by this team and shared`;
-        shareIconColor = team.color;
-    } else if (team.owner.type !== 'team' || team.owner.id !== team.id) { // Owned by someone else
-        shareIcon = 'downloading';
+    if (team.isShared) {
         const owner = team.owner;
-        if(owner.type === 'team') {
-            const ownerTeam = teams.find(t => t.id === owner.id);
-            shareIconTitle = `Owned by ${ownerTeam?.name || 'another team'}`;
-            shareIconColor = ownerTeam?.color;
-        } else if (owner.type === 'admin_group') {
-            const ownerGroup = appSettings.adminGroups.find(g => g.name === owner.name);
-            shareIconTitle = `Owned by ${ownerGroup?.name || 'an admin group'}`;
-            shareIconColor = ownerGroup?.color;
-        } else if (owner.type === 'user') {
-            const ownerUser = users.find(u => u.userId === owner.id);
-            shareIconTitle = `Owned by ${ownerUser?.displayName || 'a user'}`;
-            shareIconColor = ownerUser?.primaryColor;
+        if(owner.type === 'team' && owner.id === team.id) { // Self-owned and shared
+            shareIcon = 'upload';
+            shareIconTitle = `Owned by this team and shared`;
+            shareIconColor = team.color;
+        } else if (owner.type !== 'team' || owner.id !== team.id) { // Owned by someone else
+            shareIcon = 'downloading';
+            if(owner.type === 'team') {
+                const ownerTeam = teams.find(t => t.id === owner.id);
+                shareIconTitle = `Shared from ${ownerTeam?.name || 'another team'}`;
+                shareIconColor = ownerTeam?.color;
+            } else if (owner.type === 'admin_group') {
+                const ownerGroup = appSettings.adminGroups.find(g => g.name === owner.name);
+                shareIconTitle = `Shared from ${ownerGroup?.name || 'an admin group'}`;
+                shareIconColor = ownerGroup?.color;
+            } else if (owner.type === 'user') {
+                const ownerUser = users.find(u => u.userId === owner.id);
+                shareIconTitle = `Shared by ${ownerUser?.displayName || 'a user'}`;
+                shareIconColor = ownerUser?.primaryColor;
+            }
         }
     }
 
@@ -163,25 +230,32 @@ function TeamCard({
                     <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3 flex-1 min-w-0">
                             <div className="relative">
-                                 <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                                 <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <button onClick={(e) => e.stopPropagation()} className="h-12 w-12 flex items-center justify-center">
+                                                <GoogleSymbol name={team.icon} className="text-6xl" weight={100} />
+                                            </button>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>Team Icon</p></TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                                <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
                                     <TooltipProvider>
                                         <Tooltip>
                                             <TooltipTrigger asChild>
-                                                <button onClick={(e) => e.stopPropagation()} className="h-12 w-12 flex items-center justify-center">
-                                                    <GoogleSymbol name={team.icon} className="text-6xl" weight={100} />
-                                                </button>
+                                                <PopoverTrigger asChild onClick={(e) => e.stopPropagation()} disabled={!isOwned}>
+                                                    <button className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background", isOwned && "cursor-pointer")} style={{ backgroundColor: team.color }} />
+                                                </PopoverTrigger>
                                             </TooltipTrigger>
-                                            <TooltipContent><p>Team Icon</p></TooltipContent>
+                                            <TooltipContent><p>Change Color</p></TooltipContent>
                                         </Tooltip>
                                     </TooltipProvider>
-                                    <PopoverTrigger asChild onClick={(e) => e.stopPropagation()}>
-                                        <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background cursor-pointer" style={{ backgroundColor: team.color }} />
-                                    </PopoverTrigger>
                                     <PopoverContent className="w-auto p-2">
                                     <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdate(team.id, { color: c }); setIsColorPopoverOpen(false);}}></button>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={team.color} onChange={(e) => onUpdate(team.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
                                     </PopoverContent>
                                 </Popover>
-                                {team.isShared && shareIcon && (
+                                {shareIcon && (
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
@@ -198,7 +272,7 @@ function TeamCard({
                             )}
                             </div>
                             <div className="flex items-center gap-1 flex-1 min-w-0">
-                                {isEditingName ? (
+                                {isEditingName && isOwned ? (
                                     <Input
                                         ref={nameInputRef}
                                         defaultValue={team.name}
@@ -208,7 +282,7 @@ function TeamCard({
                                         className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
                                     />
                                 ) : (
-                                    <CardTitle className={cn("font-headline text-xl font-thin truncate")} onClick={(e) => {e.stopPropagation(); setIsEditingName(true)}}>
+                                    <CardTitle className={cn("font-headline text-xl font-thin truncate", isOwned && "cursor-pointer")} onClick={(e) => {e.stopPropagation(); if (isOwned) setIsEditingName(true)}}>
                                         {team.name}
                                     </CardTitle>
                                 )}
@@ -219,7 +293,7 @@ function TeamCard({
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild onClick={(e) => e.stopPropagation()}>
-                                            <PopoverTrigger asChild>
+                                            <PopoverTrigger asChild disabled={!isOwned}>
                                                 <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary"><GoogleSymbol name="group_add" weight={100} /></Button>
                                             </PopoverTrigger>
                                         </TooltipTrigger>
@@ -256,7 +330,7 @@ function TeamCard({
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild onClick={(e) => e.stopPropagation()}>
-                                             <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><GoogleSymbol name="more_vert" weight={100} /></Button></DropdownMenuTrigger>
+                                             <DropdownMenuTrigger asChild disabled={!isOwned}><Button variant="ghost" size="icon"><GoogleSymbol name="more_vert" weight={100} /></Button></DropdownMenuTrigger>
                                         </TooltipTrigger>
                                         <TooltipContent><p>More Options</p></TooltipContent>
                                     </Tooltip>
@@ -279,17 +353,17 @@ function TeamCard({
              {isExpanded && (
                 <CardContent className="flex-grow pt-0">
                     <ScrollArea className="max-h-48 pr-2">
-                        <StrictModeDroppable droppableId={team.id} type="user-card">
+                        <StrictModeDroppable droppableId={team.id} type="user-card" isDropDisabled={!isOwned}>
                             {(provided, snapshot) => (
                                 <div
                                     ref={provided.innerRef}
                                     {...provided.droppableProps}
                                     className={cn(
-                                        "min-h-[60px] rounded-md p-2 -m-2 space-y-1",
+                                        "min-h-[60px] rounded-md p-2 -m-2 space-y-1 transition-colors",
                                         snapshot.isDraggingOver && "ring-1 ring-border ring-inset"
                                     )}>
                                     {teamMembers.map((user, index) => (
-                                        <Draggable key={user.userId} draggableId={`user-${team.id}-${user.userId}`} index={index} ignoreContainerClipping={false}>
+                                        <Draggable key={user.userId} draggableId={`user-${team.id}-${user.userId}`} index={index} isDragDisabled={!isOwned}>
                                             {(provided, snapshot) => (
                                                 <div
                                                     ref={provided.innerRef}
@@ -297,7 +371,14 @@ function TeamCard({
                                                     {...provided.dragHandleProps}
                                                     className={cn(snapshot.isDragging && "opacity-50 shadow-lg")}
                                                 >
-                                                <UserCard user={user} teamId={team.id} onRemove={onRemoveUser} />
+                                                <UserCard 
+                                                    user={user} 
+                                                    teamId={team.id} 
+                                                    onRemove={onRemoveUser}
+                                                    isTeamAdmin={(team.teamAdmins || []).includes(user.userId)}
+                                                    onSetAdmin={handleSetAdmin}
+                                                    canManageAdmins={canManageAdmins}
+                                                />
                                                 </div>
                                             )}
                                         </Draggable>
@@ -378,8 +459,19 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
     const handleRemoveUserFromTeam = (teamId: string, userId: string) => {
         const team = teams.find(t => t.id === teamId);
         if (!team) return;
+        
+        let newTeamAdmins = team.teamAdmins || [];
+        if (newTeamAdmins.includes(userId)) {
+             newTeamAdmins = newTeamAdmins.filter(id => id !== userId);
+        }
+        
+        if (team.members.includes(userId) && newTeamAdmins.length === 0 && team.members.length > 1) {
+            const nextAdmin = team.members.find(id => id !== userId);
+            if (nextAdmin) newTeamAdmins.push(nextAdmin);
+        }
+
         const updatedMembers = team.members.filter(id => id !== userId);
-        updateTeam(teamId, { members: updatedMembers });
+        updateTeam(teamId, { members: updatedMembers, teamAdmins: newTeamAdmins });
         toast({ title: 'User Removed' });
     };
 
@@ -390,7 +482,7 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
         setTeamToDelete(null);
     };
     
-    const ownedTeams = teams.filter(team => {
+    const ownedTeams = useMemo(() => teams.filter(team => {
         if(viewAsUser.isAdmin) return true;
         const owner = team.owner;
         if(owner.type === 'user') return owner.id === viewAsUser.userId;
@@ -400,7 +492,7 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
             return (ownerTeam?.teamAdmins || []).includes(viewAsUser.userId);
         }
         return false;
-    });
+    }), [teams, viewAsUser]);
 
     const ownedTeamIds = new Set(ownedTeams.map(t => t.id));
     const sharedTeams = teams.filter(team => team.isShared && !ownedTeamIds.has(team.id));
@@ -446,6 +538,7 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
             const otherTeams = teams.filter(t => !currentOwnedTeamIds.has(t.id));
 
             reorderTeams([...reorderedOwnedTeams, ...otherTeams]);
+            return;
         }
         
         // Handle adding a user to a team
@@ -459,7 +552,6 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
             if (!destTeam) return;
 
             if (destTeam.members.includes(userId)) {
-                toast({ title: 'User Already in Team' });
                 return;
             }
             
@@ -575,7 +667,7 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
                                     </CardHeader>
                                     <CardContent>
                                         <div className="space-y-2">
-                                            {sharedTeams.map((team, index) => {
+                                            {sharedTeams.map((team) => {
                                                 return (
                                                     <TeamCard 
                                                         key={team.id}
@@ -594,6 +686,7 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
                                         </div>
                                     </CardContent>
                                 </Card>
+                                {provided.placeholder}
                             </div>
                         )}
                     </StrictModeDroppable>
