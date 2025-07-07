@@ -111,7 +111,7 @@ function EditableTimelineView({ timeline, onUpdate, onDelete }: {
   };
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="flex flex-col">
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
@@ -187,13 +187,11 @@ function EditableTimelineView({ timeline, onUpdate, onDelete }: {
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="p-0">
-        <div className="overflow-x-auto">
-          <div className="min-w-[2440px]">
-            <TimelineHourHeader />
-            <TimelineRow name="Row 1" />
-            <TimelineRow name="Row 2" />
-          </div>
+      <CardContent className="p-0 overflow-x-auto">
+        <div className="min-w-[2440px]">
+          <TimelineHourHeader />
+          <TimelineRow name="Row 1" />
+          <TimelineRow name="Row 2" />
         </div>
       </CardContent>
     </Card>
