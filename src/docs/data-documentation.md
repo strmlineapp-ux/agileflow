@@ -39,23 +39,27 @@ Access to every page and tab in the application is controlled by a dynamic rules
 
 **How It Works:**
 
-1.  **The `access` Object**: Every `AppPage` and `AppTab` object can have an optional `access` property. If this property is not defined or all of its arrays are empty, the item is considered **public** and is visible to all logged-in users.
+1.  **The `access` Object**: Every `AppPage` and `AppTab` object can have an optional `access` property that defines who can see it.
 
 2.  **The `hasAccess` Function**: A central function, `hasAccess`, located in `/src/lib/permissions.ts`, evaluates these rules for the currently logged-in user.
 
-3.  **The Rules**: Access is granted if **any** of the following conditions are met:
+3.  **Page Access Rules**: For an `AppPage`, access is granted if **any** of the following conditions are met:
     *   The user is a system administrator (`user.isAdmin === true`).
-    *   The user's ID is explicitly listed in the item's `access.users` array.
-    *   The user is a member of any team whose ID is in the item's `access.teams` array.
-    *   The user has a role (from an `AdminGroup`) that is listed in the item's `access.adminGroups` array.
+    *   The page has no `access` rules defined (it is public).
+    *   The user's ID is explicitly listed in the page's `access.users` array.
+    *   The user is a member of any team whose ID is in the page's `access.teams` array.
+    *   The user belongs to an `AdminGroup` whose ID is in the page's `access.adminGroups` array.
+
+4.  **Tab Access Rules (Simplified)**: For an `AppTab`, the logic is simpler to streamline configuration:
+    *   If a user can see the parent page, they can see the tab **unless** the tab has its own `access.adminGroups` rule.
+    *   If a tab has an `adminGroups` rule, it will **only** be visible to system administrators and members of those specific admin groups. This provides a simple way to create "admin-only" tabs on otherwise public pages.
 
 **Example Configurations (`mock-data.ts`):**
 
 ```typescript
-// Example of a page restricted to a team
+// Example of a page restricted by team
 {
   id: 'page-tasks',
-  name: 'Tasks',
   // ... other properties
   access: {
     users: [],
@@ -64,22 +68,17 @@ Access to every page and tab in the application is controlled by a dynamic rules
   }
 }
 
-// Example of a restricted tab
+// Example of a tab restricted by admin group
 {
   id: 'tab-calendars',
   name: 'Manage Calendars',
   // ... other properties
   access: {
-    users: [], // No specific users
-    teams: [], // Not restricted by team
-    adminGroups: ['Service Delivery'], // ONLY users with the "Service Delivery" role can see this
+    // Note: no users or teams array.
+    adminGroups: ['service-admin-main'], // ONLY users in this admin group (or sys admins) can see this.
   }
 }
 ```
-
-**Independent Permissions:**
-
-It is important to note that access to a page **does not** automatically grant access to its associated tabs. The `hasAccess` function is run independently for the page and for each of its tabs. This allows you to have a page visible to a wide audience, but with certain tabs on that page restricted to a smaller group.
 
 ### Implicit Ownership of Created Items
 
@@ -138,14 +137,14 @@ A sub-entity of `AppSettings`, `AppTab` defines a single, reusable content block
 | `color: string` | The hex color for the tab's icon. |
 | `description?: string` | An optional description for the tab, often used for tooltips. |
 | `componentKey: string` | A key that maps this tab to a specific React component to render its content. |
-| `access?: AccessControl` | **Optional.** An object containing arrays of `userId`s, `teamId`s, and `adminGroup` names that can view this tab. If omitted, access is considered public or inherited from the page. |
+| `access?: { adminGroups: string[] }` | **Optional.** An object containing an array of `adminGroupId`s. If present, this tab will only be visible to members of those groups (and system admins). If omitted, the tab inherits access from its parent page. |
 
 ### AdminGroup Entity
 A sub-entity of `AppSettings`, `AdminGroup` defines a single, dynamic administrative level.
 
 | Data Point | Description |
 | :--- | :--- |
-| `id: string` | **Internal.** A unique identifier for the custom group. |
+| `id: string` | **Internal.** A unique, stable identifier for the custom group, used for permission checks. |
 | `name: string` | **Internal.** The display name for the group (e.g., "Service Admin", "Service Admin+"). This is editable inline on the Admin Management page. |
 | `icon: string` | **Internal.** The Google Symbol name for the icon associated with the group. |
 | `color: string` | **Internal.** The hex color code for the icon's badge. |
@@ -202,5 +201,3 @@ This represents a specific, functional role or skill. The single source of truth
 | `icon: string` | The Google Symbol name for the badge's icon. |
 | `color: string` | The hex color code for the badge's icon and outline. |
 | `description?: string` | An optional description shown in tooltips. |
-
-

@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -899,9 +898,9 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                     <TabsContent value="groups" className="m-0">
                         {renderSearchControl()}
                         <ScrollArea className="h-64"><div className="p-1 space-y-1">{filteredGroups.map(group => {
-                          const isSelected = access.adminGroups.includes(group.name);
+                          const isSelected = access.adminGroups.includes(group.id);
                           return (
-                            <div key={group.id} className="flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer" style={{ color: isSelected ? group.color : undefined }} onClick={() => handleToggle('adminGroups', group.name)}>
+                            <div key={group.id} className="flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer" style={{ color: isSelected ? group.color : undefined }} onClick={() => handleToggle('adminGroups', group.id)}>
                               <GoogleSymbol name={group.icon} className="text-xl" />
                               <span className="font-normal">{group.name}</span>
                             </div>

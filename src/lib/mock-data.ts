@@ -1,5 +1,4 @@
 
-
 import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team, type AppSettings, type Badge, type BadgeCollection, type AppTab, type AppPage, type AdminGroup } from '@/types';
 
 export const mockTabs: AppTab[] = [
@@ -16,9 +15,7 @@ export const mockTabs: AppTab[] = [
     componentKey: 'calendars', 
     description: 'Manage shared calendars, colors, and default settings.',
     access: {
-      users: [],
-      teams: [],
-      adminGroups: ['Service Delivery'],
+      adminGroups: ['service-admin-main'],
     } 
   },
   { 
@@ -29,9 +26,7 @@ export const mockTabs: AppTab[] = [
     componentKey: 'teams', 
     description: 'Create and configure teams and their members.',
     access: {
-      users: [],
-      teams: [],
-      adminGroups: ['Service Delivery'],
+      adminGroups: ['service-admin-main'],
     }
   },
   { id: 'tab-team-members', name: 'Members', icon: 'group', color: '#6366F1', componentKey: 'team_members', description: 'View all members of a specific team and manage their roles.' },
@@ -96,7 +91,7 @@ export const mockPages: AppPage[] = [
         access: {
             users: [],
             teams: [],
-            adminGroups: ['Service Delivery']
+            adminGroups: ['service-admin-main']
         }
     },
     {
@@ -110,7 +105,7 @@ export const mockPages: AppPage[] = [
         access: {
             users: [],
             teams: ['video-production', 'live-events', 'production'],
-            adminGroups: ['Service Delivery'] 
+            adminGroups: ['service-admin-main'] 
         }
     },
     {

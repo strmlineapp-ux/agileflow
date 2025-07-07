@@ -17,9 +17,7 @@ export interface AppTab {
   description?: string;
   componentKey: 'calendars' | 'teams' | 'team_members' | 'badges' | 'locations' | 'workstations' | 'templates' | 'adminGroups' | 'pages' | 'tabs' | 'overview' | 'tasks' | 'notifications' | 'settings' | 'calendar';
   access?: {
-    users: string[];
-    teams: string[];
-    adminGroups: string[];
+    adminGroups: string[]; // AdminGroup IDs
   };
   contextTeamId?: string; // Optional teamId to provide context for a tab on a non-dynamic page
 }
@@ -36,7 +34,7 @@ export interface AppPage {
   access: {
     users: string[]; // User IDs
     teams: string[]; // Team IDs
-    adminGroups: string[]; // AdminGroup names
+    adminGroups: string[]; // AdminGroup IDs
   };
 }
 

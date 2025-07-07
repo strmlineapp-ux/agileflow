@@ -76,22 +76,36 @@ export const hasAccess = (user: User, item: AppPage | AppTab, teams: Team[], adm
 
     const access = item.access;
 
-    // If no specific access rules are defined, we assume it's accessible
+    const getUserAdminGroupIds = () => adminGroups
+        .filter(ag => (user.roles || []).includes(ag.name))
+        .map(ag => ag.id);
+
+    // If it's a tab, use simplified logic: inherit from page unless restricted by admin group
+    if ('componentKey' in item) { 
+        if (!access || !access.adminGroups || access.adminGroups.length === 0) {
+            return true; // Tab is public to anyone who can see the page
+        }
+        
+        // Tab access is restricted by admin group
+        const userAdminGroupIds = getUserAdminGroupIds();
+        return access.adminGroups.some(requiredGroupId => userAdminGroupIds.includes(requiredGroupId));
+    }
+
+    // If it's a page, use the full logic
     if (!access || (access.users.length === 0 && access.teams.length === 0 && access.adminGroups.length === 0)) {
         return true;
     }
 
-    // Direct user assignment always grants access
+    // Page: Direct user assignment
     if (access.users.includes(user.userId)) return true;
     
-    // Group-based access
-    if (access.adminGroups.some(groupName => (user.roles || []).includes(groupName))) {
+    // Page: Group-based access (using IDs)
+    const userAdminGroupIds = getUserAdminGroupIds();
+    if (access.adminGroups.some(requiredGroupId => userAdminGroupIds.includes(requiredGroupId))) {
         return true;
     }
 
-    // Team-based access
-    // This now simply checks for membership. More granular permissions (like teamAdmin)
-    // should be checked within the component itself, not for page/tab visibility.
+    // Page: Team-based access
     const userTeamIds = new Set(teams.filter(t => t.members.includes(user.userId)).map(t => t.id));
     if (access.teams.some(teamId => userTeamIds.has(teamId))) {
         return true;
@@ -111,13 +125,16 @@ export const hasAccess = (user: User, item: AppPage | AppTab, teams: Team[], adm
  * @returns A BadgeCollectionOwner object.
  */
 export const getOwnershipContext = (page: AppPage, user: User, teams: Team[], adminGroups: AdminGroup[]): BadgeCollectionOwner => {
+    const userAdminGroupNames = new Set(user.roles || []);
+    const userAdminGroupIds = new Set(adminGroups.filter(ag => userAdminGroupNames.has(ag.name)).map(ag => ag.id));
+
     // Highest priority: Admin Group ownership
-    const userAdminGroups = user.roles || [];
-    const relevantAdminGroup = adminGroups.find(ag =>
-        (page.access.adminGroups || []).includes(ag.name) && userAdminGroups.includes(ag.name)
-    );
-    if (relevantAdminGroup) {
-        return { type: 'admin_group', name: relevantAdminGroup.name };
+    const relevantAdminGroupId = (page.access.adminGroups || []).find(id => userAdminGroupIds.has(id));
+    if (relevantAdminGroupId) {
+        const relevantAdminGroup = adminGroups.find(ag => ag.id === relevantAdminGroupId);
+        if (relevantAdminGroup) {
+            return { type: 'admin_group', name: relevantAdminGroup.name };
+        }
     }
 
     // Second priority: Team ownership
