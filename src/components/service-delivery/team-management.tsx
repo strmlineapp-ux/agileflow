@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
@@ -487,8 +486,8 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
             color: predefinedColors[teams.length % predefinedColors.length],
             owner: owner,
             isShared: false,
-            members: [],
-            teamAdmins: [],
+            members: [viewAsUser.userId], // Creator is automatically a member
+            teamAdmins: [viewAsUser.userId], // And an admin
             locationCheckManagers: [],
             allBadges: [],
             badgeCollections: [],
@@ -551,14 +550,17 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
     };
     
     const displayedTeams = useMemo(() => {
-        return teams.filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase()));
-    }, [teams, searchTerm]);
+        return teams
+            .filter(t => t.members.includes(viewAsUser.userId))
+            .filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    }, [teams, viewAsUser.userId, searchTerm]);
 
 
     const sharedTeams = useMemo(() => {
-        const displayedTeamIds = new Set(displayedTeams.map(t => t.id));
-        return teams.filter(t => t.isShared && !displayedTeamIds.has(t.id) && t.name.toLowerCase().includes(sharedSearchTerm.toLowerCase()));
-    }, [teams, displayedTeams, sharedSearchTerm]);
+        return teams
+            .filter(t => t.isShared && !t.members.includes(viewAsUser.userId))
+            .filter(t => t.name.toLowerCase().includes(sharedSearchTerm.toLowerCase()));
+    }, [teams, viewAsUser.userId, sharedSearchTerm]);
     
     const onDragEnd = (result: DropResult) => {
         const { source, destination, draggableId, type } = result;
@@ -573,11 +575,12 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
             return;
         }
 
-        // --- Dragging from SHARED PANEL to MAIN BOARD ---
+        // --- Dragging from SHARED PANEL to MAIN BOARD (Linking) ---
         if (type === 'team-card' && source.droppableId === 'shared-teams-panel' && destination.droppableId === 'teams-list') {
             const teamToLink = teams.find(t => t.id === draggableId);
             if (teamToLink) {
-                 toast({ title: 'Link created', description: `Team "${teamToLink.name}" is now visible on your board.`});
+                 handleAddUserToTeam(teamToLink.id, viewAsUser.userId);
+                 toast({ title: 'Team Linked', description: `You are now a member of "${teamToLink.name}".`});
             }
             return;
         }
@@ -750,7 +753,7 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
                                                 />
                                             </div>
                                         </div>
-                                        <CardDescription>Drag a team you own here to share it.</CardDescription>
+                                        <CardDescription>Drag a team you own here to share it. Drag a team to your board to link it.</CardDescription>
                                     </CardHeader>
                                     <CardContent className="h-full">
                                         <ScrollArea className="h-full">
@@ -777,7 +780,7 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
                                                     </Draggable>
                                                 ))}
                                                 {provided.placeholder}
-                                                {sharedTeams.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">No teams are currently shared.</p>}
+                                                {sharedTeams.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">No other teams are currently shared.</p>}
                                             </div>
                                         </ScrollArea>
                                     </CardContent>
