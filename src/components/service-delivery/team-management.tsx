@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -116,6 +115,7 @@ function TeamCard({
     onToggleShare,
     onRemoveUser,
     onAddUser,
+    onSetAdmin,
     dragHandleProps,
     isSharedPreview = false,
     isExpanded,
@@ -128,13 +128,13 @@ function TeamCard({
     onToggleShare: (team: Team) => void,
     onRemoveUser: (teamId: string, userId: string) => void;
     onAddUser: (teamId: string, userId: string) => void;
+    onSetAdmin: (teamId: string, userId: string) => void;
     dragHandleProps?: any,
     isSharedPreview?: boolean,
     isExpanded: boolean,
     onToggleExpand: () => void;
 }) {
     const { viewAsUser, teams, appSettings } = useUser();
-    const { toast } = useToast();
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isEditingName, setIsEditingName] = useState(false);
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
@@ -187,18 +187,6 @@ function TeamCard({
     const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') handleSaveName();
         else if (e.key === 'Escape') setIsEditingName(false);
-    };
-
-     const handleSetAdmin = (userId: string) => {
-        if (!canManageAdmins) return;
-        const currentAdmins = team.teamAdmins || [];
-        const isAlreadyAdmin = currentAdmins.includes(userId);
-        
-        const newAdmins = isAlreadyAdmin
-            ? currentAdmins.filter(id => id !== userId)
-            : [...currentAdmins, userId];
-            
-        onUpdate(team.id, { teamAdmins: newAdmins });
     };
     
     let shareIcon: string | null = null;
@@ -382,7 +370,7 @@ function TeamCard({
                                                     teamId={team.id} 
                                                     onRemove={onRemoveUser}
                                                     isTeamAdmin={(team.teamAdmins || []).includes(user.userId)}
-                                                    onSetAdmin={handleSetAdmin}
+                                                    onSetAdmin={() => onSetAdmin(team.id, user.userId)}
                                                     canManageAdmins={canManageAdmins}
                                                 />
                                                 </div>
@@ -474,6 +462,19 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
         updateTeam(teamId, { members: updatedMembers });
         toast({ title: "User Added" });
     };
+    
+    const handleSetAdmin = (teamId: string, userId: string) => {
+        const team = teams.find(t => t.id === teamId);
+        if (!team) return;
+        const currentAdmins = team.teamAdmins || [];
+        const isAlreadyAdmin = currentAdmins.includes(userId);
+        
+        const newAdmins = isAlreadyAdmin
+            ? currentAdmins.filter(id => id !== userId)
+            : [...currentAdmins, userId];
+            
+        updateTeam(team.id, { teamAdmins: newAdmins });
+    };
 
     const handleRemoveUserFromTeam = (teamId: string, userId: string) => {
         const team = teams.find(t => t.id === teamId);
@@ -517,7 +518,6 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
         const { source, destination, draggableId, type } = result;
         if (!destination) return;
 
-        // Handle dropping on the share panel
         if (type === 'team-card' && destination.droppableId === 'shared-teams-panel') {
             const teamToShare = teams.find(t => t.id === draggableId);
             if (teamToShare && !teamToShare.isShared) {
@@ -526,7 +526,6 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
             return;
         }
 
-        // Handle duplicating a team
         if (type === 'team-card' && destination.droppableId === 'duplicate-team-zone') {
             const teamToDuplicate = teams.find(t => t.id === draggableId);
             if(teamToDuplicate) {
@@ -544,7 +543,6 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
             return;
         }
         
-        // Handle reordering teams
         if (type === 'team-card' && source.droppableId === 'teams-list' && destination.droppableId === 'teams-list') {
             const reorderedOwnedTeams = Array.from(ownedTeams);
             const [movedItem] = reorderedOwnedTeams.splice(source.index, 1);
@@ -557,17 +555,11 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
             return;
         }
         
-        // Handle adding a user to a team
         if (type === 'user-card') {
             const destTeamId = destination.droppableId;
             const userId = draggableId.split('-').pop();
-
             if (!userId) return;
-            
-            const sourceTeamId = draggableId.split('-')[1];
-            if (sourceTeamId !== destTeamId) {
-                handleAddUserToTeam(destTeamId, userId);
-            }
+            handleAddUserToTeam(destTeamId, userId);
         }
     };
 
@@ -647,6 +639,7 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
                                                     onToggleShare={handleToggleShare}
                                                     onRemoveUser={handleRemoveUserFromTeam}
                                                     onAddUser={handleAddUserToTeam}
+                                                    onSetAdmin={handleSetAdmin}
                                                     dragHandleProps={provided.dragHandleProps}
                                                     isExpanded={expandedTeams.has(team.id)}
                                                     onToggleExpand={() => toggleTeamExpansion(team.id)}
@@ -660,7 +653,7 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
                         )}
                     </StrictModeDroppable>
                 </div>
-                {/* Shared Teams Panel */}
+                
                 <div className={cn(
                     "transition-all duration-300",
                     isSharedPanelOpen ? "w-96 p-2" : "w-0"
@@ -690,6 +683,7 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
                                                         onToggleShare={handleToggleShare}
                                                         onRemoveUser={handleRemoveUserFromTeam}
                                                         onAddUser={handleAddUserToTeam}
+                                                        onSetAdmin={handleSetAdmin}
                                                         isSharedPreview={true}
                                                         isExpanded={expandedTeams.has(team.id)}
                                                         onToggleExpand={() => toggleTeamExpansion(team.id)}
@@ -730,4 +724,3 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
         </DragDropContext>
     );
 }
-
