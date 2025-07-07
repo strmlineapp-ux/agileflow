@@ -1,5 +1,3 @@
-
-
 import type React from 'react';
 
 export interface AdminGroup {
@@ -124,6 +122,8 @@ export interface Team {
   name: string;
   icon: string;
   color: string;
+  owner: BadgeCollectionOwner;
+  isShared?: boolean;
   members: string[]; // array of userIds
   teamAdmins?: string[]; // array of userIds who are admins for this team
   teamAdminsLabel?: string;

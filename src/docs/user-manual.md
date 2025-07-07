@@ -89,7 +89,7 @@ This is the central control panel for configuring the application itself.
 ### 8.2 Service Delivery Management (`/dashboard/service-delivery`)
 This is the central hub for global application settings.
 - **Manage Calendars**: Create, edit, or delete shared calendars. Hover over a calendar card and click the `delete` icon to remove it.
-- **Manage Teams**: Create new teams, edit existing team details, and manage members. Hover over a team card and click the `delete` icon to remove it.
+- **Manage Teams**: This tab provides a powerful, dynamic interface for managing user groups (called "Teams"). Just like Badge Collections, Teams can be owned, shared with other groups, linked, and copied. You can drag and drop your owned teams to a shared panel to make them available to others, or drag a shared team onto your board to link it.
 
 ### 8.3 Team Management (`/dashboard/teams/[teamId]`)
 This page is for managing the specifics of an individual team.

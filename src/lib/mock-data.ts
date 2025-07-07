@@ -83,7 +83,7 @@ export const mockPages: AppPage[] = [
         path: '/dashboard/tasks',
         isDynamic: false,
         associatedTabs: ['tab-tasks'],
-        access: { users: [], teams: [], adminGroups: [] }
+        access: { users: [], teams: [], adminGroups: [] } // Public by default now
     },
     {
         id: 'page-service-delivery',
@@ -177,19 +177,19 @@ export const mockAppSettings: AppSettings = {
 };
 
 export const mockUsers: User[] = [
-    { userId: '1', displayName: 'Bernardo Resende', email: 'bernardo.resende@google.com', isAdmin: true, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Video Production Lead', roles: ['Video Director', 'Director of Photography', 'Creative Producer', 'TD'], theme: 'dark', defaultCalendarView: 'production-schedule' },
+    { userId: '1', displayName: 'Bernardo Resende', email: 'bernardo.resende@google.com', isAdmin: true, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Video Production Lead', roles: ['Video Director', 'D.o.P.', 'Creative Producer'], theme: 'dark', defaultCalendarView: 'production-schedule' },
     { userId: '2', displayName: 'Daniel Lazard', email: 'dlazard@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Service Delivery Manager', roles: ['Service Delivery'], theme: 'light', defaultCalendarView: 'week' },
-    { userId: '3', displayName: 'May-Kate Woods', email: 'maykate@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Event Technician', roles: ['ES Operator', 'TD'], theme: 'light', defaultCalendarView: 'week' },
+    { userId: '3', displayName: 'May-Kate Woods', email: 'maykate@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Event Technician', roles: ['ES Operator', 'TD', 'Content Op'], theme: 'light', defaultCalendarView: 'week' },
     { userId: '4', displayName: 'Zoey Roberts', email: 'zoeyr@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Production Coordinator', roles: ['1st AD'], theme: 'light', defaultCalendarView: 'month' },
     { userId: '5', displayName: 'Bilal Merhi', email: 'merhi@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Senior Video Editor', roles: ['Editor', 'Motion Graphics'], theme: 'light', defaultCalendarView: 'day' },
     { userId: '6', displayName: 'Sam Walker', email: 'samwalker@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Creative Producer', roles: ['Creative Producer', 'Script'], theme: 'light', defaultCalendarView: 'day' },
-    { userId: '7', displayName: 'Ashley Mulla', email: 'ashleymulla@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Video Editor', roles: ['Editor', 'Camera Operator'], theme: 'light', defaultCalendarView: 'day' },
+    { userId: '7', displayName: 'Ashley Mulla', email: 'ashleymulla@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Video Editor', roles: ['Editor', 'Camera Op.'], theme: 'light', defaultCalendarView: 'day' },
     { userId: '8', displayName: 'Perry Rogantin', email: 'rogantin@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Senior Event Technician (Audio)', roles: ['Audio Engineer', 'Audio Mix'], theme: 'light', defaultCalendarView: 'week' },
-    { userId: '9', displayName: 'Robby Atilla', email: 'robbyatilla@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'TD Vision Specialist', roles: ['TD', 'Camera Operator'], theme: 'light', defaultCalendarView: 'week' },
+    { userId: '9', displayName: 'Robby Atilla', email: 'robbyatilla@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'TD Vision Specialist', roles: ['TD', 'Camera Op.'], theme: 'light', defaultCalendarView: 'week' },
     { userId: '10', displayName: 'Robert Messere', email: 'messere@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Event Technician', roles: ['Content Op', '1st AD'], theme: 'light', defaultCalendarView: 'week' },
-    { userId: '11', displayName: 'Reno Adriaanse', email: 'renoa@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Senior Event Technician (Visual)', roles: ['Camera Operator', 'Director of Photography'], theme: 'light', defaultCalendarView: 'week' },
+    { userId: '11', displayName: 'Reno Adriaanse', email: 'renoa@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Senior Event Technician (Visual)', roles: ['Camera Op.', 'D.o.P.'], theme: 'light', defaultCalendarView: 'week' },
     { userId: '12', displayName: 'Danny Smartt', email: 'dsmartt@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Event Technician', roles: ['Events Editor'], theme: 'light', defaultCalendarView: 'week' },
-    { userId: '13', displayName: 'Maciej Chamulak', email: 'chamulak@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Senior Event Technician', roles: ['Camera Operator'], theme: 'light', defaultCalendarView: 'week' },
+    { userId: '13', displayName: 'Maciej Chamulak', email: 'chamulak@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Senior Event Technician', roles: ['Camera Op.'], theme: 'light', defaultCalendarView: 'week' },
     { userId: '14', displayName: 'Milan Chohan', email: 'mchohan@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Event Technician', roles: ['Audio Engineer'], theme: 'light', defaultCalendarView: 'week' },
     { userId: '15', displayName: 'Molly Rose', email: 'mollyrose@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Production Coordinator', roles: [], theme: 'light', defaultCalendarView: 'month' },
 ];
@@ -248,6 +248,8 @@ export const mockTeams: Team[] = [
         name: 'Video Production',
         icon: 'movie',
         color: '#FBBF24',
+        owner: { type: 'admin_group', name: 'Service Delivery' },
+        isShared: true,
         members: ['1', '5', '6', '7'],
         teamAdmins: ['1'],
         locationCheckManagers: ['1'],
@@ -280,6 +282,8 @@ export const mockTeams: Team[] = [
         name: 'Live Events',
         icon: 'videocam',
         color: '#3B82F6',
+        owner: { type: 'team', id: 'video-production' },
+        isShared: true,
         members: ['3', '8', '9', '10', '11', '12', '13', '14'],
         teamAdmins: ['3'],
         locationCheckManagers: ['3'],
@@ -311,6 +315,8 @@ export const mockTeams: Team[] = [
         name: 'Production',
         icon: 'campaign',
         color: '#22C55E',
+        owner: { type: 'user', id: '4' }, // Owned by Zoey Roberts
+        isShared: false,
         members: ['4', '15'],
         teamAdmins: ['4'],
         locationCheckManagers: ['4'],
@@ -425,3 +431,4 @@ export const mockHolidays: Date[] = [
     new Date(currentYear, 6, 4), // Independence Day
     new Date(currentYear, 11, 25), // Christmas Day
 ];
+
