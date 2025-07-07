@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
@@ -347,7 +348,7 @@ function TeamCard({
             </div>
             <CardContent className="flex-grow pt-0 flex flex-col">
                 <ScrollArea className="max-h-48 pr-2 flex-grow">
-                    <StrictModeDroppable droppableId={team.id} type="user-card" isDropDisabled={!isOwned}>
+                    <StrictModeDroppable droppableId={team.id} type="user-card" isDropDisabled={!isOwned} ignoreContainerClipping={false}>
                         {(provided, snapshot) => (
                             <div
                                 ref={provided.innerRef}
@@ -493,6 +494,7 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
         setTeamToDelete(null);
     };
 
+    const unsharedTeams = useMemo(() => teams.filter(t => !t.isShared), [teams]);
     const sharedTeams = useMemo(() => {
         return teams.filter(t => t.isShared && t.name.toLowerCase().includes(sharedSearchTerm.toLowerCase()));
     }, [teams, sharedSearchTerm]);
@@ -501,10 +503,10 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
         const { source, destination, draggableId, type } = result;
         if (!destination) return;
 
-        if (type === 'team-card' && destination.droppableId === 'shared-teams-panel') {
-            const teamToShare = teams.find(t => t.id === draggableId);
-            if (teamToShare && !teamToShare.isShared) {
-                handleToggleShare(teamToShare);
+        if (type === 'team-card' && source.droppableId !== destination.droppableId) {
+            const teamToMove = teams.find(t => t.id === draggableId);
+            if(teamToMove) {
+                handleToggleShare(teamToMove);
             }
             return;
         }
@@ -526,11 +528,18 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
             return;
         }
         
-        if (type === 'team-card' && source.droppableId === 'teams-list' && destination.droppableId === 'teams-list') {
-            const reorderedTeams = Array.from(teams);
-            const [movedItem] = reorderedTeams.splice(source.index, 1);
-            reorderedTeams.splice(destination.index, 0, movedItem);
-            reorderTeams(reorderedTeams);
+        if (type === 'team-card') {
+            const listToReorder = source.droppableId === 'teams-list' ? unsharedTeams : sharedTeams;
+            const reorderedSublist = Array.from(listToReorder);
+            const [movedItem] = reorderedSublist.splice(source.index, 1);
+            reorderedSublist.splice(destination.index, 0, movedItem);
+
+            const otherList = source.droppableId === 'teams-list' ? sharedTeams : unsharedTeams;
+            const finalOrderedList = source.droppableId === 'teams-list' 
+                ? [...reorderedSublist, ...otherList]
+                : [...otherList, ...reorderedSublist];
+
+            reorderTeams(finalOrderedList);
             return;
         }
         
@@ -562,7 +571,7 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
                                   </Tooltip>
                               </TooltipProvider>
                             )}
-                            <StrictModeDroppable droppableId="duplicate-team-zone" type="team-card" isDropDisabled={false}>
+                            <StrictModeDroppable droppableId="duplicate-team-zone" type="team-card" isDropDisabled={false} ignoreContainerClipping={false}>
                                 {(provided, snapshot) => (
                                     <div
                                         ref={provided.innerRef}
@@ -599,10 +608,10 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
                         </TooltipProvider>
                     </div>
 
-                    <StrictModeDroppable droppableId="teams-list" type="team-card" isDropDisabled={false}>
+                    <StrictModeDroppable droppableId="teams-list" type="team-card" isDropDisabled={false} ignoreContainerClipping={false}>
                         {(provided) => (
                             <div className="flex flex-wrap -m-3" ref={provided.innerRef} {...provided.droppableProps}>
-                                {teams.map((team, index) => (
+                                {unsharedTeams.map((team, index) => (
                                     <Draggable key={team.id} draggableId={team.id} index={index} ignoreContainerClipping={false}>
                                         {(provided, snapshot) => (
                                             <div
@@ -635,7 +644,7 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
                     </StrictModeDroppable>
                 </div>
                  <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96 p-2" : "w-0")}>
-                    <StrictModeDroppable droppableId="shared-teams-panel" type="team-card" isDropDisabled={false}>
+                    <StrictModeDroppable droppableId="shared-teams-panel" type="team-card" isDropDisabled={false} ignoreContainerClipping={false}>
                         {(provided, snapshot) => (
                             <div 
                                 ref={provided.innerRef} 
@@ -670,7 +679,7 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
                                             <div className="space-y-2">
                                                 {sharedTeams.map((team, index) => (
                                                     <Draggable key={team.id} draggableId={team.id} index={index} ignoreContainerClipping={false}>
-                                                    {(provided) => (
+                                                    {(provided, snapshot) => (
                                                         <div ref={provided.innerRef} {...provided.draggableProps}>
                                                         <TeamCard
                                                             team={team}
@@ -689,8 +698,8 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
                                                     )}
                                                     </Draggable>
                                                 ))}
-                                                {sharedTeams.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">No teams are currently shared.</p>}
                                                 {provided.placeholder}
+                                                {sharedTeams.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">No teams are currently shared.</p>}
                                             </div>
                                         </ScrollArea>
                                     </CardContent>
