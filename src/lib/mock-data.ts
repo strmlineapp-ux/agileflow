@@ -61,8 +61,7 @@ export const mockPages: AppPage[] = [
         color: '#F97316',
         path: '/dashboard/overview',
         isDynamic: false,
-        associatedTabs: [],
-        componentKey: 'overview',
+        associatedTabs: ['tab-overview'],
         access: { users: [], teams: [], adminGroups: [] } // Public
     },
     {
@@ -72,8 +71,7 @@ export const mockPages: AppPage[] = [
         color: '#0EA5E9',
         path: '/dashboard/calendar',
         isDynamic: false,
-        associatedTabs: [],
-        componentKey: 'calendar',
+        associatedTabs: ['tab-calendar'],
         access: { users: [], teams: [], adminGroups: [] } // Public
     },
     {
@@ -83,9 +81,8 @@ export const mockPages: AppPage[] = [
         color: '#10B981',
         path: '/dashboard/tasks',
         isDynamic: false,
-        associatedTabs: [],
-        componentKey: 'tasks',
-        access: { users: [], teams: [], adminGroups: [] } // Public
+        associatedTabs: ['tab-tasks'],
+        access: { users: [], teams: [], adminGroups: [] }
     },
     {
         id: 'page-service-delivery',
@@ -111,7 +108,7 @@ export const mockPages: AppPage[] = [
         associatedTabs: ['tab-team-members', 'tab-badges', 'tab-locations', 'tab-workstations', 'tab-templates'],
         access: {
             users: [],
-            teams: ['video-production', 'live-events', 'production', 'service-delivery'],
+            teams: ['video-production', 'live-events', 'production'],
             adminGroups: ['Service Delivery'] 
         }
     },
@@ -122,8 +119,7 @@ export const mockPages: AppPage[] = [
         color: '#3B82F6',
         path: '/dashboard/notifications',
         isDynamic: false,
-        associatedTabs: [],
-        componentKey: 'notifications',
+        associatedTabs: ['tab-notifications'],
         access: { users: [], teams: [], adminGroups: [] } // Public
     },
     {
@@ -133,10 +129,35 @@ export const mockPages: AppPage[] = [
         color: '#64748B',
         path: '/dashboard/settings',
         isDynamic: false,
-        associatedTabs: [],
-        componentKey: 'settings',
+        associatedTabs: ['tab-settings'],
         access: { users: [], teams: [], adminGroups: [] } // Public
     },
+];
+
+const pScaleCollectionId = 'global-p-scale';
+const starSystemCollectionId = 'global-star-system';
+const effortCollectionId = 'global-effort';
+
+const pScaleBadges: Badge[] = [
+    { id: 'p0', ownerCollectionId: pScaleCollectionId, name: 'P0', icon: 'priority_high', color: '#EF4444', description: 'Highest priority - immediate action required.' },
+    { id: 'p1', ownerCollectionId: pScaleCollectionId, name: 'P1', icon: 'priority_high', color: '#F97316', description: 'High priority - requires attention soon.' },
+    { id: 'p2', ownerCollectionId: pScaleCollectionId, name: 'P2', icon: 'priority_high', color: '#FBBF24', description: 'Medium priority - standard work.' },
+    { id: 'p3', ownerCollectionId: pScaleCollectionId, name: 'P3', icon: 'priority_high', color: '#22C55E', description: 'Low priority - can be deferred.' },
+    { id: 'p4', ownerCollectionId: pScaleCollectionId, name: 'P4', icon: 'priority_high', color: '#64748B', description: 'Lowest priority - to be done when time permits.' },
+];
+const starSystemBadges: Badge[] = [
+    { id: 'star1', ownerCollectionId: starSystemCollectionId, name: '1 Star', icon: 'star', color: '#64748B', description: '1/5 Stars' },
+    { id: 'star2', ownerCollectionId: starSystemCollectionId, name: '2 Stars', icon: 'star', color: '#64748B', description: '2/5 Stars' },
+    { id: 'star3', ownerCollectionId: starSystemCollectionId, name: '3 Stars', icon: 'star', color: '#64748B', description: '3/5 Stars' },
+    { id: 'star4', ownerCollectionId: starSystemCollectionId, name: '4 Stars', icon: 'star', color: '#64748B', description: '4/5 Stars' },
+    { id: 'star5', ownerCollectionId: starSystemCollectionId, name: '5 Stars', icon: 'star', color: '#64748B', description: '5/5 Stars' },
+];
+const effortBadges: Badge[] = [
+    { id: 'effort-xs', ownerCollectionId: effortCollectionId, name: 'XS', icon: 'fitness_center', color: '#A855F7', description: 'Extra Small' },
+    { id: 'effort-s', ownerCollectionId: effortCollectionId, name: 'S', icon: 'fitness_center', color: '#A855F7', description: 'Small' },
+    { id: 'effort-m', ownerCollectionId: effortCollectionId, name: 'M', icon: 'fitness_center', color: '#A855F7', description: 'Medium' },
+    { id: 'effort-l', ownerCollectionId: effortCollectionId, name: 'L', icon: 'fitness_center', color: '#A855F7', description: 'Large' },
+    { id: 'effort-xl', ownerCollectionId: effortCollectionId, name: 'XL', icon: 'fitness_center', color: '#A855F7', description: 'Extra Large' },
 ];
 
 export const mockAppSettings: AppSettings = {
@@ -151,6 +172,7 @@ export const mockAppSettings: AppSettings = {
   ],
   pages: mockPages,
   tabs: mockTabs,
+  globalBadges: [...pScaleBadges, ...starSystemBadges, ...effortBadges]
 };
 
 export const mockUsers: User[] = [
@@ -172,9 +194,9 @@ export const mockUsers: User[] = [
 ];
 
 export const mockCalendars: SharedCalendar[] = [
+    { id: 'production', name: 'Production', icon: 'campaign', color: '#22C55E', managers: ['4'] },
     { id: 'video-production', name: 'Video Production', icon: 'movie', color: '#FBBF24', managers: ['1'] },
     { id: 'live-events', name: 'Live Events', icon: 'videocam', color: '#3B82F6', managers: ['3'] },
-    { id: 'production', name: 'Production', icon: 'campaign', color: '#22C55E', managers: ['4'] },
     { id: 'dreamtek', name: 'Dreamtek', icon: 'business_center', color: '#8B5CF6', managers: ['2'] },
 ];
 
@@ -197,7 +219,7 @@ export const mockLocations: BookableLocation[] = [
 const videoProdCollectionId = 'video-prod-collection';
 const videoProdBadges: Badge[] = [
     { id: 'badge-director', ownerCollectionId: videoProdCollectionId, name: 'Video Director', icon: 'videocam', color: '#FCD34D', description: 'Oversees the creative and technical aspects of a video shoot.' },
-    { id: 'badge-dop', ownerCollectionId: videoProdCollectionId, name: 'Director of Photography', icon: 'camera', color: '#FBBF24' },
+    { id: 'badge-dop', ownerCollectionId: videoProdCollectionId, name: 'D.o.P.', icon: 'camera', color: '#FBBF24', description: 'Director of Photography' },
     { id: 'badge-editor', ownerCollectionId: videoProdCollectionId, name: 'Editor', icon: 'edit_note', color: '#F59E0B' },
     { id: 'badge-motion', ownerCollectionId: videoProdCollectionId, name: 'Motion Graphics', icon: 'animation', color: '#D97706' },
     { id: 'badge-creative-producer', ownerCollectionId: videoProdCollectionId, name: 'Creative Producer', icon: 'person', color: '#FEF08A' },
@@ -210,7 +232,7 @@ const liveEventsCollectionId = 'event-roles-collection';
 const liveEventsBadges: Badge[] = [
     { id: 'badge-td', ownerCollectionId: liveEventsCollectionId, name: 'TD', icon: 'engineering', color: '#60A5FA', description: 'Technical Director for live events.' },
     { id: 'badge-1stad', ownerCollectionId: liveEventsCollectionId, name: '1st AD', icon: 'group', color: '#3B82F6' },
-    { id: 'badge-cameraop', ownerCollectionId: liveEventsCollectionId, name: 'Camera Operator', icon: 'photo_camera', color: '#2563EB' },
+    { id: 'badge-cameraop', ownerCollectionId: liveEventsCollectionId, name: 'Camera Op.', icon: 'photo_camera', color: '#2563EB', description: 'Camera Operator' },
     { id: 'badge-audioeng', ownerCollectionId: liveEventsCollectionId, name: 'Audio Engineer', icon: 'mic', color: '#93C5FD' },
     { id: 'badge-audiomix', ownerCollectionId: liveEventsCollectionId, name: 'Audio Mix', icon: 'equalizer', color: '#BFDBFE' },
     { id: 'badge-contentop', ownerCollectionId: liveEventsCollectionId, name: 'Content Op', icon: 'article', color: '#1D4ED8' },
@@ -218,33 +240,6 @@ const liveEventsBadges: Badge[] = [
     { id: 'badge-eventeditor', ownerCollectionId: liveEventsCollectionId, name: 'Events Editor', icon: 'local_movies', color: '#60A5FA' },
 ];
 
-// Service Delivery Owned (Global) Badges
-const pScaleCollectionId = 'p-scale-collection';
-const pScaleBadges: Badge[] = [
-    { id: 'p0', ownerCollectionId: pScaleCollectionId, name: 'P0', icon: 'priority_high', color: '#EF4444', description: 'Highest priority - immediate action required.' },
-    { id: 'p1', ownerCollectionId: pScaleCollectionId, name: 'P1', icon: 'priority_high', color: '#F97316', description: 'High priority - requires attention soon.' },
-    { id: 'p2', ownerCollectionId: pScaleCollectionId, name: 'P2', icon: 'priority_high', color: '#FBBF24', description: 'Medium priority - standard work.' },
-    { id: 'p3', ownerCollectionId: pScaleCollectionId, name: 'P3', icon: 'priority_high', color: '#22C55E', description: 'Low priority - can be deferred.' },
-    { id: 'p4', ownerCollectionId: pScaleCollectionId, name: 'P4', icon: 'priority_high', color: '#64748B', description: 'Lowest priority - to be done when time permits.' },
-];
-
-const starSystemCollectionId = 'star-system-collection';
-const starSystemBadges: Badge[] = [
-    { id: 'star1', ownerCollectionId: starSystemCollectionId, name: '1 Star', icon: 'star', color: '#64748B', description: '1/5 Stars' },
-    { id: 'star2', ownerCollectionId: starSystemCollectionId, name: '2 Stars', icon: 'star', color: '#64748B', description: '2/5 Stars' },
-    { id: 'star3', ownerCollectionId: starSystemCollectionId, name: '3 Stars', icon: 'star', color: '#64748B', description: '3/5 Stars' },
-    { id: 'star4', ownerCollectionId: starSystemCollectionId, name: '4 Stars', icon: 'star', color: '#64748B', description: '4/5 Stars' },
-    { id: 'star5', ownerCollectionId: starSystemCollectionId, name: '5 Stars', icon: 'star', color: '#64748B', description: '5/5 Stars' },
-];
-
-const effortCollectionId = 'effort-collection';
-const effortBadges: Badge[] = [
-    { id: 'effort-xs', ownerCollectionId: effortCollectionId, name: 'XS', icon: 'fitness_center', color: '#A855F7', description: 'Extra Small' },
-    { id: 'effort-s', ownerCollectionId: effortCollectionId, name: 'S', icon: 'fitness_center', color: '#A855F7', description: 'Small' },
-    { id: 'effort-m', ownerCollectionId: effortCollectionId, name: 'M', icon: 'fitness_center', color: '#A855F7', description: 'Medium' },
-    { id: 'effort-l', ownerCollectionId: effortCollectionId, name: 'L', icon: 'fitness_center', color: '#A855F7', description: 'Large' },
-    { id: 'effort-xl', ownerCollectionId: effortCollectionId, name: 'XL', icon: 'fitness_center', color: '#A855F7', description: 'Extra Large' },
-];
 
 export const mockTeams: Team[] = [
     {
@@ -255,19 +250,16 @@ export const mockTeams: Team[] = [
         members: ['1', '5', '6', '7'],
         teamAdmins: ['1'],
         locationCheckManagers: ['1'],
-        allBadges: [
-            ...videoProdBadges,
-            ...liveEventsBadges.filter(b => ['Camera Operator', 'Audio Engineer', 'Audio Mix', 'ES Operator'].includes(b.name))
-        ],
+        allBadges: [...videoProdBadges],
         badgeCollections: [{
             id: videoProdCollectionId,
-            ownerTeamId: 'video-production',
+            owner: { type: 'team', id: 'video-production'},
             name: 'Video Production Roles',
             icon: 'video_settings',
             color: '#FBBF24',
-            viewMode: 'detailed',
-            applications: ['team members', 'events'],
-            description: 'Core roles and skills for studio and field video production.',
+            viewMode: 'assorted',
+            applications: ['team members'],
+            description: 'Core roles for studio and field video production.',
             badgeIds: [
               ...videoProdBadges.map(b => b.id),
               'badge-cameraop', 'badge-audioeng', 'badge-audiomix', 'badge-esop'
@@ -278,7 +270,7 @@ export const mockTeams: Team[] = [
         checkLocations: ['Studio'],
         workstations: ['EDIT 1', 'EDIT 2', 'Pro Tools Machine'],
         eventTemplates: [
-            { id: 'template-1', name: 'Basic Studio Shoot', icon: 'theaters', requestedRoles: ['Video Director', 'Camera Operator', 'Audio Engineer'] },
+            { id: 'template-1', name: 'Basic Studio Shoot', icon: 'theaters', requestedRoles: ['Video Director', 'Camera Op.', 'Audio Engineer'] },
             { id: 'template-2', name: 'Voice Over Record', icon: 'record_voice_over', requestedRoles: ['Editor', 'Audio Mix'] }
         ],
     },
@@ -290,18 +282,15 @@ export const mockTeams: Team[] = [
         members: ['3', '8', '9', '10', '11', '12', '13', '14'],
         teamAdmins: ['3'],
         locationCheckManagers: ['3'],
-        allBadges: [
-            ...liveEventsBadges,
-            ...videoProdBadges.filter(b => ['Director of Photography', 'Editor'].includes(b.name))
-        ],
+        allBadges: [...liveEventsBadges],
         badgeCollections: [{
             id: liveEventsCollectionId,
-            ownerTeamId: 'live-events',
+            owner: { type: 'team', id: 'live-events'},
             name: 'Event Roles',
             icon: 'palette',
             color: '#3B82F6',
-            viewMode: 'detailed',
-            applications: ['team members', 'events'],
+            viewMode: 'assorted',
+            applications: ['team members'],
             description: 'Specialized roles for executing live events and broadcasts.',
             badgeIds: [
                 ...liveEventsBadges.map(b => b.id),
@@ -312,7 +301,7 @@ export const mockTeams: Team[] = [
         pinnedLocations: ['Auditorium', 'ACR', 'Event Space 1 (S2)', 'Event Space 2 (S2)'],
         checkLocations: ['Auditorium'],
         eventTemplates: [
-            { id: 'template-3', name: 'Standard Live Event', icon: 'podcasts', requestedRoles: ['TD', 'ES Operator', 'Camera Operator', 'Audio Engineer'] },
+            { id: 'template-3', name: 'Standard Live Event', icon: 'podcasts', requestedRoles: ['TD', 'ES Operator', 'Camera Op.', 'Audio Engineer'] },
             { id: 'template-4', name: 'Auditorium Presentation', icon: 'slideshow', requestedRoles: ['TD', 'Content Op'] }
         ],
     },
@@ -327,53 +316,6 @@ export const mockTeams: Team[] = [
         allBadges: [],
         badgeCollections: [],
     },
-    {
-      id: 'service-delivery',
-      name: 'Service Delivery',
-      icon: 'business_center',
-      color: '#8B5CF6',
-      members: ['2'],
-      teamAdmins: ['2'],
-      allBadges: [...pScaleBadges, ...starSystemBadges, ...effortBadges],
-      badgeCollections: [
-        {
-            id: pScaleCollectionId,
-            ownerTeamId: 'service-delivery',
-            name: 'P# Scale',
-            icon: 'rule',
-            color: '#94A3B8',
-            viewMode: 'assorted',
-            applications: ['events', 'tasks'],
-            description: 'Standard P-number priority system for criticality.',
-            badgeIds: pScaleBadges.map(b => b.id),
-            isShared: true,
-        },
-        {
-            id: starSystemCollectionId,
-            ownerTeamId: 'service-delivery',
-            name: 'Star Rating',
-            icon: 'stars',
-            color: '#FBBF24',
-            viewMode: 'assorted',
-            applications: ['tasks'],
-            description: 'A 5-star rating system for tasks and feedback.',
-            badgeIds: starSystemBadges.map(b => b.id),
-            isShared: true,
-        },
-        {
-            id: effortCollectionId,
-            ownerTeamId: 'service-delivery',
-            name: 'Effort',
-            icon: 'scale',
-            color: '#A855F7',
-            viewMode: 'assorted',
-            applications: ['tasks'],
-            description: 'T-shirt sizing for estimating task effort.',
-            badgeIds: effortBadges.map(b => b.id),
-            isShared: true,
-        }
-      ]
-    }
 ];
 
 
@@ -438,7 +380,7 @@ export const mockEvents: Event[] = [
         priority: 'p0',
         attachments: [],
         templateId: 'template-1',
-        roleAssignments: { 'Video Director': '1', 'Camera Operator': '11', 'Audio Engineer': '8' },
+        roleAssignments: { 'Video Director': '1', 'Camera Op.': '11', 'Audio Engineer': '8' },
         createdBy: '1', 
         createdAt: new Date(), 
         lastUpdated: new Date() 

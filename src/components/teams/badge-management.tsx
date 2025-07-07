@@ -142,18 +142,11 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     const [isEditingDescription, setIsEditingDescription] = useState(false);
     const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
     
+    // Simplified and corrected ownership check.
     const ownerTeam = useMemo(() => {
-        for (const t of teams) {
-          if (t.allBadges.some(b => b.id === badge.id)) {
-            const foundBadge = t.allBadges.find(b => b.id === badge.id)!;
-            const collectionOwner = t.badgeCollections.find(c => c.id === foundBadge.ownerCollectionId);
-            if (collectionOwner) {
-                return t;
-            }
-          }
-        }
-        return teams.find(t => t.id === teamId);
-    }, [teams, badge, teamId]);
+        // The true owner of a badge is the team that has it in its `allBadges` array.
+        return teams.find(t => t.allBadges.some(b => b.id === badge.id));
+    }, [teams, badge.id]);
     
     const isOwnedByMyTeam = ownerTeam?.id === teamId;
     const isEditable = isOwnedByMyTeam && !isSharedPreview;
@@ -223,10 +216,10 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     };
 
     const isShared = useMemo(() => {
-        if (!isOwnedByMyTeam) return false;
-        const ownerCollection = ownerTeam?.badgeCollections.find(c => c.id === badge.ownerCollectionId);
+        if (!ownerTeam) return false;
+        const ownerCollection = ownerTeam.badgeCollections.find(c => c.id === badge.ownerCollectionId);
         return !!ownerCollection?.isShared;
-    }, [badge.ownerCollectionId, isOwnedByMyTeam, ownerTeam]);
+    }, [badge.ownerCollectionId, ownerTeam]);
     
     const isThisTheOriginalInstance = badge.ownerCollectionId === collectionId;
 
@@ -634,9 +627,9 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
         { key: 'badges', icon: 'style', label: 'Badges' },
     ];
 
-    const isOwned = collection.ownerTeamId === teamId;
+    const isOwned = collection.owner.type === 'team' && collection.owner.id === teamId;
     const isShared = collection.isShared;
-    const ownerTeam = teams.find(t => t.id === collection.ownerTeamId);
+    const ownerTeam = teams.find(t => t.id === collection.owner.id);
     
     let shareIcon: string | null = null;
     let shareIconTitle: string = '';
@@ -807,7 +800,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
 }
 
 export const BadgeManagement = ({ team, tab }: { team?: Team, tab: AppTab }) => {
-    const { teams, updateTeam, updateAppTab } = useUser();
+    const { teams, appSettings, updateTeam, updateAppTab } = useUser();
     const { toast } = useToast();
     
     const [collectionToDelete, setCollectionToDelete] = useState<string | null>(null);
@@ -877,7 +870,7 @@ export const BadgeManagement = ({ team, tab }: { team?: Team, tab: AppTab }) => 
         }
         const newCollection: BadgeCollection = {
             id: crypto.randomUUID(),
-            ownerTeamId: team.id,
+            owner: { type: 'team', id: team.id },
             name: newName,
             icon: 'category',
             color: '#64748B',
@@ -896,7 +889,7 @@ export const BadgeManagement = ({ team, tab }: { team?: Team, tab: AppTab }) => 
         const collection = team.badgeCollections.find(c => c.id === collectionId);
         if (!collection) return;
 
-        const isOwned = collection.ownerTeamId === team.id;
+        const isOwned = collection.owner.type === 'team' && collection.owner.id === team.id;
 
         if (isOwned) {
             setCollectionToDelete(collectionId);
@@ -949,26 +942,70 @@ export const BadgeManagement = ({ team, tab }: { team?: Team, tab: AppTab }) => 
     };
     
     const allBadgesAvailableToTeam = useMemo(() => {
-        const badgeMap = new Map<string, Badge>();
-        
-        teams.forEach(t => {
-            (t.allBadges || []).forEach(badge => {
-                badgeMap.set(badge.id, badge);
-            });
-        });
-        
-        return Array.from(badgeMap.values());
-    }, [teams]);
+      const badgeMap = new Map<string, Badge>();
+      teams.forEach(t => {
+          (t.allBadges || []).forEach(badge => {
+              if (!badgeMap.has(badge.id)) {
+                  badgeMap.set(badge.id, badge);
+              }
+          });
+      });
+      (appSettings.globalBadges || []).forEach(badge => {
+        if (!badgeMap.has(badge.id)) {
+          badgeMap.set(badge.id, badge);
+        }
+      });
+      return Array.from(badgeMap.values());
+    }, [teams, appSettings.globalBadges]);
     
     const linkedCollectionIds = useMemo(() => new Set(team.badgeCollections.map(c => c.id)), [team.badgeCollections]);
 
     const sharedCollectionsFromOthers = useMemo(() => {
-        return teams
+        const otherTeamCollections = teams
             .filter(t => t.id !== team.id)
-            .flatMap(t => t.badgeCollections || [])
+            .flatMap(t => t.badgeCollections || []);
+            
+        const globalCollections = appSettings.globalBadges ? [{
+            id: 'global-p-scale',
+            name: 'P# Scale',
+            icon: 'rule',
+            color: '#94A3B8',
+            owner: { type: 'admin_group', name: 'Service Delivery' },
+            viewMode: 'assorted',
+            applications: ['events', 'tasks'],
+            description: 'Standard P-number priority system for criticality.',
+            badgeIds: appSettings.globalBadges.filter(b => b.ownerCollectionId === 'global-p-scale').map(b => b.id),
+            isShared: true,
+        },
+        {
+            id: 'global-star-system',
+            name: 'Star Rating',
+            icon: 'stars',
+            color: '#FBBF24',
+            owner: { type: 'admin_group', name: 'Service Delivery' },
+            viewMode: 'assorted',
+            applications: ['tasks'],
+            description: 'A 5-star rating system for tasks and feedback.',
+            badgeIds: appSettings.globalBadges.filter(b => b.ownerCollectionId === 'global-star-system').map(b => b.id),
+            isShared: true,
+        },
+        {
+            id: 'global-effort',
+            name: 'Effort',
+            icon: 'scale',
+            color: '#A855F7',
+            owner: { type: 'admin_group', name: 'Service Delivery' },
+            viewMode: 'assorted',
+            applications: ['tasks'],
+            description: 'T-shirt sizing for estimating task effort.',
+            badgeIds: appSettings.globalBadges.filter(b => b.ownerCollectionId === 'global-effort').map(b => b.id),
+            isShared: true,
+        }] as BadgeCollection[] : [];
+
+        return [...otherTeamCollections, ...globalCollections]
             .filter(c => c.isShared && !linkedCollectionIds.has(c.id))
             .filter(c => c.name.toLowerCase().includes(sharedSearchTerm.toLowerCase()));
-    }, [teams, team.id, linkedCollectionIds, sharedSearchTerm]);
+    }, [teams, team.id, linkedCollectionIds, sharedSearchTerm, appSettings.globalBadges]);
     
     const displayedCollections = useMemo(() => {
         const all = team?.badgeCollections || [];
@@ -1089,7 +1126,7 @@ export const BadgeManagement = ({ team, tab }: { team?: Team, tab: AppTab }) => 
                      ...JSON.parse(JSON.stringify(sourceCollection)),
                      id: newId,
                      name: `${sourceCollection.name} (Copy)`,
-                     ownerTeamId: team.id,
+                     owner: { type: 'team', id: team.id },
                      isShared: false,
                      badgeIds: newBadges.map(b => b.id),
                  };
@@ -1150,7 +1187,7 @@ export const BadgeManagement = ({ team, tab }: { team?: Team, tab: AppTab }) => 
             const newCollections = team.badgeCollections.map(c => c.id === sourceCollection.id ? { ...c, badgeIds: reorderedIds } : c);
             updateTeam(team.id, { badgeCollections: newCollections });
         } else { // --- Linking to a different collection ---
-             if (destCollection.ownerTeamId !== team.id) {
+             if (destCollection.owner.type !== 'team' || destCollection.owner.id !== team.id) {
                 toast({ variant: 'destructive', title: 'Cannot Add Badge', description: 'You can only add badges to collections owned by your team.' });
                 return;
             }
