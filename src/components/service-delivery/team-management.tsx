@@ -136,7 +136,6 @@ function TeamCard({
     const [isAddUserPopoverOpen, setIsAddUserPopoverOpen] = useState(false);
     const [userSearch, setUserSearch] = useState('');
     const addUserSearchInputRef = useRef<HTMLInputElement>(null);
-    const [isExpanded, setIsExpanded] = useState(false);
     
     const isOwned = useMemo(() => {
         if (isSharedPreview || !viewAsUser) return false;
@@ -215,17 +214,9 @@ function TeamCard({
         }
     }
 
-    const handleHeaderClick = (e: React.MouseEvent) => {
-        // Don't toggle if the click was on an interactive element inside the header
-        if ((e.target as HTMLElement).closest('button, input, a, [role="menuitem"], [role="option"]')) {
-            return;
-        }
-        setIsExpanded(!isExpanded);
-    };
-
     return (
         <Card className="flex flex-col group bg-transparent relative">
-            <div {...dragHandleProps} onClick={handleHeaderClick} className="cursor-pointer">
+            <div {...dragHandleProps}>
                 <CardHeader>
                     <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -350,45 +341,43 @@ function TeamCard({
                     </div>
                 </CardHeader>
             </div>
-             {isExpanded && (
-                <CardContent className="flex-grow pt-0">
-                    <ScrollArea className="max-h-48 pr-2">
-                        <StrictModeDroppable droppableId={team.id} type="user-card" isDropDisabled={!isOwned}>
-                            {(provided, snapshot) => (
-                                <div
-                                    ref={provided.innerRef}
-                                    {...provided.droppableProps}
-                                    className={cn(
-                                        "min-h-[60px] rounded-md p-2 -m-2 space-y-1 transition-colors",
-                                        snapshot.isDraggingOver && "ring-1 ring-border ring-inset"
-                                    )}>
-                                    {teamMembers.map((user, index) => (
-                                        <Draggable key={user.userId} draggableId={`user-${team.id}-${user.userId}`} index={index} isDragDisabled={!isOwned}>
-                                            {(provided, snapshot) => (
-                                                <div
-                                                    ref={provided.innerRef}
-                                                    {...provided.draggableProps}
-                                                    {...provided.dragHandleProps}
-                                                    className={cn(snapshot.isDragging && "opacity-50 shadow-lg")}
-                                                >
-                                                <UserCard 
-                                                    user={user} 
-                                                    onRemove={() => onRemoveUser(team.id, user.userId)}
-                                                    isTeamAdmin={(team.teamAdmins || []).includes(user.userId)}
-                                                    onSetAdmin={() => onSetAdmin(team.id, user.userId)}
-                                                    canManageAdmins={canManageAdmins}
-                                                />
-                                                </div>
-                                            )}
-                                        </Draggable>
-                                    ))}
-                                    {provided.placeholder}
-                                </div>
-                            )}
-                        </StrictModeDroppable>
-                    </ScrollArea>
-                </CardContent>
-            )}
+            <CardContent className="flex-grow pt-0">
+                <ScrollArea className="max-h-48 pr-2">
+                    <StrictModeDroppable droppableId={team.id} type="user-card" isDropDisabled={!isOwned}>
+                        {(provided, snapshot) => (
+                            <div
+                                ref={provided.innerRef}
+                                {...provided.droppableProps}
+                                className={cn(
+                                    "min-h-[60px] rounded-md p-2 -m-2 space-y-1 transition-colors",
+                                    snapshot.isDraggingOver && "ring-1 ring-border ring-inset"
+                                )}>
+                                {teamMembers.map((user, index) => (
+                                    <Draggable key={user.userId} draggableId={`user-${team.id}-${user.userId}`} index={index} isDragDisabled={!isOwned}>
+                                        {(provided, snapshot) => (
+                                            <div
+                                                ref={provided.innerRef}
+                                                {...provided.draggableProps}
+                                                {...provided.dragHandleProps}
+                                                className={cn(snapshot.isDragging && "opacity-50 shadow-lg")}
+                                            >
+                                            <UserCard 
+                                                user={user} 
+                                                onRemove={() => onRemoveUser(team.id, user.userId)}
+                                                isTeamAdmin={(team.teamAdmins || []).includes(user.userId)}
+                                                onSetAdmin={() => onSetAdmin(team.id, user.userId)}
+                                                canManageAdmins={canManageAdmins}
+                                            />
+                                            </div>
+                                        )}
+                                    </Draggable>
+                                ))}
+                                {provided.placeholder}
+                            </div>
+                        )}
+                    </StrictModeDroppable>
+                </ScrollArea>
+            </CardContent>
         </Card>
     );
 }
