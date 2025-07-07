@@ -8,7 +8,7 @@ import { CalendarManagement } from '@/components/service-delivery/calendar-manag
 import { TeamManagement } from '@/components/service-delivery/team-management';
 import { Skeleton } from '@/components/ui/skeleton';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
-import { type AppTab, type AppPage } from '@/types';
+import { type AppTab, type AppPage, type Team } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -16,12 +16,14 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { hasAccess } from '@/lib/permissions';
+import { BadgeManagement } from '@/components/teams/badge-management';
 
 
 // This is a mapping from the componentKey in our AppTab model to the actual component to render.
-const componentMap: Record<string, React.ComponentType<{ tab: AppTab }>> = {
+const componentMap: Record<string, React.ComponentType<{ tab: AppTab, team?: Team }>> = {
   calendars: CalendarManagement,
   teams: TeamManagement,
+  badges: BadgeManagement,
 };
 
 // Define a unique identifier for this page
@@ -133,9 +135,10 @@ export default function ServiceDeliveryPage() {
         </TabsList>
         {pageTabs.map(tab => {
           const ContentComponent = componentMap[tab.componentKey];
+          const contextTeam = tab.contextTeamId ? teams.find(t => t.id === tab.contextTeamId) : undefined;
           return (
             <TabsContent key={tab.id} value={tab.id} className="mt-4">
-              {ContentComponent ? <ContentComponent tab={tab} /> : <div>Component for {tab.name} not found.</div>}
+              {ContentComponent ? <ContentComponent tab={tab} team={contextTeam} /> : <div>Component for {tab.name} not found.</div>}
             </TabsContent>
           );
         })}

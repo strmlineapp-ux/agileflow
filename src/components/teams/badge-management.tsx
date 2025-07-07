@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -807,7 +806,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
     );
 }
 
-export const BadgeManagement = ({ team, tab }: { team: Team, tab: AppTab }) => {
+export const BadgeManagement = ({ team, tab }: { team?: Team, tab: AppTab }) => {
     const { teams, updateTeam, updateAppTab } = useUser();
     const { toast } = useToast();
     
@@ -854,6 +853,14 @@ export const BadgeManagement = ({ team, tab }: { team: Team, tab: AppTab }) => {
             sharedSearchInputRef.current.focus();
         }
     }, [isSharedSearching]);
+
+    if (!team) {
+        return (
+            <div className="flex items-center justify-center h-64 border-2 border-dashed rounded-lg">
+                <p className="text-muted-foreground">No team context provided for badge management.</p>
+            </div>
+        );
+    }
 
     const handleUpdateCollection = (collectionId: string, newValues: Partial<Omit<BadgeCollection, 'id' | 'badgeIds'>>) => {
         const newCollections = team.badgeCollections.map(collection => 
@@ -964,7 +971,7 @@ export const BadgeManagement = ({ team, tab }: { team: Team, tab: AppTab }) => {
     }, [teams, team.id, linkedCollectionIds, sharedSearchTerm]);
     
     const displayedCollections = useMemo(() => {
-        const all = team.badgeCollections || [];
+        const all = team?.badgeCollections || [];
         return all.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
     }, [team.badgeCollections, searchTerm]);
 
