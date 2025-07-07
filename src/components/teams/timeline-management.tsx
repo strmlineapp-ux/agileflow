@@ -53,7 +53,7 @@ const TimelineRow = ({ name }: { name: string }) => {
 }
 
 function EditableTimelineView({ timeline, onUpdate, onDelete }: {
-  timeline: { id: string, name: string, icon: string, color: string, description?: string };
+  timeline: { id: string, name: string, icon: string, color: string, description?: string, rows: {id: string, name: string}[] };
   onUpdate: (id: string, data: Partial<Omit<typeof timeline, 'id'>>) => void;
   onDelete: (id: string) => void;
 }) {
@@ -111,7 +111,7 @@ function EditableTimelineView({ timeline, onUpdate, onDelete }: {
   };
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden flex flex-col">
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
@@ -137,7 +137,14 @@ function EditableTimelineView({ timeline, onUpdate, onDelete }: {
                 </Popover>
                 <Popover>
                     <PopoverTrigger asChild>
-                        <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background cursor-pointer" style={{ backgroundColor: timeline.color }} />
+                         <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background cursor-pointer" style={{ backgroundColor: timeline.color }} />
+                                </TooltipTrigger>
+                                <TooltipContent><p>Change Color</p></TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-2">
                         <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => onUpdate(timeline.id, { color: c })} />))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={timeline.color} onChange={(e) => onUpdate(timeline.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
@@ -187,12 +194,16 @@ function EditableTimelineView({ timeline, onUpdate, onDelete }: {
           </Button>
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="overflow-x-auto">
+      <CardContent className="flex-grow min-h-0">
+        <div className="overflow-x-auto h-full">
           <div className="min-w-[2440px]">
             <TimelineHourHeader />
-            <TimelineRow name="Row 1" />
-            <TimelineRow name="Row 2" />
+            {(timeline.rows || []).map(row => (
+                <TimelineRow key={row.id} name={row.name} />
+            ))}
+             {(timeline.rows || []).length === 0 && (
+                <div className="text-center p-4 text-sm text-muted-foreground">No rows in this timeline yet.</div>
+            )}
           </div>
         </div>
       </CardContent>
@@ -231,6 +242,7 @@ export function TimelineManagement({ team, tab }: { team: Team, tab: AppTab }) {
         icon: 'timeline',
         color: '#64748B',
         description: 'A new timeline for planning work.',
+        rows: [],
     };
     updateTeam(team.id, { timelines: [...timelines, newTimeline] });
   }
@@ -293,3 +305,5 @@ export function TimelineManagement({ team, tab }: { team: Team, tab: AppTab }) {
     </div>
   );
 }
+
+    

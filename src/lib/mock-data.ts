@@ -408,8 +408,8 @@ export const mockTeams: Team[] = [
             { id: 'template-2', name: 'Voice Over Record', icon: 'record_voice_over', requestedRoles: ['Post-Production'] }
         ],
         timelines: [
-          { id: 'tl-1', name: 'Commercial Shoot Workflow', icon: 'movie', color: '#8B5CF6', description: 'Standard workflow for commercial shoots from pre-production to delivery.' },
-          { id: 'tl-2', name: 'Animation Pipeline', icon: 'animation', color: '#14B8A6', description: 'End-to-end pipeline for animated shorts.' },
+          { id: 'tl-1', name: 'Commercial Shoot Workflow', icon: 'movie', color: '#8B5CF6', description: 'Standard workflow for commercial shoots from pre-production to delivery.', rows: [{id: 'r1', name: 'Pre-Production'}, {id: 'r2', name: 'Shooting'}, {id: 'r3', name: 'Post-Production'}]},
+          { id: 'tl-2', name: 'Animation Pipeline', icon: 'animation', color: '#14B8A6', description: 'End-to-end pipeline for animated shorts.', rows: [{id: 'r4', name: 'Storyboarding'}, {id: 'r5', name: 'Animation'}, {id: 'r6', name: 'Sound Design'}] },
         ]
     },
     {
@@ -468,6 +468,7 @@ export const mockTeams: Team[] = [
         locationAliases: {},
         workstations: [],
         eventTemplates: [],
+        timelines: [],
     }
 ];
 
@@ -764,3 +765,5 @@ export const mockHolidays: Date[] = [
     new Date(currentYear, 6, 4), // Independence Day
     new Date(currentYear, 11, 25), // Christmas Day
 ];
+
+    

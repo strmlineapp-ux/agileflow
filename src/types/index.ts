@@ -117,6 +117,7 @@ export interface Timeline {
     icon: string;
     color: string;
     description?: string;
+    rows: { id: string, name: string }[];
 }
 
 export interface Team {
@@ -262,3 +263,5 @@ export type PriorityStrategy = {
   | { type: 'symbol'; icon: string; max: number; color: string }
   | { type: 'scale'; min: number; max: number; intervals: { label: string, from: number, to: number, color: string }[] }
 );
+
+    

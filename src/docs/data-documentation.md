@@ -144,6 +144,8 @@ The `Team` entity groups users together and defines a set of team-specific confi
 | `color: string` | The hex color for the team's icon. |
 | `members: string[]` | An array of `userId`s for all members of the team. |
 | `teamAdmins: string[]` | A subset of `members` who have administrative privileges for this team. |
+| `teamAdminsLabel?: string` | A custom label for the Team Admins list on the Team Members tab. |
+| `membersLabel?: string` | A custom label for the Members list on the Team Members tab. |
 | `allBadges: Badge[]` | The single source of truth for all `Badge` objects **owned** by this team. |
 | `badgeCollections: BadgeCollection[]` | An array of `BadgeCollection` objects. This includes collections *owned* by the team, and *links* to collections owned by other teams. |
 | `userBadgesLabel?: string` | A custom label for the "Team Badges" section on the Team Members tab. |
@@ -159,6 +161,7 @@ A sub-entity of `Team`, this represents a custom, multi-row timeline view, simil
 | `icon: string` | The Google Symbol name for the timeline's icon. |
 | `color: string` | The hex color for the timeline's icon. |
 | `description?: string` | An optional description for the timeline. |
+| `rows: {id: string, name: string}[]` | An array of objects defining the rows that appear in this timeline's grid. |
 
 ### BadgeCollection Entity
 A sub-entity of `Team`, this groups related Badges together. It can be owned by the team or shared with others.
@@ -188,3 +191,5 @@ This represents a specific, functional role or skill within a team. The single s
 | `icon: string` | The Google Symbol name for the badge's icon. |
 | `color: string` | The hex color code for the badge's icon and outline. |
 | `description?: string` | An optional description shown in tooltips. |
+
+    
