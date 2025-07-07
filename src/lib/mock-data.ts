@@ -1,4 +1,5 @@
 
+
 import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team, type AppSettings, type Badge, type BadgeCollection, type AppTab, type AppPage, type AdminGroup } from '@/types';
 
 export const mockTabs: AppTab[] = [
@@ -432,3 +433,4 @@ export const mockHolidays: Date[] = [
     new Date(currentYear, 6, 4), // Independence Day
     new Date(currentYear, 11, 25), // Christmas Day
 ];
+

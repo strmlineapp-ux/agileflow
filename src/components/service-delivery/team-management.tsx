@@ -563,7 +563,11 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
             const userId = draggableId.split('-').pop();
 
             if (!userId) return;
-            handleAddUserToTeam(destTeamId, userId);
+            
+            const sourceTeamId = draggableId.split('-')[1];
+            if (sourceTeamId !== destTeamId) {
+                handleAddUserToTeam(destTeamId, userId);
+            }
         }
     };
 
@@ -726,3 +730,4 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
         </DragDropContext>
     );
 }
+
