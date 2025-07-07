@@ -20,6 +20,7 @@ import { ScrollArea } from '../ui/scroll-area';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Badge } from '../ui/badge';
 import { CardDescription } from '../ui/card';
+import { googleSymbolNames } from '@/lib/google-symbols';
 
 // Wrapper to fix issues with react-beautiful-dnd and React 18 Strict Mode
 const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
@@ -135,6 +136,11 @@ function TeamCard({
     const { viewAsUser, teams } = useUser();
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isEditingName, setIsEditingName] = useState(false);
+    
+    const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
+    const [iconSearch, setIconSearch] = useState('');
+    const iconSearchInputRef = useRef<HTMLInputElement>(null);
+
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
     const [isAddUserPopoverOpen, setIsAddUserPopoverOpen] = useState(false);
     const [userSearch, setUserSearch] = useState('');
@@ -206,6 +212,16 @@ function TeamCard({
         if (isEditingName) nameInputRef.current?.focus();
     }, [isEditingName]);
 
+    useEffect(() => {
+        if (isIconPopoverOpen) {
+            setTimeout(() => iconSearchInputRef.current?.focus(), 100);
+        } else {
+            setIconSearch('');
+        }
+    }, [isIconPopoverOpen]);
+
+    const filteredIcons = useMemo(() => googleSymbolNames.filter(icon => icon.toLowerCase().includes(iconSearch.toLowerCase())), [iconSearch]);
+
     const handleSaveName = () => {
         const newName = nameInputRef.current?.value.trim();
         if (newName && newName !== team.name) {
@@ -226,16 +242,42 @@ function TeamCard({
                     <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3 flex-1 min-w-0">
                             <div className="relative">
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <button onClick={(e) => e.stopPropagation()} className="h-12 w-12 flex items-center justify-center">
-                                                <GoogleSymbol name={team.icon} className="text-6xl" weight={100} />
-                                            </button>
-                                        </TooltipTrigger>
-                                        <TooltipContent><p>Team Icon</p></TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
+                                <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <PopoverTrigger asChild onClick={(e) => e.stopPropagation()} disabled={!isOwned}>
+                                                    <button className="h-12 w-12 flex items-center justify-center">
+                                                        <GoogleSymbol name={team.icon} className="text-6xl" weight={100} />
+                                                    </button>
+                                                </PopoverTrigger>
+                                            </TooltipTrigger>
+                                            <TooltipContent><p>Change Icon</p></TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                    <PopoverContent className="w-80 p-0">
+                                        <div className="flex items-center gap-1 p-2 border-b">
+                                            <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                                            <input
+                                                ref={iconSearchInputRef}
+                                                placeholder="Search icons..."
+                                                value={iconSearch}
+                                                onChange={(e) => setIconSearch(e.target.value)}
+                                                className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                                            />
+                                        </div>
+                                        <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (
+                                            <TooltipProvider key={iconName}>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                <Button variant={team.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(team.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="h-8 w-8 p-0"><GoogleSymbol name={iconName} className="text-4xl" weight={100} /></Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent><p>{iconName}</p></TooltipContent>
+                                            </Tooltip>
+                                            </TooltipProvider>
+                                        ))}</div></ScrollArea>
+                                    </PopoverContent>
+                                </Popover>
                                 <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
                                     <TooltipProvider>
                                         <Tooltip>
@@ -695,18 +737,20 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
                             >
                                 <Card className={cn("transition-opacity duration-300 h-full bg-transparent", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
                                     <CardHeader>
-                                        <CardTitle className="font-headline font-thin text-xl">Shared Teams</CardTitle>
-                                        <CardDescription>Drag a team you own here to share it.</CardDescription>
-                                        <div className="flex items-center gap-1 p-1 border-b">
-                                            <GoogleSymbol name="search" className="text-muted-foreground text-lg" />
-                                            <input
-                                                ref={sharedSearchInputRef}
-                                                placeholder="Search shared teams..."
-                                                value={sharedSearchTerm}
-                                                onChange={(e) => setSharedSearchTerm(e.target.value)}
-                                                className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
-                                            />
+                                        <div className="flex items-center justify-between">
+                                            <CardTitle className="font-headline font-thin text-xl">Shared Teams</CardTitle>
+                                            <div className="flex items-center gap-1 p-1 border-b">
+                                                <GoogleSymbol name="search" className="text-muted-foreground text-lg" />
+                                                <input
+                                                    ref={sharedSearchInputRef}
+                                                    placeholder="Search shared teams..."
+                                                    value={sharedSearchTerm}
+                                                    onChange={(e) => setSharedSearchTerm(e.target.value)}
+                                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                                                />
+                                            </div>
                                         </div>
+                                        <CardDescription>Drag a team you own here to share it.</CardDescription>
                                     </CardHeader>
                                     <CardContent className="h-full">
                                         <ScrollArea className="h-full">
