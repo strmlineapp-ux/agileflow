@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
@@ -20,6 +18,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '../ui/avatar';
 import { ScrollArea } from '../ui/scroll-area';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Badge } from '../ui/badge';
+import { CardDescription } from '../ui/card';
 
 // Wrapper to fix issues with react-beautiful-dnd and React 18 Strict Mode
 const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
@@ -493,21 +492,39 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
         toast({ title: 'Success', description: `Team "${teamToDelete.name}" has been deleted.` });
         setTeamToDelete(null);
     };
+    
+    const displayedTeams = useMemo(() => {
+        // For an admin on this page, they see all teams.
+        // In a different context, this might be filtered by ownership or membership.
+        return teams;
+    }, [teams]);
 
-    const unsharedTeams = useMemo(() => teams.filter(t => !t.isShared), [teams]);
-    const sharedTeams = useMemo(() => {
-        return teams.filter(t => t.isShared && t.name.toLowerCase().includes(sharedSearchTerm.toLowerCase()));
-    }, [teams, sharedSearchTerm]);
+    const sharedTeamsFromOthers = useMemo(() => {
+        const displayedTeamIds = new Set(displayedTeams.map(t => t.id));
+        return teams
+            .filter(t => t.isShared && !displayedTeamIds.has(t.id))
+            .filter(t => t.name.toLowerCase().includes(sharedSearchTerm.toLowerCase()));
+    }, [teams, displayedTeams, sharedSearchTerm]);
     
     const onDragEnd = (result: DropResult) => {
         const { source, destination, draggableId, type } = result;
         if (!destination) return;
-
-        if (type === 'team-card' && source.droppableId !== destination.droppableId) {
-            const teamToMove = teams.find(t => t.id === draggableId);
-            if(teamToMove) {
-                handleToggleShare(teamToMove);
+        
+        // Handle dragging a team to the shared panel
+        if (type === 'team-card' && destination.droppableId === 'shared-teams-panel') {
+            const teamToShare = teams.find(t => t.id === draggableId);
+            if (teamToShare && !teamToShare.isShared) {
+                handleToggleShare(teamToShare);
             }
+            return;
+        }
+
+        // Handle reordering teams in the main list
+        if (type === 'team-card' && source.droppableId === 'teams-list' && destination.droppableId === 'teams-list') {
+            const reordered = Array.from(displayedTeams);
+            const [movedItem] = reordered.splice(source.index, 1);
+            reordered.splice(destination.index, 0, movedItem);
+            reorderTeams(reordered);
             return;
         }
 
@@ -525,21 +542,6 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
                 addTeam(newTeam);
                 toast({ title: 'Team Copied' });
             }
-            return;
-        }
-        
-        if (type === 'team-card') {
-            const listToReorder = source.droppableId === 'teams-list' ? unsharedTeams : sharedTeams;
-            const reorderedSublist = Array.from(listToReorder);
-            const [movedItem] = reorderedSublist.splice(source.index, 1);
-            reorderedSublist.splice(destination.index, 0, movedItem);
-
-            const otherList = source.droppableId === 'teams-list' ? sharedTeams : unsharedTeams;
-            const finalOrderedList = source.droppableId === 'teams-list' 
-                ? [...reorderedSublist, ...otherList]
-                : [...otherList, ...reorderedSublist];
-
-            reorderTeams(finalOrderedList);
             return;
         }
         
@@ -611,7 +613,7 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
                     <StrictModeDroppable droppableId="teams-list" type="team-card" isDropDisabled={false} ignoreContainerClipping={false}>
                         {(provided) => (
                             <div className="flex flex-wrap -m-3" ref={provided.innerRef} {...provided.droppableProps}>
-                                {unsharedTeams.map((team, index) => (
+                                {displayedTeams.map((team, index) => (
                                     <Draggable key={team.id} draggableId={team.id} index={index} ignoreContainerClipping={false}>
                                         {(provided, snapshot) => (
                                             <div
@@ -677,7 +679,7 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
                                     <CardContent className="h-full">
                                         <ScrollArea className="h-full">
                                             <div className="space-y-2">
-                                                {sharedTeams.map((team, index) => (
+                                                {sharedTeamsFromOthers.map((team, index) => (
                                                     <Draggable key={team.id} draggableId={team.id} index={index} ignoreContainerClipping={false}>
                                                     {(provided, snapshot) => (
                                                         <div ref={provided.innerRef} {...provided.draggableProps}>
@@ -699,7 +701,7 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
                                                     </Draggable>
                                                 ))}
                                                 {provided.placeholder}
-                                                {sharedTeams.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">No teams are currently shared.</p>}
+                                                {sharedTeamsFromOthers.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">No teams are currently shared.</p>}
                                             </div>
                                         </ScrollArea>
                                     </CardContent>
