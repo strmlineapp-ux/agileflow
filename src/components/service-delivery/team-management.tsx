@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
@@ -582,7 +581,7 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
     
     const displayedTeams = useMemo(() => {
         return teams
-            .filter(t => isTeamOwner(t, viewAsUser) || (viewAsUser.linkedTeamIds || []).includes(t.id) || t.members.includes(viewAsUser.userId))
+            .filter(t => isTeamOwner(t, viewAsUser) || (viewAsUser.linkedTeamIds || []).includes(t.id))
             .filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase()));
     }, [teams, viewAsUser, searchTerm, isTeamOwner]);
 
@@ -629,15 +628,25 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
 
             if(teamToDuplicate) {
                 const owner = getOwnershipContext(page, viewAsUser, teams, appSettings.adminGroups);
-                const teamDataCopy = JSON.parse(JSON.stringify(teamToDuplicate));
-
                 const newTeam: Omit<Team, 'id'> = {
-                    ...teamDataCopy,
                     name: `${teamToDuplicate.name} (Copy)`,
-                    owner,
+                    icon: teamToDuplicate.icon,
+                    color: teamToDuplicate.color,
+                    owner: owner,
                     isShared: false,
-                    members: teamToDuplicate.members, 
+                    members: teamToDuplicate.members,
                     teamAdmins: teamToDuplicate.teamAdmins,
+                    teamAdminsLabel: teamToDuplicate.teamAdminsLabel,
+                    membersLabel: teamToDuplicate.membersLabel,
+                    locationCheckManagers: teamToDuplicate.locationCheckManagers,
+                    allBadges: JSON.parse(JSON.stringify(teamToDuplicate.allBadges)),
+                    badgeCollections: JSON.parse(JSON.stringify(teamToDuplicate.badgeCollections)),
+                    userBadgesLabel: teamToDuplicate.userBadgesLabel,
+                    pinnedLocations: teamToDuplicate.pinnedLocations,
+                    checkLocations: teamToDuplicate.checkLocations,
+                    locationAliases: teamToDuplicate.locationAliases,
+                    workstations: teamToDuplicate.workstations,
+                    eventTemplates: JSON.parse(JSON.stringify(teamToDuplicate.eventTemplates)),
                 };
                 addTeam(newTeam);
                 toast({ title: 'Team Copied', description: 'A new, independent team has been created.' });

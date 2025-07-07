@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
@@ -192,18 +191,32 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const unlinkAndCopyTeam = useCallback(async (teamToUnlink: Team, newOwner: BadgeCollectionOwner) => {
     await simulateApi();
     
-    const newTeam: Team = {
-        ...JSON.parse(JSON.stringify(teamToUnlink)),
-        id: crypto.randomUUID(),
-        name: `${teamToUnlink.name} (Copy)`,
+    const newTeamData: Omit<Team, 'id'> = {
+        name: teamToUnlink.name,
+        icon: teamToUnlink.icon,
+        color: teamToUnlink.color,
         owner: newOwner,
         isShared: false,
+        members: teamToUnlink.members,
+        teamAdmins: teamToUnlink.teamAdmins,
+        teamAdminsLabel: teamToUnlink.teamAdminsLabel,
+        membersLabel: teamToUnlink.membersLabel,
+        locationCheckManagers: teamToUnlink.locationCheckManagers,
+        allBadges: JSON.parse(JSON.stringify(teamToUnlink.allBadges)),
+        badgeCollections: JSON.parse(JSON.stringify(teamToUnlink.badgeCollections)),
+        userBadgesLabel: teamToUnlink.userBadgesLabel,
+        pinnedLocations: teamToUnlink.pinnedLocations,
+        checkLocations: teamToUnlink.checkLocations,
+        locationAliases: teamToUnlink.locationAliases,
+        workstations: teamToUnlink.workstations,
+        eventTemplates: JSON.parse(JSON.stringify(teamToUnlink.eventTemplates)),
     };
+    
+    addTeam(newTeamData); // This will add the new team with a new ID
 
     const updatedLinkedTeamIds = (viewAsUser.linkedTeamIds || []).filter(id => id !== teamToUnlink.id);
     await updateUser(viewAsUser.userId, { linkedTeamIds: updatedLinkedTeamIds });
 
-    addTeam(newTeam);
     toast({ title: 'Team Unlinked & Copied', description: `An independent copy of "${teamToUnlink.name}" is now on your board.` });
   }, [addTeam, viewAsUser, updateUser, toast]);
 
