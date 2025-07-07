@@ -81,26 +81,17 @@ Access to every page and tab in the application is controlled by a dynamic rules
 
 It is important to note that access to a page **does not** automatically grant access to its associated tabs. The `hasAccess` function is run independently for the page and for each of its tabs. This allows you to have a page visible to a wide audience, but with certain tabs on that page restricted to a smaller group.
 
-### Implicit Ownership of Badge Collections
+### Implicit Ownership of Created Items
 
-When a user creates a new Badge Collection, the application automatically assigns ownership based on how the user gained access to the page containing the Badges tab. This creates a clear and logical hierarchy for who manages collections.
+When a user creates a new shareable item (like a **Team** or **Badge Collection**), the application automatically assigns ownership based on how the user gained access to the creation page. This creates a clear and logical hierarchy for who manages these items.
 
 **Ownership Hierarchy:**
 
-1.  **Admin Group (Highest Priority)**: If the user's access to the page is granted through an `AdminGroup`, the new collection will be owned by that group. This is true even if the user also has access via a team or direct user assignment.
-2.  **Team**: If the user's access is *not* from an Admin Group but *is* from their membership in a `Team`, the new collection will be owned by that team.
-3.  **User (Default)**: If the user's access is only granted via their specific `userId` (or if they are an admin creating a collection on a public page), the new collection will be owned by them personally.
+1.  **Admin Group (Highest Priority)**: If the user's access to the page is granted through an `AdminGroup`, the new item will be owned by that group. This is true even if the user also has access via a team or direct user assignment.
+2.  **Team**: If the user's access is *not* from an Admin Group but *is* from their membership in a `Team`, the new item will be owned by that team.
+3.  **User (Default)**: If the user's access is only granted via their specific `userId` (or if they are an admin creating an item on a public page), the new item will be owned by them personally.
 
-The `getOwnershipContext` function in `/src/lib/permissions.ts` contains the logic for this rule. This system ensures that collections created in a team context belong to the team, and collections created in a global administrative context belong to the relevant admin group.
-
-### Implicit Permissions & Contextual Data
-
-Not all user capabilities are stored directly as a field on the `User` object. Many permissions and statuses are determined contextually or are managed in other parts of the application's state. This client-side logic complements the NoSQL data model.
-
-| Capability | Where Data is Stored & How It's Used |
-| :--- | :--- |
-| **Absence Statuses** (e.g., `PTO`, `Sick`) | **Storage:** This data is **not stored on the `User` object**. It is managed in the `userStatusAssignments` state within the `UserContext`, which is a dictionary keyed by date (`YYYY-MM-DD`). In a production Firestore environment, this might be a subcollection under a `/user-statuses` collection for efficient querying by date.<br>**Usage:** The `ProductionScheduleView` allows authorized managers to assign these statuses to users for specific days. The calendar then uses this data to visually indicate a user's availability. |
-| **Interaction Permissions** (e.g., editing an event, managing a team) | **Storage:** This is also **not stored directly**. Permissions are derived by combining user roles with the context of a specific data item.<br>**Usage:** The application uses helper functions (like `canManageEventOnCalendar`) that check if a user's `userId` is in a `Team`'s `teamAdmins` list or if the user has a system-level role like `Admin`. This determines whether UI elements like "Edit" buttons are displayed. |
+The `getOwnershipContext` function in `/src/lib/permissions.ts` contains the logic for this rule. This system ensures that items created in a team context belong to the team, and items created in a global administrative context belong to the relevant admin group.
 
 ## Shared Calendar Entity
 **Firestore Collection**: `/calendars/{calendarId}`
@@ -173,8 +164,8 @@ The `Team` entity groups users together and defines a set of team-specific confi
 | `name: string` | The display name of the team. |
 | `icon: string` | The Google Symbol name for the team's icon. |
 | `color: string` | The hex color for the team's icon. |
-| `owner: { type: 'team', id: string } \| { type: 'admin_group', name: string } \| { type: 'user', id: string }` | An object that defines who owns the collection. This can be a team, an administrative group, or an individual user. Ownership dictates who can edit the team's properties. |
-| `isShared?: boolean` | **Internal.** If `true`, this team will be visible to all other teams in the application for linking. Sharing is controlled by the owner. |
+| `owner: { type: 'team', id: string } \| { type: 'admin_group', name: string } \| { type: 'user', id: string }` | An object that defines who owns the team. Ownership dictates who can edit the team's properties. |
+| `isShared?: boolean` | **Internal.** If `true`, this team will be visible to other teams in the application for discovery and linking. |
 | `members: string[]` | An array of `userId`s for all members of the team. |
 | `teamAdmins?: string[]` | A subset of `members` who have administrative privileges for this team. |
 | `teamAdminsLabel?: string` | A custom label for the Team Admins list on the Team Members tab. |
@@ -190,7 +181,7 @@ A sub-entity of `Team`, this groups related Badges together. It can be owned by 
 | :--- | :--- |
 | `id: string` | A unique identifier for the collection. |
 | `owner: { type: 'team', id: string } \| { type: 'admin_group', name: string } \| { type: 'user', id: string }` | An object that defines who owns the collection. This can be a team, an administrative group, or an individual user. Ownership dictates who can edit the collection's properties and the original badges within it. |
-| `isShared?: boolean` | **Internal.** If `true`, this collection and its badges will be visible to all other teams in the application. Sharing is controlled by the owner. |
+| `isShared?: boolean` | **Internal.** If `true`, this collection and its badges will be visible to all other teams in the application for discovery and linking. |
 | `name: string` | The name of the collection (e.g., "Skills"). |
 | `icon: string` | The Google Symbol name for the collection's icon. |
 | `color: string` | The hex color for the collection's icon. |
@@ -211,3 +202,5 @@ This represents a specific, functional role or skill. The single source of truth
 | `icon: string` | The Google Symbol name for the badge's icon. |
 | `color: string` | The hex color code for the badge's icon and outline. |
 | `description?: string` | An optional description shown in tooltips. |
+
+
