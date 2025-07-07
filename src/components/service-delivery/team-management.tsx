@@ -49,23 +49,23 @@ function UserCard({
     onRemove, 
     isTeamAdmin,
     onSetAdmin,
-    canManageAdmins,
+    canManage,
 }: { 
     user: User; 
     onRemove: () => void; 
     isTeamAdmin: boolean;
     onSetAdmin: () => void;
-    canManageAdmins: boolean;
+    canManage: boolean;
 }) {
   return (
       <div 
         className={cn(
             "group relative flex items-center gap-2 p-1 rounded-md transition-colors",
-            canManageAdmins && "cursor-pointer hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
+            canManage && "cursor-pointer hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
         )}
-        onClick={(e) => { e.stopPropagation(); if (canManageAdmins) onSetAdmin(); }}
-        onKeyDown={(e) => { if(canManageAdmins && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onSetAdmin();}}}
-        tabIndex={canManageAdmins ? 0 : -1}
+        onClick={(e) => { e.stopPropagation(); if (canManage) onSetAdmin(); }}
+        onKeyDown={(e) => { if(canManage && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onSetAdmin();}}}
+        tabIndex={canManage ? 0 : -1}
       >
           <div className="relative">
             <Avatar className="h-8 w-8">
@@ -89,21 +89,23 @@ function UserCard({
               <p className="font-normal text-sm">{user.displayName}</p>
               <p className="text-xs text-muted-foreground">{user.title}</p>
           </div>
-          <TooltipProvider>
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="absolute top-0 right-0 h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={(e) => { e.stopPropagation(); onRemove();}}
-                    >
-                        <GoogleSymbol name="cancel" className="text-lg" weight={100} />
-                    </Button>
-                </TooltipTrigger>
-                <TooltipContent><p>Remove User</p></TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          {canManage && (
+            <TooltipProvider>
+              <Tooltip>
+                  <TooltipTrigger asChild>
+                      <Button
+                          variant="ghost"
+                          size="icon"
+                          className="absolute top-0 right-0 h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => { e.stopPropagation(); onRemove();}}
+                      >
+                          <GoogleSymbol name="cancel" className="text-lg" weight={100} />
+                      </Button>
+                  </TooltipTrigger>
+                  <TooltipContent><p>Remove User</p></TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
       </div>
   );
 }
@@ -184,8 +186,6 @@ function TeamCard({
                 return false;
         }
     }, [team.owner, teams, viewAsUser, isSharedPreview, appSettings.adminGroups]);
-
-    const canManageAdmins = isOwned;
 
     const teamMembers = useMemo(() => team.members.map(id => users.find(u => u.userId === id)).filter((u): u is User => !!u), [team.members, users]);
     const availableUsersToAdd = useMemo(() => users.filter(u => !team.members.includes(u.userId) && u.displayName.toLowerCase().includes(userSearch.toLowerCase())), [users, team.members, userSearch]);
@@ -416,7 +416,7 @@ function TeamCard({
                                                 onRemove={() => onRemoveUser(team.id, user.userId)}
                                                 isTeamAdmin={(team.teamAdmins || []).includes(user.userId)}
                                                 onSetAdmin={() => onSetAdmin(team.id, user.userId)}
-                                                canManageAdmins={canManageAdmins}
+                                                canManage={isOwned}
                                             />
                                             </div>
                                         )}
@@ -433,7 +433,7 @@ function TeamCard({
 }
 
 export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
-    const { viewAsUser, users, teams, appSettings, addTeam, updateTeam, deleteTeam, reorderTeams, updateAppTab, unlinkAndCopyTeam } = useUser();
+    const { viewAsUser, users, teams, appSettings, addTeam, updateTeam, deleteTeam, reorderTeams, updateAppTab, unlinkAndCopyTeam, linkTeam } = useUser();
     const { toast } = useToast();
 
     const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
@@ -503,8 +503,8 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
             color: predefinedColors[teams.length % predefinedColors.length],
             owner: owner,
             isShared: false,
-            members: [viewAsUser.userId], // Creator is automatically a member
-            teamAdmins: [viewAsUser.userId], // And an admin
+            members: [],
+            teamAdmins: [],
             locationCheckManagers: [],
             allBadges: [],
             badgeCollections: [],
@@ -559,17 +559,10 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
         
         const updatedMembers = team.members.filter(id => id !== userId);
         
-        if (updatedMembers.length === 0 && isTeamOwner(team, viewAsUser)) {
-             updateTeam(teamId, { members: [], teamAdmins: [] });
-        } else if (updatedMembers.length === 0) {
-             deleteTeam(teamId);
-             toast({ title: 'Team Deleted', description: `Team "${team.name}" was automatically deleted as the last member was removed.` });
-        } else {
-            const newTeamAdmins = (team.teamAdmins || []).filter(id => id !== userId);
-            updateTeam(teamId, { members: updatedMembers, teamAdmins: newTeamAdmins });
-            toast({ title: 'User Removed' });
-        }
-    }, [teams, deleteTeam, updateTeam, toast, isTeamOwner, viewAsUser]);
+        const newTeamAdmins = (team.teamAdmins || []).filter(id => id !== userId);
+        updateTeam(teamId, { members: updatedMembers, teamAdmins: newTeamAdmins });
+        toast({ title: 'User Removed' });
+    }, [teams, updateTeam, toast]);
 
     const confirmDelete = () => {
         if (!teamToDelete) return;
@@ -580,7 +573,7 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
     
     const displayedTeams = useMemo(() => {
         return teams
-            .filter(t => t.members.includes(viewAsUser.userId) || isTeamOwner(t, viewAsUser))
+            .filter(t => t.members.includes(viewAsUser.userId) || isTeamOwner(t, viewAsUser) || (viewAsUser.linkedTeamIds || []).includes(t.id))
             .filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase()));
     }, [teams, viewAsUser, searchTerm, isTeamOwner]);
 
@@ -599,7 +592,7 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
         // --- Dragging to the SHARED PANEL ---
         if (type === 'team-card' && destination.droppableId === 'shared-teams-panel') {
             const teamToShare = teams.find(t => t.id === draggableId);
-            if (teamToShare && !teamToShare.isShared) {
+            if (teamToShare && !teamToShare.isShared && isTeamOwner(teamToShare, viewAsUser)) {
                 handleToggleShare(teamToShare);
             }
             return;
@@ -607,8 +600,8 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
 
         // --- Dragging from SHARED PANEL to MAIN BOARD (Linking) ---
         if (type === 'team-card' && source.droppableId === 'shared-teams-panel' && destination.droppableId === 'teams-list') {
-            handleAddUserToTeam(draggableId, viewAsUser.userId);
-            toast({ title: 'Team Linked', description: `You are now a member of the team.` });
+            linkTeam(draggableId);
+            toast({ title: 'Team Linked', description: `The shared team is now visible on your board.` });
             return;
         }
 
@@ -622,7 +615,9 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
         }
 
         if (type === 'team-card' && destination.droppableId === 'duplicate-team-zone') {
-            const teamToDuplicate = teams.find(t => t.id === draggableId);
+             const allAvailableTeams = [...teams, ...sharedTeams];
+             const teamToDuplicate = allAvailableTeams.find(t => t.id === draggableId);
+
             if(teamToDuplicate) {
                 const owner = getOwnershipContext(page, viewAsUser, teams, appSettings.adminGroups);
                 const teamDataCopy = JSON.parse(JSON.stringify(teamToDuplicate));

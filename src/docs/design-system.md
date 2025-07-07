@@ -95,7 +95,7 @@ This pattern describes how a single entity (like a **Team** or **Badge Collectio
         - **Side Panel Content**: The side panel displays all items shared by *other* users/teams, allowing the current user to discover and link them. It does **not** show items that the current user already has on their own management board.
     - **Linking (Contextual)**: This action's behavior depends on the context of the management page.
         - **Contextual Management (e.g., Badge Collections within a Team)**: A user can link a shared item to their own context by dragging it from the "Shared Items" panel and dropping it onto their management board. This creates a *link* to the original item, not a copy.
-        - **Global Management (e.g., Teams)**: For top-level entities like Teams, "linking" is an explicit action of joining. Dragging a shared team from the panel to the main board programmatically adds the current user to that team's members list, bringing it into their management scope.
+        - **Global Management (e.g., Teams)**: For top-level entities like Teams, "linking" is an explicit action. Dragging a shared team from the panel to the main board adds the team's ID to the current user's `linkedTeamIds` array, bringing it into their management scope without making them a member.
 - **Visual Cues**:
   - **Owned & Shared Externally (`upload`)**: An item created by the current user/team that has been explicitly shared with others is marked with an `upload` icon overlay. This indicates it is the "source of truth." **The color of this icon badge matches the owner's color.**
   - **Internally Linked (`change_circle`)**: An item that is used in multiple places within the *same* context (e.g., a badge appearing in two collections on one team's board) is marked with a `change_circle` icon overlay on its linked instances. **The color of this icon badge matches the owner's color.**
@@ -105,8 +105,8 @@ This pattern describes how a single entity (like a **Team** or **Badge Collectio
   - Editing a shared item (e.g., changing a team's name) modifies the original "source of truth" item, and the changes are instantly reflected in all other places where it is used.
   - **Local Overrides**: For linked Badge Collections, the `applications` (e.g., "Team Members", "Events") can be modified locally without affecting the original, allowing teams to customize how they use a shared resource.
   - **Unlinking & Copying**: When a user "deletes" a linked shared item (like a Team), the system does not delete the original. Instead, it performs two actions:
-    1.  **Creates an independent copy** of the team with the original name and configuration. The ownership of this new copy is assigned to the current user's context.
-    2.  **Removes the current user** from the original shared team's members list, effectively "unlinking" it from their view.
+    1.  **Creates an independent copy** of the team with the original name and configuration. The ownership of this new copy is assigned to the current user's context. Its member list is empty.
+    2.  **Removes the linked team's ID** from the user's `linkedTeamIds` array, effectively "unlinking" it from their view.
   - **Smart Deletion**: Deleting an item follows contextual rules:
     - Deleting a *shared-to-you* or *internally linked* instance only removes that specific link/instance. This is a low-risk action confirmed via a `Compact Action Dialog`.
     - Deleting the *original, shared* item will trigger a high-risk `AlertDialog` to prevent accidental removal of a widely-used resource.
@@ -292,6 +292,3 @@ This is the single source of truth for indicating user interaction state across 
     - **Placement**: This is context-dependent. Color-pickers are typically placed on the bottom-right corner of their parent icon. Ownership status icons are typically placed on the top-left corner to create visual balance.
     - **Application**: Used for displaying a user's admin group status, a shared status on a role icon, or a `share` icon on a shared Badge.
 -   **Badges in Assorted View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
-
-
-

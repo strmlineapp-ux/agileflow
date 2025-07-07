@@ -74,6 +74,7 @@ export interface User {
   defaultCalendarView?: 'month' | 'week' | 'day' | 'production-schedule';
   easyBooking?: boolean;
   timeFormat?: '12h' | '24h';
+  linkedTeamIds?: string[];
 }
 
 export interface EventTemplate {
