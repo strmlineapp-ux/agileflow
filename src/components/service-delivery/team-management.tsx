@@ -473,7 +473,7 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
             ? currentAdmins.filter(id => id !== userId)
             : [...currentAdmins, userId];
             
-        updateTeam(team.id, { teamAdmins: newAdmins });
+        updateTeam(teamId, { teamAdmins: newAdmins });
     };
 
     const handleRemoveUserFromTeam = (teamId: string, userId: string) => {
