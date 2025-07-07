@@ -1,4 +1,3 @@
-
 # AgileFlow User Manual
 
 Welcome to AgileFlow, your team's central hub for managing tasks, scheduling events, and coordinating production workflows. This guide will walk you through the key features of the app.

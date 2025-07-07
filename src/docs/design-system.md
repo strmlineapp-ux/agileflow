@@ -87,27 +87,27 @@ This is the consistent reference pattern for allowing a user to change both an i
 ---
 
 ### 7. Entity Sharing & Linking
-This pattern describes how a single entity (like a Badge or BadgeCollection) can exist in multiple contexts while maintaining a single source of truth.
+This pattern describes how a single entity (like a Badge, BadgeCollection, or Team) can exist in multiple contexts while maintaining a single source of truth.
 
-- **Mechanism**: Sharing is controlled at the `BadgeCollection` level. An owner of a collection can perform one of two actions to make it globally available:
-    1.  Select "Share Collection" from the card's dropdown menu.
-    2.  Drag the owned collection card and drop it onto the "Shared Collections" side panel.
-- **Linking**: Once shared, a collection appears in the side panel for all other teams. From this panel, other teams can:
-    - **Link the entire collection**: Dragging the collection's card from the panel to their main board adds a *link* to that collection to their team. This is a pointer, not a copy.
-    - **Link individual badges**: Dragging a single badge from a shared collection (either in the panel or on their board) and dropping it into one of their *owned* collections creates a link to that specific badge.
+- **Mechanism**: Sharing is controlled by the entity's owner. Owners can make an entity globally available in one of two ways:
+    1.  Select "Share" from the item's dropdown menu.
+    2.  Drag the owned item and drop it onto the "Shared" side panel.
+- **Linking**: Once shared, an entity appears in the side panel for all other teams. From this panel, other teams can:
+    - **Link the entire collection/team**: Dragging the item's card from the panel to their main board adds a *link* to that entity to their team. This is a pointer, not a copy.
+    - **Link individual sub-items (Badges only)**: Dragging a single badge from a shared collection (either in the panel or on their board) and dropping it into one of their *owned* collections creates a link to that specific badge.
 - **Visual Cues**:
-  - **Owned & Shared Externally (`upload`)**: An item created by the current team that has been explicitly shared with other teams is marked with an `upload` icon overlay. This indicates it is the "source of truth." **The color of this icon badge matches the owner team's color.**
-  - **Internally Linked (`change_circle`)**: An item that is used in multiple places within the *same* team (e.g., a badge appearing in two collections) is marked with a `change_circle` icon overlay on its linked instances. The original instance does not get this icon unless it is also shared externally. **The color of this icon badge matches the owner team's color.**
-  - **Shared-to-You (`downloading`)**: An item created in another team and being used in the current context is marked with a `downloading` icon overlay. **The color of this icon badge matches the source team's color.**
+  - **Owned & Shared Externally (`upload`)**: An item created by the current user/team that has been explicitly shared with others is marked with an `upload` icon overlay. This indicates it is the "source of truth." **The color of this icon badge matches the owner team's color.**
+  - **Internally Linked (`change_circle`)**: An item that is used in multiple places within the *same* context (e.g., a badge appearing in two collections on one team's board) is marked with a `change_circle` icon overlay on its linked instances. **The color of this icon badge matches the owner team's color.**
+  - **Shared-to-You (`downloading`)**: An item created elsewhere and being used in the current context is marked with a `downloading` icon overlay. **The color of this icon badge matches the source's color.**
   - **Owned and Not Shared/Linked**: An item that is owned and exists only in its original location does not get an icon.
 - **Behavior**:
-  - Editing a shared item (e.g., changing a badge's name or icon) modifies the original "source of truth" item, and the changes are instantly reflected in all other places where it is used.
-  - **Local Overrides**: The `applications` for a linked collection (e.g., "Team Members", "Events") can be modified locally without affecting the original, allowing teams to customize how they use a shared resource. These associated application icons are located in the `BadgeCollection` card header, above the description.
+  - Editing a shared item (e.g., changing a badge's name) modifies the original "source of truth" item, and the changes are instantly reflected in all other places where it is used.
+  - **Local Overrides**: For linked Badge Collections, the `applications` (e.g., "Team Members", "Events") can be modified locally without affecting the original, allowing teams to customize how they use a shared resource.
   - **Smart Deletion**: Deleting an item follows contextual rules:
     - Deleting a *shared-to-you* or *internally linked* instance only removes that specific link/instance. This is a low-risk action confirmed via a `Compact Action Dialog`.
-    - Deleting the *original, shared* item (i.e., an item that is currently linked elsewhere) will trigger a high-risk `AlertDialog` to prevent accidental removal of a widely-used resource.
+    - Deleting the *original, shared* item will trigger a high-risk `AlertDialog` to prevent accidental removal of a widely-used resource.
     - Deleting an *original, un-shared* item is a low-risk action confirmed via a `Compact Action Dialog`.
-- **Application**: Used for sharing Badges and Badge Collections between Teams.
+- **Application**: Used for sharing Badges, Badge Collections, and Teams.
 
 ---
 
@@ -274,5 +274,3 @@ This is the single source of truth for indicating user interaction state across 
     - **Placement**: This is context-dependent. Color-pickers are typically placed on the bottom-right corner of their parent icon. Ownership status icons are typically placed on the top-left corner to create visual balance.
     - **Application**: Used for displaying a user's admin group status, a shared status on a role icon, or a `share` icon on a shared Badge.
 -   **Badges in Assorted View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
-
-

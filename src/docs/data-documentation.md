@@ -173,6 +173,8 @@ The `Team` entity groups users together and defines a set of team-specific confi
 | `name: string` | The display name of the team. |
 | `icon: string` | The Google Symbol name for the team's icon. |
 | `color: string` | The hex color for the team's icon. |
+| `owner: { type: 'team', id: string } \| { type: 'admin_group', name: string } \| { type: 'user', id: string }` | An object that defines who owns the collection. This can be a team, an administrative group, or an individual user. Ownership dictates who can edit the team's properties. |
+| `isShared?: boolean` | **Internal.** If `true`, this team will be visible to all other teams in the application for linking. Sharing is controlled by the owner. |
 | `members: string[]` | An array of `userId`s for all members of the team. |
 | `teamAdmins?: string[]` | A subset of `members` who have administrative privileges for this team. |
 | `teamAdminsLabel?: string` | A custom label for the Team Admins list on the Team Members tab. |
@@ -209,8 +211,3 @@ This represents a specific, functional role or skill. The single source of truth
 | `icon: string` | The Google Symbol name for the badge's icon. |
 | `color: string` | The hex color code for the badge's icon and outline. |
 | `description?: string` | An optional description shown in tooltips. |
-
-
-
-
-
