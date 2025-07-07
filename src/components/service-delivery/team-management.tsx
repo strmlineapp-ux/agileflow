@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useUser } from '@/context/user-context';
 import { type Team, type User, type AppTab, type AppPage, type AppSettings } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -60,7 +60,7 @@ function UserCard({
             "group relative flex items-center gap-2 p-1 rounded-md transition-colors",
             canManageAdmins && "cursor-pointer hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
         )}
-        onClick={() => canManageAdmins && onSetAdmin()}
+        onClick={(e) => { e.stopPropagation(); if (canManageAdmins) onSetAdmin(); }}
         onKeyDown={(e) => { if(canManageAdmins && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onSetAdmin();}}}
         tabIndex={canManageAdmins ? 0 : -1}
       >
@@ -109,7 +109,7 @@ function TeamCard({
     team, 
     users,
     onUpdate, 
-    onDelete, 
+    onDelete,
     onToggleShare,
     onRemoveUser,
     onAddUser,
@@ -144,14 +144,16 @@ function TeamCard({
         if (isSharedPreview || !viewAsUser) return false;
         if(viewAsUser.isAdmin) return true;
         
-        switch (team.owner.type) {
+        const owner = team.owner || { type: 'team', id: team.id }; // Fallback for older data
+
+        switch (owner.type) {
             case 'team':
-                const ownerTeam = teams.find(t => t.id === team.owner.id);
+                const ownerTeam = teams.find(t => t.id === owner.id);
                 return ownerTeam?.teamAdmins?.includes(viewAsUser.userId) || false;
             case 'admin_group':
-                return (viewAsUser.roles || []).includes(team.owner.name);
+                return (viewAsUser.roles || []).includes(owner.name);
             case 'user':
-                return team.owner.id === viewAsUser.userId
+                return owner.id === viewAsUser.userId
             default:
                 return false;
         }
@@ -192,7 +194,7 @@ function TeamCard({
     let shareIconColor: string | undefined = '#64748B';
 
     if (team.isShared) {
-        const owner = team.owner;
+        const owner = team.owner || { type: 'team', id: team.id };
         if(owner.type === 'team' && owner.id === team.id) { // Self-owned and shared
             shareIcon = 'upload';
             shareIconTitle = `Owned by this team and shared`;
@@ -217,7 +219,7 @@ function TeamCard({
 
     return (
         <Card className={cn("flex flex-col h-full bg-transparent group relative")}>
-            <div {...dragHandleProps} onClick={onToggleExpand} className="cursor-pointer flex-grow">
+            <div {...dragHandleProps}>
                 <CardHeader>
                     <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -281,6 +283,17 @@ function TeamCard({
                             </div>
                         </div>
                         <div className="flex items-center">
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={(e) => { e.stopPropagation(); onToggleExpand(); }}>
+                                            <GoogleSymbol name={isExpanded ? 'unfold_less' : 'unfold_more'} weight={100} />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent><p>{isExpanded ? 'Collapse' : 'Expand'}</p></TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+
                             <Popover open={isAddUserPopoverOpen} onOpenChange={setIsAddUserPopoverOpen}>
                                 <TooltipProvider>
                                     <Tooltip>
@@ -499,7 +512,7 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
     
     const ownedTeams = useMemo(() => teams.filter(team => {
         if(viewAsUser.isAdmin) return true;
-        const owner = team.owner;
+        const owner = team.owner || { type: 'team', id: team.id };
         if(owner.type === 'user') return owner.id === viewAsUser.userId;
         if(owner.type === 'admin_group') return (viewAsUser.roles || []).includes(owner.name);
         if(owner.type === 'team') {
