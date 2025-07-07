@@ -111,6 +111,14 @@ export interface BadgeCollection {
   isShared?: boolean;
 }
 
+export interface Timeline {
+    id: string;
+    name: string;
+    icon: string;
+    color: string;
+    description?: string;
+}
+
 export interface Team {
   id: string;
   name: string;
@@ -129,7 +137,7 @@ export interface Team {
   locationAliases?: { [key:string]: string };
   workstations?: string[];
   eventTemplates?: EventTemplate[];
-  timelines?: { id: string; name: string; icon: string; color: string; description?: string }[];
+  timelines?: Timeline[];
 }
 
 export interface Task {
