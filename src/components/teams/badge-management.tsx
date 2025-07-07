@@ -605,13 +605,14 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, users
                 const team = teams.find(t => t.id === collection.owner.id);
                 return team?.teamAdmins?.includes(viewAsUser.userId) || viewAsUser.isAdmin;
             case 'admin_group':
-                return viewAsUser.isAdmin || (viewAsUser.roles || []).includes(collection.owner.name);
+                const userAdminGroupIds = new Set(appSettings.adminGroups.filter(ag => (viewAsUser.roles || []).includes(ag.name)).map(ag => ag.id));
+                return viewAsUser.isAdmin || userAdminGroupIds.has(collection.owner.id);
             case 'user':
                 return collection.owner.id === viewAsUser.userId;
             default:
                 return false;
         }
-    }, [collection.owner, teams, viewAsUser, isSharedPreview]);
+    }, [collection.owner, teams, viewAsUser, isSharedPreview, appSettings.adminGroups]);
     
     const handleSaveName = useCallback(() => {
         const newName = nameInputRef.current?.value || collection.name;
@@ -672,7 +673,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, users
             shareIconTitle = `Shared from ${ownerTeam?.name || 'another team'}`;
             shareIconColor = ownerTeam?.color;
         } else if (owner.type === 'admin_group') {
-            const ownerGroup = appSettings.adminGroups.find(g => g.name === owner.name);
+            const ownerGroup = appSettings.adminGroups.find(g => g.id === owner.id);
             shareIconTitle = `Shared from ${ownerGroup?.name || 'an admin group'}`;
             shareIconColor = ownerGroup?.color;
         } else if (owner.type === 'user') {
@@ -1010,7 +1011,7 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
             name: 'P# Scale',
             icon: 'rule',
             color: '#94A3B8',
-            owner: { type: 'admin_group', name: 'Service Delivery' },
+            owner: { type: 'admin_group', id: 'service-admin-main' },
             viewMode: 'assorted',
             applications: ['events', 'tasks'],
             description: 'Standard P-number priority system for criticality.',
@@ -1022,7 +1023,7 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
             name: 'Star Rating',
             icon: 'stars',
             color: '#FBBF24',
-            owner: { type: 'admin_group', name: 'Service Delivery' },
+            owner: { type: 'admin_group', id: 'service-admin-main' },
             viewMode: 'assorted',
             applications: ['tasks'],
             description: 'A 5-star rating system for tasks and feedback.',
@@ -1034,7 +1035,7 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
             name: 'Effort',
             icon: 'scale',
             color: '#A855F7',
-            owner: { type: 'admin_group', name: 'Service Delivery' },
+            owner: { type: 'admin_group', id: 'service-admin-main' },
             viewMode: 'assorted',
             applications: ['tasks'],
             description: 'T-shirt sizing for estimating task effort.',
@@ -1466,7 +1467,6 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
                                         </div>
                                     </CardContent>
                                 </Card>
-                                {provided.placeholder}
                             </div>
                         )}
                     </StrictModeDroppable>

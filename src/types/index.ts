@@ -100,7 +100,7 @@ export type BadgeApplication = 'team members' | 'events' | 'tasks' | 'badges';
 
 export type BadgeCollectionOwner = 
   | { type: 'team'; id: string }
-  | { type: 'admin_group'; name: string }
+  | { type: 'admin_group'; id: string }
   | { type: 'user'; id: string };
 
 export interface BadgeCollection {

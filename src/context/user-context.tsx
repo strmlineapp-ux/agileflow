@@ -3,7 +3,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
-import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type AdminGroup } from '@/types';
+import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type AdminGroup, type BadgeCollectionOwner } from '@/types';
 import { mockUsers as initialUsers, mockCalendars as initialCalendars, mockEvents as initialEvents, mockLocations as initialLocations, mockTeams, mockAppSettings } from '@/lib/mock-data';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
@@ -25,6 +25,7 @@ interface UserContextType {
   updateTeam: (teamId: string, teamData: Partial<Team>) => Promise<void>;
   deleteTeam: (teamId: string) => Promise<void>;
   reorderTeams: (reorderedTeams: Team[]) => Promise<void>;
+  unlinkAndCopyTeam: (teamToUnlink: Team, newOwner: BadgeCollectionOwner) => Promise<void>;
   notifications: Notification[];
   setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>;
   userStatusAssignments: Record<string, UserStatusAssignment[]>;
@@ -188,6 +189,38 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       await simulateApi();
       setTeams(reordered);
   }, []);
+  
+  const unlinkAndCopyTeam = useCallback(async (teamToUnlink: Team, newOwner: BadgeCollectionOwner) => {
+    await simulateApi();
+
+    const newTeam: Team = {
+        ...JSON.parse(JSON.stringify(teamToUnlink)),
+        id: crypto.randomUUID(),
+        name: teamToUnlink.name,
+        owner: newOwner,
+        isShared: false,
+        members: [],
+        teamAdmins: [],
+    };
+
+    setTeams(currentTeams => {
+        // First, update the original team to remove the user
+        const updatedTeamsWithRemoval = currentTeams.map(t => {
+            if (t.id === teamToUnlink.id) {
+                return {
+                    ...t,
+                    members: t.members.filter(id => id !== viewAsUser.userId),
+                };
+            }
+            return t;
+        });
+
+        // Then, add the new team
+        const finalTeams = [...updatedTeamsWithRemoval, newTeam];
+        
+        return finalTeams;
+    });
+  }, [viewAsUser.userId]);
 
   const addCalendar = useCallback(async (newCalendarData: Omit<SharedCalendar, 'id'>) => {
     const newCalendar: SharedCalendar = {
@@ -348,6 +381,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     updateTeam,
     deleteTeam,
     reorderTeams,
+    unlinkAndCopyTeam,
     notifications,
     setNotifications,
     userStatusAssignments,
@@ -375,7 +409,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }), [
     loading, realUser, viewAsUser, users, allBadges, allRolesAndBadges, teams, notifications, userStatusAssignments,
     calendars, events, locations, allBookableLocations, appSettings,
-    addTeam, updateTeam, deleteTeam, reorderTeams, setNotifications, setUserStatusAssignments, addUser,
+    addTeam, updateTeam, deleteTeam, reorderTeams, unlinkAndCopyTeam, setNotifications, setUserStatusAssignments, addUser,
     updateUser, linkGoogleCalendar, reorderCalendars, addCalendar, updateCalendar, deleteCalendar,
     addEvent, updateEvent, deleteEvent, addLocation, deleteLocation,
     getPriorityDisplay, updateAppSettings, updateAppTab

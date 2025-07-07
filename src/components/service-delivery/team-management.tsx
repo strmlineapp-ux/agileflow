@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
@@ -150,7 +151,7 @@ function TeamCard({
         if (!team.owner) return null;
         switch (team.owner.type) {
             case 'team': return teams.find(t => t.id === team.owner.id);
-            case 'admin_group': return appSettings.adminGroups.find(g => g.name === team.owner.name);
+            case 'admin_group': return appSettings.adminGroups.find(g => g.id === team.owner.id);
             case 'user': return users.find(u => u.userId === team.owner.id);
             default: return null;
         }
@@ -163,7 +164,7 @@ function TeamCard({
     
     const ownerColor = useMemo(() => {
         if (!owner) return '#64748B'; // gray
-        return ('color' in owner ? owner.color : owner.primaryColor) || '#64748B';
+        return ('color' in owner ? owner.color : (owner as User).primaryColor) || '#64748B';
     }, [owner]);
 
     const isOwned = useMemo(() => {
@@ -176,13 +177,14 @@ function TeamCard({
                 const ownerTeam = teams.find(t => t.id === team.owner.id);
                 return ownerTeam?.teamAdmins?.includes(viewAsUser.userId) || false;
             case 'admin_group':
-                return (viewAsUser.roles || []).includes(team.owner.name);
+                const userAdminGroupIds = new Set(appSettings.adminGroups.filter(ag => (viewAsUser.roles || []).includes(ag.name)).map(ag => ag.id));
+                return userAdminGroupIds.has(team.owner.id);
             case 'user':
                 return team.owner.id === viewAsUser.userId
             default:
                 return false;
         }
-    }, [team, teams, viewAsUser, isSharedPreview]);
+    }, [team.owner, teams, viewAsUser, isSharedPreview, appSettings.adminGroups]);
 
     const canManageAdmins = isOwned || (team.teamAdmins || []).includes(viewAsUser.userId);
 
@@ -432,7 +434,7 @@ function TeamCard({
 }
 
 export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
-    const { viewAsUser, users, teams, appSettings, addTeam, updateTeam, deleteTeam, reorderTeams, updateAppTab } = useUser();
+    const { viewAsUser, users, teams, appSettings, addTeam, updateTeam, deleteTeam, reorderTeams, updateAppTab, unlinkAndCopyTeam } = useUser();
     const { toast } = useToast();
 
     const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
@@ -446,6 +448,19 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
     const [isSearching, setIsSearching] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const searchInputRef = useRef<HTMLInputElement>(null);
+
+    const isTeamOwner = useCallback((team: Team, user: User) => {
+        if (!team.owner) return false;
+        if (user.isAdmin) return true;
+        switch (team.owner.type) {
+            case 'user': return team.owner.id === user.userId;
+            case 'admin_group':
+                 const userAdminGroupIds = new Set(appSettings.adminGroups.filter(ag => (user.roles || []).includes(ag.name)).map(ag => ag.id));
+                 return userAdminGroupIds.has(team.owner.id);
+            case 'team': return (teams.find(t => t.id === team.owner.id)?.teamAdmins || []).includes(user.userId);
+            default: return false;
+        }
+    }, [teams, appSettings.adminGroups]);
 
     useEffect(() => {
         if (isSearching && searchInputRef.current) {
@@ -505,40 +520,14 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
         toast({ title: team.isShared ? 'Team Unshared' : 'Team Shared' });
     };
 
-    const isTeamOwner = useCallback((team: Team, user: User) => {
-        if (!team.owner) return false;
-        if (user.isAdmin) return true;
-        switch (team.owner.type) {
-            case 'user': return team.owner.id === user.userId;
-            case 'admin_group': return (user.roles || []).includes(team.owner.name);
-            case 'team': return (teams.find(t => t.id === team.owner.id)?.teamAdmins || []).includes(user.userId);
-            default: return false;
-        }
-    }, [teams]);
     
     const handleDelete = (team: Team) => {
         const isOwned = isTeamOwner(team, viewAsUser);
         if (isOwned) {
             setTeamToDelete(team);
         } else {
-            // Unlink and Copy logic
             const owner = getOwnershipContext(page, viewAsUser, teams, appSettings.adminGroups);
-            const newTeamData = JSON.parse(JSON.stringify(team));
-            const newTeam: Omit<Team, 'id'> = {
-                ...newTeamData,
-                name: team.name, // Keep original name
-                owner,
-                isShared: false,
-                members: [], // Start with no members
-                teamAdmins: [], // No admins
-            };
-            addTeam(newTeam);
-
-            const originalTeam = teams.find(t => t.id === team.id);
-            if (originalTeam) {
-                const updatedMembers = originalTeam.members.filter(id => id !== viewAsUser.userId);
-                updateTeam(originalTeam.id, { members: updatedMembers });
-            }
+            unlinkAndCopyTeam(team, owner);
             toast({ title: 'Team Unlinked & Copied', description: `An independent copy of "${team.name}" is now owned by you.` });
         }
     };
@@ -572,7 +561,6 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
         const updatedMembers = team.members.filter(id => id !== userId);
         
         if (updatedMembers.length === 0 && isTeamOwner(team, viewAsUser)) {
-            // If the owner removes the last member (even if it's themselves), keep the team.
              updateTeam(teamId, { members: [], teamAdmins: [] });
         } else if (updatedMembers.length === 0) {
              deleteTeam(teamId);

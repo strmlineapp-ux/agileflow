@@ -133,7 +133,7 @@ export const getOwnershipContext = (page: AppPage, user: User, teams: Team[], ad
     if (relevantAdminGroupId) {
         const relevantAdminGroup = adminGroups.find(ag => ag.id === relevantAdminGroupId);
         if (relevantAdminGroup) {
-            return { type: 'admin_group', name: relevantAdminGroup.name };
+            return { type: 'admin_group', id: relevantAdminGroup.id };
         }
     }
 
