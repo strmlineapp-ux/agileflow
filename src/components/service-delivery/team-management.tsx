@@ -397,7 +397,6 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
     const title = appSettings.teamManagementLabel || tab.name;
     const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
     const [sharedSearchTerm, setSharedSearchTerm] = useState('');
-    const [isSharedSearching, setIsSharedSearching] = useState(false);
     const sharedSearchInputRef = useRef<HTMLInputElement>(null);
     
     const [isSearching, setIsSearching] = useState(false);
@@ -415,10 +414,15 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
     }, [isEditingTitle]);
 
     useEffect(() => {
-        if (isSharedSearching && sharedSearchInputRef.current) {
-            sharedSearchInputRef.current.focus();
+        if (isSharedPanelOpen) {
+            const timer = setTimeout(() => {
+                sharedSearchInputRef.current?.focus();
+            }, 100);
+            return () => clearTimeout(timer);
+        } else {
+            setSharedSearchTerm(''); // Clear search on close
         }
-    }, [isSharedSearching]);
+    }, [isSharedPanelOpen]);
 
     const handleSaveTitle = () => {
         const newName = titleInputRef.current?.value.trim();
@@ -505,30 +509,20 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
     };
     
     const displayedTeams = useMemo(() => {
-      const all = teams;
-      if (!searchTerm) return all.filter(t => !t.isShared);
-      return all.filter(
-        t =>
-          !t.isShared &&
-          t.name.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }, [teams, searchTerm]);
+        const all = teams.filter(t => {
+            const isOwned = (t.owner.type === 'team' && t.owner.id === team.id) || (t.owner.type === 'admin_group' && viewAsUser.roles?.includes(t.owner.name)) || (t.owner.type === 'user' && t.owner.id === viewAsUser.userId) || viewAsUser.isAdmin;
+            return isOwned;
+        });
+
+        if (!searchTerm) return all;
+        return all.filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    }, [teams, searchTerm, team, viewAsUser]);
+
 
     const sharedTeams = useMemo(() => {
-        return teams.filter(t => t.isShared);
-    }, [teams]);
-    
-    const sharedTeamsFromOthers = useMemo(() => {
-        const displayedTeamIds = new Set(teams.map(t => t.id));
-        // This is a placeholder. In a real multi-user environment, you'd fetch teams shared by others.
-        // For this prototype, we'll just imagine there are other teams shared.
-        // We'll filter out teams already on the user's main board.
-        const allShared = teams.filter(t => t.isShared);
-        
-        return allShared
-            .filter(t => !displayedTeamIds.has(t.id))
-            .filter(t => t.name.toLowerCase().includes(sharedSearchTerm.toLowerCase()));
-    }, [teams, sharedSearchTerm]);
+        const displayedTeamIds = new Set(displayedTeams.map(t => t.id));
+        return teams.filter(t => t.isShared && !displayedTeamIds.has(t.id) && t.name.toLowerCase().includes(sharedSearchTerm.toLowerCase()));
+    }, [teams, displayedTeams, sharedSearchTerm]);
     
     const onDragEnd = (result: DropResult) => {
         const { source, destination, draggableId, type } = result;
@@ -547,6 +541,8 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
         if (type === 'team-card' && source.droppableId === 'shared-teams-panel' && destination.droppableId === 'teams-list') {
             const teamToUnshare = teams.find(t => t.id === draggableId);
             if (teamToUnshare && teamToUnshare.isShared) {
+                // In a real app this might mean adding it to your 'managed' list.
+                // For now, we'll interpret it as un-sharing if you're the owner.
                 handleToggleShare(teamToUnshare);
             }
             return;
@@ -707,25 +703,16 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
                             >
                                 <Card className={cn("transition-opacity duration-300 h-full bg-transparent", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
                                     <CardHeader>
-                                        <div className="flex items-center justify-between">
-                                            <CardTitle className="font-headline font-thin text-xl">Shared Teams</CardTitle>
-                                             {!isSharedSearching ? (
-                                                <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={() => setIsSharedSearching(true)}>
-                                                    <GoogleSymbol name="search" />
-                                                </Button>
-                                            ) : (
-                                                <div className="flex items-center gap-1">
-                                                <GoogleSymbol name="search" className="text-muted-foreground" />
-                                                <input
-                                                    ref={sharedSearchInputRef}
-                                                    placeholder="Search..."
-                                                    value={sharedSearchTerm}
-                                                    onChange={(e) => setSharedSearchTerm(e.target.value)}
-                                                    onBlur={() => !sharedSearchTerm && setIsSharedSearching(false)}
-                                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
-                                                />
-                                                </div>
-                                            )}
+                                        <CardTitle className="font-headline font-thin text-xl">Shared Teams</CardTitle>
+                                        <div className="flex items-center gap-1 p-1 border-b">
+                                            <GoogleSymbol name="search" className="text-muted-foreground text-lg" />
+                                            <input
+                                                ref={sharedSearchInputRef}
+                                                placeholder="Search shared teams..."
+                                                value={sharedSearchTerm}
+                                                onChange={(e) => setSharedSearchTerm(e.target.value)}
+                                                className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                                            />
                                         </div>
                                     </CardHeader>
                                     <CardContent className="h-full">
