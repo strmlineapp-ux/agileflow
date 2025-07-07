@@ -15,6 +15,9 @@ import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableP
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { getOwnershipContext } from '@/lib/permissions';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
+import { Avatar, AvatarImage, AvatarFallback } from '../ui/avatar';
+import { ScrollArea } from '../ui/scroll-area';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 
 // Wrapper to fix issues with react-beautiful-dnd and React 18 Strict Mode
 const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
@@ -38,24 +41,57 @@ const predefinedColors = [
     '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
 ];
 
+function UserCard({ user, onRemove, teamId }: { user: User; onRemove: (teamId: string, userId: string) => void; teamId: string; }) {
+  return (
+      <div className="group relative flex items-center gap-2 p-1 rounded-md">
+          <Avatar className="h-8 w-8">
+              <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
+              <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+          </Avatar>
+          <div>
+              <p className="font-medium text-sm">{user.displayName}</p>
+              <p className="text-xs text-muted-foreground">{user.title}</p>
+          </div>
+          <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-0 right-0 h-6 w-6 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={() => onRemove(teamId, user.userId)}
+          >
+              <GoogleSymbol name="cancel" className="text-lg" weight={100} />
+          </Button>
+      </div>
+  );
+}
+
 function TeamCard({ 
     team, 
+    users,
     onUpdate, 
     onDelete, 
     onToggleShare,
+    onRemoveUser,
+    onAddUser,
     dragHandleProps,
     isSharedPreview = false,
 }: { 
     team: Team, 
+    users: User[],
     onUpdate: (id: string, data: Partial<Team>) => void, 
     onDelete: (team: Team) => void,
     onToggleShare: (team: Team) => void,
+    onRemoveUser: (teamId: string, userId: string) => void;
+    onAddUser: (teamId: string, userId: string) => void;
     dragHandleProps?: any,
     isSharedPreview?: boolean,
 }) {
-    const { viewAsUser, users, teams, appSettings } = useUser();
+    const { viewAsUser, teams, appSettings } = useUser();
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isEditingName, setIsEditingName] = useState(false);
+    const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
+    const [isAddUserPopoverOpen, setIsAddUserPopoverOpen] = useState(false);
+
+    const teamMembers = useMemo(() => team.members.map(id => users.find(u => u.userId === id)).filter((u): u is User => !!u), [team.members, users]);
 
     const isOwned = useMemo(() => {
         if (isSharedPreview) return false;
@@ -137,6 +173,16 @@ function TeamCard({
                                         <TooltipContent><p>{isOwned ? "Edit properties in the Team page" : "Properties are managed by the owner."}</p></TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
+                                {isOwned && (
+                                     <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                                        <PopoverTrigger asChild>
+                                            <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background cursor-pointer" style={{ backgroundColor: team.color }} />
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-2">
+                                        <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdate(team.id, { color: c }); setIsColorPopoverOpen(false);}}></button>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={team.color} onChange={(e) => onUpdate(team.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
+                                        </PopoverContent>
+                                    </Popover>
+                                )}
                                 {shareIcon && (
                                 <TooltipProvider>
                                     <Tooltip>
@@ -169,33 +215,78 @@ function TeamCard({
                                 )}
                             </div>
                         </div>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><GoogleSymbol name="more_vert" weight={100} /></Button></DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                {isOwned && !isSharedPreview && (
-                                    <DropdownMenuItem onClick={() => onToggleShare(team)}>
-                                        <GoogleSymbol name={team.isShared ? 'share_off' : 'share'} className="mr-2 text-lg"/>
-                                        {team.isShared ? 'Unshare Team' : 'Share Team'}
+                        <div className="flex items-center">
+                            <Popover open={isAddUserPopoverOpen} onOpenChange={setIsAddUserPopoverOpen}>
+                                <PopoverTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary"><GoogleSymbol name="group_add" weight={100} /></Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-64 p-0">
+                                    <ScrollArea className="h-64">
+                                        <div className="p-2 space-y-1">
+                                            {users.filter(u => !team.members.includes(u.userId)).map(user => (
+                                                <div key={user.userId} onClick={() => {onAddUser(team.id, user.userId); setIsAddUserPopoverOpen(false);}} className="flex items-center gap-2 p-2 rounded-md hover:bg-muted cursor-pointer">
+                                                    <Avatar className="h-8 w-8"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0,2)}</AvatarFallback></Avatar>
+                                                    <p className="font-medium text-sm">{user.displayName}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </ScrollArea>
+                                </PopoverContent>
+                            </Popover>
+                             <DropdownMenu>
+                                <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><GoogleSymbol name="more_vert" weight={100} /></Button></DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    {isOwned && !isSharedPreview && (
+                                        <DropdownMenuItem onClick={() => onToggleShare(team)}>
+                                            <GoogleSymbol name={team.isShared ? 'share_off' : 'share'} className="mr-2 text-lg"/>
+                                            {team.isShared ? 'Unshare Team' : 'Share Team'}
+                                        </DropdownMenuItem>
+                                    )}
+                                    <DropdownMenuItem onClick={() => onDelete(team)} className="text-destructive focus:text-destructive">
+                                        <GoogleSymbol name="delete" className="mr-2 text-lg"/>
+                                        {isOwned ? "Delete Team" : "Unlink Team"}
                                     </DropdownMenuItem>
-                                )}
-                                <DropdownMenuItem onClick={() => onDelete(team)} className="text-destructive focus:text-destructive">
-                                    <GoogleSymbol name="delete" className="mr-2 text-lg"/>
-                                    {isOwned ? "Delete Team" : "Unlink Team"}
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
                     </div>
                 </CardHeader>
             </div>
-            <CardContent>
-                <p className="text-sm text-muted-foreground">{team.members.length} member(s)</p>
+            <CardContent className="flex-grow">
+                <StrictModeDroppable droppableId={team.id} type="user-card" isDropDisabled={!isOwned}>
+                    {(provided, snapshot) => (
+                         <div
+                            ref={provided.innerRef}
+                            {...provided.droppableProps}
+                            className={cn(
+                                "min-h-[60px] rounded-md p-2 -m-2 space-y-1",
+                                snapshot.isDraggingOver && "bg-accent/50"
+                            )}>
+                            {teamMembers.map((user, index) => (
+                                <Draggable key={user.userId} draggableId={`user-${team.id}-${user.userId}`} index={index} isDragDisabled={!isOwned} ignoreContainerClipping={false}>
+                                    {(provided, snapshot) => (
+                                        <div
+                                            ref={provided.innerRef}
+                                            {...provided.draggableProps}
+                                            {...provided.dragHandleProps}
+                                            className={cn(snapshot.isDragging && "opacity-50 shadow-lg")}
+                                        >
+                                           <UserCard user={user} teamId={team.id} onRemove={onRemoveUser} />
+                                        </div>
+                                    )}
+                                </Draggable>
+                            ))}
+                            {provided.placeholder}
+                        </div>
+                    )}
+                </StrictModeDroppable>
             </CardContent>
         </Card>
     );
 }
 
 export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
-    const { viewAsUser, teams, appSettings, addTeam, updateTeam, deleteTeam, reorderTeams, updateAppTab } = useUser();
+    const { viewAsUser, users, teams, appSettings, addTeam, updateTeam, deleteTeam, reorderTeams, updateAppTab } = useUser();
     const { toast } = useToast();
 
     const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
@@ -256,6 +347,22 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
              toast({ title: 'Team Unlinked' });
         }
     };
+    
+    const handleAddUserToTeam = (teamId: string, userId: string) => {
+        const team = teams.find(t => t.id === teamId);
+        if (!team || team.members.includes(userId)) return;
+        const updatedMembers = [...team.members, userId];
+        updateTeam(teamId, { members: updatedMembers });
+        toast({ title: "User Added" });
+    };
+
+    const handleRemoveUserFromTeam = (teamId: string, userId: string) => {
+        const team = teams.find(t => t.id === teamId);
+        if (!team) return;
+        const updatedMembers = team.members.filter(id => id !== userId);
+        updateTeam(teamId, { members: updatedMembers });
+        toast({ title: 'User Removed' });
+    };
 
     const confirmDelete = () => {
         if (!teamToDelete) return;
@@ -284,7 +391,7 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
         if (!destination) return;
 
         // Handle dropping on the share panel
-        if (destination.droppableId === 'shared-teams-panel') {
+        if (type === 'team-card' && destination.droppableId === 'shared-teams-panel') {
             const teamToShare = teams.find(t => t.id === draggableId);
             if (teamToShare && !teamToShare.isShared) {
                 handleToggleShare(teamToShare);
@@ -293,7 +400,7 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
         }
 
         // Handle duplicating a team
-        if (destination.droppableId === 'duplicate-team-zone') {
+        if (type === 'team-card' && destination.droppableId === 'duplicate-team-zone') {
             const teamToDuplicate = teams.find(t => t.id === draggableId);
             if(teamToDuplicate) {
                 const owner = getOwnershipContext(page, viewAsUser, teams, appSettings.adminGroups);
@@ -310,8 +417,8 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
             return;
         }
         
-        // Handle reordering within the owned list
-        if (source.droppableId === 'teams-list' && destination.droppableId === 'teams-list') {
+        // Handle reordering teams
+        if (type === 'team-card' && source.droppableId === 'teams-list' && destination.droppableId === 'teams-list') {
             const reorderedOwnedTeams = Array.from(ownedTeams);
             const [movedItem] = reorderedOwnedTeams.splice(source.index, 1);
             reorderedOwnedTeams.splice(destination.index, 0, movedItem);
@@ -320,6 +427,31 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
             const otherTeams = teams.filter(t => !currentOwnedTeamIds.has(t.id));
 
             reorderTeams([...reorderedOwnedTeams, ...otherTeams]);
+        }
+        
+        if (type === 'user-card') {
+            const sourceTeamId = source.droppableId;
+            const destTeamId = destination.droppableId;
+            const userId = draggableId.split('-').pop();
+
+            if (!userId) return;
+
+            const sourceTeam = teams.find(t => t.id === sourceTeamId);
+            const destTeam = teams.find(t => t.id === destTeamId);
+
+            if (!sourceTeam || !destTeam) return;
+
+            // Remove from source
+            const sourceMembers = sourceTeam.members.filter(id => id !== userId);
+            updateTeam(sourceTeam.id, { members: sourceMembers });
+
+            // Add to destination
+            if (!destTeam.members.includes(userId)) {
+                const destMembers = [...destTeam.members];
+                destMembers.splice(destination.index, 0, userId);
+                updateTeam(destTeam.id, { members: destMembers });
+            }
+            toast({ title: 'User moved' });
         }
     };
 
@@ -393,9 +525,12 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
                                             >
                                                 <TeamCard 
                                                     team={team} 
+                                                    users={users}
                                                     onUpdate={handleUpdate} 
                                                     onDelete={handleDelete}
                                                     onToggleShare={handleToggleShare}
+                                                    onRemoveUser={handleRemoveUserFromTeam}
+                                                    onAddUser={handleAddUserToTeam}
                                                     dragHandleProps={provided.dragHandleProps}
                                                 />
                                             </div>
@@ -431,9 +566,12 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
                                                     <TeamCard 
                                                         key={team.id}
                                                         team={team} 
+                                                        users={users}
                                                         onUpdate={handleUpdate} 
                                                         onDelete={handleDelete}
                                                         onToggleShare={handleToggleShare}
+                                                        onRemoveUser={handleRemoveUserFromTeam}
+                                                        onAddUser={handleAddUserToTeam}
                                                         isSharedPreview={true}
                                                     />
                                                 )
