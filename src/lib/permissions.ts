@@ -1,3 +1,4 @@
+
 import { type User, type AppPage, type SharedCalendar, type Team, type AdminGroup, type AppTab, type BadgeCollectionOwner } from '@/types';
 
 /**

@@ -9,11 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle as UIDialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { GoogleSymbol } from '../icons/google-symbol';
-import { googleSymbolNames } from '@/lib/google-symbols';
 import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProps } from 'react-beautiful-dnd';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { getOwnershipContext } from '@/lib/permissions';
@@ -59,10 +56,6 @@ function TeamCard({
     const { viewAsUser, users, teams, appSettings } = useUser();
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isEditingName, setIsEditingName] = useState(false);
-    const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
-    const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
-    const [iconSearch, setIconSearch] = useState('');
-    const iconSearchInputRef = useRef<HTMLInputElement>(null);
 
     const isOwned = useMemo(() => {
         if (isSharedPreview) return false;
@@ -83,19 +76,6 @@ function TeamCard({
                 return false;
         }
     }, [team.owner, teams, viewAsUser, isSharedPreview]);
-    
-     useEffect(() => {
-        if (isIconPopoverOpen) {
-             setTimeout(() => iconSearchInputRef.current?.focus(), 100);
-        } else {
-            setIconSearch('');
-        }
-    }, [isIconPopoverOpen]);
-
-    const filteredIcons = useMemo(() => {
-        if (!iconSearch) return googleSymbolNames;
-        return googleSymbolNames.filter(name => name.toLowerCase().includes(iconSearch.toLowerCase()));
-    }, [iconSearch]);
 
     useEffect(() => {
         if (isEditingName) nameInputRef.current?.focus();
@@ -113,7 +93,7 @@ function TeamCard({
         if (e.key === 'Enter') handleSaveName();
         else if (e.key === 'Escape') setIsEditingName(false);
     };
-
+    
     let shareIcon: string | null = null;
     let shareIconTitle: string = '';
     let shareIconColor: string | undefined = '#64748B';
@@ -136,9 +116,9 @@ function TeamCard({
         } else if (owner.type === 'user') {
             const ownerUser = users.find(u => u.userId === owner.id);
             shareIconTitle = `Owned by ${ownerUser?.displayName || 'a user'}`;
+            shareIconColor = ownerUser?.primaryColor;
         }
     }
-
 
     return (
         <Card className={cn("flex flex-col h-full bg-transparent group relative")}>
@@ -147,48 +127,16 @@ function TeamCard({
                     <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3 flex-1 min-w-0">
                             <div className="relative">
-                                <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
-                                     <TooltipProvider>
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <PopoverTrigger asChild disabled={!isOwned}>
-                                                    <button className="h-12 w-12 flex items-center justify-center">
-                                                        <GoogleSymbol name={team.icon} className="text-6xl" weight={100} />
-                                                    </button>
-                                                </PopoverTrigger>
-                                            </TooltipTrigger>
-                                            <TooltipContent><p>{isOwned ? "Change Icon" : "Properties are managed by the owner."}</p></TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
-                                    <PopoverContent className="w-80 p-0">
-                                        <div className="flex items-center gap-1 p-2 border-b">
-                                            <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
-                                            <input
-                                                ref={iconSearchInputRef}
-                                                placeholder="Search icons..."
-                                                value={iconSearch}
-                                                onChange={(e) => setIconSearch(e.target.value)}
-                                                className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
-                                            />
-                                        </div>
-                                        <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={team.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(team.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="h-8 w-8 p-0"><GoogleSymbol name={iconName} className="text-4xl" weight={100} /></Button>))}</div></ScrollArea>
-                                    </PopoverContent>
-                                </Popover>
-                                <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                                    <TooltipProvider>
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <PopoverTrigger asChild disabled={!isOwned}>
-                                                    <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background cursor-pointer" style={{ backgroundColor: team.color }} />
-                                                </PopoverTrigger>
-                                            </TooltipTrigger>
-                                            <TooltipContent><p>{isOwned ? "Change Color" : "Properties are managed by the owner."}</p></TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
-                                    <PopoverContent className="w-auto p-2">
-                                        <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdate(team.id, { color: c }); setIsColorPopoverOpen(false);}}/>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={team.color} onChange={(e) => onUpdate(team.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
-                                    </PopoverContent>
-                                </Popover>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <button className="h-12 w-12 flex items-center justify-center">
+                                                <GoogleSymbol name={team.icon} className="text-6xl" weight={100} />
+                                            </button>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>{isOwned ? "Edit properties in the Team page" : "Properties are managed by the owner."}</p></TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
                                 {shareIcon && (
                                 <TooltipProvider>
                                     <Tooltip>
@@ -254,6 +202,8 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const titleInputRef = useRef<HTMLInputElement>(null);
     const title = appSettings.teamManagementLabel || tab.name;
+
+    const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
 
     useEffect(() => {
         if (isEditingTitle) titleInputRef.current?.focus();
@@ -326,11 +276,21 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
         return false;
     });
 
-    const sharedTeams = teams.filter(team => team.isShared && !ownedTeams.some(ot => ot.id === team.id));
+    const ownedTeamIds = new Set(ownedTeams.map(t => t.id));
+    const sharedTeams = teams.filter(team => team.isShared && !ownedTeamIds.has(team.id));
 
     const onDragEnd = (result: DropResult) => {
-        const { source, destination, draggableId } = result;
+        const { source, destination, draggableId, type } = result;
         if (!destination) return;
+
+        // Handle dropping on the share panel
+        if (destination.droppableId === 'shared-teams-panel') {
+            const teamToShare = teams.find(t => t.id === draggableId);
+            if (teamToShare && !teamToShare.isShared) {
+                handleToggleShare(teamToShare);
+            }
+            return;
+        }
 
         // Handle duplicating a team
         if (destination.droppableId === 'duplicate-team-zone') {
@@ -356,10 +316,10 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
             const [movedItem] = reorderedOwnedTeams.splice(source.index, 1);
             reorderedOwnedTeams.splice(destination.index, 0, movedItem);
             
-            const ownedTeamIds = new Set(reorderedOwnedTeams.map(t => t.id));
-            const unownedTeams = teams.filter(t => !ownedTeamIds.has(t.id));
+            const currentOwnedTeamIds = new Set(reorderedOwnedTeams.map(t => t.id));
+            const otherTeams = teams.filter(t => !currentOwnedTeamIds.has(t.id));
 
-            reorderTeams([...reorderedOwnedTeams, ...unownedTeams]);
+            reorderTeams([...reorderedOwnedTeams, ...otherTeams]);
         }
     };
 
@@ -367,42 +327,54 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
         <DragDropContext onDragEnd={onDragEnd}>
             <div className="flex gap-4">
                 <div className="flex-1 transition-all duration-300 flex flex-col gap-6">
-                    <div className="flex items-center gap-2">
-                        {isEditingTitle ? (
-                          <Input ref={titleInputRef} defaultValue={title} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
-                        ) : (
-                          <TooltipProvider>
-                              <Tooltip>
-                                  <TooltipTrigger asChild>
-                                      <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{title}</h2>
-                                  </TooltipTrigger>
-                                  {tab.description && (
-                                      <TooltipContent><p className="max-w-xs">{tab.description}</p></TooltipContent>
-                                  )}
-                              </Tooltip>
-                          </TooltipProvider>
-                        )}
-                        <StrictModeDroppable droppableId="duplicate-team-zone" type="team-card" isDropDisabled={false} isCombineEnabled={false}>
-                            {(provided, snapshot) => (
-                                <div
-                                    ref={provided.innerRef}
-                                    {...provided.droppableProps}
-                                    className={cn("rounded-full transition-all p-0.5", snapshot.isDraggingOver && "ring-1 ring-border ring-inset")}
-                                >
-                                    <TooltipProvider>
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="rounded-full p-0" onClick={handleAddTeam}>
-                                                    <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
-                                                    <span className="sr-only">New Team or Drop to Duplicate</span>
-                                                </Button>
-                                            </TooltipTrigger>
-                                            <TooltipContent><p>{snapshot.isDraggingOver ? 'Drop to Duplicate' : 'Add New Team'}</p></TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
-                                </div>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            {isEditingTitle ? (
+                              <Input ref={titleInputRef} defaultValue={title} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
+                            ) : (
+                              <TooltipProvider>
+                                  <Tooltip>
+                                      <TooltipTrigger asChild>
+                                          <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{title}</h2>
+                                      </TooltipTrigger>
+                                      {tab.description && (
+                                          <TooltipContent><p className="max-w-xs">{tab.description}</p></TooltipContent>
+                                      )}
+                                  </Tooltip>
+                              </TooltipProvider>
                             )}
-                        </StrictModeDroppable>
+                            <StrictModeDroppable droppableId="duplicate-team-zone" type="team-card" isDropDisabled={false} isCombineEnabled={false}>
+                                {(provided, snapshot) => (
+                                    <div
+                                        ref={provided.innerRef}
+                                        {...provided.droppableProps}
+                                        className={cn("rounded-full transition-all p-0.5", snapshot.isDraggingOver && "ring-1 ring-border ring-inset")}
+                                    >
+                                        <TooltipProvider>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Button variant="ghost" size="icon" className="rounded-full p-0" onClick={handleAddTeam}>
+                                                        <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
+                                                        <span className="sr-only">New Team or Drop to Duplicate</span>
+                                                    </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent><p>{snapshot.isDraggingOver ? 'Drop to Duplicate' : 'Add New Team'}</p></TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
+                                    </div>
+                                )}
+                            </StrictModeDroppable>
+                        </div>
+                         <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)}>
+                                        <GoogleSymbol name="dynamic_feed" weight={100} />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent><p>Show Shared Teams</p></TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
                     </div>
 
                     <StrictModeDroppable droppableId="teams-list" type="team-card" isDropDisabled={false} isCombineEnabled={false}>
@@ -414,7 +386,10 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
                                             <div
                                                 ref={provided.innerRef}
                                                 {...provided.draggableProps}
-                                                className="p-3 basis-full md:basis-1/2 lg:basis-1/3"
+                                                className={cn(
+                                                    "p-3 basis-full md:basis-1/2 flex-grow-0 flex-shrink-0",
+                                                    isSharedPanelOpen ? "lg:basis-full" : "lg:basis-1/3"
+                                                )}
                                             >
                                                 <TeamCard 
                                                     team={team} 
@@ -433,6 +408,44 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
                     </StrictModeDroppable>
                 </div>
                 {/* Shared Teams Panel */}
+                <div className={cn(
+                    "transition-all duration-300",
+                    isSharedPanelOpen ? "w-96 p-2" : "w-0"
+                )}>
+                    <StrictModeDroppable droppableId="shared-teams-panel" type="team-card" isDropDisabled={true}>
+                        {(provided, snapshot) => (
+                            <div 
+                                ref={provided.innerRef} 
+                                {...provided.droppableProps} 
+                                className={cn("h-full rounded-lg transition-all", snapshot.isDraggingOver && "ring-1 ring-border ring-inset")}
+                            >
+                                <Card className={cn("transition-opacity duration-300 h-full bg-transparent", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
+                                    <CardHeader>
+                                        <CardTitle>Shared Teams</CardTitle>
+                                        <CardDescription>Drag an owned team here to share it with everyone.</CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="space-y-2">
+                                            {sharedTeams.map((team, index) => {
+                                                return (
+                                                    <TeamCard 
+                                                        key={team.id}
+                                                        team={team} 
+                                                        onUpdate={handleUpdate} 
+                                                        onDelete={handleDelete}
+                                                        onToggleShare={handleToggleShare}
+                                                        isSharedPreview={true}
+                                                    />
+                                                )
+                                            })}
+                                            {sharedTeams.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">No teams are being shared.</p>}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </div>
+                        )}
+                    </StrictModeDroppable>
+                </div>
             </div>
             <Dialog open={!!teamToDelete} onOpenChange={() => setTeamToDelete(null)}>
                 <DialogContent className="max-w-md">

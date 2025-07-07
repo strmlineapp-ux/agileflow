@@ -9,7 +9,7 @@ Welcome to AgileFlow, your team's central hub for managing tasks, scheduling eve
 To begin using AgileFlow, you must first request access from an administrator.
 1.  Navigate to the main page and click the "Sign up" link.
 2.  Enter your email address and click "Request Access".
-3.  An administrator will review your request and grant you an access.
+3.  An administrator will review your request and grant you access.
 
 ### 1.2 Signing In
 Once your access has been approved, you can sign in:
