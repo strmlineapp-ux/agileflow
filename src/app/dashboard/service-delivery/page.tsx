@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -20,7 +21,7 @@ import { BadgeManagement } from '@/components/teams/badge-management';
 
 
 // This is a mapping from the componentKey in our AppTab model to the actual component to render.
-const componentMap: Record<string, React.ComponentType<{ tab: AppTab, team?: Team }>> = {
+const componentMap: Record<string, React.ComponentType<{ tab: AppTab, team?: Team, page: AppPage }>> = {
   calendars: CalendarManagement,
   teams: TeamManagement,
   badges: BadgeManagement,
@@ -138,7 +139,7 @@ export default function ServiceDeliveryPage() {
           const contextTeam = tab.contextTeamId ? teams.find(t => t.id === tab.contextTeamId) : undefined;
           return (
             <TabsContent key={tab.id} value={tab.id} className="mt-4">
-              {ContentComponent ? <ContentComponent tab={tab} team={contextTeam} /> : <div>Component for {tab.name} not found.</div>}
+              {ContentComponent ? <ContentComponent tab={tab} team={contextTeam} page={pageConfig} /> : <div>Component for {tab.name} not found.</div>}
             </TabsContent>
           );
         })}

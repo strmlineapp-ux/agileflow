@@ -22,7 +22,7 @@ import { googleSymbolNames } from '@/lib/google-symbols';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { hasAccess } from '@/lib/permissions';
 
-const componentMap: Record<string, React.ComponentType<{ team: any, tab: AppTab }>> = {
+const componentMap: Record<string, React.ComponentType<{ team: any, tab: AppTab, page: AppPage }>> = {
   team_members: TeamMembersView,
   badges: BadgeManagement,
   locations: PinnedLocationManagement,
@@ -169,7 +169,7 @@ export default function TeamPage() {
           const ContentComponent = componentMap[tab.componentKey];
           return (
             <TabsContent key={tab.id} value={tab.id} className="mt-4">
-              {ContentComponent ? <ContentComponent team={team} tab={tab} /> : <div>Component for {tab.name} not found.</div>}
+              {ContentComponent ? <ContentComponent team={team} tab={tab} page={pageConfig} /> : <div>Component for {tab.name} not found.</div>}
             </TabsContent>
           );
         })}

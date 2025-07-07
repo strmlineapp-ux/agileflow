@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -7,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { type Team, type Badge, type BadgeCollection, type User, type BadgeApplication, type AppTab, type BadgeCollectionOwner } from '@/types';
+import { type Team, type Badge, type BadgeCollection, type User, type BadgeApplication, type AppTab, type BadgeCollectionOwner, type AppPage } from '@/types';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { ScrollArea } from '../ui/scroll-area';
@@ -22,6 +23,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle as 
 import { Badge as UiBadge } from '../ui/badge';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '../ui/select';
+import { getOwnershipContext } from '@/lib/permissions';
 
 const predefinedColors = [
     '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
@@ -44,110 +46,6 @@ const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
   }
   return <Droppable {...props}>{children}</Droppable>;
 };
-
-function AddCollectionDialog({
-  isOpen,
-  onClose,
-  team,
-  onSave,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  team: Team;
-  onSave: (collectionData: Omit<BadgeCollection, 'id'>) => void;
-}) {
-  const { viewAsUser, appSettings } = useUser();
-  const [name, setName] = useState('');
-  const [owner, setOwner] = useState(`team:${team.id}`); // Default to current team
-
-  const userAdminGroups = useMemo(() => {
-    return appSettings.adminGroups.filter(g => viewAsUser.roles?.includes(g.name));
-  }, [appSettings.adminGroups, viewAsUser.roles]);
-
-  const handleSaveClick = () => {
-    if (!name.trim()) return;
-
-    const [ownerType, ownerIdOrName] = owner.split(':');
-
-    let ownerObject: BadgeCollectionOwner;
-
-    switch (ownerType) {
-        case 'user':
-            ownerObject = { type: 'user', id: ownerIdOrName };
-            break;
-        case 'admin_group':
-            ownerObject = { type: 'admin_group', name: ownerIdOrName };
-            break;
-        case 'team':
-        default:
-            ownerObject = { type: 'team', id: ownerIdOrName };
-            break;
-    }
-    
-    onSave({
-        name: name.trim(),
-        owner: ownerObject,
-        icon: 'category',
-        color: '#64748B',
-        viewMode: 'detailed',
-        badgeIds: [],
-        applications: [],
-        description: '',
-        isShared: false,
-    });
-    
-    // Reset state for next time
-    setName('');
-    setOwner(`team:${team.id}`);
-  };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent>
-            <div className="absolute top-4 right-4">
-                <Button variant="ghost" size="icon" onClick={handleSaveClick}>
-                    <GoogleSymbol name="check" />
-                    <span className="sr-only">Create Collection</span>
-                </Button>
-            </div>
-            <DialogHeader>
-                <UIDialogTitle>Create New Badge Collection</UIDialogTitle>
-                <DialogDescription>
-                    Define the name and ownership for your new collection.
-                </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-                <div className="space-y-2">
-                    <Label htmlFor="collection-name">Collection Name</Label>
-                    <Input id="collection-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g., Core Skills" />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="collection-owner">Owner</Label>
-                    <Select value={owner} onValueChange={setOwner}>
-                        <SelectTrigger id="collection-owner">
-                            <SelectValue placeholder="Select an owner" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectGroup>
-                                <SelectItem value={`team:${team.id}`}>{team.name} (Team)</SelectItem>
-                                <SelectItem value={`user:${viewAsUser.userId}`}>Me ({viewAsUser.displayName})</SelectItem>
-                            </SelectGroup>
-                            {userAdminGroups.length > 0 && (
-                                <SelectGroup>
-                                    <SelectLabel>Admin Groups</SelectLabel>
-                                    {userAdminGroups.map(group => (
-                                        <SelectItem key={group.id} value={`admin_group:${group.name}`}>{group.name}</SelectItem>
-                                    ))}
-                                </SelectGroup>
-                            )}
-                        </SelectContent>
-                    </Select>
-                </div>
-            </div>
-        </DialogContent>
-    </Dialog>
-  );
-}
 
 
 function CompactSearchIconPicker({
@@ -240,7 +138,7 @@ function CompactSearchIconPicker({
 
 function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collectionId, teamId, isSharedPreview = false }: { badge: Badge; viewMode: BadgeCollection['viewMode']; onUpdateBadge: (badgeData: Partial<Badge>) => void; onDelete: () => void; collectionId: string; teamId: string; isSharedPreview?: boolean; }) {
     const { toast } = useToast();
-    const { teams } = useUser();
+    const { teams, viewAsUser } = useUser();
     const [isEditingName, setIsEditingName] = useState(false);
     const [currentName, setCurrentName] = useState(badge.name);
     const nameInputRef = useRef<HTMLInputElement>(null);
@@ -249,12 +147,15 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     const [isEditingDescription, setIsEditingDescription] = useState(false);
     const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
     
-    const ownerTeam = useMemo(() => {
-        return teams.find(t => t.allBadges.some(b => b.id === badge.id));
-    }, [teams, badge.id]);
-    
-    const isOwnedByMyTeam = ownerTeam?.id === teamId;
-    const isEditable = isOwnedByMyTeam && !isSharedPreview;
+    // The team that actually holds this badge in its `allBadges` array.
+    const ownerTeam = useMemo(() => teams.find(t => (t.allBadges || []).some(b => b.id === badge.id)), [teams, badge.id]);
+
+    const isEditable = useMemo(() => {
+        if (isSharedPreview) return false;
+        if (!ownerTeam) return false; // Not editable if owner can't be found
+        if (viewAsUser.isAdmin) return true;
+        return (ownerTeam.teamAdmins || []).includes(viewAsUser.userId);
+    }, [isSharedPreview, ownerTeam, viewAsUser]);
 
     useEffect(() => {
         setCurrentName(badge.name);
@@ -329,21 +230,20 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     const isThisTheOriginalInstance = badge.ownerCollectionId === collectionId;
 
     const isLinkedInternally = useMemo(() => {
-        if (!isOwnedByMyTeam) return false;
         const currentTeam = teams.find(t => t.id === teamId);
         if (!currentTeam) return false;
         const count = currentTeam.badgeCollections.reduce((acc, c) => acc + (c.badgeIds.includes(badge.id) ? 1 : 0), 0);
         return count > 1;
-    }, [teams, badge.id, teamId, isOwnedByMyTeam]);
+    }, [teams, badge.id, teamId]);
 
     let shareIcon: string | null = null;
     let shareIconTitle: string = '';
     let shareIconColor = ownerTeam?.color;
 
-    if (isOwnedByMyTeam && isShared) {
+    if (ownerTeam?.id === teamId && isShared) {
         shareIcon = 'upload';
         shareIconTitle = `Owned by this team and shared externally`;
-    } else if (!isOwnedByMyTeam) {
+    } else if (ownerTeam?.id !== teamId) {
         shareIcon = 'downloading';
         shareIconTitle = `Shared from ${ownerTeam?.name || 'another team'}`;
     } else if (isLinkedInternally && !isThisTheOriginalInstance) {
@@ -674,11 +574,13 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     );
 }
 
-function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpdateCollection, onDeleteCollection, onAddBadge, onUpdateBadge, onDeleteBadge, onToggleShare, dragHandleProps, isSharedPreview = false }: {
+function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, users, appSettings, onUpdateCollection, onDeleteCollection, onAddBadge, onUpdateBadge, onDeleteBadge, onToggleShare, dragHandleProps, isSharedPreview = false }: {
     collection: BadgeCollection;
     allBadgesInTeam: Badge[];
     teamId: string;
     teams: Team[];
+    users: User[];
+    appSettings: AppSettings;
     onUpdateCollection: (collectionId: string, newValues: Partial<Omit<BadgeCollection, 'id' | 'badgeIds'>>) => void;
     onDeleteCollection: (collectionId: string) => void;
     onAddBadge: (collectionId: string) => void;
@@ -695,6 +597,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
     
     const isOwned = useMemo(() => {
+        if (isSharedPreview) return false;
         if (!viewAsUser) return false;
         
         switch (collection.owner.type) {
@@ -708,7 +611,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
             default:
                 return false;
         }
-    }, [collection.owner, teams, viewAsUser]);
+    }, [collection.owner, teams, viewAsUser, isSharedPreview]);
     
     const handleSaveName = useCallback(() => {
         const newName = nameInputRef.current?.value || collection.name;
@@ -750,22 +653,33 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
     ];
 
     const isShared = collection.isShared;
-    const ownerTeam = teams.find(t => t.id === teamId);
+    const isMyTeamOwner = collection.owner.type === 'team' && collection.owner.id === teamId;
     
     let shareIcon: string | null = null;
     let shareIconTitle: string = '';
-    let shareIconColor = ownerTeam?.color;
+    let shareIconColor: string | undefined = '#64748B'; // Default color
 
-    if (collection.owner.type === 'team' && collection.owner.id === teamId && isShared) {
+    if (isMyTeamOwner && isShared) {
+        const ownerTeam = teams.find(t => t.id === teamId);
         shareIcon = 'upload';
         shareIconTitle = 'Owned by this team and shared with all teams';
-    } else if (collection.owner.type !== 'team' || collection.owner.id !== teamId) {
+        shareIconColor = ownerTeam?.color;
+    } else if (!isMyTeamOwner) {
         shareIcon = 'downloading';
-        const ownerName = collection.owner.type === 'team'
-            ? teams.find(t => t.id === collection.owner.id)?.name || 'another team'
-            : collection.owner.name;
-        shareIconTitle = `Shared from ${ownerName}`;
-        shareIconColor = collection.owner.type === 'team' ? teams.find(t => t.id === collection.owner.id)?.color : '#64748B';
+        const owner = collection.owner;
+        if(owner.type === 'team') {
+            const ownerTeam = teams.find(t => t.id === owner.id);
+            shareIconTitle = `Shared from ${ownerTeam?.name || 'another team'}`;
+            shareIconColor = ownerTeam?.color;
+        } else if (owner.type === 'admin_group') {
+            const ownerGroup = appSettings.adminGroups.find(g => g.name === owner.name);
+            shareIconTitle = `Shared from ${ownerGroup?.name || 'an admin group'}`;
+            shareIconColor = ownerGroup?.color;
+        } else if (owner.type === 'user') {
+            const ownerUser = users.find(u => u.userId === owner.id);
+            shareIconTitle = `Shared by ${ownerUser?.displayName || 'a user'}`;
+            shareIconColor = ownerUser?.primaryColor;
+        }
     }
     
     return (
@@ -924,11 +838,10 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
     );
 }
 
-export function BadgeManagement({ team, tab }: { team?: Team, tab: AppTab }) {
-    const { teams, appSettings, updateTeam, updateAppTab } = useUser();
+export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab, page: AppPage }) {
+    const { teams, users, appSettings, updateTeam, updateAppTab, viewAsUser } = useUser();
     const { toast } = useToast();
     
-    const [isAddCollectionDialogOpen, setIsAddCollectionDialogOpen] = useState(false);
     const [collectionToDelete, setCollectionToDelete] = useState<string | null>(null);
     const [badgeToDelete, setBadgeToDelete] = useState<{ collectionId: string, badgeId: string } | null>(null);
     
@@ -988,20 +901,28 @@ export function BadgeManagement({ team, tab }: { team?: Team, tab: AppTab }) {
         updateTeam(team.id, { badgeCollections: newCollections });
     };
 
-    const handleAddCollection = (collectionData: Omit<BadgeCollection, 'id'>) => {
-      const newName = collectionData.name;
+    const handleAddCollection = () => {
+      const newName = `New Collection ${team.badgeCollections.length + 1}`;
       if (team.badgeCollections.some(c => c.name === newName)) {
           toast({ variant: 'destructive', title: 'Error', description: 'A collection with this name already exists.' });
           return;
       }
+      const owner = getOwnershipContext(page, viewAsUser, teams, appSettings.adminGroups);
       const newCollection: BadgeCollection = {
-          ...collectionData,
           id: crypto.randomUUID(),
+          name: newName,
+          owner: owner,
+          icon: 'category',
+          color: '#64748B',
+          viewMode: 'detailed',
+          badgeIds: [],
+          applications: [],
+          description: '',
+          isShared: false,
       };
       const newCollections = [...team.badgeCollections, newCollection];
       updateTeam(team.id, { badgeCollections: newCollections });
       toast({ title: 'Collection Added', description: `"${newName}" has been created.`});
-      setIsAddCollectionDialogOpen(false);
     };
     
     const handleDeleteCollection = (collectionId: string) => {
@@ -1382,7 +1303,7 @@ export function BadgeManagement({ team, tab }: { team?: Team, tab: AppTab }) {
                                     <TooltipProvider>
                                         <Tooltip>
                                             <TooltipTrigger asChild>
-                                                <Button variant="ghost" size="icon" onClick={() => setIsAddCollectionDialogOpen(true)}>
+                                                <Button variant="ghost" size="icon" onClick={handleAddCollection}>
                                                     <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
                                                     <span className="sr-only">Add New Collection or Drop to Duplicate</span>
                                                 </Button>
@@ -1453,6 +1374,8 @@ export function BadgeManagement({ team, tab }: { team?: Team, tab: AppTab }) {
                                                     allBadgesInTeam={allBadgesAvailableToTeam}
                                                     teamId={team.id}
                                                     teams={teams}
+                                                    users={users}
+                                                    appSettings={appSettings}
                                                     onUpdateCollection={handleUpdateCollection}
                                                     onDeleteCollection={handleDeleteCollection}
                                                     onAddBadge={handleAddBadge}
@@ -1523,6 +1446,8 @@ export function BadgeManagement({ team, tab }: { team?: Team, tab: AppTab }) {
                                                                     allBadgesInTeam={allBadgesAvailableToTeam}
                                                                     teamId={team.id}
                                                                     teams={teams}
+                                                                    users={users}
+                                                                    appSettings={appSettings}
                                                                     onUpdateCollection={handleUpdateCollection}
                                                                     onDeleteCollection={handleDeleteCollection}
                                                                     onAddBadge={handleAddBadge}
@@ -1578,15 +1503,7 @@ export function BadgeManagement({ team, tab }: { team?: Team, tab: AppTab }) {
                         </DialogHeader>
                     </DialogContent>
                 </Dialog>
-                <AddCollectionDialog 
-                    isOpen={isAddCollectionDialogOpen} 
-                    onClose={() => setIsAddCollectionDialogOpen(false)} 
-                    team={team}
-                    onSave={handleAddCollection}
-                />
             </div>
         </DragDropContext>
     );
 }
-
-    

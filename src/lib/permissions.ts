@@ -1,4 +1,4 @@
-import { type User, type AppPage, type SharedCalendar, type Team, type AdminGroup, type AppTab } from '@/types';
+import { type User, type AppPage, type SharedCalendar, type Team, type AdminGroup, type AppTab, type BadgeCollectionOwner } from '@/types';
 
 /**
  * Checks if a user has permission to manage events (create, edit, delete) on a specific calendar.
@@ -98,4 +98,42 @@ export const hasAccess = (user: User, item: AppPage | AppTab, teams: Team[], adm
     
     // Default to no access
     return false;
+};
+
+/**
+ * Determines the ownership context for a new item based on how a user gained access to the page.
+ * The hierarchy is Admin Group > Team > User.
+ * @param page The current AppPage configuration.
+ * @param user The current user object.
+ * @param teams The list of all teams.
+ * @param adminGroups The list of all admin groups.
+ * @returns A BadgeCollectionOwner object.
+ */
+export const getOwnershipContext = (page: AppPage, user: User, teams: Team[], adminGroups: AdminGroup[]): BadgeCollectionOwner => {
+    // Highest priority: Admin Group ownership
+    const userAdminGroups = user.roles || [];
+    const relevantAdminGroup = adminGroups.find(ag =>
+        (page.access.adminGroups || []).includes(ag.name) && userAdminGroups.includes(ag.name)
+    );
+    if (relevantAdminGroup) {
+        return { type: 'admin_group', name: relevantAdminGroup.name };
+    }
+
+    // Second priority: Team ownership
+    const userTeamIds = new Set(teams.filter(t => t.members.includes(user.userId)).map(t => t.id));
+    const relevantTeam = teams.find(t =>
+        (page.access.teams || []).some(teamId => userTeamIds.has(teamId))
+    );
+    if (relevantTeam) {
+        return { type: 'team', id: relevantTeam.id };
+    }
+
+    // Default to user ownership if they have direct access or if they are a system admin on a non-restricted page
+    if ((page.access.users || []).includes(user.userId) || user.isAdmin) {
+         return { type: 'user', id: user.userId };
+    }
+
+    // Fallback case - should ideally not be hit if hasAccess is checked first, but good practice.
+    // Default to the user creating the item.
+    return { type: 'user', id: user.userId };
 };
