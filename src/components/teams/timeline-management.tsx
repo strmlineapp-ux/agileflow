@@ -194,7 +194,7 @@ function EditableTimelineView({ timeline, onUpdate, onDelete }: {
             </div>
         </div>
         <div className="overflow-x-auto">
-            <div className="min-w-[2440px]">
+            <div style={{ width: '2440px' }}>
                 <TimelineHourHeader />
                 {(timeline.rows || []).map(row => (
                     <TimelineRow key={row.id} name={row.name} />
@@ -304,5 +304,3 @@ export function TimelineManagement({ team, tab }: { team: Team, tab: AppTab }) {
     </div>
   );
 }
-
-    
