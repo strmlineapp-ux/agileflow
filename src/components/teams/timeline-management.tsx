@@ -3,7 +3,7 @@
 
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useUser } from '@/context/user-context';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { type Team, type AppTab } from '@/types';
@@ -13,7 +13,6 @@ import { format, addHours, startOfDay } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { ScrollArea } from '../ui/scroll-area';
 import { googleSymbolNames } from '@/lib/google-symbols';
-import { cn } from '@/lib/utils';
 import { Textarea } from '../ui/textarea';
 
 const predefinedColors = [
@@ -111,102 +110,102 @@ function EditableTimelineView({ timeline, onUpdate, onDelete }: {
   };
 
   return (
-    <Card className="overflow-hidden flex flex-col">
-      <CardHeader>
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-             <div className="relative">
-                <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <button className="h-12 w-12 flex items-center justify-center">
-                                    <GoogleSymbol name={timeline.icon} className="text-6xl" weight={100} />
-                                </button>
-                            </TooltipTrigger>
-                            <TooltipContent><p>Change Icon</p></TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                    <PopoverContent className="w-80 p-0">
-                        <div className="flex items-center gap-1 p-2 border-b">
-                            <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
-                            <input ref={iconSearchInputRef} placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0" />
-                        </div>
-                        <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={timeline.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(timeline.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="h-8 w-8 p-0"><GoogleSymbol name={iconName} className="text-4xl" weight={100} /></Button>))}</div></ScrollArea>
-                    </PopoverContent>
-                </Popover>
-                <Popover>
-                    <PopoverTrigger asChild>
-                         <TooltipProvider>
+    <Card className="overflow-hidden">
+        <div className="p-4 border-b">
+            <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
+                <div className="relative">
+                    <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
+                        <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background cursor-pointer" style={{ backgroundColor: timeline.color }} />
+                                    <button className="h-12 w-12 flex items-center justify-center">
+                                        <GoogleSymbol name={timeline.icon} className="text-6xl" weight={100} />
+                                    </button>
                                 </TooltipTrigger>
-                                <TooltipContent><p>Change Color</p></TooltipContent>
+                                <TooltipContent><p>Change Icon</p></TooltipContent>
                             </Tooltip>
                         </TooltipProvider>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-2">
-                        <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => onUpdate(timeline.id, { color: c })} />))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={timeline.color} onChange={(e) => onUpdate(timeline.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
-                    </PopoverContent>
-                </Popover>
-            </div>
-            <div className="space-y-1">
-                {isEditingName ? (
-                    <Input
-                    ref={nameInputRef}
-                    defaultValue={timeline.name}
-                    onBlur={handleSaveName}
-                    onKeyDown={(e) => {
-                        if(e.key === 'Enter') handleSaveName();
-                        if(e.key === 'Escape') setIsEditingName(false);
-                    }}
-                    className="h-auto p-0 text-xl font-headline font-thin border-0 shadow-none bg-transparent"
-                    />
-                ) : (
-                    <CardTitle className="font-headline font-thin text-xl cursor-pointer" onClick={() => setIsEditingName(true)}>{timeline.name}</CardTitle>
-                )}
-                {isEditingDescription ? (
-                    <Textarea 
-                        ref={descriptionTextareaRef}
-                        defaultValue={timeline.description}
-                        onBlur={handleSaveDescription}
+                        <PopoverContent className="w-80 p-0">
+                            <div className="flex items-center gap-1 p-2 border-b">
+                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                                <input ref={iconSearchInputRef} placeholder="Search icons..." value={iconSearch} onChange={(e) => setIconSearch(e.target.value)} className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0" />
+                            </div>
+                            <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (<Button key={iconName} variant={timeline.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(timeline.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="h-8 w-8 p-0"><GoogleSymbol name={iconName} className="text-4xl" weight={100} /></Button>))}</div></ScrollArea>
+                        </PopoverContent>
+                    </Popover>
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background cursor-pointer" style={{ backgroundColor: timeline.color }} />
+                                    </TooltipTrigger>
+                                    <TooltipContent><p>Change Color</p></TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-2">
+                            <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => onUpdate(timeline.id, { color: c })} />))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={timeline.color} onChange={(e) => onUpdate(timeline.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
+                        </PopoverContent>
+                    </Popover>
+                </div>
+                <div className="space-y-1">
+                    {isEditingName ? (
+                        <Input
+                        ref={nameInputRef}
+                        defaultValue={timeline.name}
+                        onBlur={handleSaveName}
                         onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                                e.preventDefault();
-                                handleSaveDescription();
-                            } else if (e.key === 'Escape') {
-                                setIsEditingDescription(false);
-                            }
+                            if(e.key === 'Enter') handleSaveName();
+                            if(e.key === 'Escape') setIsEditingName(false);
                         }}
-                        className="p-0 text-sm text-muted-foreground border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 resize-none h-auto"
-                        placeholder="Click to add a description."
-                    />
-                ) : (
-                    <CardDescription className="cursor-text min-h-[20px]" onClick={() => setIsEditingDescription(true)}>
-                        {timeline.description || 'Click to add a description.'}
-                    </CardDescription>
+                        className="h-auto p-0 text-xl font-headline font-thin border-0 shadow-none bg-transparent"
+                        />
+                    ) : (
+                        <h3 className="font-headline font-thin text-xl cursor-pointer" onClick={() => setIsEditingName(true)}>{timeline.name}</h3>
+                    )}
+                    {isEditingDescription ? (
+                        <Textarea 
+                            ref={descriptionTextareaRef}
+                            defaultValue={timeline.description}
+                            onBlur={handleSaveDescription}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleSaveDescription();
+                                } else if (e.key === 'Escape') {
+                                    setIsEditingDescription(false);
+                                }
+                            }}
+                            className="p-0 text-sm text-muted-foreground border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 resize-none h-auto"
+                            placeholder="Click to add a description."
+                        />
+                    ) : (
+                        <p className="text-sm text-muted-foreground cursor-text min-h-[20px]" onClick={() => setIsEditingDescription(true)}>
+                            {timeline.description || 'Click to add a description.'}
+                        </p>
+                    )}
+                </div>
+            </div>
+            <Button variant="ghost" size="icon" className="text-destructive" onClick={() => onDelete(timeline.id)}>
+                <GoogleSymbol name="delete" />
+            </Button>
+            </div>
+        </div>
+        <div className="overflow-x-auto">
+            <div className="min-w-[2440px]">
+                <TimelineHourHeader />
+                {(timeline.rows || []).map(row => (
+                    <TimelineRow key={row.id} name={row.name} />
+                ))}
+                {(timeline.rows || []).length === 0 && (
+                    <div className="flex h-24 items-center justify-center p-4 text-center text-sm text-muted-foreground">
+                        No rows in this timeline yet.
+                    </div>
                 )}
             </div>
-          </div>
-          <Button variant="ghost" size="icon" className="text-destructive" onClick={() => onDelete(timeline.id)}>
-            <GoogleSymbol name="delete" />
-          </Button>
         </div>
-      </CardHeader>
-      <CardContent className="flex-grow min-h-0">
-        <div className="overflow-x-auto h-full">
-          <div className="min-w-[2440px]">
-            <TimelineHourHeader />
-            {(timeline.rows || []).map(row => (
-                <TimelineRow key={row.id} name={row.name} />
-            ))}
-             {(timeline.rows || []).length === 0 && (
-                <div className="text-center p-4 text-sm text-muted-foreground">No rows in this timeline yet.</div>
-            )}
-          </div>
-        </div>
-      </CardContent>
     </Card>
   )
 }
