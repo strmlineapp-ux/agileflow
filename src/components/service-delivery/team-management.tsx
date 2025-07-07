@@ -368,19 +368,21 @@ function TeamCard({
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                             <DropdownMenuTrigger asChild disabled={!isOwned} onClick={(e) => e.stopPropagation()}><Button variant="ghost" size="icon"><GoogleSymbol name="more_vert" weight={100} /></Button></DropdownMenuTrigger>
+                                             <DropdownMenuTrigger asChild disabled={!isOwned && isSharedPreview} onClick={(e) => e.stopPropagation()}><Button variant="ghost" size="icon"><GoogleSymbol name="more_vert" weight={100} /></Button></DropdownMenuTrigger>
                                         </TooltipTrigger>
                                         <TooltipContent><p>More Options</p></TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
                                 <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                                    <DropdownMenuItem onClick={() => onToggleShare(team)} disabled={isSharedPreview}>
-                                        <GoogleSymbol name={team.isShared ? 'share_off' : 'share'} className="mr-2 text-lg"/>
-                                        {team.isShared ? 'Unshare Team' : 'Share Team'}
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => onDelete(team)} className="text-destructive focus:text-destructive">
-                                        <GoogleSymbol name="delete" className="mr-2 text-lg"/>
-                                        Delete Team
+                                    {isOwned && (
+                                        <DropdownMenuItem onClick={() => onToggleShare(team)} disabled={isSharedPreview}>
+                                            <GoogleSymbol name={team.isShared ? 'share_off' : 'share'} className="mr-2 text-lg"/>
+                                            {team.isShared ? 'Unshare Team' : 'Share Team'}
+                                        </DropdownMenuItem>
+                                    )}
+                                    <DropdownMenuItem onClick={() => onDelete(team)} className={cn(!isOwned && 'text-primary focus:text-primary')}>
+                                        <GoogleSymbol name={isOwned ? "delete" : "content_copy"} className="mr-2 text-lg"/>
+                                        {isOwned ? 'Delete Team' : 'Unlink & Copy Team'}
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
@@ -446,8 +448,8 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
     const searchInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        if (isSearching) {
-            setTimeout(() => searchInputRef.current?.focus(), 100);
+        if (isSearching && searchInputRef.current) {
+            searchInputRef.current.focus();
         }
     }, [isSearching]);
 
@@ -503,7 +505,43 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
         toast({ title: team.isShared ? 'Team Unshared' : 'Team Shared' });
     };
 
-    const handleDelete = (team: Team) => setTeamToDelete(team);
+    const isTeamOwner = useCallback((team: Team, user: User) => {
+        if (!team.owner) return false;
+        if (user.isAdmin) return true;
+        switch (team.owner.type) {
+            case 'user': return team.owner.id === user.userId;
+            case 'admin_group': return (user.roles || []).includes(team.owner.name);
+            case 'team': return (teams.find(t => t.id === team.owner.id)?.teamAdmins || []).includes(user.userId);
+            default: return false;
+        }
+    }, [teams]);
+    
+    const handleDelete = (team: Team) => {
+        const isOwned = isTeamOwner(team, viewAsUser);
+        if (isOwned) {
+            setTeamToDelete(team);
+        } else {
+            // Unlink and Copy logic
+            const owner = getOwnershipContext(page, viewAsUser, teams, appSettings.adminGroups);
+            const newTeamData = JSON.parse(JSON.stringify(team));
+            const newTeam: Omit<Team, 'id'> = {
+                ...newTeamData,
+                name: team.name, // Keep original name
+                owner,
+                isShared: false,
+                members: [], // Start with no members
+                teamAdmins: [], // No admins
+            };
+            addTeam(newTeam);
+
+            const originalTeam = teams.find(t => t.id === team.id);
+            if (originalTeam) {
+                const updatedMembers = originalTeam.members.filter(id => id !== viewAsUser.userId);
+                updateTeam(originalTeam.id, { members: updatedMembers });
+            }
+            toast({ title: 'Team Unlinked & Copied', description: `An independent copy of "${team.name}" is now owned by you.` });
+        }
+    };
     
     const handleAddUserToTeam = (teamId: string, userId: string) => {
         const team = teams.find(t => t.id === teamId);
@@ -533,15 +571,18 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
         
         const updatedMembers = team.members.filter(id => id !== userId);
         
-        if (updatedMembers.length === 0) {
-            deleteTeam(teamId);
-            toast({ title: 'Team Deleted', description: `Team "${team.name}" was automatically deleted as the last member was removed.` });
+        if (updatedMembers.length === 0 && isTeamOwner(team, viewAsUser)) {
+            // If the owner removes the last member (even if it's themselves), keep the team.
+             updateTeam(teamId, { members: [], teamAdmins: [] });
+        } else if (updatedMembers.length === 0) {
+             deleteTeam(teamId);
+             toast({ title: 'Team Deleted', description: `Team "${team.name}" was automatically deleted as the last member was removed.` });
         } else {
             const newTeamAdmins = (team.teamAdmins || []).filter(id => id !== userId);
             updateTeam(teamId, { members: updatedMembers, teamAdmins: newTeamAdmins });
             toast({ title: 'User Removed' });
         }
-    }, [teams, deleteTeam, updateTeam, toast]);
+    }, [teams, deleteTeam, updateTeam, toast, isTeamOwner, viewAsUser]);
 
     const confirmDelete = () => {
         if (!teamToDelete) return;
@@ -550,19 +591,6 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
         setTeamToDelete(null);
     };
     
-    const isTeamOwner = useCallback((team: Team, user: User) => {
-        if (!team.owner) return false;
-        if (user.isAdmin) return true;
-        switch (team.owner.type) {
-            case 'user':
-                return team.owner.id === user.userId;
-            case 'admin_group':
-                return (user.roles || []).includes(team.owner.name);
-            default:
-                return false;
-        }
-    }, []);
-
     const displayedTeams = useMemo(() => {
         return teams
             .filter(t => t.members.includes(viewAsUser.userId) || isTeamOwner(t, viewAsUser))
@@ -610,12 +638,15 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
             const teamToDuplicate = teams.find(t => t.id === draggableId);
             if(teamToDuplicate) {
                 const owner = getOwnershipContext(page, viewAsUser, teams, appSettings.adminGroups);
-                const newTeam = {
-                    ...JSON.parse(JSON.stringify(teamToDuplicate)),
-                    id: crypto.randomUUID(),
+                const teamDataCopy = JSON.parse(JSON.stringify(teamToDuplicate));
+
+                const newTeam: Omit<Team, 'id'> = {
+                    ...teamDataCopy,
                     name: `${teamToDuplicate.name} (Copy)`,
                     owner,
                     isShared: false,
+                    members: [], // Reset members
+                    teamAdmins: [], // Reset admins
                 };
                 addTeam(newTeam);
                 toast({ title: 'Team Copied' });
@@ -682,7 +713,7 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
                                     <GoogleSymbol name="search" />
                                 </Button>
                             ) : (
-                                <div className="flex items-center gap-1">
+                                <div className="flex items-center gap-1 border-b">
                                     <GoogleSymbol name="search" className="text-muted-foreground" />
                                     <input
                                         ref={searchInputRef}

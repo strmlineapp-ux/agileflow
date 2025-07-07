@@ -104,6 +104,9 @@ This pattern describes how a single entity (like a **Team** or **Badge Collectio
 - **Behavior**:
   - Editing a shared item (e.g., changing a team's name) modifies the original "source of truth" item, and the changes are instantly reflected in all other places where it is used.
   - **Local Overrides**: For linked Badge Collections, the `applications` (e.g., "Team Members", "Events") can be modified locally without affecting the original, allowing teams to customize how they use a shared resource.
+  - **Unlinking & Copying**: When a user "deletes" a linked shared item (like a Team), the system does not delete the original. Instead, it performs two actions:
+    1.  **Creates an independent copy** of the team with the original name and configuration. The ownership of this new copy is assigned to the current user's context.
+    2.  **Removes the current user** from the original shared team's members list, effectively "unlinking" it from their view.
   - **Smart Deletion**: Deleting an item follows contextual rules:
     - Deleting a *shared-to-you* or *internally linked* instance only removes that specific link/instance. This is a low-risk action confirmed via a `Compact Action Dialog`.
     - Deleting the *original, shared* item will trigger a high-risk `AlertDialog` to prevent accidental removal of a widely-used resource.
@@ -135,7 +138,7 @@ This is the application's perfected, gold-standard pattern for managing a collec
     - **Card-level**: Deleting an entire card (like a Team or Collection) is a high-impact action. To prevent accidental clicks, this functionality should be placed within a `<DropdownMenu>` in the card's header, not triggered by a direct hover icon.
 -   **Drag-to-Duplicate**:
     -   **Interaction**: A designated "Add New" icon (`<Button>`) acts as a drop zone. While a card is being dragged, this zone becomes highlighted to indicate it can accept a drop.
-    -   **Behavior**: Dropping any card (pinned or not, from the main board or the shared panel) onto this zone creates a deep, independent copy of the original. The new card is given a unique ID, a modified name (e.g., with `(Copy)`), and is placed immediately after the original in the list. The current user's context is assigned as the new owner.
+    -   **Behavior**: Dropping any card (pinned or not, from the main board or the shared panel) onto this zone creates a deep, independent copy of the original. The new card is given a unique ID, a modified name (e.g., with `(Copy)`), and is placed immediately after the original in the list. Its ownership is assigned to the current user's context, and its member list is reset to be empty.
 -   **Drag-to-Assign**: This pattern allows sub-items (like **Users** or **Badges**) to be moved between different parent cards.
     - **Interaction**: A user can drag an item (e.g., a User) from one card's list.
     - **Behavior**: As the item is dragged over another card, that card's drop zone becomes highlighted. Dropping the item assigns it to the new card's collection. The original item may be removed or remain, depending on the context (e.g., assigning a user to a new admin group might not remove them from the old one). This is handled by the `onDragEnd` logic.
@@ -245,8 +248,19 @@ This pattern describes the user interface for assigning and unassigning badges t
 - **Destructive Actions**: Delete or other destructive action icons (like `delete`, `close`, `cancel`) are `text-muted-foreground` by default and become `text-destructive` on hover to provide a clear but not overwhelming visual warning.
 - **Tooltips for Clarity**: Icon-only buttons (those without visible text) and icons within pickers (like the **Icon Picker**) must always be wrapped in a `<Tooltip>` to provide context on their function. This is crucial for accessibility and user experience.
 
-### Theming & Button Styles
-- **Theme Selection**: Users can choose between `light` and `dark` themes. This selection is presented as a set of tab-like buttons, each with an icon and a label. The active theme's button has its text and icon colored with the primary theme color.
+### Color Themes & Button Styles
+The application supports two distinct color themes, `light` and `dark`, which can be selected by the user in their preferences.
+
+-   **Light Theme**:
+    -   **Aesthetic**: Clean, airy, and professional, using a light grey background (`--background: 0 0% 98%`) and dark text (`--foreground: 0 0% 20%`).
+    -   **Primary Color**: A muted, professional blue (`hsl(210 40% 55%)`) used for all key interactive elements.
+    -   **Accent Color**: A very light blue (`hsl(210 40% 96%)`) used in button hover gradients.
+
+-   **Dark Theme**:
+    -   **Aesthetic**: Modern and focused, using a dark charcoal background (`--background: 0 0% 8%`) and light grey text (`--foreground: 0 0% 67%`).
+    -   **Primary Color**: A vibrant, energetic orange (`hsl(28 95% 53%)`) that provides a strong contrast for key actions.
+    -   **Accent Color**: A warm, golden yellow (`hsl(43 55% 71%)`) used in button hover gradients.
+
 - **Custom Primary Color**: Users can select a custom primary color using a color picker popover, which is triggered by a ghost-style palette icon button. This custom color overrides the theme's default primary color.
 - **Primary Button Gradient**: Primary buttons have a special gradient effect on hover, which is unique to each theme. This provides a subtle but polished visual feedback for key actions.
 - **Text-based Button Hover**: For text-based buttons (like those on the login page), the hover and focus state is indicated *only* by the text color changing to the primary theme color. No background color is applied.
@@ -278,5 +292,6 @@ This is the single source of truth for indicating user interaction state across 
     - **Placement**: This is context-dependent. Color-pickers are typically placed on the bottom-right corner of their parent icon. Ownership status icons are typically placed on the top-left corner to create visual balance.
     - **Application**: Used for displaying a user's admin group status, a shared status on a role icon, or a `share` icon on a shared Badge.
 -   **Badges in Assorted View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
+
 
 
