@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
@@ -190,41 +191,28 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   
   const unlinkAndCopyTeam = useCallback(async (teamToUnlink: Team, newOwner: BadgeCollectionOwner) => {
     await simulateApi();
-
+    
     const newTeam: Team = {
         ...JSON.parse(JSON.stringify(teamToUnlink)),
         id: crypto.randomUUID(),
-        name: teamToUnlink.name,
+        name: `${teamToUnlink.name} (Copy)`,
         owner: newOwner,
         isShared: false,
-        members: [],
-        teamAdmins: [],
     };
-    
-    setUsers(currentUsers => currentUsers.map(u => {
-      if (u.userId === viewAsUser.userId) {
-        return {
-          ...u,
-          linkedTeamIds: (u.linkedTeamIds || []).filter(id => id !== teamToUnlink.id),
-        };
-      }
-      return u;
-    }));
 
-    setTeams(currentTeams => [...currentTeams, newTeam]);
-  }, [viewAsUser.userId]);
+    const updatedLinkedTeamIds = (viewAsUser.linkedTeamIds || []).filter(id => id !== teamToUnlink.id);
+    await updateUser(viewAsUser.userId, { linkedTeamIds: updatedLinkedTeamIds });
+
+    addTeam(newTeam);
+    toast({ title: 'Team Unlinked & Copied', description: `An independent copy of "${teamToUnlink.name}" is now on your board.` });
+  }, [addTeam, viewAsUser, updateUser, toast]);
 
   const linkTeam = useCallback(async (teamId: string) => {
     await simulateApi();
-    setUsers(currentUsers => currentUsers.map(u => {
-        if (u.userId === viewAsUser.userId) {
-            const newLinkedIds = new Set(u.linkedTeamIds || []);
-            newLinkedIds.add(teamId);
-            return { ...u, linkedTeamIds: Array.from(newLinkedIds) };
-        }
-        return u;
-    }));
-  }, [viewAsUser.userId]);
+    await updateUser(viewAsUser.userId, { 
+      linkedTeamIds: Array.from(new Set([...(viewAsUser.linkedTeamIds || []), teamId]))
+    });
+  }, [viewAsUser.userId, viewAsUser.linkedTeamIds, updateUser]);
 
 
   const addCalendar = useCallback(async (newCalendarData: Omit<SharedCalendar, 'id'>) => {

@@ -179,8 +179,8 @@ function TeamCard({
                 const ownerTeam = teams.find(t => t.id === team.owner.id);
                 return ownerTeam?.teamAdmins?.includes(viewAsUser.userId) || false;
             case 'admin_group':
-                const userAdminGroupIds = new Set(appSettings.adminGroups.filter(ag => (viewAsUser.roles || []).includes(ag.name)).map(ag => ag.id));
-                return userAdminGroupIds.has(team.owner.id);
+                 const userAdminGroupIds = new Set(appSettings.adminGroups.filter(ag => (viewAsUser.roles || []).includes(ag.name)).map(ag => ag.id));
+                 return userAdminGroupIds.has(team.owner.id);
             case 'user':
                 return team.owner.id === viewAsUser.userId
             default:
@@ -561,7 +561,10 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
     const handleRemoveUserFromTeam = useCallback((teamId: string, userId: string) => {
         const team = teams.find(t => t.id === teamId);
         if (!team) return;
-        if (!isTeamOwner(team, viewAsUser)) return;
+        if (!isTeamOwner(team, viewAsUser)) {
+             toast({ variant: 'destructive', title: 'Permission Denied', description: 'You cannot remove users from teams you do not own.' });
+            return;
+        }
         
         const updatedMembers = team.members.filter(id => id !== userId);
         
@@ -621,7 +624,8 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
         }
 
         if (type === 'team-card' && destination.droppableId === 'duplicate-team-zone') {
-             const teamToDuplicate = teams.find(t => t.id === draggableId);
+             const allVisibleTeams = [...displayedTeams, ...sharedTeams];
+             const teamToDuplicate = allVisibleTeams.find(t => t.id === draggableId);
 
             if(teamToDuplicate) {
                 const owner = getOwnershipContext(page, viewAsUser, teams, appSettings.adminGroups);
@@ -632,11 +636,11 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
                     name: `${teamToDuplicate.name} (Copy)`,
                     owner,
                     isShared: false,
-                    members: [], 
-                    teamAdmins: [],
+                    members: teamToDuplicate.members, 
+                    teamAdmins: teamToDuplicate.teamAdmins,
                 };
                 addTeam(newTeam);
-                toast({ title: 'Team Copied' });
+                toast({ title: 'Team Copied', description: 'A new, independent team has been created.' });
             }
             return;
         }
