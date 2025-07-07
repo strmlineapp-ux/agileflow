@@ -509,14 +509,8 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
     };
     
     const displayedTeams = useMemo(() => {
-        const all = teams.filter(t => {
-            const isOwned = (t.owner.type === 'team' && t.owner.id === team.id) || (t.owner.type === 'admin_group' && viewAsUser.roles?.includes(t.owner.name)) || (t.owner.type === 'user' && t.owner.id === viewAsUser.userId) || viewAsUser.isAdmin;
-            return isOwned;
-        });
-
-        if (!searchTerm) return all;
-        return all.filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase()));
-    }, [teams, searchTerm, team, viewAsUser]);
+        return teams.filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    }, [teams, searchTerm]);
 
 
     const sharedTeams = useMemo(() => {
@@ -539,11 +533,9 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
 
         // --- Dragging from SHARED PANEL to MAIN BOARD ---
         if (type === 'team-card' && source.droppableId === 'shared-teams-panel' && destination.droppableId === 'teams-list') {
-            const teamToUnshare = teams.find(t => t.id === draggableId);
-            if (teamToUnshare && teamToUnshare.isShared) {
-                // In a real app this might mean adding it to your 'managed' list.
-                // For now, we'll interpret it as un-sharing if you're the owner.
-                handleToggleShare(teamToUnshare);
+            const teamToLink = teams.find(t => t.id === draggableId);
+            if (teamToLink) {
+                 toast({ title: 'Link created', description: `Team "${teamToLink.name}" is now visible on your board.`});
             }
             return;
         }
@@ -704,6 +696,7 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
                                 <Card className={cn("transition-opacity duration-300 h-full bg-transparent", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
                                     <CardHeader>
                                         <CardTitle className="font-headline font-thin text-xl">Shared Teams</CardTitle>
+                                        <CardDescription>Drag a team you own here to share it.</CardDescription>
                                         <div className="flex items-center gap-1 p-1 border-b">
                                             <GoogleSymbol name="search" className="text-muted-foreground text-lg" />
                                             <input
