@@ -83,7 +83,7 @@ export const mockPages: AppPage[] = [
         path: '/dashboard/tasks',
         isDynamic: false,
         associatedTabs: ['tab-tasks'],
-        access: { users: [], teams: [], adminGroups: [] } // Public by default now
+        access: { users: [], teams: [], adminGroups: [] }
     },
     {
         id: 'page-service-delivery',
@@ -177,9 +177,9 @@ export const mockAppSettings: AppSettings = {
 };
 
 export const mockUsers: User[] = [
-    { userId: '1', displayName: 'Bernardo Resende', email: 'bernardo.resende@google.com', isAdmin: true, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Video Production Lead', roles: ['Video Director', 'D.o.P.', 'Creative Producer'], theme: 'dark', defaultCalendarView: 'production-schedule' },
+    { userId: '1', displayName: 'Bernardo Resende', email: 'bernardo.resende@google.com', isAdmin: true, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Video Production Lead', roles: ['Video Director', 'D.o.P.'], theme: 'dark', defaultCalendarView: 'production-schedule', primaryColor: '#FBBF24' },
     { userId: '2', displayName: 'Daniel Lazard', email: 'dlazard@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Service Delivery Manager', roles: ['Service Delivery'], theme: 'light', defaultCalendarView: 'week' },
-    { userId: '3', displayName: 'May-Kate Woods', email: 'maykate@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Event Technician', roles: ['ES Operator', 'TD', 'Content Op'], theme: 'light', defaultCalendarView: 'week' },
+    { userId: '3', displayName: 'May-Kate Woods', email: 'maykate@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Event Technician', roles: ['ES Operator', 'TD'], theme: 'light', defaultCalendarView: 'week' },
     { userId: '4', displayName: 'Zoey Roberts', email: 'zoeyr@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Production Coordinator', roles: ['1st AD'], theme: 'light', defaultCalendarView: 'month' },
     { userId: '5', displayName: 'Bilal Merhi', email: 'merhi@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Senior Video Editor', roles: ['Editor', 'Motion Graphics'], theme: 'light', defaultCalendarView: 'day' },
     { userId: '6', displayName: 'Sam Walker', email: 'samwalker@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Creative Producer', roles: ['Creative Producer', 'Script'], theme: 'light', defaultCalendarView: 'day' },
@@ -252,6 +252,8 @@ export const mockTeams: Team[] = [
         isShared: true,
         members: ['1', '5', '6', '7'],
         teamAdmins: ['1'],
+        teamAdminsLabel: 'Prod Team Leads',
+        membersLabel: 'Prod Team Members',
         locationCheckManagers: ['1'],
         allBadges: [...videoProdBadges],
         badgeCollections: [{
@@ -431,4 +433,5 @@ export const mockHolidays: Date[] = [
     new Date(currentYear, 6, 4), // Independence Day
     new Date(currentYear, 11, 25), // Christmas Day
 ];
+
 
