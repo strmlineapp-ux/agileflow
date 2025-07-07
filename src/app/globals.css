@@ -36,7 +36,7 @@
     --card-foreground: 0 0% 67%;
     --popover: 0 0% 12%;
     --popover-foreground: 0 0% 67%;
-    --primary: 28 54% 55%;
+    --primary: 28 95% 53%;
     --primary-foreground: 28 70% 95%;
     --muted: 0 0% 18%;
     --muted-foreground: 0 0% 47%;
@@ -48,7 +48,7 @@
     --warning-foreground: 43 70% 10%;
     --border: 0 0% 18%;
     --input: 0 0% 20%;
-    --ring: 28 54% 55%;
+    --ring: 28 95% 53%;
     --lunch-break-opacity: 0.15;
   }
 }

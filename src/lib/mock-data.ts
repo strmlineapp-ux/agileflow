@@ -25,9 +25,6 @@ export const mockTabs: AppTab[] = [
     color: '#10B981', 
     componentKey: 'teams', 
     description: 'Create and configure teams and their members.',
-    access: {
-      adminGroups: ['service-admin-main'],
-    }
   },
   { id: 'tab-team-members', name: 'Members', icon: 'group', color: '#6366F1', componentKey: 'team_members', description: 'View all members of a specific team and manage their roles.' },
   { id: 'tab-badges', name: 'Badges', icon: 'style', color: '#F97316', componentKey: 'badges', description: 'Create and manage reusable badges for skills, roles, or priorities.', contextTeamId: 'service-delivery' },
