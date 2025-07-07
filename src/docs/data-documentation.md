@@ -204,7 +204,7 @@ A sub-entity of `Team`, this groups related Badges together. It can be owned by 
 | Data Point | Description |
 | :--- | :--- |
 | `id: string` | A unique identifier for the collection. |
-| `owner: { type: 'team', id: string } \| { type: 'admin_group', name: string }` | An object that defines who owns the collection. Ownership dictates who can edit the collection's properties and the original badges within it. |
+| `owner: { type: 'team', id: string } \| { type: 'admin_group', name: string } \| { type: 'user', id: string }` | An object that defines who owns the collection. This can be a team, an administrative group, or an individual user. Ownership dictates who can edit the collection's properties and the original badges within it. |
 | `isShared?: boolean` | **Internal.** If `true`, this collection and its badges will be visible to all other teams in the application. Sharing is controlled by the owner. |
 | `name: string` | The name of the collection (e.g., "Skills"). |
 | `icon: string` | The Google Symbol name for the collection's icon. |
@@ -226,6 +226,7 @@ This represents a specific, functional role or skill. The single source of truth
 | `icon: string` | The Google Symbol name for the badge's icon. |
 | `color: string` | The hex color code for the badge's icon and outline. |
 | `description?: string` | An optional description shown in tooltips. |
+
 
 
 

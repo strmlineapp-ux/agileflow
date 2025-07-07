@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -583,10 +584,27 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
     dragHandleProps?: any;
     isSharedPreview?: boolean;
 }) {
+    const { viewAsUser } = useUser();
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isEditingName, setIsEditingName] = useState(false);
     
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
+    
+    const isOwned = useMemo(() => {
+        if (!viewAsUser) return false;
+        
+        switch (collection.owner.type) {
+            case 'team':
+                const team = teams.find(t => t.id === collection.owner.id);
+                return team?.teamAdmins?.includes(viewAsUser.userId) || viewAsUser.isAdmin;
+            case 'admin_group':
+                return viewAsUser.isAdmin || (viewAsUser.roles || []).includes(collection.owner.name);
+            case 'user':
+                return collection.owner.id === viewAsUser.userId;
+            default:
+                return false;
+        }
+    }, [collection.owner, teams, viewAsUser]);
     
     const handleSaveName = useCallback(() => {
         const newName = nameInputRef.current?.value || collection.name;
@@ -627,20 +645,23 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
         { key: 'badges', icon: 'style', label: 'Badges' },
     ];
 
-    const isOwned = collection.owner.type === 'team' && collection.owner.id === teamId;
     const isShared = collection.isShared;
-    const ownerTeam = teams.find(t => t.id === collection.owner.id);
+    const ownerTeam = teams.find(t => t.id === teamId);
     
     let shareIcon: string | null = null;
     let shareIconTitle: string = '';
     let shareIconColor = ownerTeam?.color;
 
-    if (isOwned && isShared) {
+    if (collection.owner.type === 'team' && collection.owner.id === teamId && isShared) {
         shareIcon = 'upload';
         shareIconTitle = 'Owned by this team and shared with all teams';
-    } else if (!isOwned) {
+    } else if (collection.owner.type !== 'team' || collection.owner.id !== teamId) {
         shareIcon = 'downloading';
-        shareIconTitle = `Shared from ${ownerTeam?.name || 'another team'}`;
+        const ownerName = collection.owner.type === 'team'
+            ? teams.find(t => t.id === collection.owner.id)?.name || 'another team'
+            : collection.owner.name;
+        shareIconTitle = `Shared from ${ownerName}`;
+        shareIconColor = collection.owner.type === 'team' ? teams.find(t => t.id === collection.owner.id)?.color : '#64748B';
     }
     
     return (
@@ -736,7 +757,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, onUpd
                                                         size="icon"
                                                         className={cn("p-0", (collection.applications || []).includes(app.key) ? 'text-primary' : 'text-muted-foreground')}
                                                         onClick={() => onUpdateCollection(collection.id, { applications: (collection.applications || []).includes(app.key) ? (collection.applications || []).filter(a => a !== app.key) : [...(collection.applications || []), app.key] })}
-                                                        disabled={isSharedPreview}
+                                                        disabled={isSharedPreview || !isOwned}
                                                     >
                                                         <GoogleSymbol name={app.icon} className="text-4xl" weight={100} />
                                                     </Button>
