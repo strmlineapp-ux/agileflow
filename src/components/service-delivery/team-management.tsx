@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
@@ -527,13 +528,16 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
         } else {
             const owner = getOwnershipContext(page, viewAsUser, teams, appSettings.adminGroups);
             unlinkAndCopyTeam(team, owner);
-            toast({ title: 'Team Unlinked & Copied', description: `An independent copy of "${team.name}" is now owned by you.` });
         }
     };
     
     const handleAddUserToTeam = (teamId: string, userId: string) => {
         const team = teams.find(t => t.id === teamId);
         if (!team || team.members.includes(userId)) return;
+        if (!isTeamOwner(team, viewAsUser)) {
+            toast({ variant: 'destructive', title: 'Permission Denied', description: 'You do not own this team.' });
+            return;
+        }
         const updatedMembers = [...team.members, userId];
         updateTeam(teamId, { members: updatedMembers });
         toast({ title: "User Added" });
@@ -542,6 +546,7 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
     const handleSetAdmin = useCallback((teamId: string, userId: string) => {
         const team = teams.find(t => t.id === teamId);
         if (!team) return;
+        if (!isTeamOwner(team, viewAsUser)) return;
         
         const currentAdmins = team.teamAdmins || [];
         const isAlreadyAdmin = currentAdmins.includes(userId);
@@ -551,18 +556,19 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
             : [...currentAdmins, userId];
             
         updateTeam(teamId, { teamAdmins: newAdmins });
-    }, [teams, updateTeam]);
+    }, [teams, updateTeam, isTeamOwner, viewAsUser]);
 
     const handleRemoveUserFromTeam = useCallback((teamId: string, userId: string) => {
         const team = teams.find(t => t.id === teamId);
         if (!team) return;
+        if (!isTeamOwner(team, viewAsUser)) return;
         
         const updatedMembers = team.members.filter(id => id !== userId);
         
         const newTeamAdmins = (team.teamAdmins || []).filter(id => id !== userId);
         updateTeam(teamId, { members: updatedMembers, teamAdmins: newTeamAdmins });
         toast({ title: 'User Removed' });
-    }, [teams, updateTeam, toast]);
+    }, [teams, updateTeam, toast, isTeamOwner, viewAsUser]);
 
     const confirmDelete = () => {
         if (!teamToDelete) return;
@@ -573,7 +579,7 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
     
     const displayedTeams = useMemo(() => {
         return teams
-            .filter(t => t.members.includes(viewAsUser.userId) || isTeamOwner(t, viewAsUser) || (viewAsUser.linkedTeamIds || []).includes(t.id))
+            .filter(t => isTeamOwner(t, viewAsUser) || (viewAsUser.linkedTeamIds || []).includes(t.id) || t.members.includes(viewAsUser.userId))
             .filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase()));
     }, [teams, viewAsUser, searchTerm, isTeamOwner]);
 
@@ -615,8 +621,7 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
         }
 
         if (type === 'team-card' && destination.droppableId === 'duplicate-team-zone') {
-             const allAvailableTeams = [...teams, ...sharedTeams];
-             const teamToDuplicate = allAvailableTeams.find(t => t.id === draggableId);
+             const teamToDuplicate = teams.find(t => t.id === draggableId);
 
             if(teamToDuplicate) {
                 const owner = getOwnershipContext(page, viewAsUser, teams, appSettings.adminGroups);
@@ -724,7 +729,7 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
                         {(provided) => (
                             <div className="flex flex-wrap -m-3" ref={provided.innerRef} {...provided.droppableProps}>
                                 {displayedTeams.map((team, index) => (
-                                    <Draggable key={team.id} draggableId={team.id} index={index} ignoreContainerClipping={false}>
+                                    <Draggable key={team.id} draggableId={team.id} index={index} type="team-card" ignoreContainerClipping={false}>
                                         {(provided, snapshot) => (
                                             <div
                                                 ref={provided.innerRef}
@@ -784,9 +789,9 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
                                         <ScrollArea className="h-full">
                                             <div className="space-y-2">
                                                 {sharedTeams.map((team, index) => (
-                                                    <Draggable key={team.id} draggableId={team.id} index={index} ignoreContainerClipping={false}>
+                                                    <Draggable key={team.id} draggableId={team.id} index={index} type="team-card" ignoreContainerClipping={false}>
                                                     {(provided, snapshot) => (
-                                                        <div ref={provided.innerRef} {...provided.draggableProps}>
+                                                        <div ref={provided.innerRef} {...provided.draggableProps} className={cn("w-full cursor-grab", snapshot.isDragging && "shadow-xl opacity-80")}>
                                                         <TeamCard
                                                             team={team}
                                                             users={users}
@@ -839,3 +844,4 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
         </DragDropContext>
     );
 }
+
