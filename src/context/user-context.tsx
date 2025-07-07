@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
@@ -168,8 +167,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const newTeam: Team = {
       ...teamData,
       id: crypto.randomUUID(),
-      allBadges: [],
-      badgeCollections: [],
     };
     await simulateApi();
     setTeams(current => [...current, newTeam]);
@@ -199,8 +196,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         name: teamToUnlink.name,
         owner: newOwner,
         isShared: false,
-        members: [],
-        teamAdmins: [],
+        members: [viewAsUser.userId], // Add the current user as a member
+        teamAdmins: [viewAsUser.userId], // And an admin
     };
 
     setTeams(currentTeams => {
@@ -210,6 +207,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                 return {
                     ...t,
                     members: t.members.filter(id => id !== viewAsUser.userId),
+                    teamAdmins: (t.teamAdmins || []).filter(id => id !== viewAsUser.userId)
                 };
             }
             return t;

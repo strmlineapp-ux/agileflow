@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
@@ -633,8 +632,8 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
                     name: `${teamToDuplicate.name} (Copy)`,
                     owner,
                     isShared: false,
-                    members: [], // Reset members
-                    teamAdmins: [], // Reset admins
+                    members: [viewAsUser.userId], // Reset and add current user
+                    teamAdmins: [viewAsUser.userId], // And make them admin
                 };
                 addTeam(newTeam);
                 toast({ title: 'Team Copied' });
