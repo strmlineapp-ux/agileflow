@@ -85,7 +85,7 @@ export const mockPages: AppPage[] = [
         isDynamic: false,
         associatedTabs: [],
         componentKey: 'tasks',
-        access: { users: [], teams: [], adminGroups: [] }
+        access: { users: [], teams: [], adminGroups: [] } // Public
     },
     {
         id: 'page-service-delivery',
@@ -111,8 +111,8 @@ export const mockPages: AppPage[] = [
         associatedTabs: ['tab-team-members', 'tab-badges', 'tab-locations', 'tab-workstations', 'tab-templates'],
         access: {
             users: [],
-            teams: ['video-production', 'live-events', 'production'],
-            adminGroups: [] 
+            teams: ['video-production', 'live-events', 'production', 'service-delivery'],
+            adminGroups: ['Service Delivery'] 
         }
     },
     {
@@ -146,7 +146,7 @@ export const mockAppSettings: AppSettings = {
       name: 'Service Delivery',
       icon: 'business_center',
       color: '#8B5CF6',
-      groupAdmins: []
+      groupAdmins: ['2']
     },
   ],
   pages: mockPages,
@@ -154,20 +154,20 @@ export const mockAppSettings: AppSettings = {
 };
 
 export const mockUsers: User[] = [
-    { userId: '1', displayName: 'Bernardo Resende', email: 'bernardo.resende@google.com', isAdmin: true, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Video Production Lead', roles: ['Video Director', 'TD', 'Director of Photography', 'Creative Producer'], theme: 'dark', defaultCalendarView: 'production-schedule' },
+    { userId: '1', displayName: 'Bernardo Resende', email: 'bernardo.resende@google.com', isAdmin: true, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Video Production Lead', roles: ['Video Director', 'Director of Photography', 'Creative Producer', 'TD'], theme: 'dark', defaultCalendarView: 'production-schedule' },
     { userId: '2', displayName: 'Daniel Lazard', email: 'dlazard@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Service Delivery Manager', roles: ['Service Delivery'], theme: 'light', defaultCalendarView: 'week' },
-    { userId: '3', displayName: 'May-Kate Woods', email: 'maykate@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Event Technician', roles: ['ES Operator'], theme: 'light', defaultCalendarView: 'week' },
+    { userId: '3', displayName: 'May-Kate Woods', email: 'maykate@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Event Technician', roles: ['ES Operator', 'TD'], theme: 'light', defaultCalendarView: 'week' },
     { userId: '4', displayName: 'Zoey Roberts', email: 'zoeyr@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Production Coordinator', roles: ['1st AD'], theme: 'light', defaultCalendarView: 'month' },
     { userId: '5', displayName: 'Bilal Merhi', email: 'merhi@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Senior Video Editor', roles: ['Editor', 'Motion Graphics'], theme: 'light', defaultCalendarView: 'day' },
     { userId: '6', displayName: 'Sam Walker', email: 'samwalker@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Creative Producer', roles: ['Creative Producer', 'Script'], theme: 'light', defaultCalendarView: 'day' },
     { userId: '7', displayName: 'Ashley Mulla', email: 'ashleymulla@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Video Editor', roles: ['Editor', 'Camera Operator'], theme: 'light', defaultCalendarView: 'day' },
-    { userId: '8', displayName: 'Perry Rogantin', email: 'rogantin@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Senior Event Technician (Audio)', roles: ['Audio Engineer'], theme: 'light', defaultCalendarView: 'week' },
-    { userId: '9', displayName: 'Robby Atilla', email: 'robbyatilla@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'TD Vision Specialist', roles: ['TD'], theme: 'light', defaultCalendarView: 'week' },
-    { userId: '10', displayName: 'Robert Messere', email: 'messere@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Event Technician', roles: ['Content Op'], theme: 'light', defaultCalendarView: 'week' },
-    { userId: '11', displayName: 'Reno Adriaanse', email: 'renoa@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Senior Event Technician (Visual)', roles: ['Camera Operator'], theme: 'light', defaultCalendarView: 'week' },
-    { userId: '12', displayName: 'Danny Smartt', email: 'dsmartt@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Event Technician', roles: [], theme: 'light', defaultCalendarView: 'week' },
-    { userId: '13', displayName: 'Maciej Chamulak', email: 'chamulak@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Senior Event Technician', roles: [], theme: 'light', defaultCalendarView: 'week' },
-    { userId: '14', displayName: 'Milan Chohan', email: 'mchohan@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Event Technician', roles: [], theme: 'light', defaultCalendarView: 'week' },
+    { userId: '8', displayName: 'Perry Rogantin', email: 'rogantin@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Senior Event Technician (Audio)', roles: ['Audio Engineer', 'Audio Mix'], theme: 'light', defaultCalendarView: 'week' },
+    { userId: '9', displayName: 'Robby Atilla', email: 'robbyatilla@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'TD Vision Specialist', roles: ['TD', 'Camera Operator'], theme: 'light', defaultCalendarView: 'week' },
+    { userId: '10', displayName: 'Robert Messere', email: 'messere@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Event Technician', roles: ['Content Op', '1st AD'], theme: 'light', defaultCalendarView: 'week' },
+    { userId: '11', displayName: 'Reno Adriaanse', email: 'renoa@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Senior Event Technician (Visual)', roles: ['Camera Operator', 'Director of Photography'], theme: 'light', defaultCalendarView: 'week' },
+    { userId: '12', displayName: 'Danny Smartt', email: 'dsmartt@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Event Technician', roles: ['Events Editor'], theme: 'light', defaultCalendarView: 'week' },
+    { userId: '13', displayName: 'Maciej Chamulak', email: 'chamulak@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Senior Event Technician', roles: ['Camera Operator'], theme: 'light', defaultCalendarView: 'week' },
+    { userId: '14', displayName: 'Milan Chohan', email: 'mchohan@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Event Technician', roles: ['Audio Engineer'], theme: 'light', defaultCalendarView: 'week' },
     { userId: '15', displayName: 'Molly Rose', email: 'mollyrose@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Production Coordinator', roles: [], theme: 'light', defaultCalendarView: 'month' },
 ];
 
@@ -193,6 +193,18 @@ export const mockLocations: BookableLocation[] = [
 
 // --- Badge Definitions ---
 
+// Video Production Owned Badges
+const videoProdCollectionId = 'video-prod-collection';
+const videoProdBadges: Badge[] = [
+    { id: 'badge-director', ownerCollectionId: videoProdCollectionId, name: 'Video Director', icon: 'videocam', color: '#FCD34D', description: 'Oversees the creative and technical aspects of a video shoot.' },
+    { id: 'badge-dop', ownerCollectionId: videoProdCollectionId, name: 'Director of Photography', icon: 'camera', color: '#FBBF24' },
+    { id: 'badge-editor', ownerCollectionId: videoProdCollectionId, name: 'Editor', icon: 'edit_note', color: '#F59E0B' },
+    { id: 'badge-motion', ownerCollectionId: videoProdCollectionId, name: 'Motion Graphics', icon: 'animation', color: '#D97706' },
+    { id: 'badge-creative-producer', ownerCollectionId: videoProdCollectionId, name: 'Creative Producer', icon: 'person', color: '#FEF08A' },
+    { id: 'badge-script', ownerCollectionId: videoProdCollectionId, name: 'Script', icon: 'description', color: '#FDE68A' },
+    { id: 'badge-gaffer', ownerCollectionId: videoProdCollectionId, name: 'Gaffer', icon: 'lightbulb', color: '#B45309' },
+];
+
 // Live Events Owned Badges
 const liveEventsCollectionId = 'event-roles-collection';
 const liveEventsBadges: Badge[] = [
@@ -204,18 +216,6 @@ const liveEventsBadges: Badge[] = [
     { id: 'badge-contentop', ownerCollectionId: liveEventsCollectionId, name: 'Content Op', icon: 'article', color: '#1D4ED8' },
     { id: 'badge-esop', ownerCollectionId: liveEventsCollectionId, name: 'ES Operator', icon: 'slideshow', color: '#3B82F6' },
     { id: 'badge-eventeditor', ownerCollectionId: liveEventsCollectionId, name: 'Events Editor', icon: 'local_movies', color: '#60A5FA' },
-];
-
-// Video Production Owned Badges
-const videoProdCollectionId = 'video-prod-collection';
-const videoProdBadges: Badge[] = [
-    { id: 'badge-director', ownerCollectionId: videoProdCollectionId, name: 'Video Director', icon: 'videocam', color: '#FCD34D', description: 'Oversees the creative and technical aspects of a video shoot.' },
-    { id: 'badge-dop', ownerCollectionId: videoProdCollectionId, name: 'Director of Photography', icon: 'camera', color: '#FBBF24' },
-    { id: 'badge-editor', ownerCollectionId: videoProdCollectionId, name: 'Editor', icon: 'edit_note', color: '#F59E0B' },
-    { id: 'badge-motion', ownerCollectionId: videoProdCollectionId, name: 'Motion Graphics', icon: 'animation', color: '#D97706' },
-    { id: 'badge-creative-producer', ownerCollectionId: videoProdCollectionId, name: 'Creative Producer', icon: 'person', color: '#FEF08A' },
-    { id: 'badge-script', ownerCollectionId: videoProdCollectionId, name: 'Script', icon: 'description', color: '#FDE68A' },
-    { id: 'badge-gaffer', ownerCollectionId: videoProdCollectionId, name: 'Gaffer', icon: 'lightbulb', color: '#B45309' },
 ];
 
 // Service Delivery Owned (Global) Badges
@@ -230,20 +230,20 @@ const pScaleBadges: Badge[] = [
 
 const starSystemCollectionId = 'star-system-collection';
 const starSystemBadges: Badge[] = [
-    { id: 'star1', ownerCollectionId: starSystemCollectionId, name: '1 Star', icon: 'star', color: '#64748B' },
-    { id: 'star2', ownerCollectionId: starSystemCollectionId, name: '2 Stars', icon: 'star', color: '#64748B' },
-    { id: 'star3', ownerCollectionId: starSystemCollectionId, name: '3 Stars', icon: 'star', color: '#64748B' },
-    { id: 'star4', ownerCollectionId: starSystemCollectionId, name: '4 Stars', icon: 'star', color: '#64748B' },
-    { id: 'star5', ownerCollectionId: starSystemCollectionId, name: '5 Stars', icon: 'star', color: '#64748B' },
+    { id: 'star1', ownerCollectionId: starSystemCollectionId, name: '1 Star', icon: 'star', color: '#64748B', description: '1/5 Stars' },
+    { id: 'star2', ownerCollectionId: starSystemCollectionId, name: '2 Stars', icon: 'star', color: '#64748B', description: '2/5 Stars' },
+    { id: 'star3', ownerCollectionId: starSystemCollectionId, name: '3 Stars', icon: 'star', color: '#64748B', description: '3/5 Stars' },
+    { id: 'star4', ownerCollectionId: starSystemCollectionId, name: '4 Stars', icon: 'star', color: '#64748B', description: '4/5 Stars' },
+    { id: 'star5', ownerCollectionId: starSystemCollectionId, name: '5 Stars', icon: 'star', color: '#64748B', description: '5/5 Stars' },
 ];
 
 const effortCollectionId = 'effort-collection';
 const effortBadges: Badge[] = [
-    { id: 'effort-xs', ownerCollectionId: effortCollectionId, name: 'XS', icon: 'fitness_center', color: '#A855F7' },
-    { id: 'effort-s', ownerCollectionId: effortCollectionId, name: 'S', icon: 'fitness_center', color: '#A855F7' },
-    { id: 'effort-m', ownerCollectionId: effortCollectionId, name: 'M', icon: 'fitness_center', color: '#A855F7' },
-    { id: 'effort-l', ownerCollectionId: effortCollectionId, name: 'L', icon: 'fitness_center', color: '#A855F7' },
-    { id: 'effort-xl', ownerCollectionId: effortCollectionId, name: 'XL', icon: 'fitness_center', color: '#A855F7' },
+    { id: 'effort-xs', ownerCollectionId: effortCollectionId, name: 'XS', icon: 'fitness_center', color: '#A855F7', description: 'Extra Small' },
+    { id: 'effort-s', ownerCollectionId: effortCollectionId, name: 'S', icon: 'fitness_center', color: '#A855F7', description: 'Small' },
+    { id: 'effort-m', ownerCollectionId: effortCollectionId, name: 'M', icon: 'fitness_center', color: '#A855F7', description: 'Medium' },
+    { id: 'effort-l', ownerCollectionId: effortCollectionId, name: 'L', icon: 'fitness_center', color: '#A855F7', description: 'Large' },
+    { id: 'effort-xl', ownerCollectionId: effortCollectionId, name: 'XL', icon: 'fitness_center', color: '#A855F7', description: 'Extra Large' },
 ];
 
 export const mockTeams: Team[] = [
@@ -262,15 +262,15 @@ export const mockTeams: Team[] = [
         badgeCollections: [{
             id: videoProdCollectionId,
             ownerTeamId: 'video-production',
-            name: 'Video Production',
+            name: 'Video Production Roles',
             icon: 'video_settings',
             color: '#FBBF24',
-            viewMode: 'list',
+            viewMode: 'detailed',
             applications: ['team members', 'events'],
             description: 'Core roles and skills for studio and field video production.',
             badgeIds: [
               ...videoProdBadges.map(b => b.id),
-              'badge-cameraop', 'badge-audioeng', 'badge-audiomix', 'badge-esop' // Linked
+              'badge-cameraop', 'badge-audioeng', 'badge-audiomix', 'badge-esop'
             ],
             isShared: true,
         }],
@@ -297,7 +297,7 @@ export const mockTeams: Team[] = [
         badgeCollections: [{
             id: liveEventsCollectionId,
             ownerTeamId: 'live-events',
-            name: 'Live Event Roles',
+            name: 'Event Roles',
             icon: 'palette',
             color: '#3B82F6',
             viewMode: 'detailed',
@@ -305,7 +305,7 @@ export const mockTeams: Team[] = [
             description: 'Specialized roles for executing live events and broadcasts.',
             badgeIds: [
                 ...liveEventsBadges.map(b => b.id),
-                'badge-dop', 'badge-editor' // Linked
+                'badge-dop', 'badge-editor'
             ],
             isShared: true,
         }],
