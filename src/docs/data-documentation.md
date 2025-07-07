@@ -1,3 +1,4 @@
+
 # AgileFlow: Data Documentation
 
 This document provides a detailed breakdown of the data structures, entities, and their relationships within the AgileFlow application. The data architecture is designed for a **Firestore (NoSQL) database environment**, which influences how data is structured and related. It serves as a technical reference for understanding how data flows through the system and interacts with internal and external services.
@@ -68,7 +69,7 @@ Not all user capabilities are stored directly as a field on the `User` object. M
 | Capability | Where Data is Stored & How It's Used |
 | :--- | :--- |
 | **Absence Statuses** (e.g., `PTO`, `Sick`) | **Storage:** This data is **not stored on the `User` object**. It is managed in the `userStatusAssignments` state within the `UserContext`, which is a dictionary keyed by date (`YYYY-MM-DD`). In a production Firestore environment, this might be a subcollection under a `/user-statuses` collection for efficient querying by date.<br>**Usage:** The `ProductionScheduleView` allows authorized managers to assign these statuses to users for specific days. The calendar then uses this data to visually indicate a user's availability. |
-| **Access to Pages** (e.g., `/admin`) | **Storage:** Page access is now entirely dynamic and is configured within each `AppPage` object inside `AppSettings.pages`. Each page has an `access` object containing arrays of `userId`s, `teamId`s, and `adminGroup` names that are allowed to view it.<br>**Usage:** A central permission checker (`hasAccess`) evaluates these rules against the current user's properties (`userId`, team memberships, `roles` array). This determines if a page is rendered in the sidebar and if a user can access its URL directly. An empty `access` object makes a page public to all logged-in users. |
+| **Access to Pages & Tabs** | **Storage:** Page and Tab access is now entirely dynamic and is configured within each `AppPage` and `AppTab` object inside `AppSettings`. Each item has an `access` object containing arrays of `userId`s, `teamId`s, and `adminGroup` names that are allowed to view it.<br>**Usage:** A central permission checker (`hasAccess`) evaluates these rules against the current user's properties (`userId`, team memberships, `roles` array). This determines if an item is rendered and if a user can access its URL directly. An empty `access` object makes an item public to all logged-in users. Importantly, access to a page **does not automatically grant access to its tabs**. The application checks tab permissions independently. |
 | **Interaction Permissions** (e.g., editing an event, managing a team) | **Storage:** This is also **not stored directly**. Permissions are derived by combining user roles with the context of a specific data item.<br>**Usage:** The application uses helper functions (like `canManageEventOnCalendar`) that check if a user's `userId` is in a `Team`'s `teamAdmins` list or if the user has a system-level role like `Admin`. This determines whether UI elements like "Edit" buttons are displayed. |
 
 ## Shared Calendar Entity
@@ -98,10 +99,24 @@ This entity, `AppSettings`, holds global configuration data that allows for cust
 | Data Point | Description |
 | :--- | :--- |
 | `adminGroups: AdminGroup[]` | An array of objects defining custom administrative groups. This allows admins to create a hierarchy between the system `Admin` and standard users. Each group has a name, icon, and color, which are editable on the Admin Management page. |
-| `pages: AppPage[]` | **The core of the dynamic navigation.** This is an array of objects defining every page in the application. The order of pages in this array directly corresponds to their order in the sidebar navigation. This order is managed on the **Admin Management** page using the "Draggable Card Management" UI pattern. Each page object includes its name, icon, URL path, access control rules, and a list of associated `tab.id`s that should be rendered on it. |
-| `tabs: AppTab[]` | **The core of the dynamic content.** This is an array of objects defining all reusable content tabs. Each object includes the tab's name, icon, and a `componentKey` that maps it to a specific React component to render its content. |
+| `pages: AppPage[]` | **The core of the dynamic navigation.** This is an array of objects defining every page in the application. The order of pages in this array directly corresponds to their order in the sidebar navigation. The order is managed on the **Admin Management** page using the "Draggable Card Management" UI pattern. Each page object includes its name, icon, URL path, access control rules, and a list of associated `tab.id`s that should be rendered on it. |
+| `tabs: AppTab[]` | **The core of the dynamic content.** This is an array of objects defining all reusable content tabs. Each object includes the tab's name, icon, a `componentKey` that maps it to a React component, and its own `access` rules. |
 | `calendarManagementLabel?: string` | An alias for the "Manage Calendars" tab on the Service Delivery page. |
 | `teamManagementLabel?: string` | An alias for the "Team Management" tab on the Service Delivery page. |
+| `strategyLabel?: string` | An alias for the "Strategy" tab on the Service Delivery page. |
+
+### AppTab Entity
+A sub-entity of `AppSettings`, `AppTab` defines a single, reusable content block.
+
+| Data Point | Description |
+| :--- | :--- |
+| `id: string` | A unique identifier for the tab. |
+| `name: string` | The display name for the tab. |
+| `icon: string` | The Google Symbol name for the tab's icon. |
+| `color: string` | The hex color for the tab's icon. |
+| `description?: string` | An optional description for the tab, often used for tooltips. |
+| `componentKey: string` | A key that maps this tab to a specific React component to render its content. |
+| `access?: AccessControl` | **Optional.** An object containing arrays of `userId`s, `teamId`s, and `adminGroup` names that can view this tab. If omitted, access is considered public or inherited from the page. |
 
 ### AdminGroup Entity
 A sub-entity of `AppSettings`, `AdminGroup` defines a single, dynamic administrative level.
@@ -126,11 +141,24 @@ The `Team` entity groups users together and defines a set of team-specific confi
 | `id: string` | A unique identifier for the team. |
 | `name: string` | The display name of the team. |
 | `icon: string` | The Google Symbol name for the team's icon. |
+| `color: string` | The hex color for the team's icon. |
 | `members: string[]` | An array of `userId`s for all members of the team. |
 | `teamAdmins: string[]` | A subset of `members` who have administrative privileges for this team. |
 | `allBadges: Badge[]` | The single source of truth for all `Badge` objects **owned** by this team. |
 | `badgeCollections: BadgeCollection[]` | An array of `BadgeCollection` objects. This includes collections *owned* by the team, and *links* to collections owned by other teams. |
 | `userBadgesLabel?: string` | A custom label for the "Team Badges" section on the Team Members tab. |
+| `timelines?: Timeline[]` | An array of `Timeline` objects that represent custom, multi-row timeline views for a team. |
+
+### Timeline Entity
+A sub-entity of `Team`, this represents a custom, multi-row timeline view, similar to the main Production Schedule.
+
+| Data Point | Description |
+| :--- | :--- |
+| `id: string` | A unique identifier for the timeline. |
+| `name: string` | The display name of the timeline. |
+| `icon: string` | The Google Symbol name for the timeline's icon. |
+| `color: string` | The hex color for the timeline's icon. |
+| `description?: string` | An optional description for the timeline. |
 
 ### BadgeCollection Entity
 A sub-entity of `Team`, this groups related Badges together. It can be owned by the team or shared with others.

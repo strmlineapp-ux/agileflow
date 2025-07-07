@@ -408,8 +408,8 @@ export const mockTeams: Team[] = [
             { id: 'template-2', name: 'Voice Over Record', icon: 'record_voice_over', requestedRoles: ['Post-Production'] }
         ],
         timelines: [
-          { id: 'tl-1', name: 'Commercial Shoot Workflow' },
-          { id: 'tl-2', name: 'Animation Pipeline' },
+          { id: 'tl-1', name: 'Commercial Shoot Workflow', icon: 'movie', color: '#8B5CF6', description: 'Standard workflow for commercial shoots from pre-production to delivery.' },
+          { id: 'tl-2', name: 'Animation Pipeline', icon: 'animation', color: '#14B8A6', description: 'End-to-end pipeline for animated shorts.' },
         ]
     },
     {
