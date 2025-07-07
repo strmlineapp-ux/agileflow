@@ -38,7 +38,6 @@ export const mockTabs: AppTab[] = [
   { id: 'tab-locations', name: 'Locations', icon: 'push_pin', color: '#A855F7', componentKey: 'locations', description: 'Manage pinned locations and check-in points for the team schedule.' },
   { id: 'tab-workstations', name: 'Workstations', icon: 'desktop_windows', color: '#D946EF', componentKey: 'workstations', description: 'Configure bookable workstations and edit machines for the team.' },
   { id: 'tab-templates', name: 'Templates', icon: 'file_copy', color: '#14B8A6', componentKey: 'templates', description: 'Create reusable event templates with pre-filled badge requests.' },
-  { id: 'tab-timeline', name: 'Timeline', icon: 'timeline', color: '#D946EF', componentKey: 'timeline', description: 'Design and manage custom timelines for different production workflows.' },
   { id: 'tab-admin-roles', name: 'Admin Groups', icon: 'admin_panel_settings', color: '#8B5CF6', componentKey: 'adminGroups', description: 'Manage high-level administrative groups and their permissions.' },
   { id: 'tab-admin-pages', name: 'Pages', icon: 'web', color: '#EC4899', componentKey: 'pages', description: 'Configure application pages, their navigation, and access controls.' },
   { id: 'tab-admin-tabs', name: 'Tabs', icon: 'tab', color: '#EF4444', componentKey: 'tabs', description: 'Manage the properties of reusable tabs that appear on pages.' },
@@ -113,7 +112,7 @@ export const mockPages: AppPage[] = [
         color: '#EC4899',
         path: '/dashboard/teams',
         isDynamic: true,
-        associatedTabs: ['tab-team-members', 'tab-badges', 'tab-locations', 'tab-workstations', 'tab-templates', 'tab-timeline'],
+        associatedTabs: ['tab-team-members', 'tab-badges', 'tab-locations', 'tab-workstations', 'tab-templates'],
         access: {
             users: [],
             teams: ['studio-productions', 'live-events', 'productions'],
@@ -407,10 +406,6 @@ export const mockTeams: Team[] = [
             { id: 'template-1', name: 'Basic Studio Shoot', icon: 'theaters', requestedRoles: ['Video Director', 'Edit Events'] },
             { id: 'template-2', name: 'Voice Over Record', icon: 'record_voice_over', requestedRoles: ['Post-Production'] }
         ],
-        timelines: [
-          { id: 'tl-1', name: 'Commercial Shoot Workflow', icon: 'movie', color: '#8B5CF6', description: 'Standard workflow for commercial shoots from pre-production to delivery.', rows: [{id: 'r1', name: 'Pre-Production'}, {id: 'r2', name: 'Shooting'}, {id: 'r3', name: 'Post-Production'}]},
-          { id: 'tl-2', name: 'Animation Pipeline', icon: 'animation', color: '#14B8A6', description: 'End-to-end pipeline for animated shorts.', rows: [{id: 'r4', name: 'Storyboarding'}, {id: 'r5', name: 'Animation'}, {id: 'r6', name: 'Sound Design'}] },
-        ]
     },
     {
         id: 'live-events',
@@ -448,7 +443,6 @@ export const mockTeams: Team[] = [
             { id: 'template-3', name: 'Standard Live Event', icon: 'podcasts', requestedRoles: ['TD', 'ES Operator', 'Camera', 'Audio'] },
             { id: 'template-4', name: 'Auditorium Presentation', icon: 'slideshow', requestedRoles: ['TD', 'Content Op'] }
         ],
-        timelines: [],
     },
     {
         id: 'productions',
@@ -468,7 +462,6 @@ export const mockTeams: Team[] = [
         locationAliases: {},
         workstations: [],
         eventTemplates: [],
-        timelines: [],
     }
 ];
 

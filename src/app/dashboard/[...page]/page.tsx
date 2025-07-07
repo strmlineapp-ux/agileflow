@@ -19,7 +19,6 @@ import { BadgeManagement } from '@/components/teams/badge-management';
 import { PinnedLocationManagement } from '@/components/settings/pinned-location-management';
 import { WorkstationManagement as TeamWorkstationManagement } from '@/components/teams/workstation-management';
 import { EventTemplateManagement } from '@/components/teams/event-template-management';
-import { TimelineManagement } from '@/components/teams/timeline-management';
 import { OverviewContent } from '@/components/dashboard/tabs/overview-tab';
 import { TasksContent } from '@/components/dashboard/tabs/tasks-tab';
 import { NotificationsContent } from '@/components/dashboard/tabs/notifications-tab';
@@ -40,7 +39,6 @@ const componentMap: Record<string, React.ComponentType<any>> = {
   locations: PinnedLocationManagement,
   workstations: TeamWorkstationManagement,
   templates: EventTemplateManagement,
-  timeline: TimelineManagement,
   // Main Content Tabs (formerly static pages)
   overview: OverviewContent,
   calendar: CalendarPageContent,

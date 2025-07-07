@@ -75,7 +75,7 @@ Access your preferences by clicking your avatar in the bottom-left corner of the
 - **Set Default Calendar View**: Select which calendar view you want to see when you log in.
 - **Set Time Format**: Choose between 12-hour and 24-hour time display.
 - **Enable Easy Booking**: Toggle the quick-create event feature.
-- **Edit Contact Info**: Click the arrow on your user row to expand it. You can edit your own contact phone number.
+- **Edit Contact Info**: Click the arrow on your user row to expand it. You can edit your own phone number.
 - **Link Google Calendar**: To connect your Google Calendar, click the grey status dot on your avatar. A tooltip will confirm the action. A simulated Google sign-in will appear and, once complete, will enable features like creating Google Meet links for your events.
 
 ## 8. Management Pages (Admin & Manager Roles)
@@ -99,7 +99,6 @@ This page is for managing the specifics of an individual team.
 - **Workstations**: Manage a list of bookable workstations or machines for the team.
 - **Event Templates**: Create reusable templates for common events. You can edit a template's name by clicking on it directly. Click the edit icon on the template card to manage its requested roles.
 - **Location Check Managers**: Assign users who are allowed to manage the daily check assignments for this team's locations.
-- **Timeline**: Create custom, multi-row timeline views that mirror the look and feel of the main Production Schedule. Each timeline has its own name, icon, color, and description, which are all editable directly on the card.
 
 ### 8.4 View As Another User (Admin Only)
 Administrators can view the application from another user's perspective.
@@ -107,5 +106,3 @@ Administrators can view the application from another user's perspective.
 2.  Select "View as" from the dropdown menu.
 3.  Choose a user from the list.
 4.  A banner will appear at the top of the screen indicating whose view you are using. To return to your own view, repeat the process and select "Return to your view".
-
-    

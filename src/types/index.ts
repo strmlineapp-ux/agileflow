@@ -15,7 +15,7 @@ export interface AppTab {
   icon: string;
   color: string;
   description?: string;
-  componentKey: 'calendars' | 'teams' | 'team_members' | 'badges' | 'locations' | 'workstations' | 'templates' | 'adminGroups' | 'pages' | 'tabs' | 'overview' | 'tasks' | 'notifications' | 'settings' | 'calendar' | 'timeline';
+  componentKey: 'calendars' | 'teams' | 'team_members' | 'badges' | 'locations' | 'workstations' | 'templates' | 'adminGroups' | 'pages' | 'tabs' | 'overview' | 'tasks' | 'notifications' | 'settings' | 'calendar';
   access?: {
     users: string[];
     teams: string[];
@@ -111,15 +111,6 @@ export interface BadgeCollection {
   isShared?: boolean;
 }
 
-export interface Timeline {
-    id: string;
-    name: string;
-    icon: string;
-    color: string;
-    description?: string;
-    rows: { id: string, name: string }[];
-}
-
 export interface Team {
   id: string;
   name: string;
@@ -138,7 +129,6 @@ export interface Team {
   locationAliases?: { [key:string]: string };
   workstations?: string[];
   eventTemplates?: EventTemplate[];
-  timelines?: Timeline[];
 }
 
 export interface Task {
@@ -263,5 +253,3 @@ export type PriorityStrategy = {
   | { type: 'symbol'; icon: string; max: number; color: string }
   | { type: 'scale'; min: number; max: number; intervals: { label: string, from: number, to: number, color: string }[] }
 );
-
-    
