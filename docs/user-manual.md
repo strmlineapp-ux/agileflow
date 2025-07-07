@@ -1,3 +1,4 @@
+
 # AgileFlow User Manual
 
 Welcome to AgileFlow, your team's central hub for managing tasks, scheduling events, and coordinating production workflows. This guide will walk you through the key features of the app.
@@ -74,7 +75,7 @@ Access your preferences by clicking your avatar in the bottom-left corner of the
 - **Set Default Calendar View**: Select which calendar view you want to see when you log in.
 - **Set Time Format**: Choose between 12-hour and 24-hour time display.
 - **Enable Easy Booking**: Toggle the quick-create event feature.
-- **Edit Contact Info**: Click the arrow on your user row to expand it. You can edit your own contact phone number.
+- **Edit Contact Info**: Click the arrow on your user row to expand it. You can edit your own phone number.
 - **Link Google Calendar**: To connect your Google Calendar, click the grey status dot on your avatar. A tooltip will confirm the action. A simulated Google sign-in will appear and, once complete, will enable features like creating Google Meet links for your events.
 
 ## 8. Management Pages (Admin & Manager Roles)
@@ -82,18 +83,18 @@ Access your preferences by clicking your avatar in the bottom-left corner of the
 ### 8.1 Admin Management (`/dashboard/admin`)
 This is the central control panel for configuring the application itself.
 - **Admin Groups**: Create and manage high-level administrative groups. To delete a group, hover over its card and click the `delete` icon that appears in the corner.
-- **Pages**: Configure the application's navigation. Create new pages, define their URL path, and control who has access to them (by user, team, or admin group). You can intuitively reorder pages by dragging and dropping them in the grid. Key system pages like "Admin Management" are pinned and cannot be moved. You can also instantly duplicate any page by dragging it onto the "Add New Page" (+) button. The "Manage Associated Tabs" popover now has a search bar to help you find tabs quickly.
+- **Pages**: Configure the application's navigation. Create new pages, define their URL path, and control who has access to them (by user, team, or admin group). You can intuitively reorder pages by dragging and dropping them in the grid. Key system pages like "Admin Management" are pinned and cannot be moved. You can also instantly duplicate any page by dragging it onto the "Add New Page" (+) button.
 - **Tabs**: Manage the reusable content blocks (tabs) in a simple list view. Use the search bar to find a specific tab to edit.
 
 ### 8.2 Service Delivery Management (`/dashboard/service-delivery`)
 This is the central hub for global application settings.
-- **Manage Calendars**: Create, edit, or delete shared calendars. Hover over a calendar card and click the `delete` icon to remove it.
-- **Manage Teams**: Create new teams, edit existing team details, and manage members. Hover over a team card and click the `delete` icon to remove it.
+- **Manage Calendars**: Create, edit, or delete shared calendars. Deleting a calendar is a high-impact action and must be done from the dropdown menu on its card.
+- **Manage Teams**: This tab provides a powerful, dynamic interface for managing user groups (called "Teams"). Just like Badge Collections, Teams can be owned, shared with other groups, linked, and copied. You can drag and drop your owned teams to a shared panel to make them available to others, or drag a shared team from that panel onto your board to link it.
 
 ### 8.3 Team Management (`/dashboard/teams/[teamId]`)
 This page is for managing the specifics of an individual team.
-- **Team Members**: View all members of the team, with Team Admins always sorted to the top. For each member, you can see the badges they've been assigned, which are conveniently grouped by their parent collection.
-- **Badge Management**: Create and manage your team's badge collections. To add a new badge to a collection, click the `add_circle` icon located directly next to the collection's name.
+- **Team Members**: View all members of the team. Team Admins are now listed in a dedicated column on the left for clarity, while all other members are in a responsive grid on the right. You can now also click on the "Team Admins" and "Members" titles to rename them for your team.
+- **Badge Management**: Create and manage your team's badge collections. To share a collection, simply drag its card to the "Shared Collections" panel. To link a collection from another team, drag it from the shared panel onto your main board.
 - **Pinned Locations**: Pin locations to the team's Production Schedule. You can also designate locations as "check locations."
 - **Workstations**: Manage a list of bookable workstations or machines for the team.
 - **Event Templates**: Create reusable templates for common events. You can edit a template's name by clicking on it directly. Click the edit icon on the template card to manage its requested roles.
