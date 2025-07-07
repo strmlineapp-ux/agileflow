@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
@@ -398,6 +399,16 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
     const [sharedSearchTerm, setSharedSearchTerm] = useState('');
     const [isSharedSearching, setIsSharedSearching] = useState(false);
     const sharedSearchInputRef = useRef<HTMLInputElement>(null);
+    
+    const [isSearching, setIsSearching] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const searchInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (isSearching) {
+            setTimeout(() => searchInputRef.current?.focus(), 100);
+        }
+    }, [isSearching]);
 
     useEffect(() => {
         if (isEditingTitle) titleInputRef.current?.focus();
@@ -494,27 +505,49 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
     };
     
     const displayedTeams = useMemo(() => {
-        // For an admin on this page, they see all teams.
-        // In a different context, this might be filtered by ownership or membership.
-        return teams;
-    }, [teams]);
+      const all = teams;
+      if (!searchTerm) return all.filter(t => !t.isShared);
+      return all.filter(
+        t =>
+          !t.isShared &&
+          t.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }, [teams, searchTerm]);
 
+    const sharedTeams = useMemo(() => {
+        return teams.filter(t => t.isShared);
+    }, [teams]);
+    
     const sharedTeamsFromOthers = useMemo(() => {
-        const displayedTeamIds = new Set(displayedTeams.map(t => t.id));
-        return teams
-            .filter(t => t.isShared && !displayedTeamIds.has(t.id))
+        const displayedTeamIds = new Set(teams.map(t => t.id));
+        // This is a placeholder. In a real multi-user environment, you'd fetch teams shared by others.
+        // For this prototype, we'll just imagine there are other teams shared.
+        // We'll filter out teams already on the user's main board.
+        const allShared = teams.filter(t => t.isShared);
+        
+        return allShared
+            .filter(t => !displayedTeamIds.has(t.id))
             .filter(t => t.name.toLowerCase().includes(sharedSearchTerm.toLowerCase()));
-    }, [teams, displayedTeams, sharedSearchTerm]);
+    }, [teams, sharedSearchTerm]);
     
     const onDragEnd = (result: DropResult) => {
         const { source, destination, draggableId, type } = result;
         if (!destination) return;
-        
-        // Handle dragging a team to the shared panel
+
+        // --- Dragging to the SHARED PANEL ---
         if (type === 'team-card' && destination.droppableId === 'shared-teams-panel') {
             const teamToShare = teams.find(t => t.id === draggableId);
             if (teamToShare && !teamToShare.isShared) {
                 handleToggleShare(teamToShare);
+            }
+            return;
+        }
+
+        // --- Dragging from SHARED PANEL to MAIN BOARD ---
+        if (type === 'team-card' && source.droppableId === 'shared-teams-panel' && destination.droppableId === 'teams-list') {
+            const teamToUnshare = teams.find(t => t.id === draggableId);
+            if (teamToUnshare && teamToUnshare.isShared) {
+                handleToggleShare(teamToUnshare);
             }
             return;
         }
@@ -598,16 +631,35 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
                                 )}
                             </StrictModeDroppable>
                         </div>
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)}>
-                                        <GoogleSymbol name="dynamic_feed" weight={100} />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent><p>Show Shared Teams</p></TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
+                        <div className="flex items-center gap-1">
+                            {!isSearching ? (
+                                <Button variant="ghost" size="icon" onClick={() => setIsSearching(true)} className="text-muted-foreground">
+                                    <GoogleSymbol name="search" />
+                                </Button>
+                            ) : (
+                                <div className="flex items-center gap-1">
+                                    <GoogleSymbol name="search" className="text-muted-foreground" />
+                                    <input
+                                        ref={searchInputRef}
+                                        placeholder="Search teams..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        onBlur={() => { if (!searchTerm) setIsSearching(false); }}
+                                        className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                                    />
+                                </div>
+                            )}
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button variant="ghost" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)}>
+                                            <GoogleSymbol name="dynamic_feed" weight={100} />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent><p>Show Shared Teams</p></TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        </div>
                     </div>
 
                     <StrictModeDroppable droppableId="teams-list" type="team-card" isDropDisabled={false} ignoreContainerClipping={false}>
@@ -679,7 +731,7 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
                                     <CardContent className="h-full">
                                         <ScrollArea className="h-full">
                                             <div className="space-y-2">
-                                                {sharedTeamsFromOthers.map((team, index) => (
+                                                {sharedTeams.map((team, index) => (
                                                     <Draggable key={team.id} draggableId={team.id} index={index} ignoreContainerClipping={false}>
                                                     {(provided, snapshot) => (
                                                         <div ref={provided.innerRef} {...provided.draggableProps}>
@@ -701,7 +753,7 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
                                                     </Draggable>
                                                 ))}
                                                 {provided.placeholder}
-                                                {sharedTeamsFromOthers.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">No teams are currently shared.</p>}
+                                                {sharedTeams.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">No teams are currently shared.</p>}
                                             </div>
                                         </ScrollArea>
                                     </CardContent>
