@@ -200,7 +200,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                             {membersLabel}
                          </h3>
                     )}
-                    {members.length > 0 ? (
+                    {members.length > 0 && (
                         <StrictModeDroppable droppableId="members-list">
                             {(provided) => (
                                 <div ref={provided.innerRef} {...provided.droppableProps} className="flex flex-wrap -m-3">
@@ -222,8 +222,6 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                                 </div>
                             )}
                         </StrictModeDroppable>
-                    ) : (
-                        <div className="text-sm text-muted-foreground p-4 border border-dashed rounded-lg text-center">No other members in this team.</div>
                     )}
                 </div>
             </div>

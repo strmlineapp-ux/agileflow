@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
@@ -549,18 +550,32 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
         setTeamToDelete(null);
     };
     
+    const isTeamOwner = useCallback((team: Team, user: User) => {
+        if (!team.owner) return false;
+        if (user.isAdmin) return true;
+        switch (team.owner.type) {
+            case 'user':
+                return team.owner.id === user.userId;
+            case 'admin_group':
+                return (user.roles || []).includes(team.owner.name);
+            default:
+                return false;
+        }
+    }, []);
+
     const displayedTeams = useMemo(() => {
         return teams
-            .filter(t => t.members.includes(viewAsUser.userId))
+            .filter(t => t.members.includes(viewAsUser.userId) || isTeamOwner(t, viewAsUser))
             .filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase()));
-    }, [teams, viewAsUser.userId, searchTerm]);
+    }, [teams, viewAsUser, searchTerm, isTeamOwner]);
 
 
     const sharedTeams = useMemo(() => {
+        const teamsOnBoard = new Set(displayedTeams.map(t => t.id));
         return teams
-            .filter(t => t.isShared && !t.members.includes(viewAsUser.userId))
+            .filter(t => t.isShared && !teamsOnBoard.has(t.id))
             .filter(t => t.name.toLowerCase().includes(sharedSearchTerm.toLowerCase()));
-    }, [teams, viewAsUser.userId, sharedSearchTerm]);
+    }, [teams, displayedTeams, sharedSearchTerm]);
     
     const onDragEnd = (result: DropResult) => {
         const { source, destination, draggableId, type } = result;
@@ -577,11 +592,8 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
 
         // --- Dragging from SHARED PANEL to MAIN BOARD (Linking) ---
         if (type === 'team-card' && source.droppableId === 'shared-teams-panel' && destination.droppableId === 'teams-list') {
-            const teamToLink = teams.find(t => t.id === draggableId);
-            if (teamToLink) {
-                 handleAddUserToTeam(teamToLink.id, viewAsUser.userId);
-                 toast({ title: 'Team Linked', description: `You are now a member of "${teamToLink.name}".`});
-            }
+            handleAddUserToTeam(draggableId, viewAsUser.userId);
+            toast({ title: 'Team Linked', description: `You are now a member of the team.` });
             return;
         }
 
