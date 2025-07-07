@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useRef, useEffect, useMemo } from 'react';
@@ -111,7 +112,7 @@ function EditableTimelineView({ timeline, onUpdate, onDelete }: {
   };
 
   return (
-    <Card className="flex flex-col">
+    <Card className="overflow-hidden">
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
@@ -187,13 +188,13 @@ function EditableTimelineView({ timeline, onUpdate, onDelete }: {
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="p-0 overflow-x-auto">
+      <div className="overflow-x-auto">
         <div className="min-w-[2440px]">
           <TimelineHourHeader />
           <TimelineRow name="Row 1" />
           <TimelineRow name="Row 2" />
         </div>
-      </CardContent>
+      </div>
     </Card>
   )
 }
