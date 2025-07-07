@@ -44,6 +44,7 @@ export interface AppSettings {
   adminGroups: AdminGroup[];
   pages: AppPage[];
   tabs: AppTab[];
+  globalBadges: Badge[];
   calendarManagementLabel?: string;
   teamManagementLabel?: string;
   strategyLabel?: string;
@@ -99,9 +100,13 @@ export interface Badge {
 
 export type BadgeApplication = 'team members' | 'events' | 'tasks' | 'badges';
 
+export type BadgeCollectionOwner = 
+  | { type: 'team'; id: string }
+  | { type: 'admin_group'; name: string };
+
 export interface BadgeCollection {
   id: string;
-  ownerTeamId: string;
+  owner: BadgeCollectionOwner;
   name: string;
   icon: string;
   color: string;
@@ -252,5 +257,4 @@ export type PriorityStrategy = {
 } & (
   | { type: 'tier'; priorities: Priority[] }
   | { type: 'symbol'; icon: string; max: number; color: string }
-  | { type: 'scale'; min: number; max: number; intervals: { label: string, from: number, to: number, color: string }[] }
-);
+  | { type: 'scale'; min: number; max

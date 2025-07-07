@@ -101,7 +101,7 @@ Access to every page and tab in the application is controlled by a dynamic rules
   access: {
     users: [], // No specific users
     teams: [], // Not restricted by team
-    adminGroups: ['Service Admin'], // ONLY users with the "Service Admin" role can see this
+    adminGroups: ['Service Delivery'], // ONLY users with the "Service Delivery" role can see this
   }
 }
 ```
@@ -148,6 +148,7 @@ This entity, `AppSettings`, holds global configuration data that allows for cust
 | `adminGroups: AdminGroup[]` | An array of objects defining custom administrative groups. This allows admins to create a hierarchy between the system `Admin` and standard users. Each group has a name, icon, and color, which are editable on the Admin Management page. |
 | `pages: AppPage[]` | **The core of the dynamic navigation.** This is an array of objects defining every page in the application. The order of pages in this array directly corresponds to their order in the sidebar navigation. The order is managed on the **Admin Management** page using the "Draggable Card Management" UI pattern. Each page object includes its name, icon, URL path, access control rules, and a list of associated `tab.id`s that should be rendered on it. |
 | `tabs: AppTab[]` | **The core of the dynamic content.** This is an array of objects defining all reusable content tabs. Each object includes the tab's name, icon, a `componentKey` that maps it to a React component, and its own `access` rules. |
+| `globalBadges: Badge[]` | An array of globally-defined badges. These are typically owned by an **Admin Group** and are managed on the **Service Delivery > Badges** tab. |
 | `calendarManagementLabel?: string` | An alias for the "Manage Calendars" tab on the Service Delivery page. |
 | `teamManagementLabel?: string` | An alias for the "Team Management" tab on the Service Delivery page. |
 | `strategyLabel?: string` | An alias for the "Strategy" tab on the Service Delivery page. |
@@ -203,8 +204,8 @@ A sub-entity of `Team`, this groups related Badges together. It can be owned by 
 | Data Point | Description |
 | :--- | :--- |
 | `id: string` | A unique identifier for the collection. |
-| `ownerTeamId: string` | The `teamId` of the team that owns the source of truth for this collection. |
-| `isShared?: boolean` | **Internal.** If `true`, this collection and its badges will be visible to all other teams in the application. Sharing is controlled by the owner team. |
+| `owner: { type: 'team', id: string } \| { type: 'admin_group', name: string }` | An object that defines who owns the collection. Ownership dictates who can edit the collection's properties and the original badges within it. |
+| `isShared?: boolean` | **Internal.** If `true`, this collection and its badges will be visible to all other teams in the application. Sharing is controlled by the owner. |
 | `name: string` | The name of the collection (e.g., "Skills"). |
 | `icon: string` | The Google Symbol name for the collection's icon. |
 | `color: string` | The hex color for the collection's icon. |
@@ -215,7 +216,7 @@ A sub-entity of `Team`, this groups related Badges together. It can be owned by 
 
 
 ### Badge Entity
-This represents a specific, functional role or skill within a team. The single source of truth for a badge is stored in the `allBadges` array of its owner's `Team` object.
+This represents a specific, functional role or skill. The single source of truth for a badge is stored in either the `allBadges` array of its owner's `Team` object, or in the `globalBadges` array in `AppSettings` if owned by an Admin Group.
 
 | Data Point | Description |
 | :--- | :--- |
@@ -225,5 +226,6 @@ This represents a specific, functional role or skill within a team. The single s
 | `icon: string` | The Google Symbol name for the badge's icon. |
 | `color: string` | The hex color code for the badge's icon and outline. |
 | `description?: string` | An optional description shown in tooltips. |
+
 
 
