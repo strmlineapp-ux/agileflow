@@ -196,8 +196,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         name: teamToUnlink.name,
         owner: newOwner,
         isShared: false,
-        members: [viewAsUser.userId], // Add the current user as a member
-        teamAdmins: [viewAsUser.userId], // And an admin
+        members: [],
+        teamAdmins: [],
     };
 
     setTeams(currentTeams => {

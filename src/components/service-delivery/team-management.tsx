@@ -185,7 +185,7 @@ function TeamCard({
         }
     }, [team.owner, teams, viewAsUser, isSharedPreview, appSettings.adminGroups]);
 
-    const canManageAdmins = isOwned || (team.teamAdmins || []).includes(viewAsUser.userId);
+    const canManageAdmins = isOwned;
 
     const teamMembers = useMemo(() => team.members.map(id => users.find(u => u.userId === id)).filter((u): u is User => !!u), [team.members, users]);
     const availableUsersToAdd = useMemo(() => users.filter(u => !team.members.includes(u.userId) && u.displayName.toLowerCase().includes(userSearch.toLowerCase())), [users, team.members, userSearch]);
@@ -369,7 +369,7 @@ function TeamCard({
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                             <DropdownMenuTrigger asChild disabled={!isOwned && isSharedPreview} onClick={(e) => e.stopPropagation()}><Button variant="ghost" size="icon"><GoogleSymbol name="more_vert" weight={100} /></Button></DropdownMenuTrigger>
+                                             <DropdownMenuTrigger asChild disabled={isSharedPreview} onClick={(e) => e.stopPropagation()}><Button variant="ghost" size="icon"><GoogleSymbol name="more_vert" weight={100} /></Button></DropdownMenuTrigger>
                                         </TooltipTrigger>
                                         <TooltipContent><p>More Options</p></TooltipContent>
                                     </Tooltip>
@@ -521,8 +521,8 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
 
     
     const handleDelete = (team: Team) => {
-        const isOwned = isTeamOwner(team, viewAsUser);
-        if (isOwned) {
+        const owned = isTeamOwner(team, viewAsUser);
+        if (owned) {
             setTeamToDelete(team);
         } else {
             const owner = getOwnershipContext(page, viewAsUser, teams, appSettings.adminGroups);
@@ -632,8 +632,8 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
                     name: `${teamToDuplicate.name} (Copy)`,
                     owner,
                     isShared: false,
-                    members: [viewAsUser.userId], // Reset and add current user
-                    teamAdmins: [viewAsUser.userId], // And make them admin
+                    members: [], 
+                    teamAdmins: [],
                 };
                 addTeam(newTeam);
                 toast({ title: 'Team Copied' });
