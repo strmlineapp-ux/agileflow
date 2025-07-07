@@ -111,7 +111,7 @@ function EditableTimelineView({ timeline, onUpdate, onDelete }: {
   };
 
   return (
-    <Card>
+    <Card className="overflow-hidden">
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
