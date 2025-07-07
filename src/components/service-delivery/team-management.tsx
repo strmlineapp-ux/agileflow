@@ -44,16 +44,14 @@ const predefinedColors = [
 function UserCard({ 
     user, 
     onRemove, 
-    teamId,
     isTeamAdmin,
     onSetAdmin,
     canManageAdmins,
 }: { 
     user: User; 
-    onRemove: (teamId: string, userId: string) => void; 
-    teamId: string;
+    onRemove: () => void; 
     isTeamAdmin: boolean;
-    onSetAdmin: (userId: string) => void;
+    onSetAdmin: () => void;
     canManageAdmins: boolean;
 }) {
   return (
@@ -62,8 +60,8 @@ function UserCard({
             "group relative flex items-center gap-2 p-1 rounded-md transition-colors",
             canManageAdmins && "cursor-pointer hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
         )}
-        onClick={() => canManageAdmins && onSetAdmin(user.userId)}
-        onKeyDown={(e) => { if(canManageAdmins && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onSetAdmin(user.userId);}}}
+        onClick={() => canManageAdmins && onSetAdmin()}
+        onKeyDown={(e) => { if(canManageAdmins && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onSetAdmin();}}}
         tabIndex={canManageAdmins ? 0 : -1}
       >
           <div className="relative">
@@ -95,7 +93,7 @@ function UserCard({
                         variant="ghost"
                         size="icon"
                         className="absolute top-0 right-0 h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={(e) => { e.stopPropagation(); onRemove(teamId, user.userId);}}
+                        onClick={(e) => { e.stopPropagation(); onRemove();}}
                     >
                         <GoogleSymbol name="cancel" className="text-lg" weight={100} />
                     </Button>
@@ -144,20 +142,20 @@ function TeamCard({
     
     const isOwned = useMemo(() => {
         if (isSharedPreview || !viewAsUser) return false;
+        if(viewAsUser.isAdmin) return true;
         
         switch (team.owner.type) {
             case 'team':
                 const ownerTeam = teams.find(t => t.id === team.owner.id);
-                return ownerTeam?.teamAdmins?.includes(viewAsUser.userId) || viewAsUser.isAdmin;
+                return ownerTeam?.teamAdmins?.includes(viewAsUser.userId) || false;
             case 'admin_group':
-                return viewAsUser.isAdmin || (viewAsUser.roles || []).includes(team.owner.name);
+                return (viewAsUser.roles || []).includes(team.owner.name);
             case 'user':
-                const ownerUser = users.find(u => u.userId === team.owner.id);
-                return ownerUser?.userId === viewAsUser.userId
+                return team.owner.id === viewAsUser.userId
             default:
                 return false;
         }
-    }, [team.owner, teams, users, viewAsUser, isSharedPreview]);
+    }, [team.owner, teams, viewAsUser, isSharedPreview]);
 
     const canManageAdmins = isOwned || (team.teamAdmins || []).includes(viewAsUser.userId);
 
@@ -219,7 +217,7 @@ function TeamCard({
 
     return (
         <Card className={cn("flex flex-col h-full bg-transparent group relative")}>
-            <div {...dragHandleProps} onClick={onToggleExpand} className="cursor-pointer">
+            <div {...dragHandleProps} onClick={onToggleExpand} className="cursor-pointer flex-grow">
                 <CardHeader>
                     <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -367,8 +365,7 @@ function TeamCard({
                                                 >
                                                 <UserCard 
                                                     user={user} 
-                                                    teamId={team.id} 
-                                                    onRemove={onRemoveUser}
+                                                    onRemove={() => onRemoveUser(team.id, user.userId)}
                                                     isTeamAdmin={(team.teamAdmins || []).includes(user.userId)}
                                                     onSetAdmin={() => onSetAdmin(team.id, user.userId)}
                                                     canManageAdmins={canManageAdmins}
@@ -404,7 +401,7 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
         if (isEditingTitle) titleInputRef.current?.focus();
     }, [isEditingTitle]);
 
-    const toggleTeamExpansion = (teamId: string) => {
+    const toggleTeamExpansion = useCallback((teamId: string) => {
         setExpandedTeams(prev => {
             const newSet = new Set(prev);
             if (newSet.has(teamId)) {
@@ -414,7 +411,7 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
             }
             return newSet;
         });
-    };
+    }, []);
 
     const handleSaveTitle = () => {
         const newName = titleInputRef.current?.value.trim();
@@ -463,9 +460,10 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
         toast({ title: "User Added" });
     };
     
-    const handleSetAdmin = (teamId: string, userId: string) => {
+    const handleSetAdmin = useCallback((teamId: string, userId: string) => {
         const team = teams.find(t => t.id === teamId);
         if (!team) return;
+        
         const currentAdmins = team.teamAdmins || [];
         const isAlreadyAdmin = currentAdmins.includes(userId);
         
@@ -474,9 +472,9 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
             : [...currentAdmins, userId];
             
         updateTeam(teamId, { teamAdmins: newAdmins });
-    };
+    }, [teams, updateTeam]);
 
-    const handleRemoveUserFromTeam = (teamId: string, userId: string) => {
+    const handleRemoveUserFromTeam = useCallback((teamId: string, userId: string) => {
         const team = teams.find(t => t.id === teamId);
         if (!team) return;
         
@@ -490,7 +488,7 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
             updateTeam(teamId, { members: updatedMembers, teamAdmins: newTeamAdmins });
             toast({ title: 'User Removed' });
         }
-    };
+    }, [teams, deleteTeam, updateTeam, toast]);
 
     const confirmDelete = () => {
         if (!teamToDelete) return;
@@ -512,7 +510,7 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
     }), [teams, viewAsUser]);
 
     const ownedTeamIds = new Set(ownedTeams.map(t => t.id));
-    const sharedTeams = teams.filter(team => team.isShared && !ownedTeamIds.has(team.id));
+    const sharedTeams = teams.filter(team => team.isShared && !ownedTeamIds.has(t.id));
 
     const onDragEnd = (result: DropResult) => {
         const { source, destination, draggableId, type } = result;
@@ -672,24 +670,35 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
                                     </CardHeader>
                                     <CardContent>
                                         <div className="space-y-2">
-                                            {sharedTeams.map((team) => {
+                                            {sharedTeams.map((team, index) => {
                                                 return (
-                                                    <TeamCard 
-                                                        key={team.id}
-                                                        team={team} 
-                                                        users={users}
-                                                        onUpdate={handleUpdate} 
-                                                        onDelete={handleDelete}
-                                                        onToggleShare={handleToggleShare}
-                                                        onRemoveUser={handleRemoveUserFromTeam}
-                                                        onAddUser={handleAddUserToTeam}
-                                                        onSetAdmin={handleSetAdmin}
-                                                        isSharedPreview={true}
-                                                        isExpanded={expandedTeams.has(team.id)}
-                                                        onToggleExpand={() => toggleTeamExpansion(team.id)}
-                                                    />
+                                                    <Draggable key={team.id} draggableId={team.id} index={index} ignoreContainerClipping={false}>
+                                                        {(provided, snapshot) => (
+                                                            <div 
+                                                                ref={provided.innerRef} 
+                                                                {...provided.draggableProps} 
+                                                                className={cn("w-full cursor-grab", snapshot.isDragging && "shadow-xl opacity-80")}
+                                                            >
+                                                                <TeamCard 
+                                                                    dragHandleProps={provided.dragHandleProps}
+                                                                    team={team} 
+                                                                    users={users}
+                                                                    onUpdate={handleUpdate} 
+                                                                    onDelete={handleDelete}
+                                                                    onToggleShare={handleToggleShare}
+                                                                    onRemoveUser={handleRemoveUserFromTeam}
+                                                                    onAddUser={handleAddUserToTeam}
+                                                                    onSetAdmin={handleSetAdmin}
+                                                                    isSharedPreview={true}
+                                                                    isExpanded={expandedTeams.has(team.id)}
+                                                                    onToggleExpand={() => toggleTeamExpansion(team.id)}
+                                                                />
+                                                            </div>
+                                                        )}
+                                                    </Draggable>
                                                 )
                                             })}
+                                            {provided.placeholder}
                                             {sharedTeams.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">No teams are being shared.</p>}
                                         </div>
                                     </CardContent>
