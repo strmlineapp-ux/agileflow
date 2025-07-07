@@ -259,4 +259,5 @@ export type PriorityStrategy = {
 } & (
   | { type: 'tier'; priorities: Priority[] }
   | { type: 'symbol'; icon: string; max: number; color: string }
-  | { type: 'scale'; min: number; max
+  | { type: 'scale'; min: number; max: number; intervals: { label: string; from: number; to: number; color: string }[] }
+);

@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -41,139 +40,13 @@ const predefinedColors = [
     '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
 ];
 
-
-const AddMemberToTeamButton = ({ usersToAdd, onAdd, teamName }: { usersToAdd: User[], onAdd: (user: User) => void, teamName: string }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const searchInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (isOpen) {
-        setTimeout(() => searchInputRef.current?.focus(), 100);
-    } else {
-        setSearchTerm('');
-    }
-  }, [isOpen]);
-
-  const handleSelect = (user: User) => {
-    onAdd(user);
-    setIsOpen(false);
-  }
-
-  const filteredUsers = useMemo(() => {
-      if (!searchTerm) return usersToAdd;
-      return usersToAdd.filter(user => 
-        user.displayName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-  }, [usersToAdd, searchTerm]);
-  
-  return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <PopoverTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-full p-0">
-                  <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
-                  <span className="sr-only">Assign member to {teamName}</span>
-              </Button>
-            </PopoverTrigger>
-          </TooltipTrigger>
-          <TooltipContent><p>Assign Member</p></TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-      <PopoverContent className="p-0 w-80">
-        <div className="flex items-center gap-1 p-2 border-b">
-            <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
-            <input
-                ref={searchInputRef}
-                placeholder="Search by name or email..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
-            />
-        </div>
-        <ScrollArea className="h-64">
-           <div className="p-1">
-            {filteredUsers.length > 0 ? filteredUsers.map(user => (
-              <div key={user.userId} onClick={() => handleSelect(user)} className="flex items-center gap-2 p-2 rounded-md group cursor-pointer">
-                <Avatar className="h-8 w-8"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0,2)}</AvatarFallback></Avatar>
-                <div>
-                  <p className="text-sm font-normal group-hover:text-primary transition-colors">{user.displayName}</p>
-                  <p className="text-xs text-muted-foreground">{user.email}</p>
-                </div>
-              </div>
-            )) : (
-              <p className="text-center text-sm text-muted-foreground p-4">{searchTerm ? 'No matching users found.' : 'All users are assigned.'}</p>
-            )}
-            </div>
-        </ScrollArea>
-      </PopoverContent>
-    </Popover>
-  )
-}
-
-const MemberCard = ({ user, index, onRemove, onSetAdmin, isTeamAdmin }: { user: User; index: number; onRemove: (userId: string) => void; onSetAdmin: (userId: string) => void; isTeamAdmin: boolean }) => {
-    return (
-        <Draggable draggableId={`user-${user.userId}`} index={index} type="user-card" ignoreContainerClipping={false}>
-        {(provided, snapshot) => (
-            <div
-                ref={provided.innerRef}
-                {...provided.draggableProps}
-                {...provided.dragHandleProps}
-                className={cn(snapshot.isDragging && "opacity-80")}
-            >
-            <div
-                tabIndex={0}
-                role="button"
-                onClick={() => onSetAdmin(user.userId)}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSetAdmin(user.userId); } }}
-                className="transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50 p-2 flex items-center justify-between rounded-lg group"
-            >
-                <div className="flex items-center gap-3">
-                    <div className="relative">
-                        <Avatar className="h-8 w-8">
-                            <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
-                            <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                        </Avatar>
-                        {isTeamAdmin && (
-                            <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background flex items-center justify-center bg-primary text-primary-foreground">
-                                <GoogleSymbol name="key" style={{fontSize: '10px'}}/>
-                            </div>
-                        )}
-                    </div>
-                    <div>
-                        <p className="font-normal text-sm">{user.displayName}</p>
-                        <p className="text-xs text-muted-foreground">{user.title || 'No title provided'}</p>
-                    </div>
-                </div>
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onRemove(user.userId); }} className="text-muted-foreground hover:text-destructive p-0 h-6 w-6 opacity-0 group-hover:opacity-100">
-                                <GoogleSymbol name="cancel" className="text-lg" weight={100} />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent><p>Remove from team</p></TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
-            </div>
-            </div>
-        )}
-        </Draggable>
-    );
-};
-
 function TeamCard({ 
     team, 
-    allUsers, 
     onUpdate, 
     onDelete, 
     isDragging
 }: { 
     team: Team, 
-    allUsers: User[], 
     onUpdate: (id: string, data: Partial<Team>) => void, 
     onDelete: (team: Team) => void,
     isDragging?: boolean,
@@ -184,8 +57,6 @@ function TeamCard({
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
     const [iconSearch, setIconSearch] = useState('');
     const iconSearchInputRef = useRef<HTMLInputElement>(null);
-    
-    const teamMembers = team.members.map(id => allUsers.find(u => u.userId === id)).filter(Boolean) as User[];
     
      useEffect(() => {
         if (isIconPopoverOpen) {
@@ -216,25 +87,6 @@ function TeamCard({
         if (e.key === 'Enter') handleSaveName();
         else if (e.key === 'Escape') setIsEditingName(false);
     };
-
-    const handleAdminToggle = (userId: string) => {
-        const currentAdmins = team.teamAdmins || [];
-        const newAdmins = currentAdmins.includes(userId)
-            ? currentAdmins.filter(id => id !== userId)
-            : [...currentAdmins, userId];
-        onUpdate(team.id, { teamAdmins: newAdmins });
-    };
-
-    const handleMemberToggle = (userId: string) => {
-        const newMembers = team.members.filter(id => id !== userId);
-        const newAdmins = (team.teamAdmins || []).filter(id => id !== userId);
-        onUpdate(team.id, { members: newMembers, teamAdmins: newAdmins });
-    }
-    
-    const unassignedUsers = useMemo(() => {
-        const memberIds = new Set(team.members);
-        return allUsers.filter(u => !memberIds.has(u.userId));
-    }, [allUsers, team.members]);
 
     return (
         <Card className={cn("flex flex-col h-full bg-transparent group relative", isDragging && "shadow-xl")}>
@@ -297,7 +149,6 @@ function TeamCard({
                                     {team.name}
                                 </CardTitle>
                             )}
-                            <AddMemberToTeamButton usersToAdd={unassignedUsers} onAdd={(user) => onUpdate(team.id, { members: [...team.members, user.userId]})} teamName={team.name} />
                         </div>
                     </div>
                      <TooltipProvider>
@@ -314,36 +165,9 @@ function TeamCard({
                     </TooltipProvider>
                 </div>
             </CardHeader>
-            <ScrollArea className="flex-grow">
-                <CardContent>
-                    <p className="text-sm font-normal text-muted-foreground">Members (click to toggle admin status)</p>
-                     <StrictModeDroppable droppableId={`team-members-${team.id}`} type="user-card" isDropDisabled={false} isCombineEnabled={false}>
-                        {(provided, snapshot) => (
-                        <div
-                            ref={provided.innerRef}
-                            {...provided.droppableProps}
-                            className={cn(
-                                "space-y-2 rounded-md p-1 min-h-[50px]",
-                                snapshot.isDraggingOver && "ring-1 ring-border ring-inset"
-                            )}
-                        >
-                            {teamMembers.map((user, index) => (
-                            <MemberCard
-                                key={user.userId}
-                                user={user}
-                                index={index}
-                                onRemove={(userId) => handleMemberToggle(userId)}
-                                onSetAdmin={(userId) => handleAdminToggle(userId)}
-                                isTeamAdmin={(team.teamAdmins || []).includes(user.userId)}
-                            />
-                            ))}
-                            {provided.placeholder}
-                            {teamMembers.length === 0 && <p className="text-sm text-muted-foreground italic text-center p-4">No members assigned.</p>}
-                        </div>
-                        )}
-                    </StrictModeDroppable>
-                </CardContent>
-            </ScrollArea>
+            <CardContent>
+                <p className="text-sm text-muted-foreground">{team.members.length} member(s)</p>
+            </CardContent>
         </Card>
     );
 }
@@ -427,68 +251,22 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
   };
   
   const onDragEnd = (result: DropResult) => {
-      const { source, destination, draggableId, type } = result;
+      const { source, destination, draggableId } = result;
       if (!destination) return;
   
-      if (type === 'team-card') {
-          if (destination.droppableId === 'duplicate-team-zone') {
-              const teamToDuplicate = teams.find(t => t.id === draggableId);
-              if (teamToDuplicate) {
-                handleDuplicateTeam(teamToDuplicate);
-              }
-              return;
-          }
-          
-          if (source.droppableId === 'teams-list' && destination.droppableId === 'teams-list') {
-              const reordered = Array.from(teams);
-              const [movedItem] = reordered.splice(source.index, 1);
-              reordered.splice(destination.index, 0, movedItem);
-              reorderTeams(reordered);
+      if (destination.droppableId === 'duplicate-team-zone') {
+          const teamToDuplicate = teams.find(t => t.id === draggableId);
+          if (teamToDuplicate) {
+            handleDuplicateTeam(teamToDuplicate);
           }
           return;
       }
       
-      if (type === 'user-card') {
-        const userId = draggableId.replace('user-', '');
-        const user = users.find(u => u.userId === userId);
-        if (!user) return;
-        
-        const sourceTeamId = source.droppableId.replace('team-members-', '');
-        const destDroppableId = destination.droppableId;
-        
-        // Handle drop on another team card
-        if (destDroppableId.startsWith('team-members-')) {
-            const destTeamId = destDroppableId.replace('team-members-', '');
-            if (sourceTeamId === destTeamId) return; // Dropped on the same team
-
-            const destTeam = teams.find(t => t.id === destTeamId);
-            if (!destTeam) return;
-
-            if (destTeam.members.includes(userId)) {
-                toast({ title: 'Already a member', description: `${user.displayName} is already in the ${destTeam.name} team.` });
-                return;
-            }
-
-            const newMembers = [...destTeam.members, userId];
-            updateTeam(destTeamId, { members: newMembers });
-            toast({ title: 'User Added', description: `${user.displayName} has been added to the ${destTeam.name} team.` });
-        }
-        
-        // Handle drop on delete icon
-        if (destDroppableId.startsWith('delete-user-dropzone-')) {
-            const destTeamId = destDroppableId.replace('delete-user-dropzone-', '');
-            if (sourceTeamId !== destTeamId) {
-                return;
-            }
-            
-            const team = teams.find(t => t.id === destTeamId);
-            if (!team) return;
-
-            const newMembers = team.members.filter(id => id !== userId);
-            const newAdmins = (team.teamAdmins || []).filter(id => id !== userId);
-            updateTeam(destTeamId, { members: newMembers, teamAdmins: newAdmins });
-            toast({ title: 'User Removed', description: `${user.displayName} has been removed from the ${team.name} team.` });
-        }
+      if (source.droppableId === 'teams-list' && destination.droppableId === 'teams-list') {
+          const reordered = Array.from(teams);
+          const [movedItem] = reordered.splice(source.index, 1);
+          reordered.splice(destination.index, 0, movedItem);
+          reorderTeams(reordered);
       }
   };
 
@@ -554,7 +332,6 @@ export function TeamManagement({ tab }: { tab: AppTab }) {
                                 >
                                     <TeamCard 
                                         team={team} 
-                                        allUsers={users} 
                                         onUpdate={handleUpdate} 
                                         onDelete={openDeleteDialog}
                                         isDragging={snapshot.isDragging}
