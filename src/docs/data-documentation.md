@@ -78,9 +78,21 @@ Access to every page and tab in the application is controlled by a dynamic rules
     *   The user is a member of any team whose ID is in the item's `access.teams` array.
     *   The user has a role (from an `AdminGroup`) that is listed in the item's `access.adminGroups` array.
 
-**Example Configuration (`mock-data.ts`):**
+**Example Configurations (`mock-data.ts`):**
 
 ```typescript
+// Example of a page restricted to a team
+{
+  id: 'page-tasks',
+  name: 'Tasks',
+  // ... other properties
+  access: {
+    users: [],
+    teams: ['live-events'], // ONLY members of the "Live Events" team can see this
+    adminGroups: []
+  }
+}
+
 // Example of a restricted tab
 {
   id: 'tab-calendars',
@@ -213,4 +225,5 @@ This represents a specific, functional role or skill within a team. The single s
 | `icon: string` | The Google Symbol name for the badge's icon. |
 | `color: string` | The hex color code for the badge's icon and outline. |
 | `description?: string` | An optional description shown in tooltips. |
+
 

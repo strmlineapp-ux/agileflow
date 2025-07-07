@@ -89,7 +89,11 @@ export const mockPages: AppPage[] = [
         isDynamic: false,
         associatedTabs: [],
         componentKey: 'tasks',
-        access: { users: [], teams: [], adminGroups: [] }
+        access: {
+            users: [],
+            teams: ['live-events'],
+            adminGroups: []
+        }
     },
     {
         id: 'page-service-delivery',
