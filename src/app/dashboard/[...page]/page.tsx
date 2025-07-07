@@ -61,14 +61,16 @@ export default function DynamicPage() {
             .find(p => currentPath.startsWith(p.path));
     }, [appSettings.pages, currentPath]);
     
-    const teamId = pageConfig?.isDynamic && Array.isArray(params.page) ? params.page[1] : undefined;
-    const team = useMemo(() => teams.find(t => t.id === teamId), [teams, teamId]);
+    const dynamicTeam = useMemo(() => {
+      const teamId = pageConfig?.isDynamic && Array.isArray(params.page) ? params.page[1] : undefined;
+      return teams.find(t => t.id === teamId)
+    }, [teams, pageConfig, params.page]);
 
     if (loading) {
         return <Skeleton className="h-full w-full" />;
     }
 
-    if (!pageConfig || (pageConfig.isDynamic && !team)) {
+    if (!pageConfig || (pageConfig.isDynamic && !dynamicTeam)) {
         return <div className="p-4">404 - Page not found for path: {currentPath}</div>;
     }
     
@@ -76,7 +78,7 @@ export default function DynamicPage() {
       .filter(t => pageConfig.associatedTabs.includes(t.id))
       .filter(t => hasAccess(viewAsUser, t, teams, appSettings.adminGroups));
       
-    const pageTitle = pageConfig.isDynamic && team ? `${team.name} ${pageConfig.name}` : pageConfig.name;
+    const pageTitle = pageConfig.isDynamic && dynamicTeam ? `${dynamicTeam.name} ${pageConfig.name}` : pageConfig.name;
 
     // Render page with no tabs (single view)
     if (pageTabs.length === 0) {
@@ -84,7 +86,7 @@ export default function DynamicPage() {
         
         if (ContentComponent) {
             const pseudoTab: AppPage = { ...pageConfig, componentKey: pageConfig.componentKey as any };
-            return <ContentComponent tab={pseudoTab} team={team} />;
+            return <ContentComponent tab={pseudoTab} team={dynamicTeam} />;
         }
 
         return (
@@ -100,11 +102,12 @@ export default function DynamicPage() {
     // Render page with single tab (no tab list)
     if (pageTabs.length === 1) {
         const tab = pageTabs[0];
+        const contextTeam = tab.contextTeamId ? teams.find(t => t.id === tab.contextTeamId) : dynamicTeam;
         const ContentComponent = componentMap[tab.componentKey];
         // The page header is rendered directly by the content component.
         // We pass the page's title, icon, and description to the tab to ensure the correct header is displayed.
         const pageAsTab = { ...tab, name: pageTitle, icon: pageConfig.icon, description: tab.description };
-        return ContentComponent ? <ContentComponent tab={pageAsTab} team={team} /> : <div>Component for {tab.name} not found.</div>;
+        return ContentComponent ? <ContentComponent tab={pageAsTab} team={contextTeam} /> : <div>Component for {tab.name} not found.</div>;
     }
     
     // Render page with multiple tabs
@@ -125,9 +128,10 @@ export default function DynamicPage() {
                 </TabsList>
                 {pageTabs.map(tab => {
                     const ContentComponent = componentMap[tab.componentKey];
+                    const contextTeam = tab.contextTeamId ? teams.find(t => t.id === tab.contextTeamId) : dynamicTeam;
                     return (
                         <TabsContent key={tab.id} value={tab.id} className="mt-4">
-                        {ContentComponent ? <ContentComponent tab={tab} team={team} /> : <div>Component for {tab.name} not found.</div>}
+                        {ContentComponent ? <ContentComponent tab={tab} team={contextTeam} /> : <div>Component for {tab.name} not found.</div>}
                         </TabsContent>
                     );
                 })}

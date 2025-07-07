@@ -21,6 +21,7 @@ export interface AppTab {
     teams: string[];
     adminGroups: string[];
   };
+  contextTeamId?: string; // Optional teamId to provide context for a tab on a non-dynamic page
 }
 
 export interface AppPage {
@@ -124,8 +125,8 @@ export interface Team {
   allBadges: Badge[]; // The single source of truth for all badges in this team
   badgeCollections: BadgeCollection[]; // Groups of badges, containing badge IDs
   userBadgesLabel?: string;
-  pinnedLocations: string[]; // array of location names
-  checkLocations: string[]; // subset of pinnedLocations designated for daily checks
+  pinnedLocations?: string[]; // array of location names
+  checkLocations?: string[]; // subset of pinnedLocations designated for daily checks
   locationAliases?: { [key:string]: string };
   workstations?: string[];
   eventTemplates?: EventTemplate[];
