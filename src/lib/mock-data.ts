@@ -52,7 +52,7 @@ export const mockPages: AppPage[] = [
         path: '/dashboard/admin',
         isDynamic: false,
         associatedTabs: ['tab-admin-roles', 'tab-admin-pages', 'tab-admin-tabs'],
-        access: { users: [], teams: [], adminGroups: [] }
+        access: { users: [], teams: [], adminGroups: [] } // Special-cased in hasAccess to only allow isAdmin
     },
     {
         id: 'page-overview',
@@ -63,7 +63,7 @@ export const mockPages: AppPage[] = [
         isDynamic: false,
         associatedTabs: [],
         componentKey: 'overview',
-        access: { users: [], teams: [], adminGroups: [] }
+        access: { users: [], teams: [], adminGroups: [] } // Public
     },
     {
         id: 'page-calendar',
@@ -74,7 +74,7 @@ export const mockPages: AppPage[] = [
         isDynamic: false,
         associatedTabs: [],
         componentKey: 'calendar',
-        access: { users: [], teams: [], adminGroups: [] }
+        access: { users: [], teams: [], adminGroups: [] } // Public
     },
     {
         id: 'page-tasks',
@@ -87,7 +87,7 @@ export const mockPages: AppPage[] = [
         componentKey: 'tasks',
         access: {
             users: [],
-            teams: ['video-production', 'live-events', 'production'],
+            teams: [], // No specific team restriction means it's public
             adminGroups: []
         }
     },
@@ -116,7 +116,7 @@ export const mockPages: AppPage[] = [
         access: {
             users: [],
             teams: ['video-production', 'live-events', 'production'],
-            adminGroups: ['Service Delivery']
+            adminGroups: [] // This rule means you must be a member of one of these teams to see the link
         }
     },
     {
@@ -128,7 +128,7 @@ export const mockPages: AppPage[] = [
         isDynamic: false,
         associatedTabs: [],
         componentKey: 'notifications',
-        access: { users: [], teams: [], adminGroups: [] }
+        access: { users: [], teams: [], adminGroups: [] } // Public
     },
     {
         id: 'page-settings',
@@ -139,7 +139,7 @@ export const mockPages: AppPage[] = [
         isDynamic: false,
         associatedTabs: [],
         componentKey: 'settings',
-        access: { users: [], teams: [], adminGroups: [] }
+        access: { users: [], teams: [], adminGroups: [] } // Public
     },
 ];
 
