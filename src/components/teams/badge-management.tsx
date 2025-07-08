@@ -136,7 +136,7 @@ function CompactSearchIconPicker({
 }
 
 
-function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collectionId, teamId, isSharedPreview = false, isCollectionOwned = false }: { badge: Badge; viewMode: BadgeCollection['viewMode']; onUpdateBadge: (badgeData: Partial<Badge>) => void; onDelete: () => void; collectionId: string; teamId: string; isSharedPreview?: boolean; isCollectionOwned: boolean; }) {
+function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collectionId, teamId, isSharedPreview = false, isCollectionOwned = false }: { badge: Badge, viewMode: BadgeCollection['viewMode'], onUpdateBadge: (badgeData: Partial<Badge>) => void, onDelete: () => void, collectionId: string, teamId: string, isSharedPreview?: boolean, isCollectionOwned: boolean }) {
     const { toast } = useToast();
     const { teams, users, viewAsUser, allBadges } = useUser();
     const [isEditingName, setIsEditingName] = useState(false);
@@ -592,19 +592,19 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
 }
 
 function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, users, onUpdateCollection, onDeleteCollection, onAddBadge, onUpdateBadge, onDeleteBadge, onToggleShare, dragHandleProps, isSharedPreview = false }: {
-    collection: BadgeCollection;
-    allBadgesInTeam: Badge[];
-    teamId: string;
-    teams: Team[];
-    users: User[];
-    onUpdateCollection: (collectionId: string, newValues: Partial<Omit<BadgeCollection, 'id' | 'badgeIds'>>) => void;
-    onDeleteCollection: (collection: BadgeCollection) => void;
-    onAddBadge: (collectionId: string) => void;
-    onUpdateBadge: (badgeData: Partial<Badge>) => void;
-    onDeleteBadge: (collectionId: string, badgeId: string) => void;
-    onToggleShare: (collectionId: string) => void;
-    dragHandleProps?: any;
-    isSharedPreview?: boolean;
+    collection: BadgeCollection,
+    allBadgesInTeam: Badge[],
+    teamId: string,
+    teams: Team[],
+    users: User[],
+    onUpdateCollection: (collectionId: string, newValues: Partial<Omit<BadgeCollection, 'id' | 'badgeIds'>>) => void,
+    onDeleteCollection: (collection: BadgeCollection) => void,
+    onAddBadge: (collectionId: string) => void,
+    onUpdateBadge: (badgeData: Partial<Badge>) => void,
+    onDeleteBadge: (collectionId: string, badgeId: string) => void,
+    onToggleShare: (collectionId: string) => void,
+    dragHandleProps?: any,
+    isSharedPreview?: boolean,
 }) {
     const { viewAsUser } = useUser();
     const nameInputRef = useRef<HTMLInputElement>(null);
@@ -722,7 +722,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, users
                                     ) : (
                                         <CardTitle onClick={() => isOwned && setIsEditingName(true)} className={cn("text-2xl font-headline font-thin break-words", isOwned && "cursor-pointer")}>{collection.name}</CardTitle>
                                     )}
-                                    <StrictModeDroppable droppableId={`duplicate-badge-zone:${collection.id}`} type="badge" isDropDisabled={!isOwned}>
+                                    <StrictModeDroppable droppableId={`duplicate-badge-zone:${collection.id}`} type="badge" isDropDisabled={!isOwned} isCombineEnabled={false}>
                                     {(provided, snapshot) => (
                                         <div
                                             ref={provided.innerRef}
@@ -800,7 +800,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, users
                 </CardHeader>
             </div>
             <CardContent className="flex-grow">
-                <StrictModeDroppable droppableId={collection.id} type="badge" isDropDisabled={isSharedPreview}>
+                <StrictModeDroppable droppableId={collection.id} type="badge" isDropDisabled={isSharedPreview} isCombineEnabled={false}>
                     {(provided, snapshot) => (
                          <div
                             ref={provided.innerRef}
@@ -998,54 +998,54 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
       return Array.from(badgeMap.values());
     }, [teams, appSettings.globalBadges]);
     
-    const linkedCollectionIds = useMemo(() => new Set(team.badgeCollections.map(c => c.id)), [team.badgeCollections]);
-
     const sharedCollectionsFromOthers = useMemo(() => {
-        const otherTeamCollections = teams
-            .filter(t => t.id !== team.id)
-            .flatMap(t => t.badgeCollections || []);
-            
-        const globalCollections = appSettings.globalBadges ? [{
-            id: 'global-p-scale',
-            name: 'P# Scale',
-            icon: 'rule',
-            color: '#94A3B8',
-            owner: { type: 'user', id: '1' },
-            viewMode: 'assorted',
-            applications: ['events', 'tasks'],
-            description: 'Standard P-number priority system for criticality.',
-            badgeIds: appSettings.globalBadges.filter(b => b.ownerCollectionId === 'global-p-scale').map(b => b.id),
-            isShared: true,
-        },
-        {
-            id: 'global-star-system',
-            name: 'Star Rating',
-            icon: 'stars',
-            color: '#FBBF24',
-            owner: { type: 'user', id: '1' },
-            viewMode: 'assorted',
-            applications: ['tasks'],
-            description: 'A 5-star rating system for tasks and feedback.',
-            badgeIds: appSettings.globalBadges.filter(b => b.ownerCollectionId === 'global-star-system').map(b => b.id),
-            isShared: true,
-        },
-        {
-            id: 'global-effort',
-            name: 'Effort',
-            icon: 'scale',
-            color: '#A855F7',
-            owner: { type: 'user', id: '1' },
-            viewMode: 'assorted',
-            applications: ['tasks'],
-            description: 'T-shirt sizing for estimating task effort.',
-            badgeIds: appSettings.globalBadges.filter(b => b.ownerCollectionId === 'global-effort').map(b => b.id),
-            isShared: true,
-        }] as BadgeCollection[] : [];
-
-        return [...otherTeamCollections, ...globalCollections]
-            .filter(c => c.isShared && !linkedCollectionIds.has(c.id))
+        const linkedCollectionIds = new Set(team.badgeCollections.map(c => c.id));
+    
+        const allSharedCollectionsMap = new Map<string, BadgeCollection>();
+    
+        // Gather from other teams
+        teams.forEach(t => {
+            (t.badgeCollections || []).forEach(collection => {
+                if (collection.isShared) {
+                    if (!allSharedCollectionsMap.has(collection.id)) {
+                        allSharedCollectionsMap.set(collection.id, collection);
+                    }
+                }
+            });
+        });
+    
+        // Reconstruct and add global collections
+        const globalCollectionIds = new Set(appSettings.globalBadges.map(b => b.ownerCollectionId));
+        globalCollectionIds.forEach(collectionId => {
+            if (!allSharedCollectionsMap.has(collectionId)) {
+                const collectionBadges = appSettings.globalBadges.filter(b => b.ownerCollectionId === collectionId);
+                if (collectionBadges.length > 0) {
+                    // This logic is fragile as it assumes global collections are structured in a certain way not present in the main data model.
+                    // This is a temporary measure to match existing functionality.
+                    const name = collectionId.replace('global-', '').replace('-',' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                    const globalCollection: BadgeCollection = {
+                        id: collectionId,
+                        name: name,
+                        icon: 'public',
+                        color: '#64748B',
+                        owner: { type: 'user', id: 'system' }, // Placeholder for system-owned
+                        viewMode: 'assorted',
+                        applications: ['events', 'tasks'],
+                        description: `Global ${name} collection.`,
+                        badgeIds: collectionBadges.map(b => b.id),
+                        isShared: true,
+                    };
+                    allSharedCollectionsMap.set(collectionId, globalCollection);
+                }
+            }
+        });
+    
+        // Filter out what's already on the board and apply search term
+        return Array.from(allSharedCollectionsMap.values())
+            .filter(c => !linkedCollectionIds.has(c.id))
             .filter(c => c.name.toLowerCase().includes(sharedSearchTerm.toLowerCase()));
-    }, [teams, team.id, linkedCollectionIds, sharedSearchTerm, appSettings.globalBadges]);
+    
+    }, [teams, team.badgeCollections, sharedSearchTerm, appSettings.globalBadges]);
     
     const displayedCollections = useMemo(() => {
         const all = team?.badgeCollections || [];
