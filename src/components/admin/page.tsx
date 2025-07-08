@@ -44,7 +44,7 @@ const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
 // #endregion
 
 // #region Admin Groups Management Tab
-const UserAssignmentCard = ({ user, onToggle, buttonText, buttonIcon, canManage }: { user: User; onToggle: () => void; buttonText: string; buttonIcon: string; canManage: boolean }) => {
+const UserAssignmentCard = ({ user }: { user: User }) => {
   return (
     <div className="group relative p-2 flex items-center justify-between rounded-md transition-colors hover:bg-muted/50">
         <div className="flex items-center gap-4">
@@ -57,24 +57,6 @@ const UserAssignmentCard = ({ user, onToggle, buttonText, buttonIcon, canManage 
                 <p className="text-sm text-muted-foreground">{user.title || 'No title provided'}</p>
             </div>
         </div>
-        {canManage && (
-            <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={onToggle}
-                            aria-label={buttonText}
-                            className="text-muted-foreground hover:text-primary"
-                        >
-                            <GoogleSymbol name={buttonIcon} className="text-lg" weight={100} />
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent><p>{buttonText}</p></TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
-        )}
     </div>
   );
 };
@@ -207,7 +189,7 @@ export const AdminsManagement = ({ tab }: { tab: AppTab }) => {
         
         <DragDropContext onDragEnd={onDragEnd}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card className="flex flex-col h-full bg-transparent">
+                <Card className="flex flex-col h-full bg-transparent border-0">
                     <CardHeader>
                         <div className="flex items-center justify-between gap-4">
                             <CardTitle className="font-normal text-base">Admins ({adminUsers.length})</CardTitle>
@@ -241,10 +223,6 @@ export const AdminsManagement = ({ tab }: { tab: AppTab }) => {
                                                 >
                                                     <UserAssignmentCard 
                                                         user={user} 
-                                                        onToggle={() => handleAdminToggle(user)}
-                                                        buttonText="Revoke Admin"
-                                                        buttonIcon="shield_person"
-                                                        canManage={adminUsers.length > 1 && viewAsUser.isAdmin}
                                                     />
                                                 </div>
                                             )}
@@ -256,7 +234,7 @@ export const AdminsManagement = ({ tab }: { tab: AppTab }) => {
                         </StrictModeDroppable>
                     </CardContent>
                   </Card>
-                  <Card className="flex flex-col h-full bg-transparent">
+                  <Card className="flex flex-col h-full bg-transparent border-0">
                     <CardHeader>
                         <div className="flex items-center justify-between gap-4">
                             <CardTitle className="font-normal text-base">Users ({nonAdminUsers.length})</CardTitle>
@@ -290,11 +268,7 @@ export const AdminsManagement = ({ tab }: { tab: AppTab }) => {
                                                     className={cn(snapshot.isDragging && "bg-muted shadow-lg rounded-md")}
                                                 >
                                                     <UserAssignmentCard 
-                                                        user={user} 
-                                                        onToggle={() => handleAdminToggle(user)}
-                                                        buttonText="Grant Admin"
-                                                        buttonIcon="add_moderator"
-                                                        canManage={viewAsUser.isAdmin}
+                                                        user={user}
                                                     />
                                                 </div>
                                             )}
@@ -1011,7 +985,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
         <Card className={cn("bg-transparent", isDragging && "shadow-xl")}>
             <CardContent className="p-2 flex items-center gap-4">
                 <div className="relative">
-                    <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
+                     <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
