@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import Link from 'next/link';
@@ -17,7 +16,7 @@ import { hasAccess } from '@/lib/permissions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export function Header() {
-  const { realUser, viewAsUser, teams, notifications, appSettings, allRolesAndBadges } = useUser();
+  const { realUser, viewAsUser, teams, notifications, appSettings } = useUser();
   const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
   const unreadCount = notifications.filter((n) => !n.read).length;
   
@@ -32,22 +31,22 @@ export function Header() {
         !page.isDynamic &&
         page.id !== 'page-admin-management' &&
         page.id !== 'page-team-management' &&
-        hasAccess(viewAsUser, page, teams, appSettings.adminGroups)
+        hasAccess(viewAsUser, page, teams)
     );
 
     return {
-        adminPage: adminPage && hasAccess(viewAsUser, adminPage, teams, appSettings.adminGroups) ? adminPage : null,
+        adminPage: adminPage && hasAccess(viewAsUser, adminPage, teams) ? adminPage : null,
         staticPages,
-        teamManagementPage: teamManagementPage && hasAccess(viewAsUser, teamManagementPage, teams, appSettings.adminGroups) ? teamManagementPage : null,
+        teamManagementPage: teamManagementPage && hasAccess(viewAsUser, teamManagementPage, teams) ? teamManagementPage : null,
     };
-  }, [viewAsUser, appSettings.pages, teams, appSettings.adminGroups]);
+  }, [viewAsUser, appSettings.pages, teams]);
 
   const userManagedTeams = useMemo(() => {
-      if(viewAsUser.isAdmin || appSettings.adminGroups.some(r => viewAsUser.roles?.includes(r.name))) {
+      if(viewAsUser.isAdmin) {
           return teams;
       }
       return teams.filter(team => team.teamAdmins?.includes(viewAsUser.userId));
-  }, [viewAsUser, teams, appSettings.adminGroups]);
+  }, [viewAsUser, teams]);
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-card px-4 sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 sm:py-4">

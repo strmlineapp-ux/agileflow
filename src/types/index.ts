@@ -1,24 +1,13 @@
 
 import type React from 'react';
 
-export interface AdminGroup {
-  id: string;
-  name:string;
-  icon: string;
-  color: string;
-  groupAdmins?: string[]; // userIds of users who are admins *of this group*
-}
-
 export interface AppTab {
   id: string;
   name: string;
   icon: string;
   color: string;
   description?: string;
-  componentKey: 'calendars' | 'teams' | 'team_members' | 'badges' | 'locations' | 'workstations' | 'templates' | 'adminGroups' | 'pages' | 'tabs' | 'overview' | 'tasks' | 'notifications' | 'settings' | 'calendar';
-  access?: {
-    adminGroups: string[]; // AdminGroup IDs
-  };
+  componentKey: 'calendars' | 'teams' | 'team_members' | 'badges' | 'locations' | 'workstations' | 'templates' | 'admins' | 'pages' | 'tabs' | 'overview' | 'tasks' | 'notifications' | 'settings' | 'calendar';
   contextTeamId?: string; // Optional teamId to provide context for a tab on a non-dynamic page
 }
 
@@ -34,12 +23,10 @@ export interface AppPage {
   access: {
     users: string[]; // User IDs
     teams: string[]; // Team IDs
-    adminGroups: string[]; // AdminGroup IDs
   };
 }
 
 export interface AppSettings {
-  adminGroups: AdminGroup[];
   pages: AppPage[];
   tabs: AppTab[];
   globalBadges: Badge[];
@@ -67,7 +54,7 @@ export interface User {
   location?: string;
   phone?: string;
   title?: string;
-  roles?: string[]; // Contains names of AdminGroups and Badge names
+  roles?: string[]; // Contains names of Badges assigned to the user
   directReports?: string[];
   theme?: 'light' | 'dark';
   primaryColor?: string; // HEX value string e.g., "#4A90E2"

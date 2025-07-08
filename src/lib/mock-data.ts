@@ -1,5 +1,5 @@
 
-import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team, type AppSettings, type Badge, type BadgeCollection, type AppTab, type AppPage, type AdminGroup, type BadgeCollectionOwner } from '@/types';
+import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team, type AppSettings, type Badge, type BadgeCollection, type AppTab, type AppPage, type BadgeCollectionOwner } from '@/types';
 
 export const mockTabs: AppTab[] = [
   { id: 'tab-overview', name: 'Overview', icon: 'dashboard', color: '#F97316', componentKey: 'overview', description: "Get a high-level summary of team activity and recent tasks." },
@@ -14,9 +14,6 @@ export const mockTabs: AppTab[] = [
     color: '#3B82F6', 
     componentKey: 'calendars', 
     description: 'Manage shared calendars, colors, and default settings.',
-    access: {
-      adminGroups: ['service-admin-main'],
-    } 
   },
   { 
     id: 'tab-teams', 
@@ -31,7 +28,7 @@ export const mockTabs: AppTab[] = [
   { id: 'tab-locations', name: 'Locations', icon: 'push_pin', color: '#A855F7', componentKey: 'locations', description: 'Manage pinned locations and check-in points for the team schedule.' },
   { id: 'tab-workstations', name: 'Workstations', icon: 'desktop_windows', color: '#D946EF', componentKey: 'workstations', description: 'Configure bookable workstations and edit machines for the team.' },
   { id: 'tab-templates', name: 'Templates', icon: 'file_copy', color: '#14B8A6', componentKey: 'templates', description: 'Create reusable event templates with pre-filled badge requests.' },
-  { id: 'tab-admin-roles', name: 'Admin Groups', icon: 'admin_panel_settings', color: '#8B5CF6', componentKey: 'adminGroups', description: 'Manage high-level administrative groups and their permissions.' },
+  { id: 'tab-admins', name: 'Admins', icon: 'admin_panel_settings', color: '#8B5CF6', componentKey: 'admins', description: 'Manage system administrators.' },
   { id: 'tab-admin-pages', name: 'Pages', icon: 'web', color: '#EC4899', componentKey: 'pages', description: 'Configure application pages, their navigation, and access controls.' },
   { id: 'tab-admin-tabs', name: 'Tabs', icon: 'tab', color: '#EF4444', componentKey: 'tabs', description: 'Manage the properties of reusable tabs that appear on pages.' },
 ];
@@ -44,8 +41,8 @@ export const mockPages: AppPage[] = [
         color: '#64748B',
         path: '/dashboard/admin',
         isDynamic: false,
-        associatedTabs: ['tab-admin-roles', 'tab-admin-pages', 'tab-admin-tabs'],
-        access: { users: [], teams: [], adminGroups: [] } // Special-cased in hasAccess to only allow isAdmin
+        associatedTabs: ['tab-admins', 'tab-admin-pages', 'tab-admin-tabs'],
+        access: { users: [], teams: [] } // Special-cased in hasAccess to only allow isAdmin
     },
     {
         id: 'page-overview',
@@ -55,7 +52,7 @@ export const mockPages: AppPage[] = [
         path: '/dashboard/overview',
         isDynamic: false,
         associatedTabs: ['tab-overview'],
-        access: { users: [], teams: [], adminGroups: [] } // Public
+        access: { users: [], teams: [] } // Public
     },
     {
         id: 'page-calendar',
@@ -65,7 +62,7 @@ export const mockPages: AppPage[] = [
         path: '/dashboard/calendar',
         isDynamic: false,
         associatedTabs: ['tab-calendar'],
-        access: { users: [], teams: [], adminGroups: [] } // Public
+        access: { users: [], teams: [] } // Public
     },
     {
         id: 'page-tasks',
@@ -75,7 +72,7 @@ export const mockPages: AppPage[] = [
         path: '/dashboard/tasks',
         isDynamic: false,
         associatedTabs: ['tab-tasks'],
-        access: { users: [], teams: [], adminGroups: [] }
+        access: { users: [], teams: [] }
     },
     {
         id: 'page-service-delivery',
@@ -87,8 +84,7 @@ export const mockPages: AppPage[] = [
         associatedTabs: ['tab-calendars', 'tab-teams', 'tab-badges'],
         access: {
             users: [],
-            teams: [],
-            adminGroups: ['service-admin-main']
+            teams: ['service-delivery'],
         }
     },
     {
@@ -101,8 +97,7 @@ export const mockPages: AppPage[] = [
         associatedTabs: ['tab-team-members', 'tab-badges', 'tab-locations', 'tab-workstations', 'tab-templates'],
         access: {
             users: [],
-            teams: ['video-production', 'live-events', 'production'],
-            adminGroups: ['service-admin-main'] 
+            teams: ['video-production', 'live-events', 'production', 'service-delivery'],
         }
     },
     {
@@ -113,7 +108,7 @@ export const mockPages: AppPage[] = [
         path: '/dashboard/notifications',
         isDynamic: false,
         associatedTabs: ['tab-notifications'],
-        access: { users: [], teams: [], adminGroups: [] } // Public
+        access: { users: [], teams: [] } // Public
     },
     {
         id: 'page-settings',
@@ -123,7 +118,7 @@ export const mockPages: AppPage[] = [
         path: '/dashboard/settings',
         isDynamic: false,
         associatedTabs: ['tab-settings'],
-        access: { users: [], teams: [], adminGroups: [] } // Public
+        access: { users: [], teams: [] } // Public
     },
 ];
 
@@ -154,15 +149,6 @@ const effortBadges: Badge[] = [
 ];
 
 export const mockAppSettings: AppSettings = {
-  adminGroups: [
-    {
-      id: 'service-admin-main',
-      name: 'Service Delivery',
-      icon: 'business_center',
-      color: '#8B5CF6',
-      groupAdmins: ['2']
-    },
-  ],
   pages: mockPages,
   tabs: mockTabs,
   globalBadges: [...pScaleBadges, ...starSystemBadges, ...effortBadges]
@@ -170,7 +156,7 @@ export const mockAppSettings: AppSettings = {
 
 export const mockUsers: User[] = [
     { userId: '1', displayName: 'Bernardo Resende', email: 'bernardo.resende@google.com', isAdmin: true, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Video Production Lead', roles: ['Video Director', 'Director of Photography'], theme: 'dark', defaultCalendarView: 'production-schedule', primaryColor: '#D8620E', linkedTeamIds: [] },
-    { userId: '2', displayName: 'Daniel Lazard', email: 'dlazard@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Service Delivery Manager', roles: ['Service Delivery'], theme: 'light', defaultCalendarView: 'week', linkedTeamIds: [] },
+    { userId: '2', displayName: 'Daniel Lazard', email: 'dlazard@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Service Delivery Manager', roles: [], theme: 'light', defaultCalendarView: 'week', linkedTeamIds: [] },
     { userId: '3', displayName: 'May-Kate Woods', email: 'maykate@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Event Technician', roles: ['ES Operator', 'TD'], theme: 'light', defaultCalendarView: 'week', linkedTeamIds: [] },
     { userId: '4', displayName: 'Zoey Roberts', email: 'zoeyr@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Production Coordinator', roles: ['1st AD'], theme: 'light', defaultCalendarView: 'month', linkedTeamIds: [] },
     { userId: '5', displayName: 'Bilal Merhi', email: 'merhi@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Senior Video Editor', roles: ['Editor', 'Motion Graphics'], theme: 'light', defaultCalendarView: 'day', linkedTeamIds: [] },
@@ -317,6 +303,19 @@ export const mockTeams: Team[] = [
         allBadges: [],
         badgeCollections: [],
     },
+    {
+        id: 'service-delivery',
+        name: 'Service Delivery',
+        icon: 'business_center',
+        color: '#8B5CF6',
+        owner: { type: 'user', id: '2' },
+        isShared: false,
+        members: ['2'],
+        teamAdmins: ['2'],
+        locationCheckManagers: [],
+        allBadges: [],
+        badgeCollections: [],
+    }
 ];
 
 

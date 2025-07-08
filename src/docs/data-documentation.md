@@ -25,7 +25,7 @@ This table details the information stored directly within each `User` object.
 | `phone?: string` | **Google Service.** The user's contact phone number. This is designed to be populated from the user's **Google Account profile** **after the user grants the necessary permissions**. |
 | `location?: string` | **Google Service.** The user's primary work location. This is designed to be populated from the user's **Google Account profile** (from their address information) **after the user grants the necessary permissions**. |
 | `googleCalendarLinked: boolean` | **Google Service.** A flag that is set to `true` only after the user successfully completes an OAuth consent flow via **Firebase Authentication** to grant the app permission to access their Google Calendar. |
-| `roles?: string[]` | **Internal.** An array of strings that includes the names of any `AdminGroup`s the user belongs to and any `Badge`s they have been assigned. The application determines the name's meaning and properties by looking it up in `AppSettings` or the relevant `Team` object. |
+| `roles?: string[]` | **Internal.** An array of strings that includes the names of any `Badge`s a user has been assigned. The application determines the name's meaning and properties by looking it up in the relevant `Team` object. |
 | `directReports?: string[]` | **Internal.** An array of `userId`s for users who report directly to this user. This is currently informational. |
 | `theme?: 'light' \| 'dark'` | **Internal.** A UI preference for the app's color scheme. |
 | `primaryColor?: string` | **Internal.** A user-selected hex color code that overrides the default primary color of their chosen theme. |
@@ -39,10 +39,9 @@ Access to every page and content tab in the application is controlled by a dynam
 
 **How It Works:**
 
-1.  **Page Access**: Access to a page is determined by the `access` object on its `AppPage` configuration. A user can view a page if they are a system admin, if the page has no rules (making it public), or if their `userId`, `Team` membership, or `AdminGroup` membership is listed in the corresponding access array.
+1.  **Page Access**: Access to a page is determined by the `access` object on its `AppPage` configuration. A user can view a page if they are a system admin, if the page has no rules (making it public), or if their `userId` or `Team` membership is listed in the corresponding access array.
 
 2.  **Tab Access**: A tab's visibility is determined by its parent page. If you can see the page, you can see all of its tabs.
-    *   **The Exception**: You can restrict a tab to be "admin-only." If an `AppTab` object has its own `access.adminGroups` rule, its visibility is overridden. It will **only** be visible to system administrators and members of those specific admin groups. This provides a simple way to create privileged tabs on otherwise public pages.
 
 **Example Configurations (`mock-data.ts`):**
 
@@ -54,33 +53,13 @@ Access to every page and content tab in the application is controlled by a dynam
   access: {
     users: [],
     teams: ['live-events'], // ONLY members of the "Live Events" team can see this
-    adminGroups: []
-  }
-}
-
-// Example of a tab restricted by admin group
-{
-  id: 'tab-calendars',
-  name: 'Manage Calendars',
-  // ... other properties
-  access: {
-    // Note: no users or teams array.
-    adminGroups: ['service-admin-main'], // ONLY users in this admin group (or sys admins) can see this.
   }
 }
 ```
 
-### Implicit Ownership of Created Items
+### Simplified Ownership of Created Items
 
-When a user creates a new shareable item (like a **Team** or **Badge Collection**), the application automatically assigns ownership based on how the user gained access to the creation page. This creates a clear and logical hierarchy for who manages these items.
-
-**Ownership Hierarchy:**
-
-1.  **Admin Group (Highest Priority)**: If the user's access to the page is granted through an `AdminGroup`, the new item will be owned by that group. This is true even if the user also has access via a team or direct user assignment.
-2.  **Team**: If the user's access is *not* from an Admin Group but *is* from their membership in a `Team`, the new item will be owned by that team.
-3.  **User (Default)**: If the user's access is only granted via their specific `userId` (or if they are an admin creating an item on a public page), the new item will be owned by them personally.
-
-The `getOwnershipContext` function in `/src/lib/permissions.ts` contains the logic for this rule. This system ensures that items created in a team context belong to the team, and items created in a global administrative context belong to the relevant admin group.
+When a user creates a new shareable item (like a **Team** or **Badge Collection**), ownership is assigned directly to that user. This simplified model ensures that every item has a single, clear owner responsible for its management. The `getOwnershipContext` function in `/src/lib/permissions.ts` contains the logic for this rule.
 
 ## Shared Calendar Entity
 **Firestore Collection**: `/calendars/{calendarId}`
@@ -108,10 +87,9 @@ This entity, `AppSettings`, holds global configuration data that allows for cust
 
 | Data Point | Description |
 | :--- | :--- |
-| `adminGroups: AdminGroup[]` | An array of objects defining custom administrative groups. This allows admins to create a hierarchy between the system `Admin` and standard users. Each group has a name, icon, and color, which are editable on the Admin Management page. |
 | `pages: AppPage[]` | **The core of the dynamic navigation.** This is an array of objects defining every page in the application. The order of pages in this array directly corresponds to their order in the sidebar navigation. The order is managed on the **Admin Management** page using the "Draggable Card Management" UI pattern. Each page object includes its name, icon, URL path, access control rules, and a list of associated `tab.id`s that should be rendered on it. |
-| `tabs: AppTab[]` | **The core of the dynamic content.** This is an array of objects defining all reusable content tabs. Each object includes the tab's name, icon, a `componentKey` that maps it to a React component, and its own `access` rules. |
-| `globalBadges: Badge[]` | An array of globally-defined badges. These are typically owned by an **Admin Group** and are managed on the **Service Delivery > Badges** tab. |
+| `tabs: AppTab[]` | **The core of the dynamic content.** This is an array of objects defining all reusable content tabs. Each object includes the tab's name, icon, and a `componentKey` that maps it to a React component. |
+| `globalBadges: Badge[]` | An array of globally-defined badges. These are managed on the **Service Delivery > Badges** tab. |
 | `calendarManagementLabel?: string` | An alias for the "Manage Calendars" tab on the Service Delivery page. |
 | `teamManagementLabel?: string` | An alias for the "Team Management" tab on the Service Delivery page. |
 | `strategyLabel?: string` | An alias for the "Strategy" tab on the Service Delivery page. |
@@ -127,30 +105,12 @@ A sub-entity of `AppSettings`, `AppTab` defines a single, reusable content block
 | `color: string` | The hex color for the tab's icon. |
 | `description?: string` | An optional description for the tab, often used for tooltips. |
 | `componentKey: string` | A key that maps this tab to a specific React component to render its content. |
-| `access?: { adminGroups: string[] }` | **Optional.** An object containing an array of `adminGroupId`s. If present, this tab will only be visible to members of those groups (and system admins). If omitted, the tab inherits access from its parent page. |
 
-### AdminGroup Entity
-A sub-entity of `AppSettings`, `AdminGroup` defines a single, dynamic administrative level. It acts as a permission layer, distinct from a `Team` which is a functional unit for collaboration.
-
-| Data Point | Description |
-| :--- | :--- |
-| `id: string` | **Internal.** A unique, stable identifier for the custom group, used for permission checks. |
-| `name: string` | **Internal.** The display name for the group (e.g., "Service Admin", "Service Admin+"). This is editable inline on the Admin Management page. |
-| `icon: string` | **Internal.** The Google Symbol name for the icon associated with the group. |
-| `color: string` | **Internal.** The hex color code for the icon's badge. |
-| `groupAdmins?: string[]` | **Internal.** An array of `userId`s for users who can add or remove members from this specific `AdminGroup`. This allows for delegated administration without granting full system-wide permissions. |
-
-#### Clarifying the Roles: Admin Group vs. Group Admin
-
-It is critical to understand the distinction between being a *member* of an Admin Group and being a *Group Admin*.
-
-*   **Admin Group Member**: This is about what a user can **do**. Being a member of an Admin Group (e.g., "Service Delivery") grants a user powerful, wide-ranging permissions. If that group has access to the "Service Delivery" page, that user can manage **all Teams and Calendars** on that page.
-*   **Group Admin**: This is about who a user can **manage**. Being a `groupAdmin` for a specific Admin Group gives a user the meta-permission to add or remove other users from that group itself. For example, a system admin could make a user a `groupAdmin` of "Service Delivery", and that user could then grant "Service Delivery" permissions to other people without needing full system admin rights.
 
 ## Team Entity
 **Firestore Collection**: `/teams/{teamId}`
 
-The `Team` entity is a functional unit that groups users together for collaboration. It is distinct from an `AdminGroup`, which is a permission layer.
+The `Team` entity is a functional unit that groups users together for collaboration.
 
 ### Team Data
 
@@ -160,7 +120,7 @@ The `Team` entity is a functional unit that groups users together for collaborat
 | `name: string` | The display name of the team. |
 | `icon: string` | The Google Symbol name for the team's icon. |
 | `color: string` | The hex color for the team's icon. |
-| `owner: { type: 'team', id: string } \| { type: 'admin_group', name: string } \| { type: 'user', id: string }` | An object that defines who owns the team. Ownership dictates who can edit the team's properties. |
+| `owner: { type: 'user', id: string }` | An object that defines who owns the team. Ownership dictates who can edit the team's properties. |
 | `isShared?: boolean` | **Internal.** If `true`, this team will be visible to other teams in the application for discovery and linking. |
 | `members: string[]` | An array of `userId`s for all members of the team. |
 | `teamAdmins?: string[]` | A subset of `members` who have administrative privileges for this team (e.g., can add/remove members). |
@@ -176,7 +136,7 @@ A sub-entity of `Team`, this groups related Badges together. It can be owned by 
 | Data Point | Description |
 | :--- | :--- |
 | `id: string` | A unique identifier for the collection. |
-| `owner: { type: 'team', id: string } \| { type: 'admin_group', name: string } \| { type: 'user', id: string }` | An object that defines who owns the collection. This can be a team, an administrative group, or an individual user. Ownership dictates who can edit the collection's properties and the original badges within it. |
+| `owner: { type: 'user', id: string }` | An object that defines who owns the collection. Ownership dictates who can edit the collection's properties and the original badges within it. |
 | `isShared?: boolean` | **Internal.** If `true`, this collection and its badges will be visible to all other teams in the application for discovery and linking. |
 | `name: string` | The name of the collection (e.g., "Skills"). |
 | `icon: string` | The Google Symbol name for the collection's icon. |
@@ -188,7 +148,7 @@ A sub-entity of `Team`, this groups related Badges together. It can be owned by 
 
 
 ### Badge Entity
-This represents a specific, functional role or skill. The single source of truth for a badge is stored in either the `allBadges` array of its owner's `Team` object, or in the `globalBadges` array in `AppSettings` if owned by an Admin Group.
+This represents a specific, functional role or skill. The single source of truth for a badge is stored in either the `allBadges` array of its owner's `Team` object, or in the `globalBadges` array in `AppSettings` if it is a global badge.
 
 | Data Point | Description |
 | :--- | :--- |

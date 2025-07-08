@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import Link from 'next/link';
@@ -22,11 +21,11 @@ export function Sidebar() {
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const userManagedTeams = useMemo(() => {
-    if(viewAsUser.isAdmin || appSettings.adminGroups.some(r => viewAsUser.roles?.includes(r.name))) {
+    if(viewAsUser.isAdmin) {
         return teams;
     }
     return teams.filter(team => team.teamAdmins?.includes(viewAsUser.userId));
-  }, [viewAsUser, teams, appSettings.adminGroups]);
+  }, [viewAsUser, teams]);
   
   const orderedNavItems = useMemo(() => {
     const adminPageId = 'page-admin-management';
@@ -35,7 +34,7 @@ export function Sidebar() {
     const visiblePages = appSettings.pages
         .filter(page => page.id !== 'page-settings') // Do not show settings icon in the main sidebar
         .filter(page => page.componentKey || page.associatedTabs.length > 0) // Hide pages with no content
-        .filter(page => hasAccess(viewAsUser, page, teams, appSettings.adminGroups));
+        .filter(page => hasAccess(viewAsUser, page, teams));
 
     const adminPage = visiblePages.find(p => p.id === adminPageId);
     const pinnedPages = visiblePages.filter(p => pinnedPageIds.includes(p.id)).sort((a,b) => pinnedPageIds.indexOf(a.id) - pinnedPageIds.indexOf(b.id));
@@ -69,7 +68,7 @@ export function Sidebar() {
     
     return [...adminNavItem, ...mainNavItems, ...pinnedNavItems].flat().filter(Boolean);
 
-  }, [appSettings.pages, viewAsUser, teams, userManagedTeams, appSettings.adminGroups]);
+  }, [appSettings.pages, viewAsUser, teams, userManagedTeams]);
   
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-14 flex-col border-r bg-card sm:flex">

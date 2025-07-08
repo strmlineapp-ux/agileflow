@@ -25,12 +25,6 @@ import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/comp
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 
 // #region Helper Components and Constants
-const predefinedColors = [
-    '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
-    '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6',
-    '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
-];
-
 // Wrapper to fix issues with react-beautiful-dnd and React 18 Strict Mode
 const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
   const [enabled, setEnabled] = useState(false);
@@ -50,397 +44,45 @@ const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
 // #endregion
 
 // #region Admin Groups Management Tab
-const UserAssignmentCard = ({ user, index, onRemove, isGroupAdmin, onSetGroupAdmin, canManage, isDraggable = false, draggableId }: { user: User; index?: number; onRemove: (user: User) => void; isGroupAdmin: boolean; onSetGroupAdmin?: (user: User) => void; canManage: boolean; isDraggable?: boolean; draggableId?: string }) => {
-  const cardContent = (
-    <div 
-        tabIndex={canManage ? 0 : -1}
-        role={canManage ? "button" : undefined}
-        className={cn(
-            "transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50 group relative rounded-lg",
-            canManage && "cursor-pointer"
-        )}
-        onClick={canManage ? () => onSetGroupAdmin?.(user) : undefined}
-        onKeyDown={canManage ? (e) => { if ((e.key === 'Enter' || e.key === ' ') && onSetGroupAdmin) { e.preventDefault(); onSetGroupAdmin(user); } } : undefined}
-    >
-      <div className="p-2 flex items-center justify-between">
+const UserAssignmentCard = ({ user, onToggle, buttonText, buttonIcon, canManage }: { user: User; onToggle: () => void; buttonText: string; buttonIcon: string; canManage: boolean }) => {
+  return (
+    <div className="group relative p-2 flex items-center justify-between rounded-md transition-colors hover:bg-muted/50">
         <div className="flex items-center gap-4">
-          <div className="relative">
             <Avatar>
               <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
               <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
             </Avatar>
-            {isGroupAdmin && (
-              <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background flex items-center justify-center bg-primary text-primary-foreground">
-                  <GoogleSymbol name="key" style={{fontSize: '10px'}}/>
-              </div>
-            )}
-          </div>
-          <div>
-            <p className="font-normal">{user.displayName}</p>
-            <p className="text-sm text-muted-foreground">{user.title || 'No title provided'}</p>
-          </div>
+            <div>
+                <p className="font-normal">{user.displayName}</p>
+                <p className="text-sm text-muted-foreground">{user.title || 'No title provided'}</p>
+            </div>
         </div>
-      </div>
-       {canManage && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    onClick={(e) => { e.stopPropagation(); onRemove(user); }} 
-                    aria-label={`Remove user`}
-                    className="absolute top-1 right-1 h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <GoogleSymbol name="cancel" className="text-lg" weight={100} />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent><p>Remove user</p></TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+        {canManage && (
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={onToggle}
+                            aria-label={buttonText}
+                            className="text-muted-foreground hover:text-primary"
+                        >
+                            <GoogleSymbol name={buttonIcon} className="text-lg" weight={100} />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent><p>{buttonText}</p></TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
         )}
     </div>
   );
-
-  if (isDraggable && index !== undefined && draggableId) {
-    return (
-      <Draggable draggableId={draggableId} index={index} type="user-card" ignoreContainerClipping={false}>
-        {(provided, snapshot) => (
-          <div
-            ref={provided.innerRef}
-            {...provided.draggableProps}
-            {...provided.dragHandleProps}
-            className={cn(snapshot.isDragging && "shadow-lg opacity-80")}
-          >
-            {cardContent}
-          </div>
-        )}
-      </Draggable>
-    );
-  }
-
-  return cardContent;
 };
 
-const AddUserToGroupButton = ({ usersToAdd, onAdd, groupName, canManage }: { usersToAdd: User[], onAdd: (user: User) => void, groupName: string, canManage: boolean }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const searchInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (isOpen) {
-        // Use a timeout to ensure the input is rendered and visible before focusing
-        const timer = setTimeout(() => {
-            if (searchInputRef.current) {
-                searchInputRef.current.focus();
-            }
-        }, 100);
-        return () => clearTimeout(timer);
-    } else {
-        setSearchTerm('');
-    }
-  }, [isOpen]);
-
-  const handleSelect = (user: User) => {
-    onAdd(user);
-    setIsOpen(false);
-  }
-
-  const filteredUsers = useMemo(() => {
-      if (!searchTerm) return usersToAdd;
-      return usersToAdd.filter(user => 
-        user.displayName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-  }, [usersToAdd, searchTerm]);
-  
-  if (!canManage) return null;
-
-  return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <PopoverTrigger asChild>
-              <Button variant="ghost" size="icon">
-                  <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
-                  <span className="sr-only">Assign user to {groupName}</span>
-              </Button>
-            </PopoverTrigger>
-          </TooltipTrigger>
-          <TooltipContent><p>Assign User</p></TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-      <PopoverContent className="p-0 w-80">
-        <div className="flex items-center gap-1 p-2 border-b">
-            <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
-            <input
-                ref={searchInputRef}
-                placeholder="Search by name or email..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
-            />
-        </div>
-        <ScrollArea className="h-64">
-           <div className="p-1">
-            {filteredUsers.length > 0 ? filteredUsers.map(user => (
-              <div key={user.userId} onClick={() => handleSelect(user)} className="flex items-center gap-2 p-2 rounded-md group cursor-pointer">
-                <Avatar className="h-8 w-8"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0,2)}</AvatarFallback></Avatar>
-                <div>
-                  <p className="font-normal group-hover:text-primary transition-colors">{user.displayName}</p>
-                  <p className="text-xs text-muted-foreground">{user.email}</p>
-                </div>
-              </div>
-            )) : (
-              <p className="text-center text-sm text-muted-foreground p-4">{searchTerm ? 'No matching users found.' : 'All users are assigned.'}</p>
-            )}
-            </div>
-        </ScrollArea>
-      </PopoverContent>
-    </Popover>
-  )
-}
-
-function AdminGroupCard({ 
-  group,
-  users, 
-  onUpdate, 
-  onDelete,
-  isDeletable
-}: { 
-  group: AdminGroup; 
-  users: User[]; 
-  onUpdate: (updatedGroup: AdminGroup) => void;
-  onDelete: () => void;
-  isDeletable: boolean;
-}) {
-    const { toast } = useToast();
-    const { viewAsUser, updateUser } = useUser();
-    
-    // Popover States
-    const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
-    const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
-    
-    const [isEditingName, setIsEditingName] = useState(false);
-    const nameInputRef = useRef<HTMLInputElement>(null);
-
-    // Icon Search State
-    const [iconSearch, setIconSearch] = useState('');
-    const iconSearchInputRef = useRef<HTMLInputElement>(null);
-    
-    const canManageGroup = viewAsUser.isAdmin || (group.groupAdmins || []).includes(viewAsUser.userId);
-    
-    const handleSaveName = useCallback(() => {
-        const input = nameInputRef.current;
-        if (!input || !input.value.trim()) {
-          toast({ variant: 'destructive', title: 'Error', description: 'Group name cannot be empty.' });
-          setIsEditingName(false);
-          return;
-        }
-        if (input.value.trim() !== group.name) {
-            onUpdate({ ...group, name: input.value.trim() });
-            toast({ title: 'Success', description: 'Group name updated.' });
-        }
-        setIsEditingName(false);
-    }, [group, onUpdate, toast]);
-    
-    useEffect(() => {
-      if (!isEditingName) return;
-      const handleOutsideClick = (event: MouseEvent) => {
-        if (nameInputRef.current && !nameInputRef.current.contains(event.target as Node)) {
-          handleSaveName();
-        }
-      };
-      document.addEventListener("mousedown", handleOutsideClick);
-      nameInputRef.current?.focus();
-      nameInputRef.current?.select();
-      return () => {
-        document.removeEventListener("mousedown", handleOutsideClick);
-      };
-    }, [isEditingName, handleSaveName]);
-    
-    useEffect(() => {
-        if (isIconPopoverOpen) {
-            setTimeout(() => iconSearchInputRef.current?.focus(), 100);
-        } else {
-            setIconSearch('');
-        }
-    }, [isIconPopoverOpen]);
-
-    const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Enter') handleSaveName();
-        else if (e.key === 'Escape') setIsEditingName(false);
-    };
-    
-    const filteredIcons = useMemo(() => {
-        if (!iconSearch) return googleSymbolNames;
-        return googleSymbolNames.filter(iconName =>
-            iconName.toLowerCase().includes(iconSearch.toLowerCase())
-        );
-    }, [iconSearch]);
-
-    const assignedUsers = useMemo(() => users.filter(u => u.roles?.includes(group.name)), [users, group.name]);
-    const unassignedUsers = useMemo(() => users.filter(u => !u.roles?.includes(group.name)), [users, group.name]);
-
-    const handleGroupToggle = (user: User) => {
-        const currentRoles = user.roles || [];
-        const hasRole = currentRoles.includes(group.name);
-        const newRoles = hasRole
-            ? currentRoles.filter(r => r !== group.name)
-            : [...currentRoles, group.name];
-
-        updateUser(user.userId, { roles: newRoles });
-        toast({ title: 'Success', description: `${user.displayName}'s group assignment has been updated.` });
-    };
-
-    const handleSetGroupAdmin = (userToUpdate: User) => {
-        if(!viewAsUser.isAdmin) {
-          toast({ variant: 'destructive', title: 'Permission Denied', description: 'Only system admins can change group administrators.' });
-          return;
-        }
-        const currentAdmins = group.groupAdmins || [];
-        const isAlreadyAdmin = currentAdmins.includes(userToUpdate.userId);
-        const newAdmins = isAlreadyAdmin
-            ? currentAdmins.filter(id => id !== userToUpdate.userId)
-            : [...currentAdmins, userToUpdate.userId];
-        onUpdate({ ...group, groupAdmins: newAdmins });
-    };
-
-    return (
-        <Card className="flex flex-col h-full bg-transparent group relative">
-            <CardHeader>
-                <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-2">
-                        <div className="relative">
-                            <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <button className="h-12 w-12 flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed" disabled={!canManageGroup}>
-                                              <GoogleSymbol name={group.icon} className="text-6xl" weight={100} />
-                                          </button>
-                                        </TooltipTrigger>
-                                        <TooltipContent><p>Change Icon</p></TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                                <PopoverContent className="w-80 p-0">
-                                    <div className="flex items-center gap-1 p-2 border-b">
-                                        <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
-                                        <input
-                                            ref={iconSearchInputRef}
-                                            placeholder="Search icons..."
-                                            value={iconSearch}
-                                            onChange={(e) => setIconSearch(e.target.value)}
-                                            className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
-                                        />
-                                    </div>
-                                    <ScrollArea className="h-64">
-                                      <div className="grid grid-cols-6 gap-1 p-2">
-                                        {filteredIcons.slice(0, 300).map((iconName) => (
-                                          <TooltipProvider key={iconName}>
-                                            <Tooltip>
-                                              <TooltipTrigger asChild>
-                                                <Button
-                                                  variant={group.icon === iconName ? "default" : "ghost"}
-                                                  size="icon"
-                                                  onClick={() => { onUpdate({ ...group, icon: iconName }); setIsIconPopoverOpen(false); }}
-                                                  className="h-8 w-8 p-0"
-                                                >
-                                                  <GoogleSymbol name={iconName} className="text-4xl" weight={100} />
-                                                </Button>
-                                              </TooltipTrigger>
-                                              <TooltipContent><p>{iconName}</p></TooltipContent>
-                                            </Tooltip>
-                                          </TooltipProvider>
-                                        ))}
-                                      </div>
-                                    </ScrollArea>
-                                </PopoverContent>
-                            </Popover>
-                            <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <PopoverTrigger asChild disabled={!canManageGroup}>
-                                                <button
-                                                    className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background", canManageGroup && "cursor-pointer", !canManageGroup && "cursor-not-allowed opacity-70")}
-                                                    aria-label="Change service admin color"
-                                                    style={{ backgroundColor: group.color }}
-                                                />
-                                            </PopoverTrigger>
-                                        </TooltipTrigger>
-                                        <TooltipContent><p>Change Color</p></TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                                <PopoverContent className="w-auto p-2">
-                                <div className="grid grid-cols-8 gap-1">
-                                    {predefinedColors.map(color => (<button key={color} className="h-6 w-6 rounded-full border" style={{ backgroundColor: color }} onClick={() => { onUpdate({ ...group, color: color }); setIsColorPopoverOpen(false); }} aria-label={`Set color to ${color}`}/>))}
-                                    <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
-                                    <GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={group.color} onChange={(e) => onUpdate({ ...group, color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" aria-label="Custom color picker"/>
-                                    </div>
-                                </div>
-                                </PopoverContent>
-                            </Popover>
-                        </div>
-                        <div className="flex-1">
-                             <div className="flex items-center gap-1">
-                                {isEditingName ? (<Input ref={nameInputRef} defaultValue={group.name} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-lg font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>) : (<CardTitle onClick={() => canManageGroup && setIsEditingName(true)} className={cn("font-headline text-lg font-thin", canManageGroup && "cursor-pointer")}>{group.name}</CardTitle>)}
-                                <AddUserToGroupButton usersToAdd={unassignedUsers} onAdd={handleGroupToggle} groupName={group.name} canManage={canManageGroup} />
-                            </div>
-                        </div>
-                    </div>
-                     {isDeletable && (
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 absolute top-2 right-2 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100" onClick={onDelete}>
-                                        <GoogleSymbol name="delete" className="text-lg" weight={100} />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>Delete Group</p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    )}
-                </div>
-            </CardHeader>
-            <ScrollArea className="flex-grow">
-                <CardContent>
-                    <StrictModeDroppable droppableId={`group-content-${group.id}`} type="user-card" isDropDisabled={!canManageGroup} isCombineEnabled={false}>
-                    {(provided, snapshot) => (
-                        <div 
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                        className={cn("space-y-4 rounded-b-lg min-h-[60px]", snapshot.isDraggingOver && "ring-1 ring-border ring-inset")}
-                        >
-                        {assignedUsers.map((user, index) => (
-                            <UserAssignmentCard 
-                                key={user.userId} 
-                                index={index}
-                                user={user} 
-                                draggableId={`user-${group.id}-${user.userId}`}
-                                onRemove={handleGroupToggle}
-                                isGroupAdmin={(group.groupAdmins || []).includes(user.userId)}
-                                onSetGroupAdmin={handleSetGroupAdmin}
-                                isDraggable={true}
-                                canManage={canManageGroup}
-                            />
-                        ))}
-                        {provided.placeholder}
-                        </div>
-                    )}
-                    </StrictModeDroppable>
-                </CardContent>
-            </ScrollArea>
-        </Card>
-    );
-}
-
-export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
+export const AdminsManagement = ({ tab }: { tab: AppTab }) => {
   const { toast } = useToast();
-  const { viewAsUser, users, updateUser, appSettings, updateAppSettings, updateAppTab } = useUser();
+  const { viewAsUser, users, updateUser, updateAppTab } = useUser();
   const [is2faDialogOpen, setIs2faDialogOpen] = useState(false);
   const [on2faSuccess, setOn2faSuccess] = useState<(() => void) | null>(null);
   const [twoFactorCode, setTwoFactorCode] = useState('');
@@ -449,8 +91,6 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
   
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [groupToDelete, setGroupToDelete] = useState<AdminGroup | null>(null);
 
   useEffect(() => {
     if (isEditingTitle) titleInputRef.current?.focus();
@@ -512,299 +152,113 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
     setIsEditing2fa(false);
   };
 
-  const handleAddAdminGroup = () => {
-    const newGroupName = `Service Admin${'+'.repeat(appSettings.adminGroups.length)}`;
-    const newGroup: AdminGroup = {
-        id: crypto.randomUUID(),
-        name: newGroupName,
-        icon: 'add_moderator',
-        color: predefinedColors[appSettings.adminGroups.length % predefinedColors.length],
-        groupAdmins: [],
-    };
-    updateAppSettings({ adminGroups: [...appSettings.adminGroups, newGroup] });
-    toast({ title: 'New Group Added', description: `"${newGroupName}" has been created.` });
-  };
-
-  const handleUpdateAdminGroup = (updatedGroup: AdminGroup) => {
-      const newGroups = appSettings.adminGroups.map(g => g.id === updatedGroup.id ? updatedGroup : g);
-      updateAppSettings({ adminGroups: newGroups });
-  }
-
-  const handleDeleteAdminGroup = (group: AdminGroup) => {
-      setGroupToDelete(group);
-      setIsDeleteDialogOpen(true);
-  }
-
-  const confirmDeleteGroup = () => {
-      if (!groupToDelete) return;
-      const newGroups = appSettings.adminGroups.filter(g => g.id !== groupToDelete.id);
-      updateAppSettings({ adminGroups: newGroups });
-      toast({ title: 'Success', description: `Admin group "${groupToDelete.name}" deleted.` });
-      setIsDeleteDialogOpen(false);
-      setGroupToDelete(null);
-  }
-
-  const onDragEnd = (result: DropResult) => {
-    const { source, destination, draggableId, type } = result;
-
-    if (!destination) return;
-
-    if (type === 'group-card') {
-      if (destination.droppableId === 'duplicate-admin-group-zone') {
-        const groupToDuplicate = appSettings.adminGroups.find(g => g.id === draggableId);
-        if (groupToDuplicate) {
-            const newName = `${groupToDuplicate.name} (Copy)`;
-            const newGroup: AdminGroup = {
-                ...JSON.parse(JSON.stringify(groupToDuplicate)), // Deep copy
-                id: crypto.randomUUID(),
-                name: newName,
-            };
-
-            // Find users to duplicate and update their roles
-            const usersToUpdate = users.filter(u => u.roles?.includes(groupToDuplicate.name));
-            usersToUpdate.forEach(user => {
-                const newRoles = [...(user.roles || []), newName];
-                updateUser(user.userId, { roles: newRoles });
-            });
-            
-            const sourceGroupIndex = appSettings.adminGroups.findIndex(g => g.id === draggableId);
-            const newGroups = [...appSettings.adminGroups];
-            newGroups.splice(sourceGroupIndex + 1, 0, newGroup);
-
-            updateAppSettings({ adminGroups: newGroups });
-            toast({ title: 'Group Duplicated', description: `A copy of "${groupToDuplicate.name}" was created.` });
-        }
-        return;
-      }
-      
-      if (source.droppableId !== destination.droppableId || source.droppableId !== 'admin-groups-list') return;
-      
-      const allGroups = appSettings.adminGroups;
-      const [movedItem] = allGroups.splice(source.index, 1);
-      allGroups.splice(destination.index, 0, movedItem);
-      updateAppSettings({ adminGroups: allGroups });
-      return;
-    }
-
-    if (type === 'user-card') {
-      const parts = draggableId.split('-');
-      const userId = parts.pop();
-      if (!userId) return;
-
-      const sourceDroppableId = source.droppableId;
-      const destinationDroppableId = destination.droppableId;
-        
-      if (sourceDroppableId === destinationDroppableId) return;
-
-      const user = users.find(u => u.userId === userId);
-      if (!user) return;
-        
-      if (destinationDroppableId === 'admins-card-droppable') {
-        if (user.isAdmin) {
-          toast({ title: 'No Change', description: `${user.displayName} is already an Admin.` });
-          return;
-        }
-            
-        // When dropped into Admins, the user becomes an admin but retains their group membership.
-        updateUser(user.userId, { isAdmin: true });
-        toast({ title: 'Admin Promoted', description: `${user.displayName} is now an Admin.` });
-        return;
-      }
-
-      if (destinationDroppableId.startsWith('group-content-')) {
-        const destGroupId = destinationDroppableId.replace('group-content-', '');
-        const destGroup = appSettings.adminGroups.find(g => g.id === destGroupId);
-        if (!destGroup) return;
-
-        if ((user.roles || []).includes(destGroup.name)) {
-          toast({ title: 'No Change', description: `${user.displayName} is already in the "${destGroup.name}" group.` });
-          return;
-        }
-
-        // Add user to the new group, keeping existing group memberships.
-        const newRoles = [...(user.roles || []), destGroup.name];
-
-        updateUser(user.userId, { roles: newRoles });
-        toast({ title: 'User Added to Group', description: `${user.displayName} added to "${destGroup.name}".` });
-        return;
-      }
-    }
-  };
-  
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
-        <div className="space-y-6">
-            <div className="flex items-center gap-2">
-                {isEditingTitle ? (
-                  <Input ref={titleInputRef} defaultValue={tab.name} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} />
-                ) : (
+    <div className="space-y-6">
+        <div className="flex items-center gap-2">
+            {isEditingTitle ? (
+              <Input ref={titleInputRef} defaultValue={tab.name} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} />
+            ) : (
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <h2 className="font-headline text-2xl font-thin tracking-tight cursor-pointer border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p className="max-w-xs">{tab.description}</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+            )}
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="flex flex-col h-full bg-transparent">
+                <CardHeader>
+                  <CardTitle className="font-headline font-thin text-lg">Admins ({adminUsers.length})</CardTitle>
+                </CardHeader>
+                <ScrollArea className="flex-grow">
+                  <CardContent>
+                    {adminUsers.map(user => (
+                        <UserAssignmentCard 
+                            key={user.userId} 
+                            user={user} 
+                            onToggle={() => handleAdminToggle(user)}
+                            buttonText="Revoke Admin"
+                            buttonIcon="shield_person"
+                            canManage={adminUsers.length > 1 && viewAsUser.isAdmin}
+                        />
+                    ))}
+                  </CardContent>
+                </ScrollArea>
+              </Card>
+              <Card className="flex flex-col h-full bg-transparent">
+                <CardHeader>
+                  <CardTitle className="font-headline font-thin text-lg">Users ({nonAdminUsers.length})</CardTitle>
+                </CardHeader>
+                <ScrollArea className="flex-grow">
+                  <CardContent>
+                     {nonAdminUsers.map(user => (
+                        <UserAssignmentCard 
+                            key={user.userId} 
+                            user={user} 
+                            onToggle={() => handleAdminToggle(user)}
+                            buttonText="Grant Admin"
+                            buttonIcon="add_moderator"
+                            canManage={viewAsUser.isAdmin}
+                        />
+                    ))}
+                  </CardContent>
+                </ScrollArea>
+              </Card>
+        </div>
+
+        <Dialog open={is2faDialogOpen} onOpenChange={(isOpen) => !isOpen && close2faDialog()}>
+            <DialogContent className="max-w-sm">
+                <div className="absolute top-4 right-4">
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <h2 className="font-headline text-2xl font-thin tracking-tight cursor-pointer border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
+                                <Button variant="ghost" size="icon" onClick={handleVerify2fa}>
+                                    <GoogleSymbol name="check" className="text-xl" />
+                                    <span className="sr-only">Verify Code</span>
+                                </Button>
                             </TooltipTrigger>
-                            <TooltipContent>
-                                <p className="max-w-xs">{tab.description}</p>
-                            </TooltipContent>
+                            <TooltipContent><p>Verify Code</p></TooltipContent>
                         </Tooltip>
                     </TooltipProvider>
-                )}
-                 <StrictModeDroppable droppableId="duplicate-admin-group-zone" type="group-card" isDropDisabled={false} isCombineEnabled={false}>
-                    {(provided, snapshot) => (
-                        <div 
-                            ref={provided.innerRef} 
-                            {...provided.droppableProps}
-                            className={cn(
-                                "rounded-full transition-all p-0.5",
-                                snapshot.isDraggingOver && "ring-1 ring-border ring-inset"
-                            )}
-                        >
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="rounded-full" onClick={handleAddAdminGroup}>
-                                            <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
-                                            <span className="sr-only">Add New Group or Drop to Duplicate</span>
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p>{snapshot.isDraggingOver ? 'Drop to Duplicate' : 'Add New Group'}</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                        </div>
+                </div>
+                <DialogHeader>
+                    <DialogTitle>Two-Factor Authentication</DialogTitle>
+                    <DialogDescription>Enter the 6-digit code from your authenticator app to proceed.</DialogDescription>
+                </DialogHeader>
+                <div
+                    className={cn("flex items-center gap-2 w-full text-left text-muted-foreground transition-colors p-2 h-10",
+                        !isEditing2fa && "cursor-text hover:text-primary/80"
                     )}
-                </StrictModeDroppable>
-            </div>
-            
-            <StrictModeDroppable droppableId="admin-groups-list" type="group-card" isDropDisabled={false} isCombineEnabled={false}>
-              {(provided) => (
-                  <div ref={provided.innerRef} {...provided.droppableProps} className="flex flex-wrap -m-3">
-                      <div className="p-3 basis-full md:basis-1/2 lg:basis-1/3">
-                        <Card className="flex flex-col h-full bg-transparent">
-                            <CardHeader>
-                              <div className="flex items-center gap-2">
-                                <CardTitle className="font-headline font-thin text-lg">Admins</CardTitle>
-                                <AddUserToGroupButton usersToAdd={nonAdminUsers} onAdd={handleAdminToggle} groupName="Admin" canManage={viewAsUser.isAdmin} />
-                              </div>
-                            </CardHeader>
-                            <ScrollArea className="flex-grow">
-                              <CardContent>
-                                  <StrictModeDroppable droppableId="admins-card-droppable" type="user-card" isDropDisabled={false} isCombineEnabled={false}>
-                                  {(provided, snapshot) => (
-                                      <div 
-                                      ref={provided.innerRef}
-                                      {...provided.droppableProps}
-                                      className={cn("space-y-4 rounded-b-lg min-h-[60px]", snapshot.isDraggingOver && "ring-1 ring-border ring-inset")}
-                                      >
-                                      {adminUsers.map(user => (
-                                          <UserAssignmentCard 
-                                          key={user.userId} 
-                                          user={user} 
-                                          onRemove={handleAdminToggle}
-                                          isGroupAdmin={false}
-                                          canManage={adminUsers.length > 1 && viewAsUser.isAdmin}
-                                          />
-                                      ))}
-                                      {provided.placeholder}
-                                      </div>
-                                  )}
-                                  </StrictModeDroppable>
-                              </CardContent>
-                            </ScrollArea>
-                          </Card>
-                      </div>
-
-                    {appSettings.adminGroups.map((group, index) => (
-                      <Draggable key={group.id} draggableId={group.id} index={index} type="group-card" ignoreContainerClipping={false}>
-                        {(provided, snapshot) => (
-                          <div 
-                            ref={provided.innerRef} 
-                            {...provided.draggableProps} 
-                            {...provided.dragHandleProps} 
-                            className="p-3 basis-full md:basis-1/2 lg:basis-1/3"
-                          >
-                            <AdminGroupCard 
-                                group={group} 
-                                users={users} 
-                                onUpdate={handleUpdateAdminGroup} 
-                                onDelete={() => handleDeleteAdminGroup(group)}
-                                isDeletable={appSettings.adminGroups.length > 1}
-                            />
-                          </div>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </div>
-              )}
-            </StrictModeDroppable>
-          
-            <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-                <DialogContent className="max-w-md">
-                    <div className="absolute top-4 right-4">
-                        <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={confirmDeleteGroup}>
-                            <GoogleSymbol name="delete" className="text-4xl" weight={100} />
-                            <span className="sr-only">Delete Group</span>
-                        </Button>
-                    </div>
-                    <DialogHeader>
-                        <DialogTitle>Delete "{groupToDelete?.name}"?</DialogTitle>
-                        <DialogDescription>
-                            This will permanently delete the group and unassign all users. This action cannot be undone.
-                        </DialogDescription>
-                    </DialogHeader>
-                </DialogContent>
-            </Dialog>
-
-              <Dialog open={is2faDialogOpen} onOpenChange={(isOpen) => !isOpen && close2faDialog()}>
-                <DialogContent className="max-w-sm">
-                    <div className="absolute top-4 right-4">
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" onClick={handleVerify2fa}>
-                                        <GoogleSymbol name="check" className="text-xl" />
-                                        <span className="sr-only">Verify Code</span>
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent><p>Verify Code</p></TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    </div>
-                    <DialogHeader>
-                        <DialogTitle>Two-Factor Authentication</DialogTitle>
-                        <DialogDescription>Enter the 6-digit code from your authenticator app to proceed.</DialogDescription>
-                    </DialogHeader>
-                    <div
-                        className={cn("flex items-center gap-2 w-full text-left text-muted-foreground transition-colors p-2 h-10",
-                            !isEditing2fa && "cursor-text hover:text-primary/80"
-                        )}
-                        onClick={() => {if (!isEditing2fa) setIsEditing2fa(true)}}
-                        >
-                        <GoogleSymbol name="password" className="text-xl" />
-                        {isEditing2fa ? (
-                            <Input
-                                id="2fa-code"
-                                ref={twoFactorCodeInputRef}
-                                value={twoFactorCode}
-                                onChange={(e) => setTwoFactorCode(e.target.value)}
-                                onBlur={() => { if (!twoFactorCode) setIsEditing2fa(false); }}
-                                onKeyDown={(e) => e.key === 'Enter' && handleVerify2fa()}
-                                className="w-full text-center tracking-[0.5em] h-auto p-0 border-0 shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground"
-                                maxLength={6}
-                                placeholder="••••••"
-                            />
-                        ) : (
-                            <span className="flex-1 text-sm text-center tracking-[0.5em]">
-                                {twoFactorCode ? '••••••' : '6-digit code'}
-                            </span>
-                        )}
-                    </div>
-                </DialogContent>
-            </Dialog>
-        </div>
-    </DragDropContext>
+                    onClick={() => {if (!isEditing2fa) setIsEditing2fa(true)}}
+                    >
+                    <GoogleSymbol name="password" className="text-xl" />
+                    {isEditing2fa ? (
+                        <Input
+                            id="2fa-code"
+                            ref={twoFactorCodeInputRef}
+                            value={twoFactorCode}
+                            onChange={(e) => setTwoFactorCode(e.target.value)}
+                            onBlur={() => { if (!twoFactorCode) setIsEditing2fa(false); }}
+                            onKeyDown={(e) => e.key === 'Enter' && handleVerify2fa()}
+                            className="w-full text-center tracking-[0.5em] h-auto p-0 border-0 shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground"
+                            maxLength={6}
+                            placeholder="••••••"
+                        />
+                    ) : (
+                        <span className="flex-1 text-sm text-center tracking-[0.5em]">
+                            {twoFactorCode ? '••••••' : '6-digit code'}
+                        </span>
+                    )}
+                </div>
+            </DialogContent>
+        </Dialog>
+    </div>
   );
 }
 // #endregion
@@ -831,7 +285,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
 
     const access = page.access;
 
-    const handleToggle = (type: 'users' | 'teams' | 'adminGroups', id: string) => {
+    const handleToggle = (type: 'users' | 'teams', id: string) => {
         const currentIds = new Set(access[type] || []);
         if (currentIds.has(id)) {
             currentIds.delete(id);
@@ -843,7 +297,6 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
 
     const filteredUsers = useMemo(() => users.filter(u => u.displayName.toLowerCase().includes(searchTerm.toLowerCase())), [users, searchTerm]);
     const filteredTeams = useMemo(() => teams.filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase())), [teams, searchTerm]);
-    const filteredGroups = useMemo(() => appSettings.adminGroups.filter(r => r.name.toLowerCase().includes(searchTerm.toLowerCase())), [appSettings.adminGroups, searchTerm]);
 
     const renderSearchControl = () => (
          <div className="p-2 border-b">
@@ -874,10 +327,9 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
             </TooltipProvider>
             <PopoverContent className="w-80 p-0">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <TabsList className="grid w-full grid-cols-3">
+                    <TabsList className="grid w-full grid-cols-2">
                         <TabsTrigger value="users">Users</TabsTrigger>
                         <TabsTrigger value="teams">Teams</TabsTrigger>
-                        <TabsTrigger value="groups">Groups</TabsTrigger>
                     </TabsList>
                     
                     <TabsContent value="users" className="m-0">
@@ -900,18 +352,6 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                             <div key={team.id} className="flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer" style={{ color: isSelected ? team.color : undefined }} onClick={() => handleToggle('teams', team.id)}>
                               <GoogleSymbol name={team.icon} className="text-xl" />
                               <span className="font-normal">{team.name}</span>
-                            </div>
-                          )
-                        })}</div></ScrollArea>
-                    </TabsContent>
-                    <TabsContent value="groups" className="m-0">
-                        {renderSearchControl()}
-                        <ScrollArea className="h-64"><div className="p-1 space-y-1">{filteredGroups.map(group => {
-                          const isSelected = access.adminGroups.includes(group.id);
-                          return (
-                            <div key={group.id} className="flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer" style={{ color: isSelected ? group.color : undefined }} onClick={() => handleToggle('adminGroups', group.id)}>
-                              <GoogleSymbol name={group.icon} className="text-xl" />
-                              <span className="font-normal">{group.name}</span>
                             </div>
                           )
                         })}</div></ScrollArea>
@@ -1115,7 +555,9 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
                                 </TooltipProvider>
                                 <PopoverContent className="w-auto p-2">
                                     <div className="grid grid-cols-8 gap-1">
-                                        {predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => { onUpdate(page.id, { color: c }); setIsColorPopoverOpen(false); }}/>))}
+                                        {['#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
+    '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6',
+    '#A855F7', '#D946EF', '#EC4899', '#F43F5E'].map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => { onUpdate(page.id, { color: c }); setIsColorPopoverOpen(false); }}/>))}
                                         <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
                                             <GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={page.color} onChange={(e) => onUpdate(page.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/>
                                         </div>
@@ -1226,7 +668,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
             path: `/dashboard/${newName.toLowerCase().replace(/\s/g, '-')}`,
             isDynamic: false,
             associatedTabs: [],
-            access: { users: [], teams: [], adminGroups: [] }
+            access: { users: [], teams: [] }
         };
         
         const draggablePages = appSettings.pages.filter(p => !pinnedIds.includes(p.id));
@@ -1528,7 +970,9 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                         </TooltipProvider>
                         <PopoverContent className="w-auto p-2">
                             <div className="grid grid-cols-8 gap-1">
-                                {predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => { onUpdate(tab.id, { color: c }); setIsColorPopoverOpen(false); }}/>))}
+                                {['#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
+    '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6',
+    '#A855F7', '#D946EF', '#EC4899', '#F43F5E'].map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => { onUpdate(tab.id, { color: c }); setIsColorPopoverOpen(false); }}/>))}
                                 <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
                                     <GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={tab.color} onChange={(e) => onUpdate(tab.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/>
                                 </div>
@@ -1702,3 +1146,4 @@ export const TabsManagement = ({ tab }: { tab: AppTab }) => {
     );
 };
 // #endregion
+

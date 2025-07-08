@@ -3,30 +3,15 @@
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useUser } from '@/context/user-context';
-import { type User, type AdminGroup, type AppPage, type AppTab, type Team } from '@/types';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { useToast } from '@/hooks/use-toast';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { GoogleSymbol } from '@/components/icons/google-symbol';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { googleSymbolNames } from '@/lib/google-symbols';
-import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProps, type DraggableLocation } from 'react-beautiful-dnd';
+import { type User, type AppPage, type AppTab } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { cn, getContrastColor } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
-import { PagesManagement, AdminGroupsManagement, TabsManagement } from '@/components/admin/page';
+import { PagesManagement, AdminsManagement, TabsManagement } from '@/components/admin/page';
 
 const componentMap: Record<string, React.ComponentType<{ tab: AppTab }>> = {
-  adminGroups: AdminGroupsManagement,
+  admins: AdminsManagement,
   pages: PagesManagement,
   tabs: TabsManagement,
 };
