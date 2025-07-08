@@ -8,9 +8,10 @@ import { useUser } from '@/context/user-context';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
-export function NotificationsContent({ tab: pageConfig }: { tab: AppPage }) {
+export function NotificationsContent({ tab: pageConfig, isSingleTabPage }: { tab: AppPage, isSingleTabPage?: boolean }) {
   const { notifications } = useUser();
   const unreadCount = notifications.filter((n) => !n.read).length;
+  const title = isSingleTabPage ? pageConfig.name : tab.name;
 
   return (
     <div className="flex flex-col gap-6">
@@ -20,7 +21,7 @@ export function NotificationsContent({ tab: pageConfig }: { tab: AppPage }) {
            <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <h1 className="font-headline text-3xl font-thin">{pageConfig.name}</h1>
+                <h1 className="font-headline text-3xl font-thin">{title}</h1>
               </TooltipTrigger>
               {pageConfig.description && (
                 <TooltipContent>

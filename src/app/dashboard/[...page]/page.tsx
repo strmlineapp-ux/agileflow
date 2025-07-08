@@ -78,12 +78,13 @@ export default function DynamicPage() {
     const pageTabs = appSettings.tabs
       .filter(t => pageConfig.associatedTabs.includes(t.id))
       .filter(t => {
-        // A tab is visible if its parent page is visible, UNLESS the tab itself has an admin group restriction.
+        // A tab is visible if its parent page is visible.
+        // The ONLY exception is if the tab has an admin group restriction.
         if (t.access?.adminGroups && t.access.adminGroups.length > 0) {
           // If restricted, user must be a system admin or in one of the specified groups.
           return viewAsUser.isAdmin || t.access.adminGroups.some(reqId => userAdminGroupIds.has(reqId));
         }
-        // Otherwise, if it has no restrictions, it's visible because we already know the user can see the page.
+        // Otherwise, if it has no restrictions, it's visible.
         return true;
       });
       
@@ -95,7 +96,7 @@ export default function DynamicPage() {
         
         if (ContentComponent) {
             const pseudoTab: AppPage = { ...pageConfig, componentKey: pageConfig.componentKey as any };
-            return <ContentComponent tab={pseudoTab} team={dynamicTeam} page={pageConfig} />;
+            return <ContentComponent tab={pseudoTab} team={dynamicTeam} page={pageConfig} isSingleTabPage={true} />;
         }
 
         return (
@@ -113,10 +114,7 @@ export default function DynamicPage() {
         const tab = pageTabs[0];
         const contextTeam = tab.contextTeamId ? teams.find(t => t.id === tab.contextTeamId) : dynamicTeam;
         const ContentComponent = componentMap[tab.componentKey];
-        // The page header is rendered directly by the content component.
-        // We pass the page's title, icon, and description to the tab to ensure the correct header is displayed.
-        const pageAsTab = { ...tab, name: pageTitle, icon: pageConfig.icon, description: tab.description };
-        return ContentComponent ? <ContentComponent tab={pageAsTab} team={contextTeam} page={pageConfig} /> : <div>Component for {tab.name} not found.</div>;
+        return ContentComponent ? <ContentComponent tab={tab} team={contextTeam} page={pageConfig} isSingleTabPage={true} /> : <div>Component for {tab.name} not found.</div>;
     }
     
     // Render page with multiple tabs
@@ -140,7 +138,7 @@ export default function DynamicPage() {
                     const contextTeam = tab.contextTeamId ? teams.find(t => t.id === tab.contextTeamId) : dynamicTeam;
                     return (
                         <TabsContent key={tab.id} value={tab.id} className="mt-4">
-                        {ContentComponent ? <ContentComponent tab={tab} team={contextTeam} page={pageConfig} /> : <div>Component for {tab.name} not found.</div>}
+                        {ContentComponent ? <ContentComponent tab={tab} team={contextTeam} page={pageConfig} isSingleTabPage={false} /> : <div>Component for {tab.name} not found.</div>}
                         </TabsContent>
                     );
                 })}

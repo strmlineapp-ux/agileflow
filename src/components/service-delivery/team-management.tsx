@@ -432,14 +432,13 @@ function TeamCard({
     );
 }
 
-export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
+export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: AppTab; page: AppPage, isSingleTabPage?: boolean }) {
     const { viewAsUser, users, teams, appSettings, addTeam, updateTeam, deleteTeam, reorderTeams, updateAppTab, unlinkAndCopyTeam, linkTeam } = useUser();
     const { toast } = useToast();
 
     const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const titleInputRef = useRef<HTMLInputElement>(null);
-    const title = appSettings.teamManagementLabel || tab.name;
     const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
     const [sharedSearchTerm, setSharedSearchTerm] = useState('');
     const sharedSearchInputRef = useRef<HTMLInputElement>(null);
@@ -447,6 +446,10 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
     const [isSearching, setIsSearching] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const searchInputRef = useRef<HTMLInputElement>(null);
+    
+    const pageTitle = page.isDynamic && teams.find(t => t.id === page.path.split('/')[2]) ? `${teams.find(t => t.id === page.path.split('/')[2])?.name} ${page.name}` : page.name;
+    const tabTitle = appSettings.teamManagementLabel || tab.name;
+    const finalTitle = isSingleTabPage ? pageTitle : tabTitle;
 
     const isTeamOwner = useCallback((team: Team, user: User) => {
         if (!team.owner) return false;
@@ -484,7 +487,7 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
 
     const handleSaveTitle = () => {
         const newName = titleInputRef.current?.value.trim();
-        if (newName && newName !== title) {
+        if (newName && newName !== tab.name) {
             updateAppTab(tab.id, { name: newName });
         }
         setIsEditingTitle(false);
@@ -669,12 +672,12 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             {isEditingTitle ? (
-                              <Input ref={titleInputRef} defaultValue={title} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
+                              <Input ref={titleInputRef} defaultValue={finalTitle} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
                             ) : (
                               <TooltipProvider>
                                   <Tooltip>
                                       <TooltipTrigger asChild>
-                                          <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{title}</h2>
+                                          <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{finalTitle}</h2>
                                       </TooltipTrigger>
                                       {tab.description && (
                                           <TooltipContent><p className="max-w-xs">{tab.description}</p></TooltipContent>
@@ -857,4 +860,3 @@ export function TeamManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
         </DragDropContext>
     );
 }
-

@@ -14,7 +14,8 @@ const stats = [
   { title: 'Team Members', value: '8', icon: 'group' },
 ];
 
-export function OverviewContent({ tab: pageConfig }: { tab: AppPage }) {
+export function OverviewContent({ tab: pageConfig, isSingleTabPage }: { tab: AppPage, isSingleTabPage?: boolean }) {
+  const title = isSingleTabPage ? pageConfig.name : tab.name;
   return (
     <div className="flex flex-col gap-6">
         <div className="flex items-center gap-3">
@@ -22,7 +23,7 @@ export function OverviewContent({ tab: pageConfig }: { tab: AppPage }) {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <h1 className="font-headline text-3xl font-thin">{pageConfig.name}</h1>
+                <h1 className="font-headline text-3xl font-thin">{title}</h1>
               </TooltipTrigger>
               {pageConfig.description && (
                 <TooltipContent>
