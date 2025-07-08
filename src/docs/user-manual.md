@@ -21,7 +21,7 @@ Once your access has been approved, you can sign in:
 The main navigation is located in the sidebar on the left, providing quick, icon-based access to all sections of the app. Hover over an icon to see its name.
 
 - **Main Navigation**: Access to core features like the Calendar, Overview, Tasks, and Notifications.
-- **Team Management**: If you are a manager of a team, a link to that team's management page will appear here.
+- **Team Management**: If you have permission to manage a team, a link to that team's management page will appear here.
 - **Admin Pages**: If you are an Admin, you will see links to the Admin and Service Delivery pages.
 - **User Profile**: At the bottom of the sidebar, you can access your profile, user preferences, and the "View as" feature (for Admins).
 
@@ -81,19 +81,19 @@ Access your preferences by clicking your avatar in the bottom-left corner of the
 
 ### 8.1 Admin (`/dashboard/admin`)
 This is the central control panel for configuring the application itself.
-- **Admin Management**: Manage system administrators by dragging and dropping users between the "Admins" and "Users" lists.
+- **Admin Management**: Manage system administrators by dragging and dropping users between the "Admins" and "Users" lists. You can also delete a user from the system on this tab.
 - **Pages**: Configure the application's navigation. Create new pages, define their URL path, and control who has access to them (by user or team). You can intuitively reorder pages by dragging and dropping them in the grid. Key system pages are pinned and cannot be moved. You can also instantly duplicate any page by dragging it onto the "Add New Page" (+) button.
 - **Tabs**: Manage the reusable content blocks (tabs) in a simple list view. Use the search bar to find a specific tab to edit.
 
 ### 8.2 Service Delivery Management (`/dashboard/service-delivery`)
 This is the central hub for global application settings.
-- **Manage Calendars**: Create, edit, or delete shared calendars. Hover over a calendar card and click the `delete` icon to remove it.
+- **Manage Calendars**: Create, edit, or delete shared calendars. Deleting a calendar is a high-impact action and must be done from the dropdown menu on its card.
 - **Manage Teams**: This tab provides a powerful, dynamic interface for managing user groups (called "Teams"). Just like Badge Collections, Teams can be owned, shared with other groups, linked, and copied. You can drag and drop your owned teams to a shared panel to make them available to others, or drag a shared team onto your board to link it.
 
 ### 8.3 Team Management (`/dashboard/teams/[teamId]`)
 This page is for managing the specifics of an individual team.
 - **Team Members**: View all members of the team. Team Admins are now listed in a dedicated column on the left for clarity, while all other members are in a responsive grid on the right. You can now also click on the "Team Admins" and "Members" titles to rename them for your team.
-- **Badge Management**: Create and manage your team's badge collections. To share a collection, simply drag its card to the "Shared Collections" panel. To link a collection from another team, drag it from the shared panel onto your main board.
+- **Badge Management**: Create and manage your team's badge collections. To share a collection, simply drag its card to the "Shared Collections" panel. To link a collection from another team, drag it from the shared panel onto your main board. You can also drag individual users from a shared team or individual badges from a shared collection.
 - **Pinned Locations**: Pin locations to the team's Production Schedule. You can also designate locations as "check locations."
 - **Workstations**: Manage a list of bookable workstations or machines for the team.
 - **Event Templates**: Create reusable templates for common events. You can edit a template's name by clicking on it directly. Click the edit icon on the template card to manage its requested roles.
