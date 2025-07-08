@@ -62,6 +62,7 @@ export interface User {
   easyBooking?: boolean;
   timeFormat?: '12h' | '24h';
   linkedTeamIds?: string[];
+  linkedCollectionIds?: string[];
 }
 
 export interface EventTemplate {
@@ -122,6 +123,7 @@ export interface Team {
   locationAliases?: { [key:string]: string };
   workstations?: string[];
   eventTemplates?: EventTemplate[];
+  linkedCollectionIds?: string[];
 }
 
 export interface Task {

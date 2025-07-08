@@ -146,10 +146,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, [locations, teams]);
 
   useEffect(() => {
-    // Simulate initial data loading to prevent infinite loading screen
+    // Simulate initial data loading
     const timer = setTimeout(() => {
         setLoading(false);
-    }, 500); 
+    }, 50); 
 
     return () => clearTimeout(timer);
   }, []);
@@ -170,6 +170,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const newTeam: Team = {
       ...teamData,
       id: crypto.randomUUID(),
+      linkedCollectionIds: [],
     };
     await simulateApi();
     setTeams(current => [...current, newTeam]);
