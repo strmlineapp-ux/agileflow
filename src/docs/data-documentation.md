@@ -2,6 +2,16 @@
 
 # AgileFlow: Data Documentation
 
+## Core Mission & Architectural Goals
+
+This app's core mission is to create a concise, robust NoSQL database that takes full advantage of Firebase Studio and Firestore services. The architecture is explicitly designed to be optimized for future analytics, forecasting, and insights, even though these features are not yet implemented.
+
+A primary goal is to work in consonance with Google Calendar. The application will manage calendars, events, tasks, and other Google Calendar related elements (with appropriate user permissions) and will add, create, and edit associated data for them.
+
+User interaction is driven by a dynamic system of pages and tabs, governed by a simplified, context-aware permission system. The user interface defines how users will fetch, add, edit, or delete data from these Google Calendar elements, or create templates and rules for this associated data.
+
+---
+
 This document provides a detailed breakdown of the data structures, entities, and their relationships within the AgileFlow application. The data architecture is designed for a **Firestore (NoSQL) database environment**, which influences how data is structured and related. It serves as a technical reference for understanding how data flows through the system and interacts with internal and external services.
 
 ## User Entity
@@ -159,4 +169,5 @@ This represents a specific, functional role or skill. The single source of truth
 | `icon: string` | The Google Symbol name for the badge's icon. |
 | `color: string` | The hex color code for the badge's icon and outline. |
 | `description?: string` | An optional description shown in tooltips. |
+
 
