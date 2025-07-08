@@ -91,6 +91,9 @@ export const AdminsManagement = ({ tab }: { tab: AppTab }) => {
   
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
+  
+  const [adminSearch, setAdminSearch] = useState('');
+  const [userSearch, setUserSearch] = useState('');
 
   useEffect(() => {
     if (isEditingTitle) titleInputRef.current?.focus();
@@ -113,8 +116,15 @@ export const AdminsManagement = ({ tab }: { tab: AppTab }) => {
     else if (e.key === 'Escape') setIsEditingTitle(false);
   };
   
-  const adminUsers = useMemo(() => users.filter(u => u.isAdmin), [users]);
-  const nonAdminUsers = useMemo(() => users.filter(u => !u.isAdmin), [users]);
+  const adminUsers = useMemo(() =>
+    users.filter(u => u.isAdmin && u.displayName.toLowerCase().includes(adminSearch.toLowerCase())),
+    [users, adminSearch]
+  );
+
+  const nonAdminUsers = useMemo(() =>
+      users.filter(u => !u.isAdmin && u.displayName.toLowerCase().includes(userSearch.toLowerCase())),
+      [users, userSearch]
+  );
   
   const handleAdminToggle = (user: User) => {
     const isLastAdmin = adminUsers.length <= 1 && user.isAdmin;
@@ -189,7 +199,13 @@ export const AdminsManagement = ({ tab }: { tab: AppTab }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card className="flex flex-col h-full bg-transparent">
                     <CardHeader>
-                      <CardTitle className="font-normal text-base">Admins ({adminUsers.length})</CardTitle>
+                        <div className="flex items-center justify-between gap-4">
+                            <CardTitle>Admins ({adminUsers.length})</CardTitle>
+                            <div className="relative w-48">
+                                <GoogleSymbol name="search" className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                <Input placeholder="Search admins..." value={adminSearch} onChange={(e) => setAdminSearch(e.target.value)} className="pl-8" />
+                            </div>
+                        </div>
                     </CardHeader>
                     <CardContent className="flex-grow">
                         <StrictModeDroppable droppableId="admins-list">
@@ -197,7 +213,7 @@ export const AdminsManagement = ({ tab }: { tab: AppTab }) => {
                                 <div
                                     ref={provided.innerRef}
                                     {...provided.droppableProps}
-                                    className={cn("p-1 space-y-1 rounded-md min-h-[60px]", snapshot.isDraggingOver && "bg-primary/10 ring-1 ring-primary/20")}
+                                    className={cn("p-1 space-y-1 rounded-md min-h-[60px]", snapshot.isDraggingOver && "ring-1 ring-border ring-inset")}
                                 >
                                     {adminUsers.map((user, index) => (
                                         <Draggable key={user.userId} draggableId={user.userId} index={index}>
@@ -227,7 +243,13 @@ export const AdminsManagement = ({ tab }: { tab: AppTab }) => {
                   </Card>
                   <Card className="flex flex-col h-full bg-transparent">
                     <CardHeader>
-                      <CardTitle className="font-normal text-base">Users ({nonAdminUsers.length})</CardTitle>
+                        <div className="flex items-center justify-between gap-4">
+                            <CardTitle>Users ({nonAdminUsers.length})</CardTitle>
+                            <div className="relative w-48">
+                                <GoogleSymbol name="search" className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                <Input placeholder="Search users..." value={userSearch} onChange={(e) => setUserSearch(e.target.value)} className="pl-8" />
+                            </div>
+                        </div>
                     </CardHeader>
                      <CardContent className="flex-grow">
                          <StrictModeDroppable droppableId="users-list">
@@ -235,7 +257,7 @@ export const AdminsManagement = ({ tab }: { tab: AppTab }) => {
                                 <div
                                     ref={provided.innerRef}
                                     {...provided.droppableProps}
-                                    className={cn("p-1 space-y-1 rounded-md min-h-[60px]", snapshot.isDraggingOver && "bg-primary/10 ring-1 ring-primary/20")}
+                                    className={cn("p-1 space-y-1 rounded-md min-h-[60px]", snapshot.isDraggingOver && "ring-1 ring-border ring-inset")}
                                 >
                                     {nonAdminUsers.map((user, index) => (
                                         <Draggable key={user.userId} draggableId={user.userId} index={index}>
@@ -1025,8 +1047,8 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                         <PopoverContent className="w-auto p-2">
                             <div className="grid grid-cols-8 gap-1">
                                 {['#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
-    '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6',
-    '#A855F7', '#D946EF', '#EC4899', '#F43F5E'].map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => { onUpdate(tab.id, { color: c }); setIsColorPopoverOpen(false); }}/>))}
+                                '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6',
+                                '#A855F7', '#D946EF', '#EC4899', '#F43F5E'].map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => { onUpdate(tab.id, { color: c }); setIsColorPopoverOpen(false); }}/>))}
                                 <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
                                     <GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={tab.color} onChange={(e) => onUpdate(tab.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/>
                                 </div>
@@ -1061,8 +1083,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
             </CardContent>
         </Card>
     );
-};
-
+}
 
 export const TabsManagement = ({ tab }: { tab: AppTab }) => {
     const { appSettings, updateAppSettings, updateAppTab } = useUser();
@@ -1200,6 +1221,3 @@ export const TabsManagement = ({ tab }: { tab: AppTab }) => {
     );
 };
 // #endregion
-
-
-
