@@ -884,7 +884,7 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
     
     useEffect(() => {
         if (isSharedSearching && sharedSearchInputRef.current) {
-            sharedSearchInputRef.current.focus();
+            setTimeout(() => sharedSearchInputRef.current?.focus(), 100);
         }
     }, [isSharedSearching]);
 
@@ -1402,13 +1402,20 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
                                 <Card className={cn("transition-opacity duration-300 h-full bg-transparent", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
                                     <CardHeader>
                                         <div className="flex items-center justify-between">
-                                            <CardTitle>Shared Collections</CardTitle>
+                                            <CardTitle className="font-headline font-thin text-xl">Shared Collections</CardTitle>
                                             {!isSharedSearching ? (
-                                                <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={() => setIsSharedSearching(true)}>
-                                                    <GoogleSymbol name="search" />
-                                                </Button>
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={() => setIsSharedSearching(true)}>
+                                                                <GoogleSymbol name="search" />
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent><p>Search Shared Collections</p></TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
                                             ) : (
-                                                <div className="flex items-center gap-1">
+                                                <div className="flex items-center gap-1 border-b">
                                                 <GoogleSymbol name="search" className="text-muted-foreground" />
                                                 <input
                                                     ref={sharedSearchInputRef}
