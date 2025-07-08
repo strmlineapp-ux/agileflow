@@ -139,6 +139,15 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     
     return Array.from(uniqueNames.values()).sort((a,b) => a.name.localeCompare(b.name));
   }, [locations, teams]);
+
+  useEffect(() => {
+    // Simulate initial data loading to prevent infinite loading screen
+    const timer = setTimeout(() => {
+        setLoading(false);
+    }, 500); 
+
+    return () => clearTimeout(timer);
+  }, []);
   
   const updateUser = useCallback(async (userId: string, userData: Partial<User>) => {
     await simulateApi();
