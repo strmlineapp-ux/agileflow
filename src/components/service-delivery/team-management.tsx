@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
@@ -634,12 +635,11 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                     color: teamToDuplicate.color,
                     owner: owner,
                     isShared: false,
-                    members: [], // Start with an empty member list for the copy
-                    teamAdmins: [], // Start with an empty admin list for the copy
+                    members: teamToDuplicate.members,
+                    teamAdmins: teamToDuplicate.teamAdmins,
                     teamAdminsLabel: teamToDuplicate.teamAdminsLabel,
                     membersLabel: teamToDuplicate.membersLabel,
-                    locationCheckManagers: [], // Reset check managers for the copy
-                    // Deep copy badge and template structures
+                    locationCheckManagers: teamToDuplicate.locationCheckManagers,
                     allBadges: JSON.parse(JSON.stringify(teamToDuplicate.allBadges || [])),
                     badgeCollections: JSON.parse(JSON.stringify(teamToDuplicate.badgeCollections || [])),
                     userBadgesLabel: teamToDuplicate.userBadgesLabel,
@@ -675,7 +675,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                               <TooltipProvider>
                                   <Tooltip>
                                       <TooltipTrigger asChild>
-                                          <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{finalTitle}</h2>
+                                          <h2 className="font-headline text-2xl font-thin tracking-tight cursor-pointer" onClick={() => setIsEditingTitle(true)}>{finalTitle}</h2>
                                       </TooltipTrigger>
                                       {tab.description && (
                                           <TooltipContent><p className="max-w-xs">{tab.description}</p></TooltipContent>

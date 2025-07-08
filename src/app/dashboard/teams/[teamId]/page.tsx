@@ -112,9 +112,9 @@ export default function TeamPage() {
         <div className="flex items-center gap-3">
             <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className="shrink-0 h-12 w-12">
-                  <GoogleSymbol name={pageConfig.icon} className="text-12xl" weight={100} />
-                </Button>
+                <button className="shrink-0 h-12 w-12 flex items-center justify-center">
+                  <GoogleSymbol name={team.icon} className="text-6xl" weight={100} />
+                </button>
               </PopoverTrigger>
               <PopoverContent className="w-80 p-0">
                 <div className="flex items-center gap-1 p-2 border-b">
@@ -125,7 +125,7 @@ export default function TeamPage() {
                     <TooltipProvider key={iconName}>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Button variant={pageConfig.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { updatePage({ icon: iconName }); setIsIconPopoverOpen(false);}} className="h-8 w-8 p-0"><GoogleSymbol name={iconName} className="text-4xl" weight={100} /></Button>
+                          <Button variant={team.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { updateTeam(team.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="h-8 w-8 p-0"><GoogleSymbol name={iconName} className="text-4xl" weight={100} /></Button>
                         </TooltipTrigger>
                         <TooltipContent><p>{iconName}</p></TooltipContent>
                       </Tooltip>
@@ -145,7 +145,7 @@ export default function TeamPage() {
                           className="h-auto p-0 font-headline text-3xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
                       />
                   ) : (
-                      <h1 className="font-headline text-3xl font-thin cursor-pointer border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingName(true)}>
+                      <h1 className="font-headline text-3xl font-thin cursor-pointer" onClick={() => setIsEditingName(true)}>
                           {team.name} Team Management
                       </h1>
                   )}

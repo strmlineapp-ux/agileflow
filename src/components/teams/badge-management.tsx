@@ -20,6 +20,7 @@ import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableP
 import { Separator } from '../ui/separator';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle as UIDialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle as UIAlertDialogTitle } from '../ui/alert-dialog';
 import { Badge as UiBadge } from '../ui/badge';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '../ui/select';
@@ -582,7 +583,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, users
     users: User[];
     appSettings: AppSettings;
     onUpdateCollection: (collectionId: string, newValues: Partial<Omit<BadgeCollection, 'id' | 'badgeIds'>>) => void;
-    onDeleteCollection: (collectionId: string) => void;
+    onDeleteCollection: (collection: BadgeCollection) => void;
     onAddBadge: (collectionId: string) => void;
     onUpdateBadge: (badgeData: Partial<Badge>) => void;
     onDeleteBadge: (collectionId: string, badgeId: string) => void;
@@ -755,7 +756,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, users
                                     {isOwned && <DropdownMenuSeparator />}
                                     {isOwned && <DropdownMenuItem onClick={() => onToggleShare(collection.id)}><GoogleSymbol name={collection.isShared ? 'share_off' : 'share'} className="mr-2 text-lg"/>{collection.isShared ? 'Unshare Collection' : 'Share Collection'}</DropdownMenuItem>}
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem onClick={() => onDeleteCollection(collection.id)} className="text-destructive focus:text-destructive">
+                                    <DropdownMenuItem onClick={() => onDeleteCollection(collection)} className="text-destructive focus:text-destructive">
                                         <GoogleSymbol name="delete" className="mr-2 text-lg"/>
                                         {isOwned ? "Delete Collection" : "Unlink Collection"}
                                     </DropdownMenuItem>
@@ -843,7 +844,7 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
     const { teams, users, appSettings, updateTeam, updateAppTab, viewAsUser } = useUser();
     const { toast } = useToast();
     
-    const [collectionToDelete, setCollectionToDelete] = useState<string | null>(null);
+    const [collectionToDelete, setCollectionToDelete] = useState<BadgeCollection | null>(null);
     const [badgeToDelete, setBadgeToDelete] = useState<{ collectionId: string, badgeId: string } | null>(null);
     
     const [isSearching, setIsSearching] = useState(false);
@@ -926,16 +927,12 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
       toast({ title: 'Collection Added', description: `"${newName}" has been created.`});
     };
     
-    const handleDeleteCollection = (collectionId: string) => {
-        const collection = team.badgeCollections.find(c => c.id === collectionId);
-        if (!collection) return;
-
+    const handleDeleteCollection = (collection: BadgeCollection) => {
         const isOwned = collection.owner.type === 'team' && collection.owner.id === team.id;
-
         if (isOwned) {
-            setCollectionToDelete(collectionId);
+            setCollectionToDelete(collection);
         } else {
-            const newCollections = team.badgeCollections.filter(c => c.id !== collectionId);
+            const newCollections = team.badgeCollections.filter(c => c.id !== collection.id);
             updateTeam(team.id, { badgeCollections: newCollections });
             toast({ title: 'Collection Unlinked', description: `"${collection.name}" is no longer linked to your team.` });
         }
@@ -944,17 +941,14 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
     const confirmDeleteCollection = () => {
         if (!collectionToDelete) return;
         
-        const collection = team.badgeCollections.find(c => c.id === collectionToDelete);
-        if (!collection) return;
-
-        const newCollections = team.badgeCollections.filter(c => c.id !== collectionToDelete);
+        const newCollections = team.badgeCollections.filter(c => c.id !== collectionToDelete.id);
         
-        const ownedBadgeIds = new Set(team.allBadges.filter(b => b.ownerCollectionId === collectionToDelete).map(b => b.id));
+        const ownedBadgeIds = new Set(team.allBadges.filter(b => b.ownerCollectionId === collectionToDelete.id).map(b => b.id));
         const newAllBadges = team.allBadges.filter(b => !ownedBadgeIds.has(b.id));
 
         updateTeam(team.id, { badgeCollections: newCollections, allBadges: newAllBadges });
 
-        toast({ title: 'Collection Deleted', description: `"${collection.name}" and all its owned badges have been deleted.`});
+        toast({ title: 'Collection Deleted', description: `"${collectionToDelete.name}" and all its owned badges have been deleted.`});
         setCollectionToDelete(null);
     };
 
@@ -1281,7 +1275,7 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
+                                            <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
                                         </TooltipTrigger>
                                         {tab.description && (
                                         <TooltipContent>
@@ -1471,7 +1465,7 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
                         )}
                     </StrictModeDroppable>
                 </div>
-                <Dialog open={!!collectionToDelete} onOpenChange={(isOpen) => !isOpen && setCollectionToDelete(null)}>
+                <Dialog open={!!collectionToDelete && !collectionToDelete.isShared} onOpenChange={() => setCollectionToDelete(null)}>
                     <DialogContent className="max-w-md">
                         <div className="absolute top-4 right-4">
                             <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={confirmDeleteCollection}>
@@ -1482,11 +1476,25 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
                         <DialogHeader>
                             <UIDialogTitle>Delete Collection?</UIDialogTitle>
                             <DialogDescription>
-                                This will permanently delete the collection and all badges it owns from this team.
+                                This will permanently delete the collection "{collectionToDelete?.name}" and all badges it owns from this team.
                             </DialogDescription>
                         </DialogHeader>
                     </DialogContent>
                 </Dialog>
+                <AlertDialog open={!!collectionToDelete && collectionToDelete.isShared} onOpenChange={() => setCollectionToDelete(null)}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <UIAlertDialogTitle>Delete Shared Collection?</UIAlertDialogTitle>
+                            <AlertDialogDescription>
+                                This collection is shared. Deleting it will remove it and its badges from all teams that use it. This action cannot be undone.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={confirmDeleteCollection} variant="destructive">Delete</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
                 <Dialog open={!!badgeToDelete} onOpenChange={(isOpen) => !isOpen && setBadgeToDelete(null)}>
                     <DialogContent>
                         <div className="absolute top-4 right-4">

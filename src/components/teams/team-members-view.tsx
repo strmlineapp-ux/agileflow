@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useUser } from '@/context/user-context';
@@ -132,7 +133,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                   <TooltipProvider>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
+                            <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
                         </TooltipTrigger>
                          {tab.description && (
                             <TooltipContent>
@@ -155,7 +156,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                             className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
                         />
                     ) : (
-                         <h3 className="font-headline font-thin text-xl cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingAdminsLabel(true)}>
+                         <h3 className="font-headline font-thin text-xl cursor-text" onClick={() => setIsEditingAdminsLabel(true)}>
                             {teamAdminsLabel}
                          </h3>
                     )}
@@ -196,7 +197,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                             className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
                         />
                     ) : (
-                         <h3 className="font-headline font-thin text-xl cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingMembersLabel(true)}>
+                         <h3 className="font-headline font-thin text-xl cursor-text" onClick={() => setIsEditingMembersLabel(true)}>
                             {membersLabel}
                          </h3>
                     )}

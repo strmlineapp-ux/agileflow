@@ -21,7 +21,7 @@ import { BadgeManagement } from '@/components/teams/badge-management';
 
 
 // This is a mapping from the componentKey in our AppTab model to the actual component to render.
-const componentMap: Record<string, React.ComponentType<{ tab: AppTab, team?: Team, page: AppPage }>> = {
+const componentMap: Record<string, React.ComponentType<{ tab: AppTab, team?: Team, page: AppPage, isSingleTabPage?: boolean }>> = {
   calendars: CalendarManagement,
   teams: TeamManagement,
   badges: BadgeManagement,
@@ -83,6 +83,16 @@ export default function ServiceDeliveryPage() {
 
   const pageTabs = appSettings.tabs.filter(t => pageConfig.associatedTabs.includes(t.id));
 
+  const pageTitle = pageConfig.name;
+  
+  // Render page with single tab (no tab list)
+    if (pageTabs.length === 1) {
+        const tab = pageTabs[0];
+        const ContentComponent = componentMap[tab.componentKey];
+        const contextTeam = tab.contextTeamId ? teams.find(t => t.id === tab.contextTeamId) : undefined;
+        return ContentComponent ? <ContentComponent tab={tab} team={contextTeam} page={pageConfig} isSingleTabPage={true} /> : <div>Component for {tab.name} not found.</div>;
+    }
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-3">
@@ -115,7 +125,7 @@ export default function ServiceDeliveryPage() {
           <TooltipProvider>
             <Tooltip>
                 <TooltipTrigger asChild>
-                  <h1 className="font-headline text-3xl font-thin cursor-pointer border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{pageConfig.name}</h1>
+                  <h1 className="font-headline text-3xl font-thin cursor-pointer" onClick={() => setIsEditingTitle(true)}>{pageConfig.name}</h1>
                 </TooltipTrigger>
                 {pageConfig.description && (
                   <TooltipContent><p className="max-w-xs">{pageConfig.description}</p></TooltipContent>

@@ -120,7 +120,7 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
             <TooltipProvider>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
+                        <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
                     </TooltipTrigger>
                     {tab.description && (
                         <TooltipContent><p className="max-w-xs">{tab.description}</p></TooltipContent>
@@ -156,7 +156,7 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
                         defaultValue={ws}
                         onBlur={handleSaveEdit}
                         onKeyDown={handleEditKeyDown}
-                        className="h-5 p-0 bg-transparent text-sm border-0 shadow-none focus-visible:ring-0"
+                        className="h-5 p-0 bg-transparent text-sm font-headline font-thin border-0 shadow-none focus-visible:ring-0"
                     />
                 ) : (
                     <span className="font-medium text-sm cursor-text" onClick={() => setEditingWorkstation(ws)}>
