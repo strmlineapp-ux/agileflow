@@ -8,7 +8,6 @@ import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { type AppTab, type AppPage } from '@/types';
-import { hasAccess } from '@/lib/permissions';
 
 // Import all possible tab components
 import { AdminGroupsManagement, PagesManagement, TabsManagement } from '@/components/admin/page';
