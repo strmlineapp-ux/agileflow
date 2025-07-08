@@ -162,7 +162,6 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
 
     const isEditable = useMemo(() => {
         if (isSharedPreview) return false;
-        if (viewAsUser.isAdmin) return true;
         return badgeOwner?.userId === viewAsUser.userId;
     }, [isSharedPreview, badgeOwner, viewAsUser]);
 
@@ -253,7 +252,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
 
     if (badgeOwner?.userId === viewAsUser.userId && isShared) {
         shareIcon = 'upload';
-        shareIconTitle = `Owned & Shared by You`;
+        shareIconTitle = 'Owned by you and shared with all teams';
     } else if (badgeOwner?.userId !== viewAsUser.userId) {
         shareIcon = 'downloading';
         shareIconTitle = `Shared by ${badgeOwner?.displayName || 'another user'}`;
@@ -616,7 +615,6 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, users
     const isOwned = useMemo(() => {
         if (isSharedPreview) return false;
         if (!viewAsUser) return false;
-        if (viewAsUser.isAdmin) return true;
         return collection.owner.id === viewAsUser.userId;
     }, [collection.owner, viewAsUser, isSharedPreview]);
     
@@ -760,8 +758,11 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, users
                                     {isOwned && <DropdownMenuSeparator />}
                                     {isOwned && <DropdownMenuItem onClick={() => onToggleShare(collection.id)}><GoogleSymbol name={collection.isShared ? 'share_off' : 'share'} className="mr-2 text-lg"/>{collection.isShared ? 'Unshare Collection' : 'Share Collection'}</DropdownMenuItem>}
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem onClick={() => onDeleteCollection(collection)} className="text-destructive focus:text-destructive">
-                                        <GoogleSymbol name="delete" className="mr-2 text-lg"/>
+                                    <DropdownMenuItem 
+                                        onClick={() => onDeleteCollection(collection)} 
+                                        className={cn(isOwned && "text-destructive focus:text-destructive")}
+                                    >
+                                        <GoogleSymbol name={isOwned ? "delete" : "link_off"} className="mr-2 text-lg"/>
                                         {isOwned ? "Delete Collection" : "Unlink Collection"}
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
@@ -769,7 +770,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, users
                         </div>
                     </div>
                     <div className="pt-2">
-                        {!isSharedPreview && (
+                        {!isSharedPreview && isOwned && (
                             <div className="flex items-center gap-1 mb-2">
                                 {APPLICATIONS.map(app => (
                                     <TooltipProvider key={app.key}>
@@ -781,7 +782,6 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, users
                                                         size="icon"
                                                         className={cn("p-0", (collection.applications || []).includes(app.key) ? 'text-primary' : 'text-muted-foreground')}
                                                         onClick={() => onUpdateCollection(collection.id, { applications: (collection.applications || []).includes(app.key) ? (collection.applications || []).filter(a => a !== app.key) : [...(collection.applications || []), app.key] })}
-                                                        disabled={isSharedPreview || !isOwned}
                                                     >
                                                         <GoogleSymbol name={app.icon} className="text-4xl" weight={100} />
                                                     </Button>
@@ -914,7 +914,7 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
           toast({ variant: 'destructive', title: 'Error', description: 'A collection with this name already exists.' });
           return;
       }
-      const owner = getOwnershipContext(page, viewAsUser, teams, appSettings.adminGroups);
+      const owner = getOwnershipContext(page, viewAsUser);
       const newCollection: BadgeCollection = {
           id: crypto.randomUUID(),
           name: newName,
@@ -933,7 +933,7 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
     };
     
     const handleDeleteCollection = (collection: BadgeCollection) => {
-        const isOwned = collection.owner.id === viewAsUser.userId || viewAsUser.isAdmin;
+        const isOwned = collection.owner.id === viewAsUser.userId;
         if (isOwned) {
             setCollectionToDelete(collection);
         } else {
