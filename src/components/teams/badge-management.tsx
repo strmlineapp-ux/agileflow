@@ -294,7 +294,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                 <TooltipTrigger asChild>
                     <button
                         type="button"
-                        className="absolute top-0 right-0 h-4 w-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute top-0 right-0 h-4 w-4 rounded-full flex items-center justify-center text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
                         onClick={(e) => { e.stopPropagation(); onDelete(); }}
                         aria-label={`Delete ${badge.name}`}
                     >
