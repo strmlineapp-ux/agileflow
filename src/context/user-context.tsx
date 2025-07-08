@@ -2,7 +2,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
-import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type BadgeCollectionOwner } from '@/types';
+import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type BadgeCollectionOwner, type BadgeCollection } from '@/types';
 import { mockUsers as initialUsers, mockCalendars as initialCalendars, mockEvents as initialEvents, mockLocations as initialLocations, mockTeams, mockAppSettings } from '@/lib/mock-data';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { hexToHsl } from '@/lib/utils';
 import { startOfDay } from 'date-fns';
+import { getOwnershipContext } from '@/lib/permissions';
 
 interface UserContextType {
   loading: boolean;
@@ -17,8 +18,6 @@ interface UserContextType {
   viewAsUser: User;
   setViewAsUser: (userId: string) => void;
   users: User[];
-  allBadges: Badge[];
-  allRolesAndBadges: { name: string; icon: string; color: string; }[];
   teams: Team[];
   addTeam: (teamData: Omit<Team, 'id'>) => Promise<void>;
   updateTeam: (teamId: string, teamData: Partial<Team>) => Promise<void>;
@@ -48,6 +47,14 @@ interface UserContextType {
   appSettings: AppSettings;
   updateAppSettings: (settings: Partial<AppSettings>) => Promise<void>;
   updateAppTab: (tabId: string, tabData: Partial<AppTab>) => Promise<void>;
+  allBadges: Badge[];
+  allBadgeCollections: BadgeCollection[];
+  addBadgeCollection: (owner: BadgeCollectionOwner, sourceCollection?: BadgeCollection) => void;
+  updateBadgeCollection: (collectionId: string, data: Partial<BadgeCollection>) => void;
+  deleteBadgeCollection: (collectionId: string) => void;
+  addBadge: (collectionId: string, sourceBadge?: Badge) => void;
+  updateBadge: (badgeData: Partial<Badge>) => void;
+  deleteBadge: (badgeId: string) => void;
 }
 
 const UserContext = createContext<UserContextType | null>(null);
@@ -89,38 +96,25 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [appSettings, setAppSettings] = useState<AppSettings>(mockAppSettings);
   const { toast } = useToast();
 
-  useEffect(() => {
-    // Simulate initial data loading process
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 500); // Adjust delay as needed
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  const allBadges = useMemo(() => {
+  const [allBadges, setAllBadges] = useState<Badge[]>(() => {
     const badgesMap = new Map<string, Badge>();
-    teams.forEach(team => {
+    mockTeams.forEach(team => {
         (team.allBadges || []).forEach(badge => {
-            if (!badgesMap.has(badge.id)) {
-                badgesMap.set(badge.id, badge);
-            }
+            if (!badgesMap.has(badge.id)) badgesMap.set(badge.id, badge);
         });
     });
     return Array.from(badgesMap.values());
-  }, [teams]);
+  });
 
-  const allRolesAndBadges = useMemo(() => {
-    const combined = new Map<string, { name: string; icon: string; color: string; }>();
-
-    allBadges.forEach(badge => {
-      if (!combined.has(badge.name)) {
-        combined.set(badge.name, badge);
-      }
+  const [allBadgeCollections, setAllBadgeCollections] = useState<BadgeCollection[]>(() => {
+    const collectionsMap = new Map<string, BadgeCollection>();
+    mockTeams.forEach(team => {
+        (team.badgeCollections || []).forEach(collection => {
+            if (!collectionsMap.has(collection.id)) collectionsMap.set(collection.id, collection);
+        });
     });
-
-    return Array.from(combined.values());
-  }, [allBadges]);
+    return Array.from(collectionsMap.values());
+  });
 
   const realUser = useMemo(() => users.find(u => u.userId === REAL_USER_ID)!, [users]);
   const viewAsUser = useMemo(() => users.find(u => u.userId === viewAsUserId) || realUser, [users, viewAsUserId, realUser]);
@@ -257,19 +251,17 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const getPriorityDisplay = useCallback((badgeId: string): { label: React.ReactNode, description?: string, color: string, icon?: string } | undefined => {
     if (!badgeId) return undefined;
 
-    for (const team of teams) {
-        const badge = (team.allBadges || []).find(b => b.id === badgeId);
-        if (badge) {
-            return {
-                label: badge.name,
-                description: badge.description,
-                color: badge.color,
-                icon: badge.icon
-            };
-        }
+    const badge = allBadges.find(b => b.id === badgeId);
+    if (badge) {
+        return {
+            label: badge.name,
+            description: badge.description,
+            color: badge.color,
+            icon: badge.icon
+        };
     }
     return undefined;
-  }, [teams]);
+  }, [allBadges]);
 
   const updateAppSettings = useCallback(async (settings: Partial<AppSettings>) => {
     await simulateApi();
@@ -284,15 +276,97 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const addBadgeCollection = useCallback((owner: BadgeCollectionOwner, sourceCollection?: BadgeCollection) => {
+    const newId = crypto.randomUUID();
+    let newBadges: Badge[] = [];
+    let newCollection: BadgeCollection;
+
+    if (sourceCollection) {
+        newBadges = sourceCollection.badgeIds.map(bId => {
+            const originalBadge = allBadges.find(b => b.id === bId);
+            return { ...(originalBadge || {}), id: crypto.randomUUID(), ownerCollectionId: newId, name: originalBadge?.name ? `${originalBadge.name} (Copy)`: 'New Badge' };
+        });
+        newCollection = {
+            ...JSON.parse(JSON.stringify(sourceCollection)),
+            id: newId,
+            name: `${sourceCollection.name} (Copy)`,
+            owner: owner,
+            isShared: false,
+            badgeIds: newBadges.map(b => b.id),
+        };
+    } else {
+        newCollection = {
+            id: newId,
+            name: `New Collection ${allBadgeCollections.length + 1}`,
+            owner: owner,
+            icon: 'category',
+            color: '#64748B',
+            viewMode: 'detailed',
+            badgeIds: [],
+            applications: [],
+            description: '',
+            isShared: false,
+        };
+    }
+    
+    setAllBadgeCollections(prev => [...prev, newCollection]);
+    if (newBadges.length > 0) {
+        setAllBadges(prev => [...prev, ...newBadges]);
+    }
+  }, [allBadgeCollections, allBadges]);
+
+  const updateBadgeCollection = useCallback((collectionId: string, data: Partial<BadgeCollection>) => {
+    setAllBadgeCollections(current => current.map(c => c.id === collectionId ? { ...c, ...data } : c));
+  }, []);
+
+  const deleteBadgeCollection = useCallback((collectionId: string) => {
+    const collectionToDelete = allBadgeCollections.find(c => c.id === collectionId);
+    if (!collectionToDelete) return;
+
+    const badgeIdsToDelete = new Set(collectionToDelete.badgeIds.filter(badgeId => {
+        const badge = allBadges.find(b => b.id === badgeId);
+        return badge?.ownerCollectionId === collectionId;
+    }));
+
+    setAllBadgeCollections(current => current.filter(c => c.id !== collectionId));
+    setAllBadges(current => current.filter(b => !badgeIdsToDelete.has(b.id)));
+  }, [allBadgeCollections, allBadges]);
+
+  const addBadge = useCallback((collectionId: string, sourceBadge?: Badge) => {
+    const newBadgeId = crypto.randomUUID();
+    const newBadge: Badge = {
+      id: newBadgeId,
+      ownerCollectionId: collectionId,
+      name: sourceBadge ? `${sourceBadge.name} (Copy)` : `New Badge`,
+      icon: sourceBadge?.icon || googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)],
+      color: sourceBadge?.color ||predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
+    };
+    setAllBadges(prev => [...prev, newBadge]);
+    setAllBadgeCollections(prev => prev.map(c => {
+      if (c.id === collectionId) {
+        return { ...c, badgeIds: [newBadgeId, ...c.badgeIds] };
+      }
+      return c;
+    }));
+  }, []);
+
+  const updateBadge = useCallback((badgeData: Partial<Badge>) => {
+    setAllBadges(current => current.map(b => b.id === badgeData.id ? { ...b, ...badgeData } : b));
+  }, []);
+
+  const deleteBadge = useCallback((badgeId: string) => {
+    setAllBadges(current => current.filter(b => b.id !== badgeId));
+    setAllBadgeCollections(current => current.map(c => ({
+        ...c,
+        badgeIds: c.badgeIds.filter(id => id !== badgeId)
+    })));
+  }, []);
+
   const linkGoogleCalendar = useCallback(async (userId: string) => {
     const provider = new GoogleAuthProvider();
     provider.addScope('https://www.googleapis.com/auth/calendar.readonly');
     try {
-      // In a real app, you would use signInWithPopup to get credentials
-      // await signInWithPopup(auth, provider);
-      // For this prototype, we will just simulate a successful link.
       await simulateApi(1000); 
-
       await updateUser(userId, { googleCalendarLinked: true, accountType: 'Full' });
       toast({
         title: "Success!",
@@ -322,7 +396,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         root.style.setProperty('--ring', hslColor);
       }
     } else {
-      // If no custom color, remove the style property to revert to the CSS default
       root.style.removeProperty('--primary');
       root.style.removeProperty('--ring');
     }
@@ -334,8 +407,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     viewAsUser,
     setViewAsUser: setViewAsUserId,
     users,
-    allBadges,
-    allRolesAndBadges,
     teams,
     addTeam,
     updateTeam,
@@ -365,13 +436,22 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     appSettings,
     updateAppSettings,
     updateAppTab,
+    allBadges,
+    allBadgeCollections,
+    addBadgeCollection,
+    updateBadgeCollection,
+    deleteBadgeCollection,
+    addBadge,
+    updateBadge,
+    deleteBadge,
   }), [
-    loading, realUser, viewAsUser, users, allBadges, allRolesAndBadges, teams, notifications, userStatusAssignments,
-    calendars, events, locations, allBookableLocations, appSettings,
+    loading, realUser, viewAsUser, users, teams, notifications, userStatusAssignments,
+    calendars, events, locations, allBookableLocations, appSettings, allBadges, allBadgeCollections,
     addTeam, updateTeam, deleteTeam, reorderTeams, setNotifications, setUserStatusAssignments, addUser,
     updateUser, linkGoogleCalendar, reorderCalendars, addCalendar, updateCalendar, deleteCalendar,
     addEvent, updateEvent, deleteEvent, addLocation, deleteLocation,
-    getPriorityDisplay, updateAppSettings, updateAppTab
+    getPriorityDisplay, updateAppSettings, updateAppTab,
+    addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge
   ]);
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

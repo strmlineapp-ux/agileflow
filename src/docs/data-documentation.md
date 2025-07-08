@@ -141,25 +141,32 @@ The `Team` entity is a functional unit that groups users together for collaborat
 | `badgeCollections: BadgeCollection[]` | An array of `BadgeCollection` objects. This includes collections created by the team's members and links to collections that have been shared by users from other teams. |
 | `userBadgesLabel?: string` | A custom label for the "Team Badges" section on the Team Members tab. |
 
+## Badge & Collection Entities
+These entities are managed globally but are owned by individual users. A "Team Badges" page displays an aggregated view of all collections owned by the members of that team.
+
 ### BadgeCollection Entity
-A sub-entity of `Team`, this groups related Badges together. It can be owned by the team or shared with others.
+**Firestore Collection**: `/badgeCollections/{collectionId}`
+
+This groups related Badges together. It is owned by a user and can be shared with others.
 
 | Data Point | Description |
 | :--- | :--- |
 | `id: string` | A unique identifier for the collection. |
 | `owner: { type: 'user', id: string }` | An object that defines who owns the collection. Ownership dictates who can edit the collection's properties and the original badges within it. |
-| `isShared?: boolean` | **Internal.** If `true`, this collection and its badges will be visible to all other teams in the application for discovery and linking. |
+| `isShared?: boolean` | **Internal.** If `true`, this collection and its badges will be visible in the "Shared Collections" panel for any user or team to use. |
 | `name: string` | The name of the collection (e.g., "Skills"). |
 | `icon: string` | The Google Symbol name for the collection's icon. |
 | `color: string` | The hex color for the collection's icon. |
-| `badgeIds: string[]` | An array of `badgeId`s belonging to this collection. This can include badges owned by this team or linked from other shared collections. |
+| `badgeIds: string[]` | An array of `badgeId`s belonging to this collection. This can include badges owned by the user or linked from other shared collections. |
 | `applications?: BadgeApplication[]` | Defines where badges from this collection can be applied (e.g., 'Team Members', 'Events'). For linked collections, this is a local override; changing it does not affect the original shared collection. |
 | `viewMode: 'assorted' \| 'detailed' \| 'list'` | **Internal.** A UI preference for how to display the badges within this collection. |
 | `description?: string` | An optional description for the collection. |
 
 
 ### Badge Entity
-This represents a specific, functional role or skill. The single source of truth for a badge is stored in either the `allBadges` array of its owner's `Team` object, or in the `globalBadges` array in `AppSettings` if it is a global badge.
+**Firestore Collection**: `/badges/{badgeId}`
+
+This represents a specific, functional role or skill. The single source of truth for a badge is stored in the global `allBadges` collection.
 
 | Data Point | Description |
 | :--- | :--- |
@@ -169,8 +176,3 @@ This represents a specific, functional role or skill. The single source of truth
 | `icon: string` | The Google Symbol name for the badge's icon. |
 | `color: string` | The hex color code for the badge's icon and outline. |
 | `description?: string` | An optional description shown in tooltips. |
-
-
-
-
-    
