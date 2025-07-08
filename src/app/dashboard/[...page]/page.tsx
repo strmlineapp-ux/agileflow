@@ -72,7 +72,7 @@ export default function DynamicPage() {
         return <Skeleton className="h-full w-full" />;
     }
 
-    if (!pageConfig || (pageConfig.isDynamic && !dynamicTeam)) {
+    if (!pageConfig || (pageConfig.isDynamic && !dynamicTeam && pageConfig.id !== 'page-team-management')) {
         return <div className="p-4">404 - Page not found for path: {currentPath}</div>;
     }
     
