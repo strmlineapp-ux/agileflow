@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -58,13 +57,13 @@ function CompactSearchIconPicker({
   disabled = false,
   weight,
 }: {
-  icon: string;
-  color?: string;
-  onUpdateIcon: (iconName: string) => void;
-  buttonClassName?: string;
-  iconClassName?: string;
-  disabled?: boolean;
-  weight?: number;
+  icon: string,
+  color?: string,
+  onUpdateIcon: (iconName: string) => void,
+  buttonClassName?: string,
+  iconClassName?: string,
+  disabled?: boolean,
+  weight?: number,
 }) {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [iconSearch, setIconSearch] = useState('');
@@ -593,19 +592,19 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
 }
 
 function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, users, onUpdateCollection, onDeleteCollection, onAddBadge, onUpdateBadge, onDeleteBadge, onToggleShare, dragHandleProps, isSharedPreview = false }: {
-    collection: BadgeCollection;
-    allBadgesInTeam: Badge[];
-    teamId: string;
-    teams: Team[];
-    users: User[];
-    onUpdateCollection: (collectionId: string, newValues: Partial<Omit<BadgeCollection, 'id' | 'badgeIds'>>) => void;
-    onDeleteCollection: (collection: BadgeCollection) => void;
-    onAddBadge: (collectionId: string) => void;
-    onUpdateBadge: (badgeData: Partial<Badge>) => void;
-    onDeleteBadge: (collectionId: string, badgeId: string) => void;
-    onToggleShare: (collectionId: string) => void;
-    dragHandleProps?: any;
-    isSharedPreview?: boolean;
+    collection: BadgeCollection,
+    allBadgesInTeam: Badge[],
+    teamId: string,
+    teams: Team[],
+    users: User[],
+    onUpdateCollection: (collectionId: string, newValues: Partial<Omit<BadgeCollection, 'id' | 'badgeIds'>>) => void,
+    onDeleteCollection: (collection: BadgeCollection) => void,
+    onAddBadge: (collectionId: string) => void,
+    onUpdateBadge: (badgeData: Partial<Badge>) => void,
+    onDeleteBadge: (collectionId: string, badgeId: string) => void,
+    onToggleShare: (collectionId: string) => void,
+    dragHandleProps?: any,
+    isSharedPreview?: boolean,
 }) {
     const { viewAsUser } = useUser();
     const nameInputRef = useRef<HTMLInputElement>(null);
