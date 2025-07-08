@@ -72,6 +72,16 @@ Access to every page and content tab in the application is controlled by a dynam
 
 When a user creates a new shareable item (like a **Team** or **Badge Collection**), ownership is assigned directly to that user. This simplified model ensures that every item has a single, clear owner responsible for its management. The `getOwnershipContext` function in `/src/lib/permissions.ts` contains the logic for this rule.
 
+### Contextual Content (Team vs. User)
+
+A key concept in AgileFlow is how content is displayed based on the context of the page you are viewing. This is most relevant for features like **Badge Management**.
+
+- **Team Context**: This applies when you are on a page that is directly associated with a specific `Team` entity, usually via a dynamic URL like `/dashboard/teams/[teamId]`. On these pages, the content you see is an *aggregation* of resources owned by all members of that team. For example, the Badge Management tab will display all Badge Collections created by any user who is a member of that team. This provides a holistic view of the team's shared resources.
+
+- **User Context (Non-Team Pages)**: This applies when you are on a page that is *not* tied to a specific team, such as the **Service Delivery** page. In this context, the content is scoped specifically to *you* (the currently logged-in user). For example, the "Badges" tab on the Service Delivery page will only show the Badge Collections that you personally own, allowing you to manage your global, reusable resources without the clutter of other teams' items.
+
+This dynamic approach ensures that the right data is presented in the right place, making management intuitive whether you're working within a team or on your own.
+
 ## Shared Calendar Entity
 **Firestore Collection**: `/calendars/{calendarId}`
 
@@ -142,12 +152,12 @@ The `Team` entity is a functional unit that groups users together for collaborat
 | `userBadgesLabel?: string` | A custom label for the "Team Badges" section on the Team Members tab. |
 
 ## Badge & Collection Entities
-These entities are managed globally but are owned by individual users. A "Team Badges" page displays an aggregated view of all collections owned by the members of that team.
+These entities are managed globally but are owned by individual users. When viewed in a **Team Context**, a "Badge Management" page displays an aggregated view of all collections owned by the members of that team. When viewed in a **User Context**, it displays only the collections owned by the current user.
 
 ### BadgeCollection Entity
 **Firestore Collection**: `/badgeCollections/{collectionId}`
 
-This groups related Badges together. It is owned by a user and can be shared with others.
+This groups related Badges together. It is owned by a **user** and can be shared with other users or teams.
 
 | Data Point | Description |
 | :--- | :--- |

@@ -798,7 +798,7 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                 </CardHeader>
             </div>
             <CardContent className="flex-grow">
-                <StrictModeDroppable droppableId={collection.id} type="badge" isDropDisabled={isSharedPreview} isCombineEnabled={false}>
+                <StrictModeDroppable droppableId={collection.id} type="badge" isDropDisabled={!isOwned && !isSharedPreview} isCombineEnabled={false}>
                     {(provided, snapshot) => (
                          <div
                             ref={provided.innerRef}
