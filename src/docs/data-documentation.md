@@ -35,15 +35,14 @@ This table details the information stored directly within each `User` object.
 
 ### Dynamic Access Control for Pages & Tabs
 
-Access to every page and content tab in the application is controlled by a dynamic ruleset. This allows for granular permission management without changing the application's code. The logic for this is primarily handled in `/src/lib/permissions.ts` and the page renderer at `/src/app/dashboard/[...page]/page.tsx`.
+Access to every page and content tab in the application is controlled by a dynamic ruleset. The logic for this is primarily handled in `/src/lib/permissions.ts` and the page renderer at `/src/app/dashboard/[...page]/page.tsx`.
 
 **How It Works:**
 
 1.  **Page Access**: Access to a page is determined by the `access` object on its `AppPage` configuration. A user can view a page if they are a system admin, if the page has no rules (making it public), or if their `userId`, `Team` membership, or `AdminGroup` membership is listed in the corresponding access array.
 
-2.  **Tab Access**: Tab visibility is intentionally simple and directly tied to page access, following one clear rule with one exception:
-    *   **Rule**: If a user has access to a page, they automatically have access to **all** tabs associated with that page.
-    *   **Exception**: You can restrict a tab to be "admin-only." If an `AppTab` object has its own `access.adminGroups` rule, its visibility is overridden. It will **only** be visible to system administrators and members of those specific admin groups. This provides a simple way to create privileged tabs on otherwise public pages.
+2.  **Tab Access**: A tab's visibility is determined by its parent page. If you can see the page, you can see all of its tabs.
+    *   **The Exception**: You can restrict a tab to be "admin-only." If an `AppTab` object has its own `access.adminGroups` rule, its visibility is overridden. It will **only** be visible to system administrators and members of those specific admin groups. This provides a simple way to create privileged tabs on otherwise public pages.
 
 **Example Configurations (`mock-data.ts`):**
 
@@ -140,6 +139,13 @@ A sub-entity of `AppSettings`, `AdminGroup` defines a single, dynamic administra
 | `icon: string` | **Internal.** The Google Symbol name for the icon associated with the group. |
 | `color: string` | **Internal.** The hex color code for the icon's badge. |
 | `groupAdmins?: string[]` | **Internal.** An array of `userId`s for users who can add or remove members from this specific `AdminGroup`. This allows for delegated administration without granting full system-wide permissions. |
+
+#### Clarifying the Roles: Admin Group vs. Group Admin
+
+It is critical to understand the distinction between being a *member* of an Admin Group and being a *Group Admin*.
+
+*   **Admin Group Member**: This is about what a user can **do**. Being a member of an Admin Group (e.g., "Service Delivery") grants a user powerful, wide-ranging permissions. If that group has access to the "Service Delivery" page, that user can manage **all Teams and Calendars** on that page.
+*   **Group Admin**: This is about who a user can **manage**. Being a `groupAdmin` for a specific Admin Group gives a user the meta-permission to add or remove other users from that group itself. For example, a system admin could make a user a `groupAdmin` of "Service Delivery", and that user could then grant "Service Delivery" permissions to other people without needing full system admin rights.
 
 ## Team Entity
 **Firestore Collection**: `/teams/{teamId}`
