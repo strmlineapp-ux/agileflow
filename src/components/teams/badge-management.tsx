@@ -56,13 +56,13 @@ function CompactSearchIconPicker({
   disabled = false,
   weight,
 }: {
-  icon: string;
-  color?: string;
-  onUpdateIcon: (iconName: string) => void;
-  buttonClassName?: string;
-  iconClassName?: string;
-  disabled?: boolean;
-  weight?: number;
+  icon: string,
+  color?: string,
+  onUpdateIcon: (iconName: string) => void,
+  buttonClassName?: string,
+  iconClassName?: string,
+  disabled?: boolean,
+  weight?: number,
 }) {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [iconSearch, setIconSearch] = useState('');
@@ -290,7 +290,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
 
     if (viewMode === 'detailed') {
       return (
-        <div className="group h-full flex flex-col rounded-lg">
+        <div className="group relative h-full flex flex-col rounded-lg">
             <CardHeader>
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -366,11 +366,6 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                             )}
                         </div>
                     </div>
-                     {isCollectionOwned && (
-                        <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onDelete(); }} className="text-muted-foreground hover:text-destructive absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <GoogleSymbol name="delete" />
-                        </Button>
-                     )}
                 </div>
             </CardHeader>
             <CardContent className="space-y-4 pt-0 flex-grow">
@@ -400,6 +395,18 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                     </TooltipProvider>
                  )}
             </CardContent>
+            {isCollectionOwned && (
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onDelete(); }} className="text-muted-foreground hover:text-destructive absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <GoogleSymbol name="delete" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent><p>{isThisTheOriginalInstance ? "Delete Badge Permanently" : "Unlink Badge from Collection"}</p></TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+             )}
         </div>
       );
     }
@@ -517,9 +524,16 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                  )}
             </div>
             {isCollectionOwned && (
-                <Button variant="ghost" size="icon" onClick={onDelete} className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity">
-                    <GoogleSymbol name="delete" />
-                </Button>
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" onClick={onDelete} className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity">
+                                <GoogleSymbol name="delete" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent><p>{isThisTheOriginalInstance ? "Delete Badge Permanently" : "Unlink Badge from Collection"}</p></TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
             )}
         </div>
       );
@@ -577,14 +591,21 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
             </UiBadge>
             
              {isCollectionOwned && (
-                <button
-                    type="button"
-                    className="absolute top-0 right-0 h-4 w-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={onDelete}
-                    aria-label={`Delete ${badge.name}`}
-                >
-                    <GoogleSymbol name="close" className="text-xs" />
-                </button>
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <button
+                                type="button"
+                                className="absolute top-0 right-0 h-4 w-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={onDelete}
+                                aria-label={`Delete ${badge.name}`}
+                            >
+                                <GoogleSymbol name="close" className="text-xs" />
+                            </button>
+                        </TooltipTrigger>
+                        <TooltipContent><p>{isThisTheOriginalInstance ? "Delete Badge Permanently" : "Unlink Badge from Collection"}</p></TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
              )}
         </div>
     );
@@ -1258,7 +1279,7 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
                     "transition-all duration-300",
                     isSharedPanelOpen ? "w-96 p-2" : "w-0"
                 )}>
-                    <StrictModeDroppable droppableId="shared-collections-panel" type="collection" isDropDisabled={false} isCombineEnabled={false}>
+                    <StrictModeDroppable droppableId="shared-collections-panel" type="collection" isDropDisabled={!allBadgeCollections.some(c => c.isShared)}>
                         {(provided, snapshot) => (
                             <div 
                                 ref={provided.innerRef} 

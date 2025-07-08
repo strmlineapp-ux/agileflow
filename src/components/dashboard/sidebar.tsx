@@ -13,6 +13,7 @@ import { GoogleSymbol } from '../icons/google-symbol';
 import { Badge } from '../ui/badge';
 import { hasAccess } from '@/lib/permissions';
 import { type AppPage } from '@/types';
+import { ScrollArea } from '../ui/scroll-area';
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -160,25 +161,27 @@ export function Sidebar() {
                     <DropdownMenuSeparator />
                     <div className="px-2 py-1.5">
                         <p className="text-xs text-muted-foreground mb-2 font-thin">Badges</p>
-                        <div className="flex flex-wrap gap-1">
-                            {viewAsUser.roles.map(roleName => {
-                                const roleInfo = allBadges.find(r => r.name === roleName);
-                                return (
-                                    <Badge
-                                        key={roleName}
-                                        variant="outline"
-                                        style={roleInfo ? { color: roleInfo.color, borderColor: roleInfo.color } : {}}
-                                        className={cn(
-                                            "rounded-full gap-1 text-xs py-0.5 px-2 font-thin",
-                                            !roleInfo && "opacity-75"
-                                        )}
-                                    >
-                                        {roleInfo && <GoogleSymbol name={roleInfo.icon} className="text-sm" weight={100} />}
-                                        <span className="font-thin">{roleName}</span>
-                                    </Badge>
-                                )
-                            })}
-                        </div>
+                        <ScrollArea className="max-h-24 pr-3">
+                          <div className="flex flex-wrap gap-1">
+                              {(viewAsUser.roles || []).map(roleName => {
+                                  const roleInfo = allBadges.find(r => r.name === roleName);
+                                  return (
+                                      <Badge
+                                          key={roleName}
+                                          variant="outline"
+                                          style={roleInfo ? { color: roleInfo.color, borderColor: roleInfo.color } : {}}
+                                          className={cn(
+                                              "rounded-full gap-1 text-xs py-0.5 px-2 font-thin",
+                                              !roleInfo && "opacity-75"
+                                          )}
+                                      >
+                                          {roleInfo && <GoogleSymbol name={roleInfo.icon} className="text-sm" weight={100} />}
+                                          <span className="font-thin">{roleName}</span>
+                                      </Badge>
+                                  )
+                              })}
+                          </div>
+                        </ScrollArea>
                     </div>
                   </>
                 )}
