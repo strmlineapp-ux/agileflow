@@ -136,7 +136,7 @@ function CompactSearchIconPicker({
 }
 
 
-function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collectionId, teamId, isSharedPreview = false, isCollectionOwned = false }: { badge: Badge, viewMode: BadgeCollection['viewMode'], onUpdateBadge: (badgeData: Partial<Badge>) => void, onDelete: () => void, collectionId: string, teamId: string, isSharedPreview?: boolean, isCollectionOwned: boolean }) {
+function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collectionId, teamId, isSharedPreview = false, isCollectionOwned = false }: { badge: Badge; viewMode: BadgeCollection['viewMode']; onUpdateBadge: (badgeData: Partial<Badge>) => void; onDelete: () => void; collectionId: string; teamId: string; isSharedPreview?: boolean; isCollectionOwned: boolean; }) {
     const { toast } = useToast();
     const { teams, users, viewAsUser, allBadges } = useUser();
     const [isEditingName, setIsEditingName] = useState(false);
@@ -592,19 +592,19 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
 }
 
 function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, users, onUpdateCollection, onDeleteCollection, onAddBadge, onUpdateBadge, onDeleteBadge, onToggleShare, dragHandleProps, isSharedPreview = false }: {
-    collection: BadgeCollection,
-    allBadgesInTeam: Badge[],
-    teamId: string,
-    teams: Team[],
-    users: User[],
-    onUpdateCollection: (collectionId: string, newValues: Partial<Omit<BadgeCollection, 'id' | 'badgeIds'>>) => void,
-    onDeleteCollection: (collection: BadgeCollection) => void,
-    onAddBadge: (collectionId: string) => void,
-    onUpdateBadge: (badgeData: Partial<Badge>) => void,
-    onDeleteBadge: (collectionId: string, badgeId: string) => void,
-    onToggleShare: (collectionId: string) => void,
-    dragHandleProps?: any,
-    isSharedPreview?: boolean,
+    collection: BadgeCollection;
+    allBadgesInTeam: Badge[];
+    teamId: string;
+    teams: Team[];
+    users: User[];
+    onUpdateCollection: (collectionId: string, newValues: Partial<Omit<BadgeCollection, 'id' | 'badgeIds'>>) => void;
+    onDeleteCollection: (collection: BadgeCollection) => void;
+    onAddBadge: (collectionId: string) => void;
+    onUpdateBadge: (badgeData: Partial<Badge>) => void;
+    onDeleteBadge: (collectionId: string, badgeId: string) => void;
+    onToggleShare: (collectionId: string) => void;
+    dragHandleProps?: any;
+    isSharedPreview?: boolean;
 }) {
     const { viewAsUser } = useUser();
     const nameInputRef = useRef<HTMLInputElement>(null);
@@ -1123,9 +1123,21 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
 
         // --- Dragging from ANYWHERE to the SHARED PANEL ---
         if (type === 'collection' && destination.droppableId === 'shared-collections-panel') {
-            const collectionToShare = team.badgeCollections.find(c => c.id === draggableId);
-            if (collectionToShare && !collectionToShare.isShared) {
-                handleToggleShare(collectionToShare.id);
+            const collectionToDrop = team.badgeCollections.find(c => c.id === draggableId);
+            if (collectionToDrop) {
+                const isOwned = collectionToDrop.owner.id === viewAsUser.userId;
+
+                if (isOwned) {
+                    // It's an owned collection. If not shared, share it.
+                    if (!collectionToDrop.isShared) {
+                        handleToggleShare(collectionToDrop.id);
+                    }
+                } else {
+                    // It's a linked collection. Unlink it by dropping back.
+                    const newCollections = team.badgeCollections.filter(c => c.id !== collectionToDrop.id);
+                    updateTeam(team.id, { badgeCollections: newCollections });
+                    toast({ title: 'Collection Unlinked', description: `"${collectionToDrop.name}" is no longer linked to your team.` });
+                }
             }
             return;
         }

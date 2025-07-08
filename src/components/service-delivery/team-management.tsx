@@ -301,7 +301,7 @@ function TeamCard({
                             </div>
                         </div>
                         <div className="flex items-center">
-                            {canManageTeam && (
+                            {canManageTeam && !isSharedPreview && (
                                 <Popover open={isAddUserPopoverOpen} onOpenChange={setIsAddUserPopoverOpen}>
                                     <TooltipProvider>
                                         <Tooltip>
@@ -583,9 +583,19 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
 
         // --- Dragging to the SHARED PANEL ---
         if (type === 'team-card' && destination.droppableId === 'shared-teams-panel') {
-            const teamToShare = teams.find(t => t.id === draggableId);
-            if (teamToShare && !teamToShare.isShared && canManageTeam(teamToShare)) {
-                handleToggleShare(teamToShare);
+            const teamToDrop = teams.find(t => t.id === draggableId);
+            if (teamToDrop) {
+                if (canManageTeam(teamToDrop)) {
+                    // It's an owned team. If not shared, share it.
+                    if (!teamToDrop.isShared) {
+                        handleToggleShare(teamToDrop);
+                    }
+                } else {
+                    // It's a linked team. Unlink it by dropping back.
+                    const updatedLinkedTeamIds = (viewAsUser.linkedTeamIds || []).filter(id => id !== teamToDrop.id);
+                    updateUser(viewAsUser.userId, { linkedTeamIds: updatedLinkedTeamIds });
+                    toast({ title: "Team Unlinked", description: `"${teamToDrop.name}" has been unlinked from your board.`});
+                }
             }
             return;
         }
@@ -633,6 +643,12 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                     workstations: [...(teamToDuplicate.workstations || [])],
                     eventTemplates: JSON.parse(JSON.stringify(teamToDuplicate.eventTemplates || [])),
                 };
+                
+                if (owner.id !== viewAsUser.userId) {
+                    newTeamData.members.push(viewAsUser.userId);
+                    newTeamData.teamAdmins?.push(viewAsUser.userId);
+                }
+
                 addTeam(newTeamData);
                 
                 const wasLinked = (viewAsUser.linkedTeamIds || []).includes(teamToDuplicate.id);
