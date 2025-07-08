@@ -288,6 +288,24 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
         </PopoverContent>
     );
 
+    const deleteButton = (
+        <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <button
+                        type="button"
+                        className="absolute top-0 right-0 h-4 w-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={(e) => { e.stopPropagation(); onDelete(); }}
+                        aria-label={`Delete ${badge.name}`}
+                    >
+                        <GoogleSymbol name="close" className="text-xs" />
+                    </button>
+                </TooltipTrigger>
+                <TooltipContent><p>{isThisTheOriginalInstance ? "Delete Badge Permanently" : "Unlink Badge from Collection"}</p></TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
+    );
+
     if (viewMode === 'detailed') {
       return (
         <div className="group relative h-full flex flex-col rounded-lg">
@@ -395,18 +413,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                     </TooltipProvider>
                  )}
             </CardContent>
-            {isCollectionOwned && (
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onDelete(); }} className="text-muted-foreground hover:text-destructive absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <GoogleSymbol name="delete" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent><p>{isThisTheOriginalInstance ? "Delete Badge Permanently" : "Unlink Badge from Collection"}</p></TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
-             )}
+            {isCollectionOwned && deleteButton}
         </div>
       );
     }
@@ -447,7 +454,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
 
     if (viewMode === 'list') {
       return (
-        <div className="group flex w-full items-start gap-4 p-2 rounded-md hover:bg-muted/50">
+        <div className="group relative flex w-full items-start gap-4 p-2 rounded-md hover:bg-muted/50">
             <div className="relative">
                 <TooltipProvider>
                     <Tooltip>
@@ -523,18 +530,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                     </TooltipProvider>
                  )}
             </div>
-            {isCollectionOwned && (
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" onClick={onDelete} className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity">
-                                <GoogleSymbol name="delete" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent><p>{isThisTheOriginalInstance ? "Delete Badge Permanently" : "Unlink Badge from Collection"}</p></TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
-            )}
+            {isCollectionOwned && deleteButton}
         </div>
       );
     }
@@ -590,23 +586,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                 {inlineNameEditor}
             </UiBadge>
             
-             {isCollectionOwned && (
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <button
-                                type="button"
-                                className="absolute top-0 right-0 h-4 w-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                onClick={onDelete}
-                                aria-label={`Delete ${badge.name}`}
-                            >
-                                <GoogleSymbol name="close" className="text-xs" />
-                            </button>
-                        </TooltipTrigger>
-                        <TooltipContent><p>{isThisTheOriginalInstance ? "Delete Badge Permanently" : "Unlink Badge from Collection"}</p></TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
-             )}
+             {isCollectionOwned && deleteButton}
         </div>
     );
 }
