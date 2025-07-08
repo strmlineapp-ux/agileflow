@@ -87,7 +87,7 @@ export interface Badge {
 
 export type BadgeApplication = 'team members' | 'events' | 'tasks' | 'badges';
 
-export type BadgeCollectionOwner = { type: 'user'; id: string };
+export type BadgeCollectionOwner = { type: 'user' | 'team'; id: string };
 
 export interface BadgeCollection {
   id: string;
@@ -107,7 +107,7 @@ export interface Team {
   name: string;
   icon: string;
   color: string;
-  owner: BadgeCollectionOwner;
+  owner: { type: 'user', id: string };
   isShared?: boolean;
   members: string[]; // array of userIds
   teamAdmins?: string[]; // array of userIds who are admins for this team

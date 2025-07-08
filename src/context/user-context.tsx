@@ -11,6 +11,7 @@ import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { hexToHsl } from '@/lib/utils';
 import { startOfDay } from 'date-fns';
 import { getOwnershipContext } from '@/lib/permissions';
+import { googleSymbolNames } from '@/lib/google-symbols';
 
 interface UserContextType {
   loading: boolean;
@@ -82,6 +83,12 @@ const getInitialAbsences = (): Record<string, UserStatusAssignment[]> => {
         ]
     };
 };
+
+const predefinedColors = [
+    '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
+    '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6',
+    '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
+];
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
@@ -292,32 +299,42 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const addBadgeCollection = useCallback((owner: BadgeCollectionOwner, sourceCollection?: BadgeCollection) => {
-    const newId = crypto.randomUUID();
+    const newCollectionId = crypto.randomUUID();
     let newBadges: Badge[] = [];
     let newCollection: BadgeCollection;
 
     if (sourceCollection) {
         newBadges = sourceCollection.badgeIds.map(bId => {
             const originalBadge = allBadges.find(b => b.id === bId);
-            return { ...(originalBadge || {}), id: crypto.randomUUID(), ownerCollectionId: newId, name: originalBadge?.name ? `${originalBadge.name} (Copy)`: 'New Badge' };
+            return { ...(originalBadge || {}), id: crypto.randomUUID(), ownerCollectionId: newCollectionId, name: originalBadge?.name ? `${originalBadge.name} (Copy)`: 'New Badge' };
         });
         newCollection = {
             ...JSON.parse(JSON.stringify(sourceCollection)),
-            id: newId,
+            id: newCollectionId,
             name: `${sourceCollection.name} (Copy)`,
             owner: owner,
             isShared: false,
             badgeIds: newBadges.map(b => b.id),
         };
     } else {
+        const newBadgeId = crypto.randomUUID();
+        const newBadge: Badge = {
+          id: newBadgeId,
+          ownerCollectionId: newCollectionId,
+          name: `New Badge`,
+          icon: googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)],
+          color: predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
+        };
+        newBadges.push(newBadge);
+
         newCollection = {
-            id: newId,
+            id: newCollectionId,
             name: `New Collection ${allBadgeCollections.length + 1}`,
             owner: owner,
             icon: 'category',
             color: '#64748B',
             viewMode: 'detailed',
-            badgeIds: [],
+            badgeIds: [newBadgeId],
             applications: [],
             description: '',
             isShared: false,

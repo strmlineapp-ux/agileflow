@@ -38,11 +38,26 @@ This table details the information stored directly within each `User` object.
 | `roles?: string[]` | **Internal.** An array of strings that includes the names of any `Badge`s a user has been assigned. The application determines the name's meaning and properties by looking it up in the relevant `Team` object. |
 | `directReports?: string[]` | **Internal.** An array of `userId`s for users who report directly to this user. This is currently informational. |
 | `linkedTeamIds?: string[]` | **Internal.** An array of `teamId`s for teams that the user has linked to their board from the shared panel. This brings the team into their management scope without making them a member. |
+| `linkedCollectionIds?: string[]` | **Internal.** An array of `collectionId`s for badge collections that the user has linked to their board from the shared panel. |
 | `theme?: 'light' \| 'dark'` | **Internal.** A UI preference for the app's color scheme. |
 | `primaryColor?: string` | **Internal.** A user-selected hex color code that overrides the default primary color of their chosen theme. |
 | `defaultCalendarView?: 'month' \| 'week' \| ...` | **Internal.** A UI preference for the default calendar layout. |
 | `easyBooking?: boolean` | **Internal.** A UI preference for enabling quick event creation from the calendar. |
 | `timeFormat?: '12h' \| '24h'` | **Internal.** A UI preference for displaying time in 12-hour or 24-hour format. |
+
+### Contextual Content & Ownership (Team vs. User Pages)
+
+A key concept in AgileFlow is how content is displayed and how ownership is assigned based on the page you are viewing. This logic is crucial for features like Badge Collections.
+
+-   **Team Page Context**: A page is considered a "Team Page" if it's either a dynamic team page (like `/dashboard/teams/[teamId]`) or if its page configuration in `AppSettings` has at least one team listed in its `access.teams` array.
+    -   **Display**: On these pages, content like the Badge Management tab displays an aggregated view of all collections owned by any member of that team, *plus* any collections owned by the team entity itself.
+    -   **Ownership**: When a new item (like a Badge Collection) is created on a Team Page, ownership is automatically assigned to the first team listed in that page's access rules.
+
+-   **User Page Context (Non-Team Pages)**: A page is considered a "User Page" if it is not dynamic and has no teams listed in its `access.teams` configuration.
+    -   **Display**: On these pages, content is scoped specifically to *you* (the currently logged-in user). For example, the "Badges" tab on a user-centric page will only show the Badge Collections that you personally own.
+    -   **Ownership**: When a new item is created on a User Page, ownership is assigned directly to you.
+
+This dynamic approach ensures that the right data is presented in the right place, and that ownership is assigned logically, making management intuitive whether you're working within a team or on your own.
 
 ### Dynamic Access Control for Pages & Tabs
 
@@ -67,20 +82,6 @@ Access to every page and content tab in the application is controlled by a dynam
   }
 }
 ```
-
-### Simplified Ownership of Created Items
-
-When a user creates a new shareable item (like a **Team** or **Badge Collection**), ownership is assigned directly to that user. This simplified model ensures that every item has a single, clear owner responsible for its management. The `getOwnershipContext` function in `/src/lib/permissions.ts` contains the logic for this rule.
-
-### Contextual Content (Team vs. User)
-
-A key concept in AgileFlow is how content is displayed based on the context of the page you are viewing. This is most relevant for features like **Badge Management**.
-
-- **Team Context**: This applies when you are on a page that is directly associated with a specific `Team` entity, usually via a dynamic URL like `/dashboard/teams/[teamId]`. On these pages, the content you see is an *aggregation* of resources owned by all members of that team. For example, the Badge Management tab will display all Badge Collections created by any user who is a member of that team. This provides a holistic view of the team's shared resources.
-
-- **User Context (Non-Team Pages)**: This applies when you are on a page that is *not* tied to a specific team, such as the **Service Delivery** page. In this context, the content is scoped specifically to *you* (the currently logged-in user). For example, the "Badges" tab on the Service Delivery page will only show the Badge Collections that you personally own, allowing you to manage your global, reusable resources without the clutter of other teams' items.
-
-This dynamic approach ensures that the right data is presented in the right place, making management intuitive whether you're working within a team or on your own.
 
 ## Shared Calendar Entity
 **Firestore Collection**: `/calendars/{calendarId}`
@@ -157,12 +158,12 @@ These entities are managed globally but are owned by individual users. When view
 ### BadgeCollection Entity
 **Firestore Collection**: `/badgeCollections/{collectionId}`
 
-This groups related Badges together. It is owned by a **user** and can be shared with other users or teams.
+This groups related Badges together. It is owned by a **user** or a **team** and can be shared with other users or teams.
 
 | Data Point | Description |
 | :--- | :--- |
 | `id: string` | A unique identifier for the collection. |
-| `owner: { type: 'user', id: string }` | An object that defines who owns the collection. Ownership dictates who can edit the collection's properties and the original badges within it. |
+| `owner: { type: 'user' \| 'team', id: string }` | An object that defines who owns the collection. Ownership dictates who can edit the collection's properties and the original badges within it. |
 | `isShared?: boolean` | **Internal.** If `true`, this collection and its badges will be visible in the "Shared Collections" panel for any user or team to use. |
 | `name: string` | The name of the collection (e.g., "Skills"). |
 | `icon: string` | The Google Symbol name for the collection's icon. |

@@ -92,13 +92,18 @@ export const hasAccess = (user: User, page: AppPage, teams: Team[]): boolean => 
 };
 
 /**
- * Determines the ownership context for a new item. With the simplified ownership model,
- * this always returns the current user.
+ * Determines the ownership context for a new item based on the page's access rules.
  * @param page The current AppPage configuration.
  * @param user The current user object.
  * @returns A BadgeCollectionOwner object.
  */
 export const getOwnershipContext = (page: AppPage, user: User): BadgeCollectionOwner => {
-    // Ownership is now always assigned to the user who creates the item.
+    // If a page is associated with any teams in its access config,
+    // the new item is owned by the first team in that list.
+    if (page.access?.teams && page.access.teams.length > 0) {
+        return { type: 'team', id: page.access.teams[0] };
+    }
+    
+    // Otherwise, ownership falls back to the user who is creating the item.
     return { type: 'user', id: user.userId };
 };
