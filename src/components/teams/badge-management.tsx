@@ -138,7 +138,7 @@ function CompactSearchIconPicker({
 
 function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collectionId, teamId, isSharedPreview = false }: { badge: Badge; viewMode: BadgeCollection['viewMode']; onUpdateBadge: (badgeData: Partial<Badge>) => void; onDelete: () => void; collectionId: string; teamId: string; isSharedPreview?: boolean; }) {
     const { toast } = useToast();
-    const { teams, viewAsUser } = useUser();
+    const { teams, users, viewAsUser, allBadges } = useUser();
     const [isEditingName, setIsEditingName] = useState(false);
     const [currentName, setCurrentName] = useState(badge.name);
     const nameInputRef = useRef<HTMLInputElement>(null);
@@ -147,15 +147,24 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     const [isEditingDescription, setIsEditingDescription] = useState(false);
     const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
     
-    // The team that actually holds this badge in its `allBadges` array.
-    const ownerTeam = useMemo(() => teams.find(t => (t.allBadges || []).some(b => b.id === badge.id)), [teams, badge.id]);
+    const badgeOwner = useMemo(() => {
+        const ownerCollection = allBadges.find(b => b.id === badge.id)?.ownerCollectionId;
+        if (!ownerCollection) return null;
+
+        for (const team of teams) {
+            const collection = team.badgeCollections.find(c => c.id === ownerCollection);
+            if (collection) {
+                return users.find(u => u.userId === collection.owner.id);
+            }
+        }
+        return null; // Should not happen if data is consistent
+    }, [badge.id, allBadges, teams, users]);
 
     const isEditable = useMemo(() => {
         if (isSharedPreview) return false;
-        if (!ownerTeam) return false; // Not editable if owner can't be found
         if (viewAsUser.isAdmin) return true;
-        return (ownerTeam.teamAdmins || []).includes(viewAsUser.userId);
-    }, [isSharedPreview, ownerTeam, viewAsUser]);
+        return badgeOwner?.userId === viewAsUser.userId;
+    }, [isSharedPreview, badgeOwner, viewAsUser]);
 
     useEffect(() => {
         setCurrentName(badge.name);
@@ -222,10 +231,12 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     };
 
     const isShared = useMemo(() => {
-        if (!ownerTeam) return false;
-        const ownerCollection = ownerTeam.badgeCollections.find(c => c.id === badge.ownerCollectionId);
-        return !!ownerCollection?.isShared;
-    }, [badge.ownerCollectionId, ownerTeam]);
+        for (const team of teams) {
+            const collection = team.badgeCollections.find(c => c.id === badge.ownerCollectionId);
+            if (collection?.isShared) return true;
+        }
+        return false;
+    }, [badge.ownerCollectionId, teams]);
     
     const isThisTheOriginalInstance = badge.ownerCollectionId === collectionId;
 
@@ -238,14 +249,14 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
 
     let shareIcon: string | null = null;
     let shareIconTitle: string = '';
-    let shareIconColor = ownerTeam?.color;
+    let shareIconColor = badgeOwner?.primaryColor || '#64748B';
 
-    if (ownerTeam?.id === teamId && isShared) {
+    if (badgeOwner?.userId === viewAsUser.userId && isShared) {
         shareIcon = 'upload';
-        shareIconTitle = `Owned by this team and shared externally`;
-    } else if (ownerTeam?.id !== teamId) {
+        shareIconTitle = `Owned by you and shared`;
+    } else if (badgeOwner?.userId !== viewAsUser.userId) {
         shareIcon = 'downloading';
-        shareIconTitle = `Shared from ${ownerTeam?.name || 'another team'}`;
+        shareIconTitle = `Shared from ${badgeOwner?.displayName || 'another user'}`;
     } else if (isLinkedInternally && !isThisTheOriginalInstance) {
         shareIcon = 'change_circle';
         shareIconTitle = 'Linked from another collection in this team';
@@ -299,7 +310,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                             />
                                         </span>
                                     </TooltipTrigger>
-                                    <TooltipContent><p>{isEditable ? "Change Icon" : "Properties are managed by the owner team."}</p></TooltipContent>
+                                    <TooltipContent><p>{isEditable ? "Change Icon" : "Properties are managed by the owner."}</p></TooltipContent>
                                 </Tooltip>
                             </TooltipProvider>
                             <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
@@ -314,7 +325,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                                 />
                                             </PopoverTrigger>
                                         </TooltipTrigger>
-                                        <TooltipContent><p>{isEditable ? 'Change Color' : 'Properties are managed by the owner team.'}</p></TooltipContent>
+                                        <TooltipContent><p>{isEditable ? 'Change Color' : 'Properties are managed by the owner.'}</p></TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
                                 {colorPickerContent}
@@ -351,7 +362,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                         <TooltipTrigger asChild>
                                             <span onClick={() => isEditable && setIsEditingName(true)} className={cn("text-base break-words font-normal", isEditable && "cursor-pointer")}>{badge.name}</span>
                                         </TooltipTrigger>
-                                        <TooltipContent><p>{isEditable ? "Click to edit" : "Properties are managed by the owner team."}</p></TooltipContent>
+                                        <TooltipContent><p>{isEditable ? "Click to edit" : "Properties are managed by the owner."}</p></TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
                             )}
@@ -384,7 +395,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                     {badge.description || (isEditable ? 'Click to add description.' : 'No description.')}
                                 </p>
                             </TooltipTrigger>
-                             <TooltipContent><p>{isEditable ? "Click to edit" : "Properties are managed by the owner team."}</p></TooltipContent>
+                             <TooltipContent><p>{isEditable ? "Click to edit" : "Properties are managed by the owner."}</p></TooltipContent>
                         </Tooltip>
                     </TooltipProvider>
                  )}
@@ -421,7 +432,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                         {badge.name}
                     </span>
                 </TooltipTrigger>
-                <TooltipContent><p>{isEditable ? "Click to edit" : "Properties are managed by the owner team."}</p></TooltipContent>
+                <TooltipContent><p>{isEditable ? "Click to edit" : "Properties are managed by the owner."}</p></TooltipContent>
             </Tooltip>
         </TooltipProvider>
     );
@@ -444,7 +455,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                 />
                             </span>
                         </TooltipTrigger>
-                        <TooltipContent><p>{isEditable ? "Change Icon" : "Properties are managed by the owner team."}</p></TooltipContent>
+                        <TooltipContent><p>{isEditable ? "Change Icon" : "Properties are managed by the owner."}</p></TooltipContent>
                     </Tooltip>
                 </TooltipProvider>
                 <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
@@ -459,7 +470,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                     />
                                 </PopoverTrigger>
                             </TooltipTrigger>
-                            <TooltipContent><p>{isEditable ? 'Change Color' : 'Properties are managed by the owner team.'}</p></TooltipContent>
+                            <TooltipContent><p>{isEditable ? 'Change Color' : 'Properties are managed by the owner.'}</p></TooltipContent>
                         </Tooltip>
                     </TooltipProvider>
                     {colorPickerContent}
@@ -500,7 +511,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                     {badge.description || (isEditable ? 'Click to add description.' : 'No description.')}
                                 </p>
                             </TooltipTrigger>
-                            <TooltipContent><p>{isEditable ? "Click to edit" : "Properties are managed by the owner team."}</p></TooltipContent>
+                            <TooltipContent><p>{isEditable ? "Click to edit" : "Properties are managed by the owner."}</p></TooltipContent>
                         </Tooltip>
                     </TooltipProvider>
                  )}
@@ -539,7 +550,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                         />
                                     </PopoverTrigger>
                                 </TooltipTrigger>
-                                <TooltipContent><p>{isEditable ? 'Change Color' : 'Properties are managed by the owner team.'}</p></TooltipContent>
+                                <TooltipContent><p>{isEditable ? 'Change Color' : 'Properties are managed by the owner.'}</p></TooltipContent>
                             </Tooltip>
                         </TooltipProvider>
                         {colorPickerContent}
@@ -575,13 +586,12 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     );
 }
 
-function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, users, appSettings, onUpdateCollection, onDeleteCollection, onAddBadge, onUpdateBadge, onDeleteBadge, onToggleShare, dragHandleProps, isSharedPreview = false }: {
+function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, users, onUpdateCollection, onDeleteCollection, onAddBadge, onUpdateBadge, onDeleteBadge, onToggleShare, dragHandleProps, isSharedPreview = false }: {
     collection: BadgeCollection;
     allBadgesInTeam: Badge[];
     teamId: string;
     teams: Team[];
     users: User[];
-    appSettings: AppSettings;
     onUpdateCollection: (collectionId: string, newValues: Partial<Omit<BadgeCollection, 'id' | 'badgeIds'>>) => void;
     onDeleteCollection: (collection: BadgeCollection) => void;
     onAddBadge: (collectionId: string) => void;
@@ -600,20 +610,9 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, users
     const isOwned = useMemo(() => {
         if (isSharedPreview) return false;
         if (!viewAsUser) return false;
-        
-        switch (collection.owner.type) {
-            case 'team':
-                const team = teams.find(t => t.id === collection.owner.id);
-                return team?.teamAdmins?.includes(viewAsUser.userId) || viewAsUser.isAdmin;
-            case 'admin_group':
-                const userAdminGroupIds = new Set(appSettings.adminGroups.filter(ag => (viewAsUser.roles || []).includes(ag.name)).map(ag => ag.id));
-                return viewAsUser.isAdmin || userAdminGroupIds.has(collection.owner.id);
-            case 'user':
-                return collection.owner.id === viewAsUser.userId;
-            default:
-                return false;
-        }
-    }, [collection.owner, teams, viewAsUser, isSharedPreview, appSettings.adminGroups]);
+        if (viewAsUser.isAdmin) return true;
+        return collection.owner.id === viewAsUser.userId;
+    }, [collection.owner, viewAsUser, isSharedPreview]);
     
     const handleSaveName = useCallback(() => {
         const newName = nameInputRef.current?.value || collection.name;
@@ -655,33 +654,19 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, users
     ];
 
     const isShared = collection.isShared;
-    const isMyTeamOwner = collection.owner.type === 'team' && collection.owner.id === teamId;
+    const isMyTeamOwner = collection.owner.id === viewAsUser.userId;
+    const ownerUser = users.find(u => u.userId === collection.owner.id);
     
     let shareIcon: string | null = null;
     let shareIconTitle: string = '';
-    let shareIconColor: string | undefined = '#64748B'; // Default color
+    let shareIconColor: string | undefined = ownerUser?.primaryColor || '#64748B'; // Default color
 
     if (isMyTeamOwner && isShared) {
-        const ownerTeam = teams.find(t => t.id === teamId);
         shareIcon = 'upload';
-        shareIconTitle = 'Owned by this team and shared with all teams';
-        shareIconColor = ownerTeam?.color;
+        shareIconTitle = 'Owned by you and shared with all teams';
     } else if (!isMyTeamOwner) {
         shareIcon = 'downloading';
-        const owner = collection.owner;
-        if(owner.type === 'team') {
-            const ownerTeam = teams.find(t => t.id === owner.id);
-            shareIconTitle = `Shared from ${ownerTeam?.name || 'another team'}`;
-            shareIconColor = ownerTeam?.color;
-        } else if (owner.type === 'admin_group') {
-            const ownerGroup = appSettings.adminGroups.find(g => g.id === owner.id);
-            shareIconTitle = `Shared from ${ownerGroup?.name || 'an admin group'}`;
-            shareIconColor = ownerGroup?.color;
-        } else if (owner.type === 'user') {
-            const ownerUser = users.find(u => u.userId === owner.id);
-            shareIconTitle = `Shared by ${ownerUser?.displayName || 'a user'}`;
-            shareIconColor = ownerUser?.primaryColor;
-        }
+        shareIconTitle = `Shared from ${ownerUser?.displayName || 'another user'}`;
     }
     
     return (
@@ -855,6 +840,7 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
     const titleInputRef = useRef<HTMLInputElement>(null);
     
     const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
+    const [isSharedPanelSearching, setIsSharedPanelSearching] = useState(false);
     const [sharedSearchTerm, setSharedSearchTerm] = useState('');
     const sharedSearchInputRef = useRef<HTMLInputElement>(null);
 
@@ -882,14 +868,10 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
     }, [isSearching]);
     
     useEffect(() => {
-        if (isSharedPanelOpen) {
-            setTimeout(() => {
-                sharedSearchInputRef.current?.focus();
-            }, 100);
-        } else {
-            setSharedSearchTerm('');
+        if (isSharedPanelSearching && sharedSearchInputRef.current) {
+            sharedSearchInputRef.current.focus();
         }
-    }, [isSharedPanelOpen]);
+    }, [isSharedPanelSearching]);
 
 
     if (!team) {
@@ -932,7 +914,7 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
     };
     
     const handleDeleteCollection = (collection: BadgeCollection) => {
-        const isOwned = collection.owner.type === 'team' && collection.owner.id === team.id;
+        const isOwned = collection.owner.id === viewAsUser.userId || viewAsUser.isAdmin;
         if (isOwned) {
             setCollectionToDelete(collection);
         } else {
@@ -1009,7 +991,7 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
             name: 'P# Scale',
             icon: 'rule',
             color: '#94A3B8',
-            owner: { type: 'admin_group', id: 'service-admin-main' },
+            owner: { type: 'user', id: '1' },
             viewMode: 'assorted',
             applications: ['events', 'tasks'],
             description: 'Standard P-number priority system for criticality.',
@@ -1021,7 +1003,7 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
             name: 'Star Rating',
             icon: 'stars',
             color: '#FBBF24',
-            owner: { type: 'admin_group', id: 'service-admin-main' },
+            owner: { type: 'user', id: '1' },
             viewMode: 'assorted',
             applications: ['tasks'],
             description: 'A 5-star rating system for tasks and feedback.',
@@ -1033,7 +1015,7 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
             name: 'Effort',
             icon: 'scale',
             color: '#A855F7',
-            owner: { type: 'admin_group', id: 'service-admin-main' },
+            owner: { type: 'user', id: '1' },
             viewMode: 'assorted',
             applications: ['tasks'],
             description: 'T-shirt sizing for estimating task effort.',
@@ -1165,7 +1147,7 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
                      ...JSON.parse(JSON.stringify(sourceCollection)),
                      id: newId,
                      name: `${sourceCollection.name} (Copy)`,
-                     owner: { type: 'team', id: team.id },
+                     owner: { type: 'user', id: viewAsUser.userId },
                      isShared: false,
                      badgeIds: newBadges.map(b => b.id),
                  };
@@ -1226,8 +1208,8 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
             const newCollections = team.badgeCollections.map(c => c.id === sourceCollection.id ? { ...c, badgeIds: reorderedIds } : c);
             updateTeam(team.id, { badgeCollections: newCollections });
         } else { // --- Linking to a different collection ---
-             if (destCollection.owner.type !== 'team' || destCollection.owner.id !== team.id) {
-                toast({ variant: 'destructive', title: 'Cannot Add Badge', description: 'You can only add badges to collections owned by your team.' });
+             if (destCollection.owner.type !== 'user' || destCollection.owner.id !== viewAsUser.userId) {
+                toast({ variant: 'destructive', title: 'Cannot Add Badge', description: 'You can only add badges to collections you own.' });
                 return;
             }
 
@@ -1320,7 +1302,7 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
                                     <GoogleSymbol name="search" />
                                 </Button>
                             ) : (
-                                <div className="flex items-center gap-1">
+                                <div className="flex items-center gap-1 border-b">
                                     <GoogleSymbol name="search" className="text-muted-foreground" />
                                     <input
                                         ref={searchInputRef}
@@ -1374,7 +1356,6 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
                                                     teamId={team.id}
                                                     teams={teams}
                                                     users={users}
-                                                    appSettings={appSettings}
                                                     onUpdateCollection={handleUpdateCollection}
                                                     onDeleteCollection={handleDeleteCollection}
                                                     onAddBadge={handleAddBadge}
@@ -1408,14 +1389,30 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
                                         <div className="flex items-center justify-between">
                                             <CardTitle className="font-headline font-thin text-xl">Shared Collections</CardTitle>
                                             <div className="flex items-center gap-1">
-                                                <GoogleSymbol name="search" className="text-muted-foreground" />
-                                                <input
-                                                    ref={sharedSearchInputRef}
-                                                    placeholder="Search shared..."
-                                                    value={sharedSearchTerm}
-                                                    onChange={(e) => setSharedSearchTerm(e.target.value)}
-                                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
-                                                />
+                                                {!isSharedPanelSearching ? (
+                                                    <TooltipProvider>
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button variant="ghost" size="icon" onClick={() => setIsSharedPanelSearching(true)}>
+                                                                    <GoogleSymbol name="search" />
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent><p>Search Shared Collections</p></TooltipContent>
+                                                        </Tooltip>
+                                                    </TooltipProvider>
+                                                ) : (
+                                                    <div className="flex items-center gap-1">
+                                                        <GoogleSymbol name="search" className="text-muted-foreground" />
+                                                        <input
+                                                            ref={sharedSearchInputRef}
+                                                            placeholder="Search shared..."
+                                                            value={sharedSearchTerm}
+                                                            onChange={(e) => setSharedSearchTerm(e.target.value)}
+                                                            onBlur={() => { if (!sharedSearchTerm) setIsSharedPanelSearching(false); }}
+                                                            className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                                                        />
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                         <CardDescription>Drag a collection to link it to your team.</CardDescription>
@@ -1439,7 +1436,6 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
                                                                     teamId={team.id}
                                                                     teams={teams}
                                                                     users={users}
-                                                                    appSettings={appSettings}
                                                                     onUpdateCollection={handleUpdateCollection}
                                                                     onDeleteCollection={handleDeleteCollection}
                                                                     onAddBadge={handleAddBadge}
@@ -1512,5 +1508,3 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
         </DragDropContext>
     );
 }
-
-    

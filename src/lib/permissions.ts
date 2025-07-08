@@ -102,8 +102,8 @@ export const hasAccess = (user: User, page: AppPage, teams: Team[], adminGroups:
 };
 
 /**
- * Determines the ownership context for a new item based on how a user gained access to the page.
- * The hierarchy is Admin Group > Team > User.
+ * Determines the ownership context for a new item. With the simplified ownership model,
+ * this always returns the current user.
  * @param page The current AppPage configuration.
  * @param user The current user object.
  * @param teams The list of all teams.
@@ -111,33 +111,6 @@ export const hasAccess = (user: User, page: AppPage, teams: Team[], adminGroups:
  * @returns A BadgeCollectionOwner object.
  */
 export const getOwnershipContext = (page: AppPage, user: User, teams: Team[], adminGroups: AdminGroup[]): BadgeCollectionOwner => {
-    const userAdminGroupNames = new Set(user.roles || []);
-    const userAdminGroupIds = new Set(adminGroups.filter(ag => userAdminGroupNames.has(ag.name)).map(ag => ag.id));
-
-    // Highest priority: Admin Group ownership
-    const relevantAdminGroupId = (page.access.adminGroups || []).find(id => userAdminGroupIds.has(id));
-    if (relevantAdminGroupId) {
-        const relevantAdminGroup = adminGroups.find(ag => ag.id === relevantAdminGroupId);
-        if (relevantAdminGroup) {
-            return { type: 'admin_group', id: relevantAdminGroup.id };
-        }
-    }
-
-    // Second priority: Team ownership
-    const userTeamIds = new Set(teams.filter(t => t.members.includes(user.userId)).map(t => t.id));
-    const relevantTeam = teams.find(t =>
-        (page.access.teams || []).some(teamId => userTeamIds.has(teamId))
-    );
-    if (relevantTeam) {
-        return { type: 'team', id: relevantTeam.id };
-    }
-
-    // Default to user ownership if they have direct access or if they are a system admin on a non-restricted page
-    if ((page.access.users || []).includes(user.userId) || user.isAdmin) {
-         return { type: 'user', id: user.userId };
-    }
-
-    // Fallback case - should ideally not be hit if hasAccess is checked first, but good practice.
-    // Default to the user creating the item.
+    // Ownership is now always assigned to the user who creates the item.
     return { type: 'user', id: user.userId };
 };

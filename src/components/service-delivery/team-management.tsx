@@ -113,8 +113,6 @@ function UserCard({
 function TeamCard({ 
     team, 
     users,
-    appSettings,
-    isTeamOwner,
     onUpdate, 
     onDelete,
     onToggleShare,
@@ -126,8 +124,6 @@ function TeamCard({
 }: { 
     team: Team, 
     users: User[],
-    appSettings: AppSettings,
-    isTeamOwner: (team: Team) => boolean;
     onUpdate: (id: string, data: Partial<Team>) => void, 
     onDelete: (team: Team) => void,
     onToggleShare: (team: Team) => void,
@@ -137,7 +133,7 @@ function TeamCard({
     dragHandleProps?: any,
     isSharedPreview?: boolean,
 }) {
-    const { viewAsUser, teams } = useUser();
+    const { viewAsUser } = useUser();
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isEditingName, setIsEditingName] = useState(false);
     
@@ -151,26 +147,18 @@ function TeamCard({
     const addUserSearchInputRef = useRef<HTMLInputElement>(null);
     
     const owner = useMemo(() => {
-        if (!team.owner) return null;
-        switch (team.owner.type) {
-            case 'team': return teams.find(t => t.id === team.owner.id);
-            case 'admin_group': return appSettings.adminGroups.find(g => g.id === team.owner.id);
-            case 'user': return users.find(u => u.userId === team.owner.id);
-            default: return null;
-        }
-    }, [team.owner, teams, users, appSettings.adminGroups]);
+        return users.find(u => u.userId === team.owner.id);
+    }, [team.owner.id, users]);
 
-    const ownerName = useMemo(() => {
-        if (!owner) return 'System';
-        return 'displayName' in owner ? owner.displayName : owner.name;
-    }, [owner]);
-    
-    const ownerColor = useMemo(() => {
-        if (!owner) return '#64748B'; // gray
-        return ('color' in owner ? owner.color : (owner as User).primaryColor) || '#64748B';
-    }, [owner]);
+    const ownerName = owner?.displayName || 'System';
+    const ownerColor = owner?.primaryColor || '#64748B';
 
-    const canManageTeam = useMemo(() => !isSharedPreview && isTeamOwner(team), [isTeamOwner, team, isSharedPreview]);
+    const canManageTeam = useMemo(() => {
+        if (isSharedPreview) return false;
+        if (viewAsUser.isAdmin) return true;
+        if ((team.teamAdmins || []).includes(viewAsUser.userId)) return true;
+        return team.owner.id === viewAsUser.userId;
+    }, [team, viewAsUser, isSharedPreview]);
 
     const teamMembers = useMemo(() => team.members.map(id => users.find(u => u.userId === id)).filter((u): u is User => !!u), [team.members, users]);
     const availableUsersToAdd = useMemo(() => users.filter(u => !team.members.includes(u.userId) && u.displayName.toLowerCase().includes(userSearch.toLowerCase())), [users, team.members, userSearch]);
@@ -178,10 +166,10 @@ function TeamCard({
     let shareIcon: string | null = null;
     let shareIconTitle: string = '';
     
-    if (canManageTeam && team.isShared) {
+    if (team.owner.id === viewAsUser.userId && team.isShared) {
         shareIcon = 'upload';
-        shareIconTitle = `Owned & Shared by ${ownerName}`;
-    } else if (!canManageTeam && team.isShared) {
+        shareIconTitle = `Owned & Shared by You`;
+    } else if (team.owner.id !== viewAsUser.userId && team.isShared) {
         shareIcon = 'downloading';
         shareIconTitle = `Shared from ${ownerName}`;
     }
@@ -436,28 +424,12 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
     const tabTitle = appSettings.teamManagementLabel || tab.name;
     const finalTitle = isSingleTabPage ? pageTitle : tabTitle;
     
-    const isTeamOwner = useCallback((team: Team) => {
+    const canManageTeam = useCallback((team: Team) => {
         if (!viewAsUser) return false;
         if (viewAsUser.isAdmin) return true;
-
-        // Check if the user is part of any Admin Group that grants access to the current management page.
-        const userAdminGroupIds = new Set(appSettings.adminGroups.filter(ag => (viewAsUser.roles || []).includes(ag.name)).map(ag => ag.id));
-        if ((page.access.adminGroups || []).some(reqId => userAdminGroupIds.has(reqId))) {
-            return true;
-        }
-
-        // If not a "page admin", fall back to direct ownership checks.
-        if (!team.owner) return false;
-
-        switch (team.owner.type) {
-            case 'user': return team.owner.id === viewAsUser.userId;
-            case 'admin_group': return userAdminGroupIds.has(team.owner.id);
-            case 'team':
-                const ownerTeam = teams.find(t => t.id === team.owner.id);
-                return ownerTeam?.teamAdmins?.includes(viewAsUser.userId) || false;
-            default: return false;
-        }
-    }, [teams, appSettings.adminGroups, page, viewAsUser]);
+        if ((team.teamAdmins || []).includes(viewAsUser.userId)) return true;
+        return team.owner.id === viewAsUser.userId;
+    }, [viewAsUser]);
 
 
     useEffect(() => {
@@ -520,7 +492,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
 
     
     const handleDelete = (team: Team) => {
-        if (isTeamOwner(team)) {
+        if (canManageTeam(team)) {
             setTeamToDelete(team);
         } else {
             const owner = getOwnershipContext(page, viewAsUser, teams, appSettings.adminGroups);
@@ -531,7 +503,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
     const handleAddUserToTeam = (teamId: string, userId: string) => {
         const team = teams.find(t => t.id === teamId);
         if (!team || team.members.includes(userId)) return;
-        if (!isTeamOwner(team)) {
+        if (!canManageTeam(team)) {
             toast({ variant: 'destructive', title: 'Permission Denied', description: 'You do not have permission to manage this team.' });
             return;
         }
@@ -542,7 +514,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
     
     const handleSetAdmin = useCallback((teamId: string, userId: string) => {
         const team = teams.find(t => t.id === teamId);
-        if (!team || !isTeamOwner(team)) return;
+        if (!team || !canManageTeam(team)) return;
         
         const currentAdmins = team.teamAdmins || [];
         const isAlreadyAdmin = currentAdmins.includes(userId);
@@ -552,11 +524,11 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
             : [...currentAdmins, userId];
             
         updateTeam(teamId, { teamAdmins: newAdmins });
-    }, [teams, updateTeam, isTeamOwner]);
+    }, [teams, updateTeam, canManageTeam]);
 
     const handleRemoveUserFromTeam = useCallback((teamId: string, userId: string) => {
         const team = teams.find(t => t.id === teamId);
-        if (!team || !isTeamOwner(team)) {
+        if (!team || !canManageTeam(team)) {
              toast({ variant: 'destructive', title: 'Permission Denied', description: 'You cannot remove users from teams you do not have permission to manage.' });
             return;
         }
@@ -566,7 +538,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
         const newTeamAdmins = (team.teamAdmins || []).filter(id => id !== userId);
         updateTeam(teamId, { members: updatedMembers, teamAdmins: newTeamAdmins });
         toast({ title: 'User Removed' });
-    }, [teams, updateTeam, toast, isTeamOwner]);
+    }, [teams, updateTeam, toast, canManageTeam]);
 
     const confirmDelete = () => {
         if (!teamToDelete) return;
@@ -578,12 +550,12 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
     const displayedTeams = useMemo(() => {
         return teams
             .filter(t => 
-                isTeamOwner(t) || 
+                canManageTeam(t) || 
                 (viewAsUser.linkedTeamIds || []).includes(t.id) ||
                 t.members.includes(viewAsUser.userId)
             )
             .filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase()));
-    }, [teams, viewAsUser, searchTerm, isTeamOwner]);
+    }, [teams, viewAsUser, searchTerm, canManageTeam]);
 
 
     const sharedTeams = useMemo(() => {
@@ -600,7 +572,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
         // --- Dragging to the SHARED PANEL ---
         if (type === 'team-card' && destination.droppableId === 'shared-teams-panel') {
             const teamToShare = teams.find(t => t.id === draggableId);
-            if (teamToShare && !teamToShare.isShared && isTeamOwner(teamToShare)) {
+            if (teamToShare && !teamToShare.isShared && canManageTeam(teamToShare)) {
                 handleToggleShare(teamToShare);
             }
             return;
@@ -755,8 +727,6 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                                                 <TeamCard 
                                                     team={team} 
                                                     users={users}
-                                                    appSettings={appSettings}
-                                                    isTeamOwner={() => isTeamOwner(team)}
                                                     onUpdate={handleUpdate} 
                                                     onDelete={handleDelete}
                                                     onToggleShare={handleToggleShare}
@@ -809,8 +779,6 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                                                         <TeamCard
                                                             team={team}
                                                             users={users}
-                                                            appSettings={appSettings}
-                                                            isTeamOwner={() => isTeamOwner(team)}
                                                             onUpdate={handleUpdate}
                                                             onDelete={handleDelete}
                                                             onToggleShare={handleToggleShare}
@@ -859,5 +827,3 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
         </DragDropContext>
     );
 }
-
-    

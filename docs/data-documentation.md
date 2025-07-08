@@ -35,15 +35,14 @@ This table details the information stored directly within each `User` object.
 
 ### Dynamic Access Control for Pages & Tabs
 
-Access to every page and tab in the application is controlled by a dynamic ruleset. This allows for granular permission management without changing the application's code.
+Access to every page and content tab in the application is controlled by a dynamic ruleset. The logic for this is primarily handled in `/src/lib/permissions.ts` and the page renderer at `/src/app/dashboard/[...page]/page.tsx`.
 
 **How It Works:**
 
-1.  **Page Access**: Access to a page is determined by the `access` object on its `AppPage` configuration. A user can see a page if they are a system admin, if the page has no rules (is public), or if they meet the criteria in the `access.users`, `access.teams`, or `access.adminGroups` arrays.
+1.  **Page Access**: Access to a page is determined by the `access` object on its `AppPage` configuration. A user can view a page if they are a system admin, if the page has no rules (making it public), or if their `userId`, `Team` membership, or `AdminGroup` membership is listed in the corresponding access array.
 
-2.  **Tab Access (Simplified)**: A tab's visibility follows a simpler, two-step rule:
-    *   **Step 1 (Inheritance)**: If a user has access to a page, they automatically have access to all the tabs associated with that page.
-    *   **Step 2 (Restriction)**: You can then *restrict* a tab to a smaller audience. If an `AppTab` object has its own `access.adminGroups` rule, it will **only** be visible to system administrators and members of those specific admin groups. This provides a simple way to create "admin-only" tabs on otherwise public pages.
+2.  **Tab Access**: A tab's visibility is determined by its parent page. If you can see the page, you can see all of its tabs.
+    *   **The Exception**: You can restrict a tab to be "admin-only." If an `AppTab` object has its own `access.adminGroups` rule, its visibility is overridden. It will **only** be visible to system administrators and members of those specific admin groups. This provides a simple way to create privileged tabs on otherwise public pages.
 
 **Example Configurations (`mock-data.ts`):**
 
@@ -71,17 +70,9 @@ Access to every page and tab in the application is controlled by a dynamic rules
 }
 ```
 
-### Implicit Ownership of Created Items
+### Simplified Ownership of Created Items
 
-When a user creates a new shareable item (like a **Team** or **Badge Collection**), the application automatically assigns ownership based on how the user gained access to the creation page. This creates a clear and logical hierarchy for who manages these items.
-
-**Ownership Hierarchy:**
-
-1.  **Admin Group (Highest Priority)**: If the user's access to the page is granted through an `AdminGroup`, the new item will be owned by that group. This is true even if the user also has access via a team or direct user assignment.
-2.  **Team**: If the user's access is *not* from an Admin Group but *is* from their membership in a `Team`, the new item will be owned by that team.
-3.  **User (Default)**: If the user's access is only granted via their specific `userId` (or if they are an admin creating an item on a public page), the new item will be owned by them personally.
-
-The `getOwnershipContext` function in `/src/lib/permissions.ts` contains the logic for this rule. This system ensures that items created in a team context belong to the team, and items created in a global administrative context belong to the relevant admin group.
+When a user creates a new shareable item (like a **Team** or **Badge Collection**), ownership is assigned directly to that user. This simplified model ensures that every item has a single, clear owner responsible for its management. The `getOwnershipContext` function in `/src/lib/permissions.ts` contains the logic for this rule.
 
 ## Shared Calendar Entity
 **Firestore Collection**: `/calendars/{calendarId}`
@@ -131,7 +122,7 @@ A sub-entity of `AppSettings`, `AppTab` defines a single, reusable content block
 | `access?: { adminGroups: string[] }` | **Optional.** An object containing an array of `adminGroupId`s. If present, this tab will only be visible to members of those groups (and system admins). If omitted, the tab inherits access from its parent page. |
 
 ### AdminGroup Entity
-A sub-entity of `AppSettings`, `AdminGroup` defines a single, dynamic administrative level.
+A sub-entity of `AppSettings`, `AdminGroup` defines a single, dynamic administrative level. It acts as a permission layer for page access, distinct from a `Team` which is a functional unit for collaboration.
 
 | Data Point | Description |
 | :--- | :--- |
@@ -139,12 +130,13 @@ A sub-entity of `AppSettings`, `AdminGroup` defines a single, dynamic administra
 | `name: string` | **Internal.** The display name for the group (e.g., "Service Admin", "Service Admin+"). This is editable inline on the Admin Management page. |
 | `icon: string` | **Internal.** The Google Symbol name for the icon associated with the group. |
 | `color: string` | **Internal.** The hex color code for the icon's badge. |
-| `groupAdmins?: string[]` | **Internal.** An array of `userId`s for users who have been designated as an "Admin" for this specific group, granting them elevated permissions for pages associated with this group. |
+| `groupAdmins?: string[]` | **Internal.** An array of `userId`s for users who can add or remove members from this specific `AdminGroup`. This allows for delegated administration without granting full system-wide permissions. |
+
 
 ## Team Entity
 **Firestore Collection**: `/teams/{teamId}`
 
-The `Team` entity groups users together and defines a set of team-specific configurations, most notably their functional **Badges**.
+The `Team` entity is a functional unit that groups users together for collaboration. It is distinct from an `AdminGroup`, which is a permission layer.
 
 ### Team Data
 
@@ -154,10 +146,10 @@ The `Team` entity groups users together and defines a set of team-specific confi
 | `name: string` | The display name of the team. |
 | `icon: string` | The Google Symbol name for the team's icon. |
 | `color: string` | The hex color for the team's icon. |
-| `owner: { type: 'team', id: string } \| { type: 'admin_group', name: string } \| { type: 'user', id: string }` | An object that defines who owns the team. Ownership dictates who can edit the team's properties. |
+| `owner: { type: 'user', id: string }` | An object that defines who owns the team. Ownership dictates who can edit the team's properties. |
 | `isShared?: boolean` | **Internal.** If `true`, this team will be visible to other teams in the application for discovery and linking. |
 | `members: string[]` | An array of `userId`s for all members of the team. |
-| `teamAdmins?: string[]` | A subset of `members` who have administrative privileges for this team. |
+| `teamAdmins?: string[]` | A subset of `members` who have administrative privileges for this team (e.g., can add/remove members). |
 | `teamAdminsLabel?: string` | A custom label for the Team Admins list on the Team Members tab. |
 | `membersLabel?: string` | A custom label for the Members list on the Team Members tab. |
 | `allBadges: Badge[]` | The single source of truth for all `Badge` objects **owned** by this team. |
@@ -170,7 +162,7 @@ A sub-entity of `Team`, this groups related Badges together. It can be owned by 
 | Data Point | Description |
 | :--- | :--- |
 | `id: string` | A unique identifier for the collection. |
-| `owner: { type: 'team', id: string } \| { type: 'admin_group', name: string } \| { type: 'user', id: string }` | An object that defines who owns the collection. This can be a team, an administrative group, or an individual user. Ownership dictates who can edit the collection's properties and the original badges within it. |
+| `owner: { type: 'user', id: string }` | An object that defines who owns the collection. Ownership dictates who can edit the collection's properties and the original badges within it. |
 | `isShared?: boolean` | **Internal.** If `true`, this collection and its badges will be visible to all other teams in the application for discovery and linking. |
 | `name: string` | The name of the collection (e.g., "Skills"). |
 | `icon: string` | The Google Symbol name for the collection's icon. |
