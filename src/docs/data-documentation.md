@@ -171,3 +171,6 @@ This represents a specific, functional role or skill. The single source of truth
 | `description?: string` | An optional description shown in tooltips. |
 
 
+
+
+    

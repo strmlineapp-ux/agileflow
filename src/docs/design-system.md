@@ -93,17 +93,17 @@ This pattern describes how a single entity (like a **Team** or **Badge Collectio
     - **Sharing via Side Panel**: The primary UI for sharing is a side panel that acts as a "discovery pool". The owner of an item can share it by dragging its card from their main management board and dropping it into this "Shared Items" panel.
         - **Behavior**: This action sets an `isShared` flag on the item but **does not remove it from the owner's board**. The item's visual state updates to show it is shared.
         - **Side Panel Content**: The side panel displays all items shared by *other* users/teams, allowing the current user to discover and link them. It does **not** show items that the current user already has on their own management board.
-    - **Linking (Contextual)**: A user can link a shared item to their own context by dragging it from the "Shared Items" panel and dropping it onto their management board. This creates a *link* to the original item, not a copy.
+    - **Linking (Contextual)**: A user can link a shared item to their own context by dragging it from the "Shared Items" panel and dropping it onto their management board. This creates a *link* to the original item, not a copy. Individual items (like **Badges**) can also be dragged from a shared collection in the panel and dropped into an owned collection.
 - **Visual Cues**:
   - **Owned & Shared Externally (`upload`)**: An item created by the current user/team that has been explicitly shared with others is marked with an `upload` icon overlay. This indicates it is the "source of truth." **The color of this icon badge matches the owner's color.**
   - **Internally Linked (`change_circle`)**: An item that is used in multiple places within the *same* context (e.g., a badge appearing in two collections on one team's board) is marked with a `change_circle` icon overlay on its linked instances. **The color of this icon badge matches the owner's color.**
   - **Shared-to-You (`downloading`)**: An item created elsewhere and being used in the current context is marked with a `downloading` icon overlay. **The color of this icon badge matches the source's color.**
   - **Owned and Not Shared/Linked**: An item that is owned and exists only in its original location does not get an icon.
 - **Behavior**:
-  - Editing a shared item (e.g., changing a team's name) modifies the original "source of truth" item, and the changes are instantly reflected in all other places where it is used.
+  - **Editing**: Editing a shared item (e.g., changing a team's name) modifies the original "source of truth" item, and the changes are instantly reflected in all other places where it is used.
+  - **Unlinking**: Unlinking is an intuitive, reversible action. If a user drags a linked item (e.g., a Team from another user) from their main management board *back* to the "Shared Items" panel, the link is simply removed from their context. No copy is made, and the original item remains untouched.
+  - **Duplicating**: To create a fully independent copy of *any* item—whether it's owned, linked, or from the shared panel—the user must explicitly drag its card and drop it onto the "Add New" button. This action creates a new entity with a unique ID, assigns ownership to the current user, and resets its member/badge lists.
   - **Local Overrides**: For linked Badge Collections, the `applications` (e.g., "Team Members", "Events") can be modified locally without affecting the original, allowing teams to customize how they use a shared resource.
-  - **Unlinking**: When a user wants to remove a linked item (e.g., via a dropdown menu), the system simply removes the reference/link from the current context. It **does not** create a copy.
-  - **Duplicating**: To create an independent copy of a shared item, the user must explicitly drag it from the shared panel and drop it onto the "Add New" button on the main board. This creates a deep copy with a new owner.
   - **Smart Deletion**: Deleting an item follows contextual rules:
     - Deleting a *shared-to-you* or *internally linked* instance only removes that specific link/instance. This is a low-risk action confirmed via a `Compact Action Dialog`.
     - Deleting the *original, shared* item will trigger a high-risk `AlertDialog` to prevent accidental removal of a widely-used resource.
@@ -136,9 +136,9 @@ This is the application's perfected, gold-standard pattern for managing a collec
 -   **Drag-to-Duplicate**:
     -   **Interaction**: A designated "Add New" icon (`<Button>`) acts as a drop zone. While a card is being dragged, this zone becomes highlighted to indicate it can accept a drop.
     -   **Behavior**: Dropping any card (pinned or not, from the main board or the shared panel) onto this zone creates a deep, independent copy of the original. The new card is given a unique ID, a modified name (e.g., with `(Copy)`), and is placed immediately after the original in the list. Its ownership is assigned to the current user's context, and its member list is reset to be empty.
--   **Drag-to-Assign**: This pattern allows sub-items (like **Users** or **Badges**) to be moved between different parent cards.
-    - **Interaction**: A user can drag an item (e.g., a User) from one card's list.
-    - **Behavior**: As the item is dragged over another card, that card's drop zone becomes highlighted. Dropping the item assigns it to the new card's collection. The original item may be removed or remain, depending on the context (e.g., assigning a user to a new admin group might not remove them from the old one). This is handled by the `onDragEnd` logic.
+-   **Drag-to-Assign**: This pattern allows sub-items (like **Users** or **Badges**) to be moved between different parent cards or from a shared panel.
+    - **Interaction**: A user can drag an item (e.g., a User or Badge) from one card's list or from a shared item in a side panel. Dragging is always enabled to provide a fluid experience.
+    - **Behavior**: As the item is dragged over a valid drop zone (e.g., another team card), the zone becomes highlighted. The application logic for the `onDragEnd` event then handles the permissions check: a drop is only successful if the user has the right to modify the destination card. This decouples the visual act of dragging from the permission-based action of dropping.
 -   **Layout Stability**: To prevent "janky" or shifting layouts during a drag operation (especially when dragging an item out of one card and over another), ensure that the container cards (e.g., `TeamCard`) maintain a consistent height. This is achieved by making the card a `flex flex-col` container and giving its main content area `flex-grow` to make it fill the available space, even when a draggable item is temporarily removed. A `ScrollArea` can be used within the content to manage overflow if the list is long.
 -   **Application**: This is the required pattern for managing Pages, Calendars, Teams, and Badge Collections.
 
@@ -172,7 +172,7 @@ When a **high-risk destructive action** requires user confirmation (like deletin
 ---
 
 ### 11. Icon Tabs for Page Navigation
-- **Description**: For primary navigation within a page (e.g., switching between "Admin Management" and "Pages" on the Admin screen), tabs should be clear, full-width, and provide strong visual cues.
+- **Description**: For primary navigation within a page, tabs should be clear, full-width, and provide strong visual cues.
 - **Appearance**:
   - Each tab trigger includes both an icon and a text label.
   - The icon is `text-4xl` with a `weight={100}` for a large but light appearance.
@@ -290,3 +290,6 @@ This is the single source of truth for indicating user interaction state across 
     - **Application**: Used for displaying a user's admin group status, a shared status on a role icon, or a `share` icon on a shared Badge.
 -   **Badges in Assorted View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
 
+
+
+    
