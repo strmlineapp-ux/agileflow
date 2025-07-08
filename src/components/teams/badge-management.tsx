@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -1408,7 +1407,7 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
                                     <CardHeader>
                                         <div className="flex items-center justify-between">
                                             <CardTitle className="font-headline font-thin text-xl">Shared Collections</CardTitle>
-                                            <div className="flex items-center gap-1 border-b">
+                                            <div className="flex items-center gap-1">
                                                 <GoogleSymbol name="search" className="text-muted-foreground" />
                                                 <input
                                                     ref={sharedSearchInputRef}
@@ -1513,3 +1512,5 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
         </DragDropContext>
     );
 }
+
+    

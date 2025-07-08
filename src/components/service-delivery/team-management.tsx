@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
@@ -787,7 +786,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                                     <CardHeader>
                                         <div className="flex items-center justify-between">
                                             <CardTitle className="font-headline font-thin text-xl">Shared Teams</CardTitle>
-                                            <div className="flex items-center gap-1 p-1 border-b">
+                                            <div className="flex items-center gap-1 p-1">
                                                 <GoogleSymbol name="search" className="text-muted-foreground text-lg" />
                                                 <input
                                                     ref={sharedSearchInputRef}
@@ -860,3 +859,5 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
         </DragDropContext>
     );
 }
+
+    
