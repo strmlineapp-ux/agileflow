@@ -86,7 +86,7 @@ export default function DynamicPage() {
         
         if (ContentComponent) {
             const pseudoTab: AppPage = { ...pageConfig, componentKey: pageConfig.componentKey as any };
-            return <ContentComponent tab={pseudoTab} team={dynamicTeam} />;
+            return <ContentComponent tab={pseudoTab} team={dynamicTeam} page={pageConfig} />;
         }
 
         return (
@@ -107,7 +107,7 @@ export default function DynamicPage() {
         // The page header is rendered directly by the content component.
         // We pass the page's title, icon, and description to the tab to ensure the correct header is displayed.
         const pageAsTab = { ...tab, name: pageTitle, icon: pageConfig.icon, description: tab.description };
-        return ContentComponent ? <ContentComponent tab={pageAsTab} team={contextTeam} /> : <div>Component for {tab.name} not found.</div>;
+        return ContentComponent ? <ContentComponent tab={pageAsTab} team={contextTeam} page={pageConfig} /> : <div>Component for {tab.name} not found.</div>;
     }
     
     // Render page with multiple tabs
@@ -131,7 +131,7 @@ export default function DynamicPage() {
                     const contextTeam = tab.contextTeamId ? teams.find(t => t.id === tab.contextTeamId) : dynamicTeam;
                     return (
                         <TabsContent key={tab.id} value={tab.id} className="mt-4">
-                        {ContentComponent ? <ContentComponent tab={tab} team={contextTeam} /> : <div>Component for {tab.name} not found.</div>}
+                        {ContentComponent ? <ContentComponent tab={tab} team={contextTeam} page={pageConfig} /> : <div>Component for {tab.name} not found.</div>}
                         </TabsContent>
                     );
                 })}
