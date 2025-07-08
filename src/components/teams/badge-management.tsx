@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -136,7 +137,7 @@ function CompactSearchIconPicker({
 }
 
 
-function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collectionId, teamId, isSharedPreview = false, isCollectionOwned = false }: { badge: Badge; viewMode: BadgeCollection['viewMode']; onUpdateBadge: (badgeData: Partial<Badge>) => void; onDelete: () => void; collectionId: string; teamId: string; isSharedPreview?: boolean; isCollectionOwned: boolean; }) {
+function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collectionId, teamId, isSharedPreview = false, isCollectionOwned = false }: { badge: Badge, viewMode: BadgeCollection['viewMode'], onUpdateBadge: (badgeData: Partial<Badge>) => void, onDelete: () => void, collectionId: string, teamId: string, isSharedPreview?: boolean, isCollectionOwned: boolean }) {
     const { toast } = useToast();
     const { teams, users, viewAsUser, allBadges } = useUser();
     const [isEditingName, setIsEditingName] = useState(false);
@@ -812,7 +813,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, users
                                 collection.viewMode === 'detailed' && "flex flex-wrap -m-2"
                             )}>
                             {collectionBadges.map((badge, index) => (
-                                <Draggable key={`${badge.id}::${collection.id}`} draggableId={`${badge.id}::${collection.id}`} index={index} isDragDisabled={isSharedPreview} ignoreContainerClipping={false}>
+                                <Draggable key={`${badge.id}::${collection.id}`} draggableId={`${badge.id}::${collection.id}`} index={index} isDragDisabled={false} ignoreContainerClipping={false}>
                                     {(provided, snapshot) => (
                                     <div 
                                       ref={provided.innerRef} 
@@ -1005,6 +1006,7 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
     
         // Gather from other teams
         teams.forEach(t => {
+            if (t.id === team.id) return; // Don't include self
             (t.badgeCollections || []).forEach(collection => {
                 if (collection.isShared) {
                     if (!allSharedCollectionsMap.has(collection.id)) {
@@ -1045,7 +1047,7 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
             .filter(c => !linkedCollectionIds.has(c.id))
             .filter(c => c.name.toLowerCase().includes(sharedSearchTerm.toLowerCase()));
     
-    }, [teams, team.badgeCollections, sharedSearchTerm, appSettings.globalBadges]);
+    }, [teams, team.id, team.badgeCollections, sharedSearchTerm, appSettings.globalBadges]);
     
     const displayedCollections = useMemo(() => {
         const all = team?.badgeCollections || [];
