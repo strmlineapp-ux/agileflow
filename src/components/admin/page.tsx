@@ -152,6 +152,20 @@ export const AdminsManagement = ({ tab }: { tab: AppTab }) => {
     setIsEditing2fa(false);
   };
 
+  const onDragEnd = (result: DropResult) => {
+    const { source, destination, draggableId } = result;
+
+    if (!destination || (source.droppableId === destination.droppableId)) {
+        return;
+    }
+
+    const userToMove = users.find(u => u.userId === draggableId);
+    if (userToMove) {
+        handleAdminToggle(userToMove);
+    }
+  };
+
+
   return (
     <div className="space-y-6">
         <div className="flex items-center gap-2">
@@ -171,46 +185,86 @@ export const AdminsManagement = ({ tab }: { tab: AppTab }) => {
             )}
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="flex flex-col h-full bg-transparent">
-                <CardHeader>
-                  <CardTitle className="font-headline font-thin text-lg">Admins ({adminUsers.length})</CardTitle>
-                </CardHeader>
-                <ScrollArea className="flex-grow">
-                  <CardContent>
-                    {adminUsers.map(user => (
-                        <UserAssignmentCard 
-                            key={user.userId} 
-                            user={user} 
-                            onToggle={() => handleAdminToggle(user)}
-                            buttonText="Revoke Admin"
-                            buttonIcon="shield_person"
-                            canManage={adminUsers.length > 1 && viewAsUser.isAdmin}
-                        />
-                    ))}
-                  </CardContent>
-                </ScrollArea>
-              </Card>
-              <Card className="flex flex-col h-full bg-transparent">
-                <CardHeader>
-                  <CardTitle className="font-headline font-thin text-lg">Users ({nonAdminUsers.length})</CardTitle>
-                </CardHeader>
-                <ScrollArea className="flex-grow">
-                  <CardContent>
-                     {nonAdminUsers.map(user => (
-                        <UserAssignmentCard 
-                            key={user.userId} 
-                            user={user} 
-                            onToggle={() => handleAdminToggle(user)}
-                            buttonText="Grant Admin"
-                            buttonIcon="add_moderator"
-                            canManage={viewAsUser.isAdmin}
-                        />
-                    ))}
-                  </CardContent>
-                </ScrollArea>
-              </Card>
-        </div>
+        <DragDropContext onDragEnd={onDragEnd}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card className="flex flex-col h-full bg-transparent">
+                    <CardHeader>
+                      <CardTitle className="font-normal text-base">Admins ({adminUsers.length})</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex-grow">
+                        <StrictModeDroppable droppableId="admins-list">
+                            {(provided, snapshot) => (
+                                <div
+                                    ref={provided.innerRef}
+                                    {...provided.droppableProps}
+                                    className={cn("p-1 space-y-1 rounded-md min-h-[60px]", snapshot.isDraggingOver && "bg-primary/10 ring-1 ring-primary/20")}
+                                >
+                                    {adminUsers.map((user, index) => (
+                                        <Draggable key={user.userId} draggableId={user.userId} index={index}>
+                                            {(provided, snapshot) => (
+                                                <div
+                                                    ref={provided.innerRef}
+                                                    {...provided.draggableProps}
+                                                    {...provided.dragHandleProps}
+                                                    className={cn(snapshot.isDragging && "bg-muted shadow-lg rounded-md")}
+                                                >
+                                                    <UserAssignmentCard 
+                                                        user={user} 
+                                                        onToggle={() => handleAdminToggle(user)}
+                                                        buttonText="Revoke Admin"
+                                                        buttonIcon="shield_person"
+                                                        canManage={adminUsers.length > 1 && viewAsUser.isAdmin}
+                                                    />
+                                                </div>
+                                            )}
+                                        </Draggable>
+                                    ))}
+                                    {provided.placeholder}
+                                </div>
+                            )}
+                        </StrictModeDroppable>
+                    </CardContent>
+                  </Card>
+                  <Card className="flex flex-col h-full bg-transparent">
+                    <CardHeader>
+                      <CardTitle className="font-normal text-base">Users ({nonAdminUsers.length})</CardTitle>
+                    </CardHeader>
+                     <CardContent className="flex-grow">
+                         <StrictModeDroppable droppableId="users-list">
+                            {(provided, snapshot) => (
+                                <div
+                                    ref={provided.innerRef}
+                                    {...provided.droppableProps}
+                                    className={cn("p-1 space-y-1 rounded-md min-h-[60px]", snapshot.isDraggingOver && "bg-primary/10 ring-1 ring-primary/20")}
+                                >
+                                    {nonAdminUsers.map((user, index) => (
+                                        <Draggable key={user.userId} draggableId={user.userId} index={index}>
+                                            {(provided, snapshot) => (
+                                                <div
+                                                    ref={provided.innerRef}
+                                                    {...provided.draggableProps}
+                                                    {...provided.dragHandleProps}
+                                                    className={cn(snapshot.isDragging && "bg-muted shadow-lg rounded-md")}
+                                                >
+                                                    <UserAssignmentCard 
+                                                        user={user} 
+                                                        onToggle={() => handleAdminToggle(user)}
+                                                        buttonText="Grant Admin"
+                                                        buttonIcon="add_moderator"
+                                                        canManage={viewAsUser.isAdmin}
+                                                    />
+                                                </div>
+                                            )}
+                                        </Draggable>
+                                    ))}
+                                    {provided.placeholder}
+                                </div>
+                            )}
+                        </StrictModeDroppable>
+                    </CardContent>
+                  </Card>
+            </div>
+        </DragDropContext>
 
         <Dialog open={is2faDialogOpen} onOpenChange={(isOpen) => !isOpen && close2faDialog()}>
             <DialogContent className="max-w-sm">
@@ -1146,5 +1200,6 @@ export const TabsManagement = ({ tab }: { tab: AppTab }) => {
     );
 };
 // #endregion
+
 
 
