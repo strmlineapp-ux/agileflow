@@ -154,12 +154,14 @@ export function Sidebar() {
                         <p className="text-xs leading-none text-muted-foreground">{viewAsUser.email}</p>
                     </div>
                 </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <div className="px-2 py-1.5">
-                    <p className="text-xs text-muted-foreground mb-2 font-thin">Badges</p>
-                    <div className="flex flex-wrap gap-1">
-                        {(viewAsUser.roles && viewAsUser.roles.length > 0) ? (
-                            viewAsUser.roles.map(roleName => {
+                
+                {viewAsUser.roles && viewAsUser.roles.length > 0 && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <div className="px-2 py-1.5">
+                        <p className="text-xs text-muted-foreground mb-2 font-thin">Badges</p>
+                        <div className="flex flex-wrap gap-1">
+                            {viewAsUser.roles.map(roleName => {
                                 const roleInfo = allBadges.find(r => r.name === roleName);
                                 return (
                                     <Badge
@@ -175,12 +177,12 @@ export function Sidebar() {
                                         <span className="font-thin">{roleName}</span>
                                     </Badge>
                                 )
-                            })
-                        ) : (
-                            <p className="text-xs text-muted-foreground italic font-thin">No roles or badges assigned</p>
-                        )}
+                            })}
+                        </div>
                     </div>
-                </div>
+                  </>
+                )}
+                
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                     <Link href="/dashboard/settings" className="font-thin">
