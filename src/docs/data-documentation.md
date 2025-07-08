@@ -138,7 +138,7 @@ The `Team` entity is a functional unit that groups users together for collaborat
 | `teamAdminsLabel?: string` | A custom label for the Team Admins list on the Team Members tab. |
 | `membersLabel?: string` | A custom label for the Members list on the Team Members tab. |
 | `allBadges: Badge[]` | The single source of truth for all `Badge` objects **owned** by this team. |
-| `badgeCollections: BadgeCollection[]` | An array of `BadgeCollection` objects. This includes collections *owned* by the team, and *links* to collections owned by other teams. |
+| `badgeCollections: BadgeCollection[]` | An array of `BadgeCollection` objects. This includes collections created by the team's members and links to collections that have been shared by users from other teams. |
 | `userBadgesLabel?: string` | A custom label for the "Team Badges" section on the Team Members tab. |
 
 ### BadgeCollection Entity
