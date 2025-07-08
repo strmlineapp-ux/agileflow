@@ -619,8 +619,8 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                     color: teamToDuplicate.color,
                     owner: owner,
                     isShared: false,
-                    members: [owner.id],
-                    teamAdmins: [owner.id],
+                    members: [...teamToDuplicate.members],
+                    teamAdmins: [...(teamToDuplicate.teamAdmins || [])],
                     teamAdminsLabel: teamToDuplicate.teamAdminsLabel,
                     membersLabel: teamToDuplicate.membersLabel,
                     locationCheckManagers: teamToDuplicate.locationCheckManagers,
@@ -680,7 +680,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                                   </Tooltip>
                               </TooltipProvider>
                             )}
-                            <StrictModeDroppable droppableId="duplicate-team-zone" type="team-card" isDropDisabled={false}>
+                            <StrictModeDroppable droppableId="duplicate-team-zone" type="team-card" isDropDisabled={false} isCombineEnabled={false}>
                                 {(provided, snapshot) => (
                                     <div
                                         ref={provided.innerRef}
@@ -736,7 +736,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                         </div>
                     </div>
 
-                    <StrictModeDroppable droppableId="teams-list" type="team-card" isDropDisabled={false}>
+                    <StrictModeDroppable droppableId="teams-list" type="team-card" isDropDisabled={false} isCombineEnabled={false}>
                         {(provided) => (
                             <div className="flex flex-wrap -m-3" ref={provided.innerRef} {...provided.droppableProps}>
                                 {displayedTeams.map((team, index) => (
@@ -771,7 +771,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                     </StrictModeDroppable>
                 </div>
                  <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96 p-2" : "w-0")}>
-                    <StrictModeDroppable droppableId="shared-teams-panel" type="team-card" isDropDisabled={false}>
+                    <StrictModeDroppable droppableId="shared-teams-panel" type="team-card" isDropDisabled={false} isCombineEnabled={false}>
                         {(provided, snapshot) => (
                             <div 
                                 ref={provided.innerRef} 
