@@ -39,20 +39,11 @@ Access to every page and tab in the application is controlled by a dynamic rules
 
 **How It Works:**
 
-1.  **The `access` Object**: Every `AppPage` and `AppTab` object can have an optional `access` property that defines who can see it.
+1.  **Page Access**: Access to a page is determined by the `access` object on its `AppPage` configuration. A user can see a page if they are a system admin, if the page has no rules (is public), or if they meet the criteria in the `access.users`, `access.teams`, or `access.adminGroups` arrays.
 
-2.  **The `hasAccess` Function**: A central function, `hasAccess`, located in `/src/lib/permissions.ts`, evaluates these rules for the currently logged-in user.
-
-3.  **Page Access Rules**: For an `AppPage`, access is granted if **any** of the following conditions are met:
-    *   The user is a system administrator (`user.isAdmin === true`).
-    *   The page has no `access` rules defined (it is public).
-    *   The user's ID is explicitly listed in the page's `access.users` array.
-    *   The user is a member of any team whose ID is in the page's `access.teams` array.
-    *   The user belongs to an `AdminGroup` whose ID is in the page's `access.adminGroups` array.
-
-4.  **Tab Access Rules (Simplified)**: For an `AppTab`, the logic is simpler to streamline configuration:
-    *   If a user can see the parent page, they can see the tab **unless** the tab has its own `access.adminGroups` rule.
-    *   If a tab has an `adminGroups` rule, it will **only** be visible to system administrators and members of those specific admin groups. This provides a simple way to create "admin-only" tabs on otherwise public pages.
+2.  **Tab Access (Simplified)**: A tab's visibility follows a simpler, two-step rule:
+    *   **Step 1 (Inheritance)**: If a user has access to a page, they automatically have access to all the tabs associated with that page.
+    *   **Step 2 (Restriction)**: You can then *restrict* a tab to a smaller audience. If an `AppTab` object has its own `access.adminGroups` rule, it will **only** be visible to system administrators and members of those specific admin groups. This provides a simple way to create "admin-only" tabs on otherwise public pages.
 
 **Example Configurations (`mock-data.ts`):**
 

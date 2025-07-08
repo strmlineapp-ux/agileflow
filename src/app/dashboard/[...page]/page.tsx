@@ -66,6 +66,8 @@ export default function DynamicPage() {
       return teams.find(t => t.id === teamId)
     }, [teams, pageConfig, params.page]);
 
+    const userAdminGroupIds = useMemo(() => new Set(appSettings.adminGroups.filter(ag => (viewAsUser.roles || []).includes(ag.name)).map(ag => ag.id)), [appSettings.adminGroups, viewAsUser.roles]);
+
     if (loading) {
         return <Skeleton className="h-full w-full" />;
     }
@@ -76,7 +78,15 @@ export default function DynamicPage() {
     
     const pageTabs = appSettings.tabs
       .filter(t => pageConfig.associatedTabs.includes(t.id))
-      .filter(t => hasAccess(viewAsUser, t, teams, appSettings.adminGroups));
+      .filter(t => {
+        // A tab is visible if its parent page is visible, UNLESS the tab itself has an admin group restriction.
+        if (t.access?.adminGroups && t.access.adminGroups.length > 0) {
+          // If restricted, user must be a system admin or in one of the specified groups.
+          return viewAsUser.isAdmin || t.access.adminGroups.some(reqId => userAdminGroupIds.has(reqId));
+        }
+        // Otherwise, if it has no restrictions, it's visible because we already know the user can see the page.
+        return true;
+      });
       
     const pageTitle = pageConfig.isDynamic && dynamicTeam ? `${dynamicTeam.name} ${pageConfig.name}` : pageConfig.name;
 

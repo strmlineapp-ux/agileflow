@@ -58,54 +58,40 @@ export const getAllUserRoles = (user: User, teams: Team[]): string[] => {
 
 
 /**
- * Checks if a user has permission to view a page or a tab based on its access rules.
+ * Checks if a user has permission to view a page based on its access rules.
+ * Tab visibility is handled separately in the rendering component.
  * @param user The user to check.
- * @param item The AppPage or AppTab configuration.
+ * @param page The AppPage configuration.
  * @param teams The list of all teams.
  * @param adminGroups The list of all admin groups.
  * @returns `true` if the user has access, `false` otherwise.
  */
-export const hasAccess = (user: User, item: AppPage | AppTab, teams: Team[], adminGroups: AdminGroup[]): boolean => {
+export const hasAccess = (user: User, page: AppPage, teams: Team[], adminGroups: AdminGroup[]): boolean => {
     // System admin has universal access
     if (user.isAdmin) return true;
 
     // Special case for the admin management page, which is only for admins
-    if ('path' in item && item.id === 'page-admin-management') {
+    if (page.id === 'page-admin-management') {
         return user.isAdmin;
     }
 
-    const access = item.access;
+    const access = page.access;
 
-    const getUserAdminGroupIds = () => adminGroups
-        .filter(ag => (user.roles || []).includes(ag.name))
-        .map(ag => ag.id);
-
-    // If it's a tab, use simplified logic: inherit from page unless restricted by admin group
-    if ('componentKey' in item) { 
-        if (!access || !access.adminGroups || access.adminGroups.length === 0) {
-            return true; // Tab is public to anyone who can see the page
-        }
-        
-        // Tab access is restricted by admin group
-        const userAdminGroupIds = getUserAdminGroupIds();
-        return access.adminGroups.some(requiredGroupId => userAdminGroupIds.includes(requiredGroupId));
-    }
-
-    // If it's a page, use the full logic
+    // If no access rules are defined, the page is public.
     if (!access || (access.users.length === 0 && access.teams.length === 0 && access.adminGroups.length === 0)) {
         return true;
     }
 
-    // Page: Direct user assignment
+    // Direct user assignment
     if (access.users.includes(user.userId)) return true;
     
-    // Page: Group-based access (using IDs)
-    const userAdminGroupIds = getUserAdminGroupIds();
-    if (access.adminGroups.some(requiredGroupId => userAdminGroupIds.includes(requiredGroupId))) {
+    // Group-based access (using IDs)
+    const userAdminGroupIds = new Set(adminGroups.filter(ag => (user.roles || []).includes(ag.name)).map(ag => ag.id));
+    if (access.adminGroups.some(requiredGroupId => userAdminGroupIds.has(requiredGroupId))) {
         return true;
     }
 
-    // Page: Team-based access
+    // Team-based access
     const userTeamIds = new Set(teams.filter(t => t.members.includes(user.userId)).map(t => t.id));
     if (access.teams.some(teamId => userTeamIds.has(teamId))) {
         return true;
