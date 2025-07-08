@@ -136,7 +136,7 @@ function CompactSearchIconPicker({
 }
 
 
-function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collectionId, teamId, isSharedPreview = false }: { badge: Badge; viewMode: BadgeCollection['viewMode']; onUpdateBadge: (badgeData: Partial<Badge>) => void; onDelete: () => void; collectionId: string; teamId: string; isSharedPreview?: boolean; }) {
+function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collectionId, teamId, isSharedPreview = false, isCollectionOwned = false }: { badge: Badge; viewMode: BadgeCollection['viewMode']; onUpdateBadge: (badgeData: Partial<Badge>) => void; onDelete: () => void; collectionId: string; teamId: string; isSharedPreview?: boolean; isCollectionOwned: boolean; }) {
     const { toast } = useToast();
     const { teams, users, viewAsUser, allBadges } = useUser();
     const [isEditingName, setIsEditingName] = useState(false);
@@ -253,10 +253,10 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
 
     if (badgeOwner?.userId === viewAsUser.userId && isShared) {
         shareIcon = 'upload';
-        shareIconTitle = `Owned by you and shared`;
+        shareIconTitle = `Owned & Shared by You`;
     } else if (badgeOwner?.userId !== viewAsUser.userId) {
         shareIcon = 'downloading';
-        shareIconTitle = `Shared from ${badgeOwner?.displayName || 'another user'}`;
+        shareIconTitle = `Shared by ${badgeOwner?.displayName || 'another user'}`;
     } else if (isLinkedInternally && !isThisTheOriginalInstance) {
         shareIcon = 'change_circle';
         shareIconTitle = 'Linked from another collection in this team';
@@ -368,9 +368,11 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                             )}
                         </div>
                     </div>
-                     <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onDelete(); }} className="text-muted-foreground hover:text-destructive absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <GoogleSymbol name="delete" />
-                    </Button>
+                     {isCollectionOwned && (
+                        <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onDelete(); }} className="text-muted-foreground hover:text-destructive absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <GoogleSymbol name="delete" />
+                        </Button>
+                     )}
                 </div>
             </CardHeader>
             <CardContent className="space-y-4 pt-0 flex-grow">
@@ -516,9 +518,11 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                     </TooltipProvider>
                  )}
             </div>
-            <Button variant="ghost" size="icon" onClick={onDelete} className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity">
-                <GoogleSymbol name="delete" />
-            </Button>
+            {isCollectionOwned && (
+                <Button variant="ghost" size="icon" onClick={onDelete} className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity">
+                    <GoogleSymbol name="delete" />
+                </Button>
+            )}
         </div>
       );
     }
@@ -574,14 +578,16 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                 {inlineNameEditor}
             </UiBadge>
             
-            <button
-                type="button"
-                className="absolute top-0 right-0 h-4 w-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={onDelete}
-                aria-label={`Delete ${badge.name}`}
-            >
-                <GoogleSymbol name="close" className="text-xs" />
-            </button>
+             {isCollectionOwned && (
+                <button
+                    type="button"
+                    className="absolute top-0 right-0 h-4 w-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={onDelete}
+                    aria-label={`Delete ${badge.name}`}
+                >
+                    <GoogleSymbol name="close" className="text-xs" />
+                </button>
+             )}
         </div>
     );
 }
@@ -666,7 +672,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, users
         shareIconTitle = 'Owned by you and shared with all teams';
     } else if (!isMyTeamOwner) {
         shareIcon = 'downloading';
-        shareIconTitle = `Shared from ${ownerUser?.displayName || 'another user'}`;
+        shareIconTitle = `Shared by ${ownerUser?.displayName || 'another user'}`;
     }
     
     return (
@@ -718,16 +724,29 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, users
                                     ) : (
                                         <CardTitle onClick={() => isOwned && setIsEditingName(true)} className={cn("text-2xl font-headline font-thin break-words", isOwned && "cursor-pointer")}>{collection.name}</CardTitle>
                                     )}
-                                    {isOwned && !isSharedPreview && (
-                                        <TooltipProvider>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <Button variant="ghost" size="icon" onClick={() => onAddBadge(collection.id)}><GoogleSymbol name="add_circle" className="text-4xl" weight={100} /><span className="sr-only">Add Badge</span></Button>
-                                                </TooltipTrigger>
-                                                <TooltipContent><p>Add New Badge</p></TooltipContent>
-                                            </Tooltip>
-                                        </TooltipProvider>
+                                    <StrictModeDroppable droppableId={`duplicate-badge-zone:${collection.id}`} type="badge" isDropDisabled={!isOwned}>
+                                    {(provided, snapshot) => (
+                                        <div
+                                            ref={provided.innerRef}
+                                            {...provided.droppableProps}
+                                            className={cn(
+                                                "rounded-full p-0.5",
+                                                snapshot.isDraggingOver && "ring-1 ring-border ring-inset"
+                                            )}
+                                        >
+                                            {isOwned && !isSharedPreview && (
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button variant="ghost" size="icon" onClick={() => onAddBadge(collection.id)}><GoogleSymbol name="add_circle" className="text-4xl" weight={100} /><span className="sr-only">Add Badge</span></Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent><p>{snapshot.isDraggingOver ? 'Drop to Duplicate' : 'Add New Badge'}</p></TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
+                                            )}
+                                        </div>
                                     )}
+                                    </StrictModeDroppable>
                                 </div>
                             </div>
                         </div>
@@ -781,7 +800,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, users
                 </CardHeader>
             </div>
             <CardContent className="flex-grow">
-                <StrictModeDroppable droppableId={collection.id} type="badge" isDropDisabled={isSharedPreview} isCombineEnabled={false}>
+                <StrictModeDroppable droppableId={collection.id} type="badge" isDropDisabled={isSharedPreview}>
                     {(provided, snapshot) => (
                          <div
                             ref={provided.innerRef}
@@ -812,6 +831,7 @@ function BadgeCollectionCard({ collection, allBadgesInTeam, teamId, teams, users
                                             collectionId={collection.id}
                                             teamId={teamId}
                                             isSharedPreview={isSharedPreview}
+                                            isCollectionOwned={isOwned}
                                         />
                                     </div>)}
                                 </Draggable>
@@ -868,8 +888,8 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
     }, [isSearching]);
     
     useEffect(() => {
-        if (isSharedPanelSearching && sharedSearchInputRef.current) {
-            sharedSearchInputRef.current.focus();
+        if (isSharedPanelSearching) {
+            setTimeout(() => sharedSearchInputRef.current?.focus(), 100);
         }
     }, [isSharedPanelSearching]);
 
