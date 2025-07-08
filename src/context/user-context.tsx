@@ -98,6 +98,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const [allBadges, setAllBadges] = useState<Badge[]>(() => {
     const badgesMap = new Map<string, Badge>();
+    
+    (mockAppSettings.globalBadges || []).forEach(badge => {
+        if (!badgesMap.has(badge.id)) badgesMap.set(badge.id, badge);
+    });
+
     mockTeams.forEach(team => {
         (team.allBadges || []).forEach(badge => {
             if (!badgesMap.has(badge.id)) badgesMap.set(badge.id, badge);
@@ -348,7 +353,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       ownerCollectionId: collectionId,
       name: sourceBadge ? `${sourceBadge.name} (Copy)` : `New Badge`,
       icon: sourceBadge?.icon || googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)],
-      color: sourceBadge?.color ||predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
+      color: predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
     };
     setAllBadges(prev => [...prev, newBadge]);
     setAllBadgeCollections(prev => prev.map(c => {

@@ -71,7 +71,7 @@ const InlineSelectEditor = ({
 };
 
 export function UserManagement() {
-    const { realUser, users, updateUser, linkGoogleCalendar, allRolesAndBadges } = useUser();
+    const { realUser, users, updateUser, linkGoogleCalendar, allBadges } = useUser();
     const [editingPhoneUserId, setEditingPhoneUserId] = useState<string | null>(null);
     const [phoneValue, setPhoneValue] = useState('');
     const phoneInputRef = useRef<HTMLInputElement>(null);
@@ -208,7 +208,7 @@ export function UserManagement() {
                                             <Label className="text-xs text-muted-foreground">Badges</Label>
                                             <div className="flex flex-wrap gap-1 mt-2">
                                             {(user.roles || []).map(role => {
-                                                const roleInfo = allRolesAndBadges.find(r => r.name === role);
+                                                const roleInfo = allBadges.find(r => r.name === role);
                                                 return (
                                                 <Badge
                                                     key={role}
@@ -354,4 +354,3 @@ export function UserManagement() {
         </>
     )
 }
-

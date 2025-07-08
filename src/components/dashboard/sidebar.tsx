@@ -16,7 +16,7 @@ import { type AppPage } from '@/types';
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { realUser, viewAsUser, setViewAsUser, users, teams, notifications, appSettings, allRolesAndBadges, linkGoogleCalendar } = useUser();
+  const { realUser, viewAsUser, setViewAsUser, users, teams, notifications, appSettings, allBadges, linkGoogleCalendar } = useUser();
   const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -160,7 +160,7 @@ export function Sidebar() {
                     <div className="flex flex-wrap gap-1">
                         {(viewAsUser.roles && viewAsUser.roles.length > 0) ? (
                             viewAsUser.roles.map(roleName => {
-                                const roleInfo = allRolesAndBadges.find(r => r.name === roleName);
+                                const roleInfo = allBadges.find(r => r.name === roleName);
                                 return (
                                     <Badge
                                         key={roleName}
