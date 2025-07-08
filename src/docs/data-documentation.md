@@ -35,15 +35,15 @@ This table details the information stored directly within each `User` object.
 
 ### Dynamic Access Control for Pages & Tabs
 
-Access to every page and tab in the application is controlled by a dynamic ruleset. This allows for granular permission management without changing the application's code.
+Access to every page and content tab in the application is controlled by a dynamic ruleset. This allows for granular permission management without changing the application's code. The logic for this is primarily handled in `/src/lib/permissions.ts` and the page renderer at `/src/app/dashboard/[...page]/page.tsx`.
 
 **How It Works:**
 
-1.  **Page Access**: Access to a page is determined by the `access` object on its `AppPage` configuration. A user can see a page if they are a system admin, if the page has no rules (is public), or if they meet the criteria in the `access.users`, `access.teams`, or `access.adminGroups` arrays.
+1.  **Page Access**: Access to a page is determined by the `access` object on its `AppPage` configuration. A user can view a page if they are a system admin, if the page has no rules (making it public), or if their `userId`, `Team` membership, or `AdminGroup` membership is listed in the corresponding access array.
 
-2.  **Tab Access (Simplified)**: A tab's visibility follows a simpler, two-step rule:
-    *   **Step 1 (Inheritance)**: If a user has access to a page, they automatically have access to all the tabs associated with that page.
-    *   **Step 2 (Restriction)**: You can then *restrict* a tab to a smaller audience. If an `AppTab` object has its own `access.adminGroups` rule, it will **only** be visible to system administrators and members of those specific admin groups. This provides a simple way to create "admin-only" tabs on otherwise public pages.
+2.  **Tab Access**: Tab visibility is intentionally simple and directly tied to page access, following one clear rule with one exception:
+    *   **Rule**: If a user has access to a page, they automatically have access to **all** tabs associated with that page.
+    *   **Exception**: You can restrict a tab to be "admin-only." If an `AppTab` object has its own `access.adminGroups` rule, its visibility is overridden. It will **only** be visible to system administrators and members of those specific admin groups. This provides a simple way to create privileged tabs on otherwise public pages.
 
 **Example Configurations (`mock-data.ts`):**
 
@@ -192,3 +192,4 @@ This represents a specific, functional role or skill. The single source of truth
 | `icon: string` | The Google Symbol name for the badge's icon. |
 | `color: string` | The hex color code for the badge's icon and outline. |
 | `description?: string` | An optional description shown in tooltips. |
+
