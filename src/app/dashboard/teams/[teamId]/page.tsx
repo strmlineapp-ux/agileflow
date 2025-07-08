@@ -100,7 +100,7 @@ export default function TeamPage() {
     );
   }
   
-  const canViewPage = hasAccess(viewAsUser, pageConfig, teams, appSettings.adminGroups);
+  const canViewPage = hasAccess(viewAsUser, pageConfig, teams);
   if (!canViewPage) {
      return null; // Navigation is filtered, so this prevents direct URL access.
   }

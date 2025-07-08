@@ -13,7 +13,7 @@ import { canManageEventOnCalendar } from '@/lib/permissions';
 import { cn, getContrastColor } from '@/lib/utils';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { createMeetLink } from '@/ai/flows/create-meet-link-flow';
-import { type User, type SharedCalendar, type Attachment, type AttachmentType, type Attendee, type Event, type Badge, type AdminGroup } from '@/types';
+import { type User, type SharedCalendar, type Attachment, type AttachmentType, type Attendee, type Event, type Badge } from '@/types';
 
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -101,11 +101,11 @@ type EventFormProps = {
   initialData?: Partial<z.infer<typeof formSchema>>;
 };
 
-const getDefaultCalendarId = (user: User, availableCalendars: SharedCalendar[], adminGroups: AdminGroup[]): string | undefined => {
+const getDefaultCalendarId = (user: User, availableCalendars: SharedCalendar[]): string | undefined => {
     if (availableCalendars.length === 0) return undefined;
     const managedCalendar = availableCalendars.find(cal => cal.managers?.includes(user.userId));
     if (managedCalendar) return managedCalendar.id;
-    if (user.isAdmin || adminGroups.some(role => user.roles?.includes(role.name))) {
+    if (user.isAdmin) {
         return availableCalendars[0].id;
     }
     return undefined;
@@ -134,16 +134,16 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
   const [roleAssignments, setRoleAssignments] = React.useState<Record<string, { assignedUser: string | null; popoverOpen: boolean }>>({});
 
   const availableCalendars = React.useMemo(() => {
-    return calendars.filter(cal => canManageEventOnCalendar(viewAsUser, cal, appSettings.adminGroups));
-  }, [calendars, viewAsUser, appSettings.adminGroups]);
+    return calendars.filter(cal => canManageEventOnCalendar(viewAsUser, cal));
+  }, [calendars, viewAsUser]);
   
   const eventPriorityBadges = React.useMemo(() => {
     return teams.flatMap(t => t.badgeCollections.filter(c => c.applications?.includes('events'))).flatMap(c => c.badgeIds).map(id => teams.flatMap(t => t.allBadges).find(b => b.id === id)).filter((b): b is Badge => !!b);
   }, [teams]);
 
   const defaultCalendarId = React.useMemo(() => {
-    return getDefaultCalendarId(viewAsUser, availableCalendars, appSettings.adminGroups);
-  }, [viewAsUser, availableCalendars, appSettings.adminGroups]);
+    return getDefaultCalendarId(viewAsUser, availableCalendars);
+  }, [viewAsUser, availableCalendars]);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),

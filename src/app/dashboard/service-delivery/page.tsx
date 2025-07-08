@@ -76,7 +76,7 @@ export default function ServiceDeliveryPage() {
     );
   }
   
-  const canViewPage = hasAccess(viewAsUser, pageConfig, teams, appSettings.adminGroups);
+  const canViewPage = hasAccess(viewAsUser, pageConfig, teams);
   if (!canViewPage) {
     return null; // Don't render if user doesn't have access
   }

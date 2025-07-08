@@ -79,10 +79,10 @@ Access your preferences by clicking your avatar in the bottom-left corner of the
 
 ## 8. Management Pages (Admin & Manager Roles)
 
-### 8.1 Admin Management (`/dashboard/admin`)
+### 8.1 Admin (`/dashboard/admin`)
 This is the central control panel for configuring the application itself.
-- **Admins**: Manage a list of system administrators, with the ability to grant and revoke admin status.
-- **Pages**: Configure the application's navigation. Create new pages, define their URL path, and control who has access to them (by user or team). You can intuitively reorder pages by dragging and dropping them in the grid. Key system pages like "Admin Management" are pinned and cannot be moved. You can also instantly duplicate any page by dragging it onto the "Add New Page" (+) button.
+- **Admin Management**: Manage system administrators by dragging and dropping users between the "Admins" and "Users" lists.
+- **Pages**: Configure the application's navigation. Create new pages, define their URL path, and control who has access to them (by user or team). You can intuitively reorder pages by dragging and dropping them in the grid. Key system pages are pinned and cannot be moved. You can also instantly duplicate any page by dragging it onto the "Add New Page" (+) button.
 - **Tabs**: Manage the reusable content blocks (tabs) in a simple list view. Use the search bar to find a specific tab to edit.
 
 ### 8.2 Service Delivery Management (`/dashboard/service-delivery`)

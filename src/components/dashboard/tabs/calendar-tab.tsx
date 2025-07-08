@@ -20,7 +20,7 @@ import { EventDetailsDialog } from '@/components/calendar/event-details-dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
-  const { realUser, viewAsUser, calendars, appSettings } = useUser();
+  const { realUser, viewAsUser, calendars } = useUser();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'month' | 'week' | 'day' | 'production-schedule'>(realUser.defaultCalendarView || 'day');
   const [zoomLevel, setZoomLevel] = useState<'normal' | 'fit'>('normal');
@@ -34,7 +34,7 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
   const weekViewContainerRef = useRef<HTMLDivElement>(null);
   const productionScheduleViewContainerRef = useRef<HTMLDivElement>(null);
   
-  const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars, appSettings.adminGroups);
+  const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars);
 
   const handlePrev = useCallback(() => {
     switch (view) {

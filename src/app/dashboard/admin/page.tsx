@@ -1,14 +1,14 @@
 
 'use client';
 
-import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
+import React from 'react';
 import { useUser } from '@/context/user-context';
-import { type User, type AppPage, type AppTab } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { PagesManagement, AdminsManagement, TabsManagement } from '@/components/admin/page';
+import { type AppTab } from '@/types';
 
 const componentMap: Record<string, React.ComponentType<{ tab: AppTab }>> = {
   admins: AdminsManagement,

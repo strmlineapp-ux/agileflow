@@ -81,13 +81,13 @@ This entity represents an internal AgileFlow calendar. It acts as a logical cont
 ## Application-Wide Settings
 **Firestore Document**: `/app-settings/global` (A singleton document)
 
-This entity, `AppSettings`, holds global configuration data that allows for customization of the application's terminology and appearance without altering the core codebase. These settings are managed on the **Admin Management** and **Service Delivery** pages.
+This entity, `AppSettings`, holds global configuration data that allows for customization of the application's terminology and appearance without altering the core codebase. These settings are managed on the **Admin** and **Service Delivery** pages.
 
 ### AppSettings Data
 
 | Data Point | Description |
 | :--- | :--- |
-| `pages: AppPage[]` | **The core of the dynamic navigation.** This is an array of objects defining every page in the application. The order of pages in this array directly corresponds to their order in the sidebar navigation. The order is managed on the **Admin Management** page using the "Draggable Card Management" UI pattern. Each page object includes its name, icon, URL path, access control rules, and a list of associated `tab.id`s that should be rendered on it. |
+| `pages: AppPage[]` | **The core of the dynamic navigation.** This is an array of objects defining every page in the application. The order of pages in this array directly corresponds to their order in the sidebar navigation. The order is managed on the **Admin** page using the "Draggable Card Management" UI pattern. Each page object includes its name, icon, URL path, access control rules, and a list of associated `tab.id`s that should be rendered on it. |
 | `tabs: AppTab[]` | **The core of the dynamic content.** This is an array of objects defining all reusable content tabs. Each object includes the tab's name, icon, and a `componentKey` that maps it to a React component. |
 | `globalBadges: Badge[]` | An array of globally-defined badges. These are managed on the **Service Delivery > Badges** tab. |
 | `calendarManagementLabel?: string` | An alias for the "Manage Calendars" tab on the Service Delivery page. |

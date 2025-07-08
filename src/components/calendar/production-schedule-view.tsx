@@ -189,7 +189,7 @@ const ProductionScheduleLocationRow = React.memo(({
     const assignedUser = users.find(u => u.userId === assignedUserId);
 
     const canManageThisLocation = useMemo(() => {
-        if (viewAsUser.roles?.includes('Admin')) return true;
+        if (viewAsUser.isAdmin) return true;
         return teams.some(team => 
             (team.pinnedLocations || []).includes(location) && 
             (team.locationCheckManagers || []).includes(viewAsUser.userId)
@@ -339,17 +339,16 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
     const [addCheckPopoverOpen, setAddCheckPopoverOpen] = useState<Record<string, boolean>>({});
     const [checkSearchTerm, setCheckSearchTerm] = useState('');
     
-    const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars, appSettings.adminGroups);
-    const managerialRoles = appSettings.adminGroups.map(r => r.name);
-    const canManageStatus = viewAsUser.isAdmin || viewAsUser.roles?.some(p => managerialRoles.includes(p));
+    const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars);
+    const canManageStatus = viewAsUser.isAdmin;
 
     const timeFormatTimeline = viewAsUser.timeFormat === '24h' ? 'HH:mm' : 'h a';
     const timeFormatEvent = viewAsUser.timeFormat === '24h' ? 'HH:mm' : 'h:mm a';
 
     const canManageAnyCheckLocation = useMemo(() => {
-        if (viewAsUser.roles?.includes('Admin')) return true;
+        if (viewAsUser.isAdmin) return true;
         return teams.some(t => (t.locationCheckManagers || []).includes(viewAsUser.userId));
-    }, [viewAsUser.roles, viewAsUser.userId, teams]);
+    }, [viewAsUser.isAdmin, viewAsUser.userId, teams]);
     
     const calendarColorMap = useMemo(() => {
         const map: Record<string, { bg: string, text: string }> = {};
@@ -599,7 +598,7 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
                                     {allChecksToRender.map(location => {
                                         const assignedUserId = dailyCheckAssignments[dayIso]?.[location];
                                         const assignedUser = users.find(u => u.userId === assignedUserId);
-                                        const canManageThisCheckLocation = viewAsUser.roles?.includes('Admin') || teams.some(t =>
+                                        const canManageThisCheckLocation = viewAsUser.isAdmin || teams.some(t =>
                                             (t.checkLocations || []).includes(location) && (t.locationCheckManagers || []).includes(viewAsUser.userId)
                                         );
                                         const isTempCheck = tempChecksForDaySet.has(location);
