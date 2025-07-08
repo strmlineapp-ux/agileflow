@@ -24,14 +24,12 @@ interface UserContextType {
   updateTeam: (teamId: string, teamData: Partial<Team>) => Promise<void>;
   deleteTeam: (teamId: string) => Promise<void>;
   reorderTeams: (reorderedTeams: Team[]) => Promise<void>;
-  unlinkAndCopyTeam: (teamToUnlink: Team, newOwner: BadgeCollectionOwner) => Promise<void>;
-  linkTeam: (teamId: string) => Promise<void>;
+  updateUser: (userId: string, userData: Partial<User>) => Promise<void>;
   notifications: Notification[];
   setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>;
   userStatusAssignments: Record<string, UserStatusAssignment[]>;
   setUserStatusAssignments: React.Dispatch<React.SetStateAction<Record<string, UserStatusAssignment[]>>>;
   addUser: (newUser: User) => Promise<void>;
-  updateUser: (userId: string, userData: Partial<User>) => Promise<void>;
   linkGoogleCalendar: (userId: string) => Promise<void>;
   calendars: SharedCalendar[];
   reorderCalendars: (reorderedCalendars: SharedCalendar[]) => Promise<void>;
@@ -183,46 +181,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       await simulateApi();
       setTeams(reordered);
   }, []);
-  
-  const unlinkAndCopyTeam = useCallback(async (teamToUnlink: Team, newOwner: BadgeCollectionOwner) => {
-    await simulateApi();
-    
-    const newTeamData: Omit<Team, 'id'> = {
-        name: teamToUnlink.name,
-        icon: teamToUnlink.icon,
-        color: teamToUnlink.color,
-        owner: newOwner,
-        isShared: false,
-        members: teamToUnlink.members,
-        teamAdmins: teamToUnlink.teamAdmins,
-        teamAdminsLabel: teamToUnlink.teamAdminsLabel,
-        membersLabel: teamToUnlink.membersLabel,
-        locationCheckManagers: teamToUnlink.locationCheckManagers,
-        allBadges: JSON.parse(JSON.stringify(teamToUnlink.allBadges)),
-        badgeCollections: JSON.parse(JSON.stringify(teamToUnlink.badgeCollections)),
-        userBadgesLabel: teamToUnlink.userBadgesLabel,
-        pinnedLocations: teamToUnlink.pinnedLocations,
-        checkLocations: teamToUnlink.checkLocations,
-        locationAliases: teamToUnlink.locationAliases,
-        workstations: teamToUnlink.workstations,
-        eventTemplates: JSON.parse(JSON.stringify(teamToUnlink.eventTemplates)),
-    };
-    
-    addTeam(newTeamData); // This will add the new team with a new ID
-
-    const updatedLinkedTeamIds = (viewAsUser.linkedTeamIds || []).filter(id => id !== teamToUnlink.id);
-    await updateUser(viewAsUser.userId, { linkedTeamIds: updatedLinkedTeamIds });
-
-    toast({ title: 'Team Unlinked & Copied', description: `An independent copy of "${teamToUnlink.name}" is now on your board.` });
-  }, [addTeam, viewAsUser, updateUser, toast]);
-
-  const linkTeam = useCallback(async (teamId: string) => {
-    await simulateApi();
-    await updateUser(viewAsUser.userId, { 
-      linkedTeamIds: Array.from(new Set([...(viewAsUser.linkedTeamIds || []), teamId]))
-    });
-  }, [viewAsUser.userId, viewAsUser.linkedTeamIds, updateUser]);
-
 
   const addCalendar = useCallback(async (newCalendarData: Omit<SharedCalendar, 'id'>) => {
     const newCalendar: SharedCalendar = {
@@ -383,8 +341,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     updateTeam,
     deleteTeam,
     reorderTeams,
-    unlinkAndCopyTeam,
-    linkTeam,
     notifications,
     setNotifications,
     userStatusAssignments,
@@ -412,7 +368,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }), [
     loading, realUser, viewAsUser, users, allBadges, allRolesAndBadges, teams, notifications, userStatusAssignments,
     calendars, events, locations, allBookableLocations, appSettings,
-    addTeam, updateTeam, deleteTeam, reorderTeams, unlinkAndCopyTeam, linkTeam, setNotifications, setUserStatusAssignments, addUser,
+    addTeam, updateTeam, deleteTeam, reorderTeams, setNotifications, setUserStatusAssignments, addUser,
     updateUser, linkGoogleCalendar, reorderCalendars, addCalendar, updateCalendar, deleteCalendar,
     addEvent, updateEvent, deleteEvent, addLocation, deleteLocation,
     getPriorityDisplay, updateAppSettings, updateAppTab
