@@ -97,7 +97,7 @@ export const mockPages: AppPage[] = [
         associatedTabs: ['tab-team-members', 'tab-badges', 'tab-locations', 'tab-workstations', 'tab-templates'],
         access: {
             users: [],
-            teams: ['video-production', 'live-events', 'production', 'service-delivery'],
+            teams: ['video-production', 'live-events', 'production'],
         }
     },
     {
