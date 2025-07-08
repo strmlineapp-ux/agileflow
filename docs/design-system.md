@@ -258,7 +258,7 @@ The application supports two distinct color themes, `light` and `dark`, which ca
 
 -   **Dark Theme**:
     -   **Aesthetic**: Modern and focused, using a dark charcoal background (`--background: 0 0% 8%`) and light grey text (`--foreground: 0 0% 67%`).
-    -   **Primary Color**: A vibrant, energetic orange (`hsl(25 88% 45%)`) that provides a strong contrast for key actions.
+    -   **Primary Color**: A vibrant, energetic orange (`#D8620E` or `hsl(25 88% 45%)`) that provides a strong contrast for key actions.
     -   **Accent Color**: A warm, golden yellow (`hsl(43 55% 71%)`) used in button hover gradients.
 
 - **Custom Primary Color**: Users can select a custom primary color using a color picker popover, which is triggered by a ghost-style palette icon button. This custom color overrides the theme's default primary color.
