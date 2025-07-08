@@ -432,7 +432,7 @@ function TeamCard({
     );
 }
 
-export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: AppTab; page: AppPage, isSingleTabPage?: boolean }) {
+export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: AppTab; page: AppPage; isSingleTabPage?: boolean }) {
     const { viewAsUser, users, teams, appSettings, addTeam, updateTeam, deleteTeam, reorderTeams, updateAppTab, unlinkAndCopyTeam, linkTeam } = useUser();
     const { toast } = useToast();
 
@@ -584,7 +584,11 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
     
     const displayedTeams = useMemo(() => {
         return teams
-            .filter(t => isTeamOwner(t, viewAsUser) || (viewAsUser.linkedTeamIds || []).includes(t.id))
+            .filter(t => 
+                isTeamOwner(t, viewAsUser) || 
+                (viewAsUser.linkedTeamIds || []).includes(t.id) ||
+                t.members.includes(viewAsUser.userId)
+            )
             .filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase()));
     }, [teams, viewAsUser, searchTerm, isTeamOwner]);
 
