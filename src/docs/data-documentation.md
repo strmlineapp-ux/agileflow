@@ -131,7 +131,7 @@ A sub-entity of `AppSettings`, `AppTab` defines a single, reusable content block
 | `access?: { adminGroups: string[] }` | **Optional.** An object containing an array of `adminGroupId`s. If present, this tab will only be visible to members of those groups (and system admins). If omitted, the tab inherits access from its parent page. |
 
 ### AdminGroup Entity
-A sub-entity of `AppSettings`, `AdminGroup` defines a single, dynamic administrative level.
+A sub-entity of `AppSettings`, `AdminGroup` defines a single, dynamic administrative level. It acts as a permission layer, distinct from a `Team` which is a functional unit for collaboration.
 
 | Data Point | Description |
 | :--- | :--- |
@@ -139,12 +139,12 @@ A sub-entity of `AppSettings`, `AdminGroup` defines a single, dynamic administra
 | `name: string` | **Internal.** The display name for the group (e.g., "Service Admin", "Service Admin+"). This is editable inline on the Admin Management page. |
 | `icon: string` | **Internal.** The Google Symbol name for the icon associated with the group. |
 | `color: string` | **Internal.** The hex color code for the icon's badge. |
-| `groupAdmins?: string[]` | **Internal.** An array of `userId`s for users who have been designated as an "Admin" for this specific group, granting them elevated permissions for pages associated with this group. |
+| `groupAdmins?: string[]` | **Internal.** An array of `userId`s for users who can add or remove members from this specific `AdminGroup`. This allows for delegated administration without granting full system-wide permissions. |
 
 ## Team Entity
 **Firestore Collection**: `/teams/{teamId}`
 
-The `Team` entity groups users together and defines a set of team-specific configurations, most notably their functional **Badges**.
+The `Team` entity is a functional unit that groups users together for collaboration. It is distinct from an `AdminGroup`, which is a permission layer.
 
 ### Team Data
 
@@ -157,7 +157,7 @@ The `Team` entity groups users together and defines a set of team-specific confi
 | `owner: { type: 'team', id: string } \| { type: 'admin_group', name: string } \| { type: 'user', id: string }` | An object that defines who owns the team. Ownership dictates who can edit the team's properties. |
 | `isShared?: boolean` | **Internal.** If `true`, this team will be visible to other teams in the application for discovery and linking. |
 | `members: string[]` | An array of `userId`s for all members of the team. |
-| `teamAdmins?: string[]` | A subset of `members` who have administrative privileges for this team. |
+| `teamAdmins?: string[]` | A subset of `members` who have administrative privileges for this team (e.g., can add/remove members). |
 | `teamAdminsLabel?: string` | A custom label for the Team Admins list on the Team Members tab. |
 | `membersLabel?: string` | A custom label for the Members list on the Team Members tab. |
 | `allBadges: Badge[]` | The single source of truth for all `Badge` objects **owned** by this team. |
@@ -192,4 +192,3 @@ This represents a specific, functional role or skill. The single source of truth
 | `icon: string` | The Google Symbol name for the badge's icon. |
 | `color: string` | The hex color code for the badge's icon and outline. |
 | `description?: string` | An optional description shown in tooltips. |
-

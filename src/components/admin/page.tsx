@@ -50,17 +50,17 @@ const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
 // #endregion
 
 // #region Admin Groups Management Tab
-const UserAssignmentCard = ({ user, index, onRemove, isGroupAdmin, onSetGroupAdmin, canRemove = true, isDraggable = false, draggableId }: { user: User; index?: number; onRemove: (user: User) => void; isGroupAdmin: boolean; onSetGroupAdmin?: (user: User) => void; canRemove?: boolean; isDraggable?: boolean; draggableId?: string }) => {
+const UserAssignmentCard = ({ user, index, onRemove, isGroupAdmin, onSetGroupAdmin, canManage, isDraggable = false, draggableId }: { user: User; index?: number; onRemove: (user: User) => void; isGroupAdmin: boolean; onSetGroupAdmin?: (user: User) => void; canManage: boolean; isDraggable?: boolean; draggableId?: string }) => {
   const cardContent = (
     <div 
-        tabIndex={onSetGroupAdmin ? 0 : -1}
-        role={onSetGroupAdmin ? "button" : undefined}
+        tabIndex={canManage ? 0 : -1}
+        role={canManage ? "button" : undefined}
         className={cn(
             "transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50 group relative rounded-lg",
-            onSetGroupAdmin && "cursor-pointer"
+            canManage && "cursor-pointer"
         )}
-        onClick={onSetGroupAdmin ? () => onSetGroupAdmin(user) : undefined}
-        onKeyDown={onSetGroupAdmin ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSetGroupAdmin(user); } } : undefined}
+        onClick={canManage ? () => onSetGroupAdmin?.(user) : undefined}
+        onKeyDown={canManage ? (e) => { if ((e.key === 'Enter' || e.key === ' ') && onSetGroupAdmin) { e.preventDefault(); onSetGroupAdmin(user); } } : undefined}
     >
       <div className="p-2 flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -81,7 +81,7 @@ const UserAssignmentCard = ({ user, index, onRemove, isGroupAdmin, onSetGroupAdm
           </div>
         </div>
       </div>
-       {canRemove && (
+       {canManage && (
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -122,7 +122,7 @@ const UserAssignmentCard = ({ user, index, onRemove, isGroupAdmin, onSetGroupAdm
   return cardContent;
 };
 
-const AddUserToGroupButton = ({ usersToAdd, onAdd, groupName }: { usersToAdd: User[], onAdd: (user: User) => void, groupName: string }) => {
+const AddUserToGroupButton = ({ usersToAdd, onAdd, groupName, canManage }: { usersToAdd: User[], onAdd: (user: User) => void, groupName: string, canManage: boolean }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -154,6 +154,8 @@ const AddUserToGroupButton = ({ usersToAdd, onAdd, groupName }: { usersToAdd: Us
       );
   }, [usersToAdd, searchTerm]);
   
+  if (!canManage) return null;
+
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <TooltipProvider>
@@ -214,7 +216,7 @@ function AdminGroupCard({
   isDeletable: boolean;
 }) {
     const { toast } = useToast();
-    const { updateUser } = useUser();
+    const { viewAsUser, updateUser } = useUser();
     
     // Popover States
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
@@ -226,6 +228,8 @@ function AdminGroupCard({
     // Icon Search State
     const [iconSearch, setIconSearch] = useState('');
     const iconSearchInputRef = useRef<HTMLInputElement>(null);
+    
+    const canManageGroup = viewAsUser.isAdmin || (group.groupAdmins || []).includes(viewAsUser.userId);
     
     const handleSaveName = useCallback(() => {
         const input = nameInputRef.current;
@@ -291,6 +295,10 @@ function AdminGroupCard({
     };
 
     const handleSetGroupAdmin = (userToUpdate: User) => {
+        if(!viewAsUser.isAdmin) {
+          toast({ variant: 'destructive', title: 'Permission Denied', description: 'Only system admins can change group administrators.' });
+          return;
+        }
         const currentAdmins = group.groupAdmins || [];
         const isAlreadyAdmin = currentAdmins.includes(userToUpdate.userId);
         const newAdmins = isAlreadyAdmin
@@ -309,9 +317,9 @@ function AdminGroupCard({
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <button className="h-12 w-12 flex items-center justify-center">
-                                                <GoogleSymbol name={group.icon} className="text-6xl" weight={100} />
-                                            </button>
+                                          <button className="h-12 w-12 flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed" disabled={!canManageGroup}>
+                                              <GoogleSymbol name={group.icon} className="text-6xl" weight={100} />
+                                          </button>
                                         </TooltipTrigger>
                                         <TooltipContent><p>Change Icon</p></TooltipContent>
                                     </Tooltip>
@@ -354,9 +362,9 @@ function AdminGroupCard({
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <PopoverTrigger asChild>
+                                            <PopoverTrigger asChild disabled={!canManageGroup}>
                                                 <button
-                                                    className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background cursor-pointer" 
+                                                    className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background", canManageGroup && "cursor-pointer", !canManageGroup && "cursor-not-allowed opacity-70")}
                                                     aria-label="Change service admin color"
                                                     style={{ backgroundColor: group.color }}
                                                 />
@@ -377,8 +385,8 @@ function AdminGroupCard({
                         </div>
                         <div className="flex-1">
                              <div className="flex items-center gap-1">
-                                {isEditingName ? (<Input ref={nameInputRef} defaultValue={group.name} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-lg font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>) : (<CardTitle onClick={() => setIsEditingName(true)} className="font-headline cursor-pointer text-lg font-thin">{group.name}</CardTitle>)}
-                                <AddUserToGroupButton usersToAdd={unassignedUsers} onAdd={handleGroupToggle} groupName={group.name} />
+                                {isEditingName ? (<Input ref={nameInputRef} defaultValue={group.name} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-lg font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"/>) : (<CardTitle onClick={() => canManageGroup && setIsEditingName(true)} className={cn("font-headline text-lg font-thin", canManageGroup && "cursor-pointer")}>{group.name}</CardTitle>)}
+                                <AddUserToGroupButton usersToAdd={unassignedUsers} onAdd={handleGroupToggle} groupName={group.name} canManage={canManageGroup} />
                             </div>
                         </div>
                     </div>
@@ -400,7 +408,7 @@ function AdminGroupCard({
             </CardHeader>
             <ScrollArea className="flex-grow">
                 <CardContent>
-                    <StrictModeDroppable droppableId={`group-content-${group.id}`} type="user-card" isDropDisabled={false} isCombineEnabled={false}>
+                    <StrictModeDroppable droppableId={`group-content-${group.id}`} type="user-card" isDropDisabled={!canManageGroup} isCombineEnabled={false}>
                     {(provided, snapshot) => (
                         <div 
                         ref={provided.innerRef}
@@ -417,6 +425,7 @@ function AdminGroupCard({
                                 isGroupAdmin={(group.groupAdmins || []).includes(user.userId)}
                                 onSetGroupAdmin={handleSetGroupAdmin}
                                 isDraggable={true}
+                                canManage={canManageGroup}
                             />
                         ))}
                         {provided.placeholder}
@@ -431,7 +440,7 @@ function AdminGroupCard({
 
 export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
   const { toast } = useToast();
-  const { users, updateUser, appSettings, updateAppSettings, updateAppTab } = useUser();
+  const { viewAsUser, users, updateUser, appSettings, updateAppSettings, updateAppTab } = useUser();
   const [is2faDialogOpen, setIs2faDialogOpen] = useState(false);
   const [on2faSuccess, setOn2faSuccess] = useState<(() => void) | null>(null);
   const [twoFactorCode, setTwoFactorCode] = useState('');
@@ -676,7 +685,7 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                             <CardHeader>
                               <div className="flex items-center gap-2">
                                 <CardTitle className="font-headline font-thin text-lg">Admins</CardTitle>
-                                <AddUserToGroupButton usersToAdd={nonAdminUsers} onAdd={handleAdminToggle} groupName="Admin" />
+                                <AddUserToGroupButton usersToAdd={nonAdminUsers} onAdd={handleAdminToggle} groupName="Admin" canManage={viewAsUser.isAdmin} />
                               </div>
                             </CardHeader>
                             <ScrollArea className="flex-grow">
@@ -694,7 +703,7 @@ export const AdminGroupsManagement = ({ tab }: { tab: AppTab }) => {
                                           user={user} 
                                           onRemove={handleAdminToggle}
                                           isGroupAdmin={false}
-                                          canRemove={adminUsers.length > 1}
+                                          canManage={adminUsers.length > 1 && viewAsUser.isAdmin}
                                           />
                                       ))}
                                       {provided.placeholder}
