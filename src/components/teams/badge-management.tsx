@@ -860,13 +860,25 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
     const titleInputRef = useRef<HTMLInputElement>(null);
     
     const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
-    const [isSharedPanelSearching, setIsSharedPanelSearching] = useState(false);
     const [sharedSearchTerm, setSharedSearchTerm] = useState('');
     const sharedSearchInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (isEditingTitle) titleInputRef.current?.focus();
     }, [isEditingTitle]);
+
+    useEffect(() => {
+        if (isSearching && searchInputRef.current) {
+            searchInputRef.current.focus();
+        }
+    }, [isSearching]);
+    
+    useEffect(() => {
+        if (isSharedPanelOpen) {
+            setTimeout(() => sharedSearchInputRef.current?.focus(), 100);
+        }
+    }, [isSharedPanelOpen]);
+
 
     const handleSaveTitle = () => {
         const newName = titleInputRef.current?.value.trim();
@@ -880,19 +892,6 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
         if (e.key === 'Enter') handleSaveTitle();
         else if (e.key === 'Escape') setIsEditingTitle(false);
     };
-
-    useEffect(() => {
-        if (isSearching && searchInputRef.current) {
-            searchInputRef.current.focus();
-        }
-    }, [isSearching]);
-    
-    useEffect(() => {
-        if (isSharedPanelSearching) {
-            setTimeout(() => sharedSearchInputRef.current?.focus(), 100);
-        }
-    }, [isSharedPanelSearching]);
-
 
     if (!team) {
         return (
@@ -1409,30 +1408,14 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
                                         <div className="flex items-center justify-between">
                                             <CardTitle className="font-headline font-thin text-xl">Shared Collections</CardTitle>
                                             <div className="flex items-center gap-1">
-                                                {!isSharedPanelSearching ? (
-                                                    <TooltipProvider>
-                                                        <Tooltip>
-                                                            <TooltipTrigger asChild>
-                                                                <Button variant="ghost" size="icon" onClick={() => setIsSharedPanelSearching(true)}>
-                                                                    <GoogleSymbol name="search" />
-                                                                </Button>
-                                                            </TooltipTrigger>
-                                                            <TooltipContent><p>Search Shared Collections</p></TooltipContent>
-                                                        </Tooltip>
-                                                    </TooltipProvider>
-                                                ) : (
-                                                    <div className="flex items-center gap-1">
-                                                        <GoogleSymbol name="search" className="text-muted-foreground" />
-                                                        <input
-                                                            ref={sharedSearchInputRef}
-                                                            placeholder="Search shared..."
-                                                            value={sharedSearchTerm}
-                                                            onChange={(e) => setSharedSearchTerm(e.target.value)}
-                                                            onBlur={() => { if (!sharedSearchTerm) setIsSharedPanelSearching(false); }}
-                                                            className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
-                                                        />
-                                                    </div>
-                                                )}
+                                                <GoogleSymbol name="search" className="text-muted-foreground text-lg" />
+                                                <input
+                                                    ref={sharedSearchInputRef}
+                                                    placeholder="Search shared..."
+                                                    value={sharedSearchTerm}
+                                                    onChange={(e) => setSharedSearchTerm(e.target.value)}
+                                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                                                />
                                             </div>
                                         </div>
                                         <CardDescription>Drag a collection to link it to your team.</CardDescription>
