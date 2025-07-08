@@ -94,6 +94,8 @@ export const AdminsManagement = ({ tab }: { tab: AppTab }) => {
   
   const [adminSearch, setAdminSearch] = useState('');
   const [userSearch, setUserSearch] = useState('');
+  const userSearchInputRef = useRef<HTMLInputElement>(null);
+
 
   useEffect(() => {
     if (isEditingTitle) titleInputRef.current?.focus();
@@ -102,6 +104,14 @@ export const AdminsManagement = ({ tab }: { tab: AppTab }) => {
   useEffect(() => {
     if (isEditing2fa) twoFactorCodeInputRef.current?.focus();
   }, [isEditing2fa]);
+  
+  useEffect(() => {
+    // Focus on the "Users" search input when the component mounts
+    const timer = setTimeout(() => {
+        userSearchInputRef.current?.focus();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleSaveTitle = () => {
     const newName = titleInputRef.current?.value.trim();
@@ -200,10 +210,15 @@ export const AdminsManagement = ({ tab }: { tab: AppTab }) => {
                 <Card className="flex flex-col h-full bg-transparent">
                     <CardHeader>
                         <div className="flex items-center justify-between gap-4">
-                            <CardTitle>Admins ({adminUsers.length})</CardTitle>
-                            <div className="relative w-48">
-                                <GoogleSymbol name="search" className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                                <Input placeholder="Search admins..." value={adminSearch} onChange={(e) => setAdminSearch(e.target.value)} className="pl-8" />
+                            <CardTitle className="font-normal text-base">Admins ({adminUsers.length})</CardTitle>
+                             <div className="flex items-center gap-1 w-48">
+                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                                <input
+                                    placeholder="Search admins..."
+                                    value={adminSearch}
+                                    onChange={(e) => setAdminSearch(e.target.value)}
+                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                                />
                             </div>
                         </div>
                     </CardHeader>
@@ -244,10 +259,16 @@ export const AdminsManagement = ({ tab }: { tab: AppTab }) => {
                   <Card className="flex flex-col h-full bg-transparent">
                     <CardHeader>
                         <div className="flex items-center justify-between gap-4">
-                            <CardTitle>Users ({nonAdminUsers.length})</CardTitle>
-                            <div className="relative w-48">
-                                <GoogleSymbol name="search" className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                                <Input placeholder="Search users..." value={userSearch} onChange={(e) => setUserSearch(e.target.value)} className="pl-8" />
+                            <CardTitle className="font-normal text-base">Users ({nonAdminUsers.length})</CardTitle>
+                             <div className="flex items-center gap-1 w-48">
+                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                                <input
+                                    ref={userSearchInputRef}
+                                    placeholder="Search users..."
+                                    value={userSearch}
+                                    onChange={(e) => setUserSearch(e.target.value)}
+                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                                />
                             </div>
                         </div>
                     </CardHeader>
