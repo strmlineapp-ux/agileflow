@@ -371,6 +371,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                         onBlur={handleSaveDescription} 
                         onKeyDown={handleDescriptionKeyDown} 
                         className="p-0 text-sm text-muted-foreground border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 resize-none" 
+                        placeholder="Click to add a description."
                         disabled={!isEditable}
                     />
                  ) : (
@@ -856,7 +857,6 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
     
     const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
     const [sharedSearchTerm, setSharedSearchTerm] = useState('');
-    const [isSharedSearching, setIsSharedSearching] = useState(false);
     const sharedSearchInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -883,10 +883,15 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
     }, [isSearching]);
     
     useEffect(() => {
-        if (isSharedSearching && sharedSearchInputRef.current) {
-            setTimeout(() => sharedSearchInputRef.current?.focus(), 100);
+        if (isSharedPanelOpen) {
+            setTimeout(() => {
+                sharedSearchInputRef.current?.focus();
+            }, 100);
+        } else {
+            setSharedSearchTerm('');
         }
-    }, [isSharedSearching]);
+    }, [isSharedPanelOpen]);
+
 
     if (!team) {
         return (
@@ -1403,30 +1408,16 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
                                     <CardHeader>
                                         <div className="flex items-center justify-between">
                                             <CardTitle className="font-headline font-thin text-xl">Shared Collections</CardTitle>
-                                            {!isSharedSearching ? (
-                                                <TooltipProvider>
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={() => setIsSharedSearching(true)}>
-                                                                <GoogleSymbol name="search" />
-                                                            </Button>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent><p>Search Shared Collections</p></TooltipContent>
-                                                    </Tooltip>
-                                                </TooltipProvider>
-                                            ) : (
-                                                <div className="flex items-center gap-1 border-b">
+                                            <div className="flex items-center gap-1 border-b">
                                                 <GoogleSymbol name="search" className="text-muted-foreground" />
                                                 <input
                                                     ref={sharedSearchInputRef}
-                                                    placeholder="Search..."
+                                                    placeholder="Search shared..."
                                                     value={sharedSearchTerm}
                                                     onChange={(e) => setSharedSearchTerm(e.target.value)}
-                                                    onBlur={() => !sharedSearchTerm && setIsSharedSearching(false)}
                                                     className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
                                                 />
-                                                </div>
-                                            )}
+                                            </div>
                                         </div>
                                         <CardDescription>Drag a collection to link it to your team.</CardDescription>
                                     </CardHeader>
