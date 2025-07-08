@@ -21,11 +21,21 @@ export function Sidebar() {
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const userManagedTeams = useMemo(() => {
-    if(viewAsUser.isAdmin) {
-        return teams;
-    }
-    return teams.filter(team => team.teamAdmins?.includes(viewAsUser.userId));
-  }, [viewAsUser, teams]);
+      const teamManagementPage = appSettings.pages.find(p => p.id === 'page-team-management');
+      if (!teamManagementPage) return [];
+
+      return teams.filter(team => {
+        // Admins can manage all teams that are configured to have a management page
+        if (viewAsUser.isAdmin) {
+            return teamManagementPage.access.teams.includes(team.id);
+        }
+        // Non-admins must be a teamAdmin and the team must be in the page's access list
+        return (
+            (team.teamAdmins?.includes(viewAsUser.userId) || team.owner.id === viewAsUser.userId) &&
+            teamManagementPage.access.teams.includes(team.id)
+        );
+      });
+  }, [viewAsUser, teams, appSettings.pages]);
   
   const orderedNavItems = useMemo(() => {
     const adminPageId = 'page-admin-management';

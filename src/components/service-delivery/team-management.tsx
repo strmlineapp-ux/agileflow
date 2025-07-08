@@ -366,7 +366,7 @@ function TeamCard({
             </div>
             <CardContent className="flex-grow pt-0 flex flex-col">
                 <ScrollArea className="max-h-48 pr-2 flex-grow">
-                    <StrictModeDroppable droppableId={team.id} type="user-card" isDropDisabled={!canManageTeam} ignoreContainerClipping={false}>
+                    <StrictModeDroppable droppableId={team.id} type="user-card" isDropDisabled={!canManageTeam}>
                         {(provided, snapshot) => (
                             <div
                                 ref={provided.innerRef}
@@ -376,7 +376,7 @@ function TeamCard({
                                     snapshot.isDraggingOver && "ring-1 ring-border ring-inset"
                                 )}>
                                 {teamMembers.map((user, index) => (
-                                    <Draggable key={user.userId} draggableId={`user-${team.id}-${user.userId}`} index={index} isDragDisabled={!canManageTeam} ignoreContainerClipping={false}>
+                                    <Draggable key={user.userId} draggableId={`user-${team.id}-${user.userId}`} index={index} isDragDisabled={!canManageTeam}>
                                         {(provided, snapshot) => (
                                             <div
                                                 ref={provided.innerRef}
@@ -387,7 +387,7 @@ function TeamCard({
                                             <UserCard 
                                                 user={user} 
                                                 onRemove={() => onRemoveUser(team.id, user.userId)}
-                                                isTeamAdmin={(team.teamAdmins || []).includes(user.userId)}
+                                                isTeamAdmin={(team.teamAdmins || []).includes(user.userId) && team.members.length > 1}
                                                 onSetAdmin={() => onSetAdmin(team.id, user.userId)}
                                                 canManage={canManageTeam}
                                             />
@@ -467,7 +467,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
     };
 
     const handleAddTeam = () => {
-        const owner = getOwnershipContext(page, viewAsUser, teams, appSettings.adminGroups);
+        const owner = getOwnershipContext(page, viewAsUser);
         const newTeam: Omit<Team, 'id'> = {
             name: `New Team ${teams.length + 1}`,
             icon: 'group',
@@ -495,7 +495,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
         if (canManageTeam(team)) {
             setTeamToDelete(team);
         } else {
-            const owner = getOwnershipContext(page, viewAsUser, teams, appSettings.adminGroups);
+            const owner = getOwnershipContext(page, viewAsUser);
             unlinkAndCopyTeam(team, owner);
         }
     };
@@ -599,7 +599,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
              const teamToDuplicate = allVisibleTeams.find(t => t.id === draggableId);
 
             if(teamToDuplicate) {
-                const owner = getOwnershipContext(page, viewAsUser, teams, appSettings.adminGroups);
+                const owner = getOwnershipContext(page, viewAsUser);
                 const newTeamData: Omit<Team, 'id'> = {
                     name: `${teamToDuplicate.name} (Copy)`,
                     icon: teamToDuplicate.icon,
@@ -654,7 +654,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                                   </Tooltip>
                               </TooltipProvider>
                             )}
-                            <StrictModeDroppable droppableId="duplicate-team-zone" type="team-card" isDropDisabled={false} ignoreContainerClipping={false}>
+                            <StrictModeDroppable droppableId="duplicate-team-zone" type="team-card" isDropDisabled={false}>
                                 {(provided, snapshot) => (
                                     <div
                                         ref={provided.innerRef}
@@ -710,11 +710,11 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                         </div>
                     </div>
 
-                    <StrictModeDroppable droppableId="teams-list" type="team-card" isDropDisabled={false} ignoreContainerClipping={false}>
+                    <StrictModeDroppable droppableId="teams-list" type="team-card" isDropDisabled={false}>
                         {(provided) => (
                             <div className="flex flex-wrap -m-3" ref={provided.innerRef} {...provided.droppableProps}>
                                 {displayedTeams.map((team, index) => (
-                                    <Draggable key={team.id} draggableId={team.id} index={index} type="team-card" ignoreContainerClipping={false}>
+                                    <Draggable key={team.id} draggableId={team.id} index={index} type="team-card">
                                         {(provided, snapshot) => (
                                             <div
                                                 ref={provided.innerRef}
@@ -745,7 +745,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                     </StrictModeDroppable>
                 </div>
                  <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96 p-2" : "w-0")}>
-                    <StrictModeDroppable droppableId="shared-teams-panel" type="team-card" isDropDisabled={false} ignoreContainerClipping={false}>
+                    <StrictModeDroppable droppableId="shared-teams-panel" type="team-card" isDropDisabled={false}>
                         {(provided, snapshot) => (
                             <div 
                                 ref={provided.innerRef} 
@@ -773,7 +773,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                                         <ScrollArea className="h-full">
                                             <div className="space-y-2">
                                                 {sharedTeams.map((team, index) => (
-                                                    <Draggable key={team.id} draggableId={team.id} index={index} type="team-card" ignoreContainerClipping={false}>
+                                                    <Draggable key={team.id} draggableId={team.id} index={index} type="team-card">
                                                     {(provided, snapshot) => (
                                                         <div ref={provided.innerRef} {...provided.draggableProps} className={cn("w-full cursor-grab", snapshot.isDragging && "shadow-xl opacity-80")}>
                                                         <TeamCard
