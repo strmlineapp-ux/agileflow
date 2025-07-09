@@ -60,7 +60,7 @@ interface UserContextType {
 
 const UserContext = createContext<UserContextType | null>(null);
 
-const REAL_USER_ID = '1'; // Alice is the admin
+const REAL_USER_ID = '1'; // Bernardo is the default user
 
 // Helper to simulate async operations
 const simulateApi = (delay = 50) => new Promise(res => setTimeout(res, delay));
