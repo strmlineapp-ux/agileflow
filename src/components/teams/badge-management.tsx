@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -414,7 +413,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                     </TooltipProvider>
                  )}
             </CardContent>
-            {isCollectionOwned && deleteButton}
+            {(isCollectionOwned || (isEditable && !isThisTheOriginalInstance)) && deleteButton}
         </div>
       );
     }
@@ -531,7 +530,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                     </TooltipProvider>
                  )}
             </div>
-            {isCollectionOwned && deleteButton}
+            {(isCollectionOwned || (isEditable && !isThisTheOriginalInstance)) && deleteButton}
         </div>
       );
     }
@@ -539,10 +538,10 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     // Assorted View
     return (
         <div className="group relative p-1.5">
-            <UiBadge
+             <UiBadge
                 variant={'outline'}
                 style={{ color: badge.color, borderColor: badge.color }}
-                className="flex items-center gap-1.5 p-1 pl-2 pr-2 rounded-full text-sm border-2 h-8"
+                className="flex items-center gap-1.5 p-1 pl-2 rounded-full text-sm border-2 h-8"
             >
                 <div className="relative">
                     <CompactSearchIconPicker
@@ -587,7 +586,23 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                 {inlineNameEditor}
             </UiBadge>
             
-             {isCollectionOwned && deleteButton}
+             {(isCollectionOwned || (isEditable && !isThisTheOriginalInstance)) && (
+                 <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                             <button
+                                type="button"
+                                className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full flex items-center justify-center text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={(e) => { e.stopPropagation(); onDelete(); }}
+                                aria-label={`Delete ${badge.name}`}
+                            >
+                                <GoogleSymbol name="close" className="text-xs" />
+                            </button>
+                        </TooltipTrigger>
+                        <TooltipContent><p>{isThisTheOriginalInstance ? "Delete Badge Permanently" : "Unlink Badge from Collection"}</p></TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+            )}
         </div>
     );
 }
@@ -770,9 +785,16 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                                     <DropdownMenuItem onClick={() => onUpdateCollection(collection.id, { viewMode: 'assorted' })}><GoogleSymbol name="view_module" className="mr-2 text-lg" />Assorted View</DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => onUpdateCollection(collection.id, { viewMode: 'detailed' })}><GoogleSymbol name="view_comfy_alt" className="mr-2 text-lg" />Detailed View</DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => onUpdateCollection(collection.id, { viewMode: 'list' })}><GoogleSymbol name="view_list" className="mr-2 text-lg" />List View</DropdownMenuItem>
-                                    {isOwned && <DropdownMenuSeparator />}
-                                    {isOwned && <DropdownMenuItem onClick={() => onToggleShare(collection.id)}><GoogleSymbol name={collection.isShared ? 'share_off' : 'share'} className="mr-2 text-lg"/>{collection.isShared ? 'Unshare Collection' : 'Share Collection'}</DropdownMenuItem>}
-                                    <DropdownMenuSeparator />
+                                    
+                                    {(isOwned || !isSharedPreview) && <DropdownMenuSeparator />}
+                                    
+                                    {isOwned && (
+                                        <DropdownMenuItem onClick={() => onToggleShare(collection.id)}>
+                                            <GoogleSymbol name={collection.isShared ? 'share_off' : 'share'} className="mr-2 text-lg"/>
+                                            {collection.isShared ? 'Unshare Collection' : 'Share Collection'}
+                                        </DropdownMenuItem>
+                                    )}
+                                    
                                     {!isSharedPreview && (
                                         <DropdownMenuItem 
                                             onClick={() => isOwned ? onDeleteCollection(collection) : handleUnlink()} 
