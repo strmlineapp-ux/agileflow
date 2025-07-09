@@ -260,7 +260,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
         shareIconTitle = 'Linked from another collection in this team';
     }
     
-    const canBeDeleted = !isViewer && (isCollectionOwned || !isThisTheOriginalInstance);
+    const canBeDeleted = !isViewer;
     
     const colorPickerContent = (
         <PopoverContent className="w-auto p-2">
@@ -642,7 +642,6 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
     
     const [isViewMenuOpen, setIsViewMenuOpen] = useState(false);
-    const [isOptionsMenuOpen, setIsOptionsMenuOpen] = useState(false);
     
     const isOwned = useMemo(() => {
         if (isSharedPreview || isViewer) return false;
@@ -804,12 +803,12 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                             </div>
                         </div>
                         <div className="flex items-center">
-                            <DropdownMenu open={isOptionsMenuOpen} onOpenChange={setIsOptionsMenuOpen}>
+                            <DropdownMenu open={isViewMenuOpen} onOpenChange={setIsViewMenuOpen}>
                                 <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><GoogleSymbol name="more_vert" weight={100} /></Button></DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                     <DropdownMenuItem onSelect={() => onUpdateCollection(collection.id, { viewMode: 'assorted' })}><GoogleSymbol name="view_module" className="mr-2 text-lg" />Assorted View</DropdownMenuItem>
-                                     <DropdownMenuItem onSelect={() => onUpdateCollection(collection.id, { viewMode: 'detailed' })}><GoogleSymbol name="view_comfy_alt" className="mr-2 text-lg" />Detailed View</DropdownMenuItem>
-                                     <DropdownMenuItem onSelect={() => onUpdateCollection(collection.id, { viewMode: 'list' })}><GoogleSymbol name="view_list" className="mr-2 text-lg" />List View</DropdownMenuItem>
+                                     <DropdownMenuItem onSelect={() => { onUpdateCollection(collection.id, { viewMode: 'assorted' }); setIsViewMenuOpen(false); }}><GoogleSymbol name="view_module" className="mr-2 text-lg" />Assorted View</DropdownMenuItem>
+                                     <DropdownMenuItem onSelect={() => { onUpdateCollection(collection.id, { viewMode: 'detailed' }); setIsViewMenuOpen(false); }}><GoogleSymbol name="view_comfy_alt" className="mr-2 text-lg" />Detailed View</DropdownMenuItem>
+                                     <DropdownMenuItem onSelect={() => { onUpdateCollection(collection.id, { viewMode: 'list' }); setIsViewMenuOpen(false); }}><GoogleSymbol name="view_list" className="mr-2 text-lg" />List View</DropdownMenuItem>
                                     
                                     {(canShare || canUnlink || (isOwned && !isSharedPreview)) && <DropdownMenuSeparator />}
                                     
@@ -956,7 +955,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     const isTeamContext = isTeamSpecificPage && !!contextTeam;
 
     const canManageCollections = useMemo(() => {
-        if (!contextTeam || !viewAsUser) return true; // User context is always manageable by the user
+        if (!contextTeam) return true; // User context is always manageable by the user
         const admins = contextTeam.teamAdmins || [];
         if (admins.length > 0) {
             return admins.includes(viewAsUser.userId);
@@ -1017,13 +1016,17 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         }
 
         let finalCollections = Array.from(collectionsMap.values());
+        
+        if (searchTerm) {
+            finalCollections = finalCollections.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
+        }
 
         if (isViewer && contextTeam) {
             finalCollections = finalCollections.filter(c => contextTeam.activeBadgeCollections?.includes(c.id));
         }
         
         return finalCollections;
-    }, [allBadgeCollections, isTeamContext, contextTeam, viewAsUser, isViewer]);
+    }, [allBadgeCollections, isTeamContext, contextTeam, viewAsUser, isViewer, searchTerm]);
 
     const handleToggleCollectionActive = (e: React.MouseEvent<HTMLDivElement, MouseEvent>, collectionId: string) => {
         if (!isTeamContext || !canManageCollections || !contextTeam) return;
