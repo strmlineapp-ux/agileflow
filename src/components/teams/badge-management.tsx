@@ -1029,7 +1029,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     }, [allBadgeCollections, collectionsToDisplay, sharedSearchTerm]);
 
     const handleAddCollection = () => {
-      const owner = getOwnershipContext(page, viewAsUser);
+      const owner = getOwnershipContext(page, viewAsUser, contextTeam);
       addBadgeCollection(owner);
     };
     
@@ -1128,7 +1128,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         if (type === 'collection' && destination.droppableId === 'duplicate-collection-zone') {
              const sourceCollection = allBadgeCollections.find(c => c.id === draggableId);
              if (sourceCollection) {
-                 const owner = getOwnershipContext(page, viewAsUser);
+                 const owner = getOwnershipContext(page, viewAsUser, contextTeam);
                  addBadgeCollection(owner, sourceCollection);
 
                  const wasLinked = team
