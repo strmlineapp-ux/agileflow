@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -772,13 +773,15 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                                     {isOwned && <DropdownMenuSeparator />}
                                     {isOwned && <DropdownMenuItem onClick={() => onToggleShare(collection.id)}><GoogleSymbol name={collection.isShared ? 'share_off' : 'share'} className="mr-2 text-lg"/>{collection.isShared ? 'Unshare Collection' : 'Share Collection'}</DropdownMenuItem>}
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem 
-                                        onClick={() => isOwned ? onDeleteCollection(collection) : handleUnlink()} 
-                                        className={cn(isOwned && "text-destructive focus:text-destructive")}
-                                    >
-                                        <GoogleSymbol name={isOwned ? "delete" : "link_off"} className="mr-2 text-lg"/>
-                                        {isOwned ? "Delete Collection" : "Unlink Collection"}
-                                    </DropdownMenuItem>
+                                    {!isSharedPreview && (
+                                        <DropdownMenuItem 
+                                            onClick={() => isOwned ? onDeleteCollection(collection) : handleUnlink()} 
+                                            className={cn(isOwned && "text-destructive focus:text-destructive")}
+                                        >
+                                            <GoogleSymbol name={isOwned ? "delete" : "link_off"} className="mr-2 text-lg"/>
+                                            {isOwned ? "Delete Collection" : "Unlink Collection"}
+                                        </DropdownMenuItem>
+                                    )}
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </div>
@@ -928,16 +931,12 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
         let linkedCollectionIds: string[] = [];
 
         if (team) {
-            // Team context: Display collections owned by ANY team member, or by the team itself.
-            const teamMemberIds = new Set(team.members);
             baseCollections = allBadgeCollections.filter(c => 
-                (c.owner.type === 'user' && teamMemberIds.has(c.owner.id)) ||
+                (c.owner.type === 'user' && team.members.includes(c.owner.id)) ||
                 (c.owner.type === 'team' && c.owner.id === team.id)
             );
             linkedCollectionIds = team.linkedCollectionIds || [];
         } else {
-            // User context (non-team page): Display collections owned by the USER.
-            // If the static page is associated with a team, show that team's collections too.
             if (page.access?.teams?.length > 0) {
                 const contextTeamId = page.access.teams[0];
                 const contextTeam = teams.find(t => t.id === contextTeamId);
@@ -1073,6 +1072,21 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
              if (sourceCollection) {
                  const owner = getOwnershipContext(page, viewAsUser);
                  addBadgeCollection(owner, sourceCollection);
+
+                 const wasLinked = team
+                    ? (team.linkedCollectionIds || []).includes(draggableId)
+                    : (viewAsUser.linkedCollectionIds || []).includes(draggableId);
+        
+                if (wasLinked) {
+                    if (team) {
+                        const updatedIds = team.linkedCollectionIds!.filter(id => id !== draggableId);
+                        updateTeam(team.id, { linkedCollectionIds: updatedIds });
+                    } else {
+                        const updatedIds = viewAsUser.linkedCollectionIds!.filter(id => id !== draggableId);
+                        updateUser(viewAsUser.userId, { linkedCollectionIds: updatedIds });
+                    }
+                }
+
                  toast({ title: 'Collection Copied', description: 'An independent copy was created.' });
              }
              return;

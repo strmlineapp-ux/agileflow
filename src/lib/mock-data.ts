@@ -1,4 +1,5 @@
 
+
 import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team, type AppSettings, type Badge, type BadgeCollection, type AppTab, type AppPage, type BadgeCollectionOwner } from '@/types';
 
 export const mockTabs: AppTab[] = [
@@ -317,7 +318,41 @@ export const mockTeams: Team[] = [
         teamAdmins: ['2'],
         locationCheckManagers: [],
         allBadges: [],
-        badgeCollections: [],
+        badgeCollections: [
+            {
+                id: pScaleCollectionId,
+                owner: { type: 'user', id: '2' },
+                name: 'P-Scale Priority',
+                icon: 'priority_high',
+                color: '#EF4444',
+                viewMode: 'assorted',
+                badgeIds: pScaleBadges.map(b => b.id),
+                isShared: true,
+                applications: ['tasks', 'events']
+            },
+            {
+                id: starSystemCollectionId,
+                owner: { type: 'user', id: '2' },
+                name: 'Star Rating',
+                icon: 'star',
+                color: '#64748B',
+                viewMode: 'assorted',
+                badgeIds: starSystemBadges.map(b => b.id),
+                isShared: true,
+                applications: ['tasks']
+            },
+            {
+                id: effortCollectionId,
+                owner: { type: 'user', id: '2' },
+                name: 'Effort',
+                icon: 'fitness_center',
+                color: '#A855F7',
+                viewMode: 'assorted',
+                badgeIds: effortBadges.map(b => b.id),
+                isShared: true,
+                applications: ['tasks']
+            }
+        ],
         linkedCollectionIds: [],
     }
 ];
