@@ -119,16 +119,6 @@ export const AdminsManagement = ({ tab }: { tab: AppTab }) => {
   );
   
   const handleAdminToggle = (user: User) => {
-    const isLastAdmin = adminUsers.length <= 1 && user.isAdmin;
-    if (isLastAdmin) {
-        toast({
-            variant: 'destructive',
-            title: 'Cannot Remove Last Admin',
-            description: 'The system must have at least one administrator.',
-        });
-        return;
-    }
-
     const action = () => {
       updateUser(user.userId, { isAdmin: !user.isAdmin });
       toast({ title: 'Success', description: `${user.displayName}'s admin status has been updated.` });

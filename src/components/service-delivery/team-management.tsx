@@ -356,7 +356,7 @@ function TeamCard({
                                             {team.isShared ? 'Unshare Team' : 'Share Team'}
                                         </DropdownMenuItem>
                                     )}
-                                    <DropdownMenuItem onClick={() => onDelete(team)}>
+                                    <DropdownMenuItem onClick={() => onDelete(team)} className={cn(!canManageTeam && 'text-primary focus:text-primary')}>
                                         <GoogleSymbol name={canManageTeam ? "delete" : "link_off"} className="mr-2 text-lg"/>
                                         {canManageTeam ? 'Delete Team' : 'Unlink Team'}
                                     </DropdownMenuItem>
@@ -468,15 +468,15 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
     };
 
     const handleAddTeam = () => {
-        const owner = { type: 'user' as const, id: viewAsUser.userId };
+        const owner = getOwnershipContext(page, viewAsUser);
         const newTeam: Omit<Team, 'id'> = {
             name: `New Team ${teams.length + 1}`,
             icon: 'group',
             color: predefinedColors[teams.length % predefinedColors.length],
             owner: owner,
             isShared: false,
-            members: [owner.id],
-            teamAdmins: [owner.id],
+            members: [],
+            teamAdmins: [],
             locationCheckManagers: [],
             allBadges: [],
             badgeCollections: [],
