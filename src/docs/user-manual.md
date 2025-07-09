@@ -94,7 +94,7 @@ This is the central hub for global application settings.
 ### 8.3 Team Management (`/dashboard/teams/[teamId]`)
 This page is for managing the specifics of an individual team.
 - **Team Members**: View all members of the team. Team Admins are now listed in a dedicated column on the left for clarity, while all other members are in a responsive grid on the right. You have full flexibility to manage Team Admins, including removing the last one. You can also click on the "Team Admins" and "Members" titles to rename them for your team.
-- **Badge Management**: Create and manage your team's badge collections. To share a collection, simply drag its card to the "Shared Collections" panel. To link a collection from another team, drag it from the shared panel onto your main board. You can also drag individual badges from a shared collection and drop them into one of your own to link them.
+- **Badge Management**: Create and manage your team's badge collections. To share a collection, simply drag its card to the "Shared Collections" panel. To link a collection from another team, drag it from the shared panel onto your main board. To **activate** a collection for your team, click on its ghosted card; clicking an active card will deactivate it. To **delete** a collection you own, use the dropdown menu on its card.
 - **Pinned Locations**: Pin locations to the team's Production Schedule. You can also designate locations as "check locations."
 - **Workstations**: Manage a list of bookable workstations or machines for the team.
 - **Event Templates**: Create reusable templates for common events. You can edit a template's name by clicking on it directly. Click the edit icon on the template card to manage its requested roles.

@@ -975,9 +975,20 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     
     const collectionsToDisplay = useMemo(() => {
         const collectionsMap = new Map<string, BadgeCollection>();
+        
+        const processCollections = (ownerId: string, linkedIds: string[]) => {
+            allBadgeCollections.forEach(c => {
+                if (c.owner.type === 'user' && c.owner.id === ownerId) {
+                    collectionsMap.set(c.id, c);
+                }
+            });
+            (linkedIds || []).forEach(id => {
+                const linked = allBadgeCollections.find(c => c.id === id);
+                if (linked) collectionsMap.set(id, linked);
+            });
+        };
 
         if (isTeamContext && contextTeam) {
-            // Display collections owned by team members or the team itself.
             const authorityUserIds = new Set(authorityUsers);
             allBadgeCollections.forEach(c => {
                 if ((c.owner.type === 'team' && c.owner.id === contextTeam.id) ||
@@ -985,24 +996,12 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                     collectionsMap.set(c.id, c);
                 }
             });
-            // Also display collections linked by the team.
             (contextTeam.linkedCollectionIds || []).forEach(id => {
                 const linked = allBadgeCollections.find(c => c.id === id);
                 if (linked) collectionsMap.set(id, linked);
             });
         } else {
-            // User context (e.g., on Service Delivery page)
-            // Display collections owned by the user.
-            allBadgeCollections.forEach(c => {
-                if (c.owner.type === 'user' && c.owner.id === viewAsUser.userId) {
-                    collectionsMap.set(c.id, c);
-                }
-            });
-            // Also display collections linked by the user.
-            (viewAsUser.linkedCollectionIds || []).forEach(id => {
-                const linked = allBadgeCollections.find(c => c.id === id);
-                if (linked) collectionsMap.set(id, linked);
-            });
+             processCollections(viewAsUser.userId, viewAsUser.linkedCollectionIds || []);
         }
         
         return Array.from(collectionsMap.values());
@@ -1012,13 +1011,20 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     const handleToggleCollectionActive = (collectionId: string) => {
         if (!isTeamContext || !canManageCollections || !contextTeam) return;
     
+        const wasActive = contextTeam.activeBadgeCollections?.includes(collectionId);
         const currentActive = new Set(contextTeam.activeBadgeCollections || []);
+        
         if (currentActive.has(collectionId)) {
             currentActive.delete(collectionId);
         } else {
             currentActive.add(collectionId);
         }
+        
         updateTeam(contextTeam.id, { activeBadgeCollections: Array.from(currentActive) });
+        toast({
+            title: `Collection ${wasActive ? 'Deactivated' : 'Activated'}`,
+            description: `The collection is now ${wasActive ? 'inactive' : 'active'} for the team.`
+        });
     };
 
     const sharedCollections = useMemo(() => {
@@ -1306,24 +1312,28 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                                     className={cn(
                                                         "p-2 w-full transition-all duration-300",
                                                         isSharedPanelOpen ? "lg:w-1/2" : "lg:w-1/3",
-                                                        canToggle && "cursor-pointer",
-                                                        (isTeamContext && !isActive) && "opacity-40 hover:opacity-100",
+                                                        (canToggle && !isActive) && "opacity-40 hover:opacity-100",
                                                     )}
-                                                    onClick={() => (isTeamContext && canToggle) && handleToggleCollectionActive(collection.id)}
+                                                    onClick={() => (canToggle && !isActive) && handleToggleCollectionActive(collection.id)}
                                                 >
-                                                    <BadgeCollectionCard
-                                                        dragHandleProps={provided.dragHandleProps}
-                                                        key={collection.id}
-                                                        collection={collection}
-                                                        allBadges={allBadges}
-                                                        onUpdateCollection={updateBadgeCollection}
-                                                        onDeleteCollection={handleDeleteCollection}
-                                                        onAddBadge={addBadge}
-                                                        onUpdateBadge={updateBadge}
-                                                        onDeleteBadge={handleDeleteBadge}
-                                                        onToggleShare={handleToggleShare}
-                                                        contextTeam={team}
-                                                    />
+                                                    <div 
+                                                        className={cn("h-full", (canToggle && !isActive) && "cursor-pointer")}
+                                                        onClick={() => (canToggle && isActive) && handleToggleCollectionActive(collection.id)}
+                                                    >
+                                                        <BadgeCollectionCard
+                                                            dragHandleProps={provided.dragHandleProps}
+                                                            key={collection.id}
+                                                            collection={collection}
+                                                            allBadges={allBadges}
+                                                            onUpdateCollection={updateBadgeCollection}
+                                                            onDeleteCollection={handleDeleteCollection}
+                                                            onAddBadge={addBadge}
+                                                            onUpdateBadge={updateBadge}
+                                                            onDeleteBadge={handleDeleteBadge}
+                                                            onToggleShare={handleToggleShare}
+                                                            contextTeam={team}
+                                                        />
+                                                    </div>
                                                 </div>
                                             )}
                                         </Draggable>
@@ -1402,7 +1412,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                         )}
                     </StrictModeDroppable>
                 </div>
-                <Dialog open={!!collectionToDelete && collectionToDelete.owner.id === viewAsUser.userId} onOpenChange={() => setCollectionToDelete(null)}>
+                <Dialog open={!!collectionToDelete} onOpenChange={() => setCollectionToDelete(null)}>
                     <DialogContent className="max-w-md">
                         <div className="absolute top-4 right-4">
                             <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10 p-0" onClick={confirmDeleteCollection}>
