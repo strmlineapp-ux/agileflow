@@ -703,6 +703,9 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
         }
     };
     
+    const canUnlink = !isOwned && !isSharedPreview;
+    const canShare = isOwned && !isSharedPreview;
+
     return (
         <Card className="h-full flex flex-col bg-transparent">
             <div {...dragHandleProps}>
@@ -786,22 +789,29 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                                     <DropdownMenuItem onClick={() => onUpdateCollection(collection.id, { viewMode: 'detailed' })}><GoogleSymbol name="view_comfy_alt" className="mr-2 text-lg" />Detailed View</DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => onUpdateCollection(collection.id, { viewMode: 'list' })}><GoogleSymbol name="view_list" className="mr-2 text-lg" />List View</DropdownMenuItem>
                                     
-                                    {(isOwned || !isOwned && !isSharedPreview) && <DropdownMenuSeparator />}
+                                    {(canShare || canUnlink || isOwned) && <DropdownMenuSeparator />}
                                     
-                                    {isOwned && !isSharedPreview && (
+                                    {canShare && (
                                         <DropdownMenuItem onClick={() => onToggleShare(collection.id)}>
                                             <GoogleSymbol name={collection.isShared ? 'share_off' : 'share'} className="mr-2 text-lg"/>
                                             {collection.isShared ? 'Unshare Collection' : 'Share Collection'}
                                         </DropdownMenuItem>
                                     )}
                                     
-                                    {!isSharedPreview && (
+                                    {canUnlink && (
+                                        <DropdownMenuItem onClick={handleUnlink}>
+                                            <GoogleSymbol name="link_off" className="mr-2 text-lg"/>
+                                            Unlink Collection
+                                        </DropdownMenuItem>
+                                    )}
+
+                                    {isOwned && !isSharedPreview && (
                                         <DropdownMenuItem 
-                                            onClick={() => isOwned ? onDeleteCollection(collection) : handleUnlink()} 
-                                            className={cn(isOwned && "text-destructive focus:text-destructive")}
+                                            onClick={() => onDeleteCollection(collection)} 
+                                            className="text-destructive focus:text-destructive"
                                         >
-                                            <GoogleSymbol name={isOwned ? "delete" : "link_off"} className="mr-2 text-lg"/>
-                                            {isOwned ? "Delete Collection" : "Unlink Collection"}
+                                            <GoogleSymbol name="delete" className="mr-2 text-lg"/>
+                                            Delete Collection
                                         </DropdownMenuItem>
                                     )}
                                 </DropdownMenuContent>
@@ -969,25 +979,20 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
         if (isTeamContext && contextTeam) {
             const authorityUserIds = new Set(authorityUsers);
             const combined = new Map<string, BadgeCollection>();
-
-            // Get collections owned by team members or the team itself
+    
+            // Get collections owned by the team itself or its authority figures (admins/members)
             allBadgeCollections.forEach(c => {
                 if ((c.owner.type === 'team' && c.owner.id === contextTeam.id) || 
                     (c.owner.type === 'user' && authorityUserIds.has(c.owner.id))) {
                     combined.set(c.id, c);
                 }
             });
-
+    
             // Get collections linked by the team
             const linkedCollections = allBadgeCollections.filter(c => (contextTeam.linkedCollectionIds || []).includes(c.id));
             linkedCollections.forEach(c => combined.set(c.id, c));
             potentialCollections = Array.from(combined.values());
             
-            if (!canManageCollections) {
-                const activeCollectionIds = new Set(contextTeam.activeBadgeCollections || []);
-                return potentialCollections.filter(c => activeCollectionIds.has(c.id));
-            }
-    
         } else {
             // User context: owned and linked collections
             const combined = new Map<string, BadgeCollection>();
@@ -1001,7 +1006,7 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
         
         return potentialCollections;
     
-    }, [allBadgeCollections, isTeamContext, contextTeam, viewAsUser, canManageCollections, authorityUsers]);
+    }, [allBadgeCollections, isTeamContext, contextTeam, viewAsUser, authorityUsers]);
 
     const handleToggleCollectionActive = (collectionId: string) => {
         if (!isTeamContext || !canManageCollections || !contextTeam) return;

@@ -378,7 +378,7 @@ function TeamCard({
                                     snapshot.isDraggingOver && "ring-1 ring-border ring-inset"
                                 )}>
                                 {teamMembers.map((user, index) => (
-                                    <Draggable key={user.userId} draggableId={`user-${team.id}-${user.userId}`} index={index} isDragDisabled={!canManageTeam && !isSharedPreview}>
+                                    <Draggable key={user.userId} draggableId={`user-${team.id}-${user.userId}`} index={index} isDragDisabled={false}>
                                         {(provided, snapshot) => (
                                             <div
                                                 ref={provided.innerRef}
@@ -468,14 +468,15 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
     };
 
     const handleAddTeam = () => {
+        const owner = { type: 'user' as const, id: viewAsUser.userId };
         const newTeam: Omit<Team, 'id'> = {
             name: `New Team ${teams.length + 1}`,
             icon: 'group',
             color: predefinedColors[teams.length % predefinedColors.length],
-            owner: { type: 'user', id: viewAsUser.userId },
+            owner: owner,
             isShared: false,
-            members: [viewAsUser.userId],
-            teamAdmins: [viewAsUser.userId],
+            members: [owner.id],
+            teamAdmins: [owner.id],
             locationCheckManagers: [],
             allBadges: [],
             badgeCollections: [],
@@ -621,14 +622,15 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
              const teamToDuplicate = allVisibleTeams.find(t => t.id === draggableId);
 
             if(teamToDuplicate) {
+                const owner = getOwnershipContext(page, viewAsUser);
                 const newTeamData: Omit<Team, 'id'> = {
                     name: `${teamToDuplicate.name} (Copy)`,
                     icon: teamToDuplicate.icon,
                     color: teamToDuplicate.color,
-                    owner: { type: 'user', id: viewAsUser.userId },
+                    owner: owner,
                     isShared: false,
-                    members: [viewAsUser.userId],
-                    teamAdmins: [viewAsUser.userId],
+                    members: [...teamToDuplicate.members],
+                    teamAdmins: [...(teamToDuplicate.teamAdmins || [])],
                     teamAdminsLabel: teamToDuplicate.teamAdminsLabel,
                     membersLabel: teamToDuplicate.membersLabel,
                     locationCheckManagers: teamToDuplicate.locationCheckManagers,
@@ -642,6 +644,11 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                     eventTemplates: JSON.parse(JSON.stringify(teamToDuplicate.eventTemplates || [])),
                 };
                 
+                if (owner.id === viewAsUser.userId && !newTeamData.members.includes(viewAsUser.userId)) {
+                    newTeamData.members.push(viewAsUser.userId);
+                    newTeamData.teamAdmins?.push(viewAsUser.userId);
+                }
+
                 addTeam(newTeamData);
                 
                 const wasLinked = (viewAsUser.linkedTeamIds || []).includes(teamToDuplicate.id);
