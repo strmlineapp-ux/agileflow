@@ -924,6 +924,7 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
     const authorityUsers = useMemo(() => {
         if (!contextTeam) return [viewAsUser.userId];
         const teamAdmins = contextTeam.teamAdmins || [];
+        // If there are no admins, all members can manage. Otherwise, only admins can.
         return teamAdmins.length > 0 ? teamAdmins : contextTeam.members;
     }, [contextTeam, viewAsUser.userId]);
     
@@ -967,31 +968,32 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
     
         if (isTeamContext && contextTeam) {
             const authorityUserIds = new Set(authorityUsers);
-            // Get collections owned by team or team members
-            const ownedCollections = allBadgeCollections.filter(c => {
-                if (c.owner.type === 'team') return c.owner.id === contextTeam.id;
-                if (c.owner.type === 'user') return authorityUserIds.has(c.owner.id);
-                return false;
+            const combined = new Map<string, BadgeCollection>();
+
+            // Get collections owned by team members or the team itself
+            allBadgeCollections.forEach(c => {
+                if ((c.owner.type === 'team' && c.owner.id === contextTeam.id) || 
+                    (c.owner.type === 'user' && authorityUserIds.has(c.owner.id))) {
+                    combined.set(c.id, c);
+                }
             });
+
             // Get collections linked by the team
             const linkedCollections = allBadgeCollections.filter(c => (contextTeam.linkedCollectionIds || []).includes(c.id));
-            // Combine them
-            const combined = new Map<string, BadgeCollection>();
-            ownedCollections.forEach(c => combined.set(c.id, c));
             linkedCollections.forEach(c => combined.set(c.id, c));
             potentialCollections = Array.from(combined.values());
             
-            // For non-managers, filter by active collections
             if (!canManageCollections) {
                 const activeCollectionIds = new Set(contextTeam.activeBadgeCollections || []);
                 return potentialCollections.filter(c => activeCollectionIds.has(c.id));
             }
     
         } else {
-            // User context
+            // User context: owned and linked collections
+            const combined = new Map<string, BadgeCollection>();
             const ownedCollections = allBadgeCollections.filter(c => c.owner.type === 'user' && c.owner.id === viewAsUser.userId);
             const linkedCollections = allBadgeCollections.filter(c => (viewAsUser.linkedCollectionIds || []).includes(c.id));
-            const combined = new Map<string, BadgeCollection>();
+            
             ownedCollections.forEach(c => combined.set(c.id, c));
             linkedCollections.forEach(c => combined.set(c.id, c));
             potentialCollections = Array.from(combined.values());
@@ -1294,10 +1296,10 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
                                                     className={cn(
                                                         "p-2 w-full transition-all duration-300",
                                                         isSharedPanelOpen ? "lg:w-1/2" : "lg:w-1/3",
-                                                        canToggle && "cursor-pointer rounded-lg",
-                                                        !isActive && "opacity-40 hover:opacity-100",
+                                                        canToggle && "cursor-pointer",
+                                                        (isTeamContext && !isActive) && "opacity-40 hover:opacity-100",
                                                     )}
-                                                    onClick={() => canToggle && handleToggleCollectionActive(collection.id)}
+                                                    onClick={() => (isTeamContext && canToggle) && handleToggleCollectionActive(collection.id)}
                                                 >
                                                     <BadgeCollectionCard
                                                         dragHandleProps={provided.dragHandleProps}

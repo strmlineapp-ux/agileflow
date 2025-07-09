@@ -356,7 +356,7 @@ function TeamCard({
                                             {team.isShared ? 'Unshare Team' : 'Share Team'}
                                         </DropdownMenuItem>
                                     )}
-                                    <DropdownMenuItem onClick={() => onDelete(team)} className={cn(!canManageTeam && 'text-primary focus:text-primary')}>
+                                    <DropdownMenuItem onClick={() => onDelete(team)}>
                                         <GoogleSymbol name={canManageTeam ? "delete" : "link_off"} className="mr-2 text-lg"/>
                                         {canManageTeam ? 'Delete Team' : 'Unlink Team'}
                                     </DropdownMenuItem>
@@ -368,7 +368,7 @@ function TeamCard({
             </div>
             <CardContent className="flex-grow pt-0 flex flex-col">
                 <ScrollArea className="max-h-48 pr-2 flex-grow">
-                    <StrictModeDroppable droppableId={team.id} type="user-card" isDropDisabled={isSharedPreview}>
+                    <StrictModeDroppable droppableId={team.id} type="user-card" isDropDisabled={isSharedPreview} isCombineEnabled={false}>
                         {(provided, snapshot) => (
                             <div
                                 ref={provided.innerRef}
@@ -468,15 +468,14 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
     };
 
     const handleAddTeam = () => {
-        const owner = getOwnershipContext(page, viewAsUser);
         const newTeam: Omit<Team, 'id'> = {
             name: `New Team ${teams.length + 1}`,
             icon: 'group',
             color: predefinedColors[teams.length % predefinedColors.length],
-            owner: owner,
+            owner: { type: 'user', id: viewAsUser.userId },
             isShared: false,
-            members: [owner.id],
-            teamAdmins: [owner.id],
+            members: [viewAsUser.userId],
+            teamAdmins: [viewAsUser.userId],
             locationCheckManagers: [],
             allBadges: [],
             badgeCollections: [],
@@ -622,15 +621,14 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
              const teamToDuplicate = allVisibleTeams.find(t => t.id === draggableId);
 
             if(teamToDuplicate) {
-                const owner = getOwnershipContext(page, viewAsUser);
                 const newTeamData: Omit<Team, 'id'> = {
                     name: `${teamToDuplicate.name} (Copy)`,
                     icon: teamToDuplicate.icon,
                     color: teamToDuplicate.color,
-                    owner: owner,
+                    owner: { type: 'user', id: viewAsUser.userId },
                     isShared: false,
-                    members: [...teamToDuplicate.members],
-                    teamAdmins: [...(teamToDuplicate.teamAdmins || [])],
+                    members: [viewAsUser.userId],
+                    teamAdmins: [viewAsUser.userId],
                     teamAdminsLabel: teamToDuplicate.teamAdminsLabel,
                     membersLabel: teamToDuplicate.membersLabel,
                     locationCheckManagers: teamToDuplicate.locationCheckManagers,
@@ -644,11 +642,6 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                     eventTemplates: JSON.parse(JSON.stringify(teamToDuplicate.eventTemplates || [])),
                 };
                 
-                if (owner.id !== viewAsUser.userId) {
-                    newTeamData.members.push(viewAsUser.userId);
-                    newTeamData.teamAdmins?.push(viewAsUser.userId);
-                }
-
                 addTeam(newTeamData);
                 
                 const wasLinked = (viewAsUser.linkedTeamIds || []).includes(teamToDuplicate.id);

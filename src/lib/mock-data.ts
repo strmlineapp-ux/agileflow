@@ -269,7 +269,7 @@ export const mockTeams: Team[] = [
         owner: { type: 'user', id: '3' },
         isShared: false,
         members: ['3', '8', '9', '10', '11', '12', '13', '14'],
-        teamAdmins: ['3'],
+        teamAdmins: [],
         locationCheckManagers: ['3'],
         allBadges: [...liveEventsBadges],
         badgeCollections: [{
