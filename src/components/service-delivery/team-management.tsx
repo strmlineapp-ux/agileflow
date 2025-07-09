@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
@@ -520,17 +521,12 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
         const currentAdmins = team.teamAdmins || [];
         const isAlreadyAdmin = currentAdmins.includes(userId);
         
-        if (isAlreadyAdmin && currentAdmins.length === 1 && team.members.length > 1) {
-            toast({ variant: 'destructive', title: 'Cannot Remove Last Admin' });
-            return;
-        }
-        
         const newAdmins = isAlreadyAdmin
             ? currentAdmins.filter(id => id !== userId)
             : [...currentAdmins, userId];
             
         updateTeam(teamId, { teamAdmins: newAdmins });
-    }, [teams, updateTeam, canManageTeam, toast]);
+    }, [teams, updateTeam, canManageTeam]);
 
     const handleRemoveUserFromTeam = useCallback((teamId: string, userId: string) => {
         const team = teams.find(t => t.id === teamId);
@@ -869,3 +865,5 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
         </DragDropContext>
     );
 }
+
+    
