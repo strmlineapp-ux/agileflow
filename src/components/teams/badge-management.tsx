@@ -729,7 +729,7 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                 <CardHeader>
                     <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3 flex-1 min-w-0">
-                            <div className="relative">
+                            <div className="relative" onClick={(e) => e.stopPropagation()}>
                                 <CompactSearchIconPicker 
                                     icon={collection.icon} 
                                     color={collection.color} 
@@ -772,9 +772,9 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
                                     {isEditingName && isOwned ? (
-                                        <Input ref={nameInputRef} defaultValue={collection.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"/>
+                                        <Input ref={nameInputRef} defaultValue={collection.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} onClick={(e) => e.stopPropagation()} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"/>
                                     ) : (
-                                        <CardTitle onClick={() => isOwned && setIsEditingName(true)} className={cn("text-2xl font-headline font-thin break-words", isOwned && "cursor-pointer")}>{collection.name}</CardTitle>
+                                        <CardTitle onClick={(e) => { e.stopPropagation(); if(isOwned) setIsEditingName(true);}} className={cn("text-2xl font-headline font-thin break-words", isOwned && "cursor-pointer")}>{collection.name}</CardTitle>
                                     )}
                                     <StrictModeDroppable droppableId={`duplicate-badge-zone:${collection.id}`} type="badge" isDropDisabled={!isOwned || isViewer} isCombineEnabled={false}>
                                     {(provided, snapshot) => (
@@ -790,7 +790,7 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                                                 <TooltipProvider>
                                                     <Tooltip>
                                                         <TooltipTrigger asChild>
-                                                            <Button variant="ghost" size="icon" onClick={() => onAddBadge(collection.id)}><GoogleSymbol name="add_circle" className="text-4xl" weight={100} /><span className="sr-only">Add Badge</span></Button>
+                                                            <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onAddBadge(collection.id);}}><GoogleSymbol name="add_circle" className="text-4xl" weight={100} /><span className="sr-only">Add Badge</span></Button>
                                                         </TooltipTrigger>
                                                         <TooltipContent><p>{snapshot.isDraggingOver ? 'Drop to Duplicate' : 'Add New Badge'}</p></TooltipContent>
                                                     </Tooltip>
@@ -802,7 +802,7 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                                 </div>
                             </div>
                         </div>
-                        <div className="flex items-center">
+                        <div className="flex items-center" onClick={(e) => e.stopPropagation()}>
                             <DropdownMenu open={isViewMenuOpen} onOpenChange={setIsViewMenuOpen}>
                                 <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><GoogleSymbol name="more_vert" weight={100} /></Button></DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
@@ -842,7 +842,7 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                     </div>
                     <div className="pt-2">
                         {!isSharedPreview && isOwned && !isViewer && (
-                            <div className="flex items-center gap-1 mb-2">
+                            <div className="flex items-center gap-1 mb-2" onClick={(e) => e.stopPropagation()}>
                                 {APPLICATIONS.map(app => (
                                     <TooltipProvider key={app.key}>
                                         <Tooltip>
@@ -1090,7 +1090,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
 
     const confirmDeleteCollection = () => {
         if (!collectionToDelete) return;
-        deleteBadgeCollection(collectionToDelete.id);
+        deleteBadgeCollection(collectionToDelete.id, contextTeam);
         toast({ title: 'Collection Deleted', description: `"${collectionToDelete.name}" and all its owned badges have been deleted.`});
         setCollectionToDelete(null);
     };

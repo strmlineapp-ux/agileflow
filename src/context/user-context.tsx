@@ -52,7 +52,7 @@ interface UserContextType {
   allBadgeCollections: BadgeCollection[];
   addBadgeCollection: (owner: BadgeCollectionOwner, sourceCollection?: BadgeCollection, contextTeam?: Team) => void;
   updateBadgeCollection: (collectionId: string, data: Partial<BadgeCollection>) => void;
-  deleteBadgeCollection: (collectionId: string) => void;
+  deleteBadgeCollection: (collectionId: string, contextTeam?: Team) => void;
   addBadge: (collectionId: string, sourceBadge?: Badge) => void;
   updateBadge: (badgeData: Partial<Badge>) => void;
   deleteBadge: (badgeId: string) => void;
@@ -177,9 +177,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const newTeam: Team = {
       ...teamData,
       id: crypto.randomUUID(),
-      members: [],
-      teamAdmins: [],
-      linkedCollectionIds: [],
     };
     await simulateApi();
     setTeams(current => [...current, newTeam]);
@@ -345,7 +342,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             viewMode: 'detailed',
             badgeIds: [newBadgeId],
             applications: [],
-            description: '',
+            description: 'This is a sample description for your new collection.',
             isShared: false,
         };
     }
@@ -362,12 +359,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             allBadges: [...contextTeam.allBadges, ...newBadges],
             activeBadgeCollections: contextTeam.activeBadgeCollections ? [...contextTeam.activeBadgeCollections] : [],
         };
-        if (sourceCollection) {
-            // For copies, they start as inactive in team context
-        } else {
-            updatedTeam.activeBadgeCollections.push(newCollection.id);
-        }
-
+        // Duplicated or new collections start as inactive in team context
         setTeams(currentTeams => currentTeams.map(t => t.id === contextTeam.id ? updatedTeam : t));
     } else {
         // User context - no team update needed.
@@ -382,7 +374,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     })));
   }, []);
 
-  const deleteBadgeCollection = useCallback((collectionId: string) => {
+  const deleteBadgeCollection = useCallback((collectionId: string, contextTeam?: Team) => {
     const collectionToDelete = allBadgeCollections.find(c => c.id === collectionId);
     if (!collectionToDelete) return;
 
@@ -392,11 +384,17 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
     setAllBadgeCollections(current => current.filter(c => c.id !== collectionId));
     setAllBadges(current => current.filter(b => !badgeIdsToDelete.has(b.id)));
-    setTeams(currentTeams => currentTeams.map(t => ({
-        ...t,
-        allBadges: t.allBadges.filter(b => !badgeIdsToDelete.has(b.id)),
-        badgeCollections: t.badgeCollections.filter(c => c.id !== collectionId)
-    })));
+    setTeams(currentTeams => currentTeams.map(t => {
+        if (contextTeam && t.id === contextTeam.id) {
+            return {
+                ...t,
+                allBadges: t.allBadges.filter(b => !badgeIdsToDelete.has(b.id)),
+                badgeCollections: t.badgeCollections.filter(c => c.id !== collectionId),
+                activeBadgeCollections: (t.activeBadgeCollections || []).filter(id => id !== collectionId),
+            }
+        }
+        return t;
+    }));
   }, [allBadgeCollections, allBadges]);
 
   const addBadge = useCallback((collectionId: string, sourceBadge?: Badge) => {
