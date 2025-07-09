@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -964,29 +963,43 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
     };
     
     const collectionsToDisplay = useMemo(() => {
-        const owner = getOwnershipContext(page, viewAsUser);
-        let baseCollections;
-
+        let potentialCollections: BadgeCollection[];
+    
         if (isTeamContext && contextTeam) {
             const authorityUserIds = new Set(authorityUsers);
-            const activeCollectionIds = new Set(contextTeam.activeBadgeCollections || []);
-
-            const potentialCollections = allBadgeCollections.filter(c => {
+            // Get collections owned by team or team members
+            const ownedCollections = allBadgeCollections.filter(c => {
                 if (c.owner.type === 'team') return c.owner.id === contextTeam.id;
                 if (c.owner.type === 'user') return authorityUserIds.has(c.owner.id);
                 return false;
             });
-
-            if (canManageCollections) {
-                return potentialCollections;
-            } else {
+            // Get collections linked by the team
+            const linkedCollections = allBadgeCollections.filter(c => (contextTeam.linkedCollectionIds || []).includes(c.id));
+            // Combine them
+            const combined = new Map<string, BadgeCollection>();
+            ownedCollections.forEach(c => combined.set(c.id, c));
+            linkedCollections.forEach(c => combined.set(c.id, c));
+            potentialCollections = Array.from(combined.values());
+            
+            // For non-managers, filter by active collections
+            if (!canManageCollections) {
+                const activeCollectionIds = new Set(contextTeam.activeBadgeCollections || []);
                 return potentialCollections.filter(c => activeCollectionIds.has(c.id));
             }
+    
         } else {
             // User context
-            return allBadgeCollections.filter(c => c.owner.type === 'user' && c.owner.id === viewAsUser.userId);
+            const ownedCollections = allBadgeCollections.filter(c => c.owner.type === 'user' && c.owner.id === viewAsUser.userId);
+            const linkedCollections = allBadgeCollections.filter(c => (viewAsUser.linkedCollectionIds || []).includes(c.id));
+            const combined = new Map<string, BadgeCollection>();
+            ownedCollections.forEach(c => combined.set(c.id, c));
+            linkedCollections.forEach(c => combined.set(c.id, c));
+            potentialCollections = Array.from(combined.values());
         }
-    }, [allBadgeCollections, isTeamContext, contextTeam, viewAsUser, page, canManageCollections, authorityUsers]);
+        
+        return potentialCollections;
+    
+    }, [allBadgeCollections, isTeamContext, contextTeam, viewAsUser, canManageCollections, authorityUsers]);
 
     const handleToggleCollectionActive = (collectionId: string) => {
         if (!isTeamContext || !canManageCollections || !contextTeam) return;
