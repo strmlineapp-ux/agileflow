@@ -12,7 +12,7 @@ This document outlines the established UI patterns and design choices that ensur
 The application favors a compact, information-dense layout. Card components are the primary building block for displaying content.
 
 -   **Gold Standard**: The login form (`/login`) serves as the ideal example of "perfect" padding. It has a larger header area and tighter content padding (`p-2`) which makes the card feel like a single, cohesive unit.
--   **Global Default**: To align with this, the global default `CardContent` padding has been set to `p-4`. This affects all cards in the app, creating a more consistent look.
+-   **Global Default**: To align with this, the global default `CardContent` padding has been set to `p-4 pt-0`. This affects all cards in the app, creating a more consistent look.
 -   **Card Backgrounds**: Cards use a `bg-transparent` background, relying on their `border` for definition. This creates a lighter, more modern UI.
 -   **Text Wrapping**: Card titles and descriptions should gracefully handle long text by wrapping. The `break-words` utility should be used on titles to prevent layout issues from long, unbroken strings.
 
@@ -207,12 +207,12 @@ This pattern describes how a group of controls in a page header can intelligentl
 ### 14. Compact Badge Pills
 This pattern is a specialized, ultra-compact version of the standard `<Badge>` component, used for displaying multiple badges in a dense layout, such as the "assorted" view mode in Badge Collections.
 
-- **Appearance**: A very thin, pill-shaped badge with minimal padding. It contains a small icon and a short text label.
+- **Appearance**: A thin, pill-shaped badge with minimal padding. It contains a small icon and a short text label. A small, circular delete button appears on hover, allowing the user to remove the badge.
 - **Sizing**:
-    - The pill has a reduced height and horizontal padding (`py-0 px-1`).
+    - The pill has a reduced height and horizontal padding (`py-0.5 px-1`).
     - The icon inside is small (e.g., `text-[9px]`).
     - The text label is also small (e.g., `text-[10px]`).
-- **Interaction**: A small, circular delete button appears on hover, allowing the user to remove the badge.
+    - The delete button is a `h-4 w-4` circle.
 - **Application**: Used in the "assorted" view of **Badge Collections** to display many badges in a compact, scannable format.
 
 ---
@@ -287,9 +287,5 @@ This is the single source of truth for indicating user interaction state across 
     - **Appearance**: A circular badge with a `border-2` of the parent element's background color (e.g., `border-background`) to create a "punched out" effect. The icon inside should be sized proportionally.
     - **Sizing**: The standard size for these badges (e.g., color-pickers, ownership status icons) is `h-4 w-4` (`16x16px`). The `GoogleSymbol` inside should be sized to fit, for example using `style={{fontSize: '10px'}}`.
     - **Placement**: This is context-dependent. Color-pickers are typically placed on the bottom-right corner of their parent icon. Ownership status icons are typically placed on the top-left corner to create visual balance.
-    - **Application**: Used for displaying a user's admin group status, a shared status on a role icon, or a `share` icon on a shared Badge.
+    - **Application**: Used for displaying a user's admin status, a shared status on a role icon, or a `share` icon on a shared Badge.
 -   **Badges in Assorted View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
-
-
-
-    

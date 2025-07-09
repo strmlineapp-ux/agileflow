@@ -163,7 +163,7 @@ export function UserManagement() {
                         </div>
                       </CardHeader>
                         <AccordionContent>
-                           <CardContent className="pt-0">
+                           <CardContent>
                                <div className="border-t pt-4">
                                 <div className="p-2 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
                                     {/* Left Column */}

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
@@ -16,6 +17,7 @@ import { googleSymbolNames } from '@/lib/google-symbols';
 import { ScrollArea } from '../ui/scroll-area';
 import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProps } from 'react-beautiful-dnd';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
 
 // Wrapper to fix issues with react-beautiful-dnd and React 18 Strict Mode
 const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
@@ -154,21 +156,22 @@ function CalendarCard({ calendar, onUpdate, onDelete, isDragging }: { calendar: 
               </CardTitle>
             )}
           </div>
-           <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive absolute top-2 right-2 opacity-0 group-hover:opacity-100" onClick={() => onDelete(calendar)}>
-                            <GoogleSymbol name="delete" className="text-lg" weight={100} />
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p>Delete Calendar</p>
-                    </TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground absolute top-2 right-2 opacity-0 group-hover:opacity-100">
+                    <GoogleSymbol name="more_vert" weight={100} />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => onDelete(calendar)} className="text-destructive focus:text-destructive">
+                    <GoogleSymbol name="delete" className="mr-2" weight={100}/>
+                    Delete Calendar
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </CardHeader>
-      <CardContent className="flex-grow space-y-4">
+      <CardContent className="flex-grow space-y-4 pt-0">
         <div>
           {isEditingTitle ? (
             <Input

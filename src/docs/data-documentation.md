@@ -49,7 +49,7 @@ This table details the information stored directly within each `User` object.
 
 A key concept in AgileFlow is how content is displayed and how ownership is assigned based on the page you are viewing. This logic is crucial for features like Badge Collections.
 
--   **Team Page Context**: A page is considered a "Team Page" if it's either a dynamic team page (like `/dashboard/teams/[teamId]`) or if its page configuration in `AppSettings` has at least one team listed in its `access.teams` array.
+-   **Team Page Context**: A page is considered a "Team Page" if its configuration in `AppSettings` has at least one team listed in its `access.teams` array, or if its `isDynamic` flag is true and the URL contains a team ID (e.g., `/dashboard/teams/[teamId]`).
     -   **Display**: On these pages, content like the Badge Management tab displays an aggregated view of all collections owned by any member of that team, *plus* any collections owned by the team entity itself.
     -   **Ownership**: When a new item (like a Badge Collection) is created on a Team Page, ownership is automatically assigned to the first team listed in that page's access rules.
 
