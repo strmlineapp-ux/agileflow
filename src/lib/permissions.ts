@@ -82,7 +82,7 @@ export const hasAccess = (user: User, page: AppPage, teams: Team[]): boolean => 
     if (access.users.includes(user.userId)) return true;
 
     // Team-based access
-    const userTeamIds = new Set(teams.filter(t => t.members.includes(user.userId)).map(t => t.id));
+    const userTeamIds = new Set(teams.filter(t => t.members.includes(user.userId) || (t.teamAdmins || []).includes(user.userId)).map(t => t.id));
     if (access.teams.some(teamId => userTeamIds.has(teamId))) {
         return true;
     }
@@ -107,3 +107,4 @@ export const getOwnershipContext = (page: AppPage, user: User, contextTeam?: Tea
     // Otherwise, ownership falls back to the user who is creating the item.
     return { type: 'user', id: user.userId };
 };
+

@@ -177,6 +177,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const newTeam: Team = {
       ...teamData,
       id: crypto.randomUUID(),
+      members: [],
+      teamAdmins: [],
       linkedCollectionIds: [],
     };
     await simulateApi();
@@ -363,8 +365,16 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             }
             return t;
         }));
+    } else if (owner.type === 'user') {
+      // If a user copies a collection, it should be linked.
+      const userToUpdate = users.find(u => u.userId === owner.id);
+      if (userToUpdate) {
+        const newLinkedIds = new Set(userToUpdate.linkedCollectionIds || []);
+        newLinkedIds.add(newCollection.id);
+        updateUser(owner.id, { linkedCollectionIds: Array.from(newLinkedIds) });
+      }
     }
-  }, [allBadgeCollections, allBadges]);
+  }, [allBadgeCollections, allBadges, teams, users, updateUser]);
 
   const updateBadgeCollection = useCallback((collectionId: string, data: Partial<BadgeCollection>) => {
     setAllBadgeCollections(current => current.map(c => c.id === collectionId ? { ...c, ...data } : c));
@@ -515,3 +525,4 @@ export function useUser() {
   }
   return context;
 }
+
