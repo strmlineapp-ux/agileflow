@@ -1067,8 +1067,11 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     
     const handleDeleteCollection = (collection: BadgeCollection) => {
         if (isViewer) return;
-        const ownerId = isTeamContext && contextTeam ? contextTeam.id : viewAsUser.userId;
-        const isOwned = collection.owner.id === ownerId;
+        
+        let isOwned = collection.owner.id === viewAsUser.userId;
+        if(contextTeam) {
+            isOwned = collection.owner.id === contextTeam.id;
+        }
 
         if (!isOwned) {
             // Unlink if not owner

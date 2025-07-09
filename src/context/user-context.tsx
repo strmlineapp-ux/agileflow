@@ -360,8 +360,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             if (t.id === owner.id) {
                 const updatedCollections = [...(t.badgeCollections || []), newCollection];
                 const updatedActiveCollections = new Set(t.activeBadgeCollections || []);
-                // Copied collections in a team context start as INACTIVE
-                // updatedActiveCollections.add(newCollection.id);
                 return { 
                     ...t, 
                     badgeCollections: updatedCollections, 
