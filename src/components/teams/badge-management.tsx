@@ -1062,7 +1062,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
 
     const handleAddCollection = () => {
       const owner = getOwnershipContext(page, viewAsUser, contextTeam);
-      addBadgeCollection(owner);
+      addBadgeCollection(owner, undefined, contextTeam);
     };
     
     const handleDeleteCollection = (collection: BadgeCollection) => {
@@ -1138,7 +1138,10 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         const { source, destination, draggableId, type } = result;
     
         if (!destination) return;
+        
+        // Prevent dropping a shared collection back into the shared panel
         if (source.droppableId === 'shared-collections-panel' && destination.droppableId === 'shared-collections-panel') return;
+
         const allVisibleCollections = [...collectionsToDisplay, ...sharedCollections];
 
         // --- Dragging from ANYWHERE to the SHARED PANEL ---
@@ -1182,7 +1185,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
              const sourceCollection = allBadgeCollections.find(c => c.id === draggableId);
              if (sourceCollection) {
                  const owner = getOwnershipContext(page, viewAsUser, contextTeam);
-                 addBadgeCollection(owner, sourceCollection);
+                 addBadgeCollection(owner, sourceCollection, contextTeam);
 
                  const wasLinked = team
                     ? (team.linkedCollectionIds || []).includes(draggableId)

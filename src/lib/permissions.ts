@@ -87,7 +87,7 @@ export const hasAccess = (user: User, page: AppPage, teams: Team[]): boolean => 
         if (!team) continue;
 
         const teamAdmins = team.teamAdmins || [];
-        // If team admins are defined, only they (and system admins, handled above) have access.
+        // If team admins are defined, only they have access.
         if (teamAdmins.length > 0) {
             if (teamAdmins.includes(user.userId)) return true;
         } else {
@@ -102,13 +102,12 @@ export const hasAccess = (user: User, page: AppPage, teams: Team[]): boolean => 
 
 /**
  * Determines the ownership context for a new item. Ownership is always assigned to the active user.
- * @param page The current AppPage configuration. (Used to differentiate context but ownership is user-based)
+ * @param page The current AppPage configuration.
  * @param user The current user object.
  * @param contextTeam The current team, if on a dynamic team page.
- * @returns A BadgeCollectionOwner object, always assigning to the current user.
+ * @returns A BadgeCollectionOwner object, assigning to the user.
  */
 export const getOwnershipContext = (page: AppPage, user: User, contextTeam?: Team): BadgeCollectionOwner => {
-    // Ownership is always assigned to the user performing the action.
+    // Simplified rule: The creator is always the owner.
     return { type: 'user', id: user.userId };
 };
-

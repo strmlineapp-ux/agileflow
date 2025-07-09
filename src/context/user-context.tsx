@@ -50,7 +50,7 @@ interface UserContextType {
   updateAppTab: (tabId: string, tabData: Partial<AppTab>) => Promise<void>;
   allBadges: Badge[];
   allBadgeCollections: BadgeCollection[];
-  addBadgeCollection: (owner: BadgeCollectionOwner, sourceCollection?: BadgeCollection) => void;
+  addBadgeCollection: (owner: BadgeCollectionOwner, sourceCollection?: BadgeCollection, contextTeam?: Team) => void;
   updateBadgeCollection: (collectionId: string, data: Partial<BadgeCollection>) => void;
   deleteBadgeCollection: (collectionId: string) => void;
   addBadge: (collectionId: string, sourceBadge?: Badge) => void;
@@ -300,7 +300,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  const addBadgeCollection = useCallback((owner: BadgeCollectionOwner, sourceCollection?: BadgeCollection) => {
+  const addBadgeCollection = useCallback((owner: BadgeCollectionOwner, sourceCollection?: BadgeCollection, contextTeam?: Team) => {
     const newCollectionId = crypto.randomUUID();
     let newBadges: Badge[] = [];
     let newCollection: BadgeCollection;
@@ -355,27 +355,24 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         setAllBadges(prev => [...prev, ...newBadges]);
     }
 
-    if (owner.type === 'team') {
-        setTeams(currentTeams => currentTeams.map(t => {
-            if (t.id === owner.id) {
-                const updatedCollections = [...(t.badgeCollections || []), newCollection];
-                const updatedBadges = [...(t.allBadges || []), ...newBadges];
-                const updatedActiveCollections = new Set(t.activeBadgeCollections || []);
-                return { 
-                    ...t, 
-                    badgeCollections: updatedCollections, 
-                    allBadges: updatedBadges,
-                    activeBadgeCollections: Array.from(updatedActiveCollections) 
-                };
-            }
-            return t;
-        }));
-    } else if (owner.type === 'user') {
-        updateUser(owner.id, { 
-            linkedCollectionIds: Array.from(new Set([...(users.find(u => u.userId === owner.id)?.linkedCollectionIds || []), newCollection.id]))
-        });
+    if (contextTeam) {
+        const updatedTeam = {
+            ...contextTeam,
+            badgeCollections: [...contextTeam.badgeCollections, newCollection],
+            allBadges: [...contextTeam.allBadges, ...newBadges],
+            activeBadgeCollections: contextTeam.activeBadgeCollections ? [...contextTeam.activeBadgeCollections] : [],
+        };
+        if (sourceCollection) {
+            // For copies, they start as inactive in team context
+        } else {
+            updatedTeam.activeBadgeCollections.push(newCollection.id);
+        }
+
+        setTeams(currentTeams => currentTeams.map(t => t.id === contextTeam.id ? updatedTeam : t));
+    } else {
+        // User context - no team update needed.
     }
-  }, [allBadgeCollections.length, allBadges, users, updateUser, teams]);
+  }, [allBadgeCollections.length, allBadges]);
 
   const updateBadgeCollection = useCallback((collectionId: string, data: Partial<BadgeCollection>) => {
     setAllBadgeCollections(current => current.map(c => c.id === collectionId ? { ...c, ...data } : c));
@@ -397,6 +394,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setAllBadges(current => current.filter(b => !badgeIdsToDelete.has(b.id)));
     setTeams(currentTeams => currentTeams.map(t => ({
         ...t,
+        allBadges: t.allBadges.filter(b => !badgeIdsToDelete.has(b.id)),
         badgeCollections: t.badgeCollections.filter(c => c.id !== collectionId)
     })));
   }, [allBadgeCollections, allBadges]);
