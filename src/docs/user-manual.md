@@ -82,7 +82,7 @@ Access your preferences by clicking your avatar in the bottom-left corner of the
 
 ### 8.1 Admin (`/dashboard/admin`)
 This is the central control panel for configuring the application itself.
-- **Admin Management**: Manage system administrators by dragging and dropping users between the "Admins" and "Users" lists. Granting or revoking admin status requires a 2-Factor Authentication code for security. For safety, the system prevents you from removing the last administrator.
+- **Admin Management**: Manage system administrators by dragging and dropping users between the "Admins" and "Users" lists. Granting or revoking admin status requires a 2-Factor Authentication code for security. For safety, the system prevents you from removing the last system administrator.
 - **Pages**: Configure the application's navigation. Create new pages, define their URL path, and control who has access to them (by user or team). You can intuitively reorder pages by dragging and dropping them in the grid. Key system pages are pinned and cannot be moved. You can also instantly duplicate any page by dragging it onto the "Add New Page" (+) button.
 - **Tabs**: Manage the reusable content blocks (tabs) in a simple list view. Use the search bar to find a specific tab to edit.
 
@@ -93,7 +93,7 @@ This is the central hub for global application settings.
 
 ### 8.3 Team Management (`/dashboard/teams/[teamId]`)
 This page is for managing the specifics of an individual team.
-- **Team Members**: View all members of the team. Team Admins are now listed in a dedicated column on the left for clarity, while all other members are in a responsive grid on the right. You can now also click on the "Team Admins" and "Members" titles to rename them for your team.
+- **Team Members**: View all members of the team. Team Admins are now listed in a dedicated column on the left for clarity, while all other members are in a responsive grid on the right. You have full flexibility to manage Team Admins, including removing the last one. You can also click on the "Team Admins" and "Members" titles to rename them for your team.
 - **Badge Management**: Create and manage your team's badge collections. To share a collection, simply drag its card to the "Shared Collections" panel. To link a collection from another team, drag it from the shared panel onto your main board. You can also drag individual badges from a shared collection and drop them into one of your own to link them.
 - **Pinned Locations**: Pin locations to the team's Production Schedule. You can also designate locations as "check locations."
 - **Workstations**: Manage a list of bookable workstations or machines for the team.
