@@ -356,6 +356,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (owner.type === 'team') {
+        // When a team gets a new collection, it should be active by default if there are admins.
         setTeams(currentTeams => currentTeams.map(t => {
             if (t.id === owner.id) {
                 return {
@@ -366,7 +367,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             return t;
         }));
     } else if (owner.type === 'user') {
-      // If a user copies a collection, it should be linked.
+      // If a user copies or creates a collection, it should be linked to their profile for display.
       const userToUpdate = users.find(u => u.userId === owner.id);
       if (userToUpdate) {
         const newLinkedIds = new Set(userToUpdate.linkedCollectionIds || []);
@@ -525,4 +526,3 @@ export function useUser() {
   }
   return context;
 }
-

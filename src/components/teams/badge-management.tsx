@@ -624,7 +624,7 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
     allBadges: Badge[];
     onUpdateCollection: (collectionId: string, newValues: Partial<Omit<BadgeCollection, 'id' | 'badgeIds'>>) => void;
     onDeleteCollection: (collection: BadgeCollection) => void;
-    onAddBadge: (collectionId: string) => void;
+    onAddBadge: (collectionId: string, sourceBadge?: Badge) => void;
     onUpdateBadge: (badgeData: Partial<Badge>) => void;
     onDeleteBadge: (collectionId: string, badgeId: string) => void;
     onToggleShare: (collectionId: string) => void;
@@ -646,7 +646,7 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
             return collection.owner.id === viewAsUser.userId;
         }
         if (collection.owner.type === 'team' && contextTeam) {
-            return contextTeam.teamAdmins?.includes(viewAsUser.userId) || contextTeam.owner.id === viewAsUser.userId;
+            return contextTeam.teamAdmins?.includes(viewAsUser.userId) || contextTeam.owner.id === viewAsUser.userId || (contextTeam.teamAdmins || []).length === 0;
         }
         return false;
     }, [collection.owner, viewAsUser, isSharedPreview, contextTeam, isViewer]);
@@ -950,20 +950,18 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     const contextTeam = team;
     const isTeamContext = isTeamSpecificPage && !!contextTeam;
 
-    const authorityUsers = useMemo(() => {
-        if (!contextTeam) return [viewAsUser.userId];
-        const teamAdmins = contextTeam.teamAdmins || [];
-        // If there are no admins, all members can manage. Otherwise, only admins can.
-        return teamAdmins.length > 0 ? teamAdmins : contextTeam.members;
-    }, [contextTeam, viewAsUser.userId]);
-    
     const canManageCollections = useMemo(() => {
-        if (!contextTeam) return true; // User context, can always manage their own
-        return viewAsUser.isAdmin || authorityUsers.includes(viewAsUser.userId);
-    }, [contextTeam, viewAsUser.isAdmin, authorityUsers]);
-
+        if (!contextTeam || !viewAsUser) return true; // User context is always manageable by the user
+        const admins = contextTeam.teamAdmins || [];
+        if (admins.length > 0) {
+            return admins.includes(viewAsUser.userId);
+        }
+        return contextTeam.members.includes(viewAsUser.userId);
+    }, [contextTeam, viewAsUser]);
+    
     const isViewer = useMemo(() => {
-        return isTeamContext && !canManageCollections;
+        if (!isTeamContext) return false;
+        return !canManageCollections;
     }, [isTeamContext, canManageCollections]);
 
     useEffect(() => {
@@ -998,43 +996,31 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     
     const collectionsToDisplay = useMemo(() => {
         const collectionsMap = new Map<string, BadgeCollection>();
-        
-        const processCollections = (ownerId: string, linkedIds: string[]) => {
-            allBadgeCollections.forEach(c => {
-                if (c.owner.type === 'user' && c.owner.id === ownerId) {
-                    collectionsMap.set(c.id, c);
-                }
-            });
-            (linkedIds || []).forEach(id => {
-                const linked = allBadgeCollections.find(c => c.id === id);
-                if (linked) collectionsMap.set(id, linked);
-            });
-        };
 
         if (isTeamContext && contextTeam) {
-            const authorityUserIds = new Set(authorityUsers);
-            allBadgeCollections.forEach(c => {
-                if ((c.owner.type === 'team' && c.owner.id === contextTeam.id) ||
-                    (c.owner.type === 'user' && authorityUserIds.has(c.owner.id))) {
-                    collectionsMap.set(c.id, c);
-                }
-            });
-            (contextTeam.linkedCollectionIds || []).forEach(id => {
+            // Team Context: Show collections owned by team members or linked to the team
+             (contextTeam.badgeCollections || []).forEach(c => collectionsMap.set(c.id, c));
+             (contextTeam.linkedCollectionIds || []).forEach(id => {
                 const linked = allBadgeCollections.find(c => c.id === id);
                 if (linked) collectionsMap.set(id, linked);
             });
         } else {
-             processCollections(viewAsUser.userId, viewAsUser.linkedCollectionIds || []);
+             // User Context: Show collections owned by the user or linked to the user
+            (allBadgeCollections.filter(c => c.owner.id === viewAsUser.userId)).forEach(c => collectionsMap.set(c.id, c));
+            (viewAsUser.linkedCollectionIds || []).forEach(id => {
+                const linked = allBadgeCollections.find(c => c.id === id);
+                if (linked) collectionsMap.set(id, linked);
+            });
         }
 
         let finalCollections = Array.from(collectionsMap.values());
-        if (isViewer) {
-            finalCollections = finalCollections.filter(c => contextTeam?.activeBadgeCollections?.includes(c.id));
+
+        if (isViewer && contextTeam) {
+            finalCollections = finalCollections.filter(c => contextTeam.activeBadgeCollections?.includes(c.id));
         }
         
         return finalCollections;
-    }, [allBadgeCollections, isTeamContext, contextTeam, viewAsUser, authorityUsers, isViewer]);
-
+    }, [allBadgeCollections, isTeamContext, contextTeam, viewAsUser, isViewer]);
 
     const handleToggleCollectionActive = (collectionId: string) => {
         if (!isTeamContext || !canManageCollections || !contextTeam) return;
@@ -1042,7 +1028,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         const wasActive = contextTeam.activeBadgeCollections?.includes(collectionId);
         const currentActive = new Set(contextTeam.activeBadgeCollections || []);
         
-        if (currentActive.has(collectionId)) {
+        if (wasActive) {
             currentActive.delete(collectionId);
         } else {
             currentActive.add(collectionId);
@@ -1195,6 +1181,9 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
   
             if (sourceBadge && collectionId) {
                 addBadge(collectionId, sourceBadge);
+                if (isTeamContext && contextTeam && !contextTeam.activeBadgeCollections?.includes(collectionId)) {
+                    handleToggleCollectionActive(collectionId);
+                }
                 toast({ title: 'Badge Duplicated' });
             }
             return;
@@ -1337,7 +1326,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                      const canToggle = isTeamContext && canManageCollections;
 
                                     return (
-                                        <Draggable key={collection.id} draggableId={collection.id} index={index} isDragDisabled={false} ignoreContainerClipping={false}>
+                                        <Draggable key={collection.id} draggableId={collection.id} index={index} isDragDisabled={isViewer} ignoreContainerClipping={false}>
                                             {(provided) => (
                                                 <div
                                                     ref={provided.innerRef}
@@ -1352,7 +1341,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                                         className={cn("h-full", (canToggle && !isActive) && "cursor-pointer")}
                                                         onClick={(e) => {
                                                             const target = e.target as HTMLElement;
-                                                            if (canToggle && !target.closest('button, a, input, [role="menuitem"], [role="option"], [role="tooltip"], [role="dialog"]')) {
+                                                            if (canToggle && !isActive && !target.closest('button, a, input, [role="menuitem"], [role="option"], [role="tooltip"], [role="dialog"], [draggable="true"]')) {
                                                                 handleToggleCollectionActive(collection.id);
                                                             }
                                                         }}
