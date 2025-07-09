@@ -1022,8 +1022,14 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         return finalCollections;
     }, [allBadgeCollections, isTeamContext, contextTeam, viewAsUser, isViewer]);
 
-    const handleToggleCollectionActive = (collectionId: string) => {
+    const handleToggleCollectionActive = (e: React.MouseEvent<HTMLDivElement, MouseEvent>, collectionId: string) => {
         if (!isTeamContext || !canManageCollections || !contextTeam) return;
+        
+        const target = e.target as HTMLElement;
+        const isInteractiveElement = target.closest('button, a, input, [role="menuitem"], [role="option"], [role="tooltip"], [role="dialog"], [draggable="true"]');
+        if (isInteractiveElement) {
+            return;
+        }
     
         const wasActive = contextTeam.activeBadgeCollections?.includes(collectionId);
         const currentActive = new Set(contextTeam.activeBadgeCollections || []);
@@ -1109,7 +1115,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         } else {
             confirmPermanentDelete(badgeId);
         }
-    }, [allBadges, allBadgeCollections, updateBadgeCollection, toast, confirmPermanentDelete]);
+    }, [allBadgeCollections, allBadges, updateBadgeCollection, toast, confirmPermanentDelete]);
     
     
     const onDragEnd = (result: DropResult) => {
@@ -1212,11 +1218,6 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
             reorderedIds.splice(destination.index, 0, movedId);
             updateBadgeCollection(sourceCollection.id, { badgeIds: reorderedIds });
         } else { // --- Linking to a different collection ---
-             if (destCollection.owner.id !== viewAsUser.userId) {
-                toast({ variant: 'destructive', title: 'Cannot Add Badge', description: 'You can only add badges to collections you own.' });
-                return;
-            }
-
             const newDestIds = Array.from(destCollection.badgeIds);
             const badgeIsAlreadyInDest = newDestIds.includes(badgeId);
 
@@ -1349,11 +1350,9 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                                     <div 
                                                         className={cn("h-full", (canToggle && !isActive) && "cursor-pointer")}
                                                         onClick={(e) => {
-                                                            if (canToggle && !isActive && !(e.target as HTMLElement).closest('button, a, input, [role="menuitem"], [role="option"], [role="tooltip"], [role="dialog"], [draggable="true"]')) {
-                                                                handleToggleCollectionActive(collection.id);
-                                                            } else if (canToggle && isActive && !(e.target as HTMLElement).closest('button, a, input, [role="menuitem"], [role="option"], [role="tooltip"], [role="dialog"], [draggable="true"]')) {
-                                                                 handleToggleCollectionActive(collection.id);
-                                                            }
+                                                           if (canToggle) {
+                                                               handleToggleCollectionActive(e, collection.id);
+                                                           }
                                                         }}
                                                     >
                                                         <BadgeCollectionCard

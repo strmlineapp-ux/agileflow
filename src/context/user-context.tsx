@@ -361,6 +361,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                 return {
                     ...t,
                     badgeCollections: [...(t.badgeCollections || []), newCollection],
+                    activeBadgeCollections: [...(t.activeBadgeCollections || []), newCollection.id] // Activate by default
                 };
             }
             return t;
