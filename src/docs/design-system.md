@@ -231,12 +231,13 @@ This pattern describes the user interface for assigning and unassigning badges t
 This pattern governs how users interact with the Badge Management tab, ensuring a clear distinction between managers and viewers within a team context.
 
 - **Activation**: In a team context, Badge Collections can be "active" or "inactive".
-    - **Manager's View**: A user who can manage the team (a team admin, or any member if no admins are set) sees all available collections (owned by members or linked). Inactive collections appear "ghosted" (e.g., `opacity-40`). **Clicking a ghosted card activates it for the team.** Clicking an active card deactivates it. Other interactions (editing name, changing view mode) **do not** change the active state.
+    - **Manager's View**: A user who can manage the team (a team admin, or any member if no admins are set) sees all available collections (owned by members or linked). Inactive collections appear "ghosted" (e.g., `opacity-40`). **Clicking on the background of a ghosted card activates it for the team.** Clicking an active card will deactivate it. Other interactions (editing name, changing view mode) **do not** change the active state. A toast notification confirms activation/deactivation.
     - **Viewer's View**: A non-manager sees only the collections that have been explicitly activated for the team. Inactive collections are not visible.
 - **Viewer Role UI Restrictions**: To provide a clean, read-only experience, the "viewer" role has a simplified UI:
     - **No Management Controls**: The "Add New Collection" and "Show Shared Badges" icons are hidden.
     - **No Informational Icons**: Icon overlays for ownership status and color-picking are hidden.
-    - **Disabled Drag-and-Drop**: Viewers cannot drag individual badges between collections.
+    - **Search & Reorder Enabled**: Viewers **can** use the search bar to find specific collections and **can** drag-and-drop the collection cards to reorder them for their personal view (this order is not saved).
+    - **Disabled Badge Dragging**: Viewers cannot drag individual badges between collections.
 - **Application**: Applied to the **Badge Management** tab.
 
 ## Visual & Theming Elements

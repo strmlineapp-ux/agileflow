@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -1290,25 +1289,25 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                 </StrictModeDroppable>
                             )}
                         </div>
-                        {!isViewer && (
-                            <div className="flex items-center gap-1">
-                                {!isSearching ? (
-                                    <Button variant="ghost" size="icon" onClick={() => setIsSearching(true)} className="text-muted-foreground">
-                                        <GoogleSymbol name="search" />
-                                    </Button>
-                                ) : (
-                                    <div className="flex items-center gap-1 border-b">
-                                        <GoogleSymbol name="search" className="text-muted-foreground" />
-                                        <input
-                                            ref={searchInputRef}
-                                            placeholder="Search collections..."
-                                            value={searchTerm}
-                                            onChange={(e) => setSearchTerm(e.target.value)}
-                                            onBlur={() => { if (!searchTerm) setIsSearching(false); }}
-                                            className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
-                                        />
-                                    </div>
-                                )}
+                        <div className="flex items-center gap-1">
+                            {!isSearching ? (
+                                <Button variant="ghost" size="icon" onClick={() => setIsSearching(true)} className="text-muted-foreground">
+                                    <GoogleSymbol name="search" />
+                                </Button>
+                            ) : (
+                                <div className="flex items-center gap-1 border-b">
+                                    <GoogleSymbol name="search" className="text-muted-foreground" />
+                                    <input
+                                        ref={searchInputRef}
+                                        placeholder="Search collections..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        onBlur={() => { if (!searchTerm) setIsSearching(false); }}
+                                        className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                                    />
+                                </div>
+                            )}
+                            {!isViewer && (
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
@@ -1319,8 +1318,8 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                         <TooltipContent><p>Show Shared Collections</p></TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </div>
                     
                     <StrictModeDroppable droppableId="collections-list" type="collection" isDropDisabled={isViewer} isCombineEnabled={false}>
@@ -1338,7 +1337,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                      const canToggle = isTeamContext && canManageCollections;
 
                                     return (
-                                        <Draggable key={collection.id} draggableId={collection.id} index={index} isDragDisabled={isViewer} ignoreContainerClipping={false}>
+                                        <Draggable key={collection.id} draggableId={collection.id} index={index} isDragDisabled={false} ignoreContainerClipping={false}>
                                             {(provided) => (
                                                 <div
                                                     ref={provided.innerRef}
@@ -1353,8 +1352,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                                         className={cn("h-full", (canToggle && !isActive) && "cursor-pointer")}
                                                         onClick={(e) => {
                                                             const target = e.target as HTMLElement;
-                                                            // Only toggle if clicking on the card background, not on interactive elements within it.
-                                                            if ((canToggle && !isActive) && !target.closest('button, a, input, [role="menuitem"], [role="option"]')) {
+                                                            if (canToggle && !target.closest('button, a, input, [role="menuitem"], [role="option"], [role="tooltip"], [role="dialog"]')) {
                                                                 handleToggleCollectionActive(collection.id);
                                                             }
                                                         }}
