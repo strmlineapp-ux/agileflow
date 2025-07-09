@@ -563,6 +563,8 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
     };
 
     const filteredIcons = useMemo(() => googleSymbolNames.filter(icon => icon.toLowerCase().includes(iconSearch.toLowerCase())), [iconSearch]);
+    
+    const displayPath = page.isDynamic ? `${page.path}/[teamId]` : page.path;
 
     return (
         <Card className={cn("flex flex-col h-full group bg-transparent", isDragging && 'shadow-xl')}>
@@ -676,7 +678,7 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
                 </div>
             </CardHeader>
             <CardContent className="flex-grow flex flex-col justify-end pt-2">
-                <p className="text-xs text-muted-foreground truncate">{page.path}</p>
+                <p className="text-xs text-muted-foreground truncate">{displayPath}</p>
             </CardContent>
             <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                 <DialogContent className="max-w-md">
@@ -765,7 +767,10 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
             const pageToDuplicate = appSettings.pages.find(p => p.id === draggableId);
             if (pageToDuplicate) {
                 const newName = `${pageToDuplicate.name} (Copy)`;
-                const newPath = `/dashboard/${newName.toLowerCase().replace(/[\s()]+/g, '-').replace(/^-+|-+$/g, '')}`;
+                const newPath = pageToDuplicate.isDynamic 
+                    ? pageToDuplicate.path 
+                    : `/dashboard/${newName.toLowerCase().replace(/[\s()]+/g, '-').replace(/^-+|-+$/g, '')}`;
+
                 const newPage: AppPage = {
                     ...JSON.parse(JSON.stringify(pageToDuplicate)), // Deep copy
                     id: crypto.randomUUID(),
@@ -1216,3 +1221,4 @@ export const TabsManagement = ({ tab }: { tab: AppTab }) => {
     );
 };
 // #endregion
+

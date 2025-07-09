@@ -11,7 +11,7 @@ import { type AppTab, type AppPage } from '@/types';
 
 // Import all possible tab components
 import { AdminsManagement, PagesManagement, TabsManagement } from '@/components/admin/page';
-import { CalendarManagement } from '@/components/service-delivery/calendar-management';
+import { CalendarManagement } from '@/components/calendar/calendar-management';
 import { TeamManagement as ServiceDeliveryTeamManagement } from '@/components/service-delivery/team-management';
 import { TeamMembersView } from '@/components/teams/team-members-view';
 import { BadgeManagement } from '@/components/teams/badge-management';
@@ -88,7 +88,7 @@ export default function DynamicPage() {
         return <Skeleton className="h-full w-full" />;
     }
 
-    if (!pageConfig || (pageConfig.isDynamic && page.path !== currentPath && !dynamicTeam)) {
+    if (!pageConfig || (pageConfig.isDynamic && pageConfig.path !== currentPath && !dynamicTeam)) {
         return <div className="p-4">404 - Page not found or team data is missing for path: {currentPath}</div>;
     }
     
