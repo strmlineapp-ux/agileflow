@@ -54,32 +54,42 @@ export default function DynamicPage() {
     const slug = Array.isArray(params.page) ? params.page.join('/') : (params.page || '');
     const currentPath = `/dashboard/${slug}`;
 
-    const pageConfig = useMemo(() => {
-        return [...appSettings.pages]
-            .sort((a, b) => b.path.length - a.path.length) // Sort to match more specific paths first e.g. /dashboard/teams over /dashboard
+    const { pageConfig, dynamicTeam } = useMemo(() => {
+        // Find the most specific page configuration that matches the current URL path.
+        const page = [...appSettings.pages]
+            .sort((a, b) => b.path.length - a.path.length) 
             .find(p => currentPath.startsWith(p.path));
-    }, [appSettings.pages, currentPath]);
-    
-    const dynamicTeam = useMemo(() => {
-      if (!pageConfig?.isDynamic) return undefined;
-      
-      const pathSegments = pageConfig.path.split('/').filter(Boolean);
-      const urlSegments = currentPath.split('/').filter(Boolean);
 
-      if (urlSegments.length > pathSegments.length) {
-        const teamId = urlSegments[pathSegments.length];
-        return teams.find(t => t.id === teamId);
-      }
-      return undefined;
-    }, [teams, pageConfig, currentPath]);
+        if (!page) {
+            return { pageConfig: null, dynamicTeam: null };
+        }
+
+        // If the matched page is dynamic, extract the team ID from the URL.
+        if (page.isDynamic) {
+            const pathSegments = page.path.split('/').filter(Boolean);
+            const urlSegments = currentPath.split('/').filter(Boolean);
+            
+            if (urlSegments.length > pathSegments.length) {
+                const teamId = urlSegments[pathSegments.length];
+                const team = teams.find(t => t.id === teamId);
+                return { pageConfig: page, dynamicTeam: team };
+            }
+            // This case handles the base path of a dynamic route group, e.g., /dashboard/teams
+            // which might show an overview or list of teams.
+            return { pageConfig: page, dynamicTeam: undefined };
+        }
+        
+        // For non-dynamic pages, there's no dynamic team context.
+        return { pageConfig: page, dynamicTeam: undefined };
+    }, [appSettings.pages, currentPath, teams]);
 
 
     if (loading) {
         return <Skeleton className="h-full w-full" />;
     }
 
-    if (!pageConfig || (pageConfig.isDynamic && !dynamicTeam && pageConfig.id !== 'page-team-management')) {
-        return <div className="p-4">404 - Page not found for path: {currentPath}</div>;
+    if (!pageConfig || (pageConfig.isDynamic && page.path !== currentPath && !dynamicTeam)) {
+        return <div className="p-4">404 - Page not found or team data is missing for path: {currentPath}</div>;
     }
     
     const pageTabs = appSettings.tabs.filter(t => pageConfig.associatedTabs.includes(t.id));
@@ -92,7 +102,7 @@ export default function DynamicPage() {
         
         if (ContentComponent) {
             const pseudoTab: AppPage = { ...pageConfig, componentKey: pageConfig.componentKey as any };
-            return <ContentComponent tab={pseudoTab} team={dynamicTeam} page={pageConfig} isSingleTabPage={true} />;
+            return <ContentComponent tab={pseudoTab} team={dynamicTeam} page={pageConfig} isSingleTabPage={true} isTeamSpecificPage={pageConfig.isDynamic} />;
         }
 
         return (
