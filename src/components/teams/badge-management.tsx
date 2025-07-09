@@ -260,7 +260,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
         shareIconTitle = 'Linked from another collection in this team';
     }
     
-    const canBeDeleted = isCollectionOwned || !isThisTheOriginalInstance;
+    const canBeDeleted = !isViewer && (isCollectionOwned || !isThisTheOriginalInstance);
     
     const colorPickerContent = (
         <PopoverContent className="w-auto p-2">
@@ -419,7 +419,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                     </TooltipProvider>
                  )}
             </CardContent>
-            {!isViewer && canBeDeleted && deleteButton}
+            {canBeDeleted && deleteButton}
         </div>
       );
     }
@@ -540,7 +540,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                     </TooltipProvider>
                  )}
             </div>
-            {!isViewer && canBeDeleted && deleteButton}
+            {canBeDeleted && deleteButton}
         </div>
       );
     }
@@ -600,7 +600,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                 {inlineNameEditor}
             </UiBadge>
             
-             {!isViewer && canBeDeleted && (
+             {canBeDeleted && (
                  <TooltipProvider>
                     <Tooltip>
                         <TooltipTrigger asChild>
@@ -640,6 +640,9 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
     const [isEditingName, setIsEditingName] = useState(false);
     
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
+    
+    const [isViewMenuOpen, setIsViewMenuOpen] = useState(false);
+    const [isOptionsMenuOpen, setIsOptionsMenuOpen] = useState(false);
     
     const isOwned = useMemo(() => {
         if (isSharedPreview || isViewer) return false;
@@ -801,12 +804,12 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                             </div>
                         </div>
                         <div className="flex items-center">
-                            <DropdownMenu>
+                            <DropdownMenu open={isOptionsMenuOpen} onOpenChange={setIsOptionsMenuOpen}>
                                 <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><GoogleSymbol name="more_vert" weight={100} /></Button></DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                     <DropdownMenuItem disabled={isViewer} onClick={(e) => { e.preventDefault(); onUpdateCollection(collection.id, { viewMode: 'assorted' })}}><GoogleSymbol name="view_module" className="mr-2 text-lg" />Assorted View</DropdownMenuItem>
-                                     <DropdownMenuItem disabled={isViewer} onClick={(e) => { e.preventDefault(); onUpdateCollection(collection.id, { viewMode: 'detailed' })}}><GoogleSymbol name="view_comfy_alt" className="mr-2 text-lg" />Detailed View</DropdownMenuItem>
-                                     <DropdownMenuItem disabled={isViewer} onClick={(e) => { e.preventDefault(); onUpdateCollection(collection.id, { viewMode: 'list' })}}><GoogleSymbol name="view_list" className="mr-2 text-lg" />List View</DropdownMenuItem>
+                                     <DropdownMenuItem onSelect={() => onUpdateCollection(collection.id, { viewMode: 'assorted' })}><GoogleSymbol name="view_module" className="mr-2 text-lg" />Assorted View</DropdownMenuItem>
+                                     <DropdownMenuItem onSelect={() => onUpdateCollection(collection.id, { viewMode: 'detailed' })}><GoogleSymbol name="view_comfy_alt" className="mr-2 text-lg" />Detailed View</DropdownMenuItem>
+                                     <DropdownMenuItem onSelect={() => onUpdateCollection(collection.id, { viewMode: 'list' })}><GoogleSymbol name="view_list" className="mr-2 text-lg" />List View</DropdownMenuItem>
                                     
                                     {(canShare || canUnlink || (isOwned && !isSharedPreview)) && <DropdownMenuSeparator />}
                                     
@@ -1061,11 +1064,18 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     
     const handleDeleteCollection = (collection: BadgeCollection) => {
         if (isViewer) return;
-        const canDelete = collection.owner.id === (isTeamContext && contextTeam ? contextTeam.id : viewAsUser.userId);
-        if (!canDelete && isTeamContext && contextTeam) {
+        const ownerId = isTeamContext && contextTeam ? contextTeam.id : viewAsUser.userId;
+        const isOwned = collection.owner.id === ownerId;
+
+        if (!isOwned) {
             // Unlink if not owner
-            const updatedIds = (contextTeam.linkedCollectionIds || []).filter(id => id !== collection.id);
-            updateTeam(contextTeam.id, { linkedCollectionIds: updatedIds });
+             if (contextTeam) {
+                const updatedIds = (contextTeam.linkedCollectionIds || []).filter(id => id !== collection.id);
+                updateTeam(contextTeam.id, { linkedCollectionIds: updatedIds });
+            } else {
+                const updatedIds = (viewAsUser.linkedCollectionIds || []).filter(id => id !== collection.id);
+                updateUser(viewAsUser.userId, { linkedCollectionIds: updatedIds });
+            }
             toast({ title: 'Collection Unlinked' });
         } else {
             setCollectionToDelete(collection);

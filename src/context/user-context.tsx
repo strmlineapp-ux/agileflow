@@ -358,11 +358,15 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     if (owner.type === 'team') {
         setTeams(currentTeams => currentTeams.map(t => {
             if (t.id === owner.id) {
-                return {
-                    ...t,
-                    badgeCollections: [...(t.badgeCollections || []), newCollection],
-                    activeBadgeCollections: [...(t.activeBadgeCollections || []), newCollection.id] // Activate by default
-                };
+                const currentCollections = new Set(t.badgeCollections.map(c => c.id));
+                if (!currentCollections.has(newCollection.id)) {
+                  // Do not automatically activate the collection
+                  const teamToUpdate = {
+                      ...t,
+                      badgeCollections: [...(t.badgeCollections || []), newCollection],
+                  };
+                  return teamToUpdate;
+                }
             }
             return t;
         }));
