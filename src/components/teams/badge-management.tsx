@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -592,7 +593,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                         <TooltipTrigger asChild>
                              <button
                                 type="button"
-                                className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full flex items-center justify-center text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full flex items-center justify-center text-destructive hover:text-destructive-foreground hover:bg-destructive opacity-0 group-hover:opacity-100 transition-opacity"
                                 onClick={(e) => { e.stopPropagation(); onDelete(); }}
                                 aria-label={`Delete ${badge.name}`}
                             >
@@ -786,9 +787,9 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                                     <DropdownMenuItem onClick={() => onUpdateCollection(collection.id, { viewMode: 'detailed' })}><GoogleSymbol name="view_comfy_alt" className="mr-2 text-lg" />Detailed View</DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => onUpdateCollection(collection.id, { viewMode: 'list' })}><GoogleSymbol name="view_list" className="mr-2 text-lg" />List View</DropdownMenuItem>
                                     
-                                    {(isOwned || !isSharedPreview) && <DropdownMenuSeparator />}
+                                    {(isOwned || !isOwned && !isSharedPreview) && <DropdownMenuSeparator />}
                                     
-                                    {isOwned && (
+                                    {isOwned && !isSharedPreview && (
                                         <DropdownMenuItem onClick={() => onToggleShare(collection.id)}>
                                             <GoogleSymbol name={collection.isShared ? 'share_off' : 'share'} className="mr-2 text-lg"/>
                                             {collection.isShared ? 'Unshare Collection' : 'Share Collection'}
@@ -917,6 +918,20 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
     const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
     const [sharedSearchTerm, setSharedSearchTerm] = useState('');
     const sharedSearchInputRef = useRef<HTMLInputElement>(null);
+    
+    const isTeamContext = !!team;
+    const contextTeam = team;
+
+    const authorityUsers = useMemo(() => {
+        if (!contextTeam) return [viewAsUser.userId];
+        const teamAdmins = contextTeam.teamAdmins || [];
+        return teamAdmins.length > 0 ? teamAdmins : contextTeam.members;
+    }, [contextTeam, viewAsUser.userId]);
+    
+    const canManageCollections = useMemo(() => {
+        if (!contextTeam) return true; // User context, can always manage their own
+        return viewAsUser.isAdmin || authorityUsers.includes(viewAsUser.userId);
+    }, [contextTeam, viewAsUser.isAdmin, authorityUsers]);
 
     useEffect(() => {
         if (isEditingTitle) titleInputRef.current?.focus();
@@ -949,45 +964,41 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
     };
     
     const collectionsToDisplay = useMemo(() => {
+        const owner = getOwnershipContext(page, viewAsUser);
         let baseCollections;
-        let linkedCollectionIds: string[] = [];
 
-        if (team) {
-            baseCollections = allBadgeCollections.filter(c => 
-                (c.owner.type === 'user' && team.members.includes(c.owner.id)) ||
-                (c.owner.type === 'team' && c.owner.id === team.id)
-            );
-            linkedCollectionIds = team.linkedCollectionIds || [];
-        } else {
-            if (page.access?.teams?.length > 0) {
-                const contextTeamId = page.access.teams[0];
-                const contextTeam = teams.find(t => t.id === contextTeamId);
-                const contextTeamMemberIds = new Set(contextTeam?.members || []);
-                baseCollections = allBadgeCollections.filter(c => 
-                    (c.owner.type === 'team' && c.owner.id === contextTeamId) ||
-                    (c.owner.type === 'user' && contextTeamMemberIds.has(c.owner.id))
-                );
-                linkedCollectionIds = contextTeam?.linkedCollectionIds || [];
-            } else {
-                 baseCollections = allBadgeCollections.filter(c => c.owner.type === 'user' && c.owner.id === viewAsUser.userId);
-                 linkedCollectionIds = viewAsUser.linkedCollectionIds || [];
-            }
-        }
+        if (isTeamContext && contextTeam) {
+            const authorityUserIds = new Set(authorityUsers);
+            const activeCollectionIds = new Set(contextTeam.activeBadgeCollections || []);
 
-        const linkedCollections = allBadgeCollections.filter(c => linkedCollectionIds.includes(c.id));
-        
-        const combined = [...baseCollections, ...linkedCollections];
-        const uniqueIds = new Set();
-        const uniqueCollections = combined.filter(c => {
-            if (uniqueIds.has(c.id)) {
+            const potentialCollections = allBadgeCollections.filter(c => {
+                if (c.owner.type === 'team') return c.owner.id === contextTeam.id;
+                if (c.owner.type === 'user') return authorityUserIds.has(c.owner.id);
                 return false;
-            }
-            uniqueIds.add(c.id);
-            return true;
-        });
+            });
 
-        return uniqueCollections.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
-    }, [allBadgeCollections, team, viewAsUser, searchTerm, page.access.teams, teams]);
+            if (canManageCollections) {
+                return potentialCollections;
+            } else {
+                return potentialCollections.filter(c => activeCollectionIds.has(c.id));
+            }
+        } else {
+            // User context
+            return allBadgeCollections.filter(c => c.owner.type === 'user' && c.owner.id === viewAsUser.userId);
+        }
+    }, [allBadgeCollections, isTeamContext, contextTeam, viewAsUser, page, canManageCollections, authorityUsers]);
+
+    const handleToggleCollectionActive = (collectionId: string) => {
+        if (!isTeamContext || !canManageCollections || !contextTeam) return;
+    
+        const currentActive = new Set(contextTeam.activeBadgeCollections || []);
+        if (currentActive.has(collectionId)) {
+            currentActive.delete(collectionId);
+        } else {
+            currentActive.add(collectionId);
+        }
+        updateTeam(contextTeam.id, { activeBadgeCollections: Array.from(currentActive) });
+    };
 
     const sharedCollections = useMemo(() => {
         const collectionsOnBoardIds = new Set(collectionsToDisplay.map(c => c.id));
@@ -1257,34 +1268,42 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
                                     snapshot.isDraggingOver && "ring-1 ring-border ring-inset p-2 rounded-lg"
                                 )}
                             >
-                                {collectionsToDisplay.map((collection, index) => (
-                                    <Draggable key={collection.id} draggableId={collection.id} index={index} ignoreContainerClipping={false}>
-                                        {(provided, snapshot) => (
-                                            <div
-                                                ref={provided.innerRef}
-                                                {...provided.draggableProps}
-                                                className={cn(
-                                                    "p-2 w-full transition-all duration-300",
-                                                    isSharedPanelOpen ? "lg:w-1/2" : "lg:w-1/3"
-                                                )}
-                                            >
-                                                <BadgeCollectionCard
-                                                    dragHandleProps={provided.dragHandleProps}
-                                                    key={collection.id}
-                                                    collection={collection}
-                                                    allBadges={allBadges}
-                                                    onUpdateCollection={updateBadgeCollection}
-                                                    onDeleteCollection={handleDeleteCollection}
-                                                    onAddBadge={addBadge}
-                                                    onUpdateBadge={updateBadge}
-                                                    onDeleteBadge={handleDeleteBadge}
-                                                    onToggleShare={handleToggleShare}
-                                                    contextTeam={team}
-                                                />
-                                            </div>
-                                        )}
-                                    </Draggable>
-                                ))}
+                                {collectionsToDisplay.map((collection, index) => {
+                                     const isActive = !isTeamContext || !contextTeam?.activeBadgeCollections || contextTeam.activeBadgeCollections.includes(collection.id);
+                                     const canToggle = isTeamContext && canManageCollections;
+
+                                    return (
+                                        <Draggable key={collection.id} draggableId={collection.id} index={index} ignoreContainerClipping={false}>
+                                            {(provided) => (
+                                                <div
+                                                    ref={provided.innerRef}
+                                                    {...provided.draggableProps}
+                                                    className={cn(
+                                                        "p-2 w-full transition-all duration-300",
+                                                        isSharedPanelOpen ? "lg:w-1/2" : "lg:w-1/3",
+                                                        canToggle && "cursor-pointer rounded-lg",
+                                                        !isActive && "opacity-40 hover:opacity-100",
+                                                    )}
+                                                    onClick={() => canToggle && handleToggleCollectionActive(collection.id)}
+                                                >
+                                                    <BadgeCollectionCard
+                                                        dragHandleProps={provided.dragHandleProps}
+                                                        key={collection.id}
+                                                        collection={collection}
+                                                        allBadges={allBadges}
+                                                        onUpdateCollection={updateBadgeCollection}
+                                                        onDeleteCollection={handleDeleteCollection}
+                                                        onAddBadge={addBadge}
+                                                        onUpdateBadge={updateBadge}
+                                                        onDeleteBadge={handleDeleteBadge}
+                                                        onToggleShare={handleToggleShare}
+                                                        contextTeam={team}
+                                                    />
+                                                </div>
+                                            )}
+                                        </Draggable>
+                                    )
+                                })}
                                 {provided.placeholder}
                             </div>
                         )}

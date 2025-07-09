@@ -125,6 +125,7 @@ export interface Team {
   workstations?: string[];
   eventTemplates?: EventTemplate[];
   linkedCollectionIds?: string[];
+  activeBadgeCollections?: string[];
 }
 
 export interface Task {

@@ -259,6 +259,7 @@ export const mockTeams: Team[] = [
             { id: 'template-2', name: 'Voice Over Record', icon: 'record_voice_over', requestedRoles: ['Editor', 'Audio Mix'] }
         ],
         linkedCollectionIds: [],
+        activeBadgeCollections: [videoProdCollectionId]
     },
     {
         id: 'live-events',
@@ -302,7 +303,7 @@ export const mockTeams: Team[] = [
         owner: { type: 'user', id: '4' },
         isShared: false,
         members: ['4', '15'],
-        teamAdmins: ['4'],
+        teamAdmins: [],
         locationCheckManagers: ['4'],
         allBadges: [],
         badgeCollections: [],
