@@ -359,10 +359,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         setTeams(currentTeams => currentTeams.map(t => {
             if (t.id === owner.id) {
                 const updatedCollections = [...(t.badgeCollections || []), newCollection];
+                const updatedBadges = [...(t.allBadges || []), ...newBadges];
                 const updatedActiveCollections = new Set(t.activeBadgeCollections || []);
                 return { 
                     ...t, 
                     badgeCollections: updatedCollections, 
+                    allBadges: updatedBadges,
                     activeBadgeCollections: Array.from(updatedActiveCollections) 
                 };
             }
@@ -417,6 +419,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }));
      setTeams(currentTeams => currentTeams.map(t => ({
         ...t,
+        allBadges: t.allBadges ? [...t.allBadges, newBadge] : [newBadge],
         badgeCollections: t.badgeCollections.map(c => c.id === collectionId ? { ...c, badgeIds: [newBadgeId, ...c.badgeIds] } : c)
     })));
   }, []);

@@ -1138,6 +1138,8 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         const { source, destination, draggableId, type } = result;
     
         if (!destination) return;
+        if (source.droppableId === 'shared-collections-panel' && destination.droppableId === 'shared-collections-panel') return;
+        const allVisibleCollections = [...collectionsToDisplay, ...sharedCollections];
 
         // --- Dragging from ANYWHERE to the SHARED PANEL ---
         if (type === 'collection' && destination.droppableId === 'shared-collections-panel') {
