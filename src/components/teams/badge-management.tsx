@@ -894,7 +894,7 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
     );
 }
 
-export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab, page: AppPage }) {
+export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }: { team?: Team, tab: AppTab, page: AppPage, isTeamSpecificPage?: boolean }) {
     const { 
         viewAsUser, 
         teams,
@@ -928,8 +928,8 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
     const [sharedSearchTerm, setSharedSearchTerm] = useState('');
     const sharedSearchInputRef = useRef<HTMLInputElement>(null);
     
-    const isTeamContext = !!team;
     const contextTeam = team;
+    const isTeamContext = isTeamSpecificPage && !!contextTeam;
 
     const authorityUsers = useMemo(() => {
         if (!contextTeam) return [viewAsUser.userId];
@@ -974,39 +974,40 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
     };
     
     const collectionsToDisplay = useMemo(() => {
-        let potentialCollections: BadgeCollection[];
-    
+        const collectionsMap = new Map<string, BadgeCollection>();
+
         if (isTeamContext && contextTeam) {
+            // Display collections owned by team members or the team itself.
             const authorityUserIds = new Set(authorityUsers);
-            const combined = new Map<string, BadgeCollection>();
-    
-            // Get collections owned by the team itself or its authority figures (admins/members)
             allBadgeCollections.forEach(c => {
-                if ((c.owner.type === 'team' && c.owner.id === contextTeam.id) || 
+                if ((c.owner.type === 'team' && c.owner.id === contextTeam.id) ||
                     (c.owner.type === 'user' && authorityUserIds.has(c.owner.id))) {
-                    combined.set(c.id, c);
+                    collectionsMap.set(c.id, c);
                 }
             });
-    
-            // Get collections linked by the team
-            const linkedCollections = allBadgeCollections.filter(c => (contextTeam.linkedCollectionIds || []).includes(c.id));
-            linkedCollections.forEach(c => combined.set(c.id, c));
-            potentialCollections = Array.from(combined.values());
-            
+            // Also display collections linked by the team.
+            (contextTeam.linkedCollectionIds || []).forEach(id => {
+                const linked = allBadgeCollections.find(c => c.id === id);
+                if (linked) collectionsMap.set(id, linked);
+            });
         } else {
-            // User context: owned and linked collections
-            const combined = new Map<string, BadgeCollection>();
-            const ownedCollections = allBadgeCollections.filter(c => c.owner.type === 'user' && c.owner.id === viewAsUser.userId);
-            const linkedCollections = allBadgeCollections.filter(c => (viewAsUser.linkedCollectionIds || []).includes(c.id));
-            
-            ownedCollections.forEach(c => combined.set(c.id, c));
-            linkedCollections.forEach(c => combined.set(c.id, c));
-            potentialCollections = Array.from(combined.values());
+            // User context (e.g., on Service Delivery page)
+            // Display collections owned by the user.
+            allBadgeCollections.forEach(c => {
+                if (c.owner.type === 'user' && c.owner.id === viewAsUser.userId) {
+                    collectionsMap.set(c.id, c);
+                }
+            });
+            // Also display collections linked by the user.
+            (viewAsUser.linkedCollectionIds || []).forEach(id => {
+                const linked = allBadgeCollections.find(c => c.id === id);
+                if (linked) collectionsMap.set(id, linked);
+            });
         }
         
-        return potentialCollections;
-    
+        return Array.from(collectionsMap.values());
     }, [allBadgeCollections, isTeamContext, contextTeam, viewAsUser, authorityUsers]);
+
 
     const handleToggleCollectionActive = (collectionId: string) => {
         if (!isTeamContext || !canManageCollections || !contextTeam) return;
@@ -1091,10 +1092,14 @@ export function BadgeManagement({ team, tab, page }: { team?: Team, tab: AppTab,
         if (type === 'collection' && destination.droppableId === 'shared-collections-panel') {
             const collectionToDrop = allBadgeCollections.find(c => c.id === draggableId);
             if (collectionToDrop) {
-                const isOwned = collectionToDrop.owner.type === 'user' && collectionToDrop.owner.id === viewAsUser.userId;
-                if (isOwned && !collectionToDrop.isShared) {
+                let isOwner = collectionToDrop.owner.type === 'user' && collectionToDrop.owner.id === viewAsUser.userId;
+                if (contextTeam && collectionToDrop.owner.type === 'team' && collectionToDrop.owner.id === contextTeam.id) {
+                    isOwner = canManageCollections;
+                }
+
+                if (isOwner && !collectionToDrop.isShared) {
                     handleToggleShare(collectionToDrop.id);
-                } else if (!isOwned) { // Unlinking a linked collection
+                } else if (!isOwner) { // Unlinking a linked collection
                      if (team) {
                         const updatedIds = (team.linkedCollectionIds || []).filter(id => id !== draggableId);
                         updateTeam(team.id, { linkedCollectionIds: updatedIds });

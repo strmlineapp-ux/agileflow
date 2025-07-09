@@ -306,8 +306,15 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     if (sourceCollection) {
         newBadges = sourceCollection.badgeIds.map(bId => {
             const originalBadge = allBadges.find(b => b.id === bId);
-            return { ...(originalBadge || {}), id: crypto.randomUUID(), ownerCollectionId: newCollectionId, name: originalBadge?.name ? `${originalBadge.name} (Copy)`: 'New Badge' };
-        });
+            if (!originalBadge) return null;
+            return { 
+                ...originalBadge, 
+                id: crypto.randomUUID(), 
+                ownerCollectionId: newCollectionId, 
+                name: `${originalBadge.name} (Copy)`
+            };
+        }).filter((b): b is Badge => b !== null);
+
         newCollection = {
             ...JSON.parse(JSON.stringify(sourceCollection)),
             id: newCollectionId,
@@ -344,6 +351,18 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setAllBadgeCollections(prev => [...prev, newCollection]);
     if (newBadges.length > 0) {
         setAllBadges(prev => [...prev, ...newBadges]);
+    }
+
+    if (owner.type === 'team') {
+        setTeams(currentTeams => currentTeams.map(t => {
+            if (t.id === owner.id) {
+                return {
+                    ...t,
+                    activeBadgeCollections: [...(t.activeBadgeCollections || []), newCollection.id]
+                };
+            }
+            return t;
+        }));
     }
   }, [allBadgeCollections, allBadges]);
 
