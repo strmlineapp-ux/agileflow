@@ -361,6 +361,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             if (t.id === owner.id) {
                 return {
                     ...t,
+                    badgeCollections: [...(t.badgeCollections || []), newCollection],
                     activeBadgeCollections: [...(t.activeBadgeCollections || []), newCollection.id]
                 };
             }
@@ -375,7 +376,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         updateUser(owner.id, { linkedCollectionIds: Array.from(newLinkedIds) });
       }
     }
-  }, [allBadgeCollections, allBadges, teams, users, updateUser]);
+  }, [allBadgeCollections.length, allBadges, users, updateUser]);
 
   const updateBadgeCollection = useCallback((collectionId: string, data: Partial<BadgeCollection>) => {
     setAllBadgeCollections(current => current.map(c => c.id === collectionId ? { ...c, ...data } : c));

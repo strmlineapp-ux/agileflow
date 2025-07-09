@@ -260,6 +260,8 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
         shareIconTitle = 'Linked from another collection in this team';
     }
     
+    const canBeDeleted = isCollectionOwned || !isThisTheOriginalInstance;
+    
     const colorPickerContent = (
         <PopoverContent className="w-auto p-2">
             <div className="grid grid-cols-8 gap-1">
@@ -417,7 +419,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                     </TooltipProvider>
                  )}
             </CardContent>
-            {isEditable && (isCollectionOwned || (isEditable && !isThisTheOriginalInstance)) && deleteButton}
+            {!isViewer && canBeDeleted && deleteButton}
         </div>
       );
     }
@@ -538,7 +540,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                     </TooltipProvider>
                  )}
             </div>
-            {isEditable && (isCollectionOwned || (isEditable && !isThisTheOriginalInstance)) && deleteButton}
+            {!isViewer && canBeDeleted && deleteButton}
         </div>
       );
     }
@@ -598,7 +600,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                 {inlineNameEditor}
             </UiBadge>
             
-             {isEditable && (isCollectionOwned || (isEditable && !isThisTheOriginalInstance)) && (
+             {!isViewer && canBeDeleted && (
                  <TooltipProvider>
                     <Tooltip>
                         <TooltipTrigger asChild>
@@ -998,14 +1000,12 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         const collectionsMap = new Map<string, BadgeCollection>();
 
         if (isTeamContext && contextTeam) {
-            // Team Context: Show collections owned by team members or linked to the team
              (contextTeam.badgeCollections || []).forEach(c => collectionsMap.set(c.id, c));
              (contextTeam.linkedCollectionIds || []).forEach(id => {
                 const linked = allBadgeCollections.find(c => c.id === id);
                 if (linked) collectionsMap.set(id, linked);
             });
         } else {
-             // User Context: Show collections owned by the user or linked to the user
             (allBadgeCollections.filter(c => c.owner.id === viewAsUser.userId)).forEach(c => collectionsMap.set(c.id, c));
             (viewAsUser.linkedCollectionIds || []).forEach(id => {
                 const linked = allBadgeCollections.find(c => c.id === id);
@@ -1054,8 +1054,16 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     };
     
     const handleDeleteCollection = (collection: BadgeCollection) => {
-        if (!canManageCollections) return;
-        setCollectionToDelete(collection);
+        if (isViewer) return;
+        const canDelete = collection.owner.id === (isTeamContext && contextTeam ? contextTeam.id : viewAsUser.userId);
+        if (!canDelete && isTeamContext && contextTeam) {
+            // Unlink if not owner
+            const updatedIds = (contextTeam.linkedCollectionIds || []).filter(id => id !== collection.id);
+            updateTeam(contextTeam.id, { linkedCollectionIds: updatedIds });
+            toast({ title: 'Collection Unlinked' });
+        } else {
+            setCollectionToDelete(collection);
+        }
     };
 
     const confirmDeleteCollection = () => {
@@ -1182,7 +1190,8 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
             if (sourceBadge && collectionId) {
                 addBadge(collectionId, sourceBadge);
                 if (isTeamContext && contextTeam && !contextTeam.activeBadgeCollections?.includes(collectionId)) {
-                    handleToggleCollectionActive(collectionId);
+                   // When duplicating a badge into an inactive collection, we don't automatically activate it anymore.
+                   // User must explicitly activate the collection card.
                 }
                 toast({ title: 'Badge Duplicated' });
             }
@@ -1340,9 +1349,10 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                                     <div 
                                                         className={cn("h-full", (canToggle && !isActive) && "cursor-pointer")}
                                                         onClick={(e) => {
-                                                            const target = e.target as HTMLElement;
-                                                            if (canToggle && !isActive && !target.closest('button, a, input, [role="menuitem"], [role="option"], [role="tooltip"], [role="dialog"], [draggable="true"]')) {
+                                                            if (canToggle && !isActive && !(e.target as HTMLElement).closest('button, a, input, [role="menuitem"], [role="option"], [role="tooltip"], [role="dialog"], [draggable="true"]')) {
                                                                 handleToggleCollectionActive(collection.id);
+                                                            } else if (canToggle && isActive && !(e.target as HTMLElement).closest('button, a, input, [role="menuitem"], [role="option"], [role="tooltip"], [role="dialog"], [draggable="true"]')) {
+                                                                 handleToggleCollectionActive(collection.id);
                                                             }
                                                         }}
                                                     >

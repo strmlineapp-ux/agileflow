@@ -61,9 +61,17 @@ export default function DynamicPage() {
     }, [appSettings.pages, currentPath]);
     
     const dynamicTeam = useMemo(() => {
-      const teamId = pageConfig?.isDynamic && Array.isArray(params.page) ? params.page[1] : undefined;
-      return teams.find(t => t.id === teamId)
-    }, [teams, pageConfig, params.page]);
+      if (!pageConfig?.isDynamic) return undefined;
+      
+      const pathSegments = pageConfig.path.split('/').filter(Boolean);
+      const urlSegments = currentPath.split('/').filter(Boolean);
+
+      if (urlSegments.length > pathSegments.length) {
+        const teamId = urlSegments[pathSegments.length];
+        return teams.find(t => t.id === teamId);
+      }
+      return undefined;
+    }, [teams, pageConfig, currentPath]);
 
 
     if (loading) {

@@ -87,11 +87,11 @@ export const hasAccess = (user: User, page: AppPage, teams: Team[]): boolean => 
         if (!team) continue;
 
         const teamAdmins = team.teamAdmins || [];
+        // If team admins are defined, only they (and system admins, handled above) have access.
         if (teamAdmins.length > 0) {
-            // If admins are defined, only they have access
             if (teamAdmins.includes(user.userId)) return true;
         } else {
-            // If no admins are defined, any member has access
+            // If no team admins are defined, any member of the team has access.
             if (team.members.includes(user.userId)) return true;
         }
     }
