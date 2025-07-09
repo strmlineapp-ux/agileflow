@@ -342,7 +342,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             viewMode: 'detailed',
             badgeIds: [newBadgeId],
             applications: [],
-            description: 'This is a sample description for your new collection.',
+            description: 'Badge Collection description',
             isShared: false,
         };
     }
@@ -357,9 +357,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             ...contextTeam,
             badgeCollections: [...contextTeam.badgeCollections, newCollection],
             allBadges: [...contextTeam.allBadges, ...newBadges],
+            // Copied/new collections start as inactive in team context
             activeBadgeCollections: contextTeam.activeBadgeCollections ? [...contextTeam.activeBadgeCollections] : [],
         };
-        // Duplicated or new collections start as inactive in team context
         setTeams(currentTeams => currentTeams.map(t => t.id === contextTeam.id ? updatedTeam : t));
     } else {
         // User context - no team update needed.
@@ -385,7 +385,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setAllBadgeCollections(current => current.filter(c => c.id !== collectionId));
     setAllBadges(current => current.filter(b => !badgeIdsToDelete.has(b.id)));
     setTeams(currentTeams => currentTeams.map(t => {
-        if (contextTeam && t.id === contextTeam.id) {
+        const isTargetTeam = contextTeam ? t.id === contextTeam.id : t.badgeCollections.some(c => c.id === collectionId);
+        if (isTargetTeam) {
             return {
                 ...t,
                 allBadges: t.allBadges.filter(b => !badgeIdsToDelete.has(b.id)),

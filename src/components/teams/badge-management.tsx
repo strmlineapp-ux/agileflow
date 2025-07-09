@@ -260,7 +260,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
         shareIconTitle = 'Linked from another collection in this team';
     }
     
-    const canBeDeleted = !isViewer;
+    const canBeDeleted = !isViewer && !isSharedPreview;
     
     const colorPickerContent = (
         <PopoverContent className="w-auto p-2">
@@ -638,6 +638,8 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
     const { viewAsUser, users, updateUser, updateTeam } = useUser();
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isEditingName, setIsEditingName] = useState(false);
+    const [isEditingDescription, setIsEditingDescription] = useState(false);
+    const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
     
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
     
@@ -677,6 +679,30 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
             document.removeEventListener('mousedown', handleOutsideClick);
         };
     }, [isEditingName, handleSaveName]);
+    
+    const handleSaveDescription = useCallback(() => {
+        const newDescription = descriptionTextareaRef.current?.value || collection.description;
+        if (newDescription?.trim() !== collection.description) {
+            onUpdateCollection(collection.id, { description: newDescription?.trim() });
+        }
+        setIsEditingDescription(false);
+    }, [collection.description, collection.id, onUpdateCollection]);
+    
+    useEffect(() => {
+        if (!isEditingDescription) return;
+        const handleOutsideClick = (event: MouseEvent) => {
+            if (descriptionTextareaRef.current && !descriptionTextareaRef.current.contains(event.target as Node)) {
+                handleSaveDescription();
+            }
+        };
+        document.addEventListener('mousedown', handleOutsideClick);
+        descriptionTextareaRef.current?.focus();
+        descriptionTextareaRef.current?.select();
+        return () => {
+            document.removeEventListener('mousedown', handleOutsideClick);
+        };
+    }, [isEditingDescription, handleSaveDescription]);
+
 
     const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') handleSaveName();
@@ -866,7 +892,21 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                                 ))}
                             </div>
                         )}
-                        {collection.description && <CardDescription>{collection.description}</CardDescription>}
+                        {isEditingDescription && isOwned ? (
+                            <Textarea
+                                ref={descriptionTextareaRef}
+                                defaultValue={collection.description}
+                                onBlur={handleSaveDescription}
+                                className="text-sm"
+                            />
+                        ) : (
+                            <CardDescription
+                                className={isOwned ? "cursor-pointer" : ""}
+                                onClick={() => { if (isOwned) setIsEditingDescription(true); }}
+                            >
+                                {collection.description || 'Badge Collection description'}
+                            </CardDescription>
+                        )}
                     </div>
                 </CardHeader>
             </div>
@@ -1069,8 +1109,8 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         if (isViewer) return;
         
         let isOwned = collection.owner.id === viewAsUser.userId;
-        if(contextTeam) {
-            isOwned = collection.owner.id === contextTeam.id;
+        if(isTeamContext && contextTeam) {
+            isOwned = collection.owner.id === contextTeam.id || collection.owner.id === viewAsUser.userId;
         }
 
         if (!isOwned) {
