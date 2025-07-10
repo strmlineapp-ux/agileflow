@@ -12,7 +12,7 @@ This document outlines the established UI patterns and design choices that ensur
 The application favors a compact, information-dense layout. Card components are the primary building block for displaying content.
 
 -   **Gold Standard**: The login form (`/login`) serves as the ideal example of "perfect" padding. It has a larger header area and tighter content padding (`p-2`) which makes the card feel like a single, cohesive unit.
--   **Global Default**: To align with this, the global default `CardContent` padding has been set to `p-4 pt-0`. This affects all cards in the app, creating a more consistent look.
+-   **Global Default**: To align with this, the global default `CardContent` padding has been reduced from `p-6` to a tighter `p-4`. This affects all cards in the app, creating a more consistent look.
 -   **Card Backgrounds**: Cards use a `bg-transparent` background, relying on their `border` for definition. This creates a lighter, more modern UI.
 -   **Text Wrapping**: Card titles and descriptions should gracefully handle long text by wrapping. The `break-words` utility should be used on titles to prevent layout issues from long, unbroken strings.
 
@@ -82,7 +82,7 @@ This is the consistent reference pattern for allowing a user to change both an i
 - **Interaction:**
   - Clicking the main part of the button opens an icon picker popover. This popover uses the **Compact Search Input** pattern for filtering. The icons inside this picker are rendered at `text-4xl` with a `weight={100}` inside `h-8 w-8` buttons for clarity and ease of selection.
   - Clicking the color swatch badge opens a color picker popover.
-- **Application:** Used for editing team icons/colors and page icons/colors.
+- **Application:** Used for editing team icons/colors, admin group icons/colors, and page icons/colors.
 
 ---
 
@@ -93,17 +93,20 @@ This pattern describes how a single entity (like a **Team** or **Badge Collectio
     - **Sharing via Side Panel**: The primary UI for sharing is a side panel that acts as a "discovery pool". The owner of an item can share it by dragging its card from their main management board and dropping it into this "Shared Items" panel.
         - **Behavior**: This action sets an `isShared` flag on the item but **does not remove it from the owner's board**. The item's visual state updates to show it is shared.
         - **Side Panel Content**: The side panel displays all items shared by *other* users/teams, allowing the current user to discover and link them. It does **not** show items that the current user already has on their own management board.
-    - **Linking (Contextual)**: A user can link a shared item to their own context by dragging it from the "Shared Items" panel and dropping it onto their management board. This creates a *link* to the original item, not a copy. Individual items (like **Badges**) can also be dragged from a shared collection in the panel and dropped into an owned collection.
+    - **Linking (Contextual)**: This action's behavior depends on the context of the management page.
+        - **Contextual Management (e.g., Badge Collections within a Team)**: A user can link a shared item to their own context by dragging it from the "Shared Items" panel and dropping it onto their management board. This creates a *link* to the original item, not a copy.
+        - **Global Management (e.g., Teams)**: For top-level entities like Teams, "linking" is an explicit action. Dragging a shared team from the panel to the main board adds the team's ID to the current user's `linkedTeamIds` array, bringing it into their management scope without making them a member.
 - **Visual Cues**:
   - **Owned & Shared Externally (`upload`)**: An item created by the current user/team that has been explicitly shared with others is marked with an `upload` icon overlay. This indicates it is the "source of truth." **The color of this icon badge matches the owner's color.**
   - **Internally Linked (`change_circle`)**: An item that is used in multiple places within the *same* context (e.g., a badge appearing in two collections on one team's board) is marked with a `change_circle` icon overlay on its linked instances. **The color of this icon badge matches the owner's color.**
   - **Shared-to-You (`downloading`)**: An item created elsewhere and being used in the current context is marked with a `downloading` icon overlay. **The color of this icon badge matches the source's color.**
   - **Owned and Not Shared/Linked**: An item that is owned and exists only in its original location does not get an icon.
 - **Behavior**:
-  - **Editing**: Editing a shared item (e.g., changing a team's name) modifies the original "source of truth" item, and the changes are instantly reflected in all other places where it is used.
-  - **Unlinking**: Unlinking is an intuitive, reversible action. If a user drags a linked item (e.g., a Team from another user) from their main management board *back* to the "Shared Items" panel, the link is simply removed from their context. No copy is made, and the original item remains untouched.
-  - **Duplicating**: To create a fully independent copy of *any* item—whether it's owned, linked, or from the shared panel—the user must explicitly drag its card and drop it onto the "Add New" button. This action creates a new entity with a unique ID, assigns ownership to the current user's context, and resets its member/badge lists. **If the duplicated item was a linked shared item, the original link is automatically removed from the user's board after the copy is created.**
+  - Editing a shared item (e.g., changing a team's name) modifies the original "source of truth" item, and the changes are instantly reflected in all other places where it is used.
   - **Local Overrides**: For linked Badge Collections, the `applications` (e.g., "Team Members", "Events") can be modified locally without affecting the original, allowing teams to customize how they use a shared resource.
+  - **Unlinking & Copying**: When a user "deletes" a linked shared item (like a Team), the system does not delete the original. Instead, it performs two actions:
+    1.  **Creates an independent copy** of the team with the original name and configuration. The ownership of this new copy is assigned to the current user's context. Its member list is empty.
+    2.  **Removes the linked team's ID** from the user's `linkedTeamIds` array, effectively "unlinking" it from their view.
   - **Smart Deletion**: Deleting an item follows contextual rules:
     - Deleting a *shared-to-you* or *internally linked* instance only removes that specific link/instance. This is a low-risk action confirmed via a `Compact Action Dialog`.
     - Deleting the *original, shared* item will trigger a high-risk `AlertDialog` to prevent accidental removal of a widely-used resource.
@@ -113,12 +116,12 @@ This pattern describes how a single entity (like a **Team** or **Badge Collectio
 ---
 
 ### 8. Draggable Card Management blueprint
-This is the application's perfected, gold-standard pattern for managing a collection of entities displayed as cards. It provides a fluid, intuitive, and grid-responsive way for users to reorder, duplicate, and assign items. It is the required pattern for managing Pages, Calendars, Teams, and Badge Collections.
+This is the application's perfected, gold-standard pattern for managing a collection of entities displayed as cards. It provides a fluid, intuitive, and grid-responsive way for users to reorder, duplicate, and assign items. It is the required pattern for managing Pages, Calendars, Teams, Admin Groups, and Badge Collections.
 
 -   **Layout**: Entities are presented in a responsive grid of cards. To ensure stability during drag operations, especially across multiple rows, the container must use a `flex flex-wrap` layout instead of CSS Grid. Each draggable card item is then given a `basis` property (e.g., `basis-full md:basis-[calc(50%-0.75rem)]`) to create the responsive columns. **Crucially, `flex-grow-0` must be used on these items**, as this prevents the remaining items in a row from expanding and causing the grid to reflow unstably when an item is being dragged.
 -   **Visual Feedback**: To provide feedback without disrupting layout, visual changes (like a `shadow`) should be applied directly to the inner component based on the `snapshot.isDragging` prop provided by `react-beautiful-dnd`. The draggable wrapper itself should remain untouched.
 -   **Internal Card Layout**: Each card is structured for clarity. The header contains the primary entity identifier (icon and name) and contextual controls. The icon and its color are editable, following the **Icon & Color Editing Flow** pattern. The main content area is used for the list of associated items (e.g., users or badges).
--   **User Item Display**: When users are displayed as items within a management card (e.g., a `TeamCard`), they are presented **without a border**. Each user item must display their avatar, full name, and professional title underneath the name for consistency.
+-   **User Item Display**: When users are displayed as items within a management card (e.g., `AdminGroupCard` or `TeamCard`), they are presented **without a border**. Each user item must display their avatar, full name, and professional title underneath the name for consistency.
 -   **Unique Draggable IDs**: It is critical that every `Draggable` component has a globally unique `draggableId`. If the same item (e.g., a user) can appear in multiple lists, you must create a unique ID for each instance. A common pattern is to combine the list's ID with the item's ID (e.g., `draggableId={'${list.id}-${item.id}'}`). This prevents the drag-and-drop library from trying to move all instances of the item simultaneously.
 -   **Draggable & Pinned States**:
     -   **Draggable Cards**: Most cards can be freely reordered within the grid.
@@ -136,11 +139,11 @@ This is the application's perfected, gold-standard pattern for managing a collec
 -   **Drag-to-Duplicate**:
     -   **Interaction**: A designated "Add New" icon (`<Button>`) acts as a drop zone. While a card is being dragged, this zone becomes highlighted to indicate it can accept a drop.
     -   **Behavior**: Dropping any card (pinned or not, from the main board or the shared panel) onto this zone creates a deep, independent copy of the original. The new card is given a unique ID, a modified name (e.g., with `(Copy)`), and is placed immediately after the original in the list. Its ownership is assigned to the current user's context, and its member list is reset to be empty.
--   **Drag-to-Assign**: This pattern allows sub-items (like **Users** or **Badges**) to be moved between different parent cards or from a shared panel.
-    - **Interaction**: A user can drag an item (e.g., a User or Badge) from one card's list or from a shared item in a side panel. Dragging is always enabled to provide a fluid experience.
-    - **Behavior**: As the item is dragged over a valid drop zone (e.g., another team card), the zone becomes highlighted. The application logic for the `onDragEnd` event then handles the permissions check: a drop is only successful if the user has the right to modify the destination card. This decouples the visual act of dragging from the permission-based action of dropping.
+-   **Drag-to-Assign**: This pattern allows sub-items (like **Users** or **Badges**) to be moved between different parent cards.
+    - **Interaction**: A user can drag an item (e.g., a User) from one card's list.
+    - **Behavior**: As the item is dragged over another card, that card's drop zone becomes highlighted. Dropping the item assigns it to the new card's collection. The original item may be removed or remain, depending on the context (e.g., assigning a user to a new admin group might not remove them from the old one). This is handled by the `onDragEnd` logic.
 -   **Layout Stability**: To prevent "janky" or shifting layouts during a drag operation (especially when dragging an item out of one card and over another), ensure that the container cards (e.g., `TeamCard`) maintain a consistent height. This is achieved by making the card a `flex flex-col` container and giving its main content area `flex-grow` to make it fill the available space, even when a draggable item is temporarily removed. A `ScrollArea` can be used within the content to manage overflow if the list is long.
--   **Application**: This is the required pattern for managing Pages, Calendars, Teams, and Badge Collections.
+-   **Application**: This is the required pattern for managing Pages, Calendars, Teams, Admin Groups, and Badge Collections.
 
 ---
 
@@ -155,7 +158,7 @@ This is a minimalist dialog for focused actions, such as entering a code or a sh
 - **Behavior**:
     - Clicking the action icon in the corner performs the primary action (e.g., saves or verifies the input).
     - Clicking the overlay dismisses the dialog without performing the action.
-- **Application**: Used for Two-Factor Authentication, quick edits, simple forms, and for confirming lower-risk destructive actions, such as deleting a **Page**, a **Team**, or an un-shared **Badge Collection**.
+- **Application**: Used for Two-Factor Authentication, quick edits, simple forms, and for confirming lower-risk destructive actions, such as deleting a **Page**, an **Admin Group**, a **Team**, or an un-shared **Badge Collection**.
 
 ---
 
@@ -172,7 +175,7 @@ When a **high-risk destructive action** requires user confirmation (like deletin
 ---
 
 ### 11. Icon Tabs for Page Navigation
-- **Description**: For primary navigation within a page, tabs should be clear, full-width, and provide strong visual cues.
+- **Description**: For primary navigation within a page (e.g., switching between "Admin Groups" and "Pages" on the Admin Management screen), tabs should be clear, full-width, and provide strong visual cues.
 - **Appearance**:
   - Each tab trigger includes both an icon and a text label.
   - The icon is `text-4xl` with a `weight={100}` for a large but light appearance.
@@ -207,12 +210,12 @@ This pattern describes how a group of controls in a page header can intelligentl
 ### 14. Compact Badge Pills
 This pattern is a specialized, ultra-compact version of the standard `<Badge>` component, used for displaying multiple badges in a dense layout, such as the "assorted" view mode in Badge Collections.
 
-- **Appearance**: A thin, pill-shaped badge with minimal padding. It contains a small icon and a short text label. A small, circular delete button appears on hover, allowing the user to remove the badge.
+- **Appearance**: A very thin, pill-shaped badge with minimal padding. It contains a small icon and a short text label.
 - **Sizing**:
-    - The pill has a reduced height and horizontal padding (`py-0.5 px-1`).
+    - The pill has a reduced height and horizontal padding (`py-0 px-1`).
     - The icon inside is small (e.g., `text-[9px]`).
     - The text label is also small (e.g., `text-[10px]`).
-    - The delete button is a `h-4 w-4` circle.
+- **Interaction**: A small, circular delete button appears on hover, allowing the user to remove the badge.
 - **Application**: Used in the "assorted" view of **Badge Collections** to display many badges in a compact, scannable format.
 
 ---
@@ -225,20 +228,6 @@ This pattern describes the user interface for assigning and unassigning badges t
         - **Assigned Badges**: Appear with a solid, colored border and a filled background, indicating a "selected" state.
         - **Unassigned Badges**: Appear with a dashed border and a transparent background, indicating an "available" but unselected state.
 - **Application**: Used on the **Team Members** tab within each team's management page.
-
----
-### 16. Contextual Badge Collection Management
-This pattern governs how users interact with the Badge Management tab, ensuring a clear distinction between managers and viewers within a team context.
-
-- **Activation**: In a team context, Badge Collections can be "active" or "inactive".
-    - **Manager's View**: A user who can manage the team (a team admin, or any member if no admins are set) sees all available collections (owned by members or linked). Inactive collections appear "ghosted" (e.g., `opacity-40`). **Clicking on the background of a ghosted card activates it for the team.** Clicking an active card will deactivate it. Other interactions (editing name, changing view mode) **do not** change the active state. A toast notification confirms activation/deactivation.
-    - **Viewer's View**: A non-manager sees only the collections that have been explicitly activated for the team. Inactive collections are not visible.
-- **Viewer Role UI Restrictions**: To provide a clean, read-only experience, the "viewer" role has a simplified UI:
-    - **No Management Controls**: The "Add New Collection" and "Show Shared Badges" icons are hidden.
-    - **No Informational Icons**: Icon overlays for ownership status and color-picking are hidden.
-    - **Search & Reorder Enabled**: Viewers **can** use the search bar to find specific collections and **can** drag-and-drop the collection cards to reorder them for their personal view (this order is not saved).
-    - **Disabled Badge Dragging**: Viewers cannot drag individual badges between collections.
-- **Application**: Applied to the **Badge Management** tab.
 
 ## Visual & Theming Elements
 
@@ -253,7 +242,7 @@ This pattern governs how users interact with the Badge Management tab, ensuring 
   - A `weight={100}` is used for most action icons (`delete`, `edit`, `more_vert`) to maintain a light, clean aesthetic.
   - Icons inside pickers (like the icon picker) are `text-4xl` with a `weight={100}` inside `h-8 w-8` buttons for clarity and ease of selection.
   - Large, circular 'Add New' buttons use `text-4xl` with a `weight={100}` for prominence.
-  - Icon picker *trigger* buttons use a large `text-6xl` icon with a `weight={100}` inside a `h-12 w-12` button.
+  - Icon picker *trigger* buttons use a large `text-12xl` icon with a `weight={100}` inside a `h-12 w-12` button.
 - **Filled Icons**: To use the filled style of an icon, pass the `filled` prop to the component: `<GoogleSymbol name="star" filled />`. This works with any of the three main styles.
 - **Hover Behavior**: The color of icons on hover is typically determined by their parent element. For example, an icon inside a `<Button variant="ghost">` will change to the primary theme color on hover because the button's text color changes, and the icon inherits that color. This creates a clean and predictable interaction.
 - **Destructive Actions**: Delete or other destructive action icons (like `delete`, `close`, `cancel`) are `text-muted-foreground` by default and become `text-destructive` on hover to provide a clear but not overwhelming visual warning.
@@ -269,7 +258,7 @@ The application supports two distinct color themes, `light` and `dark`, which ca
 
 -   **Dark Theme**:
     -   **Aesthetic**: Modern and focused, using a dark charcoal background (`--background: 0 0% 8%`) and light grey text (`--foreground: 0 0% 67%`).
-    -   **Primary Color**: A vibrant, energetic orange (`hsl(25 88% 45%)`) that provides a strong contrast for key actions.
+    -   **Primary Color**: A vibrant, energetic orange (`#D8620E` or `hsl(25 88% 45%)`) that provides a strong contrast for key actions.
     -   **Accent Color**: A warm, golden yellow (`hsl(43 55% 71%)`) used in button hover gradients.
 
 - **Custom Primary Color**: Users can select a custom primary color using a color picker popover, which is triggered by a ghost-style palette icon button. This custom color overrides the theme's default primary color.
@@ -280,7 +269,7 @@ The application supports two distinct color themes, `light` and `dark`, which ca
 This is the single source of truth for indicating user interaction state across the entire application.
 
 -   **Keyboard Focus (`focus-visible`)**: All interactive elements (buttons, inputs, checkboxes, custom cards, etc.) share a consistent focus indicator. When an element is focused via keyboard navigation, a subtle, `1px` ring with 50% opacity appears directly on its border (`focus-visible:ring-1 focus-visible:ring-ring/50`). This provides a clean, minimal, and non-intrusive focus indicator that aligns with the app's elegant aesthetic.
--   **Selected/Highlighted State**: To indicate a persistently selected or highlighted state (e.g., a Team Admin in a list), a clear icon badge (e.g., a "key" icon) is used, typically overlaid on the user's avatar. This avoids visually noisy outlines and provides a clear, universally understood symbol for elevated status.
+-   **Selected/Highlighted State**: To indicate a persistently selected or highlighted state (e.g., the designated "Group Admin" in a list), a clear icon badge (e.g., a "key" icon) is used, typically overlaid on the user's avatar. This avoids visually noisy outlines and provides a clear, universally understood symbol for elevated status.
 
 ### List Item States (Dropdowns & Popovers)
 - **Hover & Focus**: When hovering over or navigating to list items (like in dropdowns or popovers) using the keyboard, the item's text color changes to `text-primary`. **No background highlight is applied**, ensuring a clean and consistent look across the application.
@@ -301,5 +290,5 @@ This is the single source of truth for indicating user interaction state across 
     - **Appearance**: A circular badge with a `border-2` of the parent element's background color (e.g., `border-background`) to create a "punched out" effect. The icon inside should be sized proportionally.
     - **Sizing**: The standard size for these badges (e.g., color-pickers, ownership status icons) is `h-4 w-4` (`16x16px`). The `GoogleSymbol` inside should be sized to fit, for example using `style={{fontSize: '10px'}}`.
     - **Placement**: This is context-dependent. Color-pickers are typically placed on the bottom-right corner of their parent icon. Ownership status icons are typically placed on the top-left corner to create visual balance.
-    - **Application**: Used for displaying a user's admin status, a shared status on a role icon, or a `share` icon on a shared Badge.
+    - **Application**: Used for displaying a user's admin group status, a shared status on a role icon, or a `share` icon on a shared Badge.
 -   **Badges in Assorted View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
