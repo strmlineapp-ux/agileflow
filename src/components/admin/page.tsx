@@ -322,7 +322,7 @@ export const AdminsManagement = ({ tab }: { tab: AppTab }) => {
                             placeholder="••••••"
                         />
                     ) : (
-                        <span className="flex-1 text-sm text-center tracking-[0.5em]">
+                        <span className="flex-1 text-center text-sm tracking-[0.5em]">
                             {twoFactorCode ? '••••••' : '6-digit code'}
                         </span>
                     )}
@@ -706,7 +706,14 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const titleInputRef = useRef<HTMLInputElement>(null);
 
-    const pinnedIds = useMemo(() => ['page-admin-management', 'page-notifications', 'page-settings'], []);
+    const pinnedIds = useMemo(() => [
+      'page-admin-management', 
+      'page-overview', 
+      'page-calendar', 
+      'page-tasks', 
+      'page-notifications', 
+      'page-settings'
+    ], []);
 
     useEffect(() => {
         if (isEditingTitle) titleInputRef.current?.focus();

@@ -40,11 +40,12 @@ export function Sidebar() {
   
   const orderedNavItems = useMemo(() => {
     const adminPageId = 'page-admin-management';
-    const pinnedPageIds = ['page-notifications', 'page-settings'];
+    // Removed settings page from pinned so it is handled via dropdown
+    const pinnedPageIds = ['page-notifications']; 
 
     const visiblePages = appSettings.pages
-        .filter(page => page.id !== 'page-settings') // Do not show settings icon in the main sidebar
-        .filter(page => page.componentKey || page.associatedTabs.length > 0) // Hide pages with no content
+        .filter(page => page.id !== 'page-settings')
+        .filter(page => page.componentKey || page.associatedTabs.length > 0)
         .filter(page => hasAccess(viewAsUser, page, teams));
 
     const adminPage = visiblePages.find(p => p.id === adminPageId);
@@ -54,12 +55,7 @@ export function Sidebar() {
     const processPage = (page: AppPage) => {
         if (!page) return null;
         if (page.isDynamic) {
-            const teamPage = appSettings.pages.find(p => p.id === 'page-team-management');
-            if (!teamPage) return [];
-            
-            return teams
-              .filter(team => hasAccess(viewAsUser, teamPage, [team])) // Check access for each specific team
-              .map(team => ({
+            return userManagedTeams.map(team => ({
                 id: `${page.id}-${team.id}`,
                 path: `${page.path}/${team.id}`,
                 icon: team.icon,
@@ -84,7 +80,7 @@ export function Sidebar() {
     
     return [...adminNavItem, ...mainNavItems, ...pinnedNavItems].flat().filter(Boolean);
 
-  }, [appSettings.pages, viewAsUser, teams]);
+  }, [appSettings.pages, viewAsUser, teams, userManagedTeams]);
   
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-14 flex-col border-r bg-card sm:flex">
@@ -243,4 +239,3 @@ export function Sidebar() {
     </aside>
   );
 }
-

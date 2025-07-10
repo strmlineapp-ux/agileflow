@@ -5,7 +5,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useUser } from '@/context/user-context';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CalendarManagement } from '@/components/service-delivery/calendar-management';
+import { CalendarManagement } from '@/components/calendar/calendar-management';
 import { TeamManagement } from '@/components/service-delivery/team-management';
 import { Skeleton } from '@/components/ui/skeleton';
 import { GoogleSymbol } from '@/components/icons/google-symbol';

@@ -2,11 +2,19 @@
 import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team, type AppSettings, type Badge, type BadgeCollection, type AppTab, type AppPage, type BadgeCollectionOwner } from '@/types';
 
 export const mockTabs: AppTab[] = [
+  // Core Navigation Tabs
   { id: 'tab-overview', name: 'Overview', icon: 'dashboard', color: '#F97316', componentKey: 'overview', description: "Get a high-level summary of team activity and recent tasks." },
   { id: 'tab-calendar', name: 'Calendar', icon: 'calendar_month', color: '#0EA5E9', componentKey: 'calendar', description: "View and manage events in various calendar layouts." },
   { id: 'tab-tasks', name: 'Tasks', icon: 'checklist', color: '#10B981', componentKey: 'tasks', description: "Track personal and team tasks, grouped by status." },
   { id: 'tab-notifications', name: 'Notifications', icon: 'notifications', color: '#3B82F6', componentKey: 'notifications', description: "View recent notifications and handle access requests." },
   { id: 'tab-settings', name: 'Settings', icon: 'settings', color: '#64748B', componentKey: 'settings', description: "Manage your personal user preferences and account settings." },
+  
+  // Admin Page Tabs
+  { id: 'tab-admins', name: 'Admin Management', icon: 'admin_panel_settings', color: '#8B5CF6', componentKey: 'admins', description: 'Manage system administrators.' },
+  { id: 'tab-admin-pages', name: 'Pages', icon: 'web', color: '#EC4899', componentKey: 'pages', description: 'Configure application pages, their navigation, and access controls.' },
+  { id: 'tab-admin-tabs', name: 'Tabs', icon: 'tab', color: '#EF4444', componentKey: 'tabs', description: 'Manage the properties of reusable tabs that appear on pages.' },
+
+  // Reusable Management Tabs
   { 
     id: 'tab-calendars', 
     name: 'Manage Calendars', 
@@ -17,7 +25,7 @@ export const mockTabs: AppTab[] = [
   },
   { 
     id: 'tab-teams', 
-    name: 'Teams', 
+    name: 'Manage Teams', 
     icon: 'group', 
     color: '#10B981', 
     componentKey: 'teams', 
@@ -28,12 +36,10 @@ export const mockTabs: AppTab[] = [
   { id: 'tab-locations', name: 'Locations', icon: 'push_pin', color: '#A855F7', componentKey: 'locations', description: 'Manage pinned locations and check-in points for the team schedule.' },
   { id: 'tab-workstations', name: 'Workstations', icon: 'desktop_windows', color: '#D946EF', componentKey: 'workstations', description: 'Configure bookable workstations and edit machines for the team.' },
   { id: 'tab-templates', name: 'Templates', icon: 'file_copy', color: '#14B8A6', componentKey: 'templates', description: 'Create reusable event templates with pre-filled badge requests.' },
-  { id: 'tab-admins', name: 'Admin Management', icon: 'admin_panel_settings', color: '#8B5CF6', componentKey: 'admins', description: 'Manage system administrators.' },
-  { id: 'tab-admin-pages', name: 'Pages', icon: 'web', color: '#EC4899', componentKey: 'pages', description: 'Configure application pages, their navigation, and access controls.' },
-  { id: 'tab-admin-tabs', name: 'Tabs', icon: 'tab', color: '#EF4444', componentKey: 'tabs', description: 'Manage the properties of reusable tabs that appear on pages.' },
 ];
 
 export const mockPages: AppPage[] = [
+    // Integral, Pinned Pages
     {
         id: 'page-admin-management',
         name: 'Admin',
@@ -75,32 +81,6 @@ export const mockPages: AppPage[] = [
         access: { users: [], teams: [] }
     },
     {
-        id: 'page-service-delivery',
-        name: 'Service Delivery',
-        icon: 'business_center',
-        color: '#8B5CF6',
-        path: '/dashboard/service-delivery',
-        isDynamic: false,
-        associatedTabs: ['tab-calendars', 'tab-teams', 'tab-badges'],
-        access: {
-            users: [],
-            teams: ['service-delivery'],
-        }
-    },
-    {
-        id: 'page-team-management',
-        name: 'Team Management',
-        icon: 'group_work',
-        color: '#EC4899',
-        path: '/dashboard/teams',
-        isDynamic: true,
-        associatedTabs: ['tab-team-members', 'tab-badges', 'tab-locations', 'tab-workstations', 'tab-templates'],
-        access: {
-            users: [],
-            teams: ['video-production', 'live-events', 'production'],
-        }
-    },
-    {
         id: 'page-notifications',
         name: 'Notifications',
         icon: 'notifications',
@@ -119,6 +99,20 @@ export const mockPages: AppPage[] = [
         isDynamic: false,
         associatedTabs: ['tab-settings'],
         access: { users: [], teams: [] } // Public
+    },
+    // Example of a dynamic page that an admin could create.
+    {
+        id: 'page-team-management',
+        name: 'Team Management',
+        icon: 'group_work',
+        color: '#EC4899',
+        path: '/dashboard/teams',
+        isDynamic: true,
+        associatedTabs: ['tab-team-members', 'tab-badges', 'tab-locations', 'tab-workstations', 'tab-templates'],
+        access: {
+            users: [],
+            teams: ['video-production', 'live-events', 'production'], // This page is visible only to members of these teams.
+        }
     },
 ];
 

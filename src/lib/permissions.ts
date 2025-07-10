@@ -84,15 +84,8 @@ export const hasAccess = (user: User, page: AppPage, teams: Team[]): boolean => 
     // Team-based access
     for (const teamId of access.teams) {
         const team = teams.find(t => t.id === teamId);
-        if (!team) continue;
-
-        const teamAdmins = team.teamAdmins || [];
-        // If team admins are defined, only they have access.
-        if (teamAdmins.length > 0) {
-            if (teamAdmins.includes(user.userId)) return true;
-        } else {
-            // If no team admins are defined, any member of the team has access.
-            if (team.members.includes(user.userId)) return true;
+        if (team?.members.includes(user.userId)) {
+            return true;
         }
     }
     

@@ -11,7 +11,7 @@ import { type AppTab, type AppPage } from '@/types';
 
 // Import all possible tab components
 import { AdminsManagement, PagesManagement, TabsManagement } from '@/components/admin/page';
-import { CalendarManagement } from '@/components/service-delivery/calendar-management';
+import { CalendarManagement } from '@/components/calendar/calendar-management';
 import { TeamManagement as ServiceDeliveryTeamManagement } from '@/components/service-delivery/team-management';
 import { TeamMembersView } from '@/components/teams/team-members-view';
 import { BadgeManagement } from '@/components/teams/badge-management';
@@ -29,7 +29,7 @@ const componentMap: Record<string, React.ComponentType<any>> = {
   admins: AdminsManagement,
   pages: PagesManagement,
   tabs: TabsManagement,
-  // Service Delivery Tabs
+  // Reusable Management Tabs
   calendars: CalendarManagement,
   teams: ServiceDeliveryTeamManagement,
   // Team Management Tabs
@@ -38,7 +38,7 @@ const componentMap: Record<string, React.ComponentType<any>> = {
   locations: PinnedLocationManagement,
   workstations: TeamWorkstationManagement,
   templates: EventTemplateManagement,
-  // Main Content Tabs (formerly static pages)
+  // Core Content Tabs
   overview: OverviewContent,
   calendar: CalendarPageContent,
   tasks: TasksContent,
@@ -54,55 +54,51 @@ export default function DynamicPage() {
     const slug = Array.isArray(params.page) ? params.page.join('/') : (params.page || '');
     const currentPath = `/dashboard/${slug}`;
 
-    const pageConfig = useMemo(() => {
-        return [...appSettings.pages]
-            .sort((a, b) => b.path.length - a.path.length) // Sort to match more specific paths first e.g. /dashboard/teams over /dashboard
+    const { pageConfig, dynamicTeam } = useMemo(() => {
+        // Find the most specific page configuration that matches the current URL path.
+        const page = [...appSettings.pages]
+            .sort((a, b) => b.path.length - a.path.length) 
             .find(p => currentPath.startsWith(p.path));
-    }, [appSettings.pages, currentPath]);
-    
-    const dynamicTeam = useMemo(() => {
-      const teamId = pageConfig?.isDynamic && Array.isArray(params.page) ? params.page[1] : undefined;
-      return teams.find(t => t.id === teamId)
-    }, [teams, pageConfig, params.page]);
+
+        if (!page) {
+            return { pageConfig: null, dynamicTeam: null };
+        }
+
+        // If the matched page is dynamic, extract the team ID from the URL.
+        if (page.isDynamic) {
+            const pathSegments = page.path.split('/').filter(Boolean);
+            const urlSegments = currentPath.split('/').filter(Boolean);
+            
+            if (urlSegments.length > pathSegments.length) {
+                const teamId = urlSegments[pathSegments.length];
+                const team = teams.find(t => t.id === teamId);
+                return { pageConfig: page, dynamicTeam: team };
+            }
+        }
+        
+        // For non-dynamic pages, there's no dynamic team context.
+        return { pageConfig: page, dynamicTeam: undefined };
+    }, [appSettings.pages, currentPath, teams]);
 
 
     if (loading) {
         return <Skeleton className="h-full w-full" />;
     }
 
-    if (!pageConfig || (pageConfig.isDynamic && !dynamicTeam && pageConfig.id !== 'page-team-management')) {
-        return <div className="p-4">404 - Page not found for path: {currentPath}</div>;
+    if (!pageConfig || (pageConfig.isDynamic && pageConfig.path !== currentPath && !dynamicTeam)) {
+        return <div className="p-4">404 - Page not found or team data is missing for path: {currentPath}</div>;
     }
     
     const pageTabs = appSettings.tabs.filter(t => pageConfig.associatedTabs.includes(t.id));
       
     const pageTitle = pageConfig.isDynamic && dynamicTeam ? `${dynamicTeam.name} ${pageConfig.name}` : pageConfig.name;
 
-    // Render page with no tabs (single view)
-    if (pageTabs.length === 0) {
-        const ContentComponent = pageConfig.componentKey ? componentMap[pageConfig.componentKey] : null;
-        
-        if (ContentComponent) {
-            const pseudoTab: AppPage = { ...pageConfig, componentKey: pageConfig.componentKey as any };
-            return <ContentComponent tab={pseudoTab} team={dynamicTeam} page={pageConfig} isSingleTabPage={true} />;
-        }
-
-        return (
-            <div className="flex flex-col gap-6">
-                <div className="flex items-center gap-3">
-                    <GoogleSymbol name={pageConfig.icon} className="text-6xl" weight={100} />
-                    <h1 className="font-headline text-3xl font-thin">{pageTitle}</h1>
-                </div>
-            </div>
-        );
-    }
-    
     // Render page with single tab (no tab list)
     if (pageTabs.length === 1) {
         const tab = pageTabs[0];
         const contextTeam = tab.contextTeamId ? teams.find(t => t.id === tab.contextTeamId) : dynamicTeam;
         const ContentComponent = componentMap[tab.componentKey];
-        return ContentComponent ? <ContentComponent tab={tab} team={contextTeam} page={pageConfig} isSingleTabPage={true} /> : <div>Component for {tab.name} not found.</div>;
+        return ContentComponent ? <ContentComponent tab={tab} team={contextTeam} page={pageConfig} isSingleTabPage={true} isTeamSpecificPage={pageConfig.isDynamic} /> : <div>Component for {tab.name} not found.</div>;
     }
     
     // Render page with multiple tabs
@@ -126,7 +122,7 @@ export default function DynamicPage() {
                     const contextTeam = tab.contextTeamId ? teams.find(t => t.id === tab.contextTeamId) : dynamicTeam;
                     return (
                         <TabsContent key={tab.id} value={tab.id} className="mt-4">
-                        {ContentComponent ? <ContentComponent tab={tab} team={contextTeam} page={pageConfig} isSingleTabPage={false} /> : <div>Component for {tab.name} not found.</div>}
+                        {ContentComponent ? <ContentComponent tab={tab} team={contextTeam} page={pageConfig} isSingleTabPage={false} isTeamSpecificPage={pageConfig.isDynamic} /> : <div>Component for {tab.name} not found.</div>}
                         </TabsContent>
                     );
                 })}
