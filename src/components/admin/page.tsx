@@ -716,6 +716,17 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
         }
     }, [isSearching]);
 
+    useEffect(() => {
+        // Auto-focus logic for when this tab becomes visible
+        const timer = setTimeout(() => {
+            if (searchInputRef.current && !isSearching) {
+                searchInputRef.current.focus();
+                setIsSearching(true);
+            }
+        }, 150); // Delay slightly longer to ensure it's visible
+        return () => clearTimeout(timer);
+    }, []);
+
     const handleSaveTitle = () => {
         const newName = titleInputRef.current?.value.trim();
         if (newName && newName !== tab.name) {
@@ -826,7 +837,6 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <h2 className="font-headline text-2xl font-thin tracking-tight">{tab.name}</h2>
                         <StrictModeDroppable droppableId="duplicate-page-zone" isDropDisabled={false} isCombineEnabled={false}>
                             {(provided, snapshot) => (
                                 <div 
@@ -1121,13 +1131,15 @@ export const TabsManagement = ({ tab }: { tab: AppTab }) => {
     }, [isEditingTitle]);
     
     useEffect(() => {
-        if (isSearching) {
-            const timer = setTimeout(() => {
-                searchInputRef.current?.focus();
-            }, 100);
-            return () => clearTimeout(timer);
-        }
-    }, [isSearching]);
+        // Auto-focus logic for when this tab becomes visible
+        const timer = setTimeout(() => {
+            if (searchInputRef.current && !isSearching) {
+                searchInputRef.current.focus();
+                setIsSearching(true);
+            }
+        }, 150);
+        return () => clearTimeout(timer);
+    }, []);
 
     const handleSaveTitle = () => {
         const newName = titleInputRef.current?.value.trim();
@@ -1169,10 +1181,7 @@ export const TabsManagement = ({ tab }: { tab: AppTab }) => {
     return (
         <DragDropContext onDragEnd={onDragEnd}>
             <div className="space-y-8">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <h2 className="font-headline text-2xl font-thin tracking-tight">{tab.name}</h2>
-                    </div>
+                <div className="flex items-center justify-end">
                      <div className="flex items-center">
                         {isSearching ? (
                             <div className="flex items-center gap-1 w-64">
