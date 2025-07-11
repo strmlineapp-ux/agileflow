@@ -11,32 +11,33 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 export function NotificationsContent({ tab: pageConfig, isSingleTabPage }: { tab: AppPage, isSingleTabPage?: boolean }) {
   const { notifications } = useUser();
   const unreadCount = notifications.filter((n) => !n.read).length;
-  const title = isSingleTabPage ? pageConfig.name : tab.name;
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <GoogleSymbol name={pageConfig.icon} className="text-6xl" />
-           <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <h1 className="font-headline text-3xl font-thin">{title}</h1>
-              </TooltipTrigger>
-              {pageConfig.description && (
-                <TooltipContent>
-                  <p className="max-w-xs">{pageConfig.description}</p>
-                </TooltipContent>
-              )}
-            </Tooltip>
-          </TooltipProvider>
-          {unreadCount > 0 && (
-            <Badge variant="default" className="rounded-full text-base px-3">
-              {unreadCount}
-            </Badge>
-          )}
+      {isSingleTabPage && (
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <GoogleSymbol name={pageConfig.icon} className="text-6xl" weight={100} />
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <h1 className="font-headline text-3xl font-thin">{pageConfig.name}</h1>
+                </TooltipTrigger>
+                {pageConfig.description && (
+                  <TooltipContent>
+                    <p className="max-w-xs">{pageConfig.description}</p>
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
+            {unreadCount > 0 && (
+              <Badge variant="default" className="rounded-full text-base px-3">
+                {unreadCount}
+              </Badge>
+            )}
+          </div>
         </div>
-      </div>
+      )}
       <NotificationList />
     </div>
   );

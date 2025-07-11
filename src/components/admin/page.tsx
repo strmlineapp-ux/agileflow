@@ -53,7 +53,7 @@ const UserAssignmentCard = ({ user }: { user: User }) => {
               <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
             </Avatar>
             <div>
-                <p className="font-normal">{user.displayName}</p>
+                <p className="font-thin">{user.displayName}</p>
                 <p className="text-sm text-muted-foreground">{user.title || 'No title provided'}</p>
             </div>
         </div>
@@ -62,7 +62,7 @@ const UserAssignmentCard = ({ user }: { user: User }) => {
 };
 
 
-export const AdminsManagement = ({ tab }: { tab: AppTab }) => {
+export const AdminsManagement = ({ tab, isSingleTabPage }: { tab: AppTab, isSingleTabPage?: boolean }) => {
   const { toast } = useToast();
   const { viewAsUser, users, updateUser, updateAppTab } = useUser();
   const [is2faDialogOpen, setIs2faDialogOpen] = useState(false);
@@ -71,18 +71,11 @@ export const AdminsManagement = ({ tab }: { tab: AppTab }) => {
   const [isEditing2fa, setIsEditing2fa] = useState(false);
   const twoFactorCodeInputRef = useRef<HTMLInputElement>(null);
   
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const titleInputRef = useRef<HTMLInputElement>(null);
-  
   const [adminSearch, setAdminSearch] = useState('');
   const [userSearch, setUserSearch] = useState('');
   const userSearchInputRef = useRef<HTMLInputElement>(null);
 
 
-  useEffect(() => {
-    if (isEditingTitle) titleInputRef.current?.focus();
-  }, [isEditingTitle]);
-  
   useEffect(() => {
     if (isEditing2fa) twoFactorCodeInputRef.current?.focus();
   }, [isEditing2fa]);
@@ -95,19 +88,6 @@ export const AdminsManagement = ({ tab }: { tab: AppTab }) => {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleSaveTitle = () => {
-    const newName = titleInputRef.current?.value.trim();
-    if (newName && newName !== tab.name) {
-      updateAppTab(tab.id, { name: newName });
-    }
-    setIsEditingTitle(false);
-  };
-  
-  const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') handleSaveTitle();
-    else if (e.key === 'Escape') setIsEditingTitle(false);
-  };
-  
   const adminUsers = useMemo(() =>
     users.filter(u => u.isAdmin && u.displayName.toLowerCase().includes(adminSearch.toLowerCase())),
     [users, adminSearch]
@@ -170,29 +150,19 @@ export const AdminsManagement = ({ tab }: { tab: AppTab }) => {
 
   return (
     <div className="space-y-6">
-        <div className="flex items-center gap-2">
-            {isEditingTitle ? (
-              <Input ref={titleInputRef} defaultValue={tab.name} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} />
-            ) : (
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <h2 className="font-headline text-2xl font-thin tracking-tight cursor-pointer" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p className="max-w-xs">{tab.description}</p>
-                        </TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
-            )}
-        </div>
+        {isSingleTabPage && (
+          <div className="flex items-center gap-3">
+              <GoogleSymbol name={tab.icon} className="text-6xl" weight={100} />
+              <h1 className="font-headline text-3xl font-thin">{tab.name}</h1>
+          </div>
+        )}
         
         <DragDropContext onDragEnd={onDragEnd}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card className="flex flex-col h-full bg-transparent border-0">
                     <CardHeader>
                         <div className="flex items-center justify-between gap-4">
-                            <CardTitle className="font-normal text-base">Admins ({adminUsers.length})</CardTitle>
+                            <CardTitle className="font-thin text-base">Admins ({adminUsers.length})</CardTitle>
                              <div className="flex items-center gap-1 w-48">
                                 <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
                                 <input
@@ -237,7 +207,7 @@ export const AdminsManagement = ({ tab }: { tab: AppTab }) => {
                   <Card className="flex flex-col h-full bg-transparent border-0">
                     <CardHeader>
                         <div className="flex items-center justify-between gap-4">
-                            <CardTitle className="font-normal text-base">Users ({nonAdminUsers.length})</CardTitle>
+                            <CardTitle className="font-thin text-base">Users ({nonAdminUsers.length})</CardTitle>
                              <div className="flex items-center gap-1 w-48">
                                 <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
                                 <input
@@ -410,7 +380,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                           return (
                             <div key={user.userId} className="flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer" style={{ color: isSelected ? 'hsl(var(--primary))' : undefined }} onClick={() => handleToggle('users', user.userId)}>
                               <Avatar className="h-7 w-7"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0,2)}</AvatarFallback></Avatar>
-                              <span className="font-normal">{user.displayName}</span>
+                              <span className="font-thin">{user.displayName}</span>
                             </div>
                           )
                         })}</div></ScrollArea>
@@ -422,7 +392,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                           return (
                             <div key={team.id} className="flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer" style={{ color: isSelected ? team.color : undefined }} onClick={() => handleToggle('teams', team.id)}>
                               <GoogleSymbol name={team.icon} className="text-xl" />
-                              <span className="font-normal">{team.name}</span>
+                              <span className="font-thin">{team.name}</span>
                             </div>
                           )
                         })}</div></ScrollArea>
@@ -502,7 +472,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
                     onClick={() => handleToggle(tab.id)}
                 >
                     <GoogleSymbol name={tab.icon} className="text-xl" />
-                    <span className="font-normal">{tab.name}</span>
+                    <span className="font-thin">{tab.name}</span>
                 </div>
               );
             })}
@@ -1061,7 +1031,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                 <div className="flex-1 min-w-0 space-y-1">
                     <div className="flex items-center justify-between">
                          {isEditingName ? (
-                            <Input ref={nameInputRef} defaultValue={tab.name} onKeyDown={handleNameKeyDown} onBlur={handleSaveName} className="h-auto p-0 font-normal border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 font-headline" />
+                            <Input ref={nameInputRef} defaultValue={tab.name} onKeyDown={handleNameKeyDown} onBlur={handleSaveName} className="h-auto p-0 font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 font-headline" />
                         ) : (
                             <h3 className="font-headline cursor-text text-base font-thin" onClick={() => setIsEditingName(true)}>{tab.name}</h3>
                         )}

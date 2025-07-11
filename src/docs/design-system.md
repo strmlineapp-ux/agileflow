@@ -234,7 +234,7 @@ This pattern describes the user interface for assigning and unassigning badges t
 ### Typography
 - **Font**: The application exclusively uses the **Roboto** font family for a clean and consistent look.
 - **Headline Font**: All major titles (pages, tabs, prominent cards) use the `font-headline` utility class, which is configured to use a `font-thin` weight (`font-weight: 100`).
-- **Body Font**: All standard body text, labels, and buttons use a `font-thin` weight.
+- **Body Font**: All standard body text, labels, and buttons now use a `font-thin` weight.
 
 ### Icons & Hover Effects
 - **Icon Set**: We exclusively use **Google Material Symbols** via the `<GoogleSymbol />` component. This ensures a consistent visual language. The font library is a variable font, which means we can adjust its properties.
