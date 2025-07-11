@@ -69,9 +69,6 @@ export default function DynamicPage() {
                 const team = teams.find(t => t.id === teamId);
                 return { pageConfig: page, dynamicTeam: team };
             }
-            // This case handles the base path of a dynamic route group, e.g., /dashboard/teams
-            // which might show an overview or list of teams.
-            return { pageConfig: page, dynamicTeam: undefined };
         }
         
         // For non-dynamic pages, there's no dynamic team context.
