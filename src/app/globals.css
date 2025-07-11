@@ -6,25 +6,25 @@
 @layer base {
   :root,
   .light {
-    --background: 0 0% 98%;
+    --background: 210 20% 95%; /* #F4F8FC */
     --foreground: 0 0% 20%;
     --card: 0 0% 100%;
     --card-foreground: 0 0% 20%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 20%;
-    --primary: 210 40% 55%;
+    --primary: 210 70% 50%; /* #3692E9 */
     --primary-foreground: 210 40% 98%;
     --muted: 0 0% 96%;
     --muted-foreground: 0 0% 45%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 210 40% 20%;
+    --accent: 180 60% 40%; /* #2AB8A3 */
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 35% 65%;
     --destructive-foreground: 0 0% 10%;
     --warning: 40 38% 70%;
     --warning-foreground: 40 48% 10%;
     --border: 0 0% 89%;
     --input: 0 0% 89%;
-    --ring: 210 40% 55%;
+    --ring: 210 70% 50%;
     --radius: 0.5rem;
     --lunch-break-opacity: 0.15;
   }

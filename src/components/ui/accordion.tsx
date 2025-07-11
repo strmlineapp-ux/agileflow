@@ -29,13 +29,15 @@ const AccordionTrigger = React.forwardRef<
     <AccordionPrimitive.Trigger
       ref={ref}
       className={cn(
-        "flex flex-1 items-center justify-between rounded-sm py-4 font-medium transition-all hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50 [&[data-state=open]>span]:rotate-180",
+        "flex flex-1 items-center justify-between py-4 font-normal transition-all hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50 [&>span]:rotate-180",
         className
       )}
       {...props}
     >
       {children}
-      <GoogleSymbol name="expand_more" className="shrink-0 transition-transform duration-200" />
+      <span className="shrink-0 transition-transform duration-200 data-[state=open]:rotate-0">
+        <GoogleSymbol name="expand_more" />
+      </span>
     </AccordionPrimitive.Trigger>
   </AccordionPrimitive.Header>
 ))

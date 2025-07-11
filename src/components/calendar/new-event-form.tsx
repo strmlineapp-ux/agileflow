@@ -554,7 +554,7 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                           <Input 
                               placeholder={selectedCalendar?.defaultEventTitle || 'e.g. Team Standup'} 
                               {...field} 
-                              className="text-lg font-semibold h-12"
+                              className="text-lg font-normal h-12"
                           />
                       </FormControl>
                       <FormMessage />

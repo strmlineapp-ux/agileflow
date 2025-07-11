@@ -118,7 +118,7 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
             <TooltipProvider>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
+                        <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
                     </TooltipTrigger>
                     {tab.description && (
                         <TooltipContent><p className="max-w-xs">{tab.description}</p></TooltipContent>

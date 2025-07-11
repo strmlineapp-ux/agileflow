@@ -17,13 +17,9 @@ export default {
       },
     },
     extend: {
-      fontSize: {
-        '8xl': ['6rem', { lineHeight: '1' }],
-        '12xl': ['9rem', { lineHeight: '1' }],
-      },
       fontFamily: {
-        body: ['"Roboto"', 'sans-serif'],
-        headline: ['"Roboto"', 'sans-serif'],
+        body: ['var(--font-pt-sans)', 'sans-serif'],
+        headline: ['var(--font-space-grotesk)', 'sans-serif'],
       },
       fontWeight: {
           light: '300',
