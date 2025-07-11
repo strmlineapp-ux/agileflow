@@ -24,7 +24,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 
-// #region Helper Components and Constants
+// #region Helper Components and Hooks
 // Wrapper to fix issues with react-beautiful-dnd and React 18 Strict Mode
 const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
   const [enabled, setEnabled] = useState(false);
@@ -41,6 +41,37 @@ const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
   return <Droppable {...props}>{children}</Droppable>;
 };
 
+// Custom Hook to focus an element when it becomes visible within a tab
+function useFocusOnTabVisible(inputRef: React.RefObject<HTMLInputElement | null>, isSearchingRef: React.RefObject<boolean>) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        // If the tab content is visible and we haven't already focused the input
+        if (entry.isIntersecting && inputRef.current && isSearchingRef.current) {
+          setTimeout(() => inputRef.current?.focus(), 100);
+          // We only want to do this once per visibility change to avoid re-focusing
+          observer.unobserve(entry.target);
+        }
+      },
+      { threshold: 0.1 } // Fire when at least 10% of the element is visible
+    );
+
+    const currentContainer = containerRef.current;
+    if (currentContainer) {
+      observer.observe(currentContainer);
+    }
+
+    return () => {
+      if (currentContainer) {
+        observer.unobserve(currentContainer);
+      }
+    };
+  }, [inputRef, isSearchingRef]);
+
+  return containerRef;
+}
 // #endregion
 
 // #region Admin Groups Management Tab
@@ -78,7 +109,9 @@ export const AdminsManagement = ({ tab, isSingleTabPage }: { tab: AppTab, isSing
   
   const userSearchInputRef = useRef<HTMLInputElement>(null);
   const adminSearchInputRef = useRef<HTMLInputElement>(null);
-
+  const isSearchingUsersRef = useRef(isSearchingUsers);
+  isSearchingUsersRef.current = isSearchingUsers;
+  const containerRef = useFocusOnTabVisible(userSearchInputRef, isSearchingUsersRef);
 
   useEffect(() => {
     if (isEditing2fa) twoFactorCodeInputRef.current?.focus();
@@ -92,17 +125,10 @@ export const AdminsManagement = ({ tab, isSingleTabPage }: { tab: AppTab, isSing
   }, [isSearchingUsers]);
   
   useEffect(() => {
-    if (!isSingleTabPage && tab) {
-        // This tab is part of a Tabs component. Auto-focus the search input when it becomes visible.
-        const timer = setTimeout(() => {
-            if (userSearchInputRef.current && !isSearchingUsers) {
-                userSearchInputRef.current.focus();
-                setIsSearchingUsers(true);
-            }
-        }, 150);
-        return () => clearTimeout(timer);
+    if (isSearchingAdmins) {
+      setTimeout(() => adminSearchInputRef.current?.focus(), 100);
     }
-  }, [tab, isSingleTabPage, isSearchingUsers]);
+  }, [isSearchingAdmins]);
 
 
   const adminUsers = useMemo(() =>
@@ -166,7 +192,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage }: { tab: AppTab, isSing
 
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" ref={containerRef}>
         <DragDropContext onDragEnd={onDragEnd}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card className="flex flex-col h-full bg-transparent border-0">
@@ -175,7 +201,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage }: { tab: AppTab, isSing
                             <CardTitle className="font-thin text-base">Admins ({adminUsers.length})</CardTitle>
                              <div className="flex items-center gap-1 w-48">
                                 {isSearchingAdmins ? (
-                                    <>
+                                    <div className="flex items-center gap-1 w-full">
                                         <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
                                         <input
                                             ref={adminSearchInputRef}
@@ -185,7 +211,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage }: { tab: AppTab, isSing
                                             onBlur={() => !adminSearch && setIsSearchingAdmins(false)}
                                             className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 font-thin"
                                         />
-                                    </>
+                                    </div>
                                 ) : (
                                     <Button variant="ghost" size="icon" onClick={() => setIsSearchingAdmins(true)} className="ml-auto">
                                         <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
@@ -230,7 +256,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage }: { tab: AppTab, isSing
                             <CardTitle className="font-thin text-base">Users ({nonAdminUsers.length})</CardTitle>
                              <div className="flex items-center gap-1 w-48">
                                 {isSearchingUsers ? (
-                                    <>
+                                    <div className="flex items-center gap-1 w-full">
                                         <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
                                         <input
                                             ref={userSearchInputRef}
@@ -240,7 +266,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage }: { tab: AppTab, isSing
                                             onBlur={() => !userSearch && setIsSearchingUsers(false)}
                                             className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 font-thin"
                                         />
-                                    </>
+                                    </div>
                                 ) : (
                                     <Button variant="ghost" size="icon" onClick={() => setIsSearchingUsers(true)} className="ml-auto">
                                         <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
@@ -707,6 +733,9 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isSearching, setIsSearching] = useState(false);
     const searchInputRef = useRef<HTMLInputElement>(null);
+    const isSearchingRef = useRef(isSearching);
+    isSearchingRef.current = isSearching;
+    const containerRef = useFocusOnTabVisible(searchInputRef, isSearchingRef);
 
     const pinnedTopIds = useMemo(() => ['page-admin-management', 'page-overview', 'page-calendar', 'page-tasks'], []);
     const pinnedBottomIds = useMemo(() => ['page-notifications', 'page-settings'], []);
@@ -718,23 +747,12 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
 
     useEffect(() => {
         if (isSearching) {
-            const timer = setTimeout(() => {
+            setTimeout(() => {
                 searchInputRef.current?.focus();
             }, 100);
-            return () => clearTimeout(timer);
         }
     }, [isSearching]);
 
-    useEffect(() => {
-        // Auto-focus logic for when this tab becomes visible
-        const timer = setTimeout(() => {
-            if (searchInputRef.current && !isSearching) {
-                searchInputRef.current.focus();
-                setIsSearching(true);
-            }
-        }, 150);
-        return () => clearTimeout(timer);
-    }, []);
 
     const handleSaveTitle = () => {
         const newName = titleInputRef.current?.value.trim();
@@ -843,7 +861,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
 
     return (
         <DragDropContext onDragEnd={onDragEnd}>
-            <div className="space-y-4">
+            <div className="space-y-4" ref={containerRef}>
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <StrictModeDroppable droppableId="duplicate-page-zone" isDropDisabled={false} isCombineEnabled={false}>
@@ -1134,21 +1152,21 @@ export const TabsManagement = ({ tab }: { tab: AppTab }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isSearching, setIsSearching] = useState(false);
     const searchInputRef = useRef<HTMLInputElement>(null);
+    const isSearchingRef = useRef(isSearching);
+    isSearchingRef.current = isSearching;
+    const containerRef = useFocusOnTabVisible(searchInputRef, isSearchingRef);
 
     useEffect(() => {
         if (isEditingTitle) titleInputRef.current?.focus();
     }, [isEditingTitle]);
     
     useEffect(() => {
-        // Auto-focus logic for when this tab becomes visible
-        const timer = setTimeout(() => {
-            if (searchInputRef.current && !isSearching) {
-                searchInputRef.current.focus();
-                setIsSearching(true);
-            }
-        }, 150);
-        return () => clearTimeout(timer);
-    }, []);
+        if (isSearching) {
+            setTimeout(() => {
+                searchInputRef.current?.focus();
+            }, 100);
+        }
+    }, [isSearching]);
 
     const handleSaveTitle = () => {
         const newName = titleInputRef.current?.value.trim();
@@ -1189,7 +1207,7 @@ export const TabsManagement = ({ tab }: { tab: AppTab }) => {
 
     return (
         <DragDropContext onDragEnd={onDragEnd}>
-            <div className="space-y-8">
+            <div className="space-y-8" ref={containerRef}>
                 <div className="flex items-center justify-end">
                      <div className="flex items-center">
                         {isSearching ? (
