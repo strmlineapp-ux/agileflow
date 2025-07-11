@@ -91,7 +91,9 @@ This entity, `AppSettings`, holds global configuration data that allows for cust
 | :--- | :--- |
 | `pages: AppPage[]` | **The core of the dynamic navigation.** This is an array of objects defining every page in the application. The order of pages in this array directly corresponds to their order in the sidebar navigation. The order is managed on the **Admin Management** page using the "Draggable Card Management" UI pattern. Each page object includes its name, icon, URL path, access control rules, and a list of associated `tab.id`s that should be rendered on it. |
 | `tabs: AppTab[]` | **The core of the dynamic content.** This is an array of objects defining all reusable content tabs. Each object includes the tab's name, icon, and a `componentKey` that maps it to a React component. |
-| `priorityStrategies: PriorityStrategy[]` | An array of objects defining different priority systems that can be applied to entities like Events or Tasks. |
+| `globalBadges: Badge[]` | An array of globally-defined badges. These are typically used for system-wide priorities before the dynamic Badge Collection system is fully implemented. |
+| `calendarManagementLabel?: string` | An alias for the "Manage Calendars" tab on the Service Delivery page. |
+| `teamManagementLabel?: string` | An alias for the "Team Management" tab on the Service Delivery page. |
 
 ### AppPage Entity
 A sub-entity of `AppSettings`, `AppPage` defines a single entry in the application's navigation.
@@ -173,34 +175,3 @@ This represents a specific, functional role or skill. The single source of truth
 | `icon: string` | The Google Symbol name for the badge's icon. |
 | `color: string` | The hex color code for the badge's icon and outline. |
 | `description?: string` | An optional description shown in tooltips. |
-
-## Priority Strategy Entity
-**Firestore Collection**: `/app-settings/global` (part of the `AppSettings` singleton)
-
-This entity defines a reusable system for assigning priority to different items within the application.
-
-| Data Point | Description |
-| :--- | :--- |
-| `id: string` | A unique identifier for the strategy. |
-| `name: string` | The display name for the strategy (e.g., "P-Scale", "Star Rating"). |
-| `description?: string` | An optional description for the strategy. |
-| `applications: BadgeApplication[]` | Defines where this strategy applies (e.g., 'events', 'tasks'). Only one strategy can be applied to a given application at a time. |
-| `type: 'tier' \| 'symbol' \| 'scale'` | The type of strategy, which determines the data structure below. |
-| `priorities?: Priority[]` | **(Tier type only)** An array of distinct priority levels. |
-| `icon?: string` | **(Symbol type only)** The Google Symbol name for the repeating icon (e.g., "star"). |
-| `max?: number` | **(Symbol type only)** The maximum number of symbols (e.g., 5 for a 5-star rating). |
-| `color?: string` | **(Symbol type only)** The color of the symbol. |
-| `min?: number` | **(Scale type only)** The minimum value of the scale. |
-| `intervals?: { label: string, from: number, to: number, color: string }[]` | **(Scale type only)** An array defining color-coded intervals along the scale. |
-
-### Priority Entity
-A sub-entity of `PriorityStrategy` (for `tier` type).
-
-| Data Point | Description |
-| :--- | :--- |
-| `id: string` | A unique identifier for the priority level. |
-| `label: string` | The display name for the priority level (e.g., "P0", "High"). |
-| `description?: string` | An optional description. |
-| `color: string` | The hex color for the priority's badge. |
-| `shape: 'rounded-md' \| 'rounded-full'` | The shape of the priority's badge. |
-

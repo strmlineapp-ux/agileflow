@@ -17,7 +17,6 @@ export const mockTabs: AppTab[] = [
   // Service Delivery Tabs
   { id: 'tab-calendars', name: 'Calendars', icon: 'calendar_month', color: '#3B82F6', componentKey: 'calendars', description: 'Manage shared calendars for event creation across the application.' },
   { id: 'tab-service-teams', name: 'Teams', icon: 'group', color: '#22C55E', componentKey: 'teams', description: 'Manage all teams, their properties, and their shared status.' },
-  { id: 'tab-strategies', name: 'Strategies', icon: 'policy', color: '#A855F7', componentKey: 'strategies', description: 'Define and manage different systems for assigning priority to items.' },
 
   // Reusable Management Tabs
   { id: 'tab-team-members', name: 'Members', icon: 'group', color: '#6366F1', componentKey: 'team_members', description: 'View all members of a specific team and manage their roles.' },
@@ -72,11 +71,11 @@ export const mockPages: AppPage[] = [
     {
         id: 'page-service-delivery',
         name: 'Service Delivery',
-        icon: 'business',
+        icon: 'business_center',
         color: '#A855F7',
         path: '/dashboard/service-delivery',
         isDynamic: false,
-        associatedTabs: ['tab-calendars', 'tab-service-teams', 'tab-strategies'],
+        associatedTabs: ['tab-calendars', 'tab-service-teams'],
         access: { users: [], teams: [] } // Only visible to admins
     },
     // Example of a dynamic page that an admin could create.
