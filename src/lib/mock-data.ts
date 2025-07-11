@@ -1,6 +1,6 @@
 
 
-import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team, type AppSettings, type Badge, type BadgeCollection, type AppTab, type AppPage, type BadgeCollectionOwner, type PriorityStrategy } from '@/types';
+import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team, type AppSettings, type Badge, type BadgeCollection, type AppTab, type AppPage, type BadgeCollectionOwner } from '@/types';
 
 export const mockTabs: AppTab[] = [
   // Core Navigation Tabs
@@ -14,12 +14,6 @@ export const mockTabs: AppTab[] = [
   { id: 'tab-admins', name: 'Admin Management', icon: 'admin_panel_settings', color: '#8B5CF6', componentKey: 'admins', description: 'Manage system administrators.' },
   { id: 'tab-admin-pages', name: 'Pages', icon: 'web', color: '#EC4899', componentKey: 'pages', description: 'Configure application pages, their navigation, and access controls.' },
   { id: 'tab-admin-tabs', name: 'Tabs', icon: 'tab', color: '#EF4444', componentKey: 'tabs', description: 'Manage the properties of reusable tabs that appear on pages.' },
-
-  // Service Delivery Tabs
-  { id: 'tab-calendars', name: 'Manage Calendars', icon: 'calendar_month', color: '#0EA5E9', componentKey: 'calendars', description: 'Create and manage shared calendars for the application.' },
-  { id: 'tab-service-teams', name: 'Team Management', icon: 'group_work', color: '#EC4899', componentKey: 'teams', description: 'View and manage all teams across the organization.' },
-  { id: 'tab-strategies', name: 'Strategies', icon: 'psychology', color: '#F97316', componentKey: 'strategies', description: 'Define and manage priority strategies for tasks and events.' },
-
 
   // Reusable Management Tabs
   { id: 'tab-team-members', name: 'Members', icon: 'group', color: '#6366F1', componentKey: 'team_members', description: 'View all members of a specific team and manage their roles.' },
@@ -40,16 +34,6 @@ export const mockPages: AppPage[] = [
         isDynamic: false,
         associatedTabs: ['tab-admins', 'tab-admin-pages', 'tab-admin-tabs'],
         access: { users: [], teams: [] } // Special-cased in hasAccess to only allow isAdmin
-    },
-     {
-        id: 'page-service-delivery',
-        name: 'Service Delivery',
-        icon: 'home_repair_service',
-        color: '#F97316',
-        path: '/dashboard/service-delivery',
-        isDynamic: false,
-        associatedTabs: ['tab-calendars', 'tab-service-teams', 'tab-strategies'],
-        access: { users: [], teams: [] } // Admin only access
     },
     {
         id: 'page-overview',
@@ -117,41 +101,22 @@ export const mockPages: AppPage[] = [
     },
 ];
 
-const priorityStrategies: PriorityStrategy[] = [
-    {
-        id: 'p-scale',
-        name: 'P-Scale',
-        description: 'Standard P-Scale for project prioritization.',
-        type: 'tier',
-        applications: ['events'],
-        priorities: [
-            { id: 'p0', label: 'P0', description: 'Highest priority', color: '#EF4444', shape: 'rounded-md' },
-            { id: 'p1', label: 'P1', description: 'High priority', color: '#F97316', shape: 'rounded-md' },
-            { id: 'p2', label: 'P2', description: 'Medium priority', color: '#FBBF24', shape: 'rounded-md' },
-            { id: 'p3', label: 'P3', description: 'Low priority', color: '#22C55E', shape: 'rounded-md' },
-            { id: 'p4', label: 'P4', description: 'Lowest priority', color: '#64748B', shape: 'rounded-md' },
-        ],
-    },
-    {
-        id: 'task-priority',
-        name: 'Task Priority',
-        description: 'Simple priority levels for tasks.',
-        type: 'tier',
-        applications: ['tasks'],
-        priorities: [
-            { id: 'task-high', label: 'High', color: '#EF4444', shape: 'rounded-full' },
-            { id: 'task-medium', label: 'Medium', color: '#FBBF24', shape: 'rounded-full' },
-            { id: 'task-low', label: 'Low', color: '#22C55E', shape: 'rounded-full' },
-        ],
-    },
+const globalBadges: Badge[] = [
+  { id: 'p0', ownerCollectionId: 'global-priority', name: 'P0', icon: 'priority_high', color: '#EF4444', description: 'Highest priority' },
+  { id: 'p1', ownerCollectionId: 'global-priority', name: 'P1', icon: 'keyboard_arrow_up', color: '#F97316', description: 'High priority' },
+  { id: 'p2', ownerCollectionId: 'global-priority', name: 'P2', icon: 'remove', color: '#FBBF24', description: 'Medium priority' },
+  { id: 'p3', ownerCollectionId: 'global-priority', name: 'P3', icon: 'keyboard_arrow_down', color: '#22C55E', description: 'Low priority' },
+  { id: 'p4', ownerCollectionId: 'global-priority', name: 'P4', icon: 'remove', color: '#64748B', description: 'Lowest priority' },
+  { id: 'task-high', ownerCollectionId: 'task-priority', name: 'High', icon: 'keyboard_double_arrow_up', color: '#EF4444' },
+  { id: 'task-medium', ownerCollectionId: 'task-priority', name: 'Medium', icon: 'drag_handle', color: '#FBBF24' },
+  { id: 'task-low', ownerCollectionId: 'task-priority', name: 'Low', icon: 'keyboard_double_arrow_down', color: '#22C55E' },
 ];
 
 
 export const mockAppSettings: AppSettings = {
   pages: mockPages,
   tabs: mockTabs,
-  globalBadges: [],
-  priorityStrategies: priorityStrategies,
+  globalBadges: globalBadges,
 };
 
 export const mockUsers: User[] = [

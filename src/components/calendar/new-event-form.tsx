@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import * as React from 'react';
@@ -112,7 +111,7 @@ const getDefaultCalendarId = (user: User, availableCalendars: SharedCalendar[]):
 };
 
 export function EventForm({ event, onFinished, initialData }: EventFormProps) {
-  const { realUser, viewAsUser, users, calendars, teams, addEvent, updateEvent, deleteEvent, allBookableLocations, getPriorityDisplay, userStatusAssignments, appSettings } = useUser();
+  const { realUser, viewAsUser, users, calendars, teams, addEvent, updateEvent, deleteEvent, allBookableLocations, userStatusAssignments, allBadges, allBadgeCollections } = useUser();
   const { toast } = useToast();
   
   const isEditing = !!event;
@@ -137,10 +136,6 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
     return calendars.filter(cal => canManageEventOnCalendar(viewAsUser, cal));
   }, [calendars, viewAsUser]);
   
-  const eventPriorityStrategy = React.useMemo(() => {
-    return appSettings.priorityStrategies.find(s => s.applications.includes('events') && s.type === 'tier');
-  }, [appSettings.priorityStrategies]);
-
   const defaultCalendarId = React.useMemo(() => {
     return getDefaultCalendarId(viewAsUser, availableCalendars);
   }, [viewAsUser, availableCalendars]);
@@ -173,6 +168,13 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
       ...initialData,
     },
   });
+
+  const eventPriorities = React.useMemo(() => {
+    const eventPriorityCollection = allBadgeCollections.find(c => c.applications?.includes('events'));
+    if (!eventPriorityCollection) return [];
+    return eventPriorityCollection.badgeIds.map(id => allBadges.find(b => b.id === id)).filter((b): b is Badge => !!b);
+  }, [allBadgeCollections, allBadges]);
+
 
   React.useEffect(() => {
     if (isEditing && event.roleAssignments) {
@@ -437,7 +439,7 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                 />
                 )}
 
-                {eventPriorityStrategy && (
+                {eventPriorities.length > 0 && (
                   <FormField
                     control={form.control}
                     name="priority"
@@ -450,7 +452,7 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="p-1 w-auto" align="start">
-                            {eventPriorityStrategy.type === 'tier' && eventPriorityStrategy.priorities.map(p => (
+                            {eventPriorities.map(p => (
                               <div key={p.id}
                                 onClick={() => { field.onChange(p.id); setIsPriorityPopoverOpen(false); }}
                                 className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer"

@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import * as React from 'react';
@@ -43,7 +42,11 @@ const statusLabels: Record<Task['status'], string> = {
 };
 
 export function TaskList({ limit }: { limit?: number }) {
-  const { viewAsUser } = useUser();
+  const { viewAsUser, allBadges } = useUser();
+
+  const taskPriorities = React.useMemo(() => {
+    return allBadges.filter(b => b.ownerCollectionId === 'task-priority');
+  }, [allBadges]);
 
   const renderTable = (tasks: Task[]) => (
     <Card>
