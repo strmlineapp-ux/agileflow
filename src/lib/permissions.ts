@@ -1,5 +1,6 @@
 
-import { type User, type AppPage, type SharedCalendar, type Team, type AppTab, type BadgeCollectionOwner } from '@/types';
+
+import { type User, type AppPage, type SharedCalendar, type Team, type BadgeCollectionOwner } from '@/types';
 
 /**
  * Checks if a user has permission to manage events (create, edit, delete) on a specific calendar.
