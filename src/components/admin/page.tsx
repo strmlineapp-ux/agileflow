@@ -83,6 +83,10 @@ export const AdminsManagement = ({ tab, isSingleTabPage }: { tab: AppTab; isSing
   }, [isSearchingUsers]);
 
   useEffect(() => {
+    if (isSearchingAdmins) adminSearchInputRef.current?.focus();
+  }, [isSearchingAdmins]);
+
+  useEffect(() => {
     if (is2faDialogOpen) {
       requestAnimationFrame(() => {
         twoFactorCodeInputRef.current?.focus();

@@ -85,7 +85,7 @@ export const hasAccess = (user: User, page: AppPage, teams: Team[]): boolean => 
     // Team-based access
     for (const teamId of access.teams) {
         const team = teams.find(t => t.id === teamId);
-        if (team?.members.includes(user.userId) || team?.teamAdmins?.includes(user.userId)) {
+        if (team?.members.includes(user.userId) || (team?.teamAdmins || []).includes(user.userId)) {
             return true;
         }
     }
@@ -105,4 +105,3 @@ export const getOwnershipContext = (page: AppPage, user: User, contextTeam?: Tea
     // Simplified rule: The creator is always the owner.
     return { type: 'user', id: user.userId };
 };
-

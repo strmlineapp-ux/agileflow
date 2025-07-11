@@ -23,41 +23,41 @@ export function Sidebar() {
 
   const orderedNavItems = useMemo(() => {
     if (loading) return [];
-    
-    const visiblePages = appSettings.pages.filter(page =>
-        page.id !== 'page-settings' && page.associatedTabs.length > 0 && hasAccess(viewAsUser, page, teams)
-    );
 
-    const navItems = visiblePages.map(page => {
-        if (page.isDynamic) {
-             // For a dynamic page, find which teams the user should see it for.
-             const relevantTeams = teams.filter(team => {
-                // User must be a member or admin of the team.
-                const isMemberOrAdmin = team.members.includes(viewAsUser.userId) || (team.teamAdmins || []).includes(viewAsUser.userId);
-                if (!isMemberOrAdmin && !viewAsUser.isAdmin) return false;
-                
-                // The team must be included in the specific page's access list.
-                return page.access.teams.includes(team.id);
-             });
+    const visiblePages = appSettings.pages.filter(page => hasAccess(viewAsUser, page, teams));
 
-             return relevantTeams.map(team => ({
-                id: `${page.id}-${team.id}`,
-                path: `${page.path}/${team.id}`,
-                icon: team.icon,
-                name: team.name,
-                tooltip: `${page.name}: ${team.name}`,
-            }));
-        }
-        return {
-            id: page.id,
-            path: page.path,
-            icon: page.icon,
-            name: page.name,
-            tooltip: page.name,
-        };
+    const navItems = visiblePages.flatMap(page => {
+      if (page.isDynamic) {
+        // Find which teams are relevant for *this specific dynamic page*
+        const relevantTeams = teams.filter(team => {
+          const isMemberOrAdmin = team.members.includes(viewAsUser.userId) || (team.teamAdmins || []).includes(viewAsUser.userId);
+          const teamHasAccessToThisPage = page.access.teams.includes(team.id);
+          
+          return isMemberOrAdmin && teamHasAccessToThisPage;
+        });
+
+        return relevantTeams.map(team => ({
+          id: `${page.id}-${team.id}`,
+          path: `${page.path}/${team.id}`,
+          icon: team.icon,
+          name: team.name,
+          tooltip: `${page.name}: ${team.name}`,
+        }));
+      }
+
+      // Handle static pages that should not be duplicated per team
+      if (page.id === 'page-settings') return null; // Settings is in user menu
+      
+      return {
+        id: page.id,
+        path: page.path,
+        icon: page.icon,
+        name: page.name,
+        tooltip: page.name,
+      };
     });
     
-    return navItems.flat().filter(Boolean);
+    return navItems.flat().filter((item): item is NonNullable<typeof item> => !!item);
 
   }, [appSettings.pages, viewAsUser, teams, loading]);
   
