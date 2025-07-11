@@ -40,7 +40,10 @@ export function Sidebar() {
   const orderedNavItems = useMemo(() => {
     if (loading) return [];
     
-    const visiblePages = appSettings.pages.filter(page => hasAccess(viewAsUser, page, teams));
+    // A page is only visible if the user has access AND it has at least one tab configured.
+    const visiblePages = appSettings.pages.filter(page =>
+        page.associatedTabs.length > 0 && hasAccess(viewAsUser, page, teams)
+    );
 
     const navItems = visiblePages.map(page => {
         if (page.isDynamic) {

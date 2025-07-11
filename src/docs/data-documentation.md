@@ -41,7 +41,7 @@ Access to every page and content tab in the application is controlled by a dynam
 
 1.  **Page Access**: Access to a page is determined by the `access` object on its `AppPage` configuration. A user can view a page if they are a system admin, if the page has no access rules (making it public), or if their `userId` or `Team` membership is listed in the corresponding access array.
 
-2.  **Tab Access**: A tab's visibility is determined by its parent page. If you can see the page, you can see all of its tabs. There are no tab-specific access rules, simplifying the permission model.
+2.  **Tab Visibility**: A page's content is composed of one or more `AppTab`s. If a page has zero associated tabs, it is considered unconfigured and will not appear in the sidebar navigation, making it inaccessible. A page must have at least one tab to be rendered.
 
 **Example Configurations (`mock-data.ts`):**
 

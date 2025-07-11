@@ -11,8 +11,6 @@ import { type AppTab, type AppPage } from '@/types';
 
 // Import all possible tab components
 import { AdminsManagement, PagesManagement, TabsManagement } from '@/components/admin/page';
-import { CalendarManagement } from '@/components/calendar/calendar-management';
-import { TeamManagement as ServiceDeliveryTeamManagement } from '@/components/service-delivery/team-management';
 import { TeamMembersView } from '@/components/teams/team-members-view';
 import { BadgeManagement } from '@/components/teams/badge-management';
 import { PinnedLocationManagement } from '@/components/settings/pinned-location-management';
@@ -29,16 +27,13 @@ const componentMap: Record<string, React.ComponentType<any>> = {
   admins: AdminsManagement,
   pages: PagesManagement,
   tabs: TabsManagement,
-  // Reusable Management Tabs
-  calendars: CalendarManagement,
-  teams: ServiceDeliveryTeamManagement,
   // Team Management Tabs
   team_members: TeamMembersView,
   badges: BadgeManagement,
   locations: PinnedLocationManagement,
   workstations: TeamWorkstationManagement,
   templates: EventTemplateManagement,
-  // Core Content Tabs
+  // Main Content Tabs (formerly static pages)
   overview: OverviewContent,
   calendar: CalendarPageContent,
   tasks: TasksContent,
@@ -49,7 +44,7 @@ const componentMap: Record<string, React.ComponentType<any>> = {
 
 export default function DynamicPage() {
     const params = useParams();
-    const { loading, appSettings, teams, viewAsUser } = useUser();
+    const { loading, appSettings, teams } = useUser();
     
     const slug = Array.isArray(params.page) ? params.page.join('/') : (params.page || '');
     const currentPath = `/dashboard/${slug}`;
@@ -91,9 +86,15 @@ export default function DynamicPage() {
     
     const pageTabs = appSettings.tabs.filter(t => pageConfig.associatedTabs.includes(t.id));
       
+    // If a page has no tabs, it's considered unconfigured and won't be rendered.
+    // The sidebar logic should prevent this from being accessed directly.
+    if (pageTabs.length === 0) {
+        return <div className="p-4">404 - This page has no content configured.</div>;
+    }
+    
     const pageTitle = pageConfig.isDynamic && dynamicTeam ? `${dynamicTeam.name} ${pageConfig.name}` : pageConfig.name;
 
-    // Render page with single tab (no tab list)
+    // Render page with a single tab (no tab list shown)
     if (pageTabs.length === 1) {
         const tab = pageTabs[0];
         const contextTeam = tab.contextTeamId ? teams.find(t => t.id === tab.contextTeamId) : dynamicTeam;
