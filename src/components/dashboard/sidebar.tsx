@@ -27,23 +27,18 @@ export function Sidebar() {
     const visiblePages = appSettings.pages.filter(page => hasAccess(viewAsUser, page, teams));
 
     return visiblePages.flatMap(page => {
-      // A page is only rendered if it has content.
       if (!page.associatedTabs || page.associatedTabs.length === 0) {
         return null;
       }
       
       if (page.isDynamic) {
-        // Find which of the user's teams are relevant for this specific dynamic page.
         const relevantTeams = teams.filter(team => {
-          // A user must be part of the team to see its page.
           const isMemberOrAdmin = team.members.includes(viewAsUser.userId) || (team.teamAdmins || []).includes(viewAsUser.userId);
-          // The page's access list must include this team.
           const teamHasAccessToThisPage = page.access.teams.includes(team.id);
 
           return isMemberOrAdmin && teamHasAccessToThisPage;
         });
 
-        // Create a nav item for each relevant team for this dynamic page.
         return relevantTeams.map(team => ({
           id: `${page.id}-${team.id}`,
           path: `${page.path}/${team.id}`,
@@ -53,8 +48,7 @@ export function Sidebar() {
         }));
       }
       
-      // Handle static pages that should not be duplicated per team
-      if (page.id === 'page-settings') return null; // Settings is in user menu
+      if (page.id === 'page-settings') return null;
 
       return {
         id: page.id,
