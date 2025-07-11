@@ -65,7 +65,7 @@
     @apply bg-background text-foreground;
   }
   .font-headline {
-      font-family: var(--font-space-grotesk);
+      font-family: var(--font-roboto);
       @apply font-thin;
   }
 }
@@ -98,7 +98,7 @@
   .light .bg-primary:hover,
   .light .bg-primary:focus-visible {
     border-color: transparent;
-    background: linear-gradient(-113deg, hsl(var(--primary)), hsl(var(--accent))) border-box;
+    background: linear-gradient(-113deg, hsl(var(--primary)), hsl(210 40% 96%)) border-box;
   }
   .light .bg-primary:focus-visible {
     outline: 2px solid hsl(var(--ring));

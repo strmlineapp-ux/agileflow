@@ -91,7 +91,6 @@ This entity, `AppSettings`, holds global configuration data that allows for cust
 | :--- | :--- |
 | `pages: AppPage[]` | **The core of the dynamic navigation.** This is an array of objects defining every page in the application. The order of pages in this array directly corresponds to their order in the sidebar navigation. The order is managed on the **Admin Management** page using the "Draggable Card Management" UI pattern. Each page object includes its name, icon, URL path, access control rules, and a list of associated `tab.id`s that should be rendered on it. |
 | `tabs: AppTab[]` | **The core of the dynamic content.** This is an array of objects defining all reusable content tabs. Each object includes the tab's name, icon, and a `componentKey` that maps it to a React component. |
-| `globalBadges: Badge[]` | An array of globally-defined badges. These are typically used for system-wide priorities before the dynamic Badge Collection system is fully implemented. |
 | `calendarManagementLabel?: string` | An alias for the "Manage Calendars" tab on the Service Delivery page. |
 | `teamManagementLabel?: string` | An alias for the "Team Management" tab on the Service Delivery page. |
 
@@ -146,6 +145,13 @@ The `Team` entity is a functional unit that groups users together for collaborat
 | `userBadgesLabel?: string` | A custom label for the "Team Badges" section on the Team Members tab. |
 | `linkedCollectionIds?: string[]` | An array of `collectionId`s for shared Badge Collections that this team has chosen to use. |
 | `activeBadgeCollections?: string[]` | A subset of `badgeCollections` and `linkedCollectionIds` that are currently active for this team. |
+| `pinnedLocations?: string[]` | An array of location names pinned to this team's schedule. |
+| `checkLocations?: string[]` | A subset of pinnedLocations designated for daily checks. |
+| `locationAliases?: { [key:string]: string }` | A map of canonical location names to custom display aliases. |
+| `workstations?: string[]` | A list of bookable workstations or machines owned by this team. |
+| `locationCheckManagers?: string[]` | An array of `userId`s who can manage check locations for this team. |
+| `eventTemplates?: EventTemplate[]` | An array of reusable templates for common events. |
+
 
 ### BadgeCollection Entity
 A sub-entity of `Team`, this groups related Badges together. It can be owned by the team or shared with others.

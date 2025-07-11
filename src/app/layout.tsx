@@ -3,18 +3,12 @@ import type { Metadata } from 'next';
 import { Toaster } from "@/components/ui/toaster";
 import './globals.css';
 import { UserProvider } from '@/context/user-context';
-import { PT_Sans, Space_Grotesk } from 'next/font/google';
+import { Roboto } from 'next/font/google';
 
-const ptSans = PT_Sans({
+const roboto = Roboto({
   subsets: ['latin'],
-  weight: ['400', '700'],
-  variable: '--font-pt-sans',
-});
-
-const spaceGrotesk = Space_Grotesk({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
-  variable: '--font-space-grotesk',
+  weight: ['100', '300', '400', '500', '700'],
+  variable: '--font-roboto',
 });
 
 export const metadata: Metadata = {
@@ -34,7 +28,7 @@ export default function RootLayout({
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Sharp:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
       </head>
-      <body className={`${ptSans.variable} ${spaceGrotesk.variable} font-body antialiased`}>
+      <body className={`${roboto.variable} font-body antialiased`}>
         <UserProvider>
           {children}
           <Toaster />

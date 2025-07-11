@@ -18,8 +18,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        body: ['var(--font-pt-sans)', 'sans-serif'],
-        headline: ['var(--font-space-grotesk)', 'sans-serif'],
+        body: ['sans-serif'],
+        headline: ['var(--font-roboto)', 'sans-serif'],
       },
       fontWeight: {
           light: '300',
