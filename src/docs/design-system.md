@@ -40,15 +40,23 @@ This pattern provides a clean, minimal interface for search functionality, espec
 
 - **Interaction:**
   - The search input is initially hidden behind an icon-only button (e.g., `<GoogleSymbol name="search" />`).
-  - Clicking the button reveals the input field, which appears with a transparent background and no borders or box-shadow, to maintain a minimal, "inline text" look.
+  - Clicking the button reveals the input field, which appears with a transparent background and **no borders**.
 - **Behavior:**
-  - The input field **must** automatically gain focus as soon as its parent popover or container becomes visible. This is achieved using a `useEffect` hook that triggers `searchInputRef.current?.focus()` after a short `setTimeout` (e.g., 100ms) to ensure the element is rendered and ready.
   - The input hides again if the user clicks away (`onBlur`) and the field is empty.
 - **Application:** Used for filtering lists of icons, users, or other filterable content within popovers and management pages like the Admin screen.
 
+### 4. Focus-on-Search
+This pattern ensures a user can begin typing their search query immediately, without an extra click, improving the efficiency of the interface.
+
+- **Trigger**: A management tab (like "Pages" or "Tabs" on the Admin page) becomes the active, visible tab.
+- **Behavior**:
+  - The search input field for that tab **must** automatically gain focus as soon as the tab content is rendered and visible.
+  - This is achieved using a `useEffect` hook that triggers `searchInputRef.current?.focus()` after a short `setTimeout` (e.g., 100ms) to ensure the element is ready.
+- **Application**: Applied to the primary search input on management tabs to streamline the user's workflow.
+
 ---
 
-### 4. Text-based Inputs
+### 5. Text-based Inputs
 This pattern transforms standard form inputs into minimalist, text-like elements, creating a cleaner and more compact interface. It is primarily used for authentication forms.
 
 -   **Appearance**:
@@ -66,7 +74,7 @@ This pattern transforms standard form inputs into minimalist, text-like elements
 
 ---
 
-### 5. Integrated Add Button
+### 6. Integrated Add Button
 This pattern replaces large, card-style "Add New" buttons with a more compact and contextually relevant control.
 
 - **Appearance:** A circular button containing a plus (`+`) or `add_circle` icon. It uses `text-4xl` and `weight={100}` for a large but light appearance.
@@ -76,7 +84,7 @@ This pattern replaces large, card-style "Add New" buttons with a more compact an
 
 ---
 
-### 6. Icon & Color Editing Flow
+### 7. Icon & Color Editing Flow
 This is the consistent reference pattern for allowing a user to change both an icon and its color.
 
 - **Trigger:** A single, interactive unit composed of a primary icon button and a smaller color swatch badge overlaid on its corner. The primary button icon should be large and prominent (`text-6xl`).
@@ -87,7 +95,7 @@ This is the consistent reference pattern for allowing a user to change both an i
 
 ---
 
-### 7. Entity Sharing & Linking
+### 8. Entity Sharing & Linking
 This pattern describes how a single entity (like a **Team** or **Badge Collection**) can exist in multiple contexts while maintaining a single source of truth. It works in tandem with the **Draggable Card Management blueprint**.
 
 - **Mechanism**:
@@ -116,7 +124,7 @@ This pattern describes how a single entity (like a **Team** or **Badge Collectio
 
 ---
 
-### 8. Draggable Card Management blueprint
+### 9. Draggable Card Management blueprint
 This is the application's perfected, gold-standard pattern for managing a collection of entities displayed as cards. It provides a fluid, intuitive, and grid-responsive way for users to reorder, duplicate, and assign items. It is the required pattern for managing Pages, Calendars, Teams, and Badge Collections.
 
 -   **Layout**: Entities are presented in a responsive grid of cards. To ensure stability during drag operations, especially across multiple rows, the container must use a `flex flex-wrap` layout instead of CSS Grid. Each draggable card item is then given a `basis` property (e.g., `basis-full md:basis-[calc(50%-0.75rem)]`) to create the responsive columns. **Crucially, `flex-grow-0` must be used on these items**, as this prevents the remaining items in a row from expanding and causing the grid to reflow unstably when an item is being dragged.
@@ -148,7 +156,7 @@ This is the application's perfected, gold-standard pattern for managing a collec
 
 ---
 
-### 9. Compact Action Dialog
+### 10. Compact Action Dialog
 This is a minimalist dialog for focused actions, such as entering a code or a short piece of information, or for low-risk confirmations where a full-screen modal is unnecessary.
 
 - **Component**: Uses the standard `<Dialog>` component, which allows the user to dismiss the action by clicking the overlay or pressing 'Escape'.
@@ -163,7 +171,7 @@ This is a minimalist dialog for focused actions, such as entering a code or a sh
 
 ---
 
-### 10. Compact Deletion Dialog
+### 11. Compact Deletion Dialog
 When a **high-risk destructive action** requires user confirmation (like deleting a **Calendar** or a shared **Badge Collection**), the standard `AlertDialog` component is used. This is distinct from the `Compact Action Dialog` as it is intentionally more difficult to dismiss.
 
 - **Appearance**: A modal dialog centered on the screen, overlaying the content.
@@ -175,7 +183,7 @@ When a **high-risk destructive action** requires user confirmation (like deletin
 
 ---
 
-### 11. Icon Tabs for Page Navigation
+### 12. Icon Tabs for Page Navigation
 - **Description**: For primary navigation within a page (e.g., switching between "Admin Groups" and "Pages" on the Admin Management screen), tabs should be clear, full-width, and provide strong visual cues.
 - **Appearance**:
   - Each tab trigger includes both an icon and a text label.
@@ -186,18 +194,18 @@ When a **high-risk destructive action** requires user confirmation (like deletin
 
 ---
 
-### 12. Seamless Single-Tab Pages
+### 13. Seamless Single-Tab Pages
 
-- **Description**: This pattern ensures a streamlined user experience for pages that contain only a single content tab. Instead of displaying a redundant page header *and* a tab header, the tab's content becomes the page itself.
+- **Description**: This pattern ensures a streamlined user experience for pages that contain only a single content tab. Instead of displaying a redundant page header, the tab's content becomes the page itself.
 - **Behavior**:
   - When a page is configured with exactly one associated tab, the main page layout does not render its own title or icon.
   - The single tab's component is rendered directly within the main content area.
-  - The tab's component is responsible for displaying the page's title and icon, effectively promoting its header to become the page's header. This is especially true for pages like "Overview," where the content *is* the page.
+  - The tab's component is responsible for displaying the page's title and icon, effectively promoting its header to become the page's header. This is especially true for pages like "Overview," "Settings," and "Notifications" where the content *is* the page.
 - **Application**: Applied automatically to any page in the dynamic routing system (`/dashboard/[...page]`) that meets the single-tab condition. This creates a more integrated and less cluttered UI.
 
 ---
 
-### 13. Responsive Header Controls
+### 14. Responsive Header Controls
 This pattern describes how a group of controls in a page header can intelligently adapt to changes in the layout, such as the opening and closing of a side panel. It is the required header pattern for pages that use the **Draggable Card Management blueprint** and **Entity Sharing & Linking** patterns.
 
 - **Trigger**: Expanding or collapsing a panel that affects the main content area's width.
@@ -208,7 +216,7 @@ This pattern describes how a group of controls in a page header can intelligentl
 
 ---
 
-### 14. Compact Badge Pills
+### 15. Compact Badge Pills
 This pattern is a specialized, ultra-compact version of the standard `<Badge>` component, used for displaying multiple badges in a dense layout, such as the "assorted" view mode in Badge Collections.
 
 - **Appearance**: A very thin, pill-shaped badge with minimal padding. It contains a small icon and a short text label.
@@ -220,7 +228,7 @@ This pattern is a specialized, ultra-compact version of the standard `<Badge>` c
 - **Application**: Used in the "assorted" view of **Badge Collections** to display many badges in a compact, scannable format.
 
 ---
-### 15. Team Member Badge Assignment
+### 16. Team Member Badge Assignment
 This pattern describes the user interface for assigning and unassigning badges to team members.
 - **Layout**: Within each `TeamMemberCard`, badges are grouped visually by their parent `BadgeCollection`. Each collection is displayed with its name as a sub-header.
 - **Interaction**:

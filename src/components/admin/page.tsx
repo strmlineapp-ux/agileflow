@@ -74,6 +74,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage }: { tab: AppTab, isSing
   const [adminSearch, setAdminSearch] = useState('');
   const [userSearch, setUserSearch] = useState('');
   const [isSearchingAdmins, setIsSearchingAdmins] = useState(false);
+  const [isSearchingUsers, setIsSearchingUsers] = useState(false);
   
   const userSearchInputRef = useRef<HTMLInputElement>(null);
   const adminSearchInputRef = useRef<HTMLInputElement>(null);
@@ -84,12 +85,10 @@ export const AdminsManagement = ({ tab, isSingleTabPage }: { tab: AppTab, isSing
   }, [isEditing2fa]);
   
   useEffect(() => {
-    // Focus on the "Users" search input when the component mounts
-    const timer = setTimeout(() => {
-        userSearchInputRef.current?.focus();
-    }, 100);
-    return () => clearTimeout(timer);
-  }, []);
+    if (isSearchingUsers) {
+      setTimeout(() => userSearchInputRef.current?.focus(), 100);
+    }
+  }, [isSearchingUsers]);
 
   useEffect(() => {
     if (isSearchingAdmins) {
@@ -221,14 +220,23 @@ export const AdminsManagement = ({ tab, isSingleTabPage }: { tab: AppTab, isSing
                         <div className="flex items-center justify-between gap-4">
                             <CardTitle className="font-thin text-base">Users ({nonAdminUsers.length})</CardTitle>
                              <div className="flex items-center gap-1 w-48">
-                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
-                                <input
-                                    ref={userSearchInputRef}
-                                    placeholder="Search users..."
-                                    value={userSearch}
-                                    onChange={(e) => setUserSearch(e.target.value)}
-                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 font-thin"
-                                />
+                                {isSearchingUsers ? (
+                                    <>
+                                        <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
+                                        <input
+                                            ref={userSearchInputRef}
+                                            placeholder="Search users..."
+                                            value={userSearch}
+                                            onChange={(e) => setUserSearch(e.target.value)}
+                                            onBlur={() => !userSearch && setIsSearchingUsers(false)}
+                                            className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 font-thin"
+                                        />
+                                    </>
+                                ) : (
+                                    <Button variant="ghost" size="icon" onClick={() => setIsSearchingUsers(true)} className="ml-auto">
+                                        <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
+                                    </Button>
+                                )}
                             </div>
                         </div>
                     </CardHeader>
@@ -818,20 +826,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        {isEditingTitle ? (
-                            <Input ref={titleInputRef} defaultValue={tab.name} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
-                        ) : (
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <h2 className="font-headline text-2xl font-thin tracking-tight cursor-pointer" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p className="max-w-xs">{tab.description}</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                        )}
+                        <h2 className="font-headline text-2xl font-thin tracking-tight">{tab.name}</h2>
                         <StrictModeDroppable droppableId="duplicate-page-zone" isDropDisabled={false} isCombineEnabled={false}>
                             {(provided, snapshot) => (
                                 <div 
@@ -861,7 +856,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                     </div>
                      <div className="flex items-center">
                         {isSearching ? (
-                            <div className="flex items-center gap-1 p-2 border-b w-64">
+                            <div className="flex items-center gap-1 w-64">
                                 <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
                                 <input
                                     ref={searchInputRef}
@@ -1033,7 +1028,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                         </TooltipProvider>
                         <PopoverContent className="w-80 p-0">
                             <div className="flex items-center gap-1 p-2 border-b">
-                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
+                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100}/>
                                 <input
                                     ref={iconSearchInputRef}
                                     placeholder="Search icons..."
@@ -1176,24 +1171,11 @@ export const TabsManagement = ({ tab }: { tab: AppTab }) => {
             <div className="space-y-8">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                    {isEditingTitle ? (
-                        <Input ref={titleInputRef} defaultValue={tab.name} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
-                    ) : (
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p className="max-w-xs">{tab.description}</p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    )}
+                        <h2 className="font-headline text-2xl font-thin tracking-tight">{tab.name}</h2>
                     </div>
                      <div className="flex items-center">
                         {isSearching ? (
-                            <div className="flex items-center gap-1 p-2 border-b w-64">
+                            <div className="flex items-center gap-1 w-64">
                                 <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
                                 <input
                                     ref={searchInputRef}

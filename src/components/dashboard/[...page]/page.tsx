@@ -21,6 +21,8 @@ import { TasksContent } from '@/components/dashboard/tabs/tasks-tab';
 import { NotificationsContent } from '@/components/dashboard/tabs/notifications-tab';
 import { SettingsContent } from '@/components/dashboard/tabs/settings-tab';
 import { CalendarPageContent } from '@/components/dashboard/tabs/calendar-tab';
+import { CalendarManagement } from '@/components/calendar/calendar-management';
+import { TeamManagement } from '@/components/service-delivery/team-management';
 
 const componentMap: Record<string, React.ComponentType<any>> = {
   // Admin Page Tabs
@@ -39,12 +41,15 @@ const componentMap: Record<string, React.ComponentType<any>> = {
   tasks: TasksContent,
   notifications: NotificationsContent,
   settings: SettingsContent,
+  // Service Delivery Tabs
+  calendars: CalendarManagement,
+  teams: TeamManagement,
 };
 
 
 export default function DynamicPage() {
     const params = useParams();
-    const { loading, appSettings, teams } = useUser();
+    const { loading, appSettings, teams, viewAsUser } = useUser();
     
     const slug = Array.isArray(params.page) ? params.page.join('/') : (params.page || '');
     const currentPath = `/dashboard/${slug}`;
@@ -86,15 +91,25 @@ export default function DynamicPage() {
     
     const pageTabs = appSettings.tabs.filter(t => pageConfig.associatedTabs.includes(t.id));
       
-    // If a page has no tabs, it's considered unconfigured and won't be rendered.
-    // The sidebar logic should prevent this from being accessed directly.
-    if (pageTabs.length === 0) {
-        return <div className="p-4">404 - This page has no content configured.</div>;
-    }
-    
     const pageTitle = pageConfig.isDynamic && dynamicTeam ? `${dynamicTeam.name} ${pageConfig.name}` : pageConfig.name;
 
-    // Render page with a single tab (no tab list shown)
+    // Render page with no tabs (empty state)
+    if (pageTabs.length === 0) {
+        return (
+            <div className="flex flex-col gap-6">
+                <div className="flex items-center gap-3">
+                    <GoogleSymbol name={pageConfig.icon} className="text-6xl" weight={100} />
+                    <h1 className="font-headline text-3xl font-thin">{pageTitle}</h1>
+                </div>
+                <div className="p-4 border-2 border-dashed rounded-lg text-center text-muted-foreground">
+                    <p>This page has no content configured.</p>
+                    {viewAsUser.isAdmin && <p>An administrator can add tabs to this page in the Admin section.</p>}
+                </div>
+            </div>
+        );
+    }
+    
+    // Render page with single tab (no tab list)
     if (pageTabs.length === 1) {
         const tab = pageTabs[0];
         const contextTeam = tab.contextTeamId ? teams.find(t => t.id === tab.contextTeamId) : dynamicTeam;
