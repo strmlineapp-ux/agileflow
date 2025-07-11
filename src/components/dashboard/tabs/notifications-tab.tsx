@@ -17,11 +17,13 @@ export function NotificationsContent({ tab: pageConfig, isSingleTabPage }: { tab
       {isSingleTabPage && (
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <GoogleSymbol name={pageConfig.icon} className="text-6xl" weight={100} />
-            <TooltipProvider>
+             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <h1 className="font-headline text-3xl font-thin">{pageConfig.name}</h1>
+                  <h1 className="font-headline text-3xl font-thin flex items-center gap-3">
+                    <GoogleSymbol name={pageConfig.icon} className="text-6xl" weight={100} />
+                    <span>{pageConfig.name}</span>
+                  </h1>
                 </TooltipTrigger>
                 {pageConfig.description && (
                   <TooltipContent>

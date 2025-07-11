@@ -1,4 +1,5 @@
 
+
 # AgileFlow User Manual
 
 Welcome to AgileFlow, your team's central hub for managing tasks, scheduling events, and coordinating production workflows. This guide will walk you through the key features of the app.
@@ -21,14 +22,14 @@ Once your access has been approved, you can sign in:
 
 The main navigation is located in the sidebar on the left, providing quick, icon-based access to all sections of the app. Hover over an icon to see its name.
 
-- **Main Navigation**: Access to core features like the Calendar, Overview, Tasks, and Notifications.
+- **Main Navigation**: Access to core features like the Calendar, Overview, and Tasks.
 - **Team Management**: If you have permission to manage a team, a link to that team's management page will appear here.
 - **Admin Pages**: If you are an Admin, you will see links to the Admin and Service Delivery pages.
-- **User Profile**: At the bottom of the sidebar, you can access your profile, user preferences, and the "View as" feature (for Admins).
+- **User Profile**: At the bottom of the sidebar, you can access your profile, user preferences, notifications, and the "View as" feature (for Admins). The Settings page is only accessible from this menu.
 
 ## 3. Dashboard Overview
 
-The **Overview** page gives you a high-level summary of team activity, including cards for Active Tasks, Tasks Due Soon, and Completed Tasks. You can also see a list of your most recent tasks.
+The **Overview** page gives you a high-level summary of team activity, including cards for Active Tasks, Tasks Due Soon, and Completed Tasks. You can also see a list of your most recent tasks. This page has no visible header; its content acts as the page itself.
 
 ## 4. Calendar
 
@@ -63,7 +64,7 @@ The **Tasks** page helps you stay on top of your work.
 
 ## 6. Notifications
 
-The **Notifications** page keeps you informed.
+The **Notifications** page keeps you informed. This page has no visible header; the list content itself acts as the page.
 - **Unread Count**: A badge on the sidebar shows the number of unread notifications.
 - **Access Requests**: Administrators can approve or reject new user access requests directly from the notification list.
 
@@ -83,8 +84,8 @@ Access your preferences by clicking your avatar in the bottom-left corner of the
 ### 8.1 Admin (`/dashboard/admin`)
 This is the central control panel for configuring the application itself. It does not have a page header.
 - **Admin Management**: Manage system administrators by dragging and dropping users between the "Admins" and "Users" lists. Granting or revoking admin status requires a 2-Factor Authentication code for security. For safety, the system prevents you from removing the last system administrator. The search boxes for finding admins and users have a minimalist design and the "Search users" box is automatically focused for quick filtering.
-- **Pages**: Configure the application's navigation. Create new pages, define their URL path, and control who has access to them (by user or team). You can intuitively reorder pages by dragging and dropping them in the grid. Key system pages are pinned and cannot be moved. You can also instantly duplicate any page by dragging it onto the "Add New Page" (+) button.
-- **Tabs**: Manage the reusable content blocks (tabs) in a simple list view. Use the search bar to find a specific tab to edit.
+- **Pages**: Configure the application's navigation. Create new pages, define their URL path, and control who has access to them (by user or team). You can intuitively reorder pages by dragging and dropping them in the grid. Key system pages are pinned and cannot be moved. You can also instantly duplicate any page by dragging it onto the "Add New Page" (+) button. The search box is automatically focused for quick filtering.
+- **Tabs**: Manage the reusable content blocks (tabs) in a simple list view. The search bar is automatically focused for quick filtering.
 
 ### 8.2 Service Delivery Management (`/dashboard/service-delivery`)
 This is the central hub for global application settings.

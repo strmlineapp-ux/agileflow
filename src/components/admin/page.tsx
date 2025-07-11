@@ -54,7 +54,7 @@ const UserAssignmentCard = ({ user }: { user: User }) => {
             </Avatar>
             <div>
                 <p className="font-thin">{user.displayName}</p>
-                <p className="text-sm text-muted-foreground">{user.title || 'No title provided'}</p>
+                <p className="text-sm text-muted-foreground font-thin">{user.title || 'No title provided'}</p>
             </div>
         </div>
     </div>
@@ -73,7 +73,10 @@ export const AdminsManagement = ({ tab, isSingleTabPage }: { tab: AppTab, isSing
   
   const [adminSearch, setAdminSearch] = useState('');
   const [userSearch, setUserSearch] = useState('');
+  const [isSearchingAdmins, setIsSearchingAdmins] = useState(false);
+  
   const userSearchInputRef = useRef<HTMLInputElement>(null);
+  const adminSearchInputRef = useRef<HTMLInputElement>(null);
 
 
   useEffect(() => {
@@ -87,6 +90,12 @@ export const AdminsManagement = ({ tab, isSingleTabPage }: { tab: AppTab, isSing
     }, 100);
     return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    if (isSearchingAdmins) {
+      setTimeout(() => adminSearchInputRef.current?.focus(), 100);
+    }
+  }, [isSearchingAdmins]);
 
   const adminUsers = useMemo(() =>
     users.filter(u => u.isAdmin && u.displayName.toLowerCase().includes(adminSearch.toLowerCase())),
@@ -157,13 +166,23 @@ export const AdminsManagement = ({ tab, isSingleTabPage }: { tab: AppTab, isSing
                         <div className="flex items-center justify-between gap-4">
                             <CardTitle className="font-thin text-base">Admins ({adminUsers.length})</CardTitle>
                              <div className="flex items-center gap-1 w-48">
-                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
-                                <input
-                                    placeholder="Search admins..."
-                                    value={adminSearch}
-                                    onChange={(e) => setAdminSearch(e.target.value)}
-                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 font-thin"
-                                />
+                                {isSearchingAdmins ? (
+                                    <>
+                                        <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
+                                        <input
+                                            ref={adminSearchInputRef}
+                                            placeholder="Search admins..."
+                                            value={adminSearch}
+                                            onChange={(e) => setAdminSearch(e.target.value)}
+                                            onBlur={() => !adminSearch && setIsSearchingAdmins(false)}
+                                            className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 font-thin"
+                                        />
+                                    </>
+                                ) : (
+                                    <Button variant="ghost" size="icon" onClick={() => setIsSearchingAdmins(true)} className="ml-auto">
+                                        <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
+                                    </Button>
+                                )}
                             </div>
                         </div>
                     </CardHeader>
@@ -280,12 +299,12 @@ export const AdminsManagement = ({ tab, isSingleTabPage }: { tab: AppTab, isSing
                             onChange={(e) => setTwoFactorCode(e.target.value)}
                             onBlur={() => { if (!twoFactorCode) setIsEditing2fa(false); }}
                             onKeyDown={(e) => e.key === 'Enter' && handleVerify2fa()}
-                            className="w-full text-center tracking-[0.5em] h-auto p-0 border-0 shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground"
+                            className="w-full text-center tracking-[0.5em] h-auto p-0 border-0 shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground font-thin"
                             maxLength={6}
                             placeholder="••••••"
                         />
                     ) : (
-                        <span className="flex-1 text-center text-sm tracking-[0.5em]">
+                        <span className="flex-1 text-center text-sm tracking-[0.5em] font-thin">
                             {twoFactorCode ? '••••••' : '6-digit code'}
                         </span>
                     )}
@@ -341,7 +360,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                   placeholder="Search..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                  className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 font-thin"
               />
           </div>
         </div>
@@ -448,7 +467,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
                 placeholder="Search tabs..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 font-thin"
             />
           </div>
         </div>
@@ -556,7 +575,7 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
                                             placeholder="Search icons..."
                                             value={iconSearch}
                                             onChange={(e) => setIconSearch(e.target.value)}
-                                            className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                                            className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 font-thin"
                                         />
                                     </div>
                                     <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (
@@ -641,7 +660,7 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
                 </div>
             </CardHeader>
             <CardContent className="flex-grow flex flex-col justify-end pt-2">
-                <p className="text-xs text-muted-foreground truncate">{displayPath}</p>
+                <p className="text-xs text-muted-foreground truncate font-thin">{displayPath}</p>
             </CardContent>
             <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                 <DialogContent className="max-w-md">
@@ -850,7 +869,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     onBlur={() => { if (!searchTerm) setIsSearching(false); }}
-                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 font-thin"
                                 />
                             </div>
                         ) : (
@@ -1020,7 +1039,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                                     placeholder="Search icons..."
                                     value={iconSearch}
                                     onChange={(e) => setIconSearch(e.target.value)}
-                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 font-thin"
                                 />
                             </div>
                             <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (
@@ -1080,11 +1099,11 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                             defaultValue={tab.description}
                             onBlur={handleSaveDescription}
                             onKeyDown={handleDescriptionKeyDown}
-                            className="p-0 text-sm text-muted-foreground border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 resize-none"
+                            className="p-0 text-sm text-muted-foreground border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 resize-none font-thin"
                             placeholder="Click to add a description."
                         />
                     ) : (
-                        <p className="text-sm text-muted-foreground cursor-text min-h-[20px]" onClick={() => setIsEditingDescription(true)}>
+                        <p className="text-sm text-muted-foreground cursor-text min-h-[20px] font-thin" onClick={() => setIsEditingDescription(true)}>
                             {tab.description || 'Click to add a description.'}
                         </p>
                     )}
@@ -1182,7 +1201,7 @@ export const TabsManagement = ({ tab }: { tab: AppTab }) => {
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     onBlur={() => { if (!searchTerm) setIsSearching(false); }}
-                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 font-thin"
                                 />
                             </div>
                         ) : (

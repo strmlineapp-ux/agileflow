@@ -39,11 +39,12 @@ This pattern allows for seamless, direct text editing within the main applicatio
 This pattern provides a clean, minimal interface for search functionality, especially in UIs where space is a consideration or a full search bar is not always needed.
 
 - **Interaction:**
-  - The search input field is always present within its container (e.g., a popover) but may be visually understated.
-  - The input field appears with a transparent background and no borders or box-shadow, to maintain a minimal, "inline text" look.
+  - The search input is initially hidden behind an icon-only button (e.g., `<GoogleSymbol name="search" />`).
+  - Clicking the button reveals the input field, which appears with a transparent background and no borders or box-shadow, to maintain a minimal, "inline text" look.
 - **Behavior:**
   - The input field **must** automatically gain focus as soon as its parent popover or container becomes visible. This is achieved using a `useEffect` hook that triggers `searchInputRef.current?.focus()` after a short `setTimeout` (e.g., 100ms) to ensure the element is rendered and ready.
-- **Application:** Used for filtering lists of icons, users, or other filterable content within popovers and other compact spaces.
+  - The input hides again if the user clicks away (`onBlur`) and the field is empty.
+- **Application:** Used for filtering lists of icons, users, or other filterable content within popovers and management pages like the Admin screen.
 
 ---
 
