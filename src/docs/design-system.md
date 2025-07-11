@@ -82,7 +82,7 @@ This is the consistent reference pattern for allowing a user to change both an i
 - **Interaction:**
   - Clicking the main part of the button opens an icon picker popover. This popover uses the **Compact Search Input** pattern for filtering. The icons inside this picker are rendered at `text-4xl` with a `weight={100}` inside `h-8 w-8` buttons for clarity and ease of selection.
   - Clicking the color swatch badge opens a color picker popover.
-- **Application:** Used for editing team icons/colors, admin group icons/colors, and page icons/colors.
+- **Application:** Used for editing team icons/colors, and page icons/colors.
 
 ---
 
@@ -233,8 +233,8 @@ This pattern describes the user interface for assigning and unassigning badges t
 
 ### Typography
 - **Font**: The application exclusively uses the **Roboto** font family for a clean and consistent look.
-- **Headline Font**: All major titles (pages, tabs, prominent cards) use the `font-headline` utility class, which is configured to use a `font-thin` weight (`font-weight: 100`). This is also maintained during inline editing for a seamless user experience.
-- **Body Font**: All standard body text, labels, and buttons now use a `font-normal` weight. All instances of `font-semibold` or `font-bold` have been removed to create a softer, more modern aesthetic.
+- **Headline Font**: All major titles (pages, tabs, prominent cards) use the `font-headline` utility class, which is configured to use a `font-thin` weight (`font-weight: 100`).
+- **Body Font**: All standard body text, labels, and buttons use a `font-thin` weight.
 
 ### Icons & Hover Effects
 - **Icon Set**: We exclusively use **Google Material Symbols** via the `<GoogleSymbol />` component. This ensures a consistent visual language. The font library is a variable font, which means we can adjust its properties.
