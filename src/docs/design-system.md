@@ -78,7 +78,7 @@ This pattern replaces large, card-style "Add New" buttons with a more compact an
 ### 6. Icon & Color Editing Flow
 This is the consistent reference pattern for allowing a user to change both an icon and its color.
 
-- **Trigger:** A single, interactive unit composed of a primary icon button and a smaller color swatch badge overlaid on its corner.
+- **Trigger:** A single, interactive unit composed of a primary icon button and a smaller color swatch badge overlaid on its corner. The primary button icon should be large and prominent (`text-6xl`).
 - **Interaction:**
   - Clicking the main part of the button opens an icon picker popover. This popover uses the **Compact Search Input** pattern for filtering. The icons inside this picker are rendered at `text-4xl` with a `weight={100}` inside `h-8 w-8` buttons for clarity and ease of selection.
   - Clicking the color swatch badge opens a color picker popover.
@@ -191,7 +191,7 @@ When a **high-risk destructive action** requires user confirmation (like deletin
 - **Behavior**:
   - When a page is configured with exactly one associated tab, the main page layout does not render its own title or icon.
   - The single tab's component is rendered directly within the main content area.
-  - The tab's component is responsible for displaying the page's title and icon, effectively promoting its header to become the page's header.
+  - The tab's component is responsible for displaying the page's title and icon, effectively promoting its header to become the page's header. This is especially true for pages like "Overview," where the content *is* the page.
 - **Application**: Applied automatically to any page in the dynamic routing system (`/dashboard/[...page]`) that meets the single-tab condition. This creates a more integrated and less cluttered UI.
 
 ---
@@ -239,10 +239,10 @@ This pattern describes the user interface for assigning and unassigning badges t
 ### Icons & Hover Effects
 - **Icon Set**: We exclusively use **Google Material Symbols** via the `<GoogleSymbol />` component. This ensures a consistent visual language. The font library is a variable font, which means we can adjust its properties.
 - **Icon Sizing & Weight**:
-  - A `weight={100}` is used for most action icons (`delete`, `edit`, `more_vert`) to maintain a light, clean aesthetic.
-  - Icons inside pickers (like the icon picker) are `text-4xl` with a `weight={100}` inside `h-8 w-8` buttons for clarity and ease of selection.
-  - Large, circular 'Add New' buttons use `text-4xl` with a `weight={100}` for prominence.
-  - Icon picker *trigger* buttons use a large `text-6xl` icon with a `weight={100}` inside a `h-12 w-12` button.
+  - A `weight={100}` is used for **all icons** to maintain a light, clean aesthetic.
+  - Icons inside pickers (like the icon picker) are `text-4xl` inside `h-8 w-8` buttons for clarity and ease of selection.
+  - Large, circular 'Add New' buttons use `text-4xl` for prominence.
+  - Icon picker *trigger* buttons use a large `text-6xl` icon inside a `h-12 w-12` button.
 - **Filled Icons**: To use the filled style of an icon, pass the `filled` prop to the component: `<GoogleSymbol name="star" filled />`. This works with any of the three main styles.
 - **Hover Behavior**: The color of icons on hover is typically determined by their parent element. For example, an icon inside a `<Button variant="ghost">` will change to the primary theme color on hover because the button's text color changes, and the icon inherits that color. This creates a clean and predictable interaction.
 - **Destructive Actions**: Delete or other destructive action icons (like `delete`, `close`, `cancel`) are `text-muted-foreground` by default and become `text-destructive` on hover to provide a clear but not overwhelming visual warning.

@@ -150,13 +150,6 @@ export const AdminsManagement = ({ tab, isSingleTabPage }: { tab: AppTab, isSing
 
   return (
     <div className="space-y-6">
-        {isSingleTabPage && (
-          <div className="flex items-center gap-3">
-              <GoogleSymbol name={tab.icon} className="text-6xl" weight={100} />
-              <h1 className="font-headline text-3xl font-thin">{tab.name}</h1>
-          </div>
-        )}
-        
         <DragDropContext onDragEnd={onDragEnd}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card className="flex flex-col h-full bg-transparent border-0">
@@ -164,12 +157,12 @@ export const AdminsManagement = ({ tab, isSingleTabPage }: { tab: AppTab, isSing
                         <div className="flex items-center justify-between gap-4">
                             <CardTitle className="font-thin text-base">Admins ({adminUsers.length})</CardTitle>
                              <div className="flex items-center gap-1 w-48">
-                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
                                 <input
                                     placeholder="Search admins..."
                                     value={adminSearch}
                                     onChange={(e) => setAdminSearch(e.target.value)}
-                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 font-thin"
                                 />
                             </div>
                         </div>
@@ -209,13 +202,13 @@ export const AdminsManagement = ({ tab, isSingleTabPage }: { tab: AppTab, isSing
                         <div className="flex items-center justify-between gap-4">
                             <CardTitle className="font-thin text-base">Users ({nonAdminUsers.length})</CardTitle>
                              <div className="flex items-center gap-1 w-48">
-                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
                                 <input
                                     ref={userSearchInputRef}
                                     placeholder="Search users..."
                                     value={userSearch}
                                     onChange={(e) => setUserSearch(e.target.value)}
-                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 font-thin"
                                 />
                             </div>
                         </div>
@@ -260,7 +253,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage }: { tab: AppTab, isSing
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <Button variant="ghost" size="icon" onClick={handleVerify2fa}>
-                                    <GoogleSymbol name="check" className="text-xl" />
+                                    <GoogleSymbol name="check" className="text-xl" weight={100} />
                                     <span className="sr-only">Verify Code</span>
                                 </Button>
                             </TooltipTrigger>
@@ -278,7 +271,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage }: { tab: AppTab, isSing
                     )}
                     onClick={() => {if (!isEditing2fa) setIsEditing2fa(true)}}
                     >
-                    <GoogleSymbol name="password" className="text-xl" />
+                    <GoogleSymbol name="password" className="text-xl" weight={100} />
                     {isEditing2fa ? (
                         <Input
                             id="2fa-code"
@@ -342,7 +335,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
     const renderSearchControl = () => (
          <div className="p-2 border-b">
             <div className="flex items-center gap-1 w-full">
-              <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+              <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
               <input
                   ref={searchInputRef}
                   placeholder="Search..."
@@ -391,7 +384,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                           const isSelected = access.teams.includes(team.id);
                           return (
                             <div key={team.id} className="flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer" style={{ color: isSelected ? team.color : undefined }} onClick={() => handleToggle('teams', team.id)}>
-                              <GoogleSymbol name={team.icon} className="text-xl" />
+                              <GoogleSymbol name={team.icon} className="text-xl" weight={100} />
                               <span className="font-thin">{team.name}</span>
                             </div>
                           )
@@ -449,7 +442,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
       <PopoverContent className="w-80 p-0">
         <div className="p-2 border-b">
           <div className="flex items-center gap-1 w-full">
-            <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+            <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
             <input
                 ref={searchInputRef}
                 placeholder="Search tabs..."
@@ -471,7 +464,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
                     style={{ color: isAssociated ? tab.color : undefined }}
                     onClick={() => handleToggle(tab.id)}
                 >
-                    <GoogleSymbol name={tab.icon} className="text-xl" />
+                    <GoogleSymbol name={tab.icon} className="text-xl" weight={100} />
                     <span className="font-thin">{tab.name}</span>
                 </div>
               );
@@ -557,7 +550,7 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
                                 </TooltipProvider>
                                 <PopoverContent className="w-80 p-0">
                                     <div className="flex items-center gap-1 p-2 border-b">
-                                        <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                                        <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
                                         <input
                                             ref={iconSearchInputRef}
                                             placeholder="Search icons..."
@@ -602,7 +595,7 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
     '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6',
     '#A855F7', '#D946EF', '#EC4899', '#F43F5E'].map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => { onUpdate(page.id, { color: c }); setIsColorPopoverOpen(false); }}/>))}
                                         <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
-                                            <GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={page.color} onChange={(e) => onUpdate(page.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/>
+                                            <GoogleSymbol name="colorize" className="text-muted-foreground" weight={100} /><Input type="color" value={page.color} onChange={(e) => onUpdate(page.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/>
                                         </div>
                                     </div>
                                 </PopoverContent>
@@ -675,6 +668,9 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
     const { toast } = useToast();
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const titleInputRef = useRef<HTMLInputElement>(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [isSearching, setIsSearching] = useState(false);
+    const searchInputRef = useRef<HTMLInputElement>(null);
 
     const pinnedTopIds = useMemo(() => ['page-admin-management', 'page-overview', 'page-calendar', 'page-tasks'], []);
     const pinnedBottomIds = useMemo(() => ['page-notifications', 'page-settings'], []);
@@ -683,6 +679,15 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
     useEffect(() => {
         if (isEditingTitle) titleInputRef.current?.focus();
     }, [isEditingTitle]);
+
+    useEffect(() => {
+        if (isSearching) {
+            const timer = setTimeout(() => {
+                searchInputRef.current?.focus();
+            }, 100);
+            return () => clearTimeout(timer);
+        }
+    }, [isSearching]);
 
     const handleSaveTitle = () => {
         const newName = titleInputRef.current?.value.trim();
@@ -782,6 +787,12 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
             updateAppSettings({ pages: reorderedPages });
         }
     };
+    
+    const filteredPages = useMemo(() => {
+        if (!searchTerm) return appSettings.pages;
+        return appSettings.pages.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    }, [appSettings.pages, searchTerm]);
+
 
     return (
         <DragDropContext onDragEnd={onDragEnd}>
@@ -829,6 +840,32 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                             )}
                         </StrictModeDroppable>
                     </div>
+                     <div className="flex items-center">
+                        {isSearching ? (
+                            <div className="flex items-center gap-1 p-2 border-b w-64">
+                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
+                                <input
+                                    ref={searchInputRef}
+                                    placeholder="Search pages..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    onBlur={() => { if (!searchTerm) setIsSearching(false); }}
+                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                                />
+                            </div>
+                        ) : (
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button variant="ghost" size="icon" onClick={() => setIsSearching(true)}>
+                                            <GoogleSymbol name="search" weight={100} />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent><p>Search Pages</p></TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        )}
+                    </div>
                 </div>
                 
                 <StrictModeDroppable droppableId="pages-list" isDropDisabled={false} isCombineEnabled={false}>
@@ -838,7 +875,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                             {...provided.droppableProps}
                             className="flex flex-wrap -m-2"
                         >
-                            {appSettings.pages.map((page, index) => {
+                            {filteredPages.map((page, index) => {
                                 const isPinned = allPinnedIds.includes(page.id);
                                 return (
                                     <Draggable key={page.id} draggableId={page.id} index={index} isDragDisabled={isPinned} ignoreContainerClipping={false}>
@@ -977,7 +1014,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                         </TooltipProvider>
                         <PopoverContent className="w-80 p-0">
                             <div className="flex items-center gap-1 p-2 border-b">
-                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
                                 <input
                                     ref={iconSearchInputRef}
                                     placeholder="Search icons..."
@@ -1022,7 +1059,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                                 '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6',
                                 '#A855F7', '#D946EF', '#EC4899', '#F43F5E'].map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => { onUpdate(tab.id, { color: c }); setIsColorPopoverOpen(false); }}/>))}
                                 <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
-                                    <GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={tab.color} onChange={(e) => onUpdate(tab.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/>
+                                    <GoogleSymbol name="colorize" className="text-muted-foreground" weight={100} /><Input type="color" value={tab.color} onChange={(e) => onUpdate(tab.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/>
                                 </div>
                             </div>
                         </PopoverContent>
@@ -1071,7 +1108,10 @@ export const TabsManagement = ({ tab }: { tab: AppTab }) => {
     
     useEffect(() => {
         if (isSearching) {
-            setTimeout(() => searchInputRef.current?.focus(), 100);
+            const timer = setTimeout(() => {
+                searchInputRef.current?.focus();
+            }, 100);
+            return () => clearTimeout(timer);
         }
     }, [isSearching]);
 
@@ -1135,7 +1175,7 @@ export const TabsManagement = ({ tab }: { tab: AppTab }) => {
                      <div className="flex items-center">
                         {isSearching ? (
                             <div className="flex items-center gap-1 p-2 border-b w-64">
-                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
                                 <input
                                     ref={searchInputRef}
                                     placeholder="Search by name or desc..."
@@ -1150,7 +1190,7 @@ export const TabsManagement = ({ tab }: { tab: AppTab }) => {
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                         <Button variant="ghost" size="icon" onClick={() => setIsSearching(true)}>
-                                            <GoogleSymbol name="search" />
+                                            <GoogleSymbol name="search" weight={100} />
                                         </Button>
                                     </TooltipTrigger>
                                     <TooltipContent><p>Search Tabs</p></TooltipContent>
