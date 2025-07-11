@@ -26,16 +26,24 @@ export function Sidebar() {
 
     const visiblePages = appSettings.pages.filter(page => hasAccess(viewAsUser, page, teams));
 
-    const navItems = visiblePages.flatMap(page => {
+    return visiblePages.flatMap(page => {
+      // A page is only rendered if it has content.
+      if (!page.associatedTabs || page.associatedTabs.length === 0) {
+        return null;
+      }
+      
       if (page.isDynamic) {
-        // Find which teams are relevant for *this specific dynamic page*
+        // Find which of the user's teams are relevant for this specific dynamic page.
         const relevantTeams = teams.filter(team => {
+          // A user must be part of the team to see its page.
           const isMemberOrAdmin = team.members.includes(viewAsUser.userId) || (team.teamAdmins || []).includes(viewAsUser.userId);
+          // The page's access list must include this team.
           const teamHasAccessToThisPage = page.access.teams.includes(team.id);
-          
+
           return isMemberOrAdmin && teamHasAccessToThisPage;
         });
 
+        // Create a nav item for each relevant team for this dynamic page.
         return relevantTeams.map(team => ({
           id: `${page.id}-${team.id}`,
           path: `${page.path}/${team.id}`,
@@ -44,10 +52,10 @@ export function Sidebar() {
           tooltip: `${page.name}: ${team.name}`,
         }));
       }
-
+      
       // Handle static pages that should not be duplicated per team
       if (page.id === 'page-settings') return null; // Settings is in user menu
-      
+
       return {
         id: page.id,
         path: page.path,
@@ -55,10 +63,7 @@ export function Sidebar() {
         name: page.name,
         tooltip: page.name,
       };
-    });
-    
-    return navItems.flat().filter((item): item is NonNullable<typeof item> => !!item);
-
+    }).filter((item): item is NonNullable<typeof item> => !!item);
   }, [appSettings.pages, viewAsUser, teams, loading]);
   
   if (loading) {
