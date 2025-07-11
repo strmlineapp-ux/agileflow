@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import { useUser } from '@/context/user-context';
+import { useAdmin } from '@/context/admin-context';
 import { type User, type AdminGroup, type AppPage, type AppTab, type Team } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -63,7 +63,7 @@ const UserAssignmentCard = ({ user }: { user: User }) => {
 
 export const AdminsManagement = ({ tab, isSingleTabPage }: { tab: AppTab; isSingleTabPage?: boolean }) => {
   const { toast } = useToast();
-  const { viewAsUser, users, updateUser, updateAppTab } = useUser();
+  const { users, updateUser } = useAdmin();
   const [is2faDialogOpen, setIs2faDialogOpen] = useState(false);
   const [on2faSuccess, setOn2faSuccess] = useState<(() => void) | null>(null);
   const [twoFactorCode, setTwoFactorCode] = useState('');
@@ -83,8 +83,12 @@ export const AdminsManagement = ({ tab, isSingleTabPage }: { tab: AppTab; isSing
   }, [isSearchingUsers]);
 
   useEffect(() => {
-    if (isEditing2fa) twoFactorCodeInputRef.current?.focus();
-  }, [isEditing2fa]);
+    if (is2faDialogOpen) {
+      requestAnimationFrame(() => {
+        twoFactorCodeInputRef.current?.focus();
+      });
+    }
+  }, [is2faDialogOpen, isEditing2fa]);
 
   const adminUsers = useMemo(() =>
     users.filter(u => u.isAdmin && u.displayName.toLowerCase().includes(adminSearch.toLowerCase())),
@@ -113,6 +117,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage }: { tab: AppTab; isSing
     };
     setOn2faSuccess(() => action);
     setIs2faDialogOpen(true);
+    setIsEditing2fa(true);
   };
 
   const handleVerify2fa = () => {
@@ -323,7 +328,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage }: { tab: AppTab; isSing
 // #region Pages Management Tab
 
 function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: Partial<AppPage>) => void }) {
-    const { users, teams, appSettings } = useUser();
+    const { users, teams, appSettings } = useAdmin();
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [activeTab, setActiveTab] = useState("users");
@@ -420,7 +425,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
 }
 
 function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: Partial<AppPage>) => void }) {
-  const { appSettings } = useUser();
+  const { appSettings } = useAdmin();
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -687,7 +692,7 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
 }
 
 export const PagesManagement = ({ tab, isSingleTabPage }: { tab: AppTab; isSingleTabPage?: boolean }) => {
-    const { appSettings, updateAppSettings, updateAppTab } = useUser();
+    const { appSettings, updateAppSettings, updateAppTab } = useAdmin();
     const { toast } = useToast();
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const titleInputRef = useRef<HTMLInputElement>(null);
@@ -1100,7 +1105,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
 }
 
 export const TabsManagement = ({ tab, isSingleTabPage }: { tab: AppTab; isSingleTabPage?: boolean }) => {
-    const { appSettings, updateAppSettings, updateAppTab } = useUser();
+    const { appSettings, updateAppSettings, updateAppTab } = useAdmin();
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const titleInputRef = useRef<HTMLInputElement>(null);
     const [searchTerm, setSearchTerm] = useState('');

@@ -8,6 +8,7 @@ import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { type AppTab, type AppPage } from '@/types';
+import { AdminProvider } from '@/context/admin-context';
 
 // Import all possible tab components
 import { AdminsManagement, PagesManagement, TabsManagement } from '@/components/admin/page';
@@ -112,7 +113,13 @@ export default function DynamicPage() {
         const tab = pageTabs[0];
         const contextTeam = tab.contextTeamId ? teams.find(t => t.id === tab.contextTeamId) : dynamicTeam;
         const ContentComponent = componentMap[tab.componentKey];
-        return ContentComponent ? <ContentComponent tab={tab} team={contextTeam} page={pageConfig} isSingleTabPage={true} isTeamSpecificPage={pageConfig.isDynamic} /> : <div>Component for {tab.name} not found.</div>;
+        const isAdminTab = ['admins', 'pages', 'tabs'].includes(tab.componentKey);
+        const tabContent = ContentComponent ? <ContentComponent tab={tab} team={contextTeam} page={pageConfig} isSingleTabPage={true} isTeamSpecificPage={pageConfig.isDynamic} /> : <div>Component for {tab.name} not found.</div>;
+        
+        if(isAdminTab) {
+            return <AdminProvider>{tabContent}</AdminProvider>
+        }
+        return tabContent;
     }
     
     // Render page with multiple tabs
@@ -136,9 +143,12 @@ export default function DynamicPage() {
                 {pageTabs.map(tab => {
                     const ContentComponent = componentMap[tab.componentKey];
                     const contextTeam = tab.contextTeamId ? teams.find(t => t.id === tab.contextTeamId) : dynamicTeam;
+                    const isAdminTab = ['admins', 'pages', 'tabs'].includes(tab.componentKey);
+                    const tabContent = ContentComponent ? <ContentComponent tab={tab} team={contextTeam} page={pageConfig} isSingleTabPage={false} isTeamSpecificPage={pageConfig.isDynamic} /> : <div>Component for {tab.name} not found.</div>;
+                    
                     return (
                         <TabsContent key={tab.id} value={tab.id} className="mt-4">
-                          {ContentComponent ? <ContentComponent tab={tab} team={contextTeam} page={pageConfig} isSingleTabPage={false} isTeamSpecificPage={pageConfig.isDynamic} /> : <div>Component for {tab.name} not found.</div>}
+                          {isAdminTab ? <AdminProvider>{tabContent}</AdminProvider> : tabContent}
                         </TabsContent>
                     );
                 })}
