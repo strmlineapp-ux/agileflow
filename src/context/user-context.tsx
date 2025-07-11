@@ -2,7 +2,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
-import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type BadgeCollectionOwner, type BadgeCollection } from '@/types';
+import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type BadgeCollectionOwner, type BadgeCollection, type Priority, type PriorityStrategy } from '@/types';
 import { mockUsers as initialUsers, mockCalendars as initialCalendars, mockEvents as initialEvents, mockLocations as initialLocations, mockTeams, mockAppSettings } from '@/lib/mock-data';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
@@ -50,6 +50,10 @@ interface UserContextType {
   updateAppTab: (tabId: string, tabData: Partial<AppTab>) => Promise<void>;
   allBadges: Badge[];
   allBadgeCollections: BadgeCollection[];
+  priorityStrategies: PriorityStrategy[];
+  addPriorityStrategy: (strategyData: Omit<PriorityStrategy, 'id'>) => void;
+  updatePriorityStrategy: (strategyId: string, strategyData: Partial<PriorityStrategy>) => void;
+  deletePriorityStrategy: (strategyId: string) => void;
   addBadgeCollection: (owner: BadgeCollectionOwner, sourceCollection?: BadgeCollection, contextTeam?: Team) => void;
   updateBadgeCollection: (collectionId: string, data: Partial<BadgeCollection>) => void;
   deleteBadgeCollection: (collectionId: string, contextTeam?: Team) => void;
@@ -101,6 +105,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [events, setEvents] = useState<Event[]>(initialEvents);
   const [locations, setLocations] = useState<BookableLocation[]>(initialLocations);
   const [appSettings, setAppSettings] = useState<AppSettings>(mockAppSettings);
+  const [priorityStrategies, setPriorityStrategies] = useState<PriorityStrategy[]>([]);
   const { toast } = useToast();
 
   const [allBadges, setAllBadges] = useState<Badge[]>(() => {
@@ -271,7 +276,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   
   const getPriorityDisplay = useCallback((badgeId: string): { label: React.ReactNode, description?: string, color: string, icon?: string } | undefined => {
     if (!badgeId) return undefined;
-
     const badge = allBadges.find(b => b.id === badgeId);
     if (badge) {
         return {
@@ -295,6 +299,22 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       const newTabs = current.tabs.map(t => t.id === tabId ? { ...t, ...tabData } : t);
       return { ...current, tabs: newTabs };
     });
+  }, []);
+  
+  const addPriorityStrategy = useCallback((strategyData: Omit<PriorityStrategy, 'id'>) => {
+    const newStrategy: PriorityStrategy = {
+      ...strategyData,
+      id: crypto.randomUUID(),
+    };
+    setPriorityStrategies(prev => [...prev, newStrategy]);
+  }, []);
+
+  const updatePriorityStrategy = useCallback((strategyId: string, strategyData: Partial<PriorityStrategy>) => {
+    setPriorityStrategies(prev => prev.map(s => s.id === strategyId ? { ...s, ...strategyData } : s));
+  }, []);
+
+  const deletePriorityStrategy = useCallback((strategyId: string) => {
+    setPriorityStrategies(prev => prev.filter(s => s.id !== strategyId));
   }, []);
 
   const addBadgeCollection = useCallback((owner: BadgeCollectionOwner, sourceCollection?: BadgeCollection, contextTeam?: Team) => {
@@ -521,6 +541,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     updateAppTab,
     allBadges,
     allBadgeCollections,
+    priorityStrategies,
+    addPriorityStrategy,
+    updatePriorityStrategy,
+    deletePriorityStrategy,
     addBadgeCollection,
     updateBadgeCollection,
     deleteBadgeCollection,
@@ -530,10 +554,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }), [
     loading, realUser, viewAsUser, users, teams, notifications, userStatusAssignments,
     calendars, events, locations, allBookableLocations, appSettings, allBadges, allBadgeCollections,
+    priorityStrategies,
     addTeam, updateTeam, deleteTeam, reorderTeams, setNotifications, setUserStatusAssignments, addUser,
     updateUser, linkGoogleCalendar, reorderCalendars, addCalendar, updateCalendar, deleteCalendar,
     addEvent, updateEvent, deleteEvent, addLocation, deleteLocation,
     getPriorityDisplay, updateAppSettings, updateAppTab,
+    addPriorityStrategy, updatePriorityStrategy, deletePriorityStrategy,
     addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge
   ]);
 

@@ -204,3 +204,36 @@ export interface BookableLocation {
   id: string;
   name: string;
 }
+
+// Data for priority strategies, which will be managed in the UI
+export type PriorityStrategyType = 'tier' | 'symbol' | 'scale';
+
+export interface Priority {
+  id: string;
+  label: string;
+  description?: string;
+  color: string;
+  shape: 'rounded-md' | 'rounded-full';
+}
+
+export interface PriorityStrategy {
+  id: string;
+  name: string;
+  description?: string;
+  applications: BadgeApplication[];
+  type: PriorityStrategyType;
+  // Tier-specific
+  priorities?: Priority[];
+  // Symbol-specific
+  icon?: string;
+  max?: number; // e.g., 5 for a 5-star rating
+  color?: string; // color for the symbol
+  // Scale-specific
+  min?: number;
+  intervals?: {
+    label: string;
+    from: number;
+    to: number;
+    color: string;
+  }[];
+}

@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -76,13 +75,13 @@ export function StrategyManagement({ tab }: { tab: AppTab }) {
   const renderPriorityPreview = (strategy: PriorityStrategy) => {
     switch (strategy.type) {
       case 'tier':
-        return strategy.priorities.slice(0, 5).map(p => <PriorityBadge key={p.id} priorityId={p.id} />);
+        return strategy.priorities?.slice(0, 5).map(p => <PriorityBadge key={p.id} priorityId={p.id} />);
       case 'symbol':
         return [3, 2, 1].map(num => (
           <PriorityBadge key={num} priorityId={`${strategy.id}:${num}`} />
         ));
       case 'scale':
-         return strategy.intervals.slice(0, 3).map((interval, index) => {
+         return strategy.intervals?.slice(0, 3).map((interval, index) => {
             const midPoint = Math.floor((interval.from + interval.to) / 2);
             return <PriorityBadge key={index} priorityId={`${strategy.id}:${midPoint}`} />;
          });
@@ -95,12 +94,12 @@ export function StrategyManagement({ tab }: { tab: AppTab }) {
     <>
       <div className="flex items-center gap-2 mb-6">
           {isEditingTitle ? (
-            <Input ref={titleInputRef} defaultValue={title} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-semibold border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
+            <Input ref={titleInputRef} defaultValue={title} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
           ) : (
-            <h3 className="text-2xl font-semibold tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{title}</h3>
+            <h3 className="font-headline text-2xl font-thin tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{title}</h3>
           )}
           <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={openAddDialog}>
-              <GoogleSymbol name="add_circle" className="text-xl" />
+              <GoogleSymbol name="add_circle" className="text-2xl" />
               <span className="sr-only">New Strategy</span>
           </Button>
       </div>

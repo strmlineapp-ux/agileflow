@@ -42,11 +42,13 @@ const statusLabels: Record<Task['status'], string> = {
 };
 
 export function TaskList({ limit }: { limit?: number }) {
-  const { viewAsUser, allBadges } = useUser();
+  const { viewAsUser, allBadgeCollections, allBadges } = useUser();
 
   const taskPriorities = React.useMemo(() => {
-    return allBadges.filter(b => b.ownerCollectionId === 'task-priority');
-  }, [allBadges]);
+    const taskPriorityCollection = allBadgeCollections.find(c => c.applications?.includes('tasks'));
+    if (!taskPriorityCollection) return [];
+    return taskPriorityCollection.badgeIds.map(id => allBadges.find(b => b.id === id)).filter((b): b is Badge => !!b);
+  }, [allBadgeCollections, allBadges]);
 
   const renderTable = (tasks: Task[]) => (
     <Card>

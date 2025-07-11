@@ -1,5 +1,4 @@
 
-
 import { Badge } from '@/components/ui/badge';
 import { cn, getContrastColor } from '@/lib/utils';
 import { useUser } from '@/context/user-context';
@@ -11,7 +10,7 @@ export function PriorityBadge({ priorityId, className }: { priorityId: string; c
   const priorityInfo = getPriorityDisplay(priorityId);
 
   if (!priorityInfo) {
-    return <Badge className={cn('bg-muted text-muted-foreground', className)}>Unknown</Badge>;
+    return <Badge className={cn('bg-muted text-muted-foreground', className)}>{priorityId}</Badge>;
   }
 
   const textColor = getContrastColor(priorityInfo.color);
