@@ -7,6 +7,7 @@ import { useUser } from '@/context/user-context';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CalendarManagement } from '@/components/service-delivery/calendar-management';
 import { TeamManagement } from '@/components/service-delivery/team-management';
+import { StrategyManagement } from '@/components/service-delivery/strategy-management';
 import { Skeleton } from '@/components/ui/skeleton';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { type AppTab, type AppPage } from '@/types';
@@ -22,6 +23,7 @@ import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/comp
 const componentMap: Record<string, React.ComponentType<{ tab: AppTab }>> = {
   calendars: CalendarManagement,
   teams: TeamManagement,
+  strategies: StrategyManagement,
 };
 
 // Define a unique identifier for this page
@@ -80,9 +82,9 @@ export default function ServiceDeliveryPage() {
       <div className="flex items-center gap-3">
         <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
           <PopoverTrigger asChild>
-            <Button variant="ghost" size="icon" className="shrink-0 h-12 w-12">
-              <GoogleSymbol name={pageConfig.icon} className="text-12xl" weight={100} />
-            </Button>
+            <button className="shrink-0 h-12 w-12 flex items-center justify-center">
+              <GoogleSymbol name={pageConfig.icon} className="text-6xl" weight={100} />
+            </button>
           </PopoverTrigger>
           <PopoverContent className="w-80 p-0">
             <div className="flex items-center gap-1 p-2 border-b">

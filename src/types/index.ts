@@ -8,7 +8,7 @@ export interface AppTab {
   icon: string;
   color: string;
   description?: string;
-  componentKey: 'team_members' | 'badges' | 'locations' | 'workstations' | 'templates' | 'admins' | 'pages' | 'tabs' | 'overview' | 'tasks' | 'notifications' | 'settings' | 'calendar';
+  componentKey: 'team_members' | 'badges' | 'locations' | 'workstations' | 'templates' | 'admins' | 'pages' | 'tabs' | 'overview' | 'tasks' | 'notifications' | 'settings' | 'calendar' | 'strategies';
   contextTeamId?: string; // Optional teamId to provide context for a tab on a non-dynamic page
 }
 
@@ -30,6 +30,7 @@ export interface AppSettings {
   pages: AppPage[];
   tabs: AppTab[];
   globalBadges: Badge[];
+  priorityStrategies: PriorityStrategy[];
   calendarManagementLabel?: string;
   teamManagementLabel?: string;
   strategyLabel?: string;
@@ -205,3 +206,48 @@ export interface BookableLocation {
   id: string;
   name: string;
 }
+
+// Priority System Types
+export type PriorityStrategyApplication = 'events' | 'tasks';
+export type PriorityStrategyType = 'tier' | 'symbol' | 'scale';
+
+export interface Priority {
+  id: string;
+  label: string;
+  description?: string;
+  color: string;
+  shape: 'rounded-md' | 'rounded-full';
+}
+
+interface TierPriorityStrategy {
+  type: 'tier';
+  priorities: Priority[];
+}
+
+interface SymbolPriorityStrategy {
+  type: 'symbol';
+  icon: string;
+  color: string;
+  max: number;
+}
+
+interface ScaleInterval {
+  label: string;
+  from: number;
+  to: number;
+  color: string;
+}
+
+interface ScalePriorityStrategy {
+  type: 'scale';
+  min: number;
+  max: number;
+  intervals: ScaleInterval[];
+}
+
+export type PriorityStrategy = {
+  id: string;
+  name: string;
+  description?: string;
+  applications: PriorityStrategyApplication[];
+} & (TierPriorityStrategy | SymbolPriorityStrategy | ScalePriorityStrategy);

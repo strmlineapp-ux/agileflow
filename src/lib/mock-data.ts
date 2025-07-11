@@ -1,6 +1,6 @@
 
 
-import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team, type AppSettings, type Badge, type BadgeCollection, type AppTab, type AppPage, type BadgeCollectionOwner } from '@/types';
+import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team, type AppSettings, type Badge, type BadgeCollection, type AppTab, type AppPage, type BadgeCollectionOwner, type PriorityStrategy } from '@/types';
 
 export const mockTabs: AppTab[] = [
   // Core Navigation Tabs
@@ -14,6 +14,12 @@ export const mockTabs: AppTab[] = [
   { id: 'tab-admins', name: 'Admin Management', icon: 'admin_panel_settings', color: '#8B5CF6', componentKey: 'admins', description: 'Manage system administrators.' },
   { id: 'tab-admin-pages', name: 'Pages', icon: 'web', color: '#EC4899', componentKey: 'pages', description: 'Configure application pages, their navigation, and access controls.' },
   { id: 'tab-admin-tabs', name: 'Tabs', icon: 'tab', color: '#EF4444', componentKey: 'tabs', description: 'Manage the properties of reusable tabs that appear on pages.' },
+
+  // Service Delivery Tabs
+  { id: 'tab-calendars', name: 'Manage Calendars', icon: 'calendar_month', color: '#0EA5E9', componentKey: 'calendars', description: 'Create and manage shared calendars for the application.' },
+  { id: 'tab-service-teams', name: 'Team Management', icon: 'group_work', color: '#EC4899', componentKey: 'teams', description: 'View and manage all teams across the organization.' },
+  { id: 'tab-strategies', name: 'Strategies', icon: 'psychology', color: '#F97316', componentKey: 'strategies', description: 'Define and manage priority strategies for tasks and events.' },
+
 
   // Reusable Management Tabs
   { id: 'tab-team-members', name: 'Members', icon: 'group', color: '#6366F1', componentKey: 'team_members', description: 'View all members of a specific team and manage their roles.' },
@@ -34,6 +40,16 @@ export const mockPages: AppPage[] = [
         isDynamic: false,
         associatedTabs: ['tab-admins', 'tab-admin-pages', 'tab-admin-tabs'],
         access: { users: [], teams: [] } // Special-cased in hasAccess to only allow isAdmin
+    },
+     {
+        id: 'page-service-delivery',
+        name: 'Service Delivery',
+        icon: 'home_repair_service',
+        color: '#F97316',
+        path: '/dashboard/service-delivery',
+        isDynamic: false,
+        associatedTabs: ['tab-calendars', 'tab-service-teams', 'tab-strategies'],
+        access: { users: [], teams: [] } // Admin only access
     },
     {
         id: 'page-overview',
@@ -101,36 +117,41 @@ export const mockPages: AppPage[] = [
     },
 ];
 
-const pScaleCollectionId = 'global-p-scale';
-const starSystemCollectionId = 'global-star-system';
-const effortCollectionId = 'global-effort';
+const priorityStrategies: PriorityStrategy[] = [
+    {
+        id: 'p-scale',
+        name: 'P-Scale',
+        description: 'Standard P-Scale for project prioritization.',
+        type: 'tier',
+        applications: ['events'],
+        priorities: [
+            { id: 'p0', label: 'P0', description: 'Highest priority', color: '#EF4444', shape: 'rounded-md' },
+            { id: 'p1', label: 'P1', description: 'High priority', color: '#F97316', shape: 'rounded-md' },
+            { id: 'p2', label: 'P2', description: 'Medium priority', color: '#FBBF24', shape: 'rounded-md' },
+            { id: 'p3', label: 'P3', description: 'Low priority', color: '#22C55E', shape: 'rounded-md' },
+            { id: 'p4', label: 'P4', description: 'Lowest priority', color: '#64748B', shape: 'rounded-md' },
+        ],
+    },
+    {
+        id: 'task-priority',
+        name: 'Task Priority',
+        description: 'Simple priority levels for tasks.',
+        type: 'tier',
+        applications: ['tasks'],
+        priorities: [
+            { id: 'task-high', label: 'High', color: '#EF4444', shape: 'rounded-full' },
+            { id: 'task-medium', label: 'Medium', color: '#FBBF24', shape: 'rounded-full' },
+            { id: 'task-low', label: 'Low', color: '#22C55E', shape: 'rounded-full' },
+        ],
+    },
+];
 
-const pScaleBadges: Badge[] = [
-    { id: 'p0', ownerCollectionId: pScaleCollectionId, name: 'P0', icon: 'priority_high', color: '#EF4444', description: 'Highest priority - immediate action required.' },
-    { id: 'p1', ownerCollectionId: pScaleCollectionId, name: 'P1', icon: 'priority_high', color: '#F97316', description: 'High priority - requires attention soon.' },
-    { id: 'p2', ownerCollectionId: pScaleCollectionId, name: 'P2', icon: 'priority_high', color: '#FBBF24', description: 'Medium priority - standard work.' },
-    { id: 'p3', ownerCollectionId: pScaleCollectionId, name: 'P3', icon: 'priority_high', color: '#22C55E', description: 'Low priority - can be deferred.' },
-    { id: 'p4', ownerCollectionId: pScaleCollectionId, name: 'P4', icon: 'priority_high', color: '#64748B', description: 'Lowest priority - to be done when time permits.' },
-];
-const starSystemBadges: Badge[] = [
-    { id: 'star1', ownerCollectionId: starSystemCollectionId, name: '1 Star', icon: 'star', color: '#64748B', description: '1/5 Stars' },
-    { id: 'star2', ownerCollectionId: starSystemCollectionId, name: '2 Stars', icon: 'star', color: '#64748B', description: '2/5 Stars' },
-    { id: 'star3', ownerCollectionId: starSystemCollectionId, name: '3 Stars', icon: 'star', color: '#64748B', description: '3/5 Stars' },
-    { id: 'star4', ownerCollectionId: starSystemCollectionId, name: '4 Stars', icon: 'star', color: '#64748B', description: '4/5 Stars' },
-    { id: 'star5', ownerCollectionId: starSystemCollectionId, name: '5 Stars', icon: 'star', color: '#64748B', description: '5/5 Stars' },
-];
-const effortBadges: Badge[] = [
-    { id: 'effort-xs', ownerCollectionId: effortCollectionId, name: 'XS', icon: 'fitness_center', color: '#A855F7', description: 'Extra Small' },
-    { id: 'effort-s', ownerCollectionId: effortCollectionId, name: 'S', icon: 'fitness_center', color: '#A855F7', description: 'Small' },
-    { id: 'effort-m', ownerCollectionId: effortCollectionId, name: 'M', icon: 'fitness_center', color: '#A855F7', description: 'Medium' },
-    { id: 'effort-l', ownerCollectionId: effortCollectionId, name: 'L', icon: 'fitness_center', color: '#A855F7', description: 'Large' },
-    { id: 'effort-xl', ownerCollectionId: effortCollectionId, name: 'XL', icon: 'fitness_center', color: '#A855F7', description: 'Extra Large' },
-];
 
 export const mockAppSettings: AppSettings = {
   pages: mockPages,
   tabs: mockTabs,
-  globalBadges: [...pScaleBadges, ...starSystemBadges, ...effortBadges]
+  globalBadges: [],
+  priorityStrategies: priorityStrategies,
 };
 
 export const mockUsers: User[] = [
@@ -299,41 +320,7 @@ export const mockTeams: Team[] = [
         teamAdmins: ['2'],
         locationCheckManagers: [],
         allBadges: [],
-        badgeCollections: [
-            {
-                id: pScaleCollectionId,
-                owner: { type: 'user', id: '2' },
-                name: 'P-Scale Priority',
-                icon: 'priority_high',
-                color: '#EF4444',
-                viewMode: 'assorted',
-                badgeIds: pScaleBadges.map(b => b.id),
-                isShared: true,
-                applications: ['tasks', 'events']
-            },
-            {
-                id: starSystemCollectionId,
-                owner: { type: 'user', id: '2' },
-                name: 'Star Rating',
-                icon: 'star',
-                color: '#64748B',
-                viewMode: 'assorted',
-                badgeIds: starSystemBadges.map(b => b.id),
-                isShared: true,
-                applications: ['tasks']
-            },
-            {
-                id: effortCollectionId,
-                owner: { type: 'user', id: '2' },
-                name: 'Effort',
-                icon: 'fitness_center',
-                color: '#A855F7',
-                viewMode: 'assorted',
-                badgeIds: effortBadges.map(b => b.id),
-                isShared: true,
-                applications: ['tasks']
-            }
-        ],
+        badgeCollections: [],
         linkedCollectionIds: [],
     }
 ];
@@ -347,11 +334,11 @@ const userToAttendee = (user: User): Attendee => ({
 });
 
 export const mockTasks: Task[] = [
-  { taskId: '1', title: 'Design new dashboard layout', assignedTo: [mockUsers[0]], dueDate: new Date(), priority: 'p1', status: 'in_progress', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
-  { taskId: '2', title: 'Develop authentication API', assignedTo: [mockUsers[1], mockUsers[2]], dueDate: new Date(new Date().setDate(new Date().getDate() + 1)), priority: 'p0', status: 'awaiting_review', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
-  { taskId: '3', title: 'Write documentation for components', assignedTo: [mockUsers[2]], dueDate: new Date(new Date().setDate(new Date().getDate() + 7)), priority: 'p2', status: 'not_started', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
-  { taskId: '4', title: 'Fix login page CSS bug', assignedTo: [mockUsers[1]], dueDate: new Date(new Date().setDate(new Date().getDate() - 2)), priority: 'p3', status: 'completed', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
-  { taskId: '5', title: 'Setup CI/CD pipeline', assignedTo: [mockUsers[0], mockUsers[1]], dueDate: new Date(new Date().setDate(new Date().getDate() + 2)), priority: 'p1', status: 'blocked', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
+  { taskId: '1', title: 'Design new dashboard layout', assignedTo: [mockUsers[0]], dueDate: new Date(), priority: 'task-high', status: 'in_progress', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
+  { taskId: '2', title: 'Develop authentication API', assignedTo: [mockUsers[1], mockUsers[2]], dueDate: new Date(new Date().setDate(new Date().getDate() + 1)), priority: 'task-high', status: 'awaiting_review', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
+  { taskId: '3', title: 'Write documentation for components', assignedTo: [mockUsers[2]], dueDate: new Date(new Date().setDate(new Date().getDate() + 7)), priority: 'task-medium', status: 'not_started', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
+  { taskId: '4', title: 'Fix login page CSS bug', assignedTo: [mockUsers[1]], dueDate: new Date(new Date().setDate(new Date().getDate() - 2)), priority: 'task-low', status: 'completed', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
+  { taskId: '5', title: 'Setup CI/CD pipeline', assignedTo: [mockUsers[0], mockUsers[1]], dueDate: new Date(new Date().setDate(new Date().getDate() + 2)), priority: 'task-high', status: 'blocked', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
 ];
 
 const today = new Date();

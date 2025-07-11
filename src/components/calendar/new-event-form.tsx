@@ -137,9 +137,9 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
     return calendars.filter(cal => canManageEventOnCalendar(viewAsUser, cal));
   }, [calendars, viewAsUser]);
   
-  const eventPriorityBadges = React.useMemo(() => {
-    return teams.flatMap(t => t.badgeCollections.filter(c => c.applications?.includes('events'))).flatMap(c => c.badgeIds).map(id => teams.flatMap(t => t.allBadges).find(b => b.id === id)).filter((b): b is Badge => !!b);
-  }, [teams]);
+  const eventPriorityStrategy = React.useMemo(() => {
+    return appSettings.priorityStrategies.find(s => s.applications.includes('events') && s.type === 'tier');
+  }, [appSettings.priorityStrategies]);
 
   const defaultCalendarId = React.useMemo(() => {
     return getDefaultCalendarId(viewAsUser, availableCalendars);
@@ -437,7 +437,7 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                 />
                 )}
 
-                {eventPriorityBadges.length > 0 && (
+                {eventPriorityStrategy && (
                   <FormField
                     control={form.control}
                     name="priority"
@@ -450,7 +450,7 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="p-1 w-auto" align="start">
-                            {eventPriorityBadges.map(p => (
+                            {eventPriorityStrategy.type === 'tier' && eventPriorityStrategy.priorities.map(p => (
                               <div key={p.id}
                                 onClick={() => { field.onChange(p.id); setIsPriorityPopoverOpen(false); }}
                                 className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer"

@@ -7,6 +7,7 @@ import { useUser } from '@/context/user-context';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CalendarManagement } from '@/components/calendar/calendar-management';
 import { TeamManagement } from '@/components/service-delivery/team-management';
+import { StrategyManagement } from '@/components/service-delivery/strategy-management';
 import { Skeleton } from '@/components/ui/skeleton';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { type AppTab, type AppPage } from '@/types';
@@ -22,6 +23,7 @@ import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/comp
 const componentMap: Record<string, React.ComponentType<{ tab: AppTab }>> = {
   calendars: CalendarManagement,
   teams: TeamManagement,
+  strategies: StrategyManagement,
 };
 
 // Define a unique identifier for this page
