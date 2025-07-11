@@ -32,6 +32,8 @@ This table details the information stored directly within each `User` object.
 | `defaultCalendarView?: 'month' \| 'week' \| ...` | **Internal.** A UI preference for the default calendar layout. |
 | `easyBooking?: boolean` | **Internal.** A UI preference for enabling quick event creation from the calendar. |
 | `timeFormat?: '12h' \| '24h'` | **Internal.** A UI preference for displaying time in 12-hour or 24-hour format. |
+| `linkedTeamIds?: string[]` | **Internal.** An array of `teamId`s for shared teams that the user has chosen to display on their management board. |
+| `linkedCollectionIds?: string[]` | **Internal.** An array of `collectionId`s for shared Badge Collections that the user has chosen to display on their management board. |
 
 ### Dynamic Access Control for Pages & Tabs
 
@@ -41,7 +43,7 @@ Access to every page and content tab in the application is controlled by a dynam
 
 1.  **Page Access**: Access to a page is determined by the `access` object on its `AppPage` configuration. A user can view a page if they are a system admin, if the page has no access rules (making it public), or if their `userId` or `Team` membership is listed in the corresponding access array.
 
-2.  **Tab Visibility**: A page's content is composed of one or more `AppTab`s. If a page has zero associated tabs, it is considered unconfigured and will not appear in the sidebar navigation, making it inaccessible. A page must have at least one tab to be rendered.
+2.  **Tab Visibility**: A page's content is composed of one or more `AppTab`s. If a page has zero associated tabs, it is considered unconfigured and will **not** appear in the sidebar navigation, making it inaccessible. A page must have at least one tab to be rendered.
 
 **Example Configurations (`mock-data.ts`):**
 
@@ -89,10 +91,21 @@ This entity, `AppSettings`, holds global configuration data that allows for cust
 | :--- | :--- |
 | `pages: AppPage[]` | **The core of the dynamic navigation.** This is an array of objects defining every page in the application. The order of pages in this array directly corresponds to their order in the sidebar navigation. The order is managed on the **Admin Management** page using the "Draggable Card Management" UI pattern. Each page object includes its name, icon, URL path, access control rules, and a list of associated `tab.id`s that should be rendered on it. |
 | `tabs: AppTab[]` | **The core of the dynamic content.** This is an array of objects defining all reusable content tabs. Each object includes the tab's name, icon, and a `componentKey` that maps it to a React component. |
-| `globalBadges: Badge[]` | An array of globally-defined badges. These are managed on the **Service Delivery > Badges** tab. |
-| `calendarManagementLabel?: string` | An alias for the "Manage Calendars" tab on the Service Delivery page. |
-| `teamManagementLabel?: string` | An alias for the "Team Management" tab on the Service Delivery page. |
-| `strategyLabel?: string` | An alias for the "Strategy" tab on the Service Delivery page. |
+| `priorityStrategies: PriorityStrategy[]` | An array of objects defining different priority systems that can be applied to entities like Events or Tasks. |
+
+### AppPage Entity
+A sub-entity of `AppSettings`, `AppPage` defines a single entry in the application's navigation.
+
+| Data Point | Description |
+| :--- | :--- |
+| `id: string` | A unique identifier for the page. |
+| `name: string` | The display name for the page. |
+| `icon: string` | The Google Symbol name for the page's icon. |
+| `color: string` | The hex color for the page's icon. |
+| `path: string` | The base URL path for the page (e.g., `/dashboard/service-delivery` or `/dashboard/teams`). |
+| `isDynamic: boolean` | If `false`, `path` is a fixed URL. If `true`, the `path` acts as a template, and the system will append an entity ID (e.g., a team ID) to create unique URLs like `/dashboard/teams/team-id-1`. |
+| `associatedTabs: string[]` | An array of `AppTab` IDs that define the content to be rendered on this page. A page must have at least one tab to be visible. |
+| `access: { users: string[], teams: string[] }` | An object containing arrays of `userId`s and `teamId`s who can access this page. |
 
 ### AppTab Entity
 A sub-entity of `AppSettings`, `AppTab` defines a single, reusable content block.
@@ -129,6 +142,8 @@ The `Team` entity is a functional unit that groups users together for collaborat
 | `allBadges: Badge[]` | The single source of truth for all `Badge` objects **owned** by this team. |
 | `badgeCollections: BadgeCollection[]` | An array of `BadgeCollection` objects. This includes collections *owned* by the team, and *links* to collections owned by other teams. |
 | `userBadgesLabel?: string` | A custom label for the "Team Badges" section on the Team Members tab. |
+| `linkedCollectionIds?: string[]` | An array of `collectionId`s for shared Badge Collections that this team has chosen to use. |
+| `activeBadgeCollections?: string[]` | A subset of `badgeCollections` and `linkedCollectionIds` that are currently active for this team. |
 
 ### BadgeCollection Entity
 A sub-entity of `Team`, this groups related Badges together. It can be owned by the team or shared with others.
@@ -148,7 +163,7 @@ A sub-entity of `Team`, this groups related Badges together. It can be owned by 
 
 
 ### Badge Entity
-This represents a specific, functional role or skill. The single source of truth for a badge is stored in either the `allBadges` array of its owner's `Team` object, or in the `globalBadges` array in `AppSettings`.
+This represents a specific, functional role or skill. The single source of truth for a badge is stored in the `allBadges` array of its owner's `Team` object.
 
 | Data Point | Description |
 | :--- | :--- |
@@ -158,3 +173,34 @@ This represents a specific, functional role or skill. The single source of truth
 | `icon: string` | The Google Symbol name for the badge's icon. |
 | `color: string` | The hex color code for the badge's icon and outline. |
 | `description?: string` | An optional description shown in tooltips. |
+
+## Priority Strategy Entity
+**Firestore Collection**: `/app-settings/global` (part of the `AppSettings` singleton)
+
+This entity defines a reusable system for assigning priority to different items within the application.
+
+| Data Point | Description |
+| :--- | :--- |
+| `id: string` | A unique identifier for the strategy. |
+| `name: string` | The display name for the strategy (e.g., "P-Scale", "Star Rating"). |
+| `description?: string` | An optional description for the strategy. |
+| `applications: BadgeApplication[]` | Defines where this strategy applies (e.g., 'events', 'tasks'). Only one strategy can be applied to a given application at a time. |
+| `type: 'tier' \| 'symbol' \| 'scale'` | The type of strategy, which determines the data structure below. |
+| `priorities?: Priority[]` | **(Tier type only)** An array of distinct priority levels. |
+| `icon?: string` | **(Symbol type only)** The Google Symbol name for the repeating icon (e.g., "star"). |
+| `max?: number` | **(Symbol type only)** The maximum number of symbols (e.g., 5 for a 5-star rating). |
+| `color?: string` | **(Symbol type only)** The color of the symbol. |
+| `min?: number` | **(Scale type only)** The minimum value of the scale. |
+| `intervals?: { label: string, from: number, to: number, color: string }[]` | **(Scale type only)** An array defining color-coded intervals along the scale. |
+
+### Priority Entity
+A sub-entity of `PriorityStrategy` (for `tier` type).
+
+| Data Point | Description |
+| :--- | :--- |
+| `id: string` | A unique identifier for the priority level. |
+| `label: string` | The display name for the priority level (e.g., "P0", "High"). |
+| `description?: string` | An optional description. |
+| `color: string` | The hex color for the priority's badge. |
+| `shape: 'rounded-md' \| 'rounded-full'` | The shape of the priority's badge. |
+
