@@ -21,33 +21,26 @@ export function Sidebar() {
   const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const userManagedTeams = useMemo(() => {
-    if (loading) return [];
-      const teamManagementPage = appSettings.pages.find(p => p.id === 'page-team-management');
-      if (!teamManagementPage) return [];
-
-      return teams.filter(team => {
-        if (viewAsUser.isAdmin) {
-            return teamManagementPage.access.teams.includes(team.id);
-        }
-        return (
-            (team.teamAdmins?.includes(viewAsUser.userId) || team.owner.id === viewAsUser.userId) &&
-            teamManagementPage.access.teams.includes(team.id)
-        );
-      });
-  }, [viewAsUser, teams, appSettings.pages, loading]);
-  
   const orderedNavItems = useMemo(() => {
     if (loading) return [];
     
-    // A page is only visible if the user has access AND it has at least one tab configured.
     const visiblePages = appSettings.pages.filter(page =>
         page.id !== 'page-settings' && page.associatedTabs.length > 0 && hasAccess(viewAsUser, page, teams)
     );
 
     const navItems = visiblePages.map(page => {
         if (page.isDynamic) {
-             return userManagedTeams.map(team => ({
+             // For a dynamic page, find which teams the user should see it for.
+             const relevantTeams = teams.filter(team => {
+                // User must be a member or admin of the team.
+                const isMemberOrAdmin = team.members.includes(viewAsUser.userId) || (team.teamAdmins || []).includes(viewAsUser.userId);
+                if (!isMemberOrAdmin && !viewAsUser.isAdmin) return false;
+                
+                // The team must be included in the specific page's access list.
+                return page.access.teams.includes(team.id);
+             });
+
+             return relevantTeams.map(team => ({
                 id: `${page.id}-${team.id}`,
                 path: `${page.path}/${team.id}`,
                 icon: team.icon,
@@ -66,7 +59,7 @@ export function Sidebar() {
     
     return navItems.flat().filter(Boolean);
 
-  }, [appSettings.pages, viewAsUser, teams, userManagedTeams, loading]);
+  }, [appSettings.pages, viewAsUser, teams, loading]);
   
   if (loading) {
     return (
