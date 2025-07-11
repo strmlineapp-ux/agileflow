@@ -52,12 +52,12 @@ function UserCard({
     canManage,
     memberCount,
 }: { 
-    user: User, 
-    onRemove: () => void, 
-    isTeamAdmin: boolean,
-    onSetAdmin: () => void,
-    canManage: boolean,
-    memberCount: number,
+    user: User; 
+    onRemove: () => void; 
+    isTeamAdmin: boolean;
+    onSetAdmin: () => void;
+    canManage: boolean;
+    memberCount: number;
 }) {
   return (
       <div 
@@ -124,16 +124,16 @@ function TeamCard({
     dragHandleProps,
     isSharedPreview = false,
 }: { 
-    team: Team, 
-    users: User[],
-    onUpdate: (id: string, data: Partial<Team>) => void,
-    onDelete: (team: Team) => void,
-    onToggleShare: (team: Team) => void,
-    onRemoveUser: (teamId: string, userId: string) => void,
-    onAddUser: (teamId: string, userId: string) => void,
-    onSetAdmin: (teamId: string, userId: string) => void,
-    dragHandleProps?: any,
-    isSharedPreview?: boolean,
+    team: Team; 
+    users: User[];
+    onUpdate: (id: string, data: Partial<Team>) => void;
+    onDelete: (team: Team) => void;
+    onToggleShare: (team: Team) => void;
+    onRemoveUser: (teamId: string, userId: string) => void;
+    onAddUser: (teamId: string, userId: string) => void;
+    onSetAdmin: (teamId: string, userId: string) => void;
+    dragHandleProps?: any;
+    isSharedPreview?: boolean;
 }) {
     const { viewAsUser } = useUser();
     const nameInputRef = useRef<HTMLInputElement>(null);
@@ -408,7 +408,7 @@ function TeamCard({
     );
 }
 
-export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: AppTab, page: AppPage, isSingleTabPage?: boolean }) {
+export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: AppTab; page: AppPage; isSingleTabPage?: boolean }) {
     const { viewAsUser, users, teams, appSettings, addTeam, updateTeam, deleteTeam, reorderTeams, updateAppTab, updateUser } = useUser();
     const { toast } = useToast();
 
