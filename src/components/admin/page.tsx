@@ -23,7 +23,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
-import { useFocusOnMount } from '@/hooks/use-focus-on-mount';
 
 // #region Helper Components and Hooks
 // Wrapper to fix issues with react-beautiful-dnd and React 18 Strict Mode
@@ -62,7 +61,7 @@ const UserAssignmentCard = ({ user }: { user: User }) => {
 };
 
 
-export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab; isSingleTabPage?: boolean; isActive: boolean }) => {
+export const AdminsManagement = ({ tab, isSingleTabPage }: { tab: AppTab; isSingleTabPage?: boolean }) => {
   const { toast } = useToast();
   const { viewAsUser, users, updateUser, updateAppTab } = useUser();
   const [is2faDialogOpen, setIs2faDialogOpen] = useState(false);
@@ -79,9 +78,9 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
   const userSearchInputRef = useRef<HTMLInputElement>(null);
   const adminSearchInputRef = useRef<HTMLInputElement>(null);
   
-  useFocusOnMount(userSearchInputRef, isSearchingUsers);
-  useFocusOnMount(adminSearchInputRef, isSearchingAdmins);
-
+  useEffect(() => {
+      if (isSearchingUsers) userSearchInputRef.current?.focus();
+  }, [isSearchingUsers]);
 
   useEffect(() => {
     if (isEditing2fa) twoFactorCodeInputRef.current?.focus();
@@ -687,7 +686,7 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
     );
 }
 
-export const PagesManagement = ({ tab, isActive }: { tab: AppTab; isActive: boolean }) => {
+export const PagesManagement = ({ tab, isSingleTabPage }: { tab: AppTab; isSingleTabPage?: boolean }) => {
     const { appSettings, updateAppSettings, updateAppTab } = useUser();
     const { toast } = useToast();
     const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -696,7 +695,9 @@ export const PagesManagement = ({ tab, isActive }: { tab: AppTab; isActive: bool
     const [isSearching, setIsSearching] = useState(false);
     const searchInputRef = useRef<HTMLInputElement>(null);
     
-    useFocusOnMount(searchInputRef, isActive && isSearching);
+    useEffect(() => {
+        if (isSearching) searchInputRef.current?.focus();
+    }, [isSearching]);
 
 
     const pinnedTopIds = useMemo(() => ['page-admin-management', 'page-overview', 'page-calendar', 'page-tasks'], []);
@@ -1098,7 +1099,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
     );
 }
 
-export const TabsManagement = ({ tab, isActive }: { tab: AppTab; isActive: boolean }) => {
+export const TabsManagement = ({ tab, isSingleTabPage }: { tab: AppTab; isSingleTabPage?: boolean }) => {
     const { appSettings, updateAppSettings, updateAppTab } = useUser();
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const titleInputRef = useRef<HTMLInputElement>(null);
@@ -1106,7 +1107,9 @@ export const TabsManagement = ({ tab, isActive }: { tab: AppTab; isActive: boole
     const [isSearching, setIsSearching] = useState(false);
     const searchInputRef = useRef<HTMLInputElement>(null);
     
-    useFocusOnMount(searchInputRef, isActive && isSearching);
+    useEffect(() => {
+        if (isSearching) searchInputRef.current?.focus();
+    }, [isSearching]);
 
     useEffect(() => {
         if (isEditingTitle) titleInputRef.current?.focus();
@@ -1214,5 +1217,3 @@ export const TabsManagement = ({ tab, isActive }: { tab: AppTab; isActive: boole
     );
 };
 // #endregion
-
-    
