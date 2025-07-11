@@ -85,16 +85,25 @@ export const AdminsManagement = ({ tab, isSingleTabPage }: { tab: AppTab, isSing
   }, [isEditing2fa]);
   
   useEffect(() => {
+    // Focus-on-Search Pattern: When the user search field is revealed, focus it.
     if (isSearchingUsers) {
       setTimeout(() => userSearchInputRef.current?.focus(), 100);
     }
   }, [isSearchingUsers]);
-
+  
   useEffect(() => {
-    if (isSearchingAdmins) {
-      setTimeout(() => adminSearchInputRef.current?.focus(), 100);
+    if (!isSingleTabPage && tab) {
+        // This tab is part of a Tabs component. Auto-focus the search input when it becomes visible.
+        const timer = setTimeout(() => {
+            if (userSearchInputRef.current && !isSearchingUsers) {
+                userSearchInputRef.current.focus();
+                setIsSearchingUsers(true);
+            }
+        }, 150);
+        return () => clearTimeout(timer);
     }
-  }, [isSearchingAdmins]);
+  }, [tab, isSingleTabPage, isSearchingUsers]);
+
 
   const adminUsers = useMemo(() =>
     users.filter(u => u.isAdmin && u.displayName.toLowerCase().includes(adminSearch.toLowerCase())),
@@ -723,7 +732,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                 searchInputRef.current.focus();
                 setIsSearching(true);
             }
-        }, 150); // Delay slightly longer to ensure it's visible
+        }, 150);
         return () => clearTimeout(timer);
     }, []);
 
