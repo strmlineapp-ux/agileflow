@@ -18,11 +18,10 @@ export default {
     },
     extend: {
       fontFamily: {
-        body: ['sans-serif'],
+        body: ['var(--font-space-grotesk)', 'sans-serif'],
         headline: ['var(--font-roboto)', 'sans-serif'],
       },
       fontWeight: {
-          light: '300',
           thin: '100',
       },
       colors: {
