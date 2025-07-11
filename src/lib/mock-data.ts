@@ -40,16 +40,6 @@ export const mockPages: AppPage[] = [
         access: { users: [], teams: [] } // Special-cased in hasAccess to only allow isAdmin
     },
     {
-        id: 'page-service-delivery',
-        name: 'Service Delivery',
-        icon: 'home_repair_service',
-        color: '#A855F7',
-        path: '/dashboard/service-delivery',
-        isDynamic: false,
-        associatedTabs: ['tab-calendars', 'tab-service-teams', 'tab-strategies'],
-        access: { users: [], teams: [] } // Only visible to admins
-    },
-    {
         id: 'page-overview',
         name: 'Overview',
         icon: 'dashboard',
@@ -80,6 +70,30 @@ export const mockPages: AppPage[] = [
         access: { users: [], teams: [] }
     },
     {
+        id: 'page-service-delivery',
+        name: 'Service Delivery',
+        icon: 'business',
+        color: '#A855F7',
+        path: '/dashboard/service-delivery',
+        isDynamic: false,
+        associatedTabs: ['tab-calendars', 'tab-service-teams', 'tab-strategies'],
+        access: { users: [], teams: [] } // Only visible to admins
+    },
+    // Example of a dynamic page that an admin could create.
+    {
+        id: 'page-team-management',
+        name: 'Team Management',
+        icon: 'group_work',
+        color: '#EC4899',
+        path: '/dashboard/teams',
+        isDynamic: true,
+        associatedTabs: ['tab-team-members', 'tab-badges', 'tab-locations', 'tab-workstations', 'tab-templates'],
+        access: {
+            users: [],
+            teams: ['video-production', 'live-events', 'production'], // This page is visible only to members of these teams.
+        }
+    },
+    {
         id: 'page-notifications',
         name: 'Notifications',
         icon: 'notifications',
@@ -98,20 +112,6 @@ export const mockPages: AppPage[] = [
         isDynamic: false,
         associatedTabs: ['tab-settings'],
         access: { users: [], teams: [] } // Public
-    },
-    // Example of a dynamic page that an admin could create.
-    {
-        id: 'page-team-management',
-        name: 'Team Management',
-        icon: 'group_work',
-        color: '#EC4899',
-        path: '/dashboard/teams',
-        isDynamic: true,
-        associatedTabs: ['tab-team-members', 'tab-badges', 'tab-locations', 'tab-workstations', 'tab-templates'],
-        access: {
-            users: [],
-            teams: ['video-production', 'live-events', 'production'], // This page is visible only to members of these teams.
-        }
     },
 ];
 

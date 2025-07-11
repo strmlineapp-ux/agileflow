@@ -643,7 +643,7 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
                                 {isEditingName ? (
                                     <Input ref={nameInputRef} defaultValue={page.name} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-base font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"/>
                                 ) : (
-                                    <CardTitle onClick={() => !isSystemPage && setIsEditingName(true)} className={cn("font-headline text-base break-words font-thin", !isSystemPage && "cursor-pointer")}>
+                                    <CardTitle onClick={() => setIsEditingName(true)} className="font-headline text-base break-words font-thin cursor-pointer">
                                         {page.name}
                                     </CardTitle>
                                 )}
@@ -706,14 +706,9 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const titleInputRef = useRef<HTMLInputElement>(null);
 
-    const pinnedIds = useMemo(() => [
-      'page-admin-management', 
-      'page-overview', 
-      'page-calendar', 
-      'page-tasks', 
-      'page-notifications', 
-      'page-settings'
-    ], []);
+    const pinnedTopIds = useMemo(() => ['page-admin-management', 'page-overview', 'page-calendar', 'page-tasks'], []);
+    const pinnedBottomIds = useMemo(() => ['page-notifications', 'page-settings'], []);
+    const allPinnedIds = useMemo(() => [...pinnedTopIds, ...pinnedBottomIds], [pinnedTopIds, pinnedBottomIds]);
 
     useEffect(() => {
         if (isEditingTitle) titleInputRef.current?.focus();
@@ -751,11 +746,10 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
             access: { users: [], teams: [] }
         };
         
-        const draggablePages = appSettings.pages.filter(p => !pinnedIds.includes(p.id));
-        const lastDraggableIndex = appSettings.pages.findLastIndex(p => !pinnedIds.includes(p.id));
-
+        const lastTopPinnedIndex = appSettings.pages.findIndex(p => p.id === pinnedTopIds[pinnedTopIds.length - 1]);
+        
         const newPages = [...appSettings.pages];
-        newPages.splice(lastDraggableIndex + 1, 0, newPage);
+        newPages.splice(lastTopPinnedIndex + 1, 0, newPage);
         
         updateAppSettings({ pages: newPages });
     };
@@ -800,12 +794,13 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
             
             let toIndex = destination.index;
             
-            const firstDraggableIndex = pages.findIndex(p => !pinnedIds.includes(p.id));
+            // Guardrail logic
+            const firstDraggableIndex = pages.findIndex(p => !allPinnedIds.includes(p.id));
             if (toIndex < firstDraggableIndex) {
                 toIndex = firstDraggableIndex;
             }
 
-            const lastDraggableIndex = pages.findLastIndex(p => !pinnedIds.includes(p.id));
+            const lastDraggableIndex = pages.findLastIndex(p => !allPinnedIds.includes(p.id));
             if (toIndex > lastDraggableIndex) {
                 toIndex = lastDraggableIndex;
             }
@@ -874,7 +869,7 @@ export const PagesManagement = ({ tab }: { tab: AppTab }) => {
                             className="flex flex-wrap -m-2"
                         >
                             {appSettings.pages.map((page, index) => {
-                                const isPinned = pinnedIds.includes(page.id);
+                                const isPinned = allPinnedIds.includes(page.id);
                                 return (
                                     <Draggable key={page.id} draggableId={page.id} index={index} isDragDisabled={isPinned} ignoreContainerClipping={false}>
                                         {(provided, snapshot) => (
