@@ -7,7 +7,7 @@ export interface AppTab {
   icon: string;
   color: string;
   description?: string;
-  componentKey: 'team_members' | 'badges' | 'locations' | 'workstations' | 'templates' | 'admins' | 'pages' | 'tabs' | 'overview' | 'tasks' | 'notifications' | 'settings' | 'calendar';
+  componentKey: 'team_members' | 'badges' | 'locations' | 'workstations' | 'templates' | 'admins' | 'pages' | 'tabs' | 'overview' | 'tasks' | 'notifications' | 'settings' | 'calendar' | 'calendars' | 'teams' | 'strategies';
   contextTeamId?: string; // Optional teamId to provide context for a tab on a non-dynamic page
 }
 

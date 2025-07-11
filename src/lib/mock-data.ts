@@ -1,5 +1,4 @@
 
-
 import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team, type AppSettings, type Badge, type BadgeCollection, type AppTab, type AppPage, type BadgeCollectionOwner } from '@/types';
 
 export const mockTabs: AppTab[] = [
@@ -14,6 +13,11 @@ export const mockTabs: AppTab[] = [
   { id: 'tab-admins', name: 'Admin Management', icon: 'admin_panel_settings', color: '#8B5CF6', componentKey: 'admins', description: 'Manage system administrators.' },
   { id: 'tab-admin-pages', name: 'Pages', icon: 'web', color: '#EC4899', componentKey: 'pages', description: 'Configure application pages, their navigation, and access controls.' },
   { id: 'tab-admin-tabs', name: 'Tabs', icon: 'tab', color: '#EF4444', componentKey: 'tabs', description: 'Manage the properties of reusable tabs that appear on pages.' },
+
+  // Service Delivery Tabs
+  { id: 'tab-calendars', name: 'Calendars', icon: 'calendar_month', color: '#3B82F6', componentKey: 'calendars', description: 'Manage shared calendars for event creation across the application.' },
+  { id: 'tab-service-teams', name: 'Teams', icon: 'group', color: '#22C55E', componentKey: 'teams', description: 'Manage all teams, their properties, and their shared status.' },
+  { id: 'tab-strategies', name: 'Strategies', icon: 'policy', color: '#A855F7', componentKey: 'strategies', description: 'Define and manage different systems for assigning priority to items.' },
 
   // Reusable Management Tabs
   { id: 'tab-team-members', name: 'Members', icon: 'group', color: '#6366F1', componentKey: 'team_members', description: 'View all members of a specific team and manage their roles.' },
@@ -34,6 +38,16 @@ export const mockPages: AppPage[] = [
         isDynamic: false,
         associatedTabs: ['tab-admins', 'tab-admin-pages', 'tab-admin-tabs'],
         access: { users: [], teams: [] } // Special-cased in hasAccess to only allow isAdmin
+    },
+    {
+        id: 'page-service-delivery',
+        name: 'Service Delivery',
+        icon: 'home_repair_service',
+        color: '#A855F7',
+        path: '/dashboard/service-delivery',
+        isDynamic: false,
+        associatedTabs: ['tab-calendars', 'tab-service-teams', 'tab-strategies'],
+        access: { users: [], teams: [] } // Only visible to admins
     },
     {
         id: 'page-overview',
