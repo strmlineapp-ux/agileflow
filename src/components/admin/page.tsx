@@ -23,6 +23,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { useFocusOnMount } from '@/hooks/use-focus-on-mount';
 
 // #region Helper Components and Hooks
 // Wrapper to fix issues with react-beautiful-dnd and React 18 Strict Mode
@@ -78,17 +79,8 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
   const userSearchInputRef = useRef<HTMLInputElement>(null);
   const adminSearchInputRef = useRef<HTMLInputElement>(null);
   
-  useEffect(() => {
-    if (isActive && isSearchingUsers) {
-      setTimeout(() => userSearchInputRef.current?.focus(), 100);
-    }
-  }, [isActive, isSearchingUsers]);
-  
-  useEffect(() => {
-    if (isActive && isSearchingAdmins) {
-      setTimeout(() => adminSearchInputRef.current?.focus(), 100);
-    }
-  }, [isActive, isSearchingAdmins]);
+  useFocusOnMount(userSearchInputRef, isSearchingUsers);
+  useFocusOnMount(adminSearchInputRef, isSearchingAdmins);
 
 
   useEffect(() => {
@@ -704,11 +696,7 @@ export const PagesManagement = ({ tab, isActive }: { tab: AppTab; isActive: bool
     const [isSearching, setIsSearching] = useState(false);
     const searchInputRef = useRef<HTMLInputElement>(null);
     
-    useEffect(() => {
-        if (isActive && isSearching) {
-            setTimeout(() => searchInputRef.current?.focus(), 100);
-        }
-    }, [isActive, isSearching]);
+    useFocusOnMount(searchInputRef, isActive && isSearching);
 
 
     const pinnedTopIds = useMemo(() => ['page-admin-management', 'page-overview', 'page-calendar', 'page-tasks'], []);
@@ -1118,11 +1106,7 @@ export const TabsManagement = ({ tab, isActive }: { tab: AppTab; isActive: boole
     const [isSearching, setIsSearching] = useState(false);
     const searchInputRef = useRef<HTMLInputElement>(null);
     
-    useEffect(() => {
-        if (isActive && isSearching) {
-            setTimeout(() => searchInputRef.current?.focus(), 100);
-        }
-    }, [isActive, isSearching]);
+    useFocusOnMount(searchInputRef, isActive && isSearching);
 
     useEffect(() => {
         if (isEditingTitle) titleInputRef.current?.focus();

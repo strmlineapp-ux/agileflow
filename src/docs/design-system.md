@@ -48,11 +48,11 @@ This pattern provides a clean, minimal interface for search functionality, espec
 ### 4. Focus-on-Search
 This pattern ensures a user can begin typing their search query immediately, without an extra click, improving the efficiency of the interface.
 
-- **Trigger**: A management tab (like "Pages" or "Tabs" on the Admin page) becomes the active, visible tab.
+- **Trigger**: A management tab (like "Pages" or "Tabs" on the Admin page) becomes the active, visible tab, **and** the user clicks the search icon to reveal the search input.
 - **Behavior**:
-  - The search input field for that tab **must** automatically gain focus as soon as the tab content is rendered and visible.
-  - This is achieved using a `useEffect` hook that triggers `searchInputRef.current?.focus()` after a short `setTimeout` (e.g., 100ms) to ensure the element is ready.
-- **Application**: Applied to the primary search input on management tabs to streamline the user's workflow.
+  - The search input field for that tab **must** automatically gain focus as soon as the search input is rendered and visible.
+  - This is achieved using a custom `useFocusOnMount` hook that correctly handles the component lifecycle, ensuring the element is ready before attempting to focus it.
+- **Application**: Applied to the primary search input on management tabs ("Admins", "Pages", "Tabs") to streamline the user's workflow.
 
 ---
 
@@ -129,7 +129,7 @@ This is the application's perfected, gold-standard pattern for managing a collec
 
 -   **Layout**: Entities are presented in a responsive grid of cards. To ensure stability during drag operations, especially across multiple rows, the container must use a `flex flex-wrap` layout instead of CSS Grid. Each draggable card item is then given a `basis` property (e.g., `basis-full md:basis-[calc(50%-0.75rem)]`) to create the responsive columns. **Crucially, `flex-grow-0` must be used on these items**, as this prevents the remaining items in a row from expanding and causing the grid to reflow unstably when an item is being dragged.
 -   **Visual Feedback**: To provide feedback without disrupting layout, visual changes (like a `shadow`) should be applied directly to the inner component based on the `snapshot.isDragging` prop provided by `react-beautiful-dnd`. The draggable wrapper itself should remain untouched.
--   **Internal Card Layout**: Each card is structured for clarity. The header contains the primary entity identifier (icon and name) and contextual controls. The icon and its color are editable, following the **Icon & Color Editing Flow** pattern. The main content area is used for the list of associated items (e.g., users or badges).
+-   **Internal Card Layout**: Each card is structured for clarity. The header contains the primary entity identifier (icon and name) and contextual controls. The icon and its color are editable, following the **Icon & Color Editing Flow** pattern.
 -   **User Item Display**: When users are displayed as items within a management card (e.g., `TeamCard`), they are presented **without a border**. Each user item must display their avatar, full name, and professional title underneath the name for consistency.
 -   **Unique Draggable IDs**: It is critical that every `Draggable` component has a globally unique `draggableId`. If the same item (e.g., a user) can appear in multiple lists, you must create a unique ID for each instance. A common pattern is to combine the list's ID with the item's ID (e.g., `draggableId={'${list.id}-${item.id}'}`). This prevents the drag-and-drop library from trying to move all instances of the item simultaneously.
 -   **Draggable & Pinned States**:
@@ -301,3 +301,4 @@ This is the single source of truth for indicating user interaction state across 
     - **Placement**: This is context-dependent. Color-pickers are typically placed on the bottom-right corner of their parent icon. Ownership status icons are typically placed on the top-left corner to create visual balance.
     - **Application**: Used for displaying a team admin status, a shared status on a role icon, or a `share` icon on a shared Badge.
 -   **Badges in Assorted View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
+

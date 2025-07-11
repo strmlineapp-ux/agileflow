@@ -17,6 +17,14 @@ const stats = [
 export function OverviewContent({ tab: pageConfig, isSingleTabPage }: { tab: AppPage, isSingleTabPage?: boolean }) {
   return (
     <div className="flex flex-col gap-6">
+       {isSingleTabPage && (
+          <div className="flex items-center gap-3">
+             <h1 className="font-headline text-3xl font-thin flex items-center gap-3">
+                <GoogleSymbol name={pageConfig.icon} className="text-6xl" weight={100} />
+                <span>{pageConfig.name}</span>
+              </h1>
+          </div>
+       )}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
           <Card key={stat.title}>
