@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useUser } from '@/context/user-context';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
@@ -50,12 +50,12 @@ const componentMap: Record<string, React.ComponentType<any>> = {
 export default function DynamicPage() {
     const params = useParams();
     const { loading, appSettings, teams, viewAsUser } = useUser();
+    const [activeTab, setActiveTab] = useState<string | undefined>(undefined);
     
     const slug = Array.isArray(params.page) ? params.page.join('/') : (params.page || '');
     const currentPath = `/dashboard/${slug}`;
 
     const { pageConfig, dynamicTeam } = useMemo(() => {
-        // Find the most specific page configuration that matches the current URL path.
         const page = [...appSettings.pages]
             .sort((a, b) => b.path.length - a.path.length) 
             .find(p => currentPath.startsWith(p.path));
@@ -64,7 +64,6 @@ export default function DynamicPage() {
             return { pageConfig: null, dynamicTeam: null };
         }
 
-        // If the matched page is dynamic, extract the team ID from the URL.
         if (page.isDynamic) {
             const pathSegments = page.path.split('/').filter(Boolean);
             const urlSegments = currentPath.split('/').filter(Boolean);
@@ -76,10 +75,17 @@ export default function DynamicPage() {
             }
         }
         
-        // For non-dynamic pages, there's no dynamic team context.
         return { pageConfig: page, dynamicTeam: undefined };
     }, [appSettings.pages, currentPath, teams]);
 
+    useEffect(() => {
+        if (pageConfig) {
+            const pageTabs = appSettings.tabs.filter(t => pageConfig.associatedTabs.includes(t.id));
+            if (pageTabs.length > 0) {
+                setActiveTab(pageTabs[0].id);
+            }
+        }
+    }, [pageConfig, appSettings.tabs]);
 
     if (loading) {
         return <Skeleton className="h-full w-full" />;
@@ -90,10 +96,13 @@ export default function DynamicPage() {
     }
     
     const pageTabs = appSettings.tabs.filter(t => pageConfig.associatedTabs.includes(t.id));
+    const isSingleTabPage = pageTabs.length === 1;
+
+    // Don't show header for seamless single-tab pages
+    const showHeader = !isSingleTabPage || !['tab-overview', 'tab-notifications', 'tab-settings', 'tab-admins'].includes(pageTabs[0]?.id);
       
     const pageTitle = pageConfig.isDynamic && dynamicTeam ? `${dynamicTeam.name} ${pageConfig.name}` : pageConfig.name;
 
-    // Render page with no tabs (empty state)
     if (pageTabs.length === 0) {
         return (
             <div className="flex flex-col gap-6">
@@ -109,22 +118,15 @@ export default function DynamicPage() {
         );
     }
     
-    // Render page with single tab (no tab list)
-    if (pageTabs.length === 1) {
-        const tab = pageTabs[0];
-        const contextTeam = tab.contextTeamId ? teams.find(t => t.id === tab.contextTeamId) : dynamicTeam;
-        const ContentComponent = componentMap[tab.componentKey];
-        return ContentComponent ? <ContentComponent tab={tab} team={contextTeam} page={pageConfig} isSingleTabPage={true} isTeamSpecificPage={pageConfig.isDynamic} /> : <div>Component for {tab.name} not found.</div>;
-    }
-    
-    // Render page with multiple tabs
     return (
         <div className="flex flex-col gap-6">
-            <div className="flex items-center gap-3">
-                <GoogleSymbol name={pageConfig.icon} className="text-6xl" weight={100} />
-                <h1 className="font-headline text-3xl font-thin">{pageTitle}</h1>
-            </div>
-            <Tabs defaultValue={pageTabs[0]?.id} className="w-full">
+            {showHeader && (
+                <div className="flex items-center gap-3">
+                    <GoogleSymbol name={pageConfig.icon} className="text-6xl" weight={100} />
+                    <h1 className="font-headline text-3xl font-thin">{pageTitle}</h1>
+                </div>
+            )}
+            <Tabs defaultValue={pageTabs[0]?.id} value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="flex w-full">
                 {pageTabs.map(tab => (
                     <TabsTrigger key={tab.id} value={tab.id} className="flex-1 gap-2">
@@ -138,7 +140,7 @@ export default function DynamicPage() {
                     const contextTeam = tab.contextTeamId ? teams.find(t => t.id === tab.contextTeamId) : dynamicTeam;
                     return (
                         <TabsContent key={tab.id} value={tab.id} className="mt-4">
-                        {ContentComponent ? <ContentComponent tab={tab} team={contextTeam} page={pageConfig} isSingleTabPage={false} isTeamSpecificPage={pageConfig.isDynamic} /> : <div>Component for {tab.name} not found.</div>}
+                        {ContentComponent ? <ContentComponent tab={tab} team={contextTeam} page={pageConfig} isSingleTabPage={isSingleTabPage} isActive={activeTab === tab.id} isTeamSpecificPage={pageConfig.isDynamic} /> : <div>Component for {tab.name} not found.</div>}
                         </TabsContent>
                     );
                 })}
