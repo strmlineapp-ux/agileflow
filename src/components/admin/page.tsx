@@ -1228,4 +1228,3 @@ export const TabsManagement = ({ tab }: { tab: AppTab }) => {
     );
 };
 // #endregion
-

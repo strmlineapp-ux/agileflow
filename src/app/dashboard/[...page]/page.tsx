@@ -11,8 +11,6 @@ import { type AppTab, type AppPage } from '@/types';
 
 // Import all possible tab components
 import { AdminsManagement, PagesManagement, TabsManagement } from '@/components/admin/page';
-import { CalendarManagement } from '@/components/calendar/calendar-management';
-import { TeamManagement as ServiceDeliveryTeamManagement } from '@/components/service-delivery/team-management';
 import { TeamMembersView } from '@/components/teams/team-members-view';
 import { BadgeManagement } from '@/components/teams/badge-management';
 import { PinnedLocationManagement } from '@/components/settings/pinned-location-management';
@@ -29,9 +27,6 @@ const componentMap: Record<string, React.ComponentType<any>> = {
   admins: AdminsManagement,
   pages: PagesManagement,
   tabs: TabsManagement,
-  // Service Delivery Tabs
-  calendars: CalendarManagement,
-  teams: ServiceDeliveryTeamManagement,
   // Team Management Tabs
   team_members: TeamMembersView,
   badges: BadgeManagement,
@@ -96,20 +91,17 @@ export default function DynamicPage() {
       
     const pageTitle = pageConfig.isDynamic && dynamicTeam ? `${dynamicTeam.name} ${pageConfig.name}` : pageConfig.name;
 
-    // Render page with no tabs (single view)
+    // Render page with no tabs (empty state)
     if (pageTabs.length === 0) {
-        const ContentComponent = pageConfig.componentKey ? componentMap[pageConfig.componentKey] : null;
-        
-        if (ContentComponent) {
-            const pseudoTab: AppPage = { ...pageConfig, componentKey: pageConfig.componentKey as any };
-            return <ContentComponent tab={pseudoTab} team={dynamicTeam} page={pageConfig} isSingleTabPage={true} isTeamSpecificPage={pageConfig.isDynamic} />;
-        }
-
         return (
             <div className="flex flex-col gap-6">
                 <div className="flex items-center gap-3">
                     <GoogleSymbol name={pageConfig.icon} className="text-6xl" weight={100} />
                     <h1 className="font-headline text-3xl font-thin">{pageTitle}</h1>
+                </div>
+                <div className="p-4 border-2 border-dashed rounded-lg text-center text-muted-foreground">
+                    <p>This page has no content configured.</p>
+                    {viewAsUser.isAdmin && <p>An administrator can add tabs to this page in the Admin section.</p>}
                 </div>
             </div>
         );

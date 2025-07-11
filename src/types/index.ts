@@ -8,7 +8,7 @@ export interface AppTab {
   icon: string;
   color: string;
   description?: string;
-  componentKey: 'calendars' | 'teams' | 'team_members' | 'badges' | 'locations' | 'workstations' | 'templates' | 'admins' | 'pages' | 'tabs' | 'overview' | 'tasks' | 'notifications' | 'settings' | 'calendar';
+  componentKey: 'team_members' | 'badges' | 'locations' | 'workstations' | 'templates' | 'admins' | 'pages' | 'tabs' | 'overview' | 'tasks' | 'notifications' | 'settings' | 'calendar';
   contextTeamId?: string; // Optional teamId to provide context for a tab on a non-dynamic page
 }
 
@@ -20,7 +20,6 @@ export interface AppPage {
   path: string; // e.g., /dashboard/service-delivery or /dashboard/teams
   isDynamic: boolean; // True for paths like /dashboard/teams/:teamId
   associatedTabs: string[]; // Array of AppTab ids
-  componentKey?: 'overview' | 'calendar' | 'tasks' | 'notifications' | 'settings';
   access: {
     users: string[]; // User IDs
     teams: string[]; // Team IDs

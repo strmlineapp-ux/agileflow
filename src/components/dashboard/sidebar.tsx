@@ -17,51 +17,39 @@ import { ScrollArea } from '../ui/scroll-area';
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { realUser, viewAsUser, setViewAsUser, users, teams, notifications, appSettings, allBadges, linkGoogleCalendar } = useUser();
+  const { loading, realUser, viewAsUser, setViewAsUser, users, teams, notifications, appSettings, allBadges, linkGoogleCalendar } = useUser();
   const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const userManagedTeams = useMemo(() => {
+    if (loading) return [];
       const teamManagementPage = appSettings.pages.find(p => p.id === 'page-team-management');
       if (!teamManagementPage) return [];
 
       return teams.filter(team => {
-        // Admins can manage all teams that are configured to have a management page
         if (viewAsUser.isAdmin) {
             return teamManagementPage.access.teams.includes(team.id);
         }
-        // Non-admins must be a teamAdmin and the team must be in the page's access list
         return (
             (team.teamAdmins?.includes(viewAsUser.userId) || team.owner.id === viewAsUser.userId) &&
             teamManagementPage.access.teams.includes(team.id)
         );
       });
-  }, [viewAsUser, teams, appSettings.pages]);
+  }, [viewAsUser, teams, appSettings.pages, loading]);
   
   const orderedNavItems = useMemo(() => {
-    const adminPageId = 'page-admin-management';
-    // Removed settings page from pinned so it is handled via dropdown
-    const pinnedPageIds = ['page-notifications']; 
+    if (loading) return [];
+    
+    const visiblePages = appSettings.pages.filter(page => hasAccess(viewAsUser, page, teams));
 
-    const visiblePages = appSettings.pages
-        .filter(page => page.id !== 'page-settings')
-        .filter(page => page.componentKey || page.associatedTabs.length > 0)
-        .filter(page => hasAccess(viewAsUser, page, teams));
-
-    const adminPage = visiblePages.find(p => p.id === adminPageId);
-    const pinnedPages = visiblePages.filter(p => pinnedPageIds.includes(p.id)).sort((a,b) => pinnedPageIds.indexOf(a.id) - pinnedPageIds.indexOf(b.id));
-    const mainPages = visiblePages.filter(p => p.id !== adminPageId && !pinnedPageIds.includes(p.id));
-
-    const processPage = (page: AppPage) => {
-        if (!page) return null;
+    const navItems = visiblePages.map(page => {
         if (page.isDynamic) {
-            return userManagedTeams.map(team => ({
+             return userManagedTeams.map(team => ({
                 id: `${page.id}-${team.id}`,
                 path: `${page.path}/${team.id}`,
                 icon: team.icon,
                 name: team.name,
                 tooltip: `${page.name}: ${team.name}`,
-                isPage: false,
             }));
         }
         return {
@@ -70,18 +58,19 @@ export function Sidebar() {
             icon: page.icon,
             name: page.name,
             tooltip: page.name,
-            isPage: true,
         };
-    };
-
-    const adminNavItem = adminPage ? [processPage(adminPage)] : [];
-    const mainNavItems = mainPages.map(processPage);
-    const pinnedNavItems = pinnedPages.map(processPage);
+    });
     
-    return [...adminNavItem, ...mainNavItems, ...pinnedNavItems].flat().filter(Boolean);
+    return navItems.flat().filter(Boolean);
 
-  }, [appSettings.pages, viewAsUser, teams, userManagedTeams]);
+  }, [appSettings.pages, viewAsUser, teams, userManagedTeams, loading]);
   
+  if (loading) {
+    return (
+        <aside className="fixed inset-y-0 left-0 z-40 hidden w-14 flex-col border-r bg-card sm:flex" />
+    );
+  }
+
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-14 flex-col border-r bg-card sm:flex">
       <nav className="flex flex-col items-center gap-4 px-2 py-4">
@@ -97,9 +86,7 @@ export function Sidebar() {
           {orderedNavItems.map((item) => {
               if (!item) return null;
               const isNotifications = item.id === 'page-notifications';
-              const isActive = item.isPage 
-                  ? pathname === item.path || (item.path !== '/dashboard' && pathname.startsWith(item.path))
-                  : pathname.startsWith(item.path);
+              const isActive = pathname === item.path || (item.path !== '/dashboard' && pathname.startsWith(item.path));
 
               return (
                 <Tooltip key={item.id}>
