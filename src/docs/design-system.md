@@ -118,23 +118,22 @@ This pattern describes how a single entity (like a **Team** or **Badge Collectio
 ---
 
 ### 8. Draggable Card Management blueprint
-This is the application's perfected, gold-standard pattern for managing a collection of entities displayed as cards. It provides a fluid, intuitive, and grid-responsive way for users to reorder, duplicate, and assign items. It is the required pattern for managing Pages, Calendars, Teams, and Badge Collections.
+This is the application's perfected, gold-standard pattern for managing a collection of entities displayed as cards. It provides a fluid, intuitive, and grid-responsive way for users to reorder, duplicate, and assign items. It is the required pattern for managing Pages, Calendars, Teams, and Badge Collections. The core of this pattern is a successful migration to the **`@dnd-kit`** library, which proved more robust for responsive layouts.
 
--   **Layout**: Entities are presented in a responsive grid of cards. To ensure stability during drag operations, especially across multiple rows, the container must use a `flex flex-wrap` layout instead of CSS Grid. Each draggable card item is then given a `basis` property (e.g., `basis-full md:basis-[calc(50%-1rem)]`) to create responsive columns. **The `basis` can and should be adjusted to fit the content of the cards for a specific view**, but the following properties are critical.
+-   **Layout**: Entities are presented in a responsive grid of cards. To ensure stability during drag operations, especially across multiple rows, the container must use a `flex flex-wrap` layout instead of CSS Grid. Each draggable card item is then given a responsive `basis` property (e.g., `basis-full md:basis-[calc(50%-1rem)] xl:basis-[calc(25%-1rem)]`) to create the columns. A negative margin (e.g., `-m-2`) on the container and a matching positive padding (e.g., `p-2`) on the items creates the gutter.
 -   **Critical Stability Properties**:
+    -   **`@dnd-kit` is the required library.** The older `react-beautiful-dnd` library was found to be incompatible with this type of responsive layout.
     -   `flex-grow-0` and `flex-shrink-0` **must** be used on draggable items. This prevents the remaining items in a row from expanding or shrinking, which causes the grid to reflow unstably when an item is being dragged.
-    -   The `<Draggable>` component itself must have the `ignoreContainerClipping={false}` prop. This tells the library to account for the clipping of the scroll container, which is essential for correct drag-and-drop behavior in a multi-row flexbox layout.
--   **Visual Feedback**: To provide feedback without disrupting layout, visual changes (like a `shadow`) should be applied directly to the inner component based on the `snapshot.isDragging` prop provided by `react-beautiful-dnd`. The draggable wrapper itself should remain untouched.
+-   **Visual Feedback**: To provide feedback without disrupting layout, visual changes (like a `shadow` or `opacity`) should be applied directly to the inner component based on the `isDragging` prop provided by `dnd-kit`'s `useSortable` hook. The draggable wrapper itself should remain untouched.
 -   **Internal Card Layout**: Each card is structured for clarity. The header contains the primary entity identifier (icon and name) and contextual controls. The icon and its color are editable, following the **Icon & Color Editing Flow** pattern.
 -   **User Item Display**: When users are displayed as items within a management card (e.g., `TeamCard`), they are presented **without a border**. Each user item must display their avatar, full name, and professional title underneath the name for consistency.
 -   **Unique Draggable IDs**: It is critical that every `Draggable` component has a globally unique `draggableId`. If the same item (e.g., a user) can appear in multiple lists, you must create a unique ID for each instance. A common pattern is to combine the list's ID with the item's ID (e.g., `draggableId={'${list.id}-${item.id}'}`). This prevents the drag-and-drop library from trying to move all instances of the item simultaneously.
 -   **Draggable & Pinned States**:
-    -   **Draggable Cards**: Most cards can be freely reordered within the grid.
-    -   **Pinned Cards**: Certain cards are designated as "pinned" and cannot be dragged. They act as fixed anchors in the layout.
+    -   **Draggable Cards**: Most cards can be freely reordered within the grid. The `useSortable` hook allows this.
+    -   **Pinned Cards**: Certain cards are designated as "pinned" and cannot be dragged. This is achieved by disabling the `useSortable` hook for those specific items (`disabled: true`). They act as fixed anchors in the layout.
 -   **Reordering with Guardrails**:
     -   **Interaction**: Users can drag any non-pinned card and drop it between other non-pinned cards to change its order. The grid reflows smoothly to show the drop position.
-    -   **Top Guardrail**: If a card is dropped *before* the first pinned item, it is automatically repositioned to be *after* it.
-    -   **Bottom Guardrail**: If a card is dropped *after* the last pinned item, it is automatically repositioned to be *before* it. This ensures the integrity of the pinned items.
+    -   **Guardrail Logic**: The `onDragEnd` handler must contain logic to prevent reordering pinned items. If a user attempts to drop an item into a position occupied by a pinned item, the operation should be cancelled or reverted.
 -   **Drop Zone Highlighting**: Drop zones provide visual feedback when an item is dragged over them. To maintain a clean UI, highlights primarily use rings without background fills.
     -   **Standard & Duplication Zones (Reordering, Moving, Duplicating):** The drop area is highlighted with a `1px` inset, **colorless** ring using the standard border color (`ring-1 ring-border ring-inset`). This is the universal style for all non-destructive drop actions.
     -   **Destructive Zones (Deleting):** The drop area is highlighted with a `1px` ring in the destructive theme color (`ring-1 ring-destructive`).
@@ -142,11 +141,11 @@ This is the application's perfected, gold-standard pattern for managing a collec
     - **Item-level**: To maintain a clean UI, action icons like "Remove User" or "Delete Badge" must appear only when hovering over their specific context. This is achieved by adding a `group` class to the *individual item's container*. The icon button inside is then styled with `opacity-0 group-hover:opacity-100`. It is critical that parent containers (like the main card) do **not** also have a `group` class if it is not intended to trigger the item's hover state, as nested group classes can cause all item icons to appear at once.
     - **Card-level**: Deleting an entire card (like a Team or Collection) is a high-impact action. To prevent accidental clicks, this functionality should be placed within a `<DropdownMenu>` in the card's header, not triggered by a direct hover icon.
 -   **Drag-to-Duplicate**:
-    -   **Interaction**: A designated "Add New" icon (`<Button>`) acts as a drop zone. While a card is being dragged, this zone becomes highlighted to indicate it can accept a drop.
+    -   **Interaction**: A designated "Add New" icon (`<Button>`) acts as a drop zone, implemented using the `useDroppable` hook from `dnd-kit`. While a card is being dragged, this zone becomes highlighted to indicate it can accept a drop.
     -   **Behavior**: Dropping any card (pinned or not, from the main board or the shared panel) onto this zone creates a deep, independent copy of the original. The new card is given a unique ID, a modified name (e.g., with `(Copy)`), and is placed immediately after the original in the list. Its ownership is assigned to the current user's context, and its member list is reset to be empty.
 -   **Drag-to-Assign**: This pattern allows sub-items (like **Users** or **Badges**) to be moved between different parent cards.
     - **Interaction**: A user can drag an item (e.g., a User) from one card's list.
-    - **Behavior**: As the item is dragged over another card, that card's drop zone becomes highlighted. Dropping the item assigns it to the new card's collection. The original item may be removed or remain, depending on the context (e.g., assigning a user to a new admin group might not remove them from the old one). This is handled by the `onDragEnd` logic.
+    - **Behavior**: As the item is dragged over another card, that card's drop zone (using `useDroppable`) becomes highlighted. Dropping the item assigns it to the new card's collection. The original item may be removed or remain, depending on the context. This is handled by the `onDragEnd` logic.
 -   **Layout Stability**: To prevent "janky" or shifting layouts during a drag operation (especially when dragging an item out of one card and over another), ensure that the container cards (e.g., `TeamCard`) maintain a consistent height. This is achieved by making the card a `flex flex-col` container and giving its main content area `flex-grow` to make it fill the available space, even when a draggable item is temporarily removed. A `ScrollArea` can be used within the content to manage overflow if the list is long.
 -   **Application**: This is the required pattern for managing Pages, Calendars, Teams, and Badge Collections.
 
@@ -297,3 +296,5 @@ This is the single source of truth for indicating user interaction state across 
     - **Placement**: This is context-dependent. Color-pickers are typically placed on the bottom-right corner of their parent icon. Ownership status icons are typically placed on the top-left corner to create visual balance.
     - **Application**: Used for displaying a team admin status, a shared status on a role icon, or a `share` icon on a shared Badge.
 -   **Badges in Assorted View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
+
+    
