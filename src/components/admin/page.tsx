@@ -123,36 +123,50 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
   const [userSearch, setUserSearch] = useState('');
   const userSearchRef = useRef<HTMLInputElement>(null);
   
+  const [adminUsers, setAdminUsers] = useState(users.filter(u => u.isAdmin));
+  const [nonAdminUsers, setNonAdminUsers] = useState(users.filter(u => !u.isAdmin));
+
   useEffect(() => {
-    if (is2faDialogOpen && isEditing2fa) {
-      setTimeout(() => twoFactorCodeInputRef.current?.focus(), 100);
+    setAdminUsers(users.filter(u => u.isAdmin));
+    setNonAdminUsers(users.filter(u => !u.isAdmin));
+  }, [users]);
+  
+  useEffect(() => {
+    if (is2faDialogOpen) {
+      setTimeout(() => {
+        setIsEditing2fa(true);
+        setTimeout(() => twoFactorCodeInputRef.current?.focus(), 50);
+      }, 50);
     }
-  }, [is2faDialogOpen, isEditing2fa]);
+  }, [is2faDialogOpen]);
 
   useEffect(() => {
     if (isActive && userSearchRef.current) {
         setTimeout(() => userSearchRef.current?.focus(), 100);
     }
   }, [isActive]);
-
-  const adminUsers = useMemo(() =>
-    users.filter(u => u.isAdmin && u.displayName.toLowerCase().includes(adminSearch.toLowerCase())),
-    [users, adminSearch]
+  
+  const filteredAdminUsers = useMemo(() =>
+    adminUsers.filter(u => u.displayName.toLowerCase().includes(adminSearch.toLowerCase())),
+    [adminUsers, adminSearch]
   );
 
-  const nonAdminUsers = useMemo(() =>
-      users.filter(u => !u.isAdmin && u.displayName.toLowerCase().includes(userSearch.toLowerCase())),
-      [users, userSearch]
+  const filteredNonAdminUsers = useMemo(() =>
+      nonAdminUsers.filter(u => u.displayName.toLowerCase().includes(userSearch.toLowerCase())),
+      [nonAdminUsers, userSearch]
   );
   
   const handleAdminToggle = (user: User) => {
-    const currentAdminUsers = users.filter(u => u.isAdmin);
-    if (user.isAdmin && currentAdminUsers.length === 1) {
+    const currentAdminCount = users.filter(u => u.isAdmin).length;
+    if (user.isAdmin && currentAdminCount === 1) {
         toast({
             variant: 'destructive',
             title: 'Action Prohibited',
             description: 'You cannot remove the last system administrator.',
         });
+        // Revert visual state if needed
+        setAdminUsers(users.filter(u => u.isAdmin));
+        setNonAdminUsers(users.filter(u => !u.isAdmin));
         return;
     }
 
@@ -162,7 +176,6 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
     };
     setOn2faSuccess(() => action);
     setIs2faDialogOpen(true);
-    setIsEditing2fa(true);
   };
 
   const handleVerify2fa = () => {
@@ -188,14 +201,24 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
     if (!over) return;
     
     const activeData = active.data.current;
-    const overData = over.data.current;
-    
     const userToMove: User | undefined = activeData?.user;
-    const sourceListId: string | undefined = activeData?.fromListId;
-    const destListId: string | undefined = overData?.type === 'user-list' ? over.id : overData?.fromListId;
     
-    if (userToMove && sourceListId && destListId && sourceListId !== destListId) {
-        handleAdminToggle(userToMove);
+    if (userToMove) {
+        const sourceListId: string | undefined = activeData?.fromListId;
+        const destListId: string | undefined = over.data.current?.type === 'user-list' ? over.id : over.data.current?.fromListId;
+
+        if (sourceListId && destListId && sourceListId !== destListId) {
+            // Visually move the user first for a smooth animation
+            if (sourceListId === 'admin-list') {
+                setAdminUsers(prev => prev.filter(u => u.userId !== userToMove.userId));
+                setNonAdminUsers(prev => [...prev, userToMove]);
+            } else {
+                setNonAdminUsers(prev => prev.filter(u => u.userId !== userToMove.userId));
+                setAdminUsers(prev => [...prev, userToMove]);
+            }
+            // Then trigger the action that requires 2FA
+            handleAdminToggle(userToMove);
+        }
     }
   };
   
@@ -218,15 +241,15 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
                 <Card className="flex flex-col h-full bg-transparent border-0">
                     <CardHeader>
                         <div className="flex items-center justify-between gap-4">
-                            <CardTitle className="font-thin text-base">Admins ({adminUsers.length})</CardTitle>
+                            <CardTitle className="font-thin text-base">Admins ({filteredAdminUsers.length})</CardTitle>
                              <div className="flex items-center gap-1">
                                 <CompactSearchInput searchTerm={adminSearch} setSearchTerm={setAdminSearch} placeholder="Search admins..." />
                             </div>
                         </div>
                     </CardHeader>
                     <CardContent className="flex-grow">
-                        <UserDropZone id="admin-list" users={adminUsers}>
-                            {adminUsers.length === 0 && (
+                        <UserDropZone id="admin-list" users={filteredAdminUsers}>
+                            {filteredAdminUsers.length === 0 && (
                                 <div className="text-center text-sm text-muted-foreground p-4 border-2 border-dashed rounded-lg">Drag users here to make them admins.</div>
                             )}
                         </UserDropZone>
@@ -235,15 +258,15 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
                   <Card className="flex flex-col h-full bg-transparent border-0">
                     <CardHeader>
                         <div className="flex items-center justify-between gap-4">
-                            <CardTitle className="font-thin text-base">Users ({nonAdminUsers.length})</CardTitle>
+                            <CardTitle className="font-thin text-base">Users ({filteredNonAdminUsers.length})</CardTitle>
                              <div className="flex items-center gap-1">
                                 <CompactSearchInput searchTerm={userSearch} setSearchTerm={setUserSearch} placeholder="Search users..." inputRef={userSearchRef} autoFocus={isActive} />
                             </div>
                         </div>
                     </CardHeader>
                      <CardContent className="flex-grow">
-                         <UserDropZone id="user-list" users={nonAdminUsers} >
-                           {nonAdminUsers.length === 0 && (
+                         <UserDropZone id="user-list" users={filteredNonAdminUsers} >
+                           {filteredNonAdminUsers.length === 0 && (
                                 <div className="text-center text-sm text-muted-foreground p-4 border-2 border-dashed rounded-lg">No other users found.</div>
                             )}
                          </UserDropZone>
