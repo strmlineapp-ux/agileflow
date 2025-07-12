@@ -118,8 +118,6 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
   
   const [activeDragUser, setActiveDragUser] = useState<User | null>(null);
   
-  const [originalUsers, setOriginalUsers] = useState(users);
-
   const adminUsers = useMemo(() => users.filter(u => u.isAdmin), [users]);
   const nonAdminUsers = useMemo(() => users.filter(u => !u.isAdmin), [users]);
 
@@ -152,7 +150,6 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
         });
         return;
     }
-    setOriginalUsers(users); 
     setPendingUserMove({ user: userToMove, fromListId: userToMove.isAdmin ? 'admin-list' : 'user-list', destListId: userToMove.isAdmin ? 'user-list' : 'admin-list' });
     setIs2faDialogOpen(true);
   };
@@ -172,9 +169,6 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
   };
 
   const close2faDialog = () => {
-    if (pendingUserMove) {
-      setUsers(originalUsers);
-    }
     setIs2faDialogOpen(false);
     setTwoFactorCode('');
     setPendingUserMove(null);
