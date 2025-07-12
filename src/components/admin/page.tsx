@@ -45,10 +45,6 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-// #region Helper Components and Hooks
-// This hook is no longer needed as the CompactSearchInput handles its own focus logic.
-// #endregion
-
 // #region Admin Groups Management Tab
 
 function UserCard({ user }: { user: User }) {
@@ -1163,3 +1159,5 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
     );
 };
 // #endregion
+
+    
