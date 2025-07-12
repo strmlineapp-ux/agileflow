@@ -144,22 +144,20 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
       [nonAdminUsers, userSearch]
   );
   
-  const handleAdminToggle = (user: User) => {
+  const handleAdminToggle = (userToMove: User) => {
     const currentAdminCount = users.filter(u => u.isAdmin).length;
-    if (user.isAdmin && currentAdminCount === 1) {
+    if (userToMove.isAdmin && currentAdminCount === 1) {
         toast({
             variant: 'destructive',
             title: 'Action Prohibited',
             description: 'You cannot remove the last system administrator.',
         });
-        setAdminUsers(users.filter(u => u.isAdmin));
-        setNonAdminUsers(users.filter(u => !u.isAdmin));
         return;
     }
 
     const action = () => {
-      updateUser(user.userId, { isAdmin: !user.isAdmin });
-      toast({ title: 'Success', description: `${user.displayName}'s admin status has been updated.` });
+      updateUser(userToMove.userId, { isAdmin: !userToMove.isAdmin });
+      toast({ title: 'Success', description: `${userToMove.displayName}'s admin status has been updated.` });
     };
     setOn2faSuccess(() => action);
     setIs2faDialogOpen(true);
@@ -196,14 +194,8 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
         const destListId: string | undefined = overElement?.type === 'user-list' ? over.id.toString() : overElement?.fromListId;
 
         if (sourceListId && destListId && sourceListId !== destListId) {
-            if (sourceListId === 'admin-list') {
-                setAdminUsers(prev => prev.filter(u => u.userId !== userToMove.userId));
-                setNonAdminUsers(prev => [userToMove, ...prev]);
-            } else {
-                setNonAdminUsers(prev => prev.filter(u => u.userId !== userToMove.userId));
-                setAdminUsers(prev => [userToMove, ...prev]);
-            }
-            setTimeout(() => handleAdminToggle(userToMove), 50);
+            // Don't optimistically update UI. Wait for 2FA.
+            handleAdminToggle(userToMove);
         }
     }
   };
@@ -555,12 +547,12 @@ function PageCard({ page, onUpdate, onDelete, isPinned, ...props }: { page: AppP
             <CardHeader>
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <div className="relative" onPointerDown={(e) => e.stopPropagation()}>
+                        <div className="relative">
                             <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <PopoverTrigger asChild>
+                                            <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
                                                 <button className="h-12 w-12 flex items-center justify-center">
                                                     <GoogleSymbol name={page.icon} className="text-6xl" weight={100} />
                                                 </button>
@@ -603,7 +595,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, ...props }: { page: AppP
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <PopoverTrigger asChild>
+                                            <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
                                                 <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background cursor-pointer" style={{ backgroundColor: page.color }} />
                                             </PopoverTrigger>
                                         </TooltipTrigger>
@@ -627,7 +619,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, ...props }: { page: AppP
                                 {isEditingName ? (
                                     <Input ref={nameInputRef} defaultValue={page.name} onKeyDown={handleNameKeyDown} onBlur={handleSaveName} className="h-auto p-0 font-headline text-base font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"/>
                                 ) : (
-                                    <CardTitle onClick={() => setIsEditingName(true) } className="font-headline text-base break-words font-thin cursor-pointer">
+                                    <CardTitle onPointerDown={() => setIsEditingName(true) } className="font-headline text-base break-words font-thin cursor-pointer">
                                         {page.name}
                                     </CardTitle>
                                 )}
