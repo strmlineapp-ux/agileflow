@@ -450,7 +450,7 @@ function SortablePageCard({ id, page, onUpdate, onDelete, isPinned }: { id: stri
     };
 
     return (
-        <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="p-2 basis-full md:basis-[calc(50%-0.5rem)] lg:basis-[calc(33.333%-1rem)] flex-grow-0 flex-shrink-0">
+        <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="p-2 basis-full md:basis-[calc(50%-1rem)] lg:basis-[calc(33.333%-1rem)] flex-grow-0 flex-shrink-0">
              <PageCard page={page} onUpdate={onUpdate} onDelete={onDelete} isPinned={isPinned} />
         </div>
     );
@@ -1036,3 +1036,4 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
     );
 };
 // #endregion
+
