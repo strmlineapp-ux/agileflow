@@ -22,7 +22,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { CompactSearchInput } from '@/components/common/compact-search-input';
-
 import {
   DndContext,
   closestCenter,
@@ -432,7 +431,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
   );
 }
 
-function PageCard({ page, onUpdate, onDelete, isPinned }: { page: AppPage; onUpdate: (id: string, data: Partial<AppPage>) => void; onDelete: (id: string) => void; isPinned?: boolean }) {
+function PageCard({ page, onUpdate, onDelete, isPinned, dragHandleProps }: { page: AppPage; onUpdate: (id: string, data: Partial<AppPage>) => void; onDelete: (id: string) => void; isPinned?: boolean, dragHandleProps?: any }) {
     const [isEditingName, setIsEditingName] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
@@ -485,7 +484,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned }: { page: AppPage; onUpd
     const displayPath = page.isDynamic ? `${page.path}/[teamId]` : page.path;
 
     return (
-        <Card className="flex flex-col h-48 group bg-transparent">
+        <Card className="flex flex-col h-48 group bg-transparent" {...dragHandleProps}>
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -638,7 +637,7 @@ function SortablePageCard({ id, page, onUpdate, onDelete, isPinned }: { id: stri
         <div 
             ref={setNodeRef} 
             style={style} 
-            className="p-2 basis-full md:basis-[calc(50%-1rem)] xl:basis-[calc(33.333%-1rem)] 2xl:basis-[calc(25%-1rem)] flex-grow-0 flex-shrink-0"
+            className="p-2 basis-full md:basis-[calc(50%-1rem)] flex-grow-0 flex-shrink-0 lg:basis-[calc(33.333%-1rem)] xl:basis-[calc(25%-1rem)] 2xl:basis-[calc(20%-1rem)]"
         >
              <div className={cn(isDragging && "shadow-xl opacity-75")}>
                  <PageCard 
@@ -646,15 +645,14 @@ function SortablePageCard({ id, page, onUpdate, onDelete, isPinned }: { id: stri
                     onUpdate={onUpdate} 
                     onDelete={onDelete} 
                     isPinned={isPinned} 
-                    {...attributes} 
-                    {...listeners} 
+                    dragHandleProps={{...attributes, ...listeners}}
                  />
             </div>
         </div>
     );
 }
 
-function DuplicateZone({ id, onDuplicate, onAdd }: { id: string; onDuplicate: () => void; onAdd: () => void; }) {
+function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
   const { isOver, setNodeRef } = useDroppable({ id });
   
   return (
@@ -696,11 +694,12 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
         updateAppSettings({ pages: newPages });
     }, [appSettings.pages, updateAppSettings]);
     
-    const duplicatePage = useCallback((sourcePage: AppPage) => {
+    const handleDuplicatePage = useCallback((sourcePage: AppPage) => {
         const newPage: AppPage = {
             ...JSON.parse(JSON.stringify(sourcePage)),
             id: crypto.randomUUID(),
             name: `${sourcePage.name} (Copy)`,
+            isDynamic: sourcePage.isDynamic,
         };
         const sourceIndex = appSettings.pages.findIndex(p => p.id === sourcePage.id);
         const newPages = [...appSettings.pages];
@@ -745,22 +744,21 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
+        const pageId = active.id;
         
-        if (over?.id === 'duplicate-zone') {
-            const pageToDuplicate = appSettings.pages.find(p => p.id === active.id);
+        if (over?.id === 'duplicate-page-zone') {
+            const pageToDuplicate = appSettings.pages.find(p => p.id === pageId);
             if (pageToDuplicate) {
-                duplicatePage(pageToDuplicate);
+                handleDuplicatePage(pageToDuplicate);
             }
             return;
         }
 
-        if (active.id !== over?.id && over) {
+        if (over && active.id !== over.id) {
             const oldIndex = appSettings.pages.findIndex(p => p.id === active.id);
             const newIndex = appSettings.pages.findIndex(p => p.id === over!.id);
             
-            // Guardrail check
-            const newPageIsPinned = allPinnedIds.has(appSettings.pages[newIndex].id);
-            if (newPageIsPinned) {
+            if (allPinnedIds.has(appSettings.pages[newIndex].id)) {
                 return;
             }
 
@@ -780,7 +778,7 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                    <DuplicateZone id="duplicate-zone" onAdd={handleAddPage} onDuplicate={() => {}} />
+                    <DuplicateZone id="duplicate-page-zone" onAdd={handleAddPage} />
                     <div className="flex items-center">
                         <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search pages..." />
                     </div>
@@ -1081,7 +1079,3 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
     );
 };
 // #endregion
-
-
-
-    

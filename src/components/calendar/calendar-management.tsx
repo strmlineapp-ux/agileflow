@@ -16,7 +16,6 @@ import { googleSymbolNames } from '@/lib/google-symbols';
 import { ScrollArea } from '../ui/scroll-area';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
-
 import {
   DndContext,
   closestCenter,
@@ -25,7 +24,7 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
-  Droppable,
+  useDroppable,
 } from '@dnd-kit/core';
 import {
   arrayMove,
@@ -53,14 +52,14 @@ function SortableCalendarCard({ calendar, onUpdate, onDelete }: { calendar: Shar
   };
   
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="p-3 basis-full md:basis-1/2 lg:basis-1/3 flex-grow-0 flex-shrink-0">
-      <CalendarCard calendar={calendar} onUpdate={onUpdate} onDelete={onDelete} isDragging={isDragging} />
+    <div ref={setNodeRef} style={style} className="p-3 basis-full md:basis-1/2 lg:basis-1/3 flex-grow-0 flex-shrink-0">
+      <CalendarCard calendar={calendar} onUpdate={onUpdate} onDelete={onDelete} isDragging={isDragging} dragHandleProps={{...attributes, ...listeners}} />
     </div>
   );
 }
 
 
-function CalendarCard({ calendar, onUpdate, onDelete, isDragging }: { calendar: SharedCalendar; onUpdate: (id: string, data: Partial<SharedCalendar>) => void; onDelete: (calendar: SharedCalendar) => void; isDragging?: boolean; }) {
+function CalendarCard({ calendar, onUpdate, onDelete, isDragging, dragHandleProps }: { calendar: SharedCalendar; onUpdate: (id: string, data: Partial<SharedCalendar>) => void; onDelete: (calendar: SharedCalendar) => void; isDragging?: boolean; dragHandleProps?: any; }) {
   const [isEditingName, setIsEditingName] = useState(false);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -117,7 +116,7 @@ function CalendarCard({ calendar, onUpdate, onDelete, isDragging }: { calendar: 
   };
 
   return (
-    <Card className={cn("flex flex-col group bg-transparent relative", isDragging && "shadow-xl")}>
+    <Card className={cn("flex flex-col group bg-transparent relative", isDragging && "shadow-xl")} {...dragHandleProps}>
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
@@ -225,7 +224,7 @@ function CalendarCard({ calendar, onUpdate, onDelete, isDragging }: { calendar: 
   );
 }
 
-function DuplicateZone({ id, onDuplicate, onAdd, children }: { id: string; onDuplicate: () => void; onAdd: () => void; children: React.ReactNode }) {
+function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
   const { isOver, setNodeRef } = useDroppable({ id });
   
   return (
@@ -240,7 +239,8 @@ function DuplicateZone({ id, onDuplicate, onAdd, children }: { id: string; onDup
           <Tooltip>
               <TooltipTrigger asChild>
                   <Button variant="ghost" size="icon" className="rounded-full p-0" onClick={onAdd}>
-                    {children}
+                    <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
+                    <span className="sr-only">New Calendar or Drop to Duplicate</span>
                   </Button>
               </TooltipTrigger>
               <TooltipContent>
@@ -250,15 +250,6 @@ function DuplicateZone({ id, onDuplicate, onAdd, children }: { id: string; onDup
       </TooltipProvider>
     </div>
   );
-}
-
-// Dummy Droppable for dnd-kit compatibility with useDroppable hook
-function useDroppable(options: any) {
-    const [isOver, setIsOver] = useState(false);
-    const setNodeRef = (node: HTMLElement | null) => {
-        // Dummy implementation
-    };
-    return { isOver, setNodeRef };
 }
 
 export function CalendarManagement({ tab }: { tab: AppTab }) {
@@ -345,7 +336,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
   const handleDragEnd = (event: DragEndEvent) => {
       const { active, over } = event;
   
-      if (over?.id === 'duplicate-calendar-zone' && active.id) {
+      if (over?.id === 'duplicate-calendar-zone') {
         const calendarToDuplicate = calendars.find(c => c.id === active.id);
         if (calendarToDuplicate) {
             handleDuplicateCalendar(calendarToDuplicate);
@@ -353,7 +344,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
         return;
       }
   
-      if (active.id !== over?.id) {
+      if (active.id !== over?.id && over?.id) {
           const oldIndex = calendars.findIndex(p => p.id === active.id);
           const newIndex = calendars.findIndex(p => p.id === over!.id);
           const reordered = arrayMove(calendars, oldIndex, newIndex);
@@ -381,10 +372,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                   </Tooltip>
               </TooltipProvider>
             )}
-            <DuplicateZone id="duplicate-calendar-zone" onAdd={handleAddCalendar} onDuplicate={() => {}}>
-                <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
-                <span className="sr-only">New Calendar or Drop to Duplicate</span>
-            </DuplicateZone>
+            <DuplicateZone id="duplicate-calendar-zone" onAdd={handleAddCalendar} />
         </div>
         <SortableContext items={calendarIds} strategy={rectSortingStrategy}>
             <div className="flex flex-wrap -m-3">
