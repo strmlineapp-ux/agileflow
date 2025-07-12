@@ -39,12 +39,12 @@ This pattern allows for seamless, direct text editing within the main applicatio
 This pattern provides a clean, minimal interface for search functionality, especially in UIs where space is a consideration or a full search bar is not always needed. It is encapsulated in the reusable `/src/components/common/compact-search-input.tsx` component.
 
 - **Interaction:**
-  - The search input is initially hidden behind an icon-only button (e.g., `<GoogleSymbol name="search" />`).
+  - The search input is initially hidden behind an icon-only button (e.g., `<GoogleSymbol name="search" />`), which **must have a tooltip**.
   - Clicking the button reveals the input field.
   - **Crucially, the input must have a transparent background and no borders or box-shadow**, ensuring it blends seamlessly into the UI.
 - **Behavior:**
   - The input automatically gains focus as soon as it becomes visible. This is achieved using a `useEffect` hook with a `setTimeout` to ensure the element is rendered and ready for focus.
-  - The input hides again if the user clicks away (`onBlur`) and the field is empty.
+  - The input hides again if the user clicks away (`onBlur`) and the field is empty, unless `autoFocus` is true.
 - **Application:** Used for filtering lists of icons, users, or other filterable content within popovers and management pages like the Admin screen.
 
 ---
@@ -124,6 +124,8 @@ This is the application's perfected, gold-standard pattern for managing a collec
 -   **Critical Stability Properties**:
     -   **`@dnd-kit` is the required library.** The older `react-beautiful-dnd` library was found to be incompatible with this type of responsive layout.
     -   `flex-grow-0` and `flex-shrink-0` **must** be used on draggable items. This prevents the remaining items in a row from expanding or shrinking, which causes the grid to reflow unstably when an item is being dragged.
+-   **Initiating a Drag**: To provide a clean, handle-free interface, the drag action is initiated by clicking and dragging any non-interactive part of the card. The drag listener from `dnd-kit`'s `useSortable` hook is applied to the main card container.
+-   **Preventing Interaction Conflicts**: To allow buttons, popovers, and other controls *inside* the draggable card to function correctly, they must stop the `pointerdown` event from propagating up to the card's drag listener. **This is a critical implementation detail and must be done by adding `onPointerDown={(e) => e.stopPropagation()}` to every interactive element within the card.** This ensures a click on a button performs the button's action, while a click-and-drag on the card's background initiates a drag.
 -   **Visual Feedback**: To provide feedback without disrupting layout, visual changes (like a `shadow` or `opacity`) should be applied directly to the inner component based on the `isDragging` prop provided by `dnd-kit`'s `useSortable` hook. The draggable wrapper itself should remain untouched.
 -   **Internal Card Layout**: Each card is structured for clarity. The header contains the primary entity identifier (icon and name) and contextual controls. The icon and its color are editable, following the **Icon & Color Editing Flow** pattern.
 -   **User Item Display**: When users are displayed as items within a management card (e.g., `TeamCard`), they are presented **without a border**. Each user item must display their avatar, full name, and professional title underneath the name for consistency.
@@ -162,6 +164,7 @@ This is a minimalist dialog for focused actions, such as entering a code or a sh
 - **Behavior**:
     - Clicking the action icon in the corner performs the primary action (e.g., saves or verifies the input).
     - Clicking the overlay dismisses the dialog without performing the action.
+    - **When a dialog is triggered from a draggable element, its `<DialogContent>` must capture pointer events using `onPointerDownCapture={(e) => e.stopPropagation()}`. This prevents a click inside the dialog from being interpreted as a drag action on the underlying card.**
 - **Application**: Used for Two-Factor Authentication, quick edits, simple forms, and for confirming lower-risk destructive actions, such as deleting a **Page**, a **Team**, or an un-shared **Badge Collection**.
 
 ---
@@ -296,3 +299,5 @@ This is the single source of truth for indicating user interaction state across 
     - **Placement**: This is context-dependent. Color-pickers are typically placed on the bottom-right corner of their parent icon. Ownership status icons are typically placed on the top-left corner to create visual balance.
     - **Application**: Used for displaying a team admin status, a shared status on a role icon, or a `share` icon on a shared Badge.
 -   **Badges in Assorted View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
+
+    
