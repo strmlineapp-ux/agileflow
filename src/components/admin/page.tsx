@@ -116,10 +116,10 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
   const [adminSearch, setAdminSearch] = useState('');
   const [userSearch, setUserSearch] = useState('');
   
+  const [activeDragUser, setActiveDragUser] = useState<User | null>(null);
+
   const adminUsers = useMemo(() => users.filter(u => u.isAdmin), [users]);
   const nonAdminUsers = useMemo(() => users.filter(u => !u.isAdmin), [users]);
-  
-  const [activeUser, setActiveUser] = useState<User | null>(null);
 
   useEffect(() => {
     if (is2faDialogOpen) {
@@ -140,7 +140,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
       [nonAdminUsers, userSearch]
   );
   
-  const handleAdminToggle = (userToMove: User) => {
+  const handleAdminToggleRequest = (userToMove: User) => {
     const currentAdminCount = users.filter(u => u.isAdmin).length;
     if (userToMove.isAdmin && currentAdminCount === 1) {
         toast({
@@ -173,7 +173,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
   };
 
   const onDragEnd = (event: DragEndEvent) => {
-    setActiveUser(null);
+    setActiveDragUser(null);
     const { active, over } = event;
     if (!over) return;
     
@@ -186,13 +186,13 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
         const destListId: string | undefined = overElement?.type === 'user-list' ? over.id.toString() : overElement?.fromListId;
 
         if (sourceListId && destListId && sourceListId !== destListId) {
-            handleAdminToggle(userToMove);
+            handleAdminToggleRequest(userToMove);
         }
     }
   };
 
   const onDragStart = (event: DragStartEvent) => {
-    setActiveUser(event.active.data.current?.user || null);
+    setActiveDragUser(event.active.data.current?.user || null);
   };
   
   const sensors = useSensors(
@@ -247,7 +247,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
                   </Card>
             </div>
             <DragOverlay>
-                {activeUser ? <UserCard user={activeUser} /> : null}
+                {activeDragUser ? <UserCard user={activeDragUser} /> : null}
             </DragOverlay>
         </DndContext>
 
@@ -647,7 +647,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, ...props }: { page: AppP
                     </div>
                 </div>
             </CardHeader>
-            <CardContent className="pt-2">
+            <CardContent className="p-2 pt-0">
                 <p className="text-xs text-muted-foreground truncate font-thin">{displayPath}</p>
             </CardContent>
             <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
@@ -1147,5 +1147,3 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
 };
 // #endregion
 
-
-    
