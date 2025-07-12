@@ -5,6 +5,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface CompactSearchInputProps {
   searchTerm: string;
@@ -13,6 +14,7 @@ interface CompactSearchInputProps {
   className?: string;
   inputRef?: React.RefObject<HTMLInputElement>;
   autoFocus?: boolean;
+  tooltipText?: string;
 }
 
 export function CompactSearchInput({ 
@@ -22,6 +24,7 @@ export function CompactSearchInput({
   className,
   inputRef: externalInputRef,
   autoFocus = false,
+  tooltipText,
 }: CompactSearchInputProps) {
   const [isSearching, setIsSearching] = useState(autoFocus || !!searchTerm);
   const internalInputRef = useRef<HTMLInputElement>(null);
@@ -50,9 +53,22 @@ export function CompactSearchInput({
     );
   }
 
-  return (
+  const searchButton = (
     <Button variant="ghost" size="icon" onClick={() => setIsSearching(true)} className="text-muted-foreground">
       <GoogleSymbol name="search" weight={100} />
     </Button>
   );
+
+  if (tooltipText) {
+    return (
+        <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>{searchButton}</TooltipTrigger>
+                <TooltipContent><p>{tooltipText}</p></TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
+    );
+  }
+
+  return searchButton;
 }

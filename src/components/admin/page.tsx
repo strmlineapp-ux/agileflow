@@ -233,7 +233,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
                         <div className="flex items-center justify-between gap-4">
                             <CardTitle className="font-thin text-base">Admins ({filteredAdminUsers.length})</CardTitle>
                              <div className="flex items-center gap-1">
-                                <CompactSearchInput searchTerm={adminSearch} setSearchTerm={setAdminSearch} placeholder="Search admins..." />
+                                <CompactSearchInput searchTerm={adminSearch} setSearchTerm={setAdminSearch} placeholder="Search admins..." tooltipText="Search Admins" />
                             </div>
                         </div>
                     </CardHeader>
@@ -250,7 +250,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
                         <div className="flex items-center justify-between gap-4">
                             <CardTitle className="font-thin text-base">Users ({filteredNonAdminUsers.length})</CardTitle>
                              <div className="flex items-center gap-1">
-                                <CompactSearchInput searchTerm={userSearch} setSearchTerm={setUserSearch} placeholder="Search users..." autoFocus={isActive} />
+                                <CompactSearchInput searchTerm={userSearch} setSearchTerm={setUserSearch} placeholder="Search users..." autoFocus={isActive} tooltipText="Search Users" />
                             </div>
                         </div>
                     </CardHeader>
