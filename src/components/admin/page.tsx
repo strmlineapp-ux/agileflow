@@ -117,9 +117,20 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
   const [userSearch, setUserSearch] = useState('');
   
   const [activeDragUser, setActiveDragUser] = useState<User | null>(null);
+  const [items, setItems] = useState(() => ({
+    'admin-list': users.filter(u => u.isAdmin),
+    'user-list': users.filter(u => !u.isAdmin),
+  }));
+
+  useEffect(() => {
+    setItems({
+      'admin-list': users.filter(u => u.isAdmin),
+      'user-list': users.filter(u => !u.isAdmin),
+    });
+  }, [users]);
   
-  const adminUsers = useMemo(() => users.filter(u => u.isAdmin), [users]);
-  const nonAdminUsers = useMemo(() => users.filter(u => !u.isAdmin), [users]);
+  const adminUsers = useMemo(() => items['admin-list'], [items]);
+  const nonAdminUsers = useMemo(() => items['user-list'], [items]);
 
   useEffect(() => {
     if (is2faDialogOpen) {
@@ -140,7 +151,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
       [nonAdminUsers, userSearch]
   );
   
-  const handleAdminToggleRequest = (userToMove: User) => {
+  const handleAdminToggleRequest = (userToMove: User, fromListId: string, destListId: string) => {
     const currentAdminCount = users.filter(u => u.isAdmin).length;
     if (userToMove.isAdmin && currentAdminCount === 1) {
         toast({
@@ -150,7 +161,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
         });
         return;
     }
-    setPendingUserMove({ user: userToMove, fromListId: userToMove.isAdmin ? 'admin-list' : 'user-list', destListId: userToMove.isAdmin ? 'user-list' : 'admin-list' });
+    setPendingUserMove({ user: userToMove, fromListId, destListId });
     setIs2faDialogOpen(true);
   };
 
@@ -189,7 +200,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
         const destListId: string | undefined = overElement?.type === 'user-list' ? over.id.toString() : overElement?.fromListId;
 
         if (sourceListId && destListId && sourceListId !== destListId) {
-            handleAdminToggleRequest(userToMove);
+            handleAdminToggleRequest(userToMove, sourceListId, destListId);
         }
     }
   };
@@ -537,7 +548,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, ...props }: { page: AppP
     const displayPath = page.isDynamic ? `${page.path}/[teamId]` : page.path;
 
     return (
-        <Card {...props} className="group relative">
+        <Card {...props} className="group relative flex flex-col">
             {!isPinned && (
               <TooltipProvider>
                   <Tooltip>
@@ -545,7 +556,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, ...props }: { page: AppP
                           <Button
                               variant="ghost"
                               size="icon"
-                              className="absolute top-0 right-0 h-6 w-6 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                              className="absolute -top-1 -right-1 h-6 w-6 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity z-10"
                               onPointerDown={(e) => {
                                   e.stopPropagation();
                                   setIsDeleteDialogOpen(true);
