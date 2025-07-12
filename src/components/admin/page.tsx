@@ -14,7 +14,7 @@ import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { googleSymbolNames } from '@/lib/google-symbols';
-import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProps, type DraggableLocation } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProps, type DraggableLocation, type DragStart } from 'react-beautiful-dnd';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn, getContrastColor } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -667,6 +667,8 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
     const { appSettings, updateAppSettings, updateAppTab } = useUser();
     const { toast } = useToast();
     const [searchTerm, setSearchTerm] = useState('');
+    const [containerStyle, setContainerStyle] = useState<React.CSSProperties>({});
+    const droppableContainerRef = useRef<HTMLDivElement>(null);
     
     const pinnedTopIds = useMemo(() => ['page-admin-management', 'page-overview', 'page-calendar', 'page-tasks'], []);
     const pinnedBottomIds = useMemo(() => ['page-notifications', 'page-settings'], []);
@@ -704,7 +706,17 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
         toast({ title: 'Page Deleted' });
     };
     
+    const onDragStart = useCallback(() => {
+        if (droppableContainerRef.current) {
+            const { offsetHeight } = droppableContainerRef.current;
+            setContainerStyle({
+                height: `${offsetHeight}px`,
+            });
+        }
+    }, []);
+    
     const onDragEnd = (result: DropResult) => {
+        setContainerStyle({}); // Reset container style
         const { source, destination, draggableId } = result;
 
         if (!destination) return;
@@ -767,7 +779,7 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
 
 
     return (
-        <DragDropContext onDragEnd={onDragEnd}>
+        <DragDropContext onDragEnd={onDragEnd} onDragStart={onDragStart}>
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -804,37 +816,47 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
                 </div>
                 
                 <StrictModeDroppable droppableId="pages-list">
-                    {(provided) => (
+                    {(provided, snapshot) => (
                         <div
-                            {...provided.droppableProps}
-                            ref={provided.innerRef}
-                            className="flex flex-wrap -m-2"
+                            ref={droppableContainerRef}
+                            style={containerStyle}
+                            className={cn(
+                                "flex flex-wrap -m-2",
+                                snapshot.isDraggingOver && "ring-1 ring-border ring-inset rounded-lg"
+                            )}
                         >
-                            {filteredPages.map((page, index) => {
-                                const isPinned = allPinnedIds.includes(page.id);
-                                return (
-                                    <Draggable key={page.id} draggableId={page.id} index={index} isDragDisabled={isPinned}>
-                                        {(provided, snapshot) => (
-                                            <div
-                                                ref={provided.innerRef}
-                                                {...provided.draggableProps}
-                                                {...provided.dragHandleProps}
-                                                className={cn(
-                                                    "p-2 basis-full md:basis-1/2 lg:basis-1/3 flex-grow-0 flex-shrink-0"
-                                                )}
-                                            >
-                                                <PageCard
-                                                    page={page}
-                                                    onUpdate={handleUpdatePage}
-                                                    onDelete={handleDeletePage}
-                                                    isPinned={isPinned}
-                                                />
-                                            </div>
-                                        )}
-                                    </Draggable>
-                                )
-                            })}
-                            {provided.placeholder}
+                            <div
+                                ref={provided.innerRef}
+                                {...provided.droppableProps}
+                                className="flex flex-wrap w-full gap-4 p-2"
+                            >
+                                {filteredPages.map((page, index) => {
+                                    const isPinned = allPinnedIds.includes(page.id);
+                                    return (
+                                        <Draggable key={page.id} draggableId={page.id} index={index} isDragDisabled={isPinned}>
+                                            {(provided, snapshot) => (
+                                                <div
+                                                    ref={provided.innerRef}
+                                                    {...provided.draggableProps}
+                                                    {...provided.dragHandleProps}
+                                                    className={cn(
+                                                        "h-48 basis-full md:basis-[calc(50%-0.5rem)] lg:basis-[calc(33.333%-1rem)] flex-grow-0 flex-shrink-0",
+                                                        snapshot.isDragging && "shadow-xl"
+                                                    )}
+                                                >
+                                                    <PageCard
+                                                        page={page}
+                                                        onUpdate={handleUpdatePage}
+                                                        onDelete={handleDeletePage}
+                                                        isPinned={isPinned}
+                                                    />
+                                                </div>
+                                            )}
+                                        </Draggable>
+                                    )
+                                })}
+                                {provided.placeholder}
+                            </div>
                         </div>
                     )}
                 </StrictModeDroppable>
@@ -1005,7 +1027,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                 <div className="flex-1 min-w-0 space-y-1">
                     <div className="flex items-center justify-between">
                          {isEditingName ? (
-                            <Input ref={nameInputRef} defaultValue={tab.name} onKeyDown={handleNameKeyDown} onBlur={handleSaveName} className="h-auto p-0 font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 font-headline" />
+                            <Input ref={nameInputRef} defaultValue={tab.name} onKeyDown={handleTitleKeyDown} onBlur={handleSaveName} className="h-auto p-0 font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 font-headline" />
                         ) : (
                             <h3 className="font-headline cursor-text text-base font-thin" onClick={() => setIsEditingName(true)}>{tab.name}</h3>
                         )}
