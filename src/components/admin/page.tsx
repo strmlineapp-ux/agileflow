@@ -46,17 +46,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 
 // #region Helper Components and Hooks
-const useFocusOnMount = (isEditing: boolean) => {
-    const inputRef = useRef<HTMLInputElement>(null);
-
-    useEffect(() => {
-        if (isEditing && inputRef.current) {
-            inputRef.current.focus();
-        }
-    }, [isEditing]);
-
-    return inputRef;
-};
+// This hook is no longer needed as the CompactSearchInput handles its own focus logic.
 // #endregion
 
 // #region Admin Groups Management Tab
@@ -129,7 +119,6 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
   
   const [adminSearch, setAdminSearch] = useState('');
   const [userSearch, setUserSearch] = useState('');
-  const userSearchRef = useRef<HTMLInputElement>(null);
   
   const [adminUsers, setAdminUsers] = useState(users.filter(u => u.isAdmin));
   const [nonAdminUsers, setNonAdminUsers] = useState(users.filter(u => !u.isAdmin));
@@ -198,8 +187,8 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
   };
 
   const onDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
     setActiveUser(null);
+    const { active, over } = event;
     if (!over) return;
     
     const activeData = active.data.current;
@@ -208,7 +197,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
     if (userToMove) {
         const sourceListId: string | undefined = activeData?.fromListId;
         const overElement = over.data.current;
-        const destListId: string | undefined = overElement?.type === 'user-list' ? over.id : overElement?.fromListId;
+        const destListId: string | undefined = overElement?.type === 'user-list' ? over.id.toString() : overElement?.fromListId;
 
         if (sourceListId && destListId && sourceListId !== destListId) {
             if (sourceListId === 'admin-list') {
@@ -224,8 +213,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
   };
 
   const onDragStart = (event: DragStartEvent) => {
-    const { active } = event;
-    setActiveUser(active.data.current?.user || null);
+    setActiveUser(event.active.data.current?.user || null);
   };
   
   const sensors = useSensors(
@@ -266,7 +254,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
                         <div className="flex items-center justify-between gap-4">
                             <CardTitle className="font-thin text-base">Users ({filteredNonAdminUsers.length})</CardTitle>
                              <div className="flex items-center gap-1">
-                                <CompactSearchInput searchTerm={userSearch} setSearchTerm={setUserSearch} placeholder="Search users..." inputRef={userSearchRef} autoFocus={isActive} />
+                                <CompactSearchInput searchTerm={userSearch} setSearchTerm={setUserSearch} placeholder="Search users..." autoFocus={isActive} />
                             </div>
                         </div>
                     </CardHeader>
@@ -767,19 +755,12 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
     const { appSettings, updateAppSettings } = useUser();
     const { toast } = useToast();
     const [searchTerm, setSearchTerm] = useState('');
-    const searchInputRef = useRef<HTMLInputElement>(null);
     const [activePage, setActivePage] = useState<AppPage | null>(null);
     
     const pinnedTopIds = useMemo(() => ['page-admin-management', 'page-overview', 'page-calendar', 'page-tasks'], []);
     const pinnedBottomIds = useMemo(() => ['page-notifications', 'page-settings'], []);
     const allPinnedIds = useMemo(() => new Set([...pinnedTopIds, ...pinnedBottomIds]), [pinnedTopIds, pinnedBottomIds]);
     
-    useEffect(() => {
-        if (isActive && searchInputRef.current) {
-            setTimeout(() => searchInputRef.current?.focus(), 100);
-        }
-    }, [isActive]);
-
     const handleUpdatePage = useCallback((pageId: string, data: Partial<AppPage>) => {
         const newPages = appSettings.pages.map(p => p.id === pageId ? { ...p, ...data } : p);
         updateAppSettings({ pages: newPages });
@@ -880,7 +861,7 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
                 <div className="flex items-center justify-between">
                     <DuplicateZone onAdd={handleAddPage} />
                     <div className="flex items-center">
-                        <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search pages..." inputRef={searchInputRef} autoFocus={isActive} />
+                        <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search pages..." autoFocus={isActive} />
                     </div>
                 </div>
                 
@@ -1120,13 +1101,6 @@ function SortableTabCard({ id, tab, onUpdate }: { id: string, tab: AppTab, onUpd
 export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab; isSingleTabPage?: boolean, isActive?: boolean }) => {
     const { appSettings, updateAppSettings, updateAppTab } = useUser();
     const [searchTerm, setSearchTerm] = useState('');
-    const searchInputRef = useRef<HTMLInputElement>(null);
-
-    useEffect(() => {
-        if (isActive && searchInputRef.current) {
-            setTimeout(() => searchInputRef.current?.focus(), 100);
-        }
-    }, [isActive]);
 
     const handleUpdateTab = useCallback((tabId: string, data: Partial<AppTab>) => {
         const newTabs = appSettings.tabs.map(t => t.id === tabId ? { ...t, ...data } : t);
@@ -1165,7 +1139,7 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
             <div className="space-y-8">
                 <div className="flex items-center justify-end">
                      <div className="flex items-center">
-                        <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search by name or desc..." inputRef={searchInputRef} autoFocus={isActive} />
+                        <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search by name or desc..." autoFocus={isActive} />
                     </div>
                 </div>
                 <SortableContext items={tabIds} strategy={verticalListSortingStrategy}>
