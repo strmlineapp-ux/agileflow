@@ -60,9 +60,10 @@ const useFocusOnMount = (isEditing: boolean) => {
 // #region Admin Groups Management Tab
 
 function SortableUserCard({ user, listId }: { user: User, listId: string }) {
+    const draggableId = `user-dnd-${user.userId}-${listId}`;
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-        id: user.userId,
-        data: { type: 'user', user, from: listId }
+        id: draggableId,
+        data: { type: 'user', user, fromListId: listId }
     });
 
     const style = {
@@ -91,10 +92,15 @@ function SortableUserCard({ user, listId }: { user: User, listId: string }) {
 
 function UserDropZone({ id, users, children }: { id: string, users: User[], children: React.ReactNode }) {
   const { setNodeRef, isOver } = useDroppable({ id, data: { type: 'user-list' }});
+  
+  const sortableUserIds = users.map(u => `user-dnd-${u.userId}-${id}`);
 
   return (
-    <div ref={setNodeRef} className={cn("p-1 space-y-1 rounded-md min-h-[60px]", isOver ? "bg-primary/10 ring-1 ring-primary" : "")}>
-        <SortableContext items={users.map(u => u.userId)} strategy={verticalListSortingStrategy}>
+    <div ref={setNodeRef} className={cn(
+        "p-1 space-y-1 rounded-md min-h-[60px] transition-all", 
+        isOver ? "ring-1 ring-border ring-inset" : ""
+    )}>
+        <SortableContext items={sortableUserIds} strategy={verticalListSortingStrategy}>
             {users.map((user) => (
                 <SortableUserCard key={user.userId} user={user} listId={id} />
             ))}
@@ -180,15 +186,17 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
 
   const onDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    if (!over || active.id === over.id) return;
-    
-    const userToMove = users.find(u => u.userId === active.id);
-    if (!userToMove) return;
 
-    const sourceList = active.data.current?.from;
-    const destList = over.data.current?.type === 'user-list' ? over.id : null;
+    if (!over) return;
     
-    if (sourceList && destList && sourceList !== destList) {
+    const activeData = active.data.current;
+    const overData = over.data.current;
+    
+    const userToMove: User | undefined = activeData?.user;
+    const sourceListId: string | undefined = activeData?.fromListId;
+    const destListId: string | undefined = overData?.type === 'user-list' ? over.id : overData?.fromListId;
+    
+    if (userToMove && sourceListId && destListId && sourceListId !== destListId) {
         handleAdminToggle(userToMove);
     }
   };
@@ -796,9 +804,9 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
-        const pageId = active.id.toString();
         
         if (over?.id === 'duplicate-page-zone') {
+            const pageId = active.id.toString();
             const pageToDuplicate = appSettings.pages.find(p => p.id === pageId);
             if (pageToDuplicate) {
                 handleDuplicatePage(pageToDuplicate);
