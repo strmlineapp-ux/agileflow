@@ -124,10 +124,8 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
   const userSearchRef = useRef<HTMLInputElement>(null);
   
   useEffect(() => {
-    if (is2faDialogOpen) {
-      requestAnimationFrame(() => {
-        twoFactorCodeInputRef.current?.focus();
-      });
+    if (is2faDialogOpen && isEditing2fa) {
+      setTimeout(() => twoFactorCodeInputRef.current?.focus(), 100);
     }
   }, [is2faDialogOpen, isEditing2fa]);
 
