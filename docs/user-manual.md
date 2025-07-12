@@ -1,4 +1,5 @@
 
+
 # AgileFlow User Manual
 
 Welcome to AgileFlow, your team's central hub for managing tasks, scheduling events, and coordinating production workflows. This guide will walk you through the key features of the app.
@@ -21,14 +22,14 @@ Once your access has been approved, you can sign in:
 
 The main navigation is located in the sidebar on the left, providing quick, icon-based access to all sections of the app. Hover over an icon to see its name.
 
-- **Main Navigation**: Access to core features like the Calendar, Overview, Tasks, and Notifications.
-- **Team Management**: If you are a manager of a team, a link to that team's management page will appear here.
+- **Main Navigation**: Access to core features like the Calendar, Overview, and Tasks.
+- **Team Management**: If you have permission to manage a team, a link to that team's management page will appear here.
 - **Admin Pages**: If you are an Admin, you will see links to the Admin and Service Delivery pages.
-- **User Profile**: At the bottom of the sidebar, you can access your profile, user preferences, and the "View as" feature (for Admins).
+- **User Profile**: At the bottom of the sidebar, you can access your profile, user preferences, notifications, and the "View as" feature (for Admins). The Settings page is only accessible from this menu.
 
 ## 3. Dashboard Overview
 
-The **Overview** page gives you a high-level summary of team activity, including cards for Active Tasks, Tasks Due Soon, and Completed Tasks. You can also see a list of your most recent tasks.
+The **Overview** page gives you a high-level summary of team activity, including cards for Active Tasks, Tasks Due Soon, and Completed Tasks. You can also see a list of your most recent tasks. This page has no visible header; its content acts as the page itself.
 
 ## 4. Calendar
 
@@ -63,13 +64,13 @@ The **Tasks** page helps you stay on top of your work.
 
 ## 6. Notifications
 
-The **Notifications** page keeps you informed.
+The **Notifications** page keeps you informed. This page has no visible header; the list content itself acts as the page.
 - **Unread Count**: A badge on the sidebar shows the number of unread notifications.
 - **Access Requests**: Administrators can approve or reject new user access requests directly from the notification list.
 
 ## 7. Settings & Preferences
 
-Access your preferences by clicking your avatar in the bottom-left corner of the sidebar and selecting **"Account Settings"**. This page allows you to customize your experience and manage your profile.
+Access your preferences by clicking your avatar in the bottom-left corner of the sidebar and selecting **"Account Settings"**. This page has no visible header.
 
 - **Change Colour Scheme**: Choose between `light` and `dark` themes. You can also select a custom primary color to override the theme's default.
 - **Set Default Calendar View**: Select which calendar view you want to see when you log in.
@@ -80,21 +81,21 @@ Access your preferences by clicking your avatar in the bottom-left corner of the
 
 ## 8. Management Pages (Admin & Manager Roles)
 
-### 8.1 Admin Management (`/dashboard/admin`)
-This is the central control panel for configuring the application itself.
-- **Admin Groups**: Create and manage high-level administrative groups. To delete a group, hover over its card and click the `delete` icon that appears in the corner.
-- **Pages**: Configure the application's navigation. Create new pages, define their URL path, and control who has access to them (by user, team, or admin group). You can intuitively reorder pages by dragging and dropping them in the grid. Key system pages like "Admin Management" are pinned and cannot be moved. You can also instantly duplicate any page by dragging it onto the "Add New Page" (+) button.
-- **Tabs**: Manage the reusable content blocks (tabs) in a simple list view. Use the search bar to find a specific tab to edit.
+### 8.1 Admin (`/dashboard/admin`)
+This is the central control panel for configuring the application itself. It does not have a page header.
+- **Admin Management**: Manage system administrators by dragging and dropping users between the "Admins" and "Users" lists. This is a secure action; dropping a user will trigger a 2-Factor Authentication dialog. The user's status will only be changed after the correct code is provided. For safety, the system prevents you from removing the last system administrator. The "Search users" input is automatically focused for convenience.
+- **Pages**: Configure the application's navigation. Create new pages, define their URL path, and control who has access to them (by user or team). You can intuitively reorder pages by dragging and dropping them in the grid. Key system pages are pinned and cannot be moved. You can also instantly duplicate any page by dragging it onto the "Add New Page" (+) button. The search box is automatically focused when you switch to this tab.
+- **Tabs**: Manage the reusable content blocks (tabs) in a simple list view. The search bar is automatically focused when you switch to this tab.
 
 ### 8.2 Service Delivery Management (`/dashboard/service-delivery`)
 This is the central hub for global application settings.
 - **Manage Calendars**: Create, edit, or delete shared calendars. Deleting a calendar is a high-impact action and must be done from the dropdown menu on its card.
-- **Manage Teams**: This tab provides a powerful, dynamic interface for managing user groups (called "Teams"). Just like Badge Collections, Teams can be owned, shared with other groups, linked, and copied. You can drag and drop your owned teams to a shared panel to make them available to others, or drag a shared team from that panel onto your board to link it.
+- **Manage Teams**: This tab provides a powerful, dynamic interface for managing user groups (called "Teams"). You can drag and drop your owned teams to a shared panel to make them available to others, or drag a shared team from that panel onto your board to link it. To unlink a shared team, simply drag it from your board back to the shared panel.
 
 ### 8.3 Team Management (`/dashboard/teams/[teamId]`)
 This page is for managing the specifics of an individual team.
-- **Team Members**: View all members of the team. Team Admins are now listed in a dedicated column on the left for clarity, while all other members are in a responsive grid on the right. You can now also click on the "Team Admins" and "Members" titles to rename them for your team.
-- **Badge Management**: Create and manage your team's badge collections. To share a collection, simply drag its card to the "Shared Collections" panel. To link a collection from another team, drag it from the shared panel onto your main board.
+- **Team Members**: View all members of the team. Team Admins are now listed in a dedicated column on the left for clarity, while all other members are in a responsive grid on the right. You have full flexibility to manage Team Admins, including removing the last one. You can also click on the "Team Admins" and "Members" titles to rename them for your team.
+- **Badge Management**: Create and manage your team's badge collections. To share a collection, simply drag its card to the "Shared Collections" panel. To link a collection from another team, drag it from the shared panel onto your main board. To **activate** a collection for your team, click on its ghosted card; clicking an active card will deactivate it. To **delete** a collection you own, use the dropdown menu on its card.
 - **Pinned Locations**: Pin locations to the team's Production Schedule. You can also designate locations as "check locations."
 - **Workstations**: Manage a list of bookable workstations or machines for the team.
 - **Event Templates**: Create reusable templates for common events. You can edit a template's name by clicking on it directly. Click the edit icon on the template card to manage its requested roles.
@@ -106,3 +107,6 @@ Administrators can view the application from another user's perspective.
 2.  Select "View as" from the dropdown menu.
 3.  Choose a user from the list.
 4.  A banner will appear at the top of the screen indicating whose view you are using. To return to your own view, repeat the process and select "Return to your view".
+
+
+    
