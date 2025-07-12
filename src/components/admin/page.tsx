@@ -63,7 +63,7 @@ const useFocusOnMount = (isEditing: boolean) => {
 
 function UserCard({ user }: { user: User }) {
     return (
-        <div className="p-2 flex items-center justify-between rounded-md transition-colors bg-card shadow-lg">
+        <div className="p-2 flex items-center justify-between rounded-md transition-colors bg-card">
             <div className="flex items-center gap-4">
                 <Avatar>
                   <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
@@ -92,7 +92,7 @@ function SortableUserCard({ user, listId }: { user: User, listId: string }) {
     };
 
     return (
-        <div ref={setNodeRef} style={style} {...attributes} {...listeners} className={cn(isDragging && 'shadow-lg')}>
+        <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
             <UserCard user={user} />
         </div>
     );
@@ -741,8 +741,8 @@ function SortablePageCard({ id, page, onUpdate, onDelete, isPinned }: { id: stri
     );
 }
 
-function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
-  const { isOver, setNodeRef } = useDroppable({ id });
+function DuplicateZone({ onAdd }: { onAdd: () => void; }) {
+  const { isOver, setNodeRef } = useDroppable({ id: 'duplicate-page-zone' });
   
   return (
     <div
@@ -884,7 +884,7 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                    <DuplicateZone id="duplicate-page-zone" onAdd={handleAddPage} />
+                    <DuplicateZone onAdd={handleAddPage} />
                     <div className="flex items-center">
                         <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search pages..." inputRef={searchInputRef} autoFocus={isActive} />
                     </div>
