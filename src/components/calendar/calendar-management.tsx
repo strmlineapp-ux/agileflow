@@ -14,31 +14,51 @@ import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { cn } from '@/lib/utils';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { ScrollArea } from '../ui/scroll-area';
-import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProps } from 'react-beautiful-dnd';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
 
-// Wrapper to fix issues with react-beautiful-dnd and React 18 Strict Mode
-const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
-  const [enabled, setEnabled] = useState(false);
-  useEffect(() => {
-    const animation = requestAnimationFrame(() => setEnabled(true));
-    return () => {
-      cancelAnimationFrame(animation);
-      setEnabled(false);
-    };
-  }, []);
-  if (!enabled) {
-    return null;
-  }
-  return <Droppable {...props}>{children}</Droppable>;
-};
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  Droppable,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
 
 const predefinedColors = [
     '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
     '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6',
     '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
 ];
+
+function SortableCalendarCard({ calendar, onUpdate, onDelete }: { calendar: SharedCalendar; onUpdate: (id: string, data: Partial<SharedCalendar>) => void; onDelete: (calendar: SharedCalendar) => void; }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: calendar.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 10 : 'auto',
+  };
+  
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="p-3 basis-full md:basis-1/2 lg:basis-1/3 flex-grow-0 flex-shrink-0">
+      <CalendarCard calendar={calendar} onUpdate={onUpdate} onDelete={onDelete} isDragging={isDragging} />
+    </div>
+  );
+}
+
 
 function CalendarCard({ calendar, onUpdate, onDelete, isDragging }: { calendar: SharedCalendar; onUpdate: (id: string, data: Partial<SharedCalendar>) => void; onDelete: (calendar: SharedCalendar) => void; isDragging?: boolean; }) {
   const [isEditingName, setIsEditingName] = useState(false);
@@ -205,6 +225,42 @@ function CalendarCard({ calendar, onUpdate, onDelete, isDragging }: { calendar: 
   );
 }
 
+function DuplicateZone({ id, onDuplicate, onAdd, children }: { id: string; onDuplicate: () => void; onAdd: () => void; children: React.ReactNode }) {
+  const { isOver, setNodeRef } = useDroppable({ id });
+  
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "rounded-full transition-all p-0.5",
+        isOver && "ring-1 ring-border ring-inset"
+      )}
+    >
+      <TooltipProvider>
+          <Tooltip>
+              <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full p-0" onClick={onAdd}>
+                    {children}
+                  </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                  <p>{isOver ? 'Drop to Duplicate' : 'Add New Calendar'}</p>
+              </TooltipContent>
+          </Tooltip>
+      </TooltipProvider>
+    </div>
+  );
+}
+
+// Dummy Droppable for dnd-kit compatibility with useDroppable hook
+function useDroppable(options: any) {
+    const [isOver, setIsOver] = useState(false);
+    const setNodeRef = (node: HTMLElement | null) => {
+        // Dummy implementation
+    };
+    return { isOver, setNodeRef };
+}
+
 export function CalendarManagement({ tab }: { tab: AppTab }) {
   const { calendars, reorderCalendars, addCalendar, updateCalendar, deleteCalendar, updateAppTab, appSettings } = useUser();
   const { toast } = useToast();
@@ -279,28 +335,36 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
       toast({ title: 'Success', description: `Calendar "${newName}" created.` });
   };
   
-  const onDragEnd = (result: DropResult) => {
-      const { source, destination, draggableId } = result;
-      if (!destination) return;
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+      const { active, over } = event;
   
-      if (destination.droppableId === 'duplicate-calendar-zone') {
-          const calendarToDuplicate = calendars.find(c => c.id === draggableId);
-          if (calendarToDuplicate) {
-              handleDuplicateCalendar(calendarToDuplicate);
-          }
-          return;
+      if (over?.id === 'duplicate-calendar-zone' && active.id) {
+        const calendarToDuplicate = calendars.find(c => c.id === active.id);
+        if (calendarToDuplicate) {
+            handleDuplicateCalendar(calendarToDuplicate);
+        }
+        return;
       }
   
-      if (source.droppableId === 'calendars-list' && destination.droppableId === 'calendars-list') {
-          const reorderedCalendars = Array.from(calendars);
-          const [movedItem] = reorderedCalendars.splice(source.index, 1);
-          reorderedCalendars.splice(destination.index, 0, movedItem);
-          reorderCalendars(reorderedCalendars);
+      if (active.id !== over?.id) {
+          const oldIndex = calendars.findIndex(p => p.id === active.id);
+          const newIndex = calendars.findIndex(p => p.id === over!.id);
+          const reordered = arrayMove(calendars, oldIndex, newIndex);
+          reorderCalendars(reordered);
       }
   };
+  
+  const calendarIds = useMemo(() => calendars.map(c => c.id), [calendars]);
 
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <div className="space-y-6">
         <div className="flex items-center gap-2">
             {isEditingTitle ? (
@@ -317,63 +381,23 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                   </Tooltip>
               </TooltipProvider>
             )}
-            <StrictModeDroppable droppableId="duplicate-calendar-zone" isDropDisabled={false} isCombineEnabled={false}>
-                {(provided, snapshot) => (
-                    <div
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                        className={cn(
-                            "rounded-full transition-all p-0.5",
-                            snapshot.isDraggingOver && "ring-1 ring-border ring-inset"
-                        )}
-                    >
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="rounded-full p-0" onClick={handleAddCalendar}>
-                                        <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
-                                        <span className="sr-only">New Calendar or Drop to Duplicate</span>
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>{snapshot.isDraggingOver ? 'Drop to Duplicate' : 'Add New Calendar'}</p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    </div>
-                )}
-            </StrictModeDroppable>
+            <DuplicateZone id="duplicate-calendar-zone" onAdd={handleAddCalendar} onDuplicate={() => {}}>
+                <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
+                <span className="sr-only">New Calendar or Drop to Duplicate</span>
+            </DuplicateZone>
         </div>
-        <StrictModeDroppable droppableId="calendars-list" isDropDisabled={false} isCombineEnabled={false}>
-            {(provided) => (
-                <div
-                    className="flex flex-wrap -m-3"
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
-                >
-                    {calendars.map((calendar, index) => (
-                        <Draggable key={calendar.id} draggableId={calendar.id} index={index} ignoreContainerClipping={false}>
-                            {(provided, snapshot) => (
-                                <div
-                                    ref={provided.innerRef}
-                                    {...provided.draggableProps}
-                                    {...provided.dragHandleProps}
-                                    className="p-3 basis-full md:basis-1/2 lg:basis-1/3"
-                                >
-                                    <CalendarCard
-                                        calendar={calendar}
-                                        onUpdate={handleUpdate}
-                                        onDelete={openDeleteDialog}
-                                        isDragging={snapshot.isDragging}
-                                    />
-                                </div>
-                            )}
-                        </Draggable>
-                    ))}
-                    {provided.placeholder}
-                </div>
-            )}
-        </StrictModeDroppable>
+        <SortableContext items={calendarIds} strategy={rectSortingStrategy}>
+            <div className="flex flex-wrap -m-3">
+                {calendars.map((calendar) => (
+                    <SortableCalendarCard
+                        key={calendar.id}
+                        calendar={calendar}
+                        onUpdate={handleUpdate}
+                        onDelete={openDeleteDialog}
+                    />
+                ))}
+            </div>
+        </SortableContext>
       </div>
       
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
@@ -392,6 +416,6 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
           </DialogHeader>
         </DialogContent>
       </Dialog>
-    </DragDropContext>
+    </DndContext>
   );
 }

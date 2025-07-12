@@ -15,7 +15,6 @@ import { googleSymbolNames } from '@/lib/google-symbols';
 import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '../ui/dropdown-menu';
 import { Textarea } from '../ui/textarea';
-import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProps } from 'react-beautiful-dnd';
 import { Separator } from '../ui/separator';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle as UIDialogTitle } from '@/components/ui/dialog';
@@ -24,28 +23,32 @@ import { Label } from '../ui/label';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '../ui/select';
 import { getOwnershipContext } from '@/lib/permissions';
 
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  useDraggable,
+  useDroppable,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  rectSortingStrategy,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+
 const predefinedColors = [
     '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
     '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6',
     '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
 ];
-
-// Wrapper to fix issues with react-beautiful-dnd and React 18 Strict Mode
-const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
-  const [enabled, setEnabled] = useState(false);
-  useEffect(() => {
-    const animation = requestAnimationFrame(() => setEnabled(true));
-    return () => {
-      cancelAnimationFrame(animation);
-      setEnabled(false);
-    };
-  }, []);
-  if (!enabled) {
-    return null;
-  }
-  return <Droppable {...props}>{children}</Droppable>;
-};
-
 
 function CompactSearchIconPicker({
   icon,
@@ -132,6 +135,27 @@ function CompactSearchIconPicker({
       </PopoverContent>
     </Popover>
   );
+}
+
+
+function SortableBadgeItem({ badge, ...props }: { badge: Badge, [key: string]: any }) {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+        id: `badge::${badge.id}::${props.collectionId}`,
+        data: { type: 'badge', badge, collectionId: props.collectionId }
+    });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+        zIndex: isDragging ? 10 : 'auto',
+    };
+
+    return (
+        <div ref={setNodeRef} style={style} {...attributes} {...listeners} className={cn(props.collection.viewMode === 'detailed' && 'w-full md:w-1/2 p-2')}>
+             <BadgeDisplayItem badge={badge} {...props} />
+        </div>
+    );
 }
 
 
@@ -621,6 +645,71 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     );
 }
 
+function DroppableCollectionContent({ collection, children }: { collection: BadgeCollection, children: React.ReactNode }) {
+    const { setNodeRef, isOver } = useDroppable({ id: collection.id, data: { type: 'collection', collection }});
+    
+    return (
+        <div 
+            ref={setNodeRef}
+            className={cn(
+                "min-h-[60px] rounded-md border-2 border-dashed border-transparent p-2",
+                isOver && "border-primary bg-primary/10",
+                collection.viewMode === 'assorted' && "flex flex-wrap gap-2 items-start",
+                collection.viewMode === 'list' && "flex flex-col gap-1",
+                collection.viewMode === 'detailed' && "flex flex-wrap -m-2"
+            )}
+        >
+            {children}
+        </div>
+    );
+}
+
+function SortableCollectionCard({ collection, allBadges, onUpdateCollection, onDeleteCollection, onAddBadge, onUpdateBadge, onDeleteBadge, onToggleShare, contextTeam, isViewer = false, isSharedPreview = false }: {
+    collection: BadgeCollection;
+    allBadges: Badge[];
+    onUpdateCollection: (collectionId: string, newValues: Partial<Omit<BadgeCollection, 'id' | 'badgeIds'>>) => void;
+    onDeleteCollection: (collection: BadgeCollection) => void;
+    onAddBadge: (collectionId: string, sourceBadge?: Badge) => void;
+    onUpdateBadge: (badgeData: Partial<Badge>) => void;
+    onDeleteBadge: (collectionId: string, badgeId: string) => void;
+    onToggleShare: (collectionId: string) => void;
+    contextTeam?: Team;
+    isViewer?: boolean;
+    isSharedPreview?: boolean;
+}) {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+        id: `collection::${collection.id}`,
+        data: { type: 'collection', collection }
+    });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.8 : 1,
+        zIndex: isDragging ? 20 : 'auto',
+    };
+    
+    return (
+        <div ref={setNodeRef} style={style}>
+            <BadgeCollectionCard 
+                collection={collection} 
+                allBadges={allBadges}
+                onUpdateCollection={onUpdateCollection}
+                onDeleteCollection={onDeleteCollection}
+                onAddBadge={onAddBadge}
+                onUpdateBadge={onUpdateBadge}
+                onDeleteBadge={onDeleteBadge}
+                onToggleShare={onToggleShare}
+                dragHandleProps={{...attributes, ...listeners}}
+                isSharedPreview={isSharedPreview}
+                contextTeam={contextTeam}
+                isViewer={isViewer}
+            />
+        </div>
+    );
+}
+
+
 function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDeleteCollection, onAddBadge, onUpdateBadge, onDeleteBadge, onToggleShare, dragHandleProps, isSharedPreview = false, contextTeam, isViewer = false }: {
     collection: BadgeCollection;
     allBadges: Badge[];
@@ -802,29 +891,11 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                                     ) : (
                                         <CardTitle onClick={(e) => { e.stopPropagation(); if(isOwned) setIsEditingName(true);}} className={cn("text-2xl font-headline font-thin break-words", isOwned && "cursor-pointer")}>{collection.name}</CardTitle>
                                     )}
-                                    <StrictModeDroppable droppableId={`duplicate-badge-zone:${collection.id}`} type="badge" isDropDisabled={!isOwned || isViewer} isCombineEnabled={false}>
-                                    {(provided, snapshot) => (
-                                        <div
-                                            ref={provided.innerRef}
-                                            {...provided.droppableProps}
-                                            className={cn(
-                                                "rounded-full p-0.5",
-                                                snapshot.isDraggingOver && "ring-1 ring-border ring-inset"
-                                            )}
-                                        >
-                                            {isOwned && !isSharedPreview && !isViewer && (
-                                                <TooltipProvider>
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onAddBadge(collection.id);}}><GoogleSymbol name="add_circle" className="text-4xl" weight={100} /><span className="sr-only">Add Badge</span></Button>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent><p>{snapshot.isDraggingOver ? 'Drop to Duplicate' : 'Add New Badge'}</p></TooltipContent>
-                                                    </Tooltip>
-                                                </TooltipProvider>
-                                            )}
-                                        </div>
-                                    )}
-                                    </StrictModeDroppable>
+                                    <DroppableDuplicateZone id={`duplicate-badge-zone:${collection.id}`} disabled={!isOwned || isViewer}>
+                                        {isOwned && !isSharedPreview && !isViewer && (
+                                            <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onAddBadge(collection.id);}}><GoogleSymbol name="add_circle" className="text-4xl" weight={100} /><span className="sr-only">Add Badge</span></Button>
+                                        )}
+                                    </DroppableDuplicateZone>
                                 </div>
                             </div>
                         </div>
@@ -911,51 +982,51 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                 </CardHeader>
             </div>
             <CardContent className="flex-grow">
-                <StrictModeDroppable droppableId={collection.id} type="badge" isDropDisabled={!isOwned || isSharedPreview || isViewer} isCombineEnabled={false}>
-                    {(provided, snapshot) => (
-                         <div
-                            ref={provided.innerRef}
-                            {...provided.droppableProps}
-                            className={cn(
-                                "min-h-[60px] rounded-md border-2 border-dashed border-transparent p-2",
-                                collection.viewMode === 'assorted' && "flex flex-wrap gap-2 items-start",
-                                collection.viewMode === 'list' && "flex flex-col gap-1",
-                                collection.viewMode === 'detailed' && "flex flex-wrap -m-2"
-                            )}>
-                            {collectionBadges.map((badge, index) => (
-                                <Draggable key={`${badge.id}::${collection.id}`} draggableId={`${badge.id}::${collection.id}`} index={index} isDragDisabled={isViewer} ignoreContainerClipping={false}>
-                                    {(provided, snapshot) => (
-                                    <div 
-                                      ref={provided.innerRef} 
-                                      {...provided.draggableProps} 
-                                      {...provided.dragHandleProps} 
-                                      className={cn(
-                                        snapshot.isDragging && "opacity-80",
-                                        collection.viewMode === 'detailed' && 'w-full md:w-1/2 p-2'
-                                      )}
-                                    >
-                                        <BadgeDisplayItem 
-                                            badge={badge} 
-                                            viewMode={collection.viewMode} 
-                                            onUpdateBadge={(data) => onUpdateBadge({ ...data, id: badge.id })}
-                                            onDelete={() => onDeleteBadge(collection.id, badge.id)}
-                                            collectionId={collection.id}
-                                            teamId={contextTeam?.id || ''}
-                                            isSharedPreview={isSharedPreview}
-                                            isCollectionOwned={isOwned}
-                                            isViewer={isViewer}
-                                        />
-                                    </div>)}
-                                </Draggable>
-                                ))}
-                            {provided.placeholder}
-                        </div>
-                    )}
-                </StrictModeDroppable>
+                <SortableContext items={collection.badgeIds.map(id => `badge::${id}::${collection.id}`)} strategy={rectSortingStrategy}>
+                    <DroppableCollectionContent collection={collection}>
+                        {collectionBadges.map((badge, index) => (
+                            <SortableBadgeItem
+                                key={`${badge.id}::${collection.id}`}
+                                badge={badge}
+                                viewMode={collection.viewMode}
+                                onUpdateBadge={(data) => onUpdateBadge({ ...data, id: badge.id })}
+                                onDelete={() => onDeleteBadge(collection.id, badge.id)}
+                                collectionId={collection.id}
+                                teamId={contextTeam?.id || ''}
+                                isSharedPreview={isSharedPreview}
+                                isCollectionOwned={isOwned}
+                                isViewer={isViewer}
+                                collection={collection}
+                            />
+                        ))}
+                    </DroppableCollectionContent>
+                </SortableContext>
             </CardContent>
         </Card>
     );
 }
+
+function DroppableDuplicateZone({ id, disabled, children }: { id: string, disabled: boolean, children: React.ReactNode }) {
+    const { setNodeRef, isOver } = useDroppable({ id, disabled });
+    const tooltipText = isOver ? 'Drop to Duplicate' : 'Add New Badge';
+    
+    return (
+        <div 
+            ref={setNodeRef}
+            className={cn("rounded-full p-0.5 transition-all", isOver && "ring-1 ring-border ring-inset")}
+        >
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        {children}
+                    </TooltipTrigger>
+                    <TooltipContent><p>{tooltipText}</p></TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+        </div>
+    );
+}
+
 
 export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }: { team?: Team, tab: AppTab, page: AppPage, isTeamSpecificPage?: boolean }) {
     const { 
@@ -1174,128 +1245,110 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     }, [allBadgeCollections, allBadges, updateBadgeCollection, toast, confirmPermanentDelete]);
     
     
-    const onDragEnd = (result: DropResult) => {
-        const { source, destination, draggableId, type } = result;
-    
-        if (!destination) return;
+    const onDragEnd = (result: DragEndEvent) => {
+        const { active, over } = result;
+
+        if (!over) return;
         
-        // Prevent dropping a shared collection back into the shared panel
-        if (source.droppableId === 'shared-collections-panel' && destination.droppableId === 'shared-collections-panel') return;
+        const activeType = active.data.current?.type;
+        const overType = over.data.current?.type;
 
-        const allVisibleCollections = [...collectionsToDisplay, ...sharedCollections];
+        // --- Dragging a COLLECTION ---
+        if (activeType === 'collection') {
+            const collectionId = active.data.current?.collection.id;
 
-        // --- Dragging from ANYWHERE to the SHARED PANEL ---
-        if (type === 'collection' && destination.droppableId === 'shared-collections-panel') {
-            const collectionToDrop = allBadgeCollections.find(c => c.id === draggableId);
-            if (collectionToDrop) {
-                let isOwner = collectionToDrop.owner.type === 'user' && collectionToDrop.owner.id === viewAsUser.userId;
-                if (contextTeam && collectionToDrop.owner.type === 'team' && collectionToDrop.owner.id === contextTeam.id) {
-                    isOwner = canManageCollections;
+            // To Shared Panel (Unsharing or Unlinking)
+            if (over.id === 'shared-collections-panel') {
+                const collection = allBadgeCollections.find(c => c.id === collectionId);
+                if (collection && collection.owner.id === viewAsUser.userId) {
+                    handleToggleShare(collectionId);
+                } else if (collection) {
+                    handleDeleteCollection(collection); // This handles unlinking
                 }
-
-                if (isOwner && !collectionToDrop.isShared) {
-                    handleToggleShare(collectionToDrop.id);
-                } else if (!isOwner) { // Unlinking a linked collection
-                     if (team) {
-                        const updatedIds = (team.linkedCollectionIds || []).filter(id => id !== draggableId);
-                        updateTeam(team.id, { linkedCollectionIds: updatedIds });
-                    } else {
-                        const updatedIds = (viewAsUser.linkedCollectionIds || []).filter(id => id !== draggableId);
-                        updateUser(viewAsUser.userId, { linkedCollectionIds: updatedIds });
-                    }
-                    toast({ title: 'Collection Unlinked' });
-                }
-            }
-            return;
-        }
-
-        // --- Dragging from SHARED PANEL to MAIN BOARD (Linking) ---
-        if (type === 'collection' && source.droppableId === 'shared-collections-panel' && destination.droppableId === 'collections-list') {
-            if (team) {
-                updateTeam(team.id, { linkedCollectionIds: [...(team.linkedCollectionIds || []), draggableId] });
-            } else {
-                updateUser(viewAsUser.userId, { linkedCollectionIds: [...(viewAsUser.linkedCollectionIds || []), draggableId] });
-            }
-            toast({ title: 'Collection Linked' });
-            return;
-        }
-
-        // --- DUPLICATING a collection ---
-        if (type === 'collection' && destination.droppableId === 'duplicate-collection-zone') {
-             const sourceCollection = allBadgeCollections.find(c => c.id === draggableId);
-             if (sourceCollection) {
-                 const owner = getOwnershipContext(page, viewAsUser, contextTeam);
-                 addBadgeCollection(owner, sourceCollection, contextTeam);
-
-                 const wasLinked = team
-                    ? (team.linkedCollectionIds || []).includes(draggableId)
-                    : (viewAsUser.linkedCollectionIds || []).includes(draggableId);
-        
-                if (wasLinked) {
-                    if (team) {
-                        const updatedIds = team.linkedCollectionIds!.filter(id => id !== draggableId);
-                        updateTeam(team.id, { linkedCollectionIds: updatedIds });
-                    } else {
-                        const updatedIds = viewAsUser.linkedCollectionIds!.filter(id => id !== draggableId);
-                        updateUser(viewAsUser.userId, { linkedCollectionIds: updatedIds });
-                    }
-                }
-
-                 toast({ title: 'Collection Copied', description: 'An independent copy was created.' });
-             }
-             return;
-        }
-
-        const badgeId = draggableId.split('::')[0];
-        const sourceCollectionId = source.droppableId;
-        
-        // --- DUPLICATING a badge ---
-        if (destination.droppableId.startsWith('duplicate-badge-zone:')) {
-            const collectionId = destination.droppableId.split(':')[1];
-            const sourceBadge = allBadges.find(b => b.id === badgeId);
-  
-            if (sourceBadge && collectionId) {
-                addBadge(collectionId, sourceBadge);
-                if (isTeamContext && contextTeam && !contextTeam.activeBadgeCollections?.includes(collectionId)) {
-                   // When duplicating a badge into an inactive collection, we don't automatically activate it anymore.
-                   // User must explicitly activate the collection card.
-                }
-                toast({ title: 'Badge Duplicated' });
-            }
-            return;
-        }
-
-        // --- MOVING a badge ---
-        const destCollectionId = destination.droppableId;
-        const sourceCollection = allBadgeCollections.find(c => c.id === sourceCollectionId);
-        const destCollection = allBadgeCollections.find(c => c.id === destCollectionId);
-    
-        if (!sourceCollection || !destCollection) return;
-        
-        // --- Reordering within the same collection ---
-        if (source.droppableId === destination.droppableId) {
-            const reorderedIds = Array.from(sourceCollection.badgeIds);
-            const [movedId] = reorderedIds.splice(source.index, 1);
-            reorderedIds.splice(destination.index, 0, movedId);
-            updateBadgeCollection(sourceCollection.id, { badgeIds: reorderedIds });
-        } else { // --- Linking to a different collection ---
-            const newDestIds = Array.from(destCollection.badgeIds);
-            const badgeIsAlreadyInDest = newDestIds.includes(badgeId);
-
-            if (badgeIsAlreadyInDest) {
-                toast({ variant: 'default', title: 'Already linked', description: 'This badge is already in the destination collection.'});
                 return;
             }
 
-            newDestIds.splice(destination.index, 0, badgeId);
-            updateBadgeCollection(destCollection.id, { badgeIds: newDestIds });
-            toast({ title: 'Badge Shared', description: 'A link to the badge has been added to the new collection.' });
+            // From Shared Panel (Linking)
+            if (active.data.current?.isSharedPreview && over.id === 'collections-list') {
+                if (team) {
+                    updateTeam(team.id, { linkedCollectionIds: [...(team.linkedCollectionIds || []), collectionId] });
+                } else {
+                    updateUser(viewAsUser.userId, { linkedCollectionIds: [...(viewAsUser.linkedCollectionIds || []), collectionId] });
+                }
+                toast({ title: 'Collection Linked' });
+                return;
+            }
+
+            // Duplicating a collection
+            if (over.id === 'duplicate-collection-zone') {
+                const sourceCollection = allBadgeCollections.find(c => c.id === collectionId);
+                if (sourceCollection) {
+                    const owner = getOwnershipContext(page, viewAsUser, contextTeam);
+                    addBadgeCollection(owner, sourceCollection, contextTeam);
+                    toast({ title: 'Collection Copied' });
+                }
+                return;
+            }
+
+            // Reordering collections
+            if (overType === 'collection') {
+                const activeIndex = collectionsToDisplay.findIndex(c => c.id === collectionId);
+                const overIndex = collectionsToDisplay.findIndex(c => c.id === over.data.current?.collection.id);
+                // TODO: Implement reordering logic if needed.
+            }
+            return;
+        }
+
+        // --- Dragging a BADGE ---
+        if (activeType === 'badge') {
+            const badge = active.data.current?.badge as Badge;
+            const sourceCollectionId = active.data.current?.collectionId;
+            
+            // Duplicating a badge
+            if (over.id === `duplicate-badge-zone:${sourceCollectionId}`) {
+                addBadge(sourceCollectionId, badge);
+                toast({ title: 'Badge Duplicated' });
+                return;
+            }
+
+            // Moving a badge
+            if (overType === 'collection' || overType === 'badge') {
+                const overCollectionId = over.data.current?.collection.id || over.data.current?.collectionId;
+                const overCollection = allBadgeCollections.find(c => c.id === overCollectionId);
+                if (!overCollection) return;
+
+                // Move within the same collection
+                if (sourceCollectionId === overCollectionId) {
+                    const sourceIndex = overCollection.badgeIds.indexOf(badge.id);
+                    const overIndex = over.data.current?.type === 'badge' ? overCollection.badgeIds.indexOf(over.data.current.badge.id) : overCollection.badgeIds.length;
+                    
+                    if (sourceIndex !== -1) {
+                        const reorderedIds = Array.from(overCollection.badgeIds);
+                        reorderedIds.splice(sourceIndex, 1);
+                        reorderedIds.splice(overIndex, 0, badge.id);
+                        updateBadgeCollection(overCollectionId, { badgeIds: reorderedIds });
+                    }
+                } else { // Move to a different collection
+                    if (overCollection.badgeIds.includes(badge.id)) {
+                        toast({ variant: 'default', title: 'Already linked'});
+                        return;
+                    }
+                    const newDestIds = Array.from(overCollection.badgeIds);
+                    newDestIds.push(badge.id);
+                    updateBadgeCollection(overCollection.id, { badgeIds: newDestIds });
+                    toast({ title: 'Badge Shared' });
+                }
+            }
         }
     };
-
+    
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    );
 
     return (
-        <DragDropContext onDragEnd={onDragEnd}>
+        <DndContext sensors={sensors} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
             <div className="flex gap-4">
                 <div className="flex-1 transition-all duration-300 flex flex-col gap-6">
                     <div className="flex items-center justify-between">
@@ -1323,30 +1376,12 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                 </TooltipProvider>
                             )}
                             {!isViewer && (
-                                <StrictModeDroppable droppableId="duplicate-collection-zone" type="collection" isDropDisabled={false} isCombineEnabled={false}>
-                                {(provided, snapshot) => (
-                                    <div
-                                        ref={provided.innerRef}
-                                        {...provided.droppableProps}
-                                        className={cn(
-                                            "rounded-full p-0.5",
-                                            snapshot.isDraggingOver && "ring-1 ring-border ring-inset"
-                                        )}
-                                    >
-                                        <TooltipProvider>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <Button variant="ghost" size="icon" onClick={handleAddCollection}>
-                                                        <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
-                                                        <span className="sr-only">Add New Collection or Drop to Duplicate</span>
-                                                    </Button>
-                                                </TooltipTrigger>
-                                                <TooltipContent><p>{snapshot.isDraggingOver ? 'Drop to Duplicate' : 'Add New Collection'}</p></TooltipContent>
-                                            </Tooltip>
-                                        </TooltipProvider>
-                                    </div>
-                                )}
-                                </StrictModeDroppable>
+                                <DroppableDuplicateZone id="duplicate-collection-zone" disabled={isViewer}>
+                                    <Button variant="ghost" size="icon" onClick={handleAddCollection}>
+                                        <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
+                                        <span className="sr-only">Add New Collection or Drop to Duplicate</span>
+                                    </Button>
+                                </DroppableDuplicateZone>
                             )}
                         </div>
                         <div className="flex items-center gap-1">
@@ -1382,42 +1417,81 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                         </div>
                     </div>
                     
-                    <StrictModeDroppable droppableId="collections-list" type="collection" isDropDisabled={isViewer} isCombineEnabled={false}>
-                        {(provided, snapshot) => (
-                            <div 
-                                ref={provided.innerRef} 
-                                {...provided.droppableProps} 
-                                className={cn(
-                                    "flex flex-wrap -m-2 transition-all duration-300",
-                                    snapshot.isDraggingOver && "ring-1 ring-border ring-inset p-2 rounded-lg"
-                                )}
-                            >
-                                {collectionsToDisplay.map((collection, index) => {
-                                     const isActive = !isTeamContext || !contextTeam?.activeBadgeCollections || contextTeam.activeBadgeCollections.includes(collection.id);
-                                     const canToggle = isTeamContext && canManageCollections;
+                    <SortableContext items={collectionsToDisplay.map(c => `collection::${c.id}`)} strategy={rectSortingStrategy}>
+                        <div className={cn("flex flex-wrap -m-2 transition-all duration-300")}>
+                            {collectionsToDisplay.map((collection, index) => {
+                                 const isActive = !isTeamContext || !contextTeam?.activeBadgeCollections || contextTeam.activeBadgeCollections.includes(collection.id);
+                                 const canToggle = isTeamContext && canManageCollections;
 
-                                    return (
-                                        <Draggable key={collection.id} draggableId={collection.id} index={index} isDragDisabled={isViewer} ignoreContainerClipping={false}>
-                                            {(provided) => (
-                                                <div
-                                                    ref={provided.innerRef}
-                                                    {...provided.draggableProps}
-                                                    className={cn(
-                                                        "p-2 w-full transition-all duration-300",
-                                                        isSharedPanelOpen ? "lg:w-1/2" : "lg:w-1/3",
-                                                        (canToggle && !isActive) && "opacity-40 hover:opacity-100",
-                                                    )}
-                                                >
-                                                    <div 
-                                                        className={cn("h-full", (canToggle && !isActive) && "cursor-pointer")}
-                                                        onClick={(e) => {
-                                                           if (canToggle) {
-                                                               handleToggleCollectionActive(e, collection.id);
-                                                           }
-                                                        }}
-                                                    >
-                                                        <BadgeCollectionCard
-                                                            dragHandleProps={provided.dragHandleProps}
+                                return (
+                                    <div
+                                        key={collection.id}
+                                        className={cn(
+                                            "p-2 w-full transition-all duration-300",
+                                            isSharedPanelOpen ? "lg:w-1/2" : "lg:w-1/3",
+                                            (canToggle && !isActive) && "opacity-40 hover:opacity-100",
+                                        )}
+                                    >
+                                        <div 
+                                            className={cn("h-full", (canToggle && !isActive) && "cursor-pointer")}
+                                            onClick={(e) => {
+                                               if (canToggle) {
+                                                   handleToggleCollectionActive(e, collection.id);
+                                               }
+                                            }}
+                                        >
+                                            <SortableCollectionCard
+                                                collection={collection}
+                                                allBadges={allBadges}
+                                                onUpdateCollection={updateBadgeCollection}
+                                                onDeleteCollection={handleDeleteCollection}
+                                                onAddBadge={addBadge}
+                                                onUpdateBadge={updateBadge}
+                                                onDeleteBadge={handleDeleteBadge}
+                                                onToggleShare={handleToggleShare}
+                                                contextTeam={team}
+                                                isViewer={isViewer}
+                                            />
+                                        </div>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </SortableContext>
+                </div>
+                
+                {!isViewer && (
+                     <div className={cn(
+                        "transition-all duration-300",
+                        isSharedPanelOpen ? "w-96 p-2" : "w-0"
+                    )}>
+                        <div 
+                            className={cn("h-full rounded-lg transition-all")}
+                        >
+                            <Card className={cn("transition-opacity duration-300 h-full bg-transparent", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
+                                <CardHeader>
+                                    <div className="flex items-center justify-between">
+                                        <CardTitle className="font-headline font-thin text-xl">Shared Collections</CardTitle>
+                                        <div className="flex items-center gap-1">
+                                            <GoogleSymbol name="search" className="text-muted-foreground text-lg" />
+                                            <input
+                                                ref={sharedSearchInputRef}
+                                                placeholder="Search shared..."
+                                                value={sharedSearchTerm}
+                                                onChange={(e) => setSharedSearchTerm(e.target.value)}
+                                                className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                                            />
+                                        </div>
+                                    </div>
+                                    <CardDescription>Drag a collection to link it to your team.</CardDescription>
+                                </CardHeader>
+                                <CardContent className="h-full">
+                                    <ScrollArea className="h-full">
+                                        <SortableContext items={sharedCollections.map(c => `collection::${c.id}`)} strategy={verticalListSortingStrategy}>
+                                            <div className="space-y-2">
+                                                {sharedCollections.map((collection, index) => {
+                                                    return (
+                                                        <SortableCollectionCard
                                                             key={collection.id}
                                                             collection={collection}
                                                             allBadges={allBadges}
@@ -1427,89 +1501,19 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                                             onUpdateBadge={updateBadge}
                                                             onDeleteBadge={handleDeleteBadge}
                                                             onToggleShare={handleToggleShare}
+                                                            isSharedPreview={true}
                                                             contextTeam={team}
                                                             isViewer={isViewer}
                                                         />
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </Draggable>
-                                    )
-                                })}
-                                {provided.placeholder}
-                            </div>
-                        )}
-                    </StrictModeDroppable>
-                </div>
-                
-                {!isViewer && (
-                     <div className={cn(
-                        "transition-all duration-300",
-                        isSharedPanelOpen ? "w-96 p-2" : "w-0"
-                    )}>
-                        <StrictModeDroppable droppableId="shared-collections-panel" type="collection" isDropDisabled={!allBadgeCollections.some(c => c.isShared)}>
-                            {(provided, snapshot) => (
-                                <div 
-                                    ref={provided.innerRef} 
-                                    {...provided.droppableProps} 
-                                    className={cn("h-full rounded-lg transition-all", snapshot.isDraggingOver && "ring-1 ring-border ring-inset")}
-                                >
-                                    <Card className={cn("transition-opacity duration-300 h-full bg-transparent", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
-                                        <CardHeader>
-                                            <div className="flex items-center justify-between">
-                                                <CardTitle className="font-headline font-thin text-xl">Shared Collections</CardTitle>
-                                                <div className="flex items-center gap-1">
-                                                    <GoogleSymbol name="search" className="text-muted-foreground text-lg" />
-                                                    <input
-                                                        ref={sharedSearchInputRef}
-                                                        placeholder="Search shared..."
-                                                        value={sharedSearchTerm}
-                                                        onChange={(e) => setSharedSearchTerm(e.target.value)}
-                                                        className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
-                                                    />
-                                                </div>
-                                            </div>
-                                            <CardDescription>Drag a collection to link it to your team.</CardDescription>
-                                        </CardHeader>
-                                        <CardContent className="h-full">
-                                            <div className="space-y-2">
-                                                {sharedCollections.map((collection, index) => {
-                                                    return (
-                                                        <Draggable key={collection.id} draggableId={collection.id} index={index} isDragDisabled={false} ignoreContainerClipping={false}>
-                                                            {(provided, snapshot) => (
-                                                                <div 
-                                                                    ref={provided.innerRef} 
-                                                                    {...provided.draggableProps} 
-                                                                    className={cn("w-full cursor-grab", snapshot.isDragging && "shadow-xl opacity-80")}
-                                                                >
-                                                                    <BadgeCollectionCard
-                                                                        dragHandleProps={provided.dragHandleProps}
-                                                                        key={collection.id}
-                                                                        collection={collection}
-                                                                        allBadges={allBadges}
-                                                                        onUpdateCollection={updateBadgeCollection}
-                                                                        onDeleteCollection={handleDeleteCollection}
-                                                                        onAddBadge={addBadge}
-                                                                        onUpdateBadge={updateBadge}
-                                                                        onDeleteBadge={handleDeleteBadge}
-                                                                        onToggleShare={handleToggleShare}
-                                                                        isSharedPreview={true}
-                                                                        contextTeam={team}
-                                                                        isViewer={isViewer}
-                                                                    />
-                                                                </div>
-                                                            )}
-                                                        </Draggable>
                                                     )
                                                 })}
-                                                {provided.placeholder}
                                                 {sharedCollections.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">No collections are being shared by other teams.</p>}
                                             </div>
-                                        </CardContent>
-                                    </Card>
-                                </div>
-                            )}
-                        </StrictModeDroppable>
+                                        </SortableContext>
+                                    </ScrollArea>
+                                </CardContent>
+                            </Card>
+                        </div>
                     </div>
                 )}
                 <Dialog open={!!collectionToDelete} onOpenChange={() => setCollectionToDelete(null)}>
@@ -1548,6 +1552,6 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                     </DialogContent>
                 </Dialog>
             </div>
-        </DragDropContext>
+        </DndContext>
     );
 }

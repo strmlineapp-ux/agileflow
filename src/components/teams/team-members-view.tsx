@@ -7,25 +7,28 @@ import { TeamMemberCard } from './team-member-card';
 import React, { useRef, useState, useEffect, useMemo, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProps } from 'react-beautiful-dnd';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/utils';
 import { GoogleSymbol } from '../icons/google-symbol';
 
-// Wrapper to fix issues with react-beautiful-dnd and React 18 Strict Mode
-const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
-  const [enabled, setEnabled] = useState(false);
-  useEffect(() => {
-    const animation = requestAnimationFrame(() => setEnabled(true));
-    return () => {
-      cancelAnimationFrame(animation);
-      setEnabled(false);
-    };
-  }, []);
-  if (!enabled) {
-    return null;
-  }
-  return <Droppable {...props}>{children}</Droppable>;
-};
+function SortableTeamMember({ member, team, listType }: { member: User, team: Team, listType: 'admin' | 'member'}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: member.userId });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.8 : 1,
+    zIndex: isDragging ? 10 : 'auto',
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className={cn(isDragging && "shadow-xl")}>
+      <TeamMemberCard member={member} team={team} />
+    </div>
+  );
+}
 
 
 export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
@@ -53,6 +56,16 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
 
     const admins = useMemo(() => teamMembers.filter(m => team.teamAdmins?.includes(m.userId)), [teamMembers, team.teamAdmins]);
     const members = useMemo(() => teamMembers.filter(m => !team.teamAdmins?.includes(m.userId)), [teamMembers, team.teamAdmins]);
+
+    const adminIds = useMemo(() => admins.map(a => a.userId), [admins]);
+    const memberIds = useMemo(() => members.map(m => m.userId), [members]);
+    
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
 
     useEffect(() => {
         if (isEditingTitle) titleInputRef.current?.focus();
@@ -99,31 +112,37 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         else if (e.key === 'Escape') setIsEditingMembersLabel(false);
     };
     
-    const onDragEnd = (result: DropResult) => {
-      const { source, destination } = result;
-      if (!destination || source.droppableId !== destination.droppableId) {
+    const onDragEnd = (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (!over || active.id === over.id) {
         return;
       }
 
-      const isAdminList = source.droppableId === 'admins-list';
-      const listToReorder = isAdminList ? admins : members;
-      
-      const reorderedList = Array.from(listToReorder);
-      const [movedItem] = reorderedList.splice(source.index, 1);
-      reorderedList.splice(destination.index, 0, movedItem);
+      const activeList = adminIds.includes(active.id as string) ? 'admins' : 'members';
+      const overList = adminIds.includes(over.id as string) ? 'admins' : 'members';
 
-      // Reconstruct the full ordered list of IDs
-      const newAdmins = isAdminList ? reorderedList : admins;
-      const newMembers = !isAdminList ? reorderedList : members;
+      if (activeList !== overList) {
+        // For simplicity, we don't support dragging between lists in this view.
+        // That logic is handled in the Team Management view.
+        return;
+      }
       
-      // Combine the two lists to get the new full `members` order for the team
+      const list = activeList === 'admins' ? admins : members;
+      const oldIndex = list.findIndex(item => item.userId === active.id);
+      const newIndex = list.findIndex(item => item.userId === over.id);
+      
+      const reorderedList = arrayMove(list, oldIndex, newIndex);
+
+      const newAdmins = activeList === 'admins' ? reorderedList : admins;
+      const newMembers = activeList === 'members' ? reorderedList : members;
+      
       const newMemberIds = [...newAdmins, ...newMembers].map(m => m.userId);
 
       updateTeam(team.id, { members: newMemberIds });
     };
 
     return (
-      <DragDropContext onDragEnd={onDragEnd}>
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
         <div className="space-y-6">
             <div className="flex items-center gap-2 mb-6">
                 {isEditingTitle ? (
@@ -160,27 +179,13 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                          </h3>
                     )}
                     {admins.length > 0 ? (
-                        <StrictModeDroppable droppableId="admins-list">
-                            {(provided) => (
-                                <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-4">
-                                    {admins.map((member, index) => (
-                                        <Draggable key={member.userId} draggableId={`admin-${member.userId}`} index={index} ignoreContainerClipping={false}>
-                                        {(provided, snapshot) => (
-                                            <div
-                                            ref={provided.innerRef}
-                                            {...provided.draggableProps}
-                                            {...provided.dragHandleProps}
-                                            className={cn(snapshot.isDragging && "opacity-80 shadow-xl")}
-                                            >
-                                            <TeamMemberCard member={member} team={team} />
-                                            </div>
-                                        )}
-                                        </Draggable>
-                                    ))}
-                                    {provided.placeholder}
-                                </div>
-                            )}
-                        </StrictModeDroppable>
+                        <SortableContext items={adminIds} strategy={verticalListSortingStrategy}>
+                            <div className="space-y-4">
+                                {admins.map((member) => (
+                                    <SortableTeamMember key={member.userId} member={member} team={team} listType="admin" />
+                                ))}
+                            </div>
+                        </SortableContext>
                     ) : (
                         <div className="text-sm text-muted-foreground p-4 border border-dashed rounded-lg text-center">No team admins assigned.</div>
                     )}
@@ -201,31 +206,19 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                          </h3>
                     )}
                     {members.length > 0 && (
-                        <StrictModeDroppable droppableId="members-list">
-                            {(provided) => (
-                                <div ref={provided.innerRef} {...provided.droppableProps} className="flex flex-wrap -m-3">
-                                {members.map((member, index) => (
-                                    <Draggable key={member.userId} draggableId={`member-${member.userId}`} index={index} ignoreContainerClipping={false}>
-                                    {(provided, snapshot) => (
-                                        <div
-                                        ref={provided.innerRef}
-                                        {...provided.draggableProps}
-                                        {...provided.dragHandleProps}
-                                        className={cn("p-3 basis-full md:basis-1/2 flex-grow-0 flex-shrink-0", snapshot.isDragging && "opacity-80 shadow-xl")}
-                                        >
-                                        <TeamMemberCard member={member} team={team} />
-                                        </div>
-                                    )}
-                                    </Draggable>
-                                ))}
-                                {provided.placeholder}
+                        <SortableContext items={memberIds} strategy={verticalListSortingStrategy}>
+                            <div className="flex flex-wrap -m-3">
+                            {members.map((member) => (
+                                <div key={member.userId} className="p-3 basis-full md:basis-1/2 flex-grow-0 flex-shrink-0">
+                                    <SortableTeamMember member={member} team={team} listType="member" />
                                 </div>
-                            )}
-                        </StrictModeDroppable>
+                            ))}
+                            </div>
+                        </SortableContext>
                     )}
                 </div>
             </div>
         </div>
-      </DragDropContext>
+      </DndContext>
     );
 }
