@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -381,7 +382,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                     <TooltipContent><p>Manage Page Access</p></TooltipContent>
                 </Tooltip>
             </TooltipProvider>
-            <PopoverContent className="w-80 p-0" onClick={(e) => e.stopPropagation()}>
+            <PopoverContent className="w-80 p-0" onPointerDown={(e) => e.stopPropagation()}>
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                     <TabsList className="grid w-full grid-cols-2">
                         <TabsTrigger value="users">Users</TabsTrigger>
@@ -649,8 +650,10 @@ function PageCard({ page, onUpdate, onDelete, isPinned, ...props }: { page: AppP
                                               variant="ghost"
                                               size="icon"
                                               className="h-8 w-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                                              onClick={() => setIsDeleteDialogOpen(true)}
-                                              onPointerDown={(e) => e.stopPropagation()}
+                                              onPointerDown={(e) => {
+                                                  e.stopPropagation();
+                                                  setIsDeleteDialogOpen(true);
+                                              }}
                                           >
                                               <GoogleSymbol name="delete" className="text-lg" weight={100} />
                                           </Button>
@@ -666,7 +669,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, ...props }: { page: AppP
                 <p className="text-xs text-muted-foreground truncate font-thin">{displayPath}</p>
             </CardContent>
             <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-                <DialogContent className="max-w-md">
+                <DialogContent className="max-w-md" onPointerDownCapture={(e) => e.stopPropagation()}>
                     <div className="absolute top-4 right-4">
                         <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={() => onDelete(page.id)}>
                             <GoogleSymbol name="delete" className="text-4xl" weight={100} />
