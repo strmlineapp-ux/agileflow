@@ -495,7 +495,8 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
   );
 }
 
-function PageCard({ page, onUpdate, onDelete, isPinned, ...props }: { page: AppPage; onUpdate: (id: string, data: Partial<AppPage>) => void; onDelete: (id: string) => void; isPinned?: boolean, [key:string]: any; }) {
+function PageCard({ page, onUpdate, onDelete, isPinned, ...props }: { page: AppPage; onUpdate: (id: string, data: Partial<AppPage>) => void; onDelete: (id: string) => void; isPinned?: boolean, isDragging?: boolean, [key:string]: any; }) {
+    const [isExpanded, setIsExpanded] = useState(true);
     const [isEditingName, setIsEditingName] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
@@ -547,8 +548,14 @@ function PageCard({ page, onUpdate, onDelete, isPinned, ...props }: { page: AppP
     
     const displayPath = page.isDynamic ? `${page.path}/[teamId]` : page.path;
 
+    const handleCardClick = () => {
+        if (!props.isDragging) {
+            setIsExpanded(!isExpanded);
+        }
+    };
+
     return (
-        <Card {...props} className="group relative flex flex-col">
+        <Card {...props} onClick={handleCardClick} className={cn("group relative flex flex-col", !isPinned && "cursor-pointer")}>
             {!isPinned && (
               <TooltipProvider>
                   <Tooltip>
@@ -639,7 +646,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, ...props }: { page: AppP
                                 </PopoverContent>
                             </Popover>
                         </div>
-                        <div className="flex-1 min-w-0" onPointerDown={(e) => { e.stopPropagation(); setIsEditingName(true); }}>
+                        <div className="flex-1 min-w-0" onPointerDown={(e) => { e.stopPropagation(); if(!props.isDragging) setIsEditingName(true); }}>
                             <div className="flex items-center gap-1">
                                 {isEditingName ? (
                                     <Input ref={nameInputRef} defaultValue={page.name} onKeyDown={handleNameKeyDown} onBlur={handleSaveName} className="h-auto p-0 font-headline text-base font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"/>
@@ -661,9 +668,11 @@ function PageCard({ page, onUpdate, onDelete, isPinned, ...props }: { page: AppP
                     </div>
                 </div>
             </CardHeader>
-            <CardContent className="p-2 pt-0">
-                <p className="text-xs text-muted-foreground truncate font-thin">{displayPath}</p>
-            </CardContent>
+            {isExpanded && (
+                <CardContent className="p-2 pt-0">
+                    <p className="text-xs text-muted-foreground truncate font-thin">{displayPath}</p>
+                </CardContent>
+            )}
             <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                 <DialogContent className="max-w-md" onPointerDownCapture={(e) => e.stopPropagation()}>
                     <div className="absolute top-4 right-4">
@@ -712,6 +721,7 @@ function SortablePageCard({ id, page, onUpdate, onDelete, isPinned }: { id: stri
                     onUpdate={onUpdate} 
                     onDelete={onDelete} 
                     isPinned={isPinned} 
+                    isDragging={isDragging}
                     {...attributes} {...listeners}
                  />
             </div>
