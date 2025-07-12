@@ -495,7 +495,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
   );
 }
 
-function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, ...props }: { page: AppPage; onUpdate: (id: string, data: Partial<AppPage>) => void; onDelete: (id: string) => void; isPinned?: boolean; isDragging?: boolean; [key:string]: any; }) {
+function PageCard({ page, onUpdate, onDelete, isPinned, ...props }: { page: AppPage; onUpdate: (id: string, data: Partial<AppPage>) => void; onDelete: (id: string) => void; isPinned?: boolean; [key:string]: any; }) {
     const [isExpanded, setIsExpanded] = useState(true);
     const [isEditingName, setIsEditingName] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
@@ -548,14 +548,8 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, ...props }: 
     
     const displayPath = page.isDynamic ? `${page.path}/[teamId]` : page.path;
 
-    const handleCardClick = () => {
-        if (!isDragging) {
-            setIsExpanded(!isExpanded);
-        }
-    };
-
     return (
-        <Card onClick={handleCardClick} className={cn("group relative flex flex-col", !isPinned && "cursor-pointer")}>
+        <Card className={cn("group relative flex flex-col", !isPinned && "cursor-pointer")} {...props}>
             {!isPinned && (
               <TooltipProvider>
                   <Tooltip>
@@ -576,7 +570,11 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, ...props }: 
                   </Tooltip>
               </TooltipProvider>
             )}
-            <CardHeader className="p-2" {...props}>
+            <CardHeader
+              className="p-2"
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={() => setIsExpanded(!isExpanded)}
+            >
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                         <div className="relative">
@@ -646,7 +644,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, ...props }: 
                                 </PopoverContent>
                             </Popover>
                         </div>
-                        <div className="flex-1 min-w-0" onPointerDown={(e) => { e.stopPropagation(); if(!isDragging) setIsEditingName(true); }}>
+                        <div className="flex-1 min-w-0" onPointerDown={(e) => { e.stopPropagation(); setIsEditingName(true); }}>
                             <div className="flex items-center gap-1">
                                 {isEditingName ? (
                                     <Input ref={nameInputRef} defaultValue={page.name} onKeyDown={handleNameKeyDown} onBlur={handleSaveName} className="h-auto p-0 font-headline text-base font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"/>
@@ -720,8 +718,7 @@ function SortablePageCard({ id, page, onUpdate, onDelete, isPinned }: { id: stri
                     page={page} 
                     onUpdate={onUpdate} 
                     onDelete={onDelete} 
-                    isPinned={isPinned} 
-                    isDragging={isDragging}
+                    isPinned={isPinned}
                     {...attributes} 
                     {...listeners}
                  />
@@ -1171,5 +1168,7 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
     );
 };
 // #endregion
+
+    
 
     
