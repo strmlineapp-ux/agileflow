@@ -668,6 +668,7 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
     const { toast } = useToast();
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [containerStyle, setContainerStyle] = useState({});
     
     const titleInputRef = useFocusOnMount(isEditingTitle);
     
@@ -720,7 +721,16 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
         toast({ title: 'Page Deleted' });
     };
     
+    const onDragStart = (start: any, provided: any) => {
+        const droppableElement = provided.droppableElement;
+        if (droppableElement) {
+            const { width, height } = droppableElement.getBoundingClientRect();
+            setContainerStyle({ width, height });
+        }
+    };
+
     const onDragEnd = (result: DropResult) => {
+        setContainerStyle({}); // Reset container style
         const { source, destination, draggableId } = result;
 
         if (!destination) return;
@@ -783,7 +793,7 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
 
 
     return (
-        <DragDropContext onDragEnd={onDragEnd}>
+        <DragDropContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -825,6 +835,7 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
                             ref={provided.innerRef}
                             {...provided.droppableProps}
                             className="flex flex-wrap -m-2"
+                            style={containerStyle}
                         >
                             {filteredPages.map((page, index) => {
                                 const isPinned = allPinnedIds.includes(page.id);
