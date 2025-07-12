@@ -539,7 +539,27 @@ function PageCard({ page, onUpdate, onDelete, isPinned, ...props }: { page: AppP
     const displayPath = page.isDynamic ? `${page.path}/[teamId]` : page.path;
 
     return (
-        <Card {...props}>
+        <Card {...props} className="group relative">
+            {!isPinned && (
+              <TooltipProvider>
+                  <Tooltip>
+                      <TooltipTrigger asChild>
+                          <Button
+                              variant="ghost"
+                              size="icon"
+                              className="absolute top-1 right-1 h-6 w-6 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                              onPointerDown={(e) => {
+                                  e.stopPropagation();
+                                  setIsDeleteDialogOpen(true);
+                              }}
+                          >
+                              <GoogleSymbol name="delete" className="text-lg" weight={100} />
+                          </Button>
+                      </TooltipTrigger>
+                      <TooltipContent><p>Delete Page</p></TooltipContent>
+                  </Tooltip>
+              </TooltipProvider>
+            )}
             <CardHeader className="p-2">
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -622,32 +642,12 @@ function PageCard({ page, onUpdate, onDelete, isPinned, ...props }: { page: AppP
                             </div>
                         </div>
                     </div>
-                    <div className="flex items-center">
+                     <div className="flex items-center">
                         {!isSystemPage && (
                             <>
                                 <PageAccessControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
                                 <PageTabsControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
                             </>
-                        )}
-                        {!isPinned && (
-                              <TooltipProvider>
-                                  <Tooltip>
-                                      <TooltipTrigger asChild>
-                                          <Button
-                                              variant="ghost"
-                                              size="icon"
-                                              className="h-8 w-8 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
-                                              onPointerDown={(e) => {
-                                                  e.stopPropagation();
-                                                  setIsDeleteDialogOpen(true);
-                                              }}
-                                          >
-                                              <GoogleSymbol name="delete" className="text-lg" weight={100} />
-                                          </Button>
-                                      </TooltipTrigger>
-                                      <TooltipContent><p>Delete Page</p></TooltipContent>
-                                  </Tooltip>
-                              </TooltipProvider>
                         )}
                     </div>
                 </div>
@@ -695,7 +695,7 @@ function SortablePageCard({ id, page, onUpdate, onDelete, isPinned }: { id: stri
         <div 
             ref={setNodeRef} 
             style={style} 
-            className="p-2 basis-full md:basis-[calc(50%-1rem)] lg:basis-[calc(25%-1rem)] xl:basis-[calc(20%-1rem)] 2xl:basis-[calc(16.666%-1rem)] flex-grow-0 flex-shrink-0"
+            className="p-2 basis-full md:basis-[calc(50%-1rem)] lg:basis-[calc(33.333%-1rem)] xl:basis-[calc(25%-1rem)] 2xl:basis-[calc(20%-1rem)] flex-grow-0 flex-shrink-0"
         >
              <div className={cn(isDragging && "opacity-75")}>
                  <PageCard 
@@ -1151,3 +1151,5 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
     );
 };
 // #endregion
+
+    
