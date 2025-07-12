@@ -636,7 +636,7 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1">
                                 {isEditingName ? (
-                                    <Input ref={nameInputRef} defaultValue={page.name} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-base font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"/>
+                                    <Input ref={nameInputRef} defaultValue={page.name} onKeyDown={handleNameKeyDown} onBlur={handleSaveName} className="h-auto p-0 font-headline text-base font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"/>
                                 ) : (
                                     <CardTitle onClick={() => setIsEditingName(true)} className="font-headline text-base break-words font-thin cursor-pointer">
                                         {page.name}
@@ -899,7 +899,7 @@ export const PagesManagement = ({ tab, isSingleTabPage }: { tab: AppTab; isSingl
                                                 {...provided.draggableProps}
                                                 {...provided.dragHandleProps}
                                                 className={cn(
-                                                    "p-2 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5",
+                                                    "p-2 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5 flex-grow-0 flex-shrink-0",
                                                     isPinned && "opacity-70"
                                                 )}
                                             >
