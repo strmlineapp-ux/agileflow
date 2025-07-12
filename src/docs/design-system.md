@@ -36,27 +36,19 @@ This pattern allows for seamless, direct text editing within the main applicatio
 ---
 
 ### 3. Compact Search Input
-This pattern provides a clean, minimal interface for search functionality, especially in UIs where space is a consideration or a full search bar is not always needed.
+This pattern provides a clean, minimal interface for search functionality, especially in UIs where space is a consideration or a full search bar is not always needed. It is encapsulated in the reusable `/src/components/common/compact-search-input.tsx` component.
 
 - **Interaction:**
   - The search input is initially hidden behind an icon-only button (e.g., `<GoogleSymbol name="search" />`).
-  - Clicking the button reveals the input field, which appears with a transparent background and **no borders**.
+  - Clicking the button reveals the input field, which appears with a transparent background and a single underline (`border-b`).
 - **Behavior:**
+  - The input automatically gains focus as soon as it becomes visible.
   - The input hides again if the user clicks away (`onBlur`) and the field is empty.
 - **Application:** Used for filtering lists of icons, users, or other filterable content within popovers and management pages like the Admin screen.
 
-### 4. Focus-on-Search
-This pattern ensures a user can begin typing their search query immediately, without an extra click, improving the efficiency of the interface.
-
-- **Trigger**: A management tab (like "Pages" or "Tabs" on the Admin page) becomes the active, visible tab, **and** the user clicks the search icon to reveal the search input.
-- **Behavior**:
-  - The search input field for that tab **must** automatically gain focus as soon as the search input is rendered and visible.
-  - This is achieved using a custom `useFocusOnMount` hook that correctly handles the component lifecycle, ensuring the element is ready before attempting to focus it.
-- **Application**: Applied to the primary search input on management tabs ("Admins", "Pages", "Tabs") to streamline the user's workflow.
-
 ---
 
-### 5. Text-based Inputs
+### 4. Text-based Inputs
 This pattern transforms standard form inputs into minimalist, text-like elements, creating a cleaner and more compact interface. It is primarily used for authentication forms.
 
 -   **Appearance**:
@@ -74,7 +66,7 @@ This pattern transforms standard form inputs into minimalist, text-like elements
 
 ---
 
-### 6. Integrated Add Button
+### 5. Integrated Add Button
 This pattern replaces large, card-style "Add New" buttons with a more compact and contextually relevant control.
 
 - **Appearance:** A circular button containing a plus (`+`) or `add_circle` icon. It uses `text-4xl` and `weight={100}` for a large but light appearance.
@@ -84,7 +76,7 @@ This pattern replaces large, card-style "Add New" buttons with a more compact an
 
 ---
 
-### 7. Icon & Color Editing Flow
+### 6. Icon & Color Editing Flow
 This is the consistent reference pattern for allowing a user to change both an icon and its color.
 
 - **Trigger:** A single, interactive unit composed of a primary icon button and a smaller color swatch badge overlaid on its corner. The primary button icon should be large and prominent (`text-6xl`).
@@ -95,7 +87,7 @@ This is the consistent reference pattern for allowing a user to change both an i
 
 ---
 
-### 8. Entity Sharing & Linking
+### 7. Entity Sharing & Linking
 This pattern describes how a single entity (like a **Team** or **Badge Collection**) can exist in multiple contexts while maintaining a single source of truth. It works in tandem with the **Draggable Card Management blueprint**.
 
 - **Mechanism**:
@@ -124,10 +116,11 @@ This pattern describes how a single entity (like a **Team** or **Badge Collectio
 
 ---
 
-### 9. Draggable Card Management blueprint
+### 8. Draggable Card Management blueprint
 This is the application's perfected, gold-standard pattern for managing a collection of entities displayed as cards. It provides a fluid, intuitive, and grid-responsive way for users to reorder, duplicate, and assign items. It is the required pattern for managing Pages, Calendars, Teams, and Badge Collections.
 
--   **Layout**: Entities are presented in a responsive grid of cards. To ensure stability during drag operations, especially across multiple rows, the container must use a `flex flex-wrap` layout instead of CSS Grid. Each draggable card item is then given a `basis` property (e.g., `basis-full md:basis-[calc(50%-0.75rem)]`) to create the responsive columns. **Crucially, `flex-grow-0` must be used on these items**, as this prevents the remaining items in a row from expanding and causing the grid to reflow unstably when an item is being dragged.
+-   **Layout**: Entities are presented in a responsive grid of cards. To ensure stability during drag operations, especially across multiple rows, the container must use a `flex flex-wrap` layout instead of CSS Grid. Each draggable card item is then given a `basis` property (e.g., `basis-full md:basis-[calc(50%-1rem)]`) to create responsive columns. **The `basis` can and should be adjusted to fit the content of the cards for a specific view**, but the `flex-grow-0` property is critical.
+-   **Critical Stability Properties**: `flex-grow-0` and `flex-shrink-0` must be used on these items, as this prevents the remaining items in a row from expanding and causing the grid to reflow unstably when an item is being dragged. To handle multi-row dragging correctly, the `<Draggable>` component itself must have the `ignoreContainerClipping={false}` prop.
 -   **Visual Feedback**: To provide feedback without disrupting layout, visual changes (like a `shadow`) should be applied directly to the inner component based on the `snapshot.isDragging` prop provided by `react-beautiful-dnd`. The draggable wrapper itself should remain untouched.
 -   **Internal Card Layout**: Each card is structured for clarity. The header contains the primary entity identifier (icon and name) and contextual controls. The icon and its color are editable, following the **Icon & Color Editing Flow** pattern.
 -   **User Item Display**: When users are displayed as items within a management card (e.g., `TeamCard`), they are presented **without a border**. Each user item must display their avatar, full name, and professional title underneath the name for consistency.
@@ -156,7 +149,7 @@ This is the application's perfected, gold-standard pattern for managing a collec
 
 ---
 
-### 10. Compact Action Dialog
+### 9. Compact Action Dialog
 This is a minimalist dialog for focused actions, such as entering a code or a short piece of information, or for low-risk confirmations where a full-screen modal is unnecessary.
 
 - **Component**: Uses the standard `<Dialog>` component, which allows the user to dismiss the action by clicking the overlay or pressing 'Escape'.
@@ -171,7 +164,7 @@ This is a minimalist dialog for focused actions, such as entering a code or a sh
 
 ---
 
-### 11. Compact Deletion Dialog
+### 10. Compact Deletion Dialog
 When a **high-risk destructive action** requires user confirmation (like deleting a **Calendar** or a shared **Badge Collection**), the standard `AlertDialog` component is used. This is distinct from the `Compact Action Dialog` as it is intentionally more difficult to dismiss.
 
 - **Appearance**: A modal dialog centered on the screen, overlaying the content.
@@ -183,7 +176,7 @@ When a **high-risk destructive action** requires user confirmation (like deletin
 
 ---
 
-### 12. Icon Tabs for Page Navigation
+### 11. Icon Tabs for Page Navigation
 - **Description**: For primary navigation within a page (e.g., switching between "Admin Groups" and "Pages" on the Admin Management screen), tabs should be clear, full-width, and provide strong visual cues.
 - **Appearance**:
   - Each tab trigger includes both an icon and a text label.
@@ -194,7 +187,7 @@ When a **high-risk destructive action** requires user confirmation (like deletin
 
 ---
 
-### 13. Seamless Single-Tab Pages
+### 12. Seamless Single-Tab Pages
 
 - **Description**: This pattern ensures a streamlined user experience for pages that contain only a single content tab. Instead of displaying a redundant page header, the tab's content becomes the page itself.
 - **Behavior**:
@@ -205,7 +198,7 @@ When a **high-risk destructive action** requires user confirmation (like deletin
 
 ---
 
-### 14. Responsive Header Controls
+### 13. Responsive Header Controls
 This pattern describes how a group of controls in a page header can intelligently adapt to changes in the layout, such as the opening and closing of a side panel. It is the required header pattern for pages that use the **Draggable Card Management blueprint** and **Entity Sharing & Linking** patterns.
 
 - **Trigger**: Expanding or collapsing a panel that affects the main content area's width.
@@ -216,7 +209,7 @@ This pattern describes how a group of controls in a page header can intelligentl
 
 ---
 
-### 15. Compact Badge Pills
+### 14. Compact Badge Pills
 This pattern is a specialized, ultra-compact version of the standard `<Badge>` component, used for displaying multiple badges in a dense layout, such as the "assorted" view mode in Badge Collections.
 
 - **Appearance**: A very thin, pill-shaped badge with minimal padding. It contains a small icon and a short text label.
@@ -228,7 +221,7 @@ This pattern is a specialized, ultra-compact version of the standard `<Badge>` c
 - **Application**: Used in the "assorted" view of **Badge Collections** to display many badges in a compact, scannable format.
 
 ---
-### 16. Team Member Badge Assignment
+### 15. Team Member Badge Assignment
 This pattern describes the user interface for assigning and unassigning badges to team members.
 - **Layout**: Within each `TeamMemberCard`, badges are grouped visually by their parent `BadgeCollection`. Each collection is displayed with its name as a sub-header.
 - **Interaction**:
@@ -301,4 +294,3 @@ This is the single source of truth for indicating user interaction state across 
     - **Placement**: This is context-dependent. Color-pickers are typically placed on the bottom-right corner of their parent icon. Ownership status icons are typically placed on the top-left corner to create visual balance.
     - **Application**: Used for displaying a team admin status, a shared status on a role icon, or a `share` icon on a shared Badge.
 -   **Badges in Assorted View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
-

@@ -23,6 +23,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { CompactSearchInput } from '@/components/common/compact-search-input';
 
 // #region Helper Components and Hooks
 // Wrapper to fix issues with react-beautiful-dnd and React 18 Strict Mode
@@ -84,21 +85,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
   
   const [adminSearch, setAdminSearch] = useState('');
   const [userSearch, setUserSearch] = useState('');
-  const [isSearchingAdmins, setIsSearchingAdmins] = useState(false);
-  const [isSearchingUsers, setIsSearchingUsers] = useState(false);
   
-  const userSearchInputRef = useFocusOnMount(isSearchingUsers && isActive);
-  const adminSearchInputRef = useFocusOnMount(isSearchingAdmins && isActive);
-  
-  useEffect(() => {
-    if (isActive) {
-        setIsSearchingUsers(true);
-    } else {
-        setIsSearchingAdmins(false);
-        setIsSearchingUsers(false);
-    }
-  }, [isActive]);
-
   useEffect(() => {
     if (is2faDialogOpen) {
       requestAnimationFrame(() => {
@@ -183,23 +170,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
                         <div className="flex items-center justify-between gap-4">
                             <CardTitle className="font-thin text-base">Admins ({adminUsers.length})</CardTitle>
                              <div className="flex items-center gap-1">
-                                {isSearchingAdmins ? (
-                                    <div className="flex items-center gap-1 w-full">
-                                        <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
-                                        <input
-                                            ref={adminSearchInputRef}
-                                            placeholder="Search admins..."
-                                            value={adminSearch}
-                                            onChange={(e) => setAdminSearch(e.target.value)}
-                                            onBlur={() => !adminSearch && setIsSearchingAdmins(false)}
-                                            className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 font-thin"
-                                        />
-                                    </div>
-                                ) : (
-                                    <Button variant="ghost" size="icon" onClick={() => setIsSearchingAdmins(true)} className="ml-auto">
-                                        <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
-                                    </Button>
-                                )}
+                                <CompactSearchInput searchTerm={adminSearch} setSearchTerm={setAdminSearch} placeholder="Search admins..." />
                             </div>
                         </div>
                     </CardHeader>
@@ -238,23 +209,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
                         <div className="flex items-center justify-between gap-4">
                             <CardTitle className="font-thin text-base">Users ({nonAdminUsers.length})</CardTitle>
                              <div className="flex items-center gap-1">
-                                {isSearchingUsers ? (
-                                    <div className="flex items-center gap-1 w-full">
-                                        <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
-                                        <input
-                                            ref={userSearchInputRef}
-                                            placeholder="Search users..."
-                                            value={userSearch}
-                                            onChange={(e) => setUserSearch(e.target.value)}
-                                            onBlur={() => !userSearch && setIsSearchingUsers(false)}
-                                            className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 font-thin"
-                                        />
-                                    </div>
-                                ) : (
-                                    <Button variant="ghost" size="icon" onClick={() => setIsSearchingUsers(true)} className="ml-auto">
-                                        <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
-                                    </Button>
-                                )}
+                                <CompactSearchInput searchTerm={userSearch} setSearchTerm={setUserSearch} placeholder="Search users..." />
                             </div>
                         </div>
                     </CardHeader>
@@ -713,20 +668,9 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
     const { toast } = useToast();
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
-    const [isSearching, setIsSearching] = useState(false);
     
     const titleInputRef = useFocusOnMount(isEditingTitle);
-    const searchInputRef = useFocusOnMount(isSearching && isActive);
     
-    useEffect(() => {
-        if (isActive) {
-            setIsSearching(true);
-        } else {
-            setIsSearching(false);
-        }
-    }, [isActive]);
-
-
     const pinnedTopIds = useMemo(() => ['page-admin-management', 'page-overview', 'page-calendar', 'page-tasks'], []);
     const pinnedBottomIds = useMemo(() => ['page-notifications', 'page-settings'], []);
     const allPinnedIds = useMemo(() => [...pinnedTopIds, ...pinnedBottomIds], [pinnedTopIds, pinnedBottomIds]);
@@ -871,30 +815,7 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
                         </StrictModeDroppable>
                     </div>
                      <div className="flex items-center">
-                        {isSearching ? (
-                            <div className="flex items-center gap-1">
-                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
-                                <input
-                                    ref={searchInputRef}
-                                    placeholder="Search pages..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    onBlur={() => { if (!searchTerm) setIsSearching(false); }}
-                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 font-thin"
-                                />
-                            </div>
-                        ) : (
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button variant="ghost" size="icon" onClick={() => setIsSearching(true)}>
-                                            <GoogleSymbol name="search" weight={100} />
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent><p>Search Pages</p></TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                        )}
+                        <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search pages..." />
                     </div>
                 </div>
                 
@@ -1132,18 +1053,8 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
     const { appSettings, updateAppSettings, updateAppTab } = useUser();
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
-    const [isSearching, setIsSearching] = useState(false);
     
     const titleInputRef = useFocusOnMount(isEditingTitle);
-    const searchInputRef = useFocusOnMount(isSearching && isActive);
-    
-    useEffect(() => {
-        if (isActive) {
-            setIsSearching(true);
-        } else {
-            setIsSearching(false);
-        }
-    }, [isActive]);
 
     const handleSaveTitle = () => {
         const newName = titleInputRef.current?.value.trim();
@@ -1187,30 +1098,7 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
             <div className="space-y-8">
                 <div className="flex items-center justify-end">
                      <div className="flex items-center">
-                        {isSearching ? (
-                            <div className="flex items-center gap-1">
-                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
-                                <input
-                                    ref={searchInputRef}
-                                    placeholder="Search by name or desc..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    onBlur={() => { if (!searchTerm) setIsSearching(false); }}
-                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 font-thin"
-                                />
-                            </div>
-                        ) : (
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button variant="ghost" size="icon" onClick={() => setIsSearching(true)}>
-                                            <GoogleSymbol name="search" weight={100} />
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent><p>Search Tabs</p></TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                        )}
+                        <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search by name or desc..." />
                     </div>
                 </div>
                 <StrictModeDroppable droppableId="tabs-list" isDropDisabled={false}>
