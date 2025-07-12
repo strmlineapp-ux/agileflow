@@ -106,9 +106,9 @@ function UserDropZone({ id, users, children }: { id: string, users: User[], chil
 
 export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab; isSingleTabPage?: boolean, isActive?: boolean }) => {
   const { toast } = useToast();
-  const { users, updateUser } = useUser();
+  const { users, setUsers } = useUser();
   const [is2faDialogOpen, setIs2faDialogOpen] = useState(false);
-  const [userToUpdate, setUserToUpdate] = useState<User | null>(null);
+  const [pendingUserMove, setPendingUserMove] = useState<{ user: User; fromListId: string; destListId: string } | null>(null);
   const [twoFactorCode, setTwoFactorCode] = useState('');
   const [isEditing2fa, setIsEditing2fa] = useState(false);
   const twoFactorCodeInputRef = useRef<HTMLInputElement>(null);
@@ -150,14 +150,19 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
         });
         return;
     }
-    setUserToUpdate(userToMove);
+    // Instead of setting userToUpdate, we set the full move operation
+    setPendingUserMove({ user: userToMove, fromListId: userToMove.isAdmin ? 'admin-list' : 'user-list', destListId: userToMove.isAdmin ? 'user-list' : 'admin-list' });
     setIs2faDialogOpen(true);
   };
 
   const handleVerify2fa = () => {
-    if (twoFactorCode === '123456' && userToUpdate) {
-      updateUser(userToUpdate.userId, { isAdmin: !userToUpdate.isAdmin });
-      toast({ title: 'Success', description: `${userToUpdate.displayName}'s admin status has been updated.` });
+    if (twoFactorCode === '123456' && pendingUserMove) {
+      const { user } = pendingUserMove;
+      // Perform the actual state update upon successful verification
+      setUsers(currentUsers =>
+        currentUsers.map(u => (u.userId === user.userId ? { ...u, isAdmin: !u.isAdmin } : u))
+      );
+      toast({ title: 'Success', description: `${user.displayName}'s admin status has been updated.` });
       close2faDialog();
     } else {
       toast({ variant: 'destructive', title: 'Verification Failed', description: 'The provided 2FA code is incorrect. Please try again.' });
@@ -168,7 +173,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
   const close2faDialog = () => {
     setIs2faDialogOpen(false);
     setTwoFactorCode('');
-    setUserToUpdate(null);
+    setPendingUserMove(null);
     setIsEditing2fa(false);
   };
 
@@ -364,7 +369,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                     <TooltipContent><p>Manage Page Access</p></TooltipContent>
                 </Tooltip>
             </TooltipProvider>
-            <PopoverContent className="w-80 p-0" onPointerDown={(e) => e.stopPropagation()}>
+            <PopoverContent className="w-80 p-0" onPointerDownCapture={(e) => e.stopPropagation()}>
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                     <TabsList className="grid w-full grid-cols-2">
                         <TabsTrigger value="users">Users</TabsTrigger>
@@ -444,7 +449,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
               <TooltipContent><p>Manage Associated Tabs</p></TooltipContent>
           </Tooltip>
       </TooltipProvider>
-      <PopoverContent className="w-80 p-0" onPointerDown={(e) => e.stopPropagation()}>
+      <PopoverContent className="w-80 p-0" onPointerDownCapture={(e) => e.stopPropagation()}>
         <div className="p-2 border-b">
           <div className="flex items-center gap-1 w-full">
             <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
@@ -535,7 +540,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, ...props }: { page: AppP
 
     return (
         <Card className="flex flex-col group bg-transparent" {...props}>
-            <CardHeader>
+            <CardHeader className="p-2">
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                         <div className="relative">
@@ -552,7 +557,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, ...props }: { page: AppP
                                         <TooltipContent><p>Change Icon</p></TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
-                                <PopoverContent className="w-80 p-0" onPointerDown={(e) => e.stopPropagation()}>
+                                <PopoverContent className="w-80 p-0" onPointerDownCapture={(e) => e.stopPropagation()}>
                                     <div className="flex items-center gap-1 p-2 border-b">
                                         <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
                                         <input
@@ -593,7 +598,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, ...props }: { page: AppP
                                         <TooltipContent><p>Change Color</p></TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
-                                <PopoverContent className="w-auto p-2" onPointerDown={(e) => e.stopPropagation()}>
+                                <PopoverContent className="w-auto p-2" onPointerDownCapture={(e) => e.stopPropagation()}>
                                     <div className="grid grid-cols-8 gap-1">
                                         {['#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
     '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6',
@@ -1146,4 +1151,3 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
     );
 };
 // #endregion
-
