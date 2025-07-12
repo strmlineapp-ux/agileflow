@@ -93,6 +93,7 @@ This entity, `AppSettings`, holds global configuration data that allows for cust
 | :--- | :--- |
 | `pages: AppPage[]` | **The core of the dynamic navigation.** This is an array of objects defining every page in the application. The order of pages in this array directly corresponds to their order in the sidebar navigation. The order is managed on the **Admin Management** page using the "Draggable Card Management" UI pattern. Each page object includes its name, icon, URL path, access control rules, and a list of associated `tab.id`s that should be rendered on it. |
 | `tabs: AppTab[]` | **The core of the dynamic content.** This is an array of objects defining all reusable content tabs. Each object includes the tab's name, icon, and a `componentKey` that maps it to a React component. |
+| `globalBadges: Badge[]` | An array of globally-defined badges. These are typically owned by a system process and are managed on the **Badge Management** page of any team. |
 | `calendarManagementLabel?: string` | An alias for the "Manage Calendars" tab on the Service Delivery page. |
 | `teamManagementLabel?: string` | An alias for the "Team Management" tab on the Service Delivery page. |
 

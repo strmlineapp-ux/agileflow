@@ -296,5 +296,3 @@ This is the single source of truth for indicating user interaction state across 
     - **Placement**: This is context-dependent. Color-pickers are typically placed on the bottom-right corner of their parent icon. Ownership status icons are typically placed on the top-left corner to create visual balance.
     - **Application**: Used for displaying a team admin status, a shared status on a role icon, or a `share` icon on a shared Badge.
 -   **Badges in Assorted View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
-
-    

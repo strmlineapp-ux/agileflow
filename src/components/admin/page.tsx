@@ -249,7 +249,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
         </Dialog>
     </div>
   );
-}
+};
 // #endregion
 
 // #region Pages Management Tab
@@ -744,7 +744,7 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
-        const pageId = active.id;
+        const pageId = active.id.toString();
         
         if (over?.id === 'duplicate-page-zone') {
             const pageToDuplicate = appSettings.pages.find(p => p.id === pageId);
