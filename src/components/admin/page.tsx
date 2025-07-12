@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -148,12 +149,6 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
     }
   }, [is2faDialogOpen]);
 
-  useEffect(() => {
-    if (isActive && userSearchRef.current) {
-        setTimeout(() => userSearchRef.current?.focus(), 100);
-    }
-  }, [isActive]);
-  
   const filteredAdminUsers = useMemo(() =>
     adminUsers.filter(u => u.displayName.toLowerCase().includes(adminSearch.toLowerCase())),
     [adminUsers, adminSearch]
@@ -347,6 +342,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const searchInputRef = useRef<HTMLInputElement>(null);
+    const [activeTab, setActiveTab] = useState('users');
 
     useEffect(() => {
         if (isOpen) {
