@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -106,7 +105,7 @@ function UserDropZone({ id, users, children }: { id: string, users: User[], chil
   return (
     <div ref={setNodeRef} className={cn(
         "p-1 space-y-1 rounded-md min-h-[60px] transition-all", 
-        isOver ? "ring-1 ring-border ring-inset" : ""
+        isOver && "ring-1 ring-border ring-inset"
     )}>
         <SortableContext items={sortableUserIds} strategy={verticalListSortingStrategy}>
             {users.map((user) => (
@@ -347,7 +346,6 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
     const { users, teams, appSettings } = useUser();
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
-    const [activeTab, setActiveTab] = useState("users");
     const searchInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -729,7 +727,7 @@ function SortablePageCard({ id, page, onUpdate, onDelete, isPinned }: { id: stri
             className="p-2 basis-full md:basis-[calc(50%-1rem)] flex-grow-0 flex-shrink-0 lg:basis-[calc(33.333%-1rem)] xl:basis-[calc(25%-1rem)] 2xl:basis-[calc(20%-1rem)]"
              {...attributes} {...listeners}
         >
-             <div className={cn(isDragging && "shadow-xl opacity-75")}>
+             <div className={cn(isDragging && "opacity-75")}>
                  <PageCard 
                     page={page} 
                     onUpdate={onUpdate} 
