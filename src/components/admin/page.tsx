@@ -31,6 +31,7 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
+  useDroppable,
 } from '@dnd-kit/core';
 import {
   arrayMove,
@@ -431,32 +432,6 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
   );
 }
 
-
-function SortablePageCard({ id, page, onUpdate, onDelete, isPinned }: { id: string, page: AppPage, onUpdate: (id: string, data: Partial<AppPage>) => void; onDelete: (id: string) => void; isPinned?: boolean }) {
-    const {
-        attributes,
-        listeners,
-        setNodeRef,
-        transform,
-        transition,
-        isDragging,
-    } = useSortable({id: id, disabled: isPinned});
-
-    const style = {
-        transform: CSS.Transform.toString(transform),
-        transition,
-        zIndex: isDragging ? 10 : 'auto',
-        opacity: isDragging ? 0.75 : 1,
-    };
-
-    return (
-        <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="p-2 basis-full md:basis-[calc(50%-1rem)] lg:basis-[calc(33.333%-1rem)] xl:basis-[calc(25%-1rem)] 2xl:basis-[calc(20%-1rem)] flex-grow-0 flex-shrink-0">
-             <PageCard page={page} onUpdate={onUpdate} onDelete={onDelete} isPinned={isPinned} />
-        </div>
-    );
-}
-
-
 function PageCard({ page, onUpdate, onDelete, isPinned }: { page: AppPage; onUpdate: (id: string, data: Partial<AppPage>) => void; onDelete: (id: string) => void; isPinned?: boolean }) {
     const [isEditingName, setIsEditingName] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
@@ -643,6 +618,70 @@ function PageCard({ page, onUpdate, onDelete, isPinned }: { page: AppPage; onUpd
     );
 }
 
+function SortablePageCard({ id, page, onUpdate, onDelete, isPinned }: { id: string, page: AppPage, onUpdate: (id: string, data: Partial<AppPage>) => void; onDelete: (id: string) => void; isPinned?: boolean }) {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({id: id, disabled: isPinned});
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        zIndex: isDragging ? 10 : 'auto',
+    };
+
+    return (
+        <div 
+            ref={setNodeRef} 
+            style={style} 
+            className="p-2 basis-full md:basis-[calc(50%-1rem)] xl:basis-[calc(33.333%-1rem)] 2xl:basis-[calc(25%-1rem)] flex-grow-0 flex-shrink-0"
+        >
+             <div className={cn(isDragging && "shadow-xl opacity-75")}>
+                 <PageCard 
+                    page={page} 
+                    onUpdate={onUpdate} 
+                    onDelete={onDelete} 
+                    isPinned={isPinned} 
+                    {...attributes} 
+                    {...listeners} 
+                 />
+            </div>
+        </div>
+    );
+}
+
+function DuplicateZone({ id, onDuplicate, onAdd }: { id: string; onDuplicate: () => void; onAdd: () => void; }) {
+  const { isOver, setNodeRef } = useDroppable({ id });
+  
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "rounded-full transition-all p-0.5",
+        isOver && "ring-1 ring-border ring-inset"
+      )}
+    >
+      <TooltipProvider>
+          <Tooltip>
+              <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full p-0" onClick={onAdd}>
+                    <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
+                    <span className="sr-only">New Page or Drop to Duplicate</span>
+                  </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                  <p>{isOver ? 'Drop to Duplicate' : 'Add New Page'}</p>
+              </TooltipContent>
+          </Tooltip>
+      </TooltipProvider>
+    </div>
+  );
+}
+
 export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab; isSingleTabPage?: boolean, isActive?: boolean }) => {
     const { appSettings, updateAppSettings } = useUser();
     const { toast } = useToast();
@@ -656,6 +695,19 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
         const newPages = appSettings.pages.map(p => p.id === pageId ? { ...p, ...data } : p);
         updateAppSettings({ pages: newPages });
     }, [appSettings.pages, updateAppSettings]);
+    
+    const duplicatePage = useCallback((sourcePage: AppPage) => {
+        const newPage: AppPage = {
+            ...JSON.parse(JSON.stringify(sourcePage)),
+            id: crypto.randomUUID(),
+            name: `${sourcePage.name} (Copy)`,
+        };
+        const sourceIndex = appSettings.pages.findIndex(p => p.id === sourcePage.id);
+        const newPages = [...appSettings.pages];
+        newPages.splice(sourceIndex + 1, 0, newPage);
+        updateAppSettings({ pages: newPages });
+        toast({ title: "Page Duplicated", description: `A copy of "${sourcePage.name}" was created.`});
+    }, [appSettings.pages, updateAppSettings, toast]);
 
     const handleAddPage = () => {
         const pageCount = appSettings.pages.length;
@@ -693,15 +745,22 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
+        
+        if (over?.id === 'duplicate-zone') {
+            const pageToDuplicate = appSettings.pages.find(p => p.id === active.id);
+            if (pageToDuplicate) {
+                duplicatePage(pageToDuplicate);
+            }
+            return;
+        }
 
-        if (active.id !== over?.id) {
+        if (active.id !== over?.id && over) {
             const oldIndex = appSettings.pages.findIndex(p => p.id === active.id);
             const newIndex = appSettings.pages.findIndex(p => p.id === over!.id);
             
             // Guardrail check
             const newPageIsPinned = allPinnedIds.has(appSettings.pages[newIndex].id);
             if (newPageIsPinned) {
-                 toast({ variant: 'destructive', title: 'Cannot reorder', description: 'Pages cannot be moved into pinned positions.' });
                 return;
             }
 
@@ -721,22 +780,8 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="rounded-full" onClick={handleAddPage}>
-                                        <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
-                                        <span className="sr-only">Add New Page</span>
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>Add New Page</p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    </div>
-                     <div className="flex items-center">
+                    <DuplicateZone id="duplicate-zone" onAdd={handleAddPage} onDuplicate={() => {}} />
+                    <div className="flex items-center">
                         <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search pages..." />
                     </div>
                 </div>
