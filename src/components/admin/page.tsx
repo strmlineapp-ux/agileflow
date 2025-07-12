@@ -556,7 +556,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, ...props }: { page: AppP
                           <Button
                               variant="ghost"
                               size="icon"
-                              className="absolute -top-1 -right-1 h-6 w-6 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                              className="absolute -top-3 -right-3 h-6 w-6 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity z-10"
                               onPointerDown={(e) => {
                                   e.stopPropagation();
                                   setIsDeleteDialogOpen(true);
