@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -556,12 +555,12 @@ function PageCard({ page, onUpdate, onDelete, isPinned, ...props }: { page: AppP
             <CardHeader>
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <div className="relative">
+                        <div className="relative" onPointerDown={(e) => e.stopPropagation()}>
                             <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
+                                            <PopoverTrigger asChild>
                                                 <button className="h-12 w-12 flex items-center justify-center">
                                                     <GoogleSymbol name={page.icon} className="text-6xl" weight={100} />
                                                 </button>
@@ -604,7 +603,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, ...props }: { page: AppP
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
+                                            <PopoverTrigger asChild>
                                                 <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background cursor-pointer" style={{ backgroundColor: page.color }} />
                                             </PopoverTrigger>
                                         </TooltipTrigger>
@@ -649,7 +648,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, ...props }: { page: AppP
                                           <Button
                                               variant="ghost"
                                               size="icon"
-                                              className="h-8 w-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                                              className="h-8 w-8 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
                                               onPointerDown={(e) => {
                                                   e.stopPropagation();
                                                   setIsDeleteDialogOpen(true);
@@ -671,7 +670,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, ...props }: { page: AppP
             <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                 <DialogContent className="max-w-md" onPointerDownCapture={(e) => e.stopPropagation()}>
                     <div className="absolute top-4 right-4">
-                        <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={() => onDelete(page.id)}>
+                        <Button variant="ghost" size="icon" onClick={() => onDelete(page.id)}>
                             <GoogleSymbol name="delete" className="text-4xl" weight={100} />
                             <span className="sr-only">Delete Page</span>
                         </Button>
