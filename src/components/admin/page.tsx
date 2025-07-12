@@ -571,7 +571,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned }: { page: AppPage; onUpd
                                 </TooltipProvider>
                                 <PopoverContent className="w-80 p-0">
                                     <div className="flex items-center gap-1 p-2 border-b">
-                                        <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
+                                        <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
                                         <input
                                             ref={iconSearchInputRef}
                                             placeholder="Search icons..."
