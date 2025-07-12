@@ -108,7 +108,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
   const { toast } = useToast();
   const { users, updateUser } = useUser();
   const [is2faDialogOpen, setIs2faDialogOpen] = useState(false);
-  const [on2faSuccess, setOn2faSuccess] = useState<(() => void) | null>(null);
+  const [userToUpdate, setUserToUpdate] = useState<User | null>(null);
   const [twoFactorCode, setTwoFactorCode] = useState('');
   const [isEditing2fa, setIsEditing2fa] = useState(false);
   const twoFactorCodeInputRef = useRef<HTMLInputElement>(null);
@@ -154,18 +154,14 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
         });
         return;
     }
-
-    const action = () => {
-      updateUser(userToMove.userId, { isAdmin: !userToMove.isAdmin });
-      toast({ title: 'Success', description: `${userToMove.displayName}'s admin status has been updated.` });
-    };
-    setOn2faSuccess(() => action);
+    setUserToUpdate(userToMove);
     setIs2faDialogOpen(true);
   };
 
   const handleVerify2fa = () => {
-    if (twoFactorCode === '123456') {
-      on2faSuccess?.();
+    if (twoFactorCode === '123456' && userToUpdate) {
+      updateUser(userToUpdate.userId, { isAdmin: !userToUpdate.isAdmin });
+      toast({ title: 'Success', description: `${userToUpdate.displayName}'s admin status has been updated.` });
       close2faDialog();
     } else {
       toast({ variant: 'destructive', title: 'Verification Failed', description: 'The provided 2FA code is incorrect. Please try again.' });
@@ -176,7 +172,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
   const close2faDialog = () => {
     setIs2faDialogOpen(false);
     setTwoFactorCode('');
-    setOn2faSuccess(null);
+    setUserToUpdate(null);
     setIsEditing2fa(false);
   };
 
@@ -194,7 +190,6 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
         const destListId: string | undefined = overElement?.type === 'user-list' ? over.id.toString() : overElement?.fromListId;
 
         if (sourceListId && destListId && sourceListId !== destListId) {
-            // Don't optimistically update UI. Wait for 2FA.
             handleAdminToggle(userToMove);
         }
     }
@@ -543,7 +538,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, ...props }: { page: AppP
     const displayPath = page.isDynamic ? `${page.path}/[teamId]` : page.path;
 
     return (
-        <Card className="flex flex-col h-48 group bg-transparent" {...props}>
+        <Card className="flex flex-col h-full group bg-transparent" {...props}>
             <CardHeader>
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -656,7 +651,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, ...props }: { page: AppP
                     </div>
                 </div>
             </CardHeader>
-            <CardContent className="flex-grow flex flex-col justify-end pt-2">
+            <CardContent className="pt-2">
                 <p className="text-xs text-muted-foreground truncate font-thin">{displayPath}</p>
             </CardContent>
             <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
@@ -1154,3 +1149,4 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
     );
 };
 // #endregion
+
