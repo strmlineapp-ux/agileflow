@@ -31,8 +31,8 @@ export default function DashboardLayout({
           <Header />
           <main
             className={cn(
-              'flex-1 p-4 sm:p-6',
-              isCalendarPage && 'flex flex-col overflow-hidden'
+              'p-4 sm:p-6',
+              isCalendarPage && 'flex-1 flex flex-col overflow-hidden'
             )}
           >
             {children}
@@ -41,3 +41,5 @@ export default function DashboardLayout({
       </div>
   );
 }
+
+    

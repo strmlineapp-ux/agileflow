@@ -824,7 +824,7 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
                         <div
                             {...provided.droppableProps}
                             ref={provided.innerRef}
-                            className="flex flex-wrap -m-2"
+                            className="flex flex-wrap gap-4"
                         >
                             {filteredPages.map((page, index) => {
                                 const isPinned = allPinnedIds.includes(page.id);
@@ -835,7 +835,7 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
                                                 ref={provided.innerRef}
                                                 {...provided.draggableProps}
                                                 {...provided.dragHandleProps}
-                                                className="p-2 basis-full md:basis-[calc(50%-1rem)] lg:basis-[calc(33.333%-1rem)] flex-grow-0 flex-shrink-0"
+                                                className="w-full md:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-1rem)]"
                                             >
                                                 <div className={cn(snapshot.isDragging && "shadow-xl")}>
                                                     <PageCard
@@ -1134,3 +1134,5 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
     );
 };
 // #endregion
+
+    
