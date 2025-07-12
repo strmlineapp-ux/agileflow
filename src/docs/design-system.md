@@ -40,9 +40,10 @@ This pattern provides a clean, minimal interface for search functionality, espec
 
 - **Interaction:**
   - The search input is initially hidden behind an icon-only button (e.g., `<GoogleSymbol name="search" />`).
-  - Clicking the button reveals the input field, which appears with a transparent background and a single underline (`border-b`).
+  - Clicking the button reveals the input field.
+  - **Crucially, the input must have a transparent background and no borders or box-shadow**, ensuring it blends seamlessly into the UI.
 - **Behavior:**
-  - The input automatically gains focus as soon as it becomes visible.
+  - The input automatically gains focus as soon as it becomes visible. This is achieved using a `useEffect` hook with a `setTimeout` to ensure the element is rendered and ready for focus.
   - The input hides again if the user clicks away (`onBlur`) and the field is empty.
 - **Application:** Used for filtering lists of icons, users, or other filterable content within popovers and management pages like the Admin screen.
 
@@ -119,8 +120,10 @@ This pattern describes how a single entity (like a **Team** or **Badge Collectio
 ### 8. Draggable Card Management blueprint
 This is the application's perfected, gold-standard pattern for managing a collection of entities displayed as cards. It provides a fluid, intuitive, and grid-responsive way for users to reorder, duplicate, and assign items. It is the required pattern for managing Pages, Calendars, Teams, and Badge Collections.
 
--   **Layout**: Entities are presented in a responsive grid of cards. To ensure stability during drag operations, especially across multiple rows, the container must use a `flex flex-wrap` layout instead of CSS Grid. Each draggable card item is then given a `basis` property (e.g., `basis-full md:basis-[calc(50%-1rem)]`) to create responsive columns. **The `basis` can and should be adjusted to fit the content of the cards for a specific view**, but the `flex-grow-0` property is critical.
--   **Critical Stability Properties**: `flex-grow-0` and `flex-shrink-0` must be used on these items, as this prevents the remaining items in a row from expanding and causing the grid to reflow unstably when an item is being dragged. To handle multi-row dragging correctly, the `<Draggable>` component itself must have the `ignoreContainerClipping={false}` prop.
+-   **Layout**: Entities are presented in a responsive grid of cards. To ensure stability during drag operations, especially across multiple rows, the container must use a `flex flex-wrap` layout instead of CSS Grid. Each draggable card item is then given a `basis` property (e.g., `basis-full md:basis-[calc(50%-1rem)]`) to create responsive columns. **The `basis` can and should be adjusted to fit the content of the cards for a specific view**, but the following properties are critical.
+-   **Critical Stability Properties**:
+    -   `flex-grow-0` and `flex-shrink-0` **must** be used on draggable items. This prevents the remaining items in a row from expanding or shrinking, which causes the grid to reflow unstably when an item is being dragged.
+    -   The `<Draggable>` component itself must have the `ignoreContainerClipping={false}` prop. This tells the library to account for the clipping of the scroll container, which is essential for correct drag-and-drop behavior in a multi-row flexbox layout.
 -   **Visual Feedback**: To provide feedback without disrupting layout, visual changes (like a `shadow`) should be applied directly to the inner component based on the `snapshot.isDragging` prop provided by `react-beautiful-dnd`. The draggable wrapper itself should remain untouched.
 -   **Internal Card Layout**: Each card is structured for clarity. The header contains the primary entity identifier (icon and name) and contextual controls. The icon and its color are editable, following the **Icon & Color Editing Flow** pattern.
 -   **User Item Display**: When users are displayed as items within a management card (e.g., `TeamCard`), they are presented **without a border**. Each user item must display their avatar, full name, and professional title underneath the name for consistency.

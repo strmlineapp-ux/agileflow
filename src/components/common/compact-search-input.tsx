@@ -4,6 +4,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
+import { cn } from '@/lib/utils';
 
 interface CompactSearchInputProps {
   searchTerm: string;
@@ -23,13 +24,13 @@ export function CompactSearchInput({
 
   useEffect(() => {
     if (isSearching) {
-      inputRef.current?.focus();
+      setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [isSearching]);
 
   if (isSearching) {
     return (
-      <div className="flex items-center gap-1 border-b">
+      <div className={cn("flex items-center gap-1", className)}>
         <GoogleSymbol name="search" className="text-muted-foreground" weight={100} />
         <input
           ref={inputRef}
