@@ -117,6 +117,8 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
   const [userSearch, setUserSearch] = useState('');
   
   const [activeDragUser, setActiveDragUser] = useState<User | null>(null);
+  
+  const [originalUsers, setOriginalUsers] = useState(users);
 
   const adminUsers = useMemo(() => users.filter(u => u.isAdmin), [users]);
   const nonAdminUsers = useMemo(() => users.filter(u => !u.isAdmin), [users]);
@@ -150,7 +152,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
         });
         return;
     }
-    // Instead of setting userToUpdate, we set the full move operation
+    setOriginalUsers(users); 
     setPendingUserMove({ user: userToMove, fromListId: userToMove.isAdmin ? 'admin-list' : 'user-list', destListId: userToMove.isAdmin ? 'user-list' : 'admin-list' });
     setIs2faDialogOpen(true);
   };
@@ -158,7 +160,6 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
   const handleVerify2fa = () => {
     if (twoFactorCode === '123456' && pendingUserMove) {
       const { user } = pendingUserMove;
-      // Perform the actual state update upon successful verification
       setUsers(currentUsers =>
         currentUsers.map(u => (u.userId === user.userId ? { ...u, isAdmin: !u.isAdmin } : u))
       );
@@ -171,6 +172,9 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
   };
 
   const close2faDialog = () => {
+    if (pendingUserMove) {
+      setUsers(originalUsers);
+    }
     setIs2faDialogOpen(false);
     setTwoFactorCode('');
     setPendingUserMove(null);
@@ -659,7 +663,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, ...props }: { page: AppP
                 <DialogContent className="max-w-md" onPointerDownCapture={(e) => e.stopPropagation()}>
                     <div className="absolute top-4 right-4">
                         <Button variant="ghost" size="icon" onClick={() => onDelete(page.id)}>
-                            <GoogleSymbol name="check" className="text-4xl" weight={100} />
+                            <GoogleSymbol name="check" className="text-xl" weight={100} />
                             <span className="sr-only">Confirm Delete</span>
                         </Button>
                     </div>
@@ -724,7 +728,7 @@ function DuplicateZone({ onAdd }: { onAdd: () => void; }) {
       <TooltipProvider>
           <Tooltip>
               <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full p-0" onClick={onAdd}>
+                  <Button variant="ghost" size="icon" className="rounded-full p-0" onClick={onAdd} onPointerDown={(e) => e.stopPropagation()}>
                     <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
                     <span className="sr-only">New Page or Drop to Duplicate</span>
                   </Button>
