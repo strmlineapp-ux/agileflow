@@ -36,14 +36,16 @@ This pattern allows for seamless, direct text editing within the main applicatio
 ---
 
 ### 3. Compact Search Input
-This pattern provides a clean, minimal interface for search functionality, especially in UIs where space is a consideration or a full search bar is not always needed.
+This pattern provides a clean, minimal interface for search functionality, especially in UIs where space is a consideration or a full search bar is not always needed. It is encapsulated in the reusable `/src/components/common/compact-search-input.tsx` component.
 
 - **Interaction:**
-  - The search input field is always present within its container (e.g., a popover) but may be visually understated.
-  - The input field appears with a transparent background and no borders or box-shadow, to maintain a minimal, "inline text" look.
+  - The search input is initially hidden behind an icon-only button (e.g., `<GoogleSymbol name="search" />`), which **must have a tooltip**.
+  - Clicking the button reveals the input field.
+  - **Crucially, the input must have a transparent background and no borders or box-shadow**, ensuring it blends seamlessly into the UI.
 - **Behavior:**
-  - The input field **must** automatically gain focus as soon as its parent popover or container becomes visible. This is achieved using a `useEffect` hook that triggers `searchInputRef.current?.focus()` after a short `setTimeout` (e.g., 100ms) to ensure the element is rendered and ready.
-- **Application:** Used for filtering lists of icons, users, or other filterable content within popovers and other compact spaces.
+  - The input automatically gains focus as soon as it becomes visible. This is achieved using a `useEffect` hook with a `setTimeout` to ensure the element is rendered and ready for focus.
+  - The input hides again if the user clicks away (`onBlur`) and the field is empty, unless `autoFocus` is true.
+- **Application:** Used for filtering lists of icons, users, or other filterable content within popovers and management pages like the Admin screen.
 
 ---
 
@@ -78,11 +80,11 @@ This pattern replaces large, card-style "Add New" buttons with a more compact an
 ### 6. Icon & Color Editing Flow
 This is the consistent reference pattern for allowing a user to change both an icon and its color.
 
-- **Trigger:** A single, interactive unit composed of a primary icon button and a smaller color swatch badge overlaid on its corner.
+- **Trigger:** A single, interactive unit composed of a primary icon button and a smaller color swatch badge overlaid on its corner. The primary button icon should be large and prominent (`text-6xl`).
 - **Interaction:**
   - Clicking the main part of the button opens an icon picker popover. This popover uses the **Compact Search Input** pattern for filtering. The icons inside this picker are rendered at `text-4xl` with a `weight={100}` inside `h-8 w-8` buttons for clarity and ease of selection.
   - Clicking the color swatch badge opens a color picker popover.
-- **Application:** Used for editing team icons/colors, admin group icons/colors, and page icons/colors.
+- **Application:** Used for editing team icons/colors, and page icons/colors.
 
 ---
 
@@ -116,20 +118,22 @@ This pattern describes how a single entity (like a **Team** or **Badge Collectio
 ---
 
 ### 8. Draggable Card Management blueprint
-This is the application's perfected, gold-standard pattern for managing a collection of entities displayed as cards. It provides a fluid, intuitive, and grid-responsive way for users to reorder, duplicate, and assign items. It is the required pattern for managing Pages, Calendars, Teams, Admin Groups, and Badge Collections.
+This is the application's perfected, gold-standard pattern for managing a collection of entities displayed as cards. It provides a fluid, intuitive, and grid-responsive way for users to reorder, duplicate, and assign items. It is the required pattern for managing Pages, Calendars, Teams, and Badge Collections. The core of this pattern is a successful migration to the **`@dnd-kit`** library, which proved more robust for responsive layouts.
 
--   **Layout**: Entities are presented in a responsive grid of cards. To ensure stability during drag operations, especially across multiple rows, the container must use a `flex flex-wrap` layout instead of CSS Grid. Each draggable card item is then given a `basis` property (e.g., `basis-full md:basis-[calc(50%-0.75rem)]`) to create the responsive columns. **Crucially, `flex-grow-0` must be used on these items**, as this prevents the remaining items in a row from expanding and causing the grid to reflow unstably when an item is being dragged.
--   **Visual Feedback**: To provide feedback without disrupting layout, visual changes (like a `shadow`) should be applied directly to the inner component based on the `snapshot.isDragging` prop provided by `react-beautiful-dnd`. The draggable wrapper itself should remain untouched.
--   **Internal Card Layout**: Each card is structured for clarity. The header contains the primary entity identifier (icon and name) and contextual controls. The icon and its color are editable, following the **Icon & Color Editing Flow** pattern. The main content area is used for the list of associated items (e.g., users or badges).
--   **User Item Display**: When users are displayed as items within a management card (e.g., `AdminGroupCard` or `TeamCard`), they are presented **without a border**. Each user item must display their avatar, full name, and professional title underneath the name for consistency.
+-   **Layout**: Entities are presented in a responsive grid of cards. To ensure stability during drag operations, especially across multiple rows, the container must use a `flex flex-wrap` layout instead of CSS Grid. Each draggable card item is then given a responsive `basis` property (e.g., `basis-full md:basis-[calc(50%-1rem)] xl:basis-[calc(25%-1rem)]`) to create the columns. A negative margin (e.g., `-m-2`) on the container and a matching positive padding (e.g., `p-2`) on the items creates the gutter.
+-   **Critical Stability Properties**:
+    -   **`@dnd-kit` is the required library.** The older `react-beautiful-dnd` library was found to be incompatible with this type of responsive layout.
+    -   `flex-grow-0` and `flex-shrink-0` **must** be used on draggable items. This prevents the remaining items in a row from expanding or shrinking, which causes the grid to reflow unstably when an item is being dragged.
+-   **Visual Feedback**: To provide feedback without disrupting layout, visual changes (like a `shadow` or `opacity`) should be applied directly to the inner component based on the `isDragging` prop provided by `dnd-kit`'s `useSortable` hook. The draggable wrapper itself should remain untouched.
+-   **Internal Card Layout**: Each card is structured for clarity. The header contains the primary entity identifier (icon and name) and contextual controls. The icon and its color are editable, following the **Icon & Color Editing Flow** pattern.
+-   **User Item Display**: When users are displayed as items within a management card (e.g., `TeamCard`), they are presented **without a border**. Each user item must display their avatar, full name, and professional title underneath the name for consistency.
 -   **Unique Draggable IDs**: It is critical that every `Draggable` component has a globally unique `draggableId`. If the same item (e.g., a user) can appear in multiple lists, you must create a unique ID for each instance. A common pattern is to combine the list's ID with the item's ID (e.g., `draggableId={'${list.id}-${item.id}'}`). This prevents the drag-and-drop library from trying to move all instances of the item simultaneously.
 -   **Draggable & Pinned States**:
-    -   **Draggable Cards**: Most cards can be freely reordered within the grid.
-    -   **Pinned Cards**: Certain cards are designated as "pinned" and cannot be dragged. They act as fixed anchors in the layout.
+    -   **Draggable Cards**: Most cards can be freely reordered within the grid. The `useSortable` hook allows this.
+    -   **Pinned Cards**: Certain cards are designated as "pinned" and cannot be dragged. This is achieved by disabling the `useSortable` hook for those specific items (`disabled: true`). They act as fixed anchors in the layout.
 -   **Reordering with Guardrails**:
     -   **Interaction**: Users can drag any non-pinned card and drop it between other non-pinned cards to change its order. The grid reflows smoothly to show the drop position.
-    -   **Top Guardrail**: If a card is dropped *before* the first pinned item, it is automatically repositioned to be *after* it.
-    -   **Bottom Guardrail**: If a card is dropped *after* the last pinned item, it is automatically repositioned to be *before* it. This ensures the integrity of the pinned items.
+    -   **Guardrail Logic**: The `onDragEnd` handler must contain logic to prevent reordering pinned items. If a user attempts to drop an item into a position occupied by a pinned item, the operation should be cancelled or reverted.
 -   **Drop Zone Highlighting**: Drop zones provide visual feedback when an item is dragged over them. To maintain a clean UI, highlights primarily use rings without background fills.
     -   **Standard & Duplication Zones (Reordering, Moving, Duplicating):** The drop area is highlighted with a `1px` inset, **colorless** ring using the standard border color (`ring-1 ring-border ring-inset`). This is the universal style for all non-destructive drop actions.
     -   **Destructive Zones (Deleting):** The drop area is highlighted with a `1px` ring in the destructive theme color (`ring-1 ring-destructive`).
@@ -137,13 +141,13 @@ This is the application's perfected, gold-standard pattern for managing a collec
     - **Item-level**: To maintain a clean UI, action icons like "Remove User" or "Delete Badge" must appear only when hovering over their specific context. This is achieved by adding a `group` class to the *individual item's container*. The icon button inside is then styled with `opacity-0 group-hover:opacity-100`. It is critical that parent containers (like the main card) do **not** also have a `group` class if it is not intended to trigger the item's hover state, as nested group classes can cause all item icons to appear at once.
     - **Card-level**: Deleting an entire card (like a Team or Collection) is a high-impact action. To prevent accidental clicks, this functionality should be placed within a `<DropdownMenu>` in the card's header, not triggered by a direct hover icon.
 -   **Drag-to-Duplicate**:
-    -   **Interaction**: A designated "Add New" icon (`<Button>`) acts as a drop zone. While a card is being dragged, this zone becomes highlighted to indicate it can accept a drop.
+    -   **Interaction**: A designated "Add New" icon (`<Button>`) acts as a drop zone, implemented using the `useDroppable` hook from `dnd-kit`. While a card is being dragged, this zone becomes highlighted to indicate it can accept a drop.
     -   **Behavior**: Dropping any card (pinned or not, from the main board or the shared panel) onto this zone creates a deep, independent copy of the original. The new card is given a unique ID, a modified name (e.g., with `(Copy)`), and is placed immediately after the original in the list. Its ownership is assigned to the current user's context, and its member list is reset to be empty.
 -   **Drag-to-Assign**: This pattern allows sub-items (like **Users** or **Badges**) to be moved between different parent cards.
     - **Interaction**: A user can drag an item (e.g., a User) from one card's list.
-    - **Behavior**: As the item is dragged over another card, that card's drop zone becomes highlighted. Dropping the item assigns it to the new card's collection. The original item may be removed or remain, depending on the context (e.g., assigning a user to a new admin group might not remove them from the old one). This is handled by the `onDragEnd` logic.
+    - **Behavior**: As the item is dragged over another card, that card's drop zone (using `useDroppable`) becomes highlighted. Dropping the item assigns it to the new card's collection. The original item may be removed or remain, depending on the context. This is handled by the `onDragEnd` logic.
 -   **Layout Stability**: To prevent "janky" or shifting layouts during a drag operation (especially when dragging an item out of one card and over another), ensure that the container cards (e.g., `TeamCard`) maintain a consistent height. This is achieved by making the card a `flex flex-col` container and giving its main content area `flex-grow` to make it fill the available space, even when a draggable item is temporarily removed. A `ScrollArea` can be used within the content to manage overflow if the list is long.
--   **Application**: This is the required pattern for managing Pages, Calendars, Teams, Admin Groups, and Badge Collections.
+-   **Application**: This is the required pattern for managing Pages, Calendars, Teams, and Badge Collections.
 
 ---
 
@@ -158,7 +162,7 @@ This is a minimalist dialog for focused actions, such as entering a code or a sh
 - **Behavior**:
     - Clicking the action icon in the corner performs the primary action (e.g., saves or verifies the input).
     - Clicking the overlay dismisses the dialog without performing the action.
-- **Application**: Used for Two-Factor Authentication, quick edits, simple forms, and for confirming lower-risk destructive actions, such as deleting a **Page**, an **Admin Group**, a **Team**, or an un-shared **Badge Collection**.
+- **Application**: Used for Two-Factor Authentication, quick edits, simple forms, and for confirming lower-risk destructive actions, such as deleting a **Page**, a **Team**, or an un-shared **Badge Collection**.
 
 ---
 
@@ -187,11 +191,11 @@ When a **high-risk destructive action** requires user confirmation (like deletin
 
 ### 12. Seamless Single-Tab Pages
 
-- **Description**: This pattern ensures a streamlined user experience for pages that contain only a single content tab. Instead of displaying a redundant page header *and* a tab header, the tab's content becomes the page itself.
+- **Description**: This pattern ensures a streamlined user experience for pages that contain only a single content tab. Instead of displaying a redundant page header, the tab's content becomes the page itself.
 - **Behavior**:
   - When a page is configured with exactly one associated tab, the main page layout does not render its own title or icon.
   - The single tab's component is rendered directly within the main content area.
-  - The tab's component is responsible for displaying the page's title and icon, effectively promoting its header to become the page's header.
+  - The tab's component is responsible for displaying the page's title and icon, effectively promoting its header to become the page's header. This is especially true for pages like "Overview," "Settings," and "Notifications" where the content *is* the page.
 - **Application**: Applied automatically to any page in the dynamic routing system (`/dashboard/[...page]`) that meets the single-tab condition. This creates a more integrated and less cluttered UI.
 
 ---
@@ -233,16 +237,16 @@ This pattern describes the user interface for assigning and unassigning badges t
 
 ### Typography
 - **Font**: The application exclusively uses the **Roboto** font family for a clean and consistent look.
-- **Headline Font**: All major titles (pages, tabs, prominent cards) use the `font-headline` utility class, which is configured to use a `font-thin` weight (`font-weight: 100`). This is also maintained during inline editing for a seamless user experience.
-- **Body Font**: All standard body text, labels, and buttons now use a `font-normal` weight. All instances of `font-semibold` or `font-bold` have been removed to create a softer, more modern aesthetic.
+- **Headline Font**: All major titles (pages, tabs, prominent cards) use the `font-headline` utility class, which is configured to use a `font-thin` weight (`font-weight: 100`).
+- **Body Font**: All standard body text, labels, and buttons now use a `font-thin` weight.
 
 ### Icons & Hover Effects
 - **Icon Set**: We exclusively use **Google Material Symbols** via the `<GoogleSymbol />` component. This ensures a consistent visual language. The font library is a variable font, which means we can adjust its properties.
 - **Icon Sizing & Weight**:
-  - A `weight={100}` is used for most action icons (`delete`, `edit`, `more_vert`) to maintain a light, clean aesthetic.
-  - Icons inside pickers (like the icon picker) are `text-4xl` with a `weight={100}` inside `h-8 w-8` buttons for clarity and ease of selection.
-  - Large, circular 'Add New' buttons use `text-4xl` with a `weight={100}` for prominence.
-  - Icon picker *trigger* buttons use a large `text-12xl` icon with a `weight={100}` inside a `h-12 w-12` button.
+  - A `weight={100}` is used for **all icons** to maintain a light, clean aesthetic.
+  - Icons inside pickers (like the icon picker) are `text-4xl` inside `h-8 w-8` buttons for clarity and ease of selection.
+  - Large, circular 'Add New' buttons use `text-4xl` for prominence.
+  - Icon picker *trigger* buttons use a large `text-6xl` icon inside a `h-12 w-12` button.
 - **Filled Icons**: To use the filled style of an icon, pass the `filled` prop to the component: `<GoogleSymbol name="star" filled />`. This works with any of the three main styles.
 - **Hover Behavior**: The color of icons on hover is typically determined by their parent element. For example, an icon inside a `<Button variant="ghost">` will change to the primary theme color on hover because the button's text color changes, and the icon inherits that color. This creates a clean and predictable interaction.
 - **Destructive Actions**: Delete or other destructive action icons (like `delete`, `close`, `cancel`) are `text-muted-foreground` by default and become `text-destructive` on hover to provide a clear but not overwhelming visual warning.
@@ -269,7 +273,7 @@ The application supports two distinct color themes, `light` and `dark`, which ca
 This is the single source of truth for indicating user interaction state across the entire application.
 
 -   **Keyboard Focus (`focus-visible`)**: All interactive elements (buttons, inputs, checkboxes, custom cards, etc.) share a consistent focus indicator. When an element is focused via keyboard navigation, a subtle, `1px` ring with 50% opacity appears directly on its border (`focus-visible:ring-1 focus-visible:ring-ring/50`). This provides a clean, minimal, and non-intrusive focus indicator that aligns with the app's elegant aesthetic.
--   **Selected/Highlighted State**: To indicate a persistently selected or highlighted state (e.g., the designated "Group Admin" in a list), a clear icon badge (e.g., a "key" icon) is used, typically overlaid on the user's avatar. This avoids visually noisy outlines and provides a clear, universally understood symbol for elevated status.
+-   **Selected/Highlighted State**: To indicate a persistently selected or highlighted state (e.g., the designated "Team Admin" in a list), a clear icon badge (e.g., a "key" icon) is used, typically overlaid on the user's avatar. This avoids visually noisy outlines and provides a clear, universally understood symbol for elevated status.
 
 ### List Item States (Dropdowns & Popovers)
 - **Hover & Focus**: When hovering over or navigating to list items (like in dropdowns or popovers) using the keyboard, the item's text color changes to `text-primary`. **No background highlight is applied**, ensuring a clean and consistent look across the application.
@@ -290,5 +294,7 @@ This is the single source of truth for indicating user interaction state across 
     - **Appearance**: A circular badge with a `border-2` of the parent element's background color (e.g., `border-background`) to create a "punched out" effect. The icon inside should be sized proportionally.
     - **Sizing**: The standard size for these badges (e.g., color-pickers, ownership status icons) is `h-4 w-4` (`16x16px`). The `GoogleSymbol` inside should be sized to fit, for example using `style={{fontSize: '10px'}}`.
     - **Placement**: This is context-dependent. Color-pickers are typically placed on the bottom-right corner of their parent icon. Ownership status icons are typically placed on the top-left corner to create visual balance.
-    - **Application**: Used for displaying a user's admin group status, a shared status on a role icon, or a `share` icon on a shared Badge.
+    - **Application**: Used for displaying a team admin status, a shared status on a role icon, or a `share` icon on a shared Badge.
 -   **Badges in Assorted View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
+
+    
