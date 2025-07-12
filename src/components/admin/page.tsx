@@ -477,7 +477,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
 }
 
 
-function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: AppPage; onUpdate: (id: string, data: Partial<AppPage>) => void; onDelete: (id: string) => void; isDragging?: boolean, isPinned?: boolean }) {
+function PageCard({ page, onUpdate, onDelete, isPinned }: { page: AppPage; onUpdate: (id: string, data: Partial<AppPage>) => void; onDelete: (id: string) => void; isPinned?: boolean }) {
     const [isEditingName, setIsEditingName] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
@@ -530,7 +530,7 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
     const displayPath = page.isDynamic ? `${page.path}/[teamId]` : page.path;
 
     return (
-        <Card className={cn("flex flex-col h-full group bg-transparent", isDragging && 'shadow-xl')}>
+        <Card className={cn("flex flex-col h-full group bg-transparent")}>
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -666,27 +666,11 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
 export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab; isSingleTabPage?: boolean, isActive?: boolean }) => {
     const { appSettings, updateAppSettings, updateAppTab } = useUser();
     const { toast } = useToast();
-    const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
-    
-    const titleInputRef = useFocusOnMount(isEditingTitle);
     
     const pinnedTopIds = useMemo(() => ['page-admin-management', 'page-overview', 'page-calendar', 'page-tasks'], []);
     const pinnedBottomIds = useMemo(() => ['page-notifications', 'page-settings'], []);
     const allPinnedIds = useMemo(() => [...pinnedTopIds, ...pinnedBottomIds], [pinnedTopIds, pinnedBottomIds]);
-
-    const handleSaveTitle = () => {
-        const newName = titleInputRef.current?.value.trim();
-        if (newName && newName !== tab.name) {
-            updateAppTab(tab.id, { name: newName });
-        }
-        setIsEditingTitle(false);
-    };
-
-    const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Enter') handleSaveTitle();
-        else if (e.key === 'Escape') setIsEditingTitle(false);
-    };
 
     const handleUpdatePage = useCallback((pageId: string, data: Partial<AppPage>) => {
         const newPages = appSettings.pages.map(p => p.id === pageId ? { ...p, ...data } : p);
@@ -824,7 +808,7 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
                         <div
                             {...provided.droppableProps}
                             ref={provided.innerRef}
-                            className="flex flex-wrap gap-4"
+                            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
                         >
                             {filteredPages.map((page, index) => {
                                 const isPinned = allPinnedIds.includes(page.id);
@@ -835,17 +819,14 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
                                                 ref={provided.innerRef}
                                                 {...provided.draggableProps}
                                                 {...provided.dragHandleProps}
-                                                className="w-full md:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-1rem)]"
+                                                className={cn(snapshot.isDragging && "shadow-xl opacity-50")}
                                             >
-                                                <div className={cn(snapshot.isDragging && "shadow-xl")}>
-                                                    <PageCard
-                                                        page={page}
-                                                        onUpdate={handleUpdatePage}
-                                                        onDelete={handleDeletePage}
-                                                        isDragging={snapshot.isDragging}
-                                                        isPinned={isPinned}
-                                                    />
-                                                </div>
+                                                <PageCard
+                                                    page={page}
+                                                    onUpdate={handleUpdatePage}
+                                                    onDelete={handleDeletePage}
+                                                    isPinned={isPinned}
+                                                />
                                             </div>
                                         )}
                                     </Draggable>
