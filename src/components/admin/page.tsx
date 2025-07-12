@@ -30,8 +30,10 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
+  type DragStartEvent,
   useDroppable,
-  useDraggable
+  useDraggable,
+  DragOverlay,
 } from '@dnd-kit/core';
 import {
   arrayMove,
@@ -59,6 +61,23 @@ const useFocusOnMount = (isEditing: boolean) => {
 
 // #region Admin Groups Management Tab
 
+function UserCard({ user }: { user: User }) {
+    return (
+        <div className="p-2 flex items-center justify-between rounded-md transition-colors bg-card shadow-lg">
+            <div className="flex items-center gap-4">
+                <Avatar>
+                  <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
+                  <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <div>
+                    <p className="font-thin">{user.displayName}</p>
+                    <p className="text-sm text-muted-foreground font-thin">{user.title || 'No title provided'}</p>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 function SortableUserCard({ user, listId }: { user: User, listId: string }) {
     const draggableId = `user-dnd-${user.userId}-${listId}`;
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -73,19 +92,8 @@ function SortableUserCard({ user, listId }: { user: User, listId: string }) {
     };
 
     return (
-        <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-            <div className="p-2 flex items-center justify-between rounded-md transition-colors hover:bg-muted/50">
-                <div className="flex items-center gap-4">
-                    <Avatar>
-                      <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
-                      <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                        <p className="font-thin">{user.displayName}</p>
-                        <p className="text-sm text-muted-foreground font-thin">{user.title || 'No title provided'}</p>
-                    </div>
-                </div>
-            </div>
+        <div ref={setNodeRef} style={style} {...attributes} {...listeners} className={cn(isDragging && 'shadow-lg')}>
+            <UserCard user={user} />
         </div>
     );
 }
@@ -125,6 +133,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
   
   const [adminUsers, setAdminUsers] = useState(users.filter(u => u.isAdmin));
   const [nonAdminUsers, setNonAdminUsers] = useState(users.filter(u => !u.isAdmin));
+  const [activeUser, setActiveUser] = useState<User | null>(null);
 
   useEffect(() => {
     setAdminUsers(users.filter(u => u.isAdmin));
@@ -164,7 +173,6 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
             title: 'Action Prohibited',
             description: 'You cannot remove the last system administrator.',
         });
-        // Revert visual state if needed
         setAdminUsers(users.filter(u => u.isAdmin));
         setNonAdminUsers(users.filter(u => !u.isAdmin));
         return;
@@ -197,7 +205,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
 
   const onDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-
+    setActiveUser(null);
     if (!over) return;
     
     const activeData = active.data.current;
@@ -205,21 +213,25 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
     
     if (userToMove) {
         const sourceListId: string | undefined = activeData?.fromListId;
-        const destListId: string | undefined = over.data.current?.type === 'user-list' ? over.id : over.data.current?.fromListId;
+        const overElement = over.data.current;
+        const destListId: string | undefined = overElement?.type === 'user-list' ? over.id : overElement?.fromListId;
 
         if (sourceListId && destListId && sourceListId !== destListId) {
-            // Visually move the user first for a smooth animation
             if (sourceListId === 'admin-list') {
                 setAdminUsers(prev => prev.filter(u => u.userId !== userToMove.userId));
-                setNonAdminUsers(prev => [...prev, userToMove]);
+                setNonAdminUsers(prev => [userToMove, ...prev]);
             } else {
                 setNonAdminUsers(prev => prev.filter(u => u.userId !== userToMove.userId));
-                setAdminUsers(prev => [...prev, userToMove]);
+                setAdminUsers(prev => [userToMove, ...prev]);
             }
-            // Then trigger the action that requires 2FA
-            handleAdminToggle(userToMove);
+            setTimeout(() => handleAdminToggle(userToMove), 50);
         }
     }
+  };
+
+  const onDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    setActiveUser(active.data.current?.user || null);
   };
   
   const sensors = useSensors(
@@ -236,7 +248,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
                 <h1 className="font-headline text-3xl font-thin">{tab.name}</h1>
              </div>
         )}
-        <DndContext sensors={sensors} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
+        <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card className="flex flex-col h-full bg-transparent border-0">
                     <CardHeader>
@@ -273,6 +285,9 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
                     </CardContent>
                   </Card>
             </div>
+            <DragOverlay>
+                {activeUser ? <UserCard user={activeUser} /> : null}
+            </DragOverlay>
         </DndContext>
 
         <Dialog open={is2faDialogOpen} onOpenChange={(isOpen) => !isOpen && close2faDialog()}>
@@ -505,7 +520,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
   );
 }
 
-function PageCard({ page, onUpdate, onDelete, isPinned, dragHandleProps }: { page: AppPage; onUpdate: (id: string, data: Partial<AppPage>) => void; onDelete: (id: string) => void; isPinned?: boolean, dragHandleProps?: any }) {
+function PageCard({ page, onUpdate, onDelete, isPinned }: { page: AppPage; onUpdate: (id: string, data: Partial<AppPage>) => void; onDelete: (id: string) => void; isPinned?: boolean }) {
     const [isEditingName, setIsEditingName] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
@@ -558,7 +573,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, dragHandleProps }: { pag
     const displayPath = page.isDynamic ? `${page.path}/[teamId]` : page.path;
 
     return (
-        <Card className="flex flex-col h-48 group bg-transparent" {...dragHandleProps}>
+        <Card className="flex flex-col h-48 group bg-transparent">
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -712,6 +727,7 @@ function SortablePageCard({ id, page, onUpdate, onDelete, isPinned }: { id: stri
             ref={setNodeRef} 
             style={style} 
             className="p-2 basis-full md:basis-[calc(50%-1rem)] flex-grow-0 flex-shrink-0 lg:basis-[calc(33.333%-1rem)] xl:basis-[calc(25%-1rem)] 2xl:basis-[calc(20%-1rem)]"
+             {...attributes} {...listeners}
         >
              <div className={cn(isDragging && "shadow-xl opacity-75")}>
                  <PageCard 
@@ -719,7 +735,6 @@ function SortablePageCard({ id, page, onUpdate, onDelete, isPinned }: { id: stri
                     onUpdate={onUpdate} 
                     onDelete={onDelete} 
                     isPinned={isPinned} 
-                    dragHandleProps={{...attributes, ...listeners}}
                  />
             </div>
         </div>
@@ -759,6 +774,7 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
     const { toast } = useToast();
     const [searchTerm, setSearchTerm] = useState('');
     const searchInputRef = useRef<HTMLInputElement>(null);
+    const [activePage, setActivePage] = useState<AppPage | null>(null);
     
     const pinnedTopIds = useMemo(() => ['page-admin-management', 'page-overview', 'page-calendar', 'page-tasks'], []);
     const pinnedBottomIds = useMemo(() => ['page-notifications', 'page-settings'], []);
@@ -823,7 +839,16 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
         })
     );
 
+    const handleDragStart = (event: DragStartEvent) => {
+        const { active } = event;
+        const page = appSettings.pages.find(p => p.id === active.id);
+        if (page) {
+            setActivePage(page);
+        }
+    };
+    
     const handleDragEnd = (event: DragEndEvent) => {
+        setActivePage(null);
         const { active, over } = event;
         
         if (over?.id === 'duplicate-page-zone') {
@@ -856,7 +881,7 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
     const pageIds = useMemo(() => filteredPages.map(p => p.id), [filteredPages]);
 
     return (
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
                     <DuplicateZone id="duplicate-page-zone" onAdd={handleAddPage} />
@@ -879,6 +904,9 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
                         ))}
                     </div>
                 </SortableContext>
+                <DragOverlay>
+                    {activePage ? <PageCard page={activePage} onUpdate={() => {}} onDelete={() => {}} isPinned={allPinnedIds.has(activePage.id)} /> : null}
+                </DragOverlay>
             </div>
         </DndContext>
     );
