@@ -555,13 +555,13 @@ function PageCard({ page, onUpdate, onDelete, isPinned }: { page: AppPage; onUpd
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <div className="relative" onClick={(e) => e.stopPropagation()}>
+                        <div className="relative">
                             <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild>
-                                                <button className="h-12 w-12 flex items-center justify-center">
+                                                <button className="h-12 w-12 flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
                                                     <GoogleSymbol name={page.icon} className="text-6xl" weight={100} />
                                                 </button>
                                             </PopoverTrigger>
@@ -604,7 +604,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned }: { page: AppPage; onUpd
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild>
-                                                <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background cursor-pointer" style={{ backgroundColor: page.color }} />
+                                                <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background cursor-pointer" style={{ backgroundColor: page.color }} onClick={(e) => e.stopPropagation()} />
                                             </PopoverTrigger>
                                         </TooltipTrigger>
                                         <TooltipContent><p>Change Color</p></TooltipContent>
@@ -1163,4 +1163,5 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
     
 
     
+
 
