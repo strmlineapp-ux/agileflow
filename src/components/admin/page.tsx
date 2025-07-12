@@ -31,6 +31,7 @@ import {
   useSensors,
   type DragEndEvent,
   useDroppable,
+  useDraggable
 } from '@dnd-kit/core';
 import {
   arrayMove,
@@ -57,23 +58,51 @@ const useFocusOnMount = (isEditing: boolean) => {
 // #endregion
 
 // #region Admin Groups Management Tab
-const UserAssignmentCard = ({ user }: { user: User }) => {
-  return (
-    <div className="group relative p-2 flex items-center justify-between rounded-md transition-colors hover:bg-muted/50">
-        <div className="flex items-center gap-4">
-            <Avatar>
-              <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
-              <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <div>
-                <p className="font-thin">{user.displayName}</p>
-                <p className="text-sm text-muted-foreground font-thin">{user.title || 'No title provided'}</p>
+
+function SortableUserCard({ user, listId }: { user: User, listId: string }) {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+        id: user.userId,
+        data: { type: 'user', user, from: listId }
+    });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1
+    };
+
+    return (
+        <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+            <div className="p-2 flex items-center justify-between rounded-md transition-colors hover:bg-muted/50">
+                <div className="flex items-center gap-4">
+                    <Avatar>
+                      <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
+                      <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                        <p className="font-thin">{user.displayName}</p>
+                        <p className="text-sm text-muted-foreground font-thin">{user.title || 'No title provided'}</p>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-  );
-};
+    );
+}
 
+function UserDropZone({ id, users, children }: { id: string, users: User[], children: React.ReactNode }) {
+  const { setNodeRef, isOver } = useDroppable({ id, data: { type: 'user-list' }});
+
+  return (
+    <div ref={setNodeRef} className={cn("p-1 space-y-1 rounded-md min-h-[60px]", isOver ? "bg-primary/10 ring-1 ring-primary" : "")}>
+        <SortableContext items={users.map(u => u.userId)} strategy={verticalListSortingStrategy}>
+            {users.map((user) => (
+                <SortableUserCard key={user.userId} user={user} listId={id} />
+            ))}
+        </SortableContext>
+        {children}
+    </div>
+  )
+}
 
 export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab; isSingleTabPage?: boolean, isActive?: boolean }) => {
   const { toast } = useToast();
@@ -86,6 +115,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
   
   const [adminSearch, setAdminSearch] = useState('');
   const [userSearch, setUserSearch] = useState('');
+  const userSearchRef = useRef<HTMLInputElement>(null);
   
   useEffect(() => {
     if (is2faDialogOpen) {
@@ -94,6 +124,12 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
       });
     }
   }, [is2faDialogOpen, isEditing2fa]);
+
+  useEffect(() => {
+    if (isActive && userSearchRef.current) {
+        setTimeout(() => userSearchRef.current?.focus(), 100);
+    }
+  }, [isActive]);
 
   const adminUsers = useMemo(() =>
     users.filter(u => u.isAdmin && u.displayName.toLowerCase().includes(adminSearch.toLowerCase())),
@@ -142,10 +178,25 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
     setIsEditing2fa(false);
   };
 
-  // This is a placeholder for dnd-kit logic if needed for this component in the future
   const onDragEnd = (event: DragEndEvent) => {
-    //
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    
+    const userToMove = users.find(u => u.userId === active.id);
+    if (!userToMove) return;
+
+    const sourceList = active.data.current?.from;
+    const destList = over.data.current?.type === 'user-list' ? over.id : null;
+    
+    if (sourceList && destList && sourceList !== destList) {
+        handleAdminToggle(userToMove);
+    }
   };
+  
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
 
 
   return (
@@ -156,7 +207,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
                 <h1 className="font-headline text-3xl font-thin">{tab.name}</h1>
              </div>
         )}
-        <DndContext onDragEnd={onDragEnd}>
+        <DndContext sensors={sensors} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card className="flex flex-col h-full bg-transparent border-0">
                     <CardHeader>
@@ -168,14 +219,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
                         </div>
                     </CardHeader>
                     <CardContent className="flex-grow">
-                        <div className="p-1 space-y-1 rounded-md min-h-[60px]">
-                            {adminUsers.map((user, index) => (
-                                <UserAssignmentCard 
-                                    key={user.userId}
-                                    user={user} 
-                                />
-                            ))}
-                        </div>
+                        <UserDropZone id="admin-list" users={adminUsers} />
                     </CardContent>
                   </Card>
                   <Card className="flex flex-col h-full bg-transparent border-0">
@@ -183,19 +227,12 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
                         <div className="flex items-center justify-between gap-4">
                             <CardTitle className="font-thin text-base">Users ({nonAdminUsers.length})</CardTitle>
                              <div className="flex items-center gap-1">
-                                <CompactSearchInput searchTerm={userSearch} setSearchTerm={setUserSearch} placeholder="Search users..." />
+                                <CompactSearchInput searchTerm={userSearch} setSearchTerm={setUserSearch} placeholder="Search users..." inputRef={userSearchRef} autoFocus={isActive} />
                             </div>
                         </div>
                     </CardHeader>
                      <CardContent className="flex-grow">
-                         <div className="p-1 space-y-1 rounded-md min-h-[60px]">
-                            {nonAdminUsers.map((user, index) => (
-                                <UserAssignmentCard 
-                                    key={user.userId}
-                                    user={user}
-                                />
-                            ))}
-                        </div>
+                         <UserDropZone id="user-list" users={nonAdminUsers} />
                     </CardContent>
                   </Card>
             </div>
@@ -684,10 +721,17 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
     const { appSettings, updateAppSettings } = useUser();
     const { toast } = useToast();
     const [searchTerm, setSearchTerm] = useState('');
+    const searchInputRef = useRef<HTMLInputElement>(null);
     
     const pinnedTopIds = useMemo(() => ['page-admin-management', 'page-overview', 'page-calendar', 'page-tasks'], []);
     const pinnedBottomIds = useMemo(() => ['page-notifications', 'page-settings'], []);
     const allPinnedIds = useMemo(() => new Set([...pinnedTopIds, ...pinnedBottomIds]), [pinnedTopIds, pinnedBottomIds]);
+    
+    useEffect(() => {
+        if (isActive && searchInputRef.current) {
+            setTimeout(() => searchInputRef.current?.focus(), 100);
+        }
+    }, [isActive]);
 
     const handleUpdatePage = useCallback((pageId: string, data: Partial<AppPage>) => {
         const newPages = appSettings.pages.map(p => p.id === pageId ? { ...p, ...data } : p);
@@ -780,7 +824,7 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
                 <div className="flex items-center justify-between">
                     <DuplicateZone id="duplicate-page-zone" onAdd={handleAddPage} />
                     <div className="flex items-center">
-                        <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search pages..." />
+                        <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search pages..." inputRef={searchInputRef} autoFocus={isActive} />
                     </div>
                 </div>
                 
@@ -1017,6 +1061,13 @@ function SortableTabCard({ id, tab, onUpdate }: { id: string, tab: AppTab, onUpd
 export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab; isSingleTabPage?: boolean, isActive?: boolean }) => {
     const { appSettings, updateAppSettings, updateAppTab } = useUser();
     const [searchTerm, setSearchTerm] = useState('');
+    const searchInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (isActive && searchInputRef.current) {
+            setTimeout(() => searchInputRef.current?.focus(), 100);
+        }
+    }, [isActive]);
 
     const handleUpdateTab = useCallback((tabId: string, data: Partial<AppTab>) => {
         const newTabs = appSettings.tabs.map(t => t.id === tabId ? { ...t, ...data } : t);
@@ -1055,7 +1106,7 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
             <div className="space-y-8">
                 <div className="flex items-center justify-end">
                      <div className="flex items-center">
-                        <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search by name or desc..." />
+                        <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search by name or desc..." inputRef={searchInputRef} autoFocus={isActive} />
                     </div>
                 </div>
                 <SortableContext items={tabIds} strategy={verticalListSortingStrategy}>

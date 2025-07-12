@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { cn } from '@/lib/utils';
@@ -11,22 +11,28 @@ interface CompactSearchInputProps {
   setSearchTerm: (value: string) => void;
   placeholder?: string;
   className?: string;
+  inputRef?: React.RefObject<HTMLInputElement>;
+  autoFocus?: boolean;
 }
 
 export function CompactSearchInput({ 
   searchTerm, 
   setSearchTerm, 
   placeholder = "Search...", 
-  className 
+  className,
+  inputRef: externalInputRef,
+  autoFocus = false,
 }: CompactSearchInputProps) {
-  const [isSearching, setIsSearching] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [isSearching, setIsSearching] = useState(autoFocus || !!searchTerm);
+  const internalInputRef = useRef<HTMLInputElement>(null);
+  const inputRef = externalInputRef || internalInputRef;
 
   useEffect(() => {
-    if (isSearching) {
+    if (autoFocus || isSearching) {
+      setIsSearching(true);
       setTimeout(() => inputRef.current?.focus(), 100);
     }
-  }, [isSearching]);
+  }, [isSearching, autoFocus, inputRef]);
 
   if (isSearching) {
     return (
@@ -37,7 +43,7 @@ export function CompactSearchInput({
           placeholder={placeholder}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          onBlur={() => { if (!searchTerm) setIsSearching(false); }}
+          onBlur={() => { if (!searchTerm && !autoFocus) setIsSearching(false); }}
           className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 font-thin"
         />
       </div>
