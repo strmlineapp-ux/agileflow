@@ -25,9 +25,9 @@ export default function DashboardLayout({
   }
 
   return (
-      <div className="flex min-h-screen w-full bg-muted/40">
+      <div className="min-h-screen w-full bg-muted/40">
         <Sidebar />
-        <div className="flex flex-1 flex-col sm:pl-14">
+        <div className="flex flex-col sm:pl-14">
           <Header />
           <main
             className={cn(

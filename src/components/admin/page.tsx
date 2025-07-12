@@ -835,9 +835,7 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
                                                 ref={provided.innerRef}
                                                 {...provided.draggableProps}
                                                 {...provided.dragHandleProps}
-                                                className={cn(
-                                                    "p-2 basis-full sm:basis-1/2 md:basis-[calc(33.333%-1rem)] lg:basis-[calc(25%-1rem)] xl:basis-[calc(20%-1rem)] flex-grow-0 flex-shrink-0"
-                                                )}
+                                                className="p-2 basis-full md:basis-[calc(50%-1rem)] lg:basis-[calc(33.333%-1rem)] flex-grow-0 flex-shrink-0"
                                             >
                                                 <div className={cn(snapshot.isDragging && "shadow-xl")}>
                                                     <PageCard
