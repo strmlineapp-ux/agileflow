@@ -13,7 +13,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/utils';
 import { GoogleSymbol } from '../icons/google-symbol';
 
-function SortableTeamMember({ member, team, listType }: { member: User, team: Team, listType: 'admin' | 'member'}) {
+function SortableTeamMember({ member, team }: { member: User, team: Team }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: member.userId });
 
   const style = {
@@ -34,11 +34,9 @@ function SortableTeamMember({ member, team, listType }: { member: User, team: Te
 export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
     const { users, updateAppTab, updateTeam } = useUser();
     
-    // States for inline editing page tab title
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const titleInputRef = useRef<HTMLInputElement>(null);
     
-    // States for inline editing sub-headers
     const [isEditingAdminsLabel, setIsEditingAdminsLabel] = useState(false);
     const [isEditingMembersLabel, setIsEditingMembersLabel] = useState(false);
     const adminsLabelInputRef = useRef<HTMLInputElement>(null);
@@ -47,7 +45,6 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
     const teamAdminsLabel = team.teamAdminsLabel || 'Team Admins';
     const membersLabel = team.membersLabel || 'Members';
     
-    // Derive members directly from context/props to ensure a single source of truth.
     const teamMembers = useMemo(() => {
         return team.members
             .map(id => users.find(u => u.userId === id))
@@ -182,7 +179,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                         <SortableContext items={adminIds} strategy={verticalListSortingStrategy}>
                             <div className="space-y-4">
                                 {admins.map((member) => (
-                                    <SortableTeamMember key={member.userId} member={member} team={team} listType="admin" />
+                                    <SortableTeamMember key={member.userId} member={member} team={team} />
                                 ))}
                             </div>
                         </SortableContext>
@@ -210,7 +207,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                             <div className="flex flex-wrap -m-3">
                             {members.map((member) => (
                                 <div key={member.userId} className="p-3 basis-full md:basis-1/2 flex-grow-0 flex-shrink-0">
-                                    <SortableTeamMember member={member} team={team} listType="member" />
+                                    <SortableTeamMember member={member} team={team} />
                                 </div>
                             ))}
                             </div>
