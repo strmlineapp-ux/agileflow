@@ -8,16 +8,16 @@ import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/comp
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal, DropdownMenuLabel } from '../ui/dropdown-menu';
-import { useUser } from '@/context/user-context';
+import { useUserSession, useUserData } from '@/context/user-context';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { Badge } from '../ui/badge';
 import { hasAccess } from '@/lib/permissions';
-import { type AppPage } from '@/types';
-import { ScrollArea } from '../ui/scroll-area';
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { loading, realUser, viewAsUser, setViewAsUser, users, teams, notifications, appSettings, allBadges, linkGoogleCalendar } = useUser();
+  const { realUser, viewAsUser, setViewAsUser, users } = useUserSession();
+  const { loading, teams, notifications, appSettings, allBadges, linkGoogleCalendar } = useUserData();
+  
   const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -33,10 +33,9 @@ export function Sidebar() {
       
       if (page.isDynamic) {
         const relevantTeams = teams.filter(team => {
-          const isMemberOrAdmin = team.members.includes(viewAsUser.userId) || (team.teamAdmins || []).includes(viewAsUser.userId);
-          const teamHasAccessToThisPage = page.access.teams.includes(team.id);
-
-          return isMemberOrAdmin && teamHasAccessToThisPage;
+            const isMemberOrAdmin = team.members.includes(viewAsUser.userId) || (team.teamAdmins || []).includes(viewAsUser.userId);
+            const teamHasAccessToThisPage = page.access.teams.includes(team.id);
+            return isMemberOrAdmin && teamHasAccessToThisPage;
         });
 
         return relevantTeams.map(team => ({

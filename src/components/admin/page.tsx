@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import { useAdmin } from '@/context/admin-context';
+import { useUser } from '@/context/user-context';
 import { type User, type AdminGroup, type AppPage, type AppTab, type Team } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -63,7 +63,7 @@ const UserAssignmentCard = ({ user }: { user: User }) => {
 
 export const AdminsManagement = ({ tab, isSingleTabPage }: { tab: AppTab; isSingleTabPage?: boolean }) => {
   const { toast } = useToast();
-  const { users, updateUser } = useAdmin();
+  const { users, updateUser } = useUser();
   const [is2faDialogOpen, setIs2faDialogOpen] = useState(false);
   const [on2faSuccess, setOn2faSuccess] = useState<(() => void) | null>(null);
   const [twoFactorCode, setTwoFactorCode] = useState('');
@@ -332,7 +332,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage }: { tab: AppTab; isSing
 // #region Pages Management Tab
 
 function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: Partial<AppPage>) => void }) {
-    const { users, teams, appSettings } = useAdmin();
+    const { users, teams, appSettings } = useUser();
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [activeTab, setActiveTab] = useState("users");
@@ -429,7 +429,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
 }
 
 function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: Partial<AppPage>) => void }) {
-  const { appSettings } = useAdmin();
+  const { appSettings } = useUser();
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -696,7 +696,7 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
 }
 
 export const PagesManagement = ({ tab, isSingleTabPage }: { tab: AppTab; isSingleTabPage?: boolean }) => {
-    const { appSettings, updateAppSettings, updateAppTab } = useAdmin();
+    const { appSettings, updateAppSettings, updateAppTab } = useUser();
     const { toast } = useToast();
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const titleInputRef = useRef<HTMLInputElement>(null);
@@ -1062,7 +1062,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                                 <TooltipTrigger asChild>
                                     <PopoverTrigger asChild>
                                         <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background cursor-pointer" style={{ backgroundColor: tab.color }} />
-                                    </PopoverTrigger>
+                                    </TooltipTrigger>
                                 </TooltipTrigger>
                                 <TooltipContent><p>Change Color</p></TooltipContent>
                             </Tooltip>
@@ -1109,7 +1109,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
 }
 
 export const TabsManagement = ({ tab, isSingleTabPage }: { tab: AppTab; isSingleTabPage?: boolean }) => {
-    const { appSettings, updateAppSettings, updateAppTab } = useAdmin();
+    const { appSettings, updateAppSettings, updateAppTab } = useUser();
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const titleInputRef = useRef<HTMLInputElement>(null);
     const [searchTerm, setSearchTerm] = useState('');

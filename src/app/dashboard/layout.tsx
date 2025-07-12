@@ -1,10 +1,11 @@
+
 'use client';
 
 import { Sidebar } from '@/components/dashboard/sidebar';
 import { Header } from '@/components/dashboard/header';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { useUser } from '@/context/user-context';
+import { useUserData } from '@/context/user-context';
 
 export default function DashboardLayout({
   children,
@@ -13,7 +14,7 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const isCalendarPage = pathname.startsWith('/dashboard/calendar');
-  const { loading } = useUser();
+  const { loading } = useUserData();
 
   if (loading) {
     return (

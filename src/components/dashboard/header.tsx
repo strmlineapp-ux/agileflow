@@ -20,33 +20,40 @@ export function Header() {
   const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
   const unreadCount = notifications.filter((n) => !n.read).length;
   
-  const dynamicPage = useMemo(() => {
-    return appSettings.pages.find(page => page.isDynamic);
-  }, [appSettings.pages]);
+  const orderedNavItems = useMemo(() => {
+    const visiblePages = appSettings.pages.filter(page => hasAccess(viewAsUser, page, teams));
 
-  const { adminPage, staticPages, teamManagementPage } = useMemo(() => {
-    const adminPage = appSettings.pages.find(p => p.id === 'page-admin-management');
-    const teamManagementPage = appSettings.pages.find(p => p.id === 'page-team-management');
-    const staticPages = appSettings.pages.filter(page => 
-        !page.isDynamic &&
-        page.id !== 'page-admin-management' &&
-        page.id !== 'page-team-management' &&
-        hasAccess(viewAsUser, page, teams)
-    );
-
-    return {
-        adminPage: adminPage && hasAccess(viewAsUser, adminPage, teams) ? adminPage : null,
-        staticPages,
-        teamManagementPage: teamManagementPage && hasAccess(viewAsUser, teamManagementPage, teams) ? teamManagementPage : null,
-    };
-  }, [viewAsUser, appSettings.pages, teams]);
-
-  const userManagedTeams = useMemo(() => {
-      if(viewAsUser.isAdmin) {
-          return teams;
+    return visiblePages.flatMap(page => {
+      if (!page.associatedTabs || page.associatedTabs.length === 0) {
+        return null;
       }
-      return teams.filter(team => team.teamAdmins?.includes(viewAsUser.userId));
-  }, [viewAsUser, teams]);
+      
+      if (page.isDynamic) {
+        const relevantTeams = teams.filter(team => {
+            const isMemberOrAdmin = team.members.includes(viewAsUser.userId) || (team.teamAdmins || []).includes(viewAsUser.userId);
+            const teamHasAccessToThisPage = page.access.teams.includes(team.id);
+            return isMemberOrAdmin && teamHasAccessToThisPage;
+        });
+
+        return relevantTeams.map(team => ({
+          id: `${page.id}-${team.id}`,
+          path: `${page.path}/${team.id}`,
+          icon: team.icon,
+          name: team.name,
+          tooltip: `${page.name}: ${team.name}`,
+        }));
+      }
+      
+      return {
+        id: page.id,
+        path: page.path,
+        icon: page.icon,
+        name: page.name,
+        tooltip: page.name,
+      };
+    }).filter((item): item is NonNullable<typeof item> => !!item);
+  }, [appSettings.pages, viewAsUser, teams]);
+
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-card px-4 sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 sm:py-4">
@@ -91,32 +98,18 @@ export function Header() {
               <span className="sr-only">AgileFlow</span>
             </Link>
 
-            {adminPage && (
-              <Link href={adminPage.path} className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
-                <GoogleSymbol name={adminPage.icon} className="text-2xl" weight={100} />
-                {adminPage.name}
-              </Link>
-            )}
-
-            {staticPages.map(page => (
-                <Link key={page.id} href={page.path} className="flex items-center justify-between gap-4 px-2.5 text-muted-foreground hover:text-foreground">
+            {orderedNavItems.map(item => (
+                <Link key={item.id} href={item.path} className="flex items-center justify-between gap-4 px-2.5 text-muted-foreground hover:text-foreground">
                   <div className="flex items-center gap-4">
-                    <GoogleSymbol name={page.icon} className="text-2xl" weight={100} />
-                    {page.name}
+                    <GoogleSymbol name={item.icon} className="text-2xl" weight={100} />
+                    {item.name}
                   </div>
-                  {page.id === 'page-notifications' && unreadCount > 0 && (
+                  {item.id === 'page-notifications' && unreadCount > 0 && (
                     <Badge variant="default" className="flex h-5 w-5 items-center justify-center rounded-full p-0">
                       {unreadCount}
                     </Badge>
                   )}
                 </Link>
-            ))}
-
-            {teamManagementPage && userManagedTeams.map(team => (
-              <Link key={`${teamManagementPage.id}-${team.id}`} href={`${teamManagementPage.path}/${team.id}`} className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
-                  <GoogleSymbol name={team.icon} className="text-2xl" weight={100} />
-                  {team.name}
-              </Link>
             ))}
           </nav>
         </SheetContent>

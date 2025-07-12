@@ -4,21 +4,30 @@
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
 import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type BadgeCollectionOwner, type BadgeCollection } from '@/types';
 import { mockUsers as initialUsers, mockCalendars as initialCalendars, mockEvents as initialEvents, mockLocations as initialLocations, mockTeams, mockAppSettings } from '@/lib/mock-data';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { GoogleAuthProvider } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
-import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { hexToHsl } from '@/lib/utils';
-import { startOfDay } from 'date-fns';
 import { getOwnershipContext } from '@/lib/permissions';
 import { googleSymbolNames } from '@/lib/google-symbols';
 
-interface UserContextType {
-  loading: boolean;
+// Helper to simulate async operations
+const simulateApi = (delay = 50) => new Promise(res => setTimeout(res, delay));
+
+// --- Split Contexts for Performance ---
+
+// Context for frequently updated, session-specific data (e.g., who the user is viewing as)
+interface UserSessionContextType {
   realUser: User;
   viewAsUser: User;
   setViewAsUser: (userId: string) => void;
-  users: User[];
+  users: User[]; // Keep users here as it's needed for the "View As" dropdown
+}
+const UserSessionContext = createContext<UserSessionContextType | null>(null);
+
+
+// Context for heavier, less frequently updated application data
+interface UserDataContextType {
+  loading: boolean;
   teams: Team[];
   addTeam: (teamData: Omit<Team, 'id'>) => Promise<void>;
   updateTeam: (teamId: string, teamData: Partial<Team>) => Promise<void>;
@@ -57,38 +66,9 @@ interface UserContextType {
   updateBadge: (badgeData: Partial<Badge>) => void;
   deleteBadge: (badgeId: string) => void;
 }
-
-const UserContext = createContext<UserContextType | null>(null);
+const UserDataContext = createContext<UserDataContextType | null>(null);
 
 const REAL_USER_ID = '1'; // Bernardo is the default user
-
-// Helper to simulate async operations
-const simulateApi = (delay = 50) => new Promise(res => setTimeout(res, delay));
-
-const getInitialAbsences = (): Record<string, UserStatusAssignment[]> => {
-    const today = startOfDay(new Date());
-    const todayISO = today.toISOString();
-    
-    const tomorrow = startOfDay(new Date());
-    tomorrow.setDate(today.getDate() + 1);
-    const tomorrowISO = tomorrow.toISOString();
-    
-    return {
-        [todayISO]: [
-            { userId: '2', status: 'PTO' },
-            { userId: '4', status: 'Sick' },
-        ],
-        [tomorrowISO]: [
-             { userId: '3', status: 'PTO (AM)' },
-        ]
-    };
-};
-
-const predefinedColors = [
-    '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
-    '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6',
-    '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
-];
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
@@ -96,7 +76,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [users, setUsers] = useState<User[]>(initialUsers);
   const [teams, setTeams] = useState<Team[]>(mockTeams);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [userStatusAssignments, setUserStatusAssignments] = useState<Record<string, UserStatusAssignment[]>>(getInitialAbsences());
+  const [userStatusAssignments, setUserStatusAssignments] = useState<Record<string, UserStatusAssignment[]>>({});
   const [calendars, setCalendars] = useState<SharedCalendar[]>(initialCalendars);
   const [events, setEvents] = useState<Event[]>(initialEvents);
   const [locations, setLocations] = useState<BookableLocation[]>(initialLocations);
@@ -105,11 +85,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const [allBadges, setAllBadges] = useState<Badge[]>(() => {
     const badgesMap = new Map<string, Badge>();
-    
     (mockAppSettings.globalBadges || []).forEach(badge => {
         if (!badgesMap.has(badge.id)) badgesMap.set(badge.id, badge);
     });
-
     mockTeams.forEach(team => {
         (team.allBadges || []).forEach(badge => {
             if (!badgesMap.has(badge.id)) badgesMap.set(badge.id, badge);
@@ -133,14 +111,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const allBookableLocations = useMemo(() => {
     const globalLocations = locations.map(l => ({ id: l.id, name: l.name }));
-    
     const workstationLocations = teams.flatMap(team => 
         (team.workstations || []).map(wsName => ({
             id: `${team.id}-${wsName.toLowerCase().replace(/\s+/g, '-')}`,
             name: wsName,
         }))
     );
-    
     const combined = [...globalLocations, ...workstationLocations];
     const uniqueNames = new Map();
     combined.forEach(loc => {
@@ -148,19 +124,16 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             uniqueNames.set(loc.name, loc);
         }
     });
-    
     return Array.from(uniqueNames.values()).sort((a,b) => a.name.localeCompare(b.name));
   }, [locations, teams]);
 
   useEffect(() => {
-    // Simulate initial data loading
     const timer = setTimeout(() => {
         setLoading(false);
     }, 50); 
-
     return () => clearTimeout(timer);
   }, []);
-  
+
   const updateUser = useCallback(async (userId: string, userData: Partial<User>) => {
     await simulateApi();
     setUsers(currentUsers =>
@@ -173,11 +146,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setUsers(currentUsers => [...currentUsers, newUser]);
   }, []);
 
-   const addTeam = useCallback(async (teamData: Omit<Team, 'id'>) => {
-    const newTeam: Team = {
-      ...teamData,
-      id: crypto.randomUUID(),
-    };
+  const addTeam = useCallback(async (teamData: Omit<Team, 'id'>) => {
+    const newTeam: Team = { ...teamData, id: crypto.randomUUID() };
     await simulateApi();
     setTeams(current => [...current, newTeam]);
   }, []);
@@ -198,28 +168,19 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const addCalendar = useCallback(async (newCalendarData: Omit<SharedCalendar, 'id'>) => {
-    const newCalendar: SharedCalendar = {
-      ...newCalendarData,
-      id: crypto.randomUUID(),
-    };
+    const newCalendar: SharedCalendar = { ...newCalendarData, id: crypto.randomUUID() };
     await simulateApi();
     setCalendars(current => [...current, newCalendar]);
   }, []);
 
   const updateCalendar = useCallback(async (calendarId: string, calendarData: Partial<SharedCalendar>) => {
     await simulateApi();
-    setCalendars(current =>
-      current.map(c => (c.id === calendarId ? { ...c, ...calendarData } : c))
-    );
+    setCalendars(current => current.map(c => (c.id === calendarId ? { ...c, ...calendarData } : c)));
   }, []);
 
   const deleteCalendar = useCallback(async (calendarId: string) => {
     if (calendars.length <= 1) {
-      toast({
-        variant: 'destructive',
-        title: 'Cannot Delete Calendar',
-        description: 'You cannot delete the last remaining calendar.',
-      });
+      toast({ variant: 'destructive', title: 'Cannot Delete Calendar', description: 'You cannot delete the last remaining calendar.' });
       return;
     }
     await simulateApi();
@@ -231,35 +192,24 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       setCalendars(reordered);
   }, []);
 
-
   const addEvent = useCallback(async (newEventData: Omit<Event, 'eventId'>) => {
-    const event: Event = {
-      ...newEventData,
-      eventId: crypto.randomUUID(),
-    };
+    const event: Event = { ...newEventData, eventId: crypto.randomUUID() };
     await simulateApi();
     setEvents(currentEvents => [...currentEvents, event]);
   }, []);
 
   const updateEvent = useCallback(async (eventId: string, eventData: Partial<Omit<Event, 'eventId'>>) => {
     await simulateApi();
-    setEvents(currentEvents =>
-      currentEvents.map(e =>
-        e.eventId === eventId ? { ...e, ...eventData, lastUpdated: new Date() } as Event : e
-      )
-    );
+    setEvents(currentEvents => currentEvents.map(e => e.eventId === eventId ? { ...e, ...eventData, lastUpdated: new Date() } as Event : e));
   }, []);
 
   const deleteEvent = useCallback(async (eventId: string) => {
     await simulateApi();
     setEvents(currentEvents => currentEvents.filter(e => e.eventId !== eventId));
   }, []);
-  
+
   const addLocation = useCallback(async (locationName: string) => {
-      const newLocation: BookableLocation = {
-          id: crypto.randomUUID(),
-          name: locationName,
-      };
+      const newLocation: BookableLocation = { id: crypto.randomUUID(), name: locationName };
       await simulateApi();
       setLocations(current => [...current, newLocation]);
   }, []);
@@ -268,18 +218,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       await simulateApi();
       setLocations(current => current.filter(loc => loc.id !== locationId));
   }, []);
-  
+
   const getPriorityDisplay = useCallback((badgeId: string): { label: React.ReactNode, description?: string, color: string, icon?: string } | undefined => {
     if (!badgeId) return undefined;
     const badge = allBadges.find(b => b.id === badgeId);
-    if (badge) {
-        return {
-            label: badge.name,
-            description: badge.description,
-            color: badge.color,
-            icon: badge.icon
-        };
-    }
+    if (badge) return { label: badge.name, description: badge.description, color: badge.color, icon: badge.icon };
     return undefined;
   }, [allBadges]);
 
@@ -290,108 +233,49 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const updateAppTab = useCallback(async (tabId: string, tabData: Partial<AppTab>) => {
     await simulateApi();
-    setAppSettings(current => {
-      const newTabs = current.tabs.map(t => t.id === tabId ? { ...t, ...tabData } : t);
-      return { ...current, tabs: newTabs };
-    });
+    setAppSettings(current => ({ ...current, tabs: current.tabs.map(t => t.id === tabId ? { ...t, ...tabData } : t) }));
   }, []);
-  
+
   const addBadgeCollection = useCallback((owner: BadgeCollectionOwner, sourceCollection?: BadgeCollection, contextTeam?: Team) => {
     const newCollectionId = crypto.randomUUID();
     let newBadges: Badge[] = [];
     let newCollection: BadgeCollection;
-
     if (sourceCollection) {
         newBadges = sourceCollection.badgeIds.map(bId => {
             const originalBadge = allBadges.find(b => b.id === bId);
             if (!originalBadge) return null;
-            return { 
-                ...originalBadge, 
-                id: crypto.randomUUID(), 
-                ownerCollectionId: newCollectionId, 
-                name: `${originalBadge.name} (Copy)`
-            };
+            return { ...originalBadge, id: crypto.randomUUID(), ownerCollectionId: newCollectionId, name: `${originalBadge.name} (Copy)` };
         }).filter((b): b is Badge => b !== null);
-
-        newCollection = {
-            ...JSON.parse(JSON.stringify(sourceCollection)),
-            id: newCollectionId,
-            name: `${sourceCollection.name} (Copy)`,
-            owner: owner,
-            isShared: false,
-            badgeIds: newBadges.map(b => b.id),
-        };
+        newCollection = { ...JSON.parse(JSON.stringify(sourceCollection)), id: newCollectionId, name: `${sourceCollection.name} (Copy)`, owner: owner, isShared: false, badgeIds: newBadges.map(b => b.id) };
     } else {
         const newBadgeId = crypto.randomUUID();
-        const newBadge: Badge = {
-          id: newBadgeId,
-          ownerCollectionId: newCollectionId,
-          name: `New Badge`,
-          icon: googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)],
-          color: predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
-        };
+        const newBadge: Badge = { id: newBadgeId, ownerCollectionId: newCollectionId, name: `New Badge`, icon: googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)], color: predefinedColors[Math.floor(Math.random() * predefinedColors.length)] };
         newBadges.push(newBadge);
-
-        newCollection = {
-            id: newCollectionId,
-            name: `New Collection ${allBadgeCollections.length + 1}`,
-            owner: owner,
-            icon: 'category',
-            color: '#64748B',
-            viewMode: 'detailed',
-            badgeIds: [newBadgeId],
-            applications: [],
-            description: 'Badge Collection description',
-            isShared: false,
-        };
+        newCollection = { id: newCollectionId, name: `New Collection ${allBadgeCollections.length + 1}`, owner: owner, icon: 'category', color: '#64748B', viewMode: 'detailed', badgeIds: [newBadgeId], applications: [], description: 'Badge Collection description', isShared: false };
     }
-    
     setAllBadgeCollections(prev => [...prev, newCollection]);
-    if (newBadges.length > 0) {
-        setAllBadges(prev => [...prev, ...newBadges]);
-    }
-
+    if (newBadges.length > 0) setAllBadges(prev => [...prev, ...newBadges]);
     if (contextTeam) {
-        const updatedTeam = {
-            ...contextTeam,
-            badgeCollections: [...contextTeam.badgeCollections, newCollection],
-            allBadges: [...contextTeam.allBadges, ...newBadges],
-            // Copied/new collections start as inactive in team context
-            activeBadgeCollections: contextTeam.activeBadgeCollections ? [...contextTeam.activeBadgeCollections] : [],
-        };
+        const updatedTeam = { ...contextTeam, badgeCollections: [...contextTeam.badgeCollections, newCollection], allBadges: [...contextTeam.allBadges, ...newBadges], activeBadgeCollections: contextTeam.activeBadgeCollections ? [...contextTeam.activeBadgeCollections] : [] };
         setTeams(currentTeams => currentTeams.map(t => t.id === contextTeam.id ? updatedTeam : t));
-    } else {
-        // User context - no team update needed.
     }
   }, [allBadgeCollections.length, allBadges]);
 
   const updateBadgeCollection = useCallback((collectionId: string, data: Partial<BadgeCollection>) => {
     setAllBadgeCollections(current => current.map(c => c.id === collectionId ? { ...c, ...data } : c));
-    setTeams(currentTeams => currentTeams.map(t => ({
-        ...t,
-        badgeCollections: t.badgeCollections.map(c => c.id === collectionId ? { ...c, ...data } : c)
-    })));
+    setTeams(currentTeams => currentTeams.map(t => ({ ...t, badgeCollections: t.badgeCollections.map(c => c.id === collectionId ? { ...c, ...data } : c) })));
   }, []);
 
   const deleteBadgeCollection = useCallback((collectionId: string, contextTeam?: Team) => {
     const collectionToDelete = allBadgeCollections.find(c => c.id === collectionId);
     if (!collectionToDelete) return;
-
-    const badgeIdsToDelete = new Set(allBadges
-        .filter(b => b.ownerCollectionId === collectionId)
-        .map(b => b.id));
-
+    const badgeIdsToDelete = new Set(allBadges.filter(b => b.ownerCollectionId === collectionId).map(b => b.id));
     setAllBadgeCollections(current => current.filter(c => c.id !== collectionId));
     setAllBadges(current => current.filter(b => !badgeIdsToDelete.has(b.id)));
     setTeams(currentTeams => currentTeams.map(t => {
         const isTargetTeam = contextTeam ? t.id === contextTeam.id : t.badgeCollections.some(c => c.id === collectionId);
         if (isTargetTeam) {
-            return {
-                ...t,
-                allBadges: t.allBadges.filter(b => !badgeIdsToDelete.has(b.id)),
-                badgeCollections: t.badgeCollections.filter(c => c.id !== collectionId),
-                activeBadgeCollections: (t.activeBadgeCollections || []).filter(id => id !== collectionId),
-            }
+            return { ...t, allBadges: t.allBadges.filter(b => !badgeIdsToDelete.has(b.id)), badgeCollections: t.badgeCollections.filter(c => c.id !== collectionId), activeBadgeCollections: (t.activeBadgeCollections || []).filter(id => id !== collectionId) };
         }
         return t;
     }));
@@ -399,78 +283,34 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const addBadge = useCallback((collectionId: string, sourceBadge?: Badge) => {
     const newBadgeId = crypto.randomUUID();
-    const newBadge: Badge = {
-      id: newBadgeId,
-      ownerCollectionId: collectionId,
-      name: sourceBadge ? `${sourceBadge.name} (Copy)` : `New Badge`,
-      icon: sourceBadge?.icon || googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)],
-      color: predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
-    };
+    const newBadge: Badge = { id: newBadgeId, ownerCollectionId: collectionId, name: sourceBadge ? `${sourceBadge.name} (Copy)` : `New Badge`, icon: sourceBadge?.icon || googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)], color: predefinedColors[Math.floor(Math.random() * predefinedColors.length)] };
     setAllBadges(prev => [...prev, newBadge]);
-    setAllBadgeCollections(prev => prev.map(c => {
-      if (c.id === collectionId) {
-        return { ...c, badgeIds: [newBadgeId, ...c.badgeIds] };
-      }
-      return c;
-    }));
-     setTeams(currentTeams => currentTeams.map(t => ({
-        ...t,
-        allBadges: t.allBadges ? [...t.allBadges, newBadge] : [newBadge],
-        badgeCollections: t.badgeCollections.map(c => c.id === collectionId ? { ...c, badgeIds: [newBadgeId, ...c.badgeIds] } : c)
-    })));
+    setAllBadgeCollections(prev => prev.map(c => c.id === collectionId ? { ...c, badgeIds: [newBadgeId, ...c.badgeIds] } : c));
+    setTeams(currentTeams => currentTeams.map(t => ({ ...t, allBadges: t.allBadges ? [...t.allBadges, newBadge] : [newBadge], badgeCollections: t.badgeCollections.map(c => c.id === collectionId ? { ...c, badgeIds: [newBadgeId, ...c.badgeIds] } : c) })));
   }, []);
 
   const updateBadge = useCallback((badgeData: Partial<Badge>) => {
     setAllBadges(current => current.map(b => b.id === badgeData.id ? { ...b, ...badgeData } : b));
-    setTeams(currentTeams => currentTeams.map(t => ({
-        ...t,
-        allBadges: t.allBadges.map(b => b.id === badgeData.id ? { ...b, ...badgeData } : b)
-    })));
+    setTeams(currentTeams => currentTeams.map(t => ({ ...t, allBadges: t.allBadges.map(b => b.id === badgeData.id ? { ...b, ...badgeData } : b) })));
   }, []);
 
   const deleteBadge = useCallback((badgeId: string) => {
     setAllBadges(current => current.filter(b => b.id !== badgeId));
-    setAllBadgeCollections(current => current.map(c => ({
-        ...c,
-        badgeIds: c.badgeIds.filter(id => id !== badgeId)
-    })));
-    setTeams(currentTeams => currentTeams.map(t => ({
-        ...t,
-        allBadges: t.allBadges.filter(b => b.id !== badgeId),
-        badgeCollections: t.badgeCollections.map(c => ({
-            ...c,
-            badgeIds: c.badgeIds.filter(id => id !== badgeId)
-        }))
-    })));
+    setAllBadgeCollections(current => current.map(c => ({ ...c, badgeIds: c.badgeIds.filter(id => id !== badgeId) })));
+    setTeams(currentTeams => currentTeams.map(t => ({ ...t, allBadges: t.allBadges.filter(b => b.id !== badgeId), badgeCollections: t.badgeCollections.map(c => ({ ...c, badgeIds: c.badgeIds.filter(id => id !== badgeId) })) })));
   }, []);
 
   const linkGoogleCalendar = useCallback(async (userId: string) => {
-    const provider = new GoogleAuthProvider();
-    provider.addScope('https://www.googleapis.com/auth/calendar.readonly');
-    try {
-      await simulateApi(1000); 
-      await updateUser(userId, { googleCalendarLinked: true, accountType: 'Full' });
-      toast({
-        title: "Success!",
-        description: "Your Google Calendar has been successfully connected.",
-      });
-    } catch (error) {
-      console.error("Error linking Google Calendar:", error);
-      toast({
-        variant: "destructive",
-        title: "Uh oh! Something went wrong.",
-        description: "There was a problem linking your Google Calendar. Please try again.",
-      });
-    }
+    await simulateApi(1000);
+    updateUser(userId, { googleCalendarLinked: true, accountType: 'Full' });
+    toast({ title: "Success!", description: "Your Google Calendar has been successfully connected." });
   }, [updateUser, toast]);
 
   useEffect(() => {
     const root = window.document.documentElement;
     root.classList.remove('light', 'dark');
-    
     const currentTheme = viewAsUser.theme || 'light';
     root.classList.add(currentTheme);
-    
     if (viewAsUser.primaryColor) {
       const hslColor = hexToHsl(viewAsUser.primaryColor);
       if (hslColor) {
@@ -482,67 +322,44 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       root.style.removeProperty('--ring');
     }
   }, [viewAsUser.theme, viewAsUser.primaryColor]);
-  
-  const value = useMemo(() => ({
-    loading,
+
+  const sessionValue = useMemo(() => ({
     realUser,
     viewAsUser,
     setViewAsUser: setViewAsUserId,
     users,
-    teams,
-    addTeam,
-    updateTeam,
-    deleteTeam,
-    reorderTeams,
-    notifications,
-    setNotifications,
-    userStatusAssignments,
-    setUserStatusAssignments,
-    addUser,
-    updateUser,
-    linkGoogleCalendar,
-    calendars,
-    reorderCalendars,
-    addCalendar,
-    updateCalendar,
-    deleteCalendar,
-    events,
-    addEvent,
-    updateEvent,
-    deleteEvent,
-    locations,
-    allBookableLocations,
-    addLocation,
-    deleteLocation,
-    getPriorityDisplay,
-    appSettings,
-    updateAppSettings,
-    updateAppTab,
-    allBadges,
-    allBadgeCollections,
-    addBadgeCollection,
-    updateBadgeCollection,
-    deleteBadgeCollection,
-    addBadge,
-    updateBadge,
-    deleteBadge,
-  }), [
-    loading, realUser, viewAsUser, users, teams, notifications, userStatusAssignments,
-    calendars, events, locations, allBookableLocations, appSettings, allBadges, allBadgeCollections,
-    addTeam, updateTeam, deleteTeam, reorderTeams, setNotifications, setUserStatusAssignments, addUser,
-    updateUser, linkGoogleCalendar, reorderCalendars, addCalendar, updateCalendar, deleteCalendar,
-    addEvent, updateEvent, deleteEvent, addLocation, deleteLocation,
-    getPriorityDisplay, updateAppSettings, updateAppTab,
-    addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge
-  ]);
+  }), [realUser, viewAsUser, users]);
 
-  return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
+  const dataValue = useMemo(() => ({
+    loading, teams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, notifications, setNotifications, userStatusAssignments, setUserStatusAssignments, addUser, linkGoogleCalendar, calendars, reorderCalendars, addCalendar, updateCalendar, deleteCalendar, events, addEvent, updateEvent, deleteEvent, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge,
+  }), [loading, teams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, notifications, setNotifications, userStatusAssignments, setUserStatusAssignments, addUser, linkGoogleCalendar, calendars, reorderCalendars, addCalendar, updateCalendar, deleteCalendar, events, addEvent, updateEvent, deleteEvent, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge]);
+
+  return (
+    <UserSessionContext.Provider value={sessionValue}>
+      <UserDataContext.Provider value={dataValue}>
+        {children}
+      </UserDataContext.Provider>
+    </UserSessionContext.Provider>
+  );
 }
 
-export function useUser() {
-  const context = useContext(UserContext);
-  if (!context) {
-    throw new Error('useUser must be used within a UserProvider');
-  }
+// Custom hooks for consuming the contexts
+export function useUserSession() {
+  const context = useContext(UserSessionContext);
+  if (!context) throw new Error('useUserSession must be used within a UserProvider');
   return context;
+}
+
+export function useUserData() {
+  const context = useContext(UserDataContext);
+  if (!context) throw new Error('useUserData must be used within a UserProvider');
+  return context;
+}
+
+// Combined hook for convenience, for components that need both.
+// Note: Components using this will re-render on both session and data changes.
+export function useUser() {
+    const session = useUserSession();
+    const data = useUserData();
+    return { ...session, ...data };
 }
