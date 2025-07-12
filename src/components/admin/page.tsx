@@ -612,14 +612,14 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
                             </Popover>
                             <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
                                 <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <PopoverTrigger asChild>
-                                            <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background cursor-pointer" style={{ backgroundColor: page.color }} />
-                                        </PopoverTrigger>
-                                    </TooltipTrigger>
-                                    <TooltipContent><p>Change Color</p></TooltipContent>
-                                </Tooltip>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <PopoverTrigger asChild>
+                                                <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background cursor-pointer" style={{ backgroundColor: page.color }} />
+                                            </PopoverTrigger>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>Change Color</p></TooltipContent>
+                                    </Tooltip>
                                 </TooltipProvider>
                                 <PopoverContent className="w-auto p-2">
                                     <div className="grid grid-cols-8 gap-1">
@@ -994,8 +994,12 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
     }, [isIconPopoverOpen]);
 
     const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Enter') handleSaveName();
-        else if (e.key === 'Escape') setIsEditingName(false);
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          nameInputRef.current?.blur();
+        } else if (e.key === 'Escape') {
+          setIsEditingName(false);
+        }
     };
 
     const handleDescriptionKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -1028,7 +1032,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                         </TooltipProvider>
                         <PopoverContent className="w-80 p-0">
                             <div className="flex items-center gap-1 p-2 border-b">
-                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100}/>
+                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
                                 <input
                                     ref={iconSearchInputRef}
                                     placeholder="Search icons..."
@@ -1062,7 +1066,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                                 <TooltipTrigger asChild>
                                     <PopoverTrigger asChild>
                                         <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background cursor-pointer" style={{ backgroundColor: tab.color }} />
-                                    </TooltipTrigger>
+                                    </PopoverTrigger>
                                 </TooltipTrigger>
                                 <TooltipContent><p>Change Color</p></TooltipContent>
                             </Tooltip>
