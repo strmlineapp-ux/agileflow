@@ -14,8 +14,6 @@ import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { googleSymbolNames } from '@/lib/google-symbols';
-import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProps, type DraggableLocation, type DragStart } from 'react-beautiful-dnd';
-import { Skeleton } from '@/components/ui/skeleton';
 import { cn, getContrastColor } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -25,23 +23,26 @@ import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/comp
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { CompactSearchInput } from '@/components/common/compact-search-input';
 
-// #region Helper Components and Hooks
-// Wrapper to fix issues with react-beautiful-dnd and React 18 Strict Mode
-const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
-  const [enabled, setEnabled] = useState(false);
-  useEffect(() => {
-    const animation = requestAnimationFrame(() => setEnabled(true));
-    return () => {
-      cancelAnimationFrame(animation);
-      setEnabled(false);
-    };
-  }, []);
-  if (!enabled) {
-    return null;
-  }
-  return <Droppable {...props}>{children}</Droppable>;
-};
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+  rectSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
+// #region Helper Components and Hooks
 const useFocusOnMount = (isEditing: boolean) => {
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -141,17 +142,9 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
     setIsEditing2fa(false);
   };
 
-  const onDragEnd = (result: DropResult) => {
-    const { source, destination, draggableId } = result;
-
-    if (!destination || (source.droppableId === destination.droppableId)) {
-        return;
-    }
-
-    const userToMove = users.find(u => u.userId === draggableId);
-    if (userToMove) {
-        handleAdminToggle(userToMove);
-    }
+  // This is a placeholder for dnd-kit logic if needed for this component in the future
+  const onDragEnd = (event: DragEndEvent) => {
+    //
   };
 
 
@@ -163,7 +156,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
                 <h1 className="font-headline text-3xl font-thin">{tab.name}</h1>
              </div>
         )}
-        <DragDropContext onDragEnd={onDragEnd}>
+        <DndContext onDragEnd={onDragEnd}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card className="flex flex-col h-full bg-transparent border-0">
                     <CardHeader>
@@ -175,33 +168,14 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
                         </div>
                     </CardHeader>
                     <CardContent className="flex-grow">
-                        <StrictModeDroppable droppableId="admins-list">
-                            {(provided, snapshot) => (
-                                <div
-                                    ref={provided.innerRef}
-                                    {...provided.droppableProps}
-                                    className={cn("p-1 space-y-1 rounded-md min-h-[60px]", snapshot.isDraggingOver && "ring-1 ring-border ring-inset")}
-                                >
-                                    {adminUsers.map((user, index) => (
-                                        <Draggable key={user.userId} draggableId={user.userId} index={index}>
-                                            {(provided, snapshot) => (
-                                                <div
-                                                    ref={provided.innerRef}
-                                                    {...provided.draggableProps}
-                                                    {...provided.dragHandleProps}
-                                                    className={cn(snapshot.isDragging && "bg-muted shadow-lg rounded-md")}
-                                                >
-                                                    <UserAssignmentCard 
-                                                        user={user} 
-                                                    />
-                                                </div>
-                                            )}
-                                        </Draggable>
-                                    ))}
-                                    {provided.placeholder}
-                                </div>
-                            )}
-                        </StrictModeDroppable>
+                        <div className="p-1 space-y-1 rounded-md min-h-[60px]">
+                            {adminUsers.map((user, index) => (
+                                <UserAssignmentCard 
+                                    key={user.userId}
+                                    user={user} 
+                                />
+                            ))}
+                        </div>
                     </CardContent>
                   </Card>
                   <Card className="flex flex-col h-full bg-transparent border-0">
@@ -214,37 +188,18 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
                         </div>
                     </CardHeader>
                      <CardContent className="flex-grow">
-                         <StrictModeDroppable droppableId="users-list">
-                            {(provided, snapshot) => (
-                                <div
-                                    ref={provided.innerRef}
-                                    {...provided.droppableProps}
-                                    className={cn("p-1 space-y-1 rounded-md min-h-[60px]", snapshot.isDraggingOver && "ring-1 ring-border ring-inset")}
-                                >
-                                    {nonAdminUsers.map((user, index) => (
-                                        <Draggable key={user.userId} draggableId={user.userId} index={index}>
-                                            {(provided, snapshot) => (
-                                                <div
-                                                    ref={provided.innerRef}
-                                                    {...provided.draggableProps}
-                                                    {...provided.dragHandleProps}
-                                                    className={cn(snapshot.isDragging && "bg-muted shadow-lg rounded-md")}
-                                                >
-                                                    <UserAssignmentCard 
-                                                        user={user}
-                                                    />
-                                                </div>
-                                            )}
-                                        </Draggable>
-                                    ))}
-                                    {provided.placeholder}
-                                </div>
-                            )}
-                        </StrictModeDroppable>
+                         <div className="p-1 space-y-1 rounded-md min-h-[60px]">
+                            {nonAdminUsers.map((user, index) => (
+                                <UserAssignmentCard 
+                                    key={user.userId}
+                                    user={user}
+                                />
+                            ))}
+                        </div>
                     </CardContent>
                   </Card>
             </div>
-        </DragDropContext>
+        </DndContext>
 
         <Dialog open={is2faDialogOpen} onOpenChange={(isOpen) => !isOpen && close2faDialog()}>
             <DialogContent className="max-w-sm">
@@ -477,6 +432,31 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
 }
 
 
+function SortablePageCard({ id, page, onUpdate, onDelete, isPinned }: { id: string, page: AppPage, onUpdate: (id: string, data: Partial<AppPage>) => void; onDelete: (id: string) => void; isPinned?: boolean }) {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({id: id, disabled: isPinned});
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        zIndex: isDragging ? 10 : 'auto',
+        opacity: isDragging ? 0.75 : 1,
+    };
+
+    return (
+        <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="p-2 basis-full md:basis-[calc(50%-0.5rem)] lg:basis-[calc(33.333%-1rem)] flex-grow-0 flex-shrink-0">
+             <PageCard page={page} onUpdate={onUpdate} onDelete={onDelete} isPinned={isPinned} />
+        </div>
+    );
+}
+
+
 function PageCard({ page, onUpdate, onDelete, isPinned }: { page: AppPage; onUpdate: (id: string, data: Partial<AppPage>) => void; onDelete: (id: string) => void; isPinned?: boolean }) {
     const [isEditingName, setIsEditingName] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
@@ -530,7 +510,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned }: { page: AppPage; onUpd
     const displayPath = page.isDynamic ? `${page.path}/[teamId]` : page.path;
 
     return (
-        <Card className={cn("flex flex-col h-full group bg-transparent")}>
+        <Card className="flex flex-col h-48 group bg-transparent">
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -664,15 +644,13 @@ function PageCard({ page, onUpdate, onDelete, isPinned }: { page: AppPage; onUpd
 }
 
 export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab; isSingleTabPage?: boolean, isActive?: boolean }) => {
-    const { appSettings, updateAppSettings, updateAppTab } = useUser();
+    const { appSettings, updateAppSettings } = useUser();
     const { toast } = useToast();
     const [searchTerm, setSearchTerm] = useState('');
-    const [containerStyle, setContainerStyle] = useState<React.CSSProperties>({});
-    const droppableContainerRef = useRef<HTMLDivElement>(null);
     
     const pinnedTopIds = useMemo(() => ['page-admin-management', 'page-overview', 'page-calendar', 'page-tasks'], []);
     const pinnedBottomIds = useMemo(() => ['page-notifications', 'page-settings'], []);
-    const allPinnedIds = useMemo(() => [...pinnedTopIds, ...pinnedBottomIds], [pinnedTopIds, pinnedBottomIds]);
+    const allPinnedIds = useMemo(() => new Set([...pinnedTopIds, ...pinnedBottomIds]), [pinnedTopIds, pinnedBottomIds]);
 
     const handleUpdatePage = useCallback((pageId: string, data: Partial<AppPage>) => {
         const newPages = appSettings.pages.map(p => p.id === pageId ? { ...p, ...data } : p);
@@ -706,68 +684,28 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
         toast({ title: 'Page Deleted' });
     };
     
-    const onDragStart = useCallback(() => {
-        if (droppableContainerRef.current) {
-            const { offsetHeight } = droppableContainerRef.current;
-            setContainerStyle({
-                height: `${offsetHeight}px`,
-            });
-        }
-    }, []);
-    
-    const onDragEnd = (result: DropResult) => {
-        setContainerStyle({}); // Reset container style
-        const { source, destination, draggableId } = result;
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
 
-        if (!destination) return;
-        
-        const pages = appSettings.pages;
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
 
-        if (destination.droppableId === 'duplicate-page-zone') {
-            const pageToDuplicate = pages.find(p => p.id === draggableId);
-            if (pageToDuplicate) {
-                const newName = `${pageToDuplicate.name} (Copy)`;
-                const newPath = pageToDuplicate.isDynamic 
-                    ? pageToDuplicate.path 
-                    : `/dashboard/${newName.toLowerCase().replace(/[\s()]+/g, '-').replace(/^-+|-+$/g, '')}`;
-
-                const newPage: AppPage = {
-                    ...JSON.parse(JSON.stringify(pageToDuplicate)), // Deep copy
-                    id: crypto.randomUUID(),
-                    name: newName,
-                    path: newPath,
-                };
-                
-                const sourcePageIndex = pages.findIndex(p => p.id === draggableId);
-                const newPages = [...pages];
-                newPages.splice(sourcePageIndex + 1, 0, newPage);
-    
-                updateAppSettings({ pages: newPages });
-                toast({ title: 'Page Duplicated', description: `A copy of "${pageToDuplicate.name}" was created.` });
-            }
-            return;
-        }
-
-        if (destination.droppableId === 'pages-list' && source.droppableId === 'pages-list') {
-            const reorderedPages = Array.from(pages);
-            const [movedItem] = reorderedPages.splice(source.index, 1);
-
-            let newIndex = destination.index;
-
-            // Find boundaries for draggable items
-            const firstDraggableIndex = pages.findIndex(p => !allPinnedIds.includes(p.id));
-            const lastDraggableIndex = pages.map(p => !allPinnedIds.includes(p.id)).lastIndexOf(true);
+        if (active.id !== over?.id) {
+            const oldIndex = appSettings.pages.findIndex(p => p.id === active.id);
+            const newIndex = appSettings.pages.findIndex(p => p.id === over!.id);
             
-            // Apply guardrails
-            if (newIndex < firstDraggableIndex) {
-                newIndex = firstDraggableIndex;
-            }
-            if (newIndex > lastDraggableIndex) {
-                newIndex = lastDraggableIndex;
+            // Guardrail check
+            const newPageIsPinned = allPinnedIds.has(appSettings.pages[newIndex].id);
+            if (newPageIsPinned) {
+                 toast({ variant: 'destructive', title: 'Cannot reorder', description: 'Pages cannot be moved into pinned positions.' });
+                return;
             }
 
-            reorderedPages.splice(newIndex, 0, movedItem);
-
+            const reorderedPages = arrayMove(appSettings.pages, oldIndex, newIndex);
             updateAppSettings({ pages: reorderedPages });
         }
     };
@@ -777,91 +715,48 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
         return appSettings.pages.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
     }, [appSettings.pages, searchTerm]);
 
+    const pageIds = useMemo(() => filteredPages.map(p => p.id), [filteredPages]);
 
     return (
-        <DragDropContext onDragEnd={onDragEnd} onDragStart={onDragStart}>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <StrictModeDroppable droppableId="duplicate-page-zone" isDropDisabled={false} isCombineEnabled={false}>
-                            {(provided, snapshot) => (
-                                <div 
-                                    ref={provided.innerRef} 
-                                    {...provided.droppableProps}
-                                    className={cn(
-                                        "rounded-full transition-all p-0.5",
-                                        snapshot.isDraggingOver && "ring-1 ring-border ring-inset"
-                                    )}
-                                >
-                                    <TooltipProvider>
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="rounded-full" onClick={handleAddPage}>
-                                                    <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
-                                                    <span className="sr-only">Add New Page</span>
-                                                </Button>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                                <p>{snapshot.isDraggingOver ? 'Drop to Duplicate' : 'Add New Page'}</p>
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
-                                </div>
-                            )}
-                        </StrictModeDroppable>
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="rounded-full" onClick={handleAddPage}>
+                                        <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
+                                        <span className="sr-only">Add New Page</span>
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Add New Page</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
                     </div>
                      <div className="flex items-center">
                         <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search pages..." />
                     </div>
                 </div>
                 
-                <StrictModeDroppable droppableId="pages-list">
-                    {(provided, snapshot) => (
-                        <div
-                            ref={droppableContainerRef}
-                            style={containerStyle}
-                            className={cn(
-                                "flex flex-wrap -m-2",
-                                snapshot.isDraggingOver && "ring-1 ring-border ring-inset rounded-lg"
-                            )}
-                        >
-                            <div
-                                ref={provided.innerRef}
-                                {...provided.droppableProps}
-                                className="flex flex-wrap w-full gap-4 p-2"
-                            >
-                                {filteredPages.map((page, index) => {
-                                    const isPinned = allPinnedIds.includes(page.id);
-                                    return (
-                                        <Draggable key={page.id} draggableId={page.id} index={index} isDragDisabled={isPinned}>
-                                            {(provided, snapshot) => (
-                                                <div
-                                                    ref={provided.innerRef}
-                                                    {...provided.draggableProps}
-                                                    {...provided.dragHandleProps}
-                                                    className={cn(
-                                                        "h-48 basis-full md:basis-[calc(50%-0.5rem)] lg:basis-[calc(33.333%-1rem)] flex-grow-0 flex-shrink-0",
-                                                        snapshot.isDragging && "shadow-xl"
-                                                    )}
-                                                >
-                                                    <PageCard
-                                                        page={page}
-                                                        onUpdate={handleUpdatePage}
-                                                        onDelete={handleDeletePage}
-                                                        isPinned={isPinned}
-                                                    />
-                                                </div>
-                                            )}
-                                        </Draggable>
-                                    )
-                                })}
-                                {provided.placeholder}
-                            </div>
-                        </div>
-                    )}
-                </StrictModeDroppable>
+                <SortableContext items={pageIds} strategy={rectSortingStrategy}>
+                    <div className="flex flex-wrap -m-2">
+                        {filteredPages.map((page) => (
+                            <SortablePageCard
+                                key={page.id}
+                                id={page.id}
+                                page={page}
+                                onUpdate={handleUpdatePage}
+                                onDelete={handleDeletePage}
+                                isPinned={allPinnedIds.has(page.id)}
+                            />
+                        ))}
+                    </div>
+                </SortableContext>
             </div>
-        </DragDropContext>
+        </DndContext>
     );
 };
 // #endregion
@@ -1027,7 +922,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                 <div className="flex-1 min-w-0 space-y-1">
                     <div className="flex items-center justify-between">
                          {isEditingName ? (
-                            <Input ref={nameInputRef} defaultValue={tab.name} onKeyDown={handleTitleKeyDown} onBlur={handleSaveName} className="h-auto p-0 font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 font-headline" />
+                            <Input ref={nameInputRef} defaultValue={tab.name} onKeyDown={handleNameKeyDown} onBlur={handleSaveName} className="h-auto p-0 font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 font-headline" />
                         ) : (
                             <h3 className="font-headline cursor-text text-base font-thin" onClick={() => setIsEditingName(true)}>{tab.name}</h3>
                         )}
@@ -1053,25 +948,32 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
     );
 }
 
+function SortableTabCard({ id, tab, onUpdate }: { id: string, tab: AppTab, onUpdate: (id: string, data: Partial<AppTab>) => void; }) {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({id});
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+    };
+    
+    return (
+        <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+            <TabCard tab={tab} onUpdate={onUpdate} isDragging={isDragging} />
+        </div>
+    );
+}
+
+
 export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab; isSingleTabPage?: boolean, isActive?: boolean }) => {
     const { appSettings, updateAppSettings, updateAppTab } = useUser();
-    const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
-    
-    const titleInputRef = useFocusOnMount(isEditingTitle);
-
-    const handleSaveTitle = () => {
-        const newName = titleInputRef.current?.value.trim();
-        if (newName && newName !== tab.name) {
-            updateAppTab(tab.id, { name: newName });
-        }
-        setIsEditingTitle(false);
-    };
-
-    const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Enter') handleSaveTitle();
-        else if (e.key === 'Escape') setIsEditingTitle(false);
-    };
 
     const handleUpdateTab = useCallback((tabId: string, data: Partial<AppTab>) => {
         const newTabs = appSettings.tabs.map(t => t.id === tabId ? { ...t, ...data } : t);
@@ -1086,58 +988,51 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
         );
     }, [appSettings.tabs, searchTerm]);
 
-    const onDragEnd = (result: DropResult) => {
-      const { source, destination } = result;
-      if (!destination || source.index === destination.index) return;
-
-      const reorderedTabs = Array.from(appSettings.tabs);
-      const [movedItem] = reorderedTabs.splice(source.index, 1);
-      reorderedTabs.splice(destination.index, 0, movedItem);
-
-      updateAppSettings({ tabs: reorderedTabs });
+    const tabIds = useMemo(() => filteredTabs.map(t => t.id), [filteredTabs]);
+    
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
+    
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (over && active.id !== over.id) {
+            const oldIndex = appSettings.tabs.findIndex(t => t.id === active.id);
+            const newIndex = appSettings.tabs.findIndex(t => t.id === over.id);
+            const reorderedTabs = arrayMove(appSettings.tabs, oldIndex, newIndex);
+            updateAppSettings({ tabs: reorderedTabs });
+        }
     };
 
     return (
-        <DragDropContext onDragEnd={onDragEnd}>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <div className="space-y-8">
                 <div className="flex items-center justify-end">
                      <div className="flex items-center">
                         <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search by name or desc..." />
                     </div>
                 </div>
-                <StrictModeDroppable droppableId="tabs-list" isDropDisabled={false}>
-                    {(provided) => (
-                        <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-4">
-                            {filteredTabs.length > 0 ? (
-                                filteredTabs.map((appTab, index) => (
-                                    <Draggable key={appTab.id} draggableId={appTab.id} index={index} ignoreContainerClipping={false}>
-                                        {(provided, snapshot) => (
-                                            <div
-                                                ref={provided.innerRef}
-                                                {...provided.draggableProps}
-                                                {...provided.dragHandleProps}
-                                                className={snapshot.isDragging ? "shadow-xl" : ""}
-                                            >
-                                                <TabCard
-                                                    tab={appTab}
-                                                    onUpdate={handleUpdateTab}
-                                                    isDragging={snapshot.isDragging}
-                                                />
-                                            </div>
-                                        )}
-                                    </Draggable>
-                                ))
-                            ) : (
-                                <p className="text-center text-muted-foreground p-4">No tabs found.</p>
-                            )}
-                            {provided.placeholder}
-                        </div>
-                    )}
-                </StrictModeDroppable>
+                <SortableContext items={tabIds} strategy={verticalListSortingStrategy}>
+                    <div className="space-y-4">
+                        {filteredTabs.length > 0 ? (
+                            filteredTabs.map((appTab) => (
+                                <SortableTabCard
+                                    key={appTab.id}
+                                    id={appTab.id}
+                                    tab={appTab}
+                                    onUpdate={handleUpdateTab}
+                                />
+                            ))
+                        ) : (
+                            <p className="text-center text-muted-foreground p-4">No tabs found.</p>
+                        )}
+                    </div>
+                </SortableContext>
             </div>
-        </DragDropContext>
+        </DndContext>
     );
 };
 // #endregion
-
-    
