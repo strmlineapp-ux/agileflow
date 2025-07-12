@@ -819,11 +819,11 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
                     </div>
                 </div>
                 
-                <StrictModeDroppable droppableId="pages-list" isDropDisabled={false} isCombineEnabled={false}>
+                <StrictModeDroppable droppableId="pages-list">
                     {(provided) => (
                         <div
-                            ref={provided.innerRef}
                             {...provided.droppableProps}
+                            ref={provided.innerRef}
                             className="flex flex-wrap -m-2"
                         >
                             {filteredPages.map((page, index) => {
@@ -836,17 +836,18 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
                                                 {...provided.draggableProps}
                                                 {...provided.dragHandleProps}
                                                 className={cn(
-                                                    "p-2 basis-full sm:basis-1/2 md:basis-[calc(33.333%-1rem)] lg:basis-[calc(25%-1rem)] xl:basis-[calc(20%-1rem)] flex-grow-0 flex-shrink-0",
-                                                    isPinned && "opacity-70"
+                                                    "p-2 basis-full sm:basis-1/2 md:basis-[calc(33.333%-1rem)] lg:basis-[calc(25%-1rem)] xl:basis-[calc(20%-1rem)] flex-grow-0 flex-shrink-0"
                                                 )}
                                             >
-                                                <PageCard
-                                                    page={page}
-                                                    onUpdate={handleUpdatePage}
-                                                    onDelete={handleDeletePage}
-                                                    isDragging={snapshot.isDragging}
-                                                    isPinned={isPinned}
-                                                />
+                                                <div className={cn(snapshot.isDragging && "shadow-xl")}>
+                                                    <PageCard
+                                                        page={page}
+                                                        onUpdate={handleUpdatePage}
+                                                        onDelete={handleDeletePage}
+                                                        isDragging={snapshot.isDragging}
+                                                        isPinned={isPinned}
+                                                    />
+                                                </div>
                                             </div>
                                         )}
                                     </Draggable>
