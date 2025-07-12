@@ -96,19 +96,11 @@
     border-color: transparent;
     background: linear-gradient(-113deg, hsl(var(--primary)), hsl(210 40% 96%)) border-box;
   }
-  .light .bg-primary:focus-visible {
-    outline: 2px solid hsl(var(--ring));
-    outline-offset: 2px;
-  }
 
   /* Dark Theme Gradient Effect */
   .dark .bg-primary:hover,
   .dark .bg-primary:focus-visible {
     border-color: transparent;
     background: linear-gradient(-113deg, hsl(var(--primary)), hsl(var(--accent))) border-box;
-  }
-  .dark .bg-primary:focus-visible {
-    outline: 2px solid hsl(var(--ring));
-    outline-offset: 2px;
   }
 }
