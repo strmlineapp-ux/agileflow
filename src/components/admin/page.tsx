@@ -375,13 +375,13 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <PopoverTrigger asChild>
-                            <Button variant="ghost" size="icon"><GoogleSymbol name="group_add" className="text-4xl" weight={100} /></Button>
+                            <Button variant="ghost" size="icon" onClick={(e) => e.stopPropagation()}><GoogleSymbol name="group_add" className="text-4xl" weight={100} /></Button>
                         </PopoverTrigger>
                     </TooltipTrigger>
                     <TooltipContent><p>Manage Page Access</p></TooltipContent>
                 </Tooltip>
             </TooltipProvider>
-            <PopoverContent className="w-80 p-0">
+            <PopoverContent className="w-80 p-0" onClick={(e) => e.stopPropagation()}>
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                     <TabsList className="grid w-full grid-cols-2">
                         <TabsTrigger value="users">Users</TabsTrigger>
@@ -455,13 +455,13 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
           <Tooltip>
               <TooltipTrigger asChild>
                   <PopoverTrigger asChild>
-                      <Button variant="ghost" size="icon"><GoogleSymbol name="layers" className="text-4xl" weight={100} /></Button>
+                      <Button variant="ghost" size="icon" onClick={(e) => e.stopPropagation()}><GoogleSymbol name="layers" className="text-4xl" weight={100} /></Button>
                   </PopoverTrigger>
               </TooltipTrigger>
               <TooltipContent><p>Manage Associated Tabs</p></TooltipContent>
           </Tooltip>
       </TooltipProvider>
-      <PopoverContent className="w-80 p-0">
+      <PopoverContent className="w-80 p-0" onClick={(e) => e.stopPropagation()}>
         <div className="p-2 border-b">
           <div className="flex items-center gap-1 w-full">
             <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
@@ -555,7 +555,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned }: { page: AppPage; onUpd
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <div className="relative">
+                        <div className="relative" onClick={(e) => e.stopPropagation()}>
                             <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                                 <TooltipProvider>
                                     <Tooltip>
@@ -569,7 +569,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned }: { page: AppPage; onUpd
                                         <TooltipContent><p>Change Icon</p></TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
-                                <PopoverContent className="w-80 p-0">
+                                <PopoverContent className="w-80 p-0" onClick={(e) => e.stopPropagation()}>
                                     <div className="flex items-center gap-1 p-2 border-b">
                                         <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
                                         <input
@@ -610,7 +610,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned }: { page: AppPage; onUpd
                                         <TooltipContent><p>Change Color</p></TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
-                                <PopoverContent className="w-auto p-2">
+                                <PopoverContent className="w-auto p-2" onClick={(e) => e.stopPropagation()}>
                                     <div className="grid grid-cols-8 gap-1">
                                         {['#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
     '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6',
@@ -625,9 +625,9 @@ function PageCard({ page, onUpdate, onDelete, isPinned }: { page: AppPage; onUpd
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1">
                                 {isEditingName ? (
-                                    <Input ref={nameInputRef} defaultValue={page.name} onKeyDown={handleNameKeyDown} onBlur={handleSaveName} className="h-auto p-0 font-headline text-base font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"/>
+                                    <Input ref={nameInputRef} defaultValue={page.name} onKeyDown={handleNameKeyDown} onBlur={handleSaveName} onClick={(e) => e.stopPropagation()} className="h-auto p-0 font-headline text-base font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"/>
                                 ) : (
-                                    <CardTitle onClick={() => setIsEditingName(true)} className="font-headline text-base break-words font-thin cursor-pointer">
+                                    <CardTitle onClick={(e) => { e.stopPropagation(); setIsEditingName(true); }} className="font-headline text-base break-words font-thin cursor-pointer">
                                         {page.name}
                                     </CardTitle>
                                 )}
@@ -649,7 +649,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned }: { page: AppPage; onUpd
                                             variant="ghost"
                                             size="icon"
                                             className="h-8 w-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                                            onClick={() => setIsDeleteDialogOpen(true)}
+                                            onClick={(e) => { e.stopPropagation(); setIsDeleteDialogOpen(true); }}
                                         >
                                             <GoogleSymbol name="delete" className="text-lg" weight={100} />
                                         </Button>
@@ -1163,3 +1163,4 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
     
 
     
+
