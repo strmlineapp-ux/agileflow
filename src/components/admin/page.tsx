@@ -668,8 +668,6 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
     const { toast } = useToast();
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
-    const [containerStyle, setContainerStyle] = useState({});
-    const droppableContainerRef = useRef<HTMLDivElement>(null);
     
     const titleInputRef = useFocusOnMount(isEditingTitle);
     
@@ -722,19 +720,7 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
         toast({ title: 'Page Deleted' });
     };
     
-    const onDragStart = () => {
-        const container = droppableContainerRef.current;
-        if (container) {
-            const { offsetWidth, offsetHeight } = container;
-            setContainerStyle({
-                width: `${offsetWidth}px`,
-                height: `${offsetHeight}px`,
-            });
-        }
-    };
-
     const onDragEnd = (result: DropResult) => {
-        setContainerStyle({}); // Reset container style
         const { source, destination, draggableId } = result;
 
         if (!destination) return;
@@ -797,7 +783,7 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
 
 
     return (
-        <DragDropContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
+        <DragDropContext onDragEnd={onDragEnd}>
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -834,45 +820,39 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
                 </div>
                 
                 <StrictModeDroppable droppableId="pages-list" isDropDisabled={false} isCombineEnabled={false}>
-                    {(provided, snapshot) => (
+                    {(provided) => (
                         <div
                             ref={provided.innerRef}
                             {...provided.droppableProps}
-                            className={cn(
-                                "flex flex-wrap -m-2",
-                                snapshot.isDraggingOver && "ring-1 ring-border ring-inset p-2 rounded-lg"
-                            )}
-                            style={containerStyle}
+                            className="flex flex-wrap -m-2"
                         >
-                            <div className="flex flex-wrap w-full" ref={droppableContainerRef}>
-                                {filteredPages.map((page, index) => {
-                                    const isPinned = allPinnedIds.includes(page.id);
-                                    return (
-                                        <Draggable key={page.id} draggableId={page.id} index={index} isDragDisabled={isPinned} ignoreContainerClipping={false}>
-                                            {(provided, snapshot) => (
-                                                <div
-                                                    ref={provided.innerRef}
-                                                    {...provided.draggableProps}
-                                                    {...provided.dragHandleProps}
-                                                    className={cn(
-                                                        "p-2 basis-full sm:basis-1/2 md:basis-[calc(33.333%-1rem)] lg:basis-[calc(25%-1rem)] xl:basis-[calc(20%-1rem)] flex-grow-0 flex-shrink-0",
-                                                        isPinned && "opacity-70"
-                                                    )}
-                                                >
-                                                    <PageCard
-                                                        page={page}
-                                                        onUpdate={handleUpdatePage}
-                                                        onDelete={handleDeletePage}
-                                                        isDragging={snapshot.isDragging}
-                                                        isPinned={isPinned}
-                                                    />
-                                                </div>
-                                            )}
-                                        </Draggable>
-                                    )
-                                })}
-                                {provided.placeholder}
-                            </div>
+                            {filteredPages.map((page, index) => {
+                                const isPinned = allPinnedIds.includes(page.id);
+                                return (
+                                    <Draggable key={page.id} draggableId={page.id} index={index} isDragDisabled={isPinned}>
+                                        {(provided, snapshot) => (
+                                            <div
+                                                ref={provided.innerRef}
+                                                {...provided.draggableProps}
+                                                {...provided.dragHandleProps}
+                                                className={cn(
+                                                    "p-2 basis-full sm:basis-1/2 md:basis-[calc(33.333%-1rem)] lg:basis-[calc(25%-1rem)] xl:basis-[calc(20%-1rem)] flex-grow-0 flex-shrink-0",
+                                                    isPinned && "opacity-70"
+                                                )}
+                                            >
+                                                <PageCard
+                                                    page={page}
+                                                    onUpdate={handleUpdatePage}
+                                                    onDelete={handleDeletePage}
+                                                    isDragging={snapshot.isDragging}
+                                                    isPinned={isPinned}
+                                                />
+                                            </div>
+                                        )}
+                                    </Draggable>
+                                )
+                            })}
+                            {provided.placeholder}
                         </div>
                     )}
                 </StrictModeDroppable>
