@@ -219,7 +219,11 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
                         </div>
                     </CardHeader>
                     <CardContent className="flex-grow">
-                        <UserDropZone id="admin-list" users={adminUsers} />
+                        <UserDropZone id="admin-list" users={adminUsers}>
+                            {adminUsers.length === 0 && (
+                                <div className="text-center text-sm text-muted-foreground p-4 border-2 border-dashed rounded-lg">Drag users here to make them admins.</div>
+                            )}
+                        </UserDropZone>
                     </CardContent>
                   </Card>
                   <Card className="flex flex-col h-full bg-transparent border-0">
@@ -232,7 +236,11 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
                         </div>
                     </CardHeader>
                      <CardContent className="flex-grow">
-                         <UserDropZone id="user-list" users={nonAdminUsers} />
+                         <UserDropZone id="user-list" users={nonAdminUsers} >
+                           {nonAdminUsers.length === 0 && (
+                                <div className="text-center text-sm text-muted-foreground p-4 border-2 border-dashed rounded-lg">No other users found.</div>
+                            )}
+                         </UserDropZone>
                     </CardContent>
                   </Card>
             </div>

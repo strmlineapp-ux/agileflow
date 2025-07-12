@@ -118,6 +118,13 @@ export default function DynamicPage() {
         );
     }
     
+    if (isSingleTabPage) {
+        const tab = pageTabs[0];
+        const contextTeam = tab.contextTeamId ? teams.find(t => t.id === tab.contextTeamId) : dynamicTeam;
+        const ContentComponent = componentMap[tab.componentKey];
+        return ContentComponent ? <ContentComponent tab={tab} team={contextTeam} page={pageConfig} isSingleTabPage={true} isTeamSpecificPage={pageConfig.isDynamic} /> : <div>Component for {tab.name} not found.</div>;
+    }
+    
     return (
         <div className="flex flex-col gap-6">
             {showHeader && (
@@ -140,7 +147,7 @@ export default function DynamicPage() {
                     const contextTeam = tab.contextTeamId ? teams.find(t => t.id === tab.contextTeamId) : dynamicTeam;
                     return (
                         <TabsContent key={tab.id} value={tab.id} className="mt-4">
-                        {ContentComponent ? <ContentComponent tab={tab} team={contextTeam} page={pageConfig} isSingleTabPage={isSingleTabPage} isActive={activeTab === tab.id} isTeamSpecificPage={pageConfig.isDynamic} /> : <div>Component for {tab.name} not found.</div>}
+                        {ContentComponent ? <ContentComponent tab={tab} team={contextTeam} page={pageConfig} isSingleTabPage={false} isActive={activeTab === tab.id} isTeamSpecificPage={pageConfig.isDynamic} /> : <div>Component for {tab.name} not found.</div>}
                         </TabsContent>
                     );
                 })}
@@ -148,5 +155,3 @@ export default function DynamicPage() {
         </div>
     );
 }
-
-    
