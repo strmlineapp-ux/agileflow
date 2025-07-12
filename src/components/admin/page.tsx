@@ -116,15 +116,11 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
   const [adminSearch, setAdminSearch] = useState('');
   const [userSearch, setUserSearch] = useState('');
   
-  const [adminUsers, setAdminUsers] = useState(users.filter(u => u.isAdmin));
-  const [nonAdminUsers, setNonAdminUsers] = useState(users.filter(u => !u.isAdmin));
+  const adminUsers = useMemo(() => users.filter(u => u.isAdmin), [users]);
+  const nonAdminUsers = useMemo(() => users.filter(u => !u.isAdmin), [users]);
+  
   const [activeUser, setActiveUser] = useState<User | null>(null);
 
-  useEffect(() => {
-    setAdminUsers(users.filter(u => u.isAdmin));
-    setNonAdminUsers(users.filter(u => !u.isAdmin));
-  }, [users]);
-  
   useEffect(() => {
     if (is2faDialogOpen) {
       setTimeout(() => {
@@ -256,7 +252,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
         </DndContext>
 
         <Dialog open={is2faDialogOpen} onOpenChange={(isOpen) => !isOpen && close2faDialog()}>
-            <DialogContent className="max-w-sm">
+            <DialogContent className="max-w-sm" onPointerDownCapture={(e) => e.stopPropagation()}>
                 <div className="absolute top-4 right-4">
                     <TooltipProvider>
                         <Tooltip>
@@ -538,7 +534,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, ...props }: { page: AppP
     const displayPath = page.isDynamic ? `${page.path}/[teamId]` : page.path;
 
     return (
-        <Card className="flex flex-col h-full group bg-transparent" {...props}>
+        <Card className="flex flex-col group bg-transparent" {...props}>
             <CardHeader>
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -609,12 +605,12 @@ function PageCard({ page, onUpdate, onDelete, isPinned, ...props }: { page: AppP
                                 </PopoverContent>
                             </Popover>
                         </div>
-                        <div className="flex-1 min-w-0" onPointerDown={(e) => e.stopPropagation()}>
+                        <div className="flex-1 min-w-0" onPointerDown={(e) => { e.stopPropagation(); setIsEditingName(true); }}>
                             <div className="flex items-center gap-1">
                                 {isEditingName ? (
                                     <Input ref={nameInputRef} defaultValue={page.name} onKeyDown={handleNameKeyDown} onBlur={handleSaveName} className="h-auto p-0 font-headline text-base font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"/>
                                 ) : (
-                                    <CardTitle onPointerDown={() => setIsEditingName(true) } className="font-headline text-base break-words font-thin cursor-pointer">
+                                    <CardTitle className="font-headline text-base break-words font-thin cursor-pointer">
                                         {page.name}
                                     </CardTitle>
                                 )}
@@ -1105,6 +1101,7 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
     
     const sensors = useSensors(
         useSensor(PointerSensor),
+        useSensor(PointerSensor),
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates,
         })
@@ -1150,3 +1147,5 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
 };
 // #endregion
 
+
+    
