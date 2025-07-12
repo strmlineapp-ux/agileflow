@@ -498,7 +498,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
 function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, ...props }: { page: AppPage; onUpdate: (id: string, data: Partial<AppPage>) => void; onDelete: (id: string) => void; isPinned?: boolean; isDragging?: boolean; [key:string]: any; }) {
     const { viewAsUser } = useUser();
     const canManage = viewAsUser.isAdmin;
-    const [isExpanded, setIsExpanded] = useState(true);
+    const [isExpanded, setIsExpanded] = useState(false);
     const [isEditingName, setIsEditingName] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
@@ -573,10 +573,11 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, ...props }: 
               </TooltipProvider>
             )}
             <CardHeader
-              className="p-2"
-              onClick={() => setIsExpanded(!isExpanded)}
+              className={cn("p-2", !isPinned && "cursor-pointer")}
+              onClick={() => {if (!isPinned && !isDragging) setIsExpanded(!isExpanded);}}
+              {...(!isPinned && props.dragHandleProps)}
             >
-                <div className="flex items-start justify-between" {...(!isPinned && props.dragHandleProps)}>
+                <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2 flex-1 min-w-0" onPointerDown={(e) => e.stopPropagation()}>
                         <div className="relative">
                             <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
@@ -723,7 +724,7 @@ function SortablePageCard({ id, page, onUpdate, onDelete, isPinned }: { id: stri
                     onUpdate={onUpdate} 
                     onDelete={onDelete} 
                     isPinned={isPinned}
-                    dragHandleProps={listeners}
+                    dragHandleProps={!isPinned ? listeners : undefined}
                     {...attributes}
                     isDragging={isDragging}
                  />
