@@ -40,6 +40,18 @@ const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
   }
   return <Droppable {...props}>{children}</Droppable>;
 };
+
+const useFocusOnMount = (isEditing: boolean) => {
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (isEditing && inputRef.current) {
+            inputRef.current.focus();
+        }
+    }, [isEditing]);
+
+    return inputRef;
+};
 // #endregion
 
 // #region Admin Groups Management Tab
@@ -61,7 +73,7 @@ const UserAssignmentCard = ({ user }: { user: User }) => {
 };
 
 
-export const AdminsManagement = ({ tab, isSingleTabPage }: { tab: AppTab; isSingleTabPage?: boolean }) => {
+export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab; isSingleTabPage?: boolean, isActive?: boolean }) => {
   const { toast } = useToast();
   const { users, updateUser } = useUser();
   const [is2faDialogOpen, setIs2faDialogOpen] = useState(false);
@@ -75,16 +87,17 @@ export const AdminsManagement = ({ tab, isSingleTabPage }: { tab: AppTab; isSing
   const [isSearchingAdmins, setIsSearchingAdmins] = useState(false);
   const [isSearchingUsers, setIsSearchingUsers] = useState(false);
   
-  const userSearchInputRef = useRef<HTMLInputElement>(null);
-  const adminSearchInputRef = useRef<HTMLInputElement>(null);
+  const userSearchInputRef = useFocusOnMount(isSearchingUsers && isActive);
+  const adminSearchInputRef = useFocusOnMount(isSearchingAdmins && isActive);
   
   useEffect(() => {
-      if (isSearchingUsers) userSearchInputRef.current?.focus();
-  }, [isSearchingUsers]);
-
-  useEffect(() => {
-    if (isSearchingAdmins) adminSearchInputRef.current?.focus();
-  }, [isSearchingAdmins]);
+    if (isActive) {
+        setIsSearchingUsers(true);
+    } else {
+        setIsSearchingAdmins(false);
+        setIsSearchingUsers(false);
+    }
+  }, [isActive]);
 
   useEffect(() => {
     if (is2faDialogOpen) {
@@ -695,27 +708,28 @@ function PageCard({ page, onUpdate, onDelete, isDragging, isPinned }: { page: Ap
     );
 }
 
-export const PagesManagement = ({ tab, isSingleTabPage }: { tab: AppTab; isSingleTabPage?: boolean }) => {
+export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab; isSingleTabPage?: boolean, isActive?: boolean }) => {
     const { appSettings, updateAppSettings, updateAppTab } = useUser();
     const { toast } = useToast();
     const [isEditingTitle, setIsEditingTitle] = useState(false);
-    const titleInputRef = useRef<HTMLInputElement>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [isSearching, setIsSearching] = useState(false);
-    const searchInputRef = useRef<HTMLInputElement>(null);
+    
+    const titleInputRef = useFocusOnMount(isEditingTitle);
+    const searchInputRef = useFocusOnMount(isSearching && isActive);
     
     useEffect(() => {
-        if (isSearching) searchInputRef.current?.focus();
-    }, [isSearching]);
+        if (isActive) {
+            setIsSearching(true);
+        } else {
+            setIsSearching(false);
+        }
+    }, [isActive]);
 
 
     const pinnedTopIds = useMemo(() => ['page-admin-management', 'page-overview', 'page-calendar', 'page-tasks'], []);
     const pinnedBottomIds = useMemo(() => ['page-notifications', 'page-settings'], []);
     const allPinnedIds = useMemo(() => [...pinnedTopIds, ...pinnedBottomIds], [pinnedTopIds, pinnedBottomIds]);
-
-    useEffect(() => {
-        if (isEditingTitle) titleInputRef.current?.focus();
-    }, [isEditingTitle]);
 
     const handleSaveTitle = () => {
         const newName = titleInputRef.current?.value.trim();
@@ -764,11 +778,13 @@ export const PagesManagement = ({ tab, isSingleTabPage }: { tab: AppTab; isSingl
     
     const onDragEnd = (result: DropResult) => {
         const { source, destination, draggableId } = result;
-    
+
         if (!destination) return;
-    
+        
+        const pages = appSettings.pages;
+
         if (destination.droppableId === 'duplicate-page-zone') {
-            const pageToDuplicate = appSettings.pages.find(p => p.id === draggableId);
+            const pageToDuplicate = pages.find(p => p.id === draggableId);
             if (pageToDuplicate) {
                 const newName = `${pageToDuplicate.name} (Copy)`;
                 const newPath = pageToDuplicate.isDynamic 
@@ -782,8 +798,8 @@ export const PagesManagement = ({ tab, isSingleTabPage }: { tab: AppTab; isSingl
                     path: newPath,
                 };
                 
-                const sourcePageIndex = appSettings.pages.findIndex(p => p.id === draggableId);
-                const newPages = [...appSettings.pages];
+                const sourcePageIndex = pages.findIndex(p => p.id === draggableId);
+                const newPages = [...pages];
                 newPages.splice(sourcePageIndex + 1, 0, newPage);
     
                 updateAppSettings({ pages: newPages });
@@ -791,26 +807,26 @@ export const PagesManagement = ({ tab, isSingleTabPage }: { tab: AppTab; isSingl
             }
             return;
         }
-    
+
         if (destination.droppableId === 'pages-list' && source.droppableId === 'pages-list') {
-            const pages = appSettings.pages;
-            
-            let toIndex = destination.index;
-            
-            // Guardrail logic
-            const firstDraggableIndex = pages.findIndex(p => !allPinnedIds.includes(p.id));
-            if (toIndex < firstDraggableIndex) {
-                toIndex = firstDraggableIndex;
-            }
-
-            const lastDraggableIndex = pages.findLastIndex(p => !allPinnedIds.includes(p.id));
-            if (toIndex > lastDraggableIndex) {
-                toIndex = lastDraggableIndex;
-            }
-
             const reorderedPages = Array.from(pages);
             const [movedItem] = reorderedPages.splice(source.index, 1);
-            reorderedPages.splice(toIndex, 0, movedItem);
+
+            let newIndex = destination.index;
+
+            // Find boundaries for draggable items
+            const firstDraggableIndex = pages.findIndex(p => !allPinnedIds.includes(p.id));
+            const lastDraggableIndex = pages.map(p => !allPinnedIds.includes(p.id)).lastIndexOf(true);
+            
+            // Apply guardrails
+            if (newIndex < firstDraggableIndex) {
+                newIndex = firstDraggableIndex;
+            }
+            if (newIndex > lastDraggableIndex) {
+                newIndex = lastDraggableIndex;
+            }
+
+            reorderedPages.splice(newIndex, 0, movedItem);
 
             updateAppSettings({ pages: reorderedPages });
         }
@@ -899,7 +915,7 @@ export const PagesManagement = ({ tab, isSingleTabPage }: { tab: AppTab; isSingl
                                                 {...provided.draggableProps}
                                                 {...provided.dragHandleProps}
                                                 className={cn(
-                                                    "p-2 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5 flex-grow-0 flex-shrink-0",
+                                                    "p-2 basis-full sm:basis-1/2 md:basis-[calc(33.333%-1rem)] lg:basis-[calc(25%-1rem)] xl:basis-[calc(20%-1rem)] flex-grow-0 flex-shrink-0",
                                                     isPinned && "opacity-70"
                                                 )}
                                             >
@@ -1112,21 +1128,22 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
     );
 }
 
-export const TabsManagement = ({ tab, isSingleTabPage }: { tab: AppTab; isSingleTabPage?: boolean }) => {
+export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab; isSingleTabPage?: boolean, isActive?: boolean }) => {
     const { appSettings, updateAppSettings, updateAppTab } = useUser();
     const [isEditingTitle, setIsEditingTitle] = useState(false);
-    const titleInputRef = useRef<HTMLInputElement>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [isSearching, setIsSearching] = useState(false);
-    const searchInputRef = useRef<HTMLInputElement>(null);
+    
+    const titleInputRef = useFocusOnMount(isEditingTitle);
+    const searchInputRef = useFocusOnMount(isSearching && isActive);
     
     useEffect(() => {
-        if (isSearching) searchInputRef.current?.focus();
-    }, [isSearching]);
-
-    useEffect(() => {
-        if (isEditingTitle) titleInputRef.current?.focus();
-    }, [isEditingTitle]);
+        if (isActive) {
+            setIsSearching(true);
+        } else {
+            setIsSearching(false);
+        }
+    }, [isActive]);
 
     const handleSaveTitle = () => {
         const newName = titleInputRef.current?.value.trim();
