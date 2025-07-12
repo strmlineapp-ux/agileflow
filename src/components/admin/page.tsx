@@ -539,7 +539,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, ...props }: { page: AppP
     const displayPath = page.isDynamic ? `${page.path}/[teamId]` : page.path;
 
     return (
-        <Card className="flex flex-col group bg-transparent" {...props}>
+        <Card {...props}>
             <CardHeader className="p-2">
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -659,8 +659,8 @@ function PageCard({ page, onUpdate, onDelete, isPinned, ...props }: { page: AppP
                 <DialogContent className="max-w-md" onPointerDownCapture={(e) => e.stopPropagation()}>
                     <div className="absolute top-4 right-4">
                         <Button variant="ghost" size="icon" onClick={() => onDelete(page.id)}>
-                            <GoogleSymbol name="delete" className="text-4xl" weight={100} />
-                            <span className="sr-only">Delete Page</span>
+                            <GoogleSymbol name="check" className="text-4xl" weight={100} />
+                            <span className="sr-only">Confirm Delete</span>
                         </Button>
                     </div>
                     <DialogHeader>
@@ -695,7 +695,7 @@ function SortablePageCard({ id, page, onUpdate, onDelete, isPinned }: { id: stri
         <div 
             ref={setNodeRef} 
             style={style} 
-            className="p-2 basis-full md:basis-[calc(50%-1rem)] flex-grow-0 flex-shrink-0 lg:basis-[calc(33.333%-1rem)] xl:basis-[calc(25%-1rem)] 2xl:basis-[calc(20%-1rem)]"
+            className="p-2 basis-full md:basis-[calc(50%-1rem)] lg:basis-[calc(25%-1rem)] xl:basis-[calc(20%-1rem)] 2xl:basis-[calc(16.666%-1rem)] flex-grow-0 flex-shrink-0"
         >
              <div className={cn(isDragging && "opacity-75")}>
                  <PageCard 
