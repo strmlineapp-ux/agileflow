@@ -911,9 +911,7 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                                             <CardTitle onPointerDown={(e) => { e.stopPropagation(); if(isOwned) setIsEditingName(true);}} className={cn("text-2xl font-headline font-thin break-words", isOwned && "cursor-pointer")}>{collection.name}</CardTitle>
                                         )}
                                         <DroppableDuplicateZone id={`duplicate-badge-zone:${collection.id}`} disabled={!isOwned || isViewer}>
-                                            {isOwned && !isSharedPreview && !isViewer && (
-                                                <Button variant="ghost" size="icon" onPointerDown={(e) => { e.stopPropagation(); onAddBadge(collection.id);}}><GoogleSymbol name="add_circle" className="text-4xl" weight={100} /><span className="sr-only">Add Badge</span></Button>
-                                            )}
+                                            <Button variant="ghost" size="icon" onPointerDown={(e) => { e.stopPropagation(); onAddBadge(collection.id);}}><GoogleSymbol name="add_circle" className="text-4xl" weight={100} /><span className="sr-only">Add Badge</span></Button>
                                         </DroppableDuplicateZone>
                                     </div>
                                 </div>
@@ -1409,7 +1407,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                             )}
                             {!isViewer && (
                                 <DroppableDuplicateZone id="duplicate-collection-zone" disabled={isViewer}>
-                                    <Button variant="ghost" size="icon" onPointerDown={(e) => { e.stopPropagation(); handleAddCollection(); }}>
+                                    <Button variant="ghost" size="icon" onPointerDown={(e) => { e.stopPropagation(); handleAddCollection(); }} onClick={handleAddCollection}>
                                         <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
                                         <span className="sr-only">Add New Collection or Drop to Duplicate</span>
                                     </Button>
