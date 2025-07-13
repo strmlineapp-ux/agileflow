@@ -24,7 +24,9 @@ export function Sidebar() {
   const orderedNavItems = useMemo(() => {
     if (loading) return [];
 
-    const visiblePages = appSettings.pages.filter(page => hasAccess(viewAsUser, page, teams));
+    const visiblePages = appSettings.pages
+        .filter(page => page.id !== 'page-settings') // Explicitly hide Settings from main nav
+        .filter(page => hasAccess(viewAsUser, page, teams));
 
     return visiblePages.flatMap(page => {
       if (!page.associatedTabs || page.associatedTabs.length === 0) {
@@ -165,6 +167,13 @@ export function Sidebar() {
                 )}
                 
                 <DropdownMenuSeparator />
+
+                 <DropdownMenuItem asChild>
+                    <Link href="/dashboard/settings" className="font-thin">
+                        <GoogleSymbol name="settings" className="mr-2 text-lg" weight={100} />
+                        <span>Account Settings</span>
+                    </Link>
+                </DropdownMenuItem>
                 
                 {realUser.userId === viewAsUser.userId && (
                   <DropdownMenuItem onSelect={() => linkGoogleCalendar(realUser.userId)} disabled={realUser.googleCalendarLinked} className="font-thin">

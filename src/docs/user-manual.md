@@ -22,10 +22,10 @@ Once your access has been approved, you can sign in:
 
 The main navigation is located in the sidebar on the left, providing quick, icon-based access to all sections of the app. Hover over an icon to see its name.
 
-- **Main Navigation**: Access to core features like the Calendar, Overview, Tasks, and Settings.
+- **Main Navigation**: Access to core features like the Calendar, Overview, and Tasks.
 - **Team Management**: If you have permission to manage a team, a link to that team's management page will appear here.
 - **Admin Pages**: If you are an Admin, you will see links to the Admin and Service Delivery pages.
-- **User Profile**: At the bottom of the sidebar, you can access your profile, notifications, and the "View as" feature (for Admins).
+- **User Profile**: At the bottom of the sidebar, you can access your profile, user preferences, notifications, and the "View as" feature (for Admins). The Settings page is only accessible from this menu.
 
 ## 3. Dashboard Overview
 
@@ -70,7 +70,7 @@ The **Notifications** page keeps you informed. This page has no visible header; 
 
 ## 7. Settings & Preferences
 
-The **Settings** page can be accessed from the main sidebar. It contains your personal account preferences. This page has no visible header.
+Access your preferences by clicking your avatar in the bottom-left corner of the sidebar and selecting **"Account Settings"**. This page has no visible header.
 
 - **Change Colour Scheme**: Choose between `light` and `dark` themes. You can also select a custom primary color to override the theme's default.
 - **Set Default Calendar View**: Select which calendar view you want to see when you log in.
