@@ -46,31 +46,39 @@ The calendar provides four distinct views, accessible via tabs at the top of the
 
 #### Month View
 A traditional monthly grid layout.
--   **Day Cells**: Each cell represents a day and displays its number. The current day is highlighted with a primary-colored circle. Weekends and holidays are subtly shaded.
--   **Events**: Events appear as compact, colored badges showing the event title. The badge color is determined by its assigned priority, or by the calendar's color if no priority is set.
--   **Weekend Toggle**: If there are events scheduled on a weekend, controls will appear on the edges of the weekday header, allowing you to expand or collapse the view to show or hide Saturday and Sunday.
+-   **Layout**: A grid of days, organized into weeks. The view is designed to be responsive; rows will expand in height to accommodate the number of events on the busiest day of that week.
+-   **Day Cells**: Each cell represents a day and displays its number in the top-left corner.
+    -   **Today's Date**: The current day is highlighted with a circular, primary-colored background to make it stand out.
+    -   **Shading**: Weekends and holidays are subtly shaded with a muted background color to visually separate them from workdays.
+-   **Events**: Events appear as compact, colored badges that show the event title.
+    -   **Color**: The badge color is determined by its assigned priority, providing an at-a-glance sense of importance. If no priority is set, it defaults to the color of the calendar it belongs to.
+-   **Weekend Toggle**: If there are events scheduled on a weekend, controls will appear on the edges of the weekday header. Clicking the double-chevron icons will expand or collapse the view to show or hide Saturday and Sunday, optimizing the viewing area.
 
 #### Week View
 A 7-day vertical timeline view.
--   **Day Columns**: Each column represents a day of the week, displaying the day's name and number.
--   **Events**: Events are rendered as colored blocks. Each block shows:
-    -   A **Priority Badge** indicating its importance.
-    -   **Assigned User Avatars**, with a secondary icon badge showing their role for that event. Hovering over an avatar reveals the user's name and role.
-    -   The event's **title** and **time range**.
--   **Now Marker**: On the current day, a red line indicates the current time.
+-   **Layout**: A horizontal grid with a fixed timeline on the left and a column for each day of the week.
+-   **Day Columns**: Each column is a vertical representation of a single day, displaying the day's name and number at the top.
+-   **Events**: Events are rendered as colored blocks within their respective day's column. Each block is positioned and sized vertically according to its start and end times. The blocks are rich with information:
+    -   **Priority Badge**: A colored badge at the top of the event block indicates its importance.
+    -   **Assigned User Avatars**: A row of circular avatars shows who is assigned to the event. A secondary, smaller icon badge is overlaid on each avatar to show their specific role (e.g., a camera icon for a "Camera Op."). Hovering over an avatar reveals a tooltip with the user's full name and their role.
+    -   **Details**: The event's title and time range are clearly displayed within the block.
+-   **"Now" Marker**: On the current day, a horizontal red line dynamically indicates the current time, providing a clear reference point.
 
 #### Day View
 A detailed horizontal timeline for a single day, organized by location.
--   **Location Rows**: Each row represents a location. Rows for locations with no events are automatically collapsed. You can click a location's name to manually toggle its row's visibility.
--   **Events**: Events appear as colored blocks within their location's row, positioned and sized according to their start and end times. They display the same rich information as the Week View (priority, avatars, title, time).
--   **Axis Toggle**: A "Swap Axis" button in the header allows you to switch to a **Reversed (Vertical) View**, where the timeline runs top-to-bottom and events for the day are displayed in a single column.
+-   **Layout**: A horizontal timeline where each row represents a different location. This view is ideal for understanding resource allocation and potential conflicts.
+-   **Location Rows**: Each row is labeled with a location's name on the left.
+    -   **Collapsible Rows**: Rows for locations with no scheduled events are automatically collapsed to save space. Users can also manually click on any location's name to toggle its row's visibility, allowing them to focus on what's important.
+-   **Events**: Events appear as colored blocks within their location's row, positioned and sized horizontally according to their start and end times. They display the same rich information as the Week View (priority, avatars, title, time).
+-   **Axis Toggle**: A "Swap Axis" button in the header allows you to switch to a **Reversed (Vertical) View**. In this mode, the timeline runs top-to-bottom in a single column, and all events for the day are displayed within it, providing a more traditional agenda-style layout.
 
 #### Production Schedule
 A specialized weekly view for production planning, organized by location across multiple days.
--   **Day Cards**: The week is presented as a series of cards, one for each day. You can collapse or expand each day's card to focus on the schedule.
--   **Daily Checks**: At the top of each day's card, a series of pills represent "daily checks" for specific locations. Users with permission can add temporary checks, assign users to them, and see who is assigned.
+-   **Layout**: The week is presented as a series of collapsible day cards, allowing users to focus on one day at a time or view the entire week's schedule.
+-   **Day Cards**: Each card represents a single day and can be collapsed or expanded by clicking its header.
+-   **Daily Checks**: Positioned at the top of each day's card, a series of pills represent "daily checks" for specific locations (e.g., ensuring a studio is ready). Users with permission can add temporary checks for the day or assign users to a check. The assigned user's name appears in the pill.
 -   **User Statuses**: On the right side of each day's header, color-coded pills show which users are absent (e.g., PTO, Sick). Managers can click the `account_circle_off` icon to open a dialog and manage these statuses for the day.
--   **Location Rows**: Similar to the Day View, each day's card contains rows for pinned locations, displaying all events scheduled in those locations for that day.
+-   **Location Rows**: Similar to the Day View, each day's card contains rows for pinned locations, displaying all events scheduled in those locations for that specific day.
 
 ## 5. Tasks
 
@@ -128,4 +136,5 @@ Administrators can view the application from another user's perspective.
 4.  A banner will appear at the top of the screen indicating whose view you are using. To return to your own view, repeat the process and select "Return to your view".
 
 
+    
     
