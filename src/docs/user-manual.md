@@ -42,18 +42,35 @@ The calendar is a powerful tool for visualizing and managing your team's schedul
 - **Easy Booking**: In your user preferences, you can enable "Easy Booking," which allows you to click on any empty time slot in the Day, Week, or Production Schedule views to quickly open the new event form with the time pre-filled.
 
 ### 4.2 Calendar Views & Controls
-- **View Tabs**: Switch between four different views:
-    - **Month**: A traditional monthly overview.
-    - **Week**: A 7-day timeline view.
-    - **Day**: A detailed hourly view for a single day. Can be switched between a horizontal (standard) or vertical (reversed) axis.
-    - **Production Schedule**: A specialized view showing events organized by location for an entire week.
-- **Controls**: Use the controls at the top to navigate between dates, jump to "Today," and adjust the view (e.g., zoom in/out).
-- **Lunch Break**: A subtle diagonal pattern between 12:00 and 14:30 serves as a visual reminder to keep time free for a lunch break.
+The calendar provides four distinct views, accessible via tabs at the top of the calendar card. The header also contains controls to navigate between dates, jump to "Today," and toggle view-specific options. A subtle diagonal pattern between 12:00 and 14:30 in timeline views serves as a visual reminder to keep time free for a lunch break.
 
-### 4.3 Production Schedule View
-This is the most detailed view, designed for production planning.
-- **Daily Checks**: Users with the "Manage Checks" permission can add, remove, and assign users to daily check locations that appear as pills at the top of each day.
-- **User Statuses**: Managers can assign absence statuses (e.g., PTO, Sick) to users by clicking the `account_circle_off` icon. These appear as color-coded pills on the right side of each day's header.
+#### Month View
+A traditional monthly grid layout.
+-   **Day Cells**: Each cell represents a day and displays its number. The current day is highlighted with a primary-colored circle. Weekends and holidays are subtly shaded.
+-   **Events**: Events appear as compact, colored badges showing the event title. The badge color is determined by its assigned priority, or by the calendar's color if no priority is set.
+-   **Weekend Toggle**: If there are events scheduled on a weekend, controls will appear on the edges of the weekday header, allowing you to expand or collapse the view to show or hide Saturday and Sunday.
+
+#### Week View
+A 7-day vertical timeline view.
+-   **Day Columns**: Each column represents a day of the week, displaying the day's name and number.
+-   **Events**: Events are rendered as colored blocks. Each block shows:
+    -   A **Priority Badge** indicating its importance.
+    -   **Assigned User Avatars**, with a secondary icon badge showing their role for that event. Hovering over an avatar reveals the user's name and role.
+    -   The event's **title** and **time range**.
+-   **Now Marker**: On the current day, a red line indicates the current time.
+
+#### Day View
+A detailed horizontal timeline for a single day, organized by location.
+-   **Location Rows**: Each row represents a location. Rows for locations with no events are automatically collapsed. You can click a location's name to manually toggle its row's visibility.
+-   **Events**: Events appear as colored blocks within their location's row, positioned and sized according to their start and end times. They display the same rich information as the Week View (priority, avatars, title, time).
+-   **Axis Toggle**: A "Swap Axis" button in the header allows you to switch to a **Reversed (Vertical) View**, where the timeline runs top-to-bottom and events for the day are displayed in a single column.
+
+#### Production Schedule
+A specialized weekly view for production planning, organized by location across multiple days.
+-   **Day Cards**: The week is presented as a series of cards, one for each day. You can collapse or expand each day's card to focus on the schedule.
+-   **Daily Checks**: At the top of each day's card, a series of pills represent "daily checks" for specific locations. Users with permission can add temporary checks, assign users to them, and see who is assigned.
+-   **User Statuses**: On the right side of each day's header, color-coded pills show which users are absent (e.g., PTO, Sick). Managers can click the `account_circle_off` icon to open a dialog and manage these statuses for the day.
+-   **Location Rows**: Similar to the Day View, each day's card contains rows for pinned locations, displaying all events scheduled in those locations for that day.
 
 ## 5. Tasks
 
