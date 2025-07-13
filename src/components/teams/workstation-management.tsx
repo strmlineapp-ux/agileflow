@@ -208,7 +208,7 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
       <Dialog open={!!workstationToDelete} onOpenChange={(isOpen) => !isOpen && setWorkstationToDelete(null)}>
         <DialogContent className="max-w-md">
             <div className="absolute top-4 right-4">
-                <Button variant="ghost" size="icon" className="p-0 text-destructive" onClick={handleDelete}>
+                <Button variant="ghost" size="icon" className="hover:text-destructive p-0 hover:bg-transparent" onClick={handleDelete}>
                     <GoogleSymbol name="delete" className="text-4xl" weight={100} />
                     <span className="sr-only">Delete Workstation</span>
                 </Button>

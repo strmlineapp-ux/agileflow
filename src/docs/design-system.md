@@ -21,16 +21,17 @@ The application favors a compact, information-dense layout. Card components are 
 ### 2. Inline Editor
 This pattern allows for seamless, direct text editing within the main application layout, avoiding disruptive dialog boxes or popovers for simple text changes.
 
-- **Trigger:** Clicking directly on a text element (e.g., a section title, a badge name, a phone number).
+- **Trigger:** Clicking directly on a text element (e.g., a section title, a badge name).
 - **Interaction:**
     - The text element transforms into an input field.
     - The input field must be styled to perfectly match the font, size, weight, and color of the original text element it replaces (e.g., using the `font-headline font-thin` classes).
     - **Crucially, the input must have a transparent background and no borders or box-shadow**, ensuring it blends seamlessly into the UI.
 - **Behavior:**
-    - Typing modifies the text value.
+    - Typing modifies the text value. Pressing the spacebar correctly adds spaces for multi-word names.
     - Pressing 'Enter' saves the changes and reverts the input back to a standard text element.
     - Pressing 'Escape' cancels the edit without saving.
     - **A `useEffect` hook must be implemented to add a 'mousedown' event listener to the document. This listener should check if the click occurred outside the input field's ref and, if so, trigger the save function. This ensures that clicking anywhere else on the page correctly dismisses and saves the editor.**
+- **Conflict Prevention**: If the inline editor is inside a draggable component (like a `PageCard`), its container **must** have an `onPointerDown={(e) => e.stopPropagation()}` handler. This is critical to prevent `@dnd-kit`'s drag listener from activating when the input is clicked, which would otherwise interfere with typing.
 - **Application:** Used for editing entity names, labels, and other simple text fields directly in the UI.
 
 ---
@@ -43,8 +44,9 @@ This pattern provides a clean, minimal interface for search functionality, espec
   - Clicking the button reveals the input field.
   - **Crucially, the input must have a transparent background and no borders or box-shadow**, ensuring it blends seamlessly into the UI.
 - **Behavior:**
-  - The input automatically gains focus as soon as it becomes visible. This is achieved using a `useEffect` hook with a `setTimeout` to ensure the element is rendered and ready for focus.
-  - The input hides again if the user clicks away (`onBlur`) and the field is empty, unless `autoFocus` is true.
+  - **Automatic Focus**: If configured with `autoFocus`, the input gains focus as soon as its parent tab becomes visible. This is a one-time action per tab load.
+  - **Manual Focus**: Clicking the search icon will always expand the input and focus it.
+  - **Collapse on Blur**: The input always collapses back to its icon-only state when it loses focus (`onBlur`) and the field is empty.
 - **Application:** Used for filtering lists of icons, users, or other filterable content within popovers and management pages like the Admin screen.
 
 ---
@@ -126,7 +128,9 @@ This is the application's perfected, gold-standard pattern for managing a collec
     -   `flex-grow-0` and `flex-shrink-0` **must** be used on draggable items. This prevents the remaining items in a row from expanding or shrinking, which causes the grid to reflow unstably when an item is being dragged.
 -   **Initiating a Drag**: To provide a clean, handle-free interface, the drag action is initiated by clicking and dragging any non-interactive part of the card. The drag listener from `dnd-kit`'s `useSortable` hook is applied to the main card container.
 -   **Click vs. Drag**: The `@dnd-kit` library can differentiate between a single click and a drag action. This is achieved by adding an `onClick` handler to the same element as the drag listeners. The handler must check the `isDragging` state provided by the `useSortable` hook and prevent the click action from executing if a drag is in progress. The default state for cards is **collapsed**. Clicking the card toggles its expanded state to reveal more details (e.g., the URL path on a Page card).
--   **Preventing Interaction Conflicts**: To allow buttons, popovers, and other controls *inside* the draggable card to function correctly, they must stop the `pointerdown` event from propagating up to the card's drag listener. **This is a critical implementation detail and must be done by adding `onPointerDown={(e) => e.stopPropagation()}` to every interactive element within the card.** This ensures a click on a button performs the button's action, while a click-and-drag on the card's background initiates a drag.
+-   **Preventing Interaction Conflicts**:
+    -   To allow buttons, popovers, and other controls *inside* the draggable card to function correctly, they must stop the `pointerdown` event from propagating up to the card's drag listener. **This is a critical implementation detail and must be done by adding `onPointerDown={(e) => e.stopPropagation()}` to every interactive element within the card.**
+    -   To prevent conflicts with keyboard interactions inside a card (like an **Inline Editor**), the `useSortable` hook for the draggable card **must** be temporarily disabled while the internal component is in an editing state. This is done by passing a `disabled: isEditing` flag to the hook, preventing `@dnd-kit`'s keyboard listeners (e.g., spacebar to lift) from firing while the user is typing.
 -   **Visual Feedback**: To provide feedback without disrupting layout, visual changes (like a `shadow` or `opacity`) should be applied directly to the inner component based on the `isDragging` prop provided by `dnd-kit`'s `useSortable` hook. The draggable wrapper itself should remain untouched.
 -   **Internal Card Layout**: Each card is structured for clarity. The header contains the primary entity identifier (icon and name) and contextual controls. To keep cards compact, headers and content areas should use minimal padding (e.g., `p-2`). Titles should be configured to wrap gracefully to handle longer text.
 -   **User Item Display**: When users are displayed as items within a management card (e.g., `TeamCard`), they are presented **without a border**. Each user item must display their avatar, full name, and professional title underneath the name for consistency.
@@ -146,7 +150,7 @@ This is the application's perfected, gold-standard pattern for managing a collec
     - **Card-level**: Deleting an entire card (like a Team or Collection) is a high-impact action. To prevent accidental clicks, this functionality should be placed within a `<DropdownMenu>` in the card's header, not triggered by a direct hover icon.
 -   **Drag-to-Duplicate**:
     -   **Interaction**: A designated "Add New" icon (`<Button>`) acts as a drop zone, implemented using the `useDroppable` hook from `dnd-kit`. While a card is being dragged, this zone becomes highlighted to indicate it can accept a drop.
-    -   **Behavior**: Dropping any card (pinned or not, from the main board or the shared panel) onto this zone creates a deep, independent copy of the original. The new card is given a unique ID, a modified name (e.g., with `(Copy)`), and is placed immediately after the original in the list. Its ownership is assigned to the current user's context, and its member list is reset to be empty.
+    -   **Behavior**: Dropping any card (pinned or not, from the main board or the shared panel) onto this zone creates a deep, independent copy of the original. The new card is given a unique ID, a modified name (e.g., with `(Copy)`), and a unique URL path. It is placed immediately after the original in the list. Its ownership is assigned to the current user's context, and its member list is reset to be empty.
 -   **Drag-to-Assign**: This pattern allows sub-items (like **Users** or **Badges**) to be moved between different parent cards.
     - **Interaction**: A user can drag an item (e.g., a User) from one card's list.
     - **Behavior**: As the item is dragged over another card, that card's drop zone (using `useDroppable`) becomes highlighted. Dropping the item assigns it to the new card's collection. The original item may be removed or remain, depending on the context. This is handled by the `onDragEnd` logic.
@@ -161,13 +165,14 @@ This is a minimalist dialog for focused actions, such as entering a code or a sh
 - **Component**: Uses the standard `<Dialog>` component, which allows the user to dismiss the action by clicking the overlay or pressing 'Escape'.
 - **Appearance**:
     - No footer buttons ("Cancel", "Save").
-    - The primary action (e.g., Save, Verify, Delete) is represented by a single, icon-only button (e.g., `<GoogleSymbol name="check" />`) positioned in the top-right corner of the dialog content.
+    - **Standard Action**: The primary action (e.g., Save, Verify) is represented by a single, icon-only button (e.g., `<GoogleSymbol name="check" />`) positioned in the top-right corner.
+    - **Destructive Action**: For low-risk deletions, the primary action button is a large `delete` icon styled with the destructive color on hover (`text-destructive hover:bg-transparent`). This creates a clear, consistent visual language for deletion.
     - The content is focused and minimal, often using other compact patterns like "Text-based Inputs" for a clean interface.
 - **Behavior**:
-    - Clicking the action icon in the corner performs the primary action (e.g., saves or verifies the input).
+    - Clicking the action icon in the corner performs the primary action.
     - Clicking the overlay dismisses the dialog without performing the action.
     - **When a dialog is triggered from a draggable element, its `<DialogContent>` must capture pointer events using `onPointerDownCapture={(e) => e.stopPropagation()}`. This prevents a click inside the dialog from being interpreted as a drag action on the underlying card.**
-- **Application**: Used for Two-Factor Authentication, quick edits, simple forms, and for confirming lower-risk destructive actions, such as deleting a **Page**, a **Team**, or an un-shared **Badge Collection**.
+- **Application**: Used for Two-Factor Authentication, quick edits, and for confirming lower-risk destructive actions, such as deleting a **Page**, a **Team**, a **Workstation**, or an un-shared **Badge Collection**.
 
 ---
 

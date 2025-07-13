@@ -682,7 +682,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" className="text-destructive p-0 hover:bg-transparent" onClick={() => onDelete(page.id)}>
+                            <Button variant="ghost" size="icon" className="hover:text-destructive p-0 hover:bg-transparent" onClick={() => onDelete(page.id)}>
                               <GoogleSymbol name="delete" className="text-4xl" weight={100} />
                               <span className="sr-only">Delete Page</span>
                             </Button>

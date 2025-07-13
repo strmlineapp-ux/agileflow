@@ -806,7 +806,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                          <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10 p-0" onClick={confirmDelete}>
+                                    <Button variant="ghost" size="icon" className="hover:text-destructive p-0 hover:bg-transparent" onClick={confirmDelete}>
                                         <GoogleSymbol name="delete" className="text-4xl" weight={100} />
                                         <span className="sr-only">Delete Team</span>
                                     </Button>
