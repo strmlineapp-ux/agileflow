@@ -533,6 +533,13 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, ...props }: 
         else if (e.key === 'Escape') setIsEditingName(false);
     };
 
+    const handlePathClick = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (!isPinned && canManage) {
+        onUpdate(page.id, { isDynamic: !page.isDynamic });
+      }
+    };
+
     const filteredIcons = useMemo(() => googleSymbolNames.filter(icon => icon.toLowerCase().includes(iconSearch.toLowerCase())), [iconSearch]);
     
     const displayPath = page.isDynamic ? `${page.path}/[teamId]` : page.path;
@@ -660,7 +667,9 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, ...props }: 
             </CardHeader>
             {isExpanded && (
                 <CardContent className="p-2 pt-0">
-                    <p className="text-xs text-muted-foreground truncate font-thin">{displayPath}</p>
+                    <p className={cn("text-xs text-muted-foreground truncate font-thin", !isPinned && "cursor-pointer hover:text-primary")} onClick={handlePathClick}>
+                      {displayPath}
+                    </p>
                 </CardContent>
             )}
             <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
@@ -1116,7 +1125,6 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
     
     const sensors = useSensors(
         useSensor(PointerSensor),
-        useSensor(PointerSensor),
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates,
         })
@@ -1161,7 +1169,5 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
     );
 };
 // #endregion
-
-    
 
     
