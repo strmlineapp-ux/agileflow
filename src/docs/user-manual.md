@@ -33,7 +33,7 @@ The **Overview** page gives you a high-level summary of team activity, including
 
 ## 4. Calendar
 
-The calendar is a powerful tool for visualizing and managing your team's schedule.
+The calendar is a powerful tool for visualizing and managing your team's schedule. The main calendar area is presented within a single, clean card that contains all the different views, giving it a well-organized and unified feel.
 
 ### 4.1 Creating Events
 - Click the **(+)** icon in the header to open the new event form.
