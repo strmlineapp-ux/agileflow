@@ -31,24 +31,33 @@ const SettingSelect = ({
   options,
   placeholder,
   icon,
+  tooltip,
 }: {
   value: string;
   onSave: (newValue: string) => void;
   options: { value: string; label: string }[];
   placeholder: string;
   icon: string;
+  tooltip: string;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const currentLabel = options.find(opt => opt.value === value)?.label || placeholder;
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <PopoverTrigger asChild>
-        <Button variant="ghost" className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
-          <GoogleSymbol name={icon} className="text-xl" weight={100} />
-          <span className="text-sm">{currentLabel}</span>
-        </Button>
-      </PopoverTrigger>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
+                <GoogleSymbol name={icon} className="text-xl" weight={100} />
+                <span className="text-sm">{currentLabel}</span>
+              </Button>
+            </PopoverTrigger>
+          </TooltipTrigger>
+          <TooltipContent><p>{tooltip}</p></TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
       <PopoverContent className="w-auto p-1" align="start">
         {options.map(option => (
           <Button
@@ -105,8 +114,8 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
     };
 
     const THEME_OPTIONS = [
-      { name: 'light', label: 'Light', icon: 'light_mode' },
-      { name: 'dark', label: 'Dark', icon: 'dark_mode' },
+      { name: 'light', label: 'Light', icon: 'light_mode', tooltip: 'Set Light Theme' },
+      { name: 'dark', label: 'Dark', icon: 'dark_mode', tooltip: 'Set Dark Theme' },
     ];
     
     const handleSetPrimaryColor = (color: string) => {
@@ -168,15 +177,15 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
                         </div>
                       </CardHeader>
                         <AccordionContent>
-                           <CardContent>
-                               <div className="border-t pt-4">
+                           <CardContent className="p-2 pt-0">
+                               <div className="border-t pt-2">
                                 <div className="p-2 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
                                     {/* Left Column */}
-                                    <div className="space-y-2">
-                                        <p className="text-sm font-medium">{user.title || <span className="italic text-muted-foreground">Not provided</span>}</p>
+                                    <div className="space-y-1">
+                                        <p className="text-sm font-medium h-9 flex items-center">{user.title || <span className="italic text-muted-foreground">Not provided</span>}</p>
                                         <div
                                             className={cn(
-                                                "text-sm min-h-[36px] flex items-center",
+                                                "text-sm h-9 flex items-center",
                                                 isCurrentUser && !editingPhoneUserId && "cursor-pointer"
                                             )}
                                             onClick={() => {
@@ -204,7 +213,7 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
                                             )}
                                         </div>
                                          {isCurrentUser && (
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex items-center gap-2 h-9">
                                                 <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
                                                     <TooltipProvider>
                                                         <Tooltip>
@@ -233,19 +242,25 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
                                                 <div className="relative">
                                                     <div className="flex h-10 items-center justify-center p-0 text-muted-foreground border-b">
                                                         {THEME_OPTIONS.map(theme => (
-                                                        <Button
-                                                            key={theme.name}
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => handleThemeChange(theme.name as any)}
-                                                            className={cn(
-                                                            "rounded-none gap-2 py-1.5 hover:bg-transparent",
-                                                            realUser.theme === theme.name ? "text-primary" : "hover:text-foreground"
-                                                            )}
-                                                        >
-                                                            <GoogleSymbol name={theme.icon} className="text-lg" weight={100} />
-                                                            {theme.label}
-                                                        </Button>
+                                                          <TooltipProvider key={theme.name}>
+                                                            <Tooltip>
+                                                                <TooltipTrigger asChild>
+                                                                  <Button
+                                                                      variant="ghost"
+                                                                      size="sm"
+                                                                      onClick={() => handleThemeChange(theme.name as any)}
+                                                                      className={cn(
+                                                                      "rounded-none gap-2 py-1.5 hover:bg-transparent",
+                                                                      realUser.theme === theme.name ? "text-primary" : "hover:text-foreground"
+                                                                      )}
+                                                                  >
+                                                                      <GoogleSymbol name={theme.icon} className="text-lg" weight={100} />
+                                                                      {theme.label}
+                                                                  </Button>
+                                                                </TooltipTrigger>
+                                                                <TooltipContent><p>{theme.tooltip}</p></TooltipContent>
+                                                              </Tooltip>
+                                                          </TooltipProvider>
                                                         ))}
                                                     </div>
                                                 </div>
@@ -253,7 +268,7 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
                                         )}
                                     </div>
                                     {/* Right Column */}
-                                    <div className="space-y-2">
+                                    <div className="space-y-1">
                                         {isCurrentUser && (
                                         <>
                                             <SettingSelect
@@ -267,6 +282,7 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
                                                 ]}
                                                 placeholder="Select Default View"
                                                 icon="edit_calendar"
+                                                tooltip="Default Calendar View"
                                             />
                                             <SettingSelect
                                                 value={realUser.timeFormat || '12h'}
@@ -277,6 +293,7 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
                                                 ]}
                                                 placeholder="Select Time Format"
                                                 icon="schedule"
+                                                tooltip="Time Format"
                                             />
                                             <TooltipProvider>
                                                 <Tooltip>
@@ -307,3 +324,5 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
         </>
     )
 }
+
+    
