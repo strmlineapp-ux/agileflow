@@ -85,10 +85,13 @@ export default function DynamicPage() {
         if (pageConfig) {
             const pageTabs = appSettings.tabs.filter(t => pageConfig.associatedTabs.includes(t.id));
             if (pageTabs.length > 0) {
-                setActiveTab(pageTabs[0].id);
+                // Only set active tab if it's not already set or if the current active tab is no longer valid for this page
+                if (!activeTab || !pageTabs.find(t => t.id === activeTab)) {
+                    setActiveTab(pageTabs[0].id);
+                }
             }
         }
-    }, [pageConfig, appSettings.tabs]);
+    }, [pageConfig]);
 
     if (loading) {
         return <Skeleton className="h-full w-full" />;
