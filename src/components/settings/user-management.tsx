@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, Fragment, useRef, useEffect } from 'react';
+import { useState, Fragment, useRef, useEffect, useMemo } from 'react';
 import { type User, type Team } from '@/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -18,6 +18,7 @@ import { Badge } from '../ui/badge';
 import { Label } from '../ui/label';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { CompactSearchInput } from '../common/compact-search-input';
 
 const predefinedColors = [
     '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
@@ -70,13 +71,19 @@ const InlineSelectEditor = ({
   );
 };
 
-export function UserManagement() {
+export function UserManagement({ showSearch = false }: { showSearch?: boolean }) {
     const { realUser, users, updateUser, linkGoogleCalendar, allBadges } = useUser();
     const [editingPhoneUserId, setEditingPhoneUserId] = useState<string | null>(null);
     const [phoneValue, setPhoneValue] = useState('');
     const phoneInputRef = useRef<HTMLInputElement>(null);
     const { toast } = useToast();
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    
+    const filteredUsers = useMemo(() => {
+        if (!searchTerm) return users;
+        return users.filter(user => user.displayName.toLowerCase().includes(searchTerm.toLowerCase()));
+    }, [users, searchTerm]);
 
     useEffect(() => {
         if (editingPhoneUserId && phoneInputRef.current) {
@@ -115,8 +122,18 @@ export function UserManagement() {
 
     return (
         <>
+          {showSearch && (
+              <div className="flex justify-end mb-4">
+                  <CompactSearchInput 
+                    searchTerm={searchTerm} 
+                    setSearchTerm={setSearchTerm} 
+                    placeholder="Search users..." 
+                    autoFocus={true} 
+                  />
+              </div>
+          )}
           <div className="grid grid-cols-1 gap-6">
-            {users.map(user => {
+            {filteredUsers.map(user => {
               const isCurrentUser = user.userId === realUser.userId;
               return (
                 <Card key={user.userId} className="bg-transparent">
@@ -128,26 +145,16 @@ export function UserManagement() {
                             <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        {isCurrentUser && !user.googleCalendarLinked ? (
-                                            <Button variant="ghost" className="relative h-12 w-12 p-0 rounded-full" onClick={(e) => { e.stopPropagation(); linkGoogleCalendar(user.userId); }}>
-                                                <Avatar className="h-12 w-12">
-                                                    <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
-                                                    <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                                                </Avatar>
-                                                <span className="absolute bottom-0 right-0 block h-3.5 w-3.5 rounded-full bg-gray-400 ring-2 ring-card" />
-                                            </Button>
-                                        ) : (
-                                            <div className="relative">
-                                                <Avatar className="h-12 w-12">
-                                                    <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
-                                                    <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                                                </Avatar>
-                                                <span className={cn(
-                                                    "absolute bottom-0 right-0 block h-3.5 w-3.5 rounded-full ring-2 ring-card",
-                                                    user.googleCalendarLinked ? "bg-green-500" : "bg-gray-400"
-                                                )} />
-                                            </div>
-                                        )}
+                                        <div className="relative">
+                                            <Avatar className="h-12 w-12">
+                                                <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
+                                                <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                            </Avatar>
+                                            <span className={cn(
+                                                "absolute bottom-0 right-0 block h-3.5 w-3.5 rounded-full ring-2 ring-card",
+                                                user.googleCalendarLinked ? "bg-green-500" : "bg-gray-400"
+                                            )} />
+                                        </div>
                                     </TooltipTrigger>
                                     <TooltipContent>
                                         <p>Google Calendar: {user.googleCalendarLinked ? 'Connected' : isCurrentUser ? 'Click to connect' : 'Not Connected'}</p>

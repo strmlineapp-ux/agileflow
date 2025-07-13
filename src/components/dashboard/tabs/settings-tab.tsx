@@ -11,23 +11,25 @@ export function SettingsContent({ tab: pageConfig, isSingleTabPage }: { tab: App
   return (
     <div className="flex flex-col gap-6">
       {isSingleTabPage && (
-        <div className="flex items-center gap-3">
-          <GoogleSymbol name={pageConfig.icon} className="text-6xl" weight={100} />
-          <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <h1 className="font-headline text-3xl font-thin">{pageConfig.name}</h1>
-                </TooltipTrigger>
-                {pageConfig.description && (
-                  <TooltipContent>
-                    <p className="max-w-xs">{pageConfig.description}</p>
-                  </TooltipContent>
-                )}
-              </Tooltip>
-            </TooltipProvider>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <GoogleSymbol name={pageConfig.icon} className="text-6xl" weight={100} />
+            <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <h1 className="font-headline text-3xl font-thin">{pageConfig.name}</h1>
+                  </TooltipTrigger>
+                  {pageConfig.description && (
+                    <TooltipContent>
+                      <p className="max-w-xs">{pageConfig.description}</p>
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
+          </div>
         </div>
       )}
-      <UserManagement />
+      <UserManagement showSearch={isSingleTabPage} />
     </div>
   );
 }
