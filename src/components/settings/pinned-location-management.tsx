@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo, useRef, useEffect } from 'react';
@@ -16,6 +15,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { LocationCheckManagerManagement } from '../teams/location-check-manager-management';
 
 export function PinnedLocationManagement({ team, tab }: { team: Team, tab: AppTab }) {
+  if (!team) {
+    return null;
+  }
+  
   const { viewAsUser, locations, updateTeam, updateAppTab } = useUser();
   const { toast } = useToast();
   
