@@ -525,15 +525,6 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, ...props }: 
         }
     }, [isIconPopoverOpen]);
 
-    const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-      // We only handle Enter and Escape here. Clicks are handled by the effect.
-      if (e.key === 'Enter') {
-          handleSaveName();
-      } else if (e.key === 'Escape') {
-          setIsEditingName(false);
-      }
-    };
-
     const handlePathClick = (e: React.MouseEvent) => {
       e.stopPropagation();
       if (!isPinned && canManage) {
@@ -641,10 +632,10 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, ...props }: 
                                 </PopoverContent>
                             </Popover>
                         </div>
-                        <div className="flex-1 min-w-0" onPointerDown={(e) => { if(canManage) e.stopPropagation() }}>
+                        <div className="flex-1 min-w-0" onPointerDown={(e) => { if(canManage) e.stopPropagation(); }}>
                             <div className="flex items-center gap-1">
                                 {isEditingName ? (
-                                    <Input ref={nameInputRef} defaultValue={page.name} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-base font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"/>
+                                    <Input ref={nameInputRef} defaultValue={page.name} className="h-auto p-0 font-headline text-base font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"/>
                                 ) : (
                                     <CardTitle 
                                       className={cn("font-headline text-base break-words font-thin", canManage && "cursor-pointer")}
@@ -679,7 +670,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, ...props }: 
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10 p-0" onClick={() => onDelete(page.id)}>
+                            <Button variant="ghost" size="icon" className="text-destructive p-0" onClick={() => onDelete(page.id)}>
                               <GoogleSymbol name="delete" className="text-4xl" weight={100} />
                               <span className="sr-only">Delete Page</span>
                             </Button>
@@ -805,7 +796,7 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
             name: newName,
             icon: 'web',
             color: '#64748B',
-            path: `/dashboard/${newName.toLowerCase().replace(/\s/g, '-')}`,
+            path: `/dashboard/${newName.toLowerCase().replace(/\s/g, '-')}-${crypto.randomUUID().slice(0,4)}`,
             isDynamic: false,
             associatedTabs: [],
             access: { users: [], teams: [] }
