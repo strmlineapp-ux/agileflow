@@ -224,9 +224,6 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
                     </CardHeader>
                     <CardContent className="flex-grow">
                         <UserDropZone id="admin-list" users={filteredAdminUsers}>
-                            {filteredAdminUsers.length === 0 && (
-                                <div className="text-center text-sm text-muted-foreground p-4 border-2 border-dashed rounded-lg">Drag users here to make them admins.</div>
-                            )}
                         </UserDropZone>
                     </CardContent>
                   </Card>

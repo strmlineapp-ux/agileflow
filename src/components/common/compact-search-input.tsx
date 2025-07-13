@@ -39,7 +39,7 @@ export function CompactSearchInput({
   }, [autoFocus, initialFocusDone, inputRef]);
   
   useEffect(() => {
-    if (isSearching && inputRef.current) {
+    if (isSearching) {
         setTimeout(() => inputRef.current?.focus(), 50);
     }
   }, [isSearching, inputRef]);
@@ -54,7 +54,7 @@ export function CompactSearchInput({
           placeholder={placeholder}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          onBlur={() => { if (!searchTerm && !autoFocus) setIsSearching(false); }}
+          onBlur={() => { if (!searchTerm) setIsSearching(false); }}
           className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 font-thin"
         />
       </div>
