@@ -243,6 +243,17 @@ This pattern describes the user interface for assigning and unassigning badges t
         - **Unassigned Badges**: Appear with a dashed border and a transparent background, indicating an "available" but unselected state.
 - **Application**: Used on the **Team Members** tab within each team's management page.
 
+---
+### 16. Compact Preferences Row
+This pattern provides a dense, icon-driven interface for managing a series of user-specific settings. It is designed to be placed within a user's card or profile view, offering quick access without taking up significant vertical space.
+
+- **Appearance**: A horizontal row of icon-only buttons. Each button represents a single user preference (e.g., Theme, Time Format).
+- **Interaction**:
+    - **Tooltip on Hover**: Hovering over any icon button **must** display a `<Tooltip>` that clearly describes the setting and its current value (e.g., "Theme: Dark" or "Easy Booking: On"). This is critical for usability as the icons alone do not convey the current state.
+    - **Popover on Click**: Clicking an icon button opens a compact `<Popover>` containing the options for that setting.
+    - **Instant Application**: Selecting an option within the popover immediately applies the change and closes the popover. There is no separate "Save" button.
+- **Application**: Used on the **Account Settings** page to manage the current user's theme, primary color, default calendar view, time format, and other boolean preferences.
+
 ## Visual & Theming Elements
 
 ### Typography
@@ -308,3 +319,4 @@ This is the single source of truth for indicating user interaction state across 
 -   **Badges in Assorted View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
 
     
+
