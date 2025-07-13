@@ -15,7 +15,7 @@ const dynamicPages: AppPage[] = [
         path: '/dashboard/service-delivery',
         isDynamic: false,
         associatedTabs: ['tab-calendars', 'tab-service-teams'],
-        access: { users: [], teams: [] } // Only visible to admins
+        access: { users: ['2'], teams: [] } // Only visible to specific users or admins
     },
     // Example of a dynamic page that an admin could create.
     {
