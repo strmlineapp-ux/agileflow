@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useEffect, useState, useMemo, useRef, useCallback, useLayoutEffect } from 'react';
@@ -153,7 +152,7 @@ export const WeekView = React.memo(({ date, containerRef, zoomLevel, onEasyBooki
     const gridColsClass = showWeekends ? 'grid-cols-[auto,1fr,1fr,1fr,1fr,1fr,1fr,1fr]' : 'grid-cols-[auto,1fr,1fr,1fr,1fr,1fr]';
 
     return (
-        <Card className="border-0">
+        <Card className="h-full flex flex-col">
             <CardHeader className="p-0 border-b sticky top-0 bg-card z-10">
                 <div className={cn("grid", gridColsClass)}>
                     <div className="w-20"></div> {/* Timeline spacer */}
