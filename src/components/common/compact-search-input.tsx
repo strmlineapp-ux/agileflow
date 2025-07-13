@@ -32,18 +32,24 @@ export function CompactSearchInput({
   const [initialFocusDone, setInitialFocusDone] = useState(false);
 
   useEffect(() => {
-    if (autoFocus && !initialFocusDone) {
-      setIsSearching(true);
-      setInitialFocusDone(true);
+    if (isSearching && autoFocus && !initialFocusDone) {
+      setTimeout(() => {
+        inputRef.current?.focus();
+        setInitialFocusDone(true);
+      }, 50);
     }
-  }, [autoFocus, initialFocusDone, inputRef]);
-  
-  useEffect(() => {
-    if (isSearching) {
-        setTimeout(() => inputRef.current?.focus(), 50);
-    }
-  }, [isSearching, inputRef]);
+  }, [isSearching, autoFocus, initialFocusDone, inputRef]);
 
+  const handleIconClick = () => {
+    setIsSearching(true);
+    setTimeout(() => inputRef.current?.focus(), 50);
+  };
+
+  const handleBlur = () => {
+    if (!searchTerm) {
+      setIsSearching(false);
+    }
+  };
 
   if (isSearching) {
     return (
@@ -54,7 +60,7 @@ export function CompactSearchInput({
           placeholder={placeholder}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          onBlur={() => { if (!searchTerm) setIsSearching(false); }}
+          onBlur={handleBlur}
           className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 font-thin"
         />
       </div>
@@ -62,7 +68,7 @@ export function CompactSearchInput({
   }
 
   const searchButton = (
-    <Button variant="ghost" size="icon" onClick={() => setIsSearching(true)} className="text-muted-foreground">
+    <Button variant="ghost" size="icon" onClick={handleIconClick} className="text-muted-foreground">
       <GoogleSymbol name="search" weight={100} />
     </Button>
   );

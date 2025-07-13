@@ -81,8 +81,7 @@ export function Sidebar() {
           {orderedNavItems.map((item) => {
               if (!item) return null;
               const isNotifications = item.id === 'page-notifications';
-              const isActive = pathname.startsWith(item.path) && 
-                (pathname === item.path || pathname.charAt(item.path.length) === '/');
+              const isActive = item.path === pathname || (pathname.startsWith(item.path) && pathname.charAt(item.path.length) === '/');
 
 
               return (

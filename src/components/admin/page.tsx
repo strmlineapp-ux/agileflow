@@ -526,12 +526,12 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, ...props }: 
     }, [isIconPopoverOpen]);
 
     const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            handleSaveName();
-        } else if (e.key === 'Escape') {
-            setIsEditingName(false);
-        }
+      // We only handle Enter and Escape here. Clicks are handled by the effect.
+      if (e.key === 'Enter') {
+          handleSaveName();
+      } else if (e.key === 'Escape') {
+          setIsEditingName(false);
+      }
     };
 
     const handlePathClick = (e: React.MouseEvent) => {
@@ -1163,7 +1163,7 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
                 </div>
                 <SortableContext items={tabIds} strategy={verticalListSortingStrategy}>
                     <div className="space-y-4">
-                        {filteredTabs.length > 0 ? (
+                        {filteredTabs.length > 0 &&
                             filteredTabs.map((appTab) => (
                                 <SortableTabCard
                                     key={appTab.id}
@@ -1172,9 +1172,7 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
                                     onUpdate={handleUpdateTab}
                                 />
                             ))
-                        ) : (
-                            <></>
-                        )}
+                        }
                     </div>
                 </SortableContext>
             </div>
