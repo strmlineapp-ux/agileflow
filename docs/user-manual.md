@@ -70,13 +70,15 @@ The **Notifications** page keeps you informed. This page has no visible header; 
 
 ## 7. Settings & Preferences
 
-Access your preferences by clicking your avatar in the bottom-left corner of the sidebar and selecting **"Account Settings"**. This page has no visible header, and the user search bar is automatically focused to make finding users easier.
+Access your preferences by clicking your avatar in the bottom-left corner of the sidebar and selecting **"Account Settings"**. This page has no visible header, and the user search bar is automatically focused to make finding other users easier.
 
-- **Change Colour Scheme**: Choose between `light` and `dark` themes. You can also select a custom primary color to override the theme's default.
-- **Set Default Calendar View**: Select which calendar view you want to see when you log in.
-- **Set Time Format**: Choose between 12-hour and 24-hour time display.
-- **Enable Easy Booking**: Toggle the quick-create event feature.
-- **Edit Contact Info**: Click the arrow on your user row to expand it. You can edit your own phone number.
+Your user preferences appear in a compact, icon-driven row on your user card. Hover over each icon to see its function.
+
+- **Set Custom Primary Colour**: Click the palette icon to open a color picker and choose a custom color that overrides your theme's default.
+- **Change Colour Scheme**: Click the sun/moon icon to instantly toggle between `light` and `dark` themes.
+- **Set Default Calendar View**: Click the calendar icon to open a compact popover menu and select which calendar view you want to see when you log in.
+- **Set Time Format**: Click the clock icon to choose between 12-hour and 24-hour time display from a popover menu.
+- **Enable Easy Booking**: Click the toggle icon to turn on or off the ability to quickly create events by clicking on empty calendar slots.
 - **Link Google Calendar**: To connect your Google Calendar, hover over the status dot on your avatar in the sidebar user menu. If disconnected, a tooltip will prompt you to click to connect. A simulated Google sign-in will appear and, once complete, will enable features like creating Google Meet links for your events.
 
 ## 8. Management Pages (Admin & Manager Roles)
