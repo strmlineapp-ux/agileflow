@@ -12,6 +12,7 @@ import { useUserSession, useUserData } from '@/context/user-context';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { Badge } from '../ui/badge';
 import { hasAccess } from '@/lib/permissions';
+import { Button } from '../ui/button';
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -109,27 +110,38 @@ export function Sidebar() {
       </nav>
       <nav className="mt-auto flex flex-col items-center gap-4 px-2 py-4">
          <DropdownMenu>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                    <DropdownMenuTrigger asChild>
-                        <button className="flex h-9 w-9 items-center justify-center rounded-full md:h-8 md:w-8">
-                            <div className="relative">
-                                <Avatar className="h-8 w-8">
-                                    <AvatarImage src={viewAsUser.avatarUrl} alt={viewAsUser.displayName} data-ai-hint="user avatar" />
-                                    <AvatarFallback>{viewAsUser.displayName.slice(0,2).toUpperCase()}</AvatarFallback>
-                                </Avatar>
-                                <span className={cn(
-                                    "absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-background",
-                                    viewAsUser.googleCalendarLinked ? "bg-green-500" : "bg-gray-400"
-                                )} />
-                            </div>
-                        </button>
-                    </DropdownMenuTrigger>
-                </TooltipTrigger>
-                <TooltipContent side="right">User Account</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <DropdownMenuTrigger asChild>
+                <button className="flex h-9 w-9 items-center justify-center rounded-full md:h-8 md:w-8">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="relative">
+                            <Avatar className="h-8 w-8">
+                                <AvatarImage src={viewAsUser.avatarUrl} alt={viewAsUser.displayName} data-ai-hint="user avatar" />
+                                <AvatarFallback>{viewAsUser.displayName.slice(0,2).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                            <span 
+                              className={cn(
+                                "absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-background",
+                                viewAsUser.googleCalendarLinked ? "bg-green-500" : "bg-gray-400",
+                                realUser.userId === viewAsUser.userId && !viewAsUser.googleCalendarLinked && "cursor-pointer"
+                              )}
+                              onClick={(e) => {
+                                if (realUser.userId === viewAsUser.userId && !viewAsUser.googleCalendarLinked) {
+                                  e.stopPropagation();
+                                  linkGoogleCalendar(realUser.userId);
+                                }
+                              }}
+                            />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="right">
+                          <p>Google Calendar: {viewAsUser.googleCalendarLinked ? 'Connected' : (realUser.userId === viewAsUser.userId ? 'Click to connect' : 'Not Connected')}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                </button>
+            </DropdownMenuTrigger>
             <DropdownMenuContent side="right" align="end" className="w-64">
                 <DropdownMenuLabel className="font-thin">
                     <div className="flex flex-col space-y-1">
@@ -174,13 +186,6 @@ export function Sidebar() {
                         <span>Account Settings</span>
                     </Link>
                 </DropdownMenuItem>
-                
-                {realUser.userId === viewAsUser.userId && (
-                  <DropdownMenuItem onSelect={() => linkGoogleCalendar(realUser.userId)} disabled={realUser.googleCalendarLinked} className="font-thin">
-                    <GoogleSymbol name={realUser.googleCalendarLinked ? "link" : "link_off"} className="mr-2 text-lg" weight={100} />
-                    <span>{realUser.googleCalendarLinked ? "Calendar Linked" : "Link Google Calendar"}</span>
-                  </DropdownMenuItem>
-                )}
 
                 {realUser.isAdmin && (
                   <DropdownMenuSub>
