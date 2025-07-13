@@ -480,11 +480,19 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
   );
 }
 
-function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, ...props }: { page: AppPage; onUpdate: (id: string, data: Partial<AppPage>) => void; onDelete: (id: string) => void; isPinned?: boolean; isDragging?: boolean; [key:string]: any; }) {
+function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingName, setIsEditingName, ...props }: { 
+    page: AppPage; 
+    onUpdate: (id: string, data: Partial<AppPage>) => void; 
+    onDelete: (id: string) => void; 
+    isPinned?: boolean; 
+    isDragging?: boolean;
+    isEditingName: boolean;
+    setIsEditingName: (isEditing: boolean) => void;
+    [key:string]: any; 
+}) {
     const { viewAsUser } = useUser();
     const canManage = viewAsUser.isAdmin;
     const [isExpanded, setIsExpanded] = useState(false);
-    const [isEditingName, setIsEditingName] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
@@ -500,7 +508,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, ...props }: 
         if (newName && newName.trim() && newName !== page.name) {
             onUpdate(page.id, { name: newName });
         }
-    }, [page.id, page.name, onUpdate]);
+    }, [page.id, page.name, onUpdate, setIsEditingName]);
 
     useEffect(() => {
         if (!isEditingName) return;
@@ -545,7 +553,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, ...props }: 
                           <Button
                               variant="ghost"
                               size="icon"
-                              className="absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                              className="absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10"
                               onPointerDown={(e) => {
                                   e.stopPropagation();
                                   setIsDeleteDialogOpen(true);
@@ -564,7 +572,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, ...props }: 
               {...(!isPinned && props.dragHandleProps)}
             >
                 <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-2 flex-1 min-w-0" onPointerDown={(e) => e.stopPropagation()}>
+                    <div className="flex items-center gap-2 flex-1 min-w-0" onPointerDown={(e) => { if(canManage) e.stopPropagation(); }}>
                         <div className="relative">
                             <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                                 <TooltipProvider>
@@ -632,10 +640,18 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, ...props }: 
                                 </PopoverContent>
                             </Popover>
                         </div>
-                        <div className="flex-1 min-w-0" onPointerDown={(e) => { if(canManage) e.stopPropagation(); }}>
+                        <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1">
                                 {isEditingName ? (
-                                    <Input ref={nameInputRef} defaultValue={page.name} className="h-auto p-0 font-headline text-base font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"/>
+                                    <Input 
+                                      ref={nameInputRef} 
+                                      defaultValue={page.name} 
+                                      className="h-auto p-0 font-headline text-base font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter') handleSaveName();
+                                        if (e.key === 'Escape') setIsEditingName(false);
+                                      }}
+                                    />
                                 ) : (
                                     <CardTitle 
                                       className={cn("font-headline text-base break-words font-thin", canManage && "cursor-pointer")}
@@ -670,7 +686,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, ...props }: 
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" className="text-destructive p-0" onClick={() => onDelete(page.id)}>
+                            <Button variant="ghost" size="icon" className="text-destructive p-0 hover:bg-transparent" onClick={() => onDelete(page.id)}>
                               <GoogleSymbol name="delete" className="text-4xl" weight={100} />
                               <span className="sr-only">Delete Page</span>
                             </Button>
@@ -692,6 +708,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, ...props }: 
 }
 
 function SortablePageCard({ id, page, onUpdate, onDelete, isPinned }: { id: string, page: AppPage, onUpdate: (id: string, data: Partial<AppPage>) => void; onDelete: (id: string) => void; isPinned?: boolean }) {
+    const [isEditingName, setIsEditingName] = useState(false);
     const {
         attributes,
         listeners,
@@ -699,7 +716,7 @@ function SortablePageCard({ id, page, onUpdate, onDelete, isPinned }: { id: stri
         transform,
         transition,
         isDragging,
-    } = useSortable({id: id, disabled: isPinned});
+    } = useSortable({id: id, disabled: isPinned || isEditingName });
 
     const style = {
         transform: CSS.Transform.toString(transform),
@@ -722,6 +739,8 @@ function SortablePageCard({ id, page, onUpdate, onDelete, isPinned }: { id: stri
                     dragHandleProps={!isPinned ? listeners : undefined}
                     {...attributes}
                     isDragging={isDragging}
+                    isEditingName={isEditingName}
+                    setIsEditingName={setIsEditingName}
                  />
             </div>
         </div>
@@ -889,7 +908,7 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
                     </div>
                 </SortableContext>
                 <DragOverlay>
-                    {activePage ? <PageCard page={activePage} onUpdate={() => {}} onDelete={() => {}} isPinned={pinnedIds.has(activePage.id)} /> : null}
+                    {activePage ? <PageCard page={activePage} onUpdate={() => {}} onDelete={() => {}} isPinned={pinnedIds.has(activePage.id)} isEditingName={false} setIsEditingName={() => {}} /> : null}
                 </DragOverlay>
             </div>
         </DndContext>
