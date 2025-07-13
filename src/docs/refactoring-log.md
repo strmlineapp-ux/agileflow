@@ -70,28 +70,21 @@ The fix involved restructuring the JSX to ensure the `<PopoverTrigger>` and `<Po
 The fix resolved the parsing error and restored the functionality of the "Pages" management tab. This reinforces the importance of adhering to the component structure expected by UI libraries like Radix.
 
 ---
-### 2024-07-27: **Architecture Migration: `react-beautiful-dnd` to `dnd-kit`**
+### 2024-07-27: **Architecture Migration to `@dnd-kit`**
 
 **Status**: ✅ Completed
 
 **Problem**:
-The `react-beautiful-dnd` library, while powerful, proved to be fundamentally incompatible with the application's responsive, multi-row grid layouts. Despite numerous attempts to stabilize the layout (fixing container sizes, using placeholders, correcting CSS), the library was unable to correctly calculate the geometry of draggable items and drop zones. This resulted in persistent, critical bugs where entire rows of cards would move as a single block, and cards could be dragged outside their intended container. The root cause was an intrinsic limitation in the library's ability to handle complex, responsive flexbox and grid layouts that shift during a drag operation.
+The previous drag-and-drop library was unable to reliably handle the application's responsive, multi-row grid layouts, leading to critical bugs where card rows would move incorrectly and items could be dragged outside their intended containers. This was due to an intrinsic limitation in the library's ability to calculate geometry in complex, responsive flexbox and grid layouts.
 
 **Solution**:
-The decision was made to perform a full migration to a more modern and robust drag-and-drop library: `@dnd-kit`.
+A full migration to the more modern and robust **`@dnd-kit`** library was executed.
 
-1.  **Library Replacement**: `react-beautiful-dnd` was completely removed from the project dependencies and replaced with `@dnd-kit/core` and `@dnd-kit/sortable`.
+1.  **Library Replacement**: The old library was completely removed from project dependencies and replaced with `@dnd-kit/core` and `@dnd-kit/sortable`.
 
-2.  **Component Refactoring**: All components that previously used `react-beautiful-dnd` were refactored to use the `dnd-kit` architecture. This included:
-    *   `/src/components/admin/page.tsx` (Pages Management)
-    *   `/src/components/calendar/calendar-management.tsx`
-    *   `/src/components/teams/badge-management.tsx`
-    *   `/src/components/teams/team-members-view.tsx`
-    *   `/src/components/service-delivery/team-management.tsx`
+2.  **Component Refactoring**: All components using drag-and-drop were refactored to use `dnd-kit`'s modern, hooks-based API (`useSortable`, `useDraggable`, `useDroppable`). This provided finer-grained control and a more stable implementation.
 
-3.  **Modern Hooks-based Approach**: The implementation was updated to use `dnd-kit`'s modern, hooks-based API (`useSortable`, `useDraggable`, `useDroppable`). This provided finer-grained control and eliminated the need for previous workarounds like `StrictModeDroppable` wrappers.
-
-4.  **Sensors for Better Input**: `dnd-kit`'s sensor system (`PointerSensor`, `KeyboardSensor`) was implemented to provide a better user experience for both mouse and keyboard-based interactions.
+3.  **Sensors for Better Input**: `dnd-kit`'s sensor system (`PointerSensor`, `KeyboardSensor`) was implemented to provide a better user experience for both mouse and keyboard-based interactions.
 
 **Outcome**:
-The migration to `dnd-kit` was a complete success. It immediately resolved all of the persistent layout and positioning bugs. The drag-and-drop functionality is now smooth, predictable, and works flawlessly across responsive, multi-row grids. The resulting code is also cleaner, more modern, and more maintainable, aligning better with current React best practices. This was a critical architectural change that unblocked a core UX feature of the application.
+The migration to `@dnd-kit` was a complete success. It immediately resolved all of the persistent layout and positioning bugs. The drag-and-drop functionality is now smooth, predictable, and works flawlessly across all responsive management pages. The resulting code is cleaner, more modern, and more maintainable, aligning better with current React best practices.
