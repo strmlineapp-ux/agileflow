@@ -72,6 +72,8 @@ The **Notifications** page keeps you informed. This page has no visible header; 
 
 Access your preferences by clicking your avatar in the bottom-left corner of the sidebar and selecting **"Account Settings"**. This page has no visible header; the user search bar is automatically focused to make finding other users easier.
 
+The settings page features your user card (or the user you are "viewing as") prominently at the top, followed by a search bar and a compact grid of all other users in the system.
+
 Your user preferences appear in a compact, icon-driven row on your user card. Hover over each icon to see its function.
 
 - **Set Custom Primary Colour**: Click the palette icon to open a color picker and choose a custom color that overrides your theme's default.
