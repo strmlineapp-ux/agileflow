@@ -70,7 +70,7 @@ The **Notifications** page keeps you informed. This page has no visible header; 
 
 ## 7. Settings & Preferences
 
-Access your preferences by clicking your avatar in the bottom-left corner of the sidebar and selecting **"Account Settings"**. This page has no visible header, and the user search bar is automatically focused to make finding other users easier.
+Access your preferences by clicking your avatar in the bottom-left corner of the sidebar and selecting **"Account Settings"**. This page has no visible header; the user search bar is automatically focused to make finding other users easier.
 
 Your user preferences appear in a compact, icon-driven row on your user card. Hover over each icon to see its function.
 
@@ -78,7 +78,7 @@ Your user preferences appear in a compact, icon-driven row on your user card. Ho
 - **Change Colour Scheme**: Click the sun/moon icon to instantly toggle between `light` and `dark` themes.
 - **Set Default Calendar View**: Click the calendar icon to open a compact popover menu and select which calendar view you want to see when you log in.
 - **Set Time Format**: Click the clock icon to choose between 12-hour and 24-hour time display from a popover menu.
-- **Enable Easy Booking**: Click the toggle icon to turn on or off the ability to quickly create events by clicking on empty calendar slots.
+- **Enable Easy Booking**: Click the toggle icon to turn on or off the ability to quickly create events by clicking on empty calendar slots. The current status (**On** or **Off**) is shown in the tooltip.
 - **Link Google Calendar**: To connect your Google Calendar, hover over the status dot on your avatar in the sidebar user menu. If disconnected, a tooltip will prompt you to click to connect. A simulated Google sign-in will appear and, once complete, will enable features like creating Google Meet links for your events.
 
 ## 8. Management Pages (Admin & Manager Roles)
@@ -86,8 +86,8 @@ Your user preferences appear in a compact, icon-driven row on your user card. Ho
 ### 8.1 Admin (`/dashboard/admin`)
 This is the central control panel for configuring the application itself. It does not have a page header.
 - **Admin Management**: Manage system administrators by dragging and dropping users between the "Admins" and "Users" lists. Granting or revoking admin status requires a 2-Factor Authentication code for security. For safety, the system prevents you from removing the last system administrator. The "Search users" input is automatically focused for convenience.
-- **Pages**: Configure the application's navigation. Create new pages, define their URL path, and control who has access to them (by user or team). You can intuitively reorder pages by dragging and dropping them in the grid. Key system pages are pinned and cannot be moved. You can also instantly duplicate any page by dragging it onto the "Add New Page" (+) button. The search box is automatically focused when you switch to this tab.
-- **Tabs**: Manage the reusable content blocks (tabs) in a simple list view. The order of this list can be changed via drag-and-drop and affects the order in which tabs appear in popovers, like the "Manage Tabs" control on the Pages screen. The search bar is automatically focused when you switch to this tab.
+- **Pages**: Configure the application's navigation. Create new pages, define their URL path, and control who has access to them (by user or team). You can intuitively reorder pages by dragging and dropping them in the grid. Key system pages are pinned and cannot be moved. You can also instantly duplicate any page by dragging it onto the "Add New Page" (+) button. A duplicated page is a completely independent copy with its own unique URL path.
+- **Tabs**: Manage the reusable content blocks (tabs) in a simple list view. The order of this list can be changed via drag-and-drop and affects the default order in which tabs appear in popovers, like the "Manage Tabs" control on the Pages screen. The default order is: `Calendars`, `Teams`, `Members`, `Badges`, `Locations`, `Workstations`, `Templates`, `Overview`, `Calendar`, `Tasks`, `Admin Management`, `Settings`, `Pages`, and `Tabs`.
 
 ### 8.2 Service Delivery Management (`/dashboard/service-delivery`)
 This is the central hub for global application settings.

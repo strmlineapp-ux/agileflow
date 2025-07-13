@@ -21,16 +21,17 @@ The application favors a compact, information-dense layout. Card components are 
 ### 2. Inline Editor
 This pattern allows for seamless, direct text editing within the main application layout, avoiding disruptive dialog boxes or popovers for simple text changes.
 
-- **Trigger:** Clicking directly on a text element (e.g., a section title, a badge name, a phone number).
+- **Trigger:** Clicking directly on a text element (e.g., a section title, a badge name).
 - **Interaction:**
     - The text element transforms into an input field.
     - The input field must be styled to perfectly match the font, size, weight, and color of the original text element it replaces (e.g., using the `font-headline font-thin` classes).
     - **Crucially, the input must have a transparent background and no borders or box-shadow**, ensuring it blends seamlessly into the UI.
 - **Behavior:**
-    - Typing modifies the text value.
+    - Typing modifies the text value. Pressing the spacebar correctly adds spaces for multi-word names.
     - Pressing 'Enter' saves the changes and reverts the input back to a standard text element.
     - Pressing 'Escape' cancels the edit without saving.
     - **A `useEffect` hook must be implemented to add a 'mousedown' event listener to the document. This listener should check if the click occurred outside the input field's ref and, if so, trigger the save function. This ensures that clicking anywhere else on the page correctly dismisses and saves the editor.**
+- **Conflict Prevention**: If the inline editor is inside a draggable component (like a `PageCard`), its container **must** have an `onPointerDown={(e) => e.stopPropagation()}` handler. This is critical to prevent `@dnd-kit`'s drag listener from activating when the input is clicked, which would otherwise interfere with typing.
 - **Application:** Used for editing entity names, labels, and other simple text fields directly in the UI.
 
 ---
@@ -43,8 +44,9 @@ This pattern provides a clean, minimal interface for search functionality, espec
   - Clicking the button reveals the input field.
   - **Crucially, the input must have a transparent background and no borders or box-shadow**, ensuring it blends seamlessly into the UI.
 - **Behavior:**
-  - The input automatically gains focus as soon as it becomes visible. This is achieved using a `useEffect` hook with a `setTimeout` to ensure the element is rendered and ready for focus.
-  - The input hides again if the user clicks away (`onBlur`) and the field is empty, unless `autoFocus` is true.
+  - **Automatic Focus**: If configured with `autoFocus`, the input gains focus as soon as its parent tab becomes visible. This is a one-time action per tab load.
+  - **Manual Focus**: Clicking the search icon will always expand the input and focus it.
+  - **Collapse on Blur**: The input always collapses back to its icon-only state when it loses focus (`onBlur`) and the field is empty.
 - **Application:** Used for filtering lists of icons, users, or other filterable content within popovers and management pages like the Admin screen.
 
 ---
@@ -141,11 +143,12 @@ This is the application's perfected, gold-standard pattern for managing a collec
     -   **Standard & Duplication Zones (Reordering, Moving, Duplicating):** The drop area is highlighted with a `1px` inset, **colorless** ring using the standard border color (`ring-1 ring-border ring-inset`). This is the universal style for all non-destructive drop actions.
     -   **Destructive Zones (Deleting):** The drop area is highlighted with a `1px` ring in the destructive theme color (`ring-1 ring-destructive`).
 -   **Contextual Hover Actions**:
-    - **Item-level**: To maintain a clean UI, action icons like "Remove User" or "Delete Badge" must appear only when hovering over their specific context. This is achieved by adding a `group` class to the *individual item's container*. The icon button inside is then styled with `opacity-0 group-hover:opacity-100`. To create a "badge-like" affordance in the corner of a card, the button can be positioned absolutely (e.g., `-top-2 -right-2`).
+    - **Item-level**: To maintain a clean UI, action icons like "Remove User" or "Delete Badge" must appear only when hovering over their specific context. This is achieved by adding a `group` class to the *individual item's container*. The icon button inside is then styled with `opacity-0 group-hover:opacity-100`.
+    - **Delete Icon**: The standard icon for deleting an item (like a Page or Team) is a circular `cancel` icon. To create this affordance in the corner of a card, the button can be positioned absolutely (e.g., `-top-2 -right-2`).
     - **Card-level**: Deleting an entire card (like a Team or Collection) is a high-impact action. To prevent accidental clicks, this functionality should be placed within a `<DropdownMenu>` in the card's header, not triggered by a direct hover icon.
 -   **Drag-to-Duplicate**:
     -   **Interaction**: A designated "Add New" icon (`<Button>`) acts as a drop zone, implemented using the `useDroppable` hook from `dnd-kit`. While a card is being dragged, this zone becomes highlighted to indicate it can accept a drop.
-    -   **Behavior**: Dropping any card (pinned or not, from the main board or the shared panel) onto this zone creates a deep, independent copy of the original. The new card is given a unique ID, a modified name (e.g., with `(Copy)`), and is placed immediately after the original in the list. Its ownership is assigned to the current user's context, and its member list is reset to be empty.
+    -   **Behavior**: Dropping any card (pinned or not, from the main board or the shared panel) onto this zone creates a deep, independent copy of the original. The new card is given a unique ID, a modified name (e.g., with `(Copy)`), and a unique URL path. It is placed immediately after the original in the list. Its ownership is assigned to the current user's context, and its member list is reset to be empty.
 -   **Drag-to-Assign**: This pattern allows sub-items (like **Users** or **Badges**) to be moved between different parent cards.
     - **Interaction**: A user can drag an item (e.g., a User) from one card's list.
     - **Behavior**: As the item is dragged over another card, that card's drop zone (using `useDroppable`) becomes highlighted. Dropping the item assigns it to the new card's collection. The original item may be removed or remain, depending on the context. This is handled by the `onDragEnd` logic.
@@ -160,13 +163,14 @@ This is a minimalist dialog for focused actions, such as entering a code or a sh
 - **Component**: Uses the standard `<Dialog>` component, which allows the user to dismiss the action by clicking the overlay or pressing 'Escape'.
 - **Appearance**:
     - No footer buttons ("Cancel", "Save").
-    - The primary action (e.g., Save, Verify, Delete) is represented by a single, icon-only button (e.g., `<GoogleSymbol name="check" />`) positioned in the top-right corner of the dialog content.
+    - **Standard Action**: The primary action (e.g., Save, Verify) is represented by a single, icon-only button (e.g., `<GoogleSymbol name="check" />`) positioned in the top-right corner.
+    - **Destructive Action**: For low-risk deletions, the primary action button is a large `delete` icon styled with the destructive color on hover (`text-destructive hover:bg-transparent`). This creates a clear, consistent visual language for deletion.
     - The content is focused and minimal, often using other compact patterns like "Text-based Inputs" for a clean interface.
 - **Behavior**:
-    - Clicking the action icon in the corner performs the primary action (e.g., saves or verifies the input).
+    - Clicking the action icon in the corner performs the primary action.
     - Clicking the overlay dismisses the dialog without performing the action.
     - **When a dialog is triggered from a draggable element, its `<DialogContent>` must capture pointer events using `onPointerDownCapture={(e) => e.stopPropagation()}`. This prevents a click inside the dialog from being interpreted as a drag action on the underlying card.**
-- **Application**: Used for Two-Factor Authentication, quick edits, simple forms, and for confirming lower-risk destructive actions, such as deleting a **Page**, a **Team**, or an un-shared **Badge Collection**.
+- **Application**: Used for Two-Factor Authentication, quick edits, and for confirming lower-risk destructive actions, such as deleting a **Page**, a **Team**, a **Workstation**, or an un-shared **Badge Collection**.
 
 ---
 
@@ -302,3 +306,4 @@ This is the single source of truth for indicating user interaction state across 
 -   **Badges in Assorted View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
 
     
+
