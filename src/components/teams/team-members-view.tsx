@@ -34,6 +34,11 @@ function SortableTeamMember({ member, team }: { member: User, team: Team }) {
 export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
     const { users, updateAppTab, updateTeam } = useUser();
     
+    // Safeguard to prevent rendering if team data is not available.
+    if (!team) {
+      return null;
+    }
+
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const titleInputRef = useRef<HTMLInputElement>(null);
     
