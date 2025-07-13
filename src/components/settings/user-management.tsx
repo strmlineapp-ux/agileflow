@@ -45,13 +45,14 @@ const SettingSelect = ({
             <Tooltip>
                 <TooltipTrigger asChild>
                     <PopoverTrigger asChild>
-                        <Button variant="ghost" className="flex items-center gap-1 text-muted-foreground hover:bg-transparent hover:text-foreground h-9 w-auto px-2">
+                        <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:bg-transparent hover:text-foreground">
                             <GoogleSymbol name={icon} className="text-xl" weight={100} />
-                            <span className="text-sm">{currentLabel}</span>
                         </Button>
                     </PopoverTrigger>
                 </TooltipTrigger>
-                <TooltipContent><p>{tooltip}</p></TooltipContent>
+                <TooltipContent>
+                  <p>{tooltip}: <span className="font-semibold">{currentLabel}</span></p>
+                </TooltipContent>
             </Tooltip>
         </TooltipProvider>
         <PopoverContent className="w-auto p-1" align="start">
@@ -59,7 +60,7 @@ const SettingSelect = ({
             <Button
                 key={option.value}
                 variant="ghost"
-                className="w-full justify-start h-8 px-2"
+                className="justify-start h-8 px-2"
                 onClick={() => {
                 onSave(option.value);
                 setIsOpen(false);
@@ -112,7 +113,7 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
               return (
                 <Card key={user.userId} className="bg-transparent">
                     <CardHeader>
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-start justify-between">
                             <div className="flex items-center gap-4">
                                 <TooltipProvider>
                                     <Tooltip>
@@ -140,7 +141,7 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
                                 </div>
                             </div>
                             {isCurrentUser && (
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1">
                                     <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
                                         <TooltipProvider>
                                             <Tooltip>
@@ -210,13 +211,12 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
                                     <TooltipProvider>
                                         <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <Button variant="ghost" onClick={() => updateUser(realUser.userId, { easyBooking: !realUser.easyBooking })} className="flex items-center gap-1 text-muted-foreground hover:bg-transparent hover:text-foreground h-9 px-2">
+                                            <Button variant="ghost" size="icon" onClick={() => updateUser(realUser.userId, { easyBooking: !realUser.easyBooking })} className="h-9 w-9 text-muted-foreground hover:bg-transparent hover:text-foreground">
                                                 <GoogleSymbol name={realUser.easyBooking ? 'toggle_on' : 'toggle_off'} className="text-2xl" weight={100} />
-                                                <span className="text-sm">Easy Booking</span>
                                             </Button>
                                         </TooltipTrigger>
                                         <TooltipContent>
-                                            <p>Click empty calendar slots to quickly create events.</p>
+                                            <p>Easy Booking: Click empty calendar slots to quickly create events.</p>
                                         </TooltipContent>
                                         </Tooltip>
                                     </TooltipProvider>
