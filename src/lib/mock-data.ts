@@ -7,6 +7,16 @@ import { corePages, coreTabs, globalBadges } from './core-data';
 // structure is defined in `core-data.ts`.
 
 const dynamicPages: AppPage[] = [
+    {
+        id: 'page-service-delivery',
+        name: 'Service Delivery',
+        icon: 'business_center',
+        color: '#A855F7',
+        path: '/dashboard/service-delivery',
+        isDynamic: false,
+        associatedTabs: ['tab-calendars', 'tab-service-teams'],
+        access: { users: [], teams: [] } // Only visible to admins
+    },
     // Example of a dynamic page that an admin could create.
     {
         id: 'page-team-management',
@@ -24,8 +34,8 @@ const dynamicPages: AppPage[] = [
 ];
 
 export const mockAppSettings: AppSettings = {
-  pages: [...corePages, ...dynamicPages],
-  tabs: [...coreTabs],
+  pages: [...dynamicPages],
+  tabs: [], // Core tabs are now in core-data.ts
   globalBadges: globalBadges,
 };
 

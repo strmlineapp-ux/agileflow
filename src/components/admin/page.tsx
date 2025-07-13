@@ -916,8 +916,6 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
 
     const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
     const [isEditingDescription, setIsEditingDescription] = useState(false);
-    
-    const isCoreTab = useMemo(() => coreTabs.some(t => t.id === tab.id), [tab.id]);
 
     const handleSaveName = useCallback(() => {
         const newName = nameInputRef.current?.value.trim();
@@ -1070,7 +1068,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                         ) : (
                             <h3 className="font-headline cursor-text text-base font-thin" onClick={() => setIsEditingName(true)}>{tab.name}</h3>
                         )}
-                        <Badge variant={isCoreTab ? "default" : "outline"}>{isCoreTab ? "Core" : tab.componentKey}</Badge>
+                        <Badge variant="outline">{tab.componentKey}</Badge>
                     </div>
                     {isEditingDescription ? (
                         <Textarea 

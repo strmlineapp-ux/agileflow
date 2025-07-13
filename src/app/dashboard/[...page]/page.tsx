@@ -91,7 +91,7 @@ export default function DynamicPage() {
                 }
             }
         }
-    }, [pageConfig]);
+    }, [pageConfig, appSettings.tabs, activeTab]);
 
     if (loading) {
         return <Skeleton className="h-full w-full" />;

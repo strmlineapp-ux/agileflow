@@ -81,7 +81,27 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [calendars, setCalendars] = useState<SharedCalendar[]>(initialCalendars);
   const [events, setEvents] = useState<Event[]>(initialEvents);
   const [locations, setLocations] = useState<BookableLocation[]>(initialLocations);
-  const [appSettings, setAppSettings] = useState<AppSettings>(mockAppSettings);
+  
+  const [appSettings, setAppSettings] = useState<AppSettings>(() => {
+    // Correctly merge core and dynamic data at initialization
+    const corePageIds = new Set(corePages.map(p => p.id));
+    const dynamicPages = mockAppSettings.pages.filter(p => !corePageIds.has(p.id));
+
+    // Place dynamic pages after Tasks and before Notifications
+    const tasksIndex = corePages.findIndex(p => p.id === 'page-tasks');
+    const finalPages = [...corePages];
+    if (tasksIndex !== -1) {
+        finalPages.splice(tasksIndex + 1, 0, ...dynamicPages);
+    } else {
+        finalPages.push(...dynamicPages);
+    }
+    
+    return {
+        pages: finalPages,
+        tabs: [...coreTabs],
+        globalBadges: globalBadges,
+    };
+  });
   const { toast } = useToast();
 
   const [allBadges, setAllBadges] = useState<Badge[]>(() => {

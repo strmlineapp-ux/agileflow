@@ -76,16 +76,6 @@ export const corePages: AppPage[] = [
         access: { users: [], teams: [] }
     },
     {
-        id: 'page-service-delivery',
-        name: 'Service Delivery',
-        icon: 'business_center',
-        color: '#A855F7',
-        path: '/dashboard/service-delivery',
-        isDynamic: false,
-        associatedTabs: ['tab-calendars', 'tab-service-teams'],
-        access: { users: [], teams: [] } // Only visible to admins
-    },
-    {
         id: 'page-notifications',
         name: 'Notifications',
         icon: 'notifications',
