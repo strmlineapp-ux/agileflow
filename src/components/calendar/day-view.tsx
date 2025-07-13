@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useMemo, useState, useRef, useCallback, useLayoutEffect } from 'react';
@@ -105,7 +104,7 @@ const DayViewLocationRow = React.memo(({
                                                     <TooltipTrigger asChild>
                                                         <div className="relative">
                                                             <Avatar className="h-6 w-6">
-                                                                <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
+                                                                <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar"/>
                                                                 <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
                                                             </Avatar>
                                                             {roleIcon && (
@@ -142,17 +141,16 @@ const DayViewLocationRow = React.memo(({
 });
 DayViewLocationRow.displayName = 'DayViewLocationRow';
 
-export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, onEasyBooking, onEventClick }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', axisView: 'standard' | 'reversed', onEasyBooking: (data: { startTime: Date, location?: string }) => void, onEventClick: (event: Event) => void }) => {
+export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, onEasyBooking, onEventClick, triggerScroll }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', axisView: 'standard' | 'reversed', onEasyBooking: (data: { startTime: Date, location?: string }) => void, onEventClick: (event: Event) => void, triggerScroll: number }) => {
     const { viewAsUser, events, calendars, users, teams } = useUser();
     const [now, setNow] = useState<Date | null>(null);
     const nowMarkerRef = useRef<HTMLDivElement>(null);
+    const timelineScrollerRef = useRef<HTMLDivElement>(null);
+
     const [collapsedLocations, setCollapsedLocations] = useState<Set<string>>(new Set());
     const [hourWidth, setHourWidth] = useState(DEFAULT_HOUR_WIDTH_PX);
     const [hourHeight, setHourHeight] = useState(DEFAULT_HOUR_HEIGHT_PX);
-    const initialScrollPerformed = useRef(false);
-    const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
 
-    const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars);
     const isViewingToday = useMemo(() => isSameDay(date, new Date()), [date]);
 
     const timeFormatTimeline = viewAsUser.timeFormat === '24h' ? 'HH:mm' : 'h a';
@@ -167,7 +165,7 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
         });
         return map;
     }, [calendars]);
-
+    
     useEffect(() => {
         if (isViewingToday) {
             const timer = setInterval(() => setNow(new Date()), 60 * 1000);
@@ -177,78 +175,51 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
             setNow(null);
         }
     }, [isViewingToday]);
-    
-    useEffect(() => {
-        initialScrollPerformed.current = false;
-    }, [date, zoomLevel, axisView]);
 
-    useLayoutEffect(() => {
-        const container = containerRef.current;
-        if (!container) return;
+    useEffect(() => {
+        if (!timelineScrollerRef.current) return;
         
         const resizeObserver = new ResizeObserver(entries => {
             for (let entry of entries) {
-                setContainerSize({ width: entry.contentRect.width, height: entry.contentRect.height });
-            }
-        });
-
-        resizeObserver.observe(container);
-        setContainerSize({ width: container.offsetWidth, height: container.offsetHeight });
-
-        return () => resizeObserver.disconnect();
-    }, [containerRef]);
-
-    useEffect(() => {
-        if (zoomLevel === 'fit') {
-            if (axisView === 'standard') {
-                if (containerSize.width > 0) {
-                    const newHourWidth = (containerSize.width - LOCATION_LABEL_WIDTH_PX) / 12; // Fit 12 hours (8am-8pm)
+                const isFit = zoomLevel === 'fit';
+                if (axisView === 'standard') {
+                    const newHourWidth = isFit ? (entry.contentRect.width) / 12 : DEFAULT_HOUR_WIDTH_PX;
                     setHourWidth(newHourWidth);
-                }
-            } else { // reversed
-                if (containerSize.height > 0) {
-                    const newHourHeight = containerSize.height / 12; // Fit 12 hours (8am-8pm)
+                } else { // reversed
+                     const newHourHeight = isFit ? (entry.contentRect.height) / 12 : DEFAULT_HOUR_HEIGHT_PX;
                     setHourHeight(newHourHeight);
                 }
             }
-        } else { // normal zoom
-            setHourWidth(DEFAULT_HOUR_WIDTH_PX);
-            setHourHeight(DEFAULT_HOUR_HEIGHT_PX);
-        }
-    }, [zoomLevel, axisView, containerSize]);
+        });
+    
+        resizeObserver.observe(timelineScrollerRef.current);
+        return () => resizeObserver.disconnect();
+    }, [zoomLevel, axisView, dayEvents]);
 
     useEffect(() => {
-        const container = containerRef.current;
-        if (!container || initialScrollPerformed.current || (containerSize.width === 0 && containerSize.height === 0)) return;
+        const scroller = timelineScrollerRef.current;
+        if (!scroller) return;
 
-        const performScroll = () => {
-            let scrollLeft = 8 * hourWidth; // Default to 8am
-            let scrollTop = 8 * hourHeight; // Default to 8am
-            
-            if (zoomLevel === 'fit') {
-                 scrollLeft = 0;
-                 scrollTop = 0;
-            } else if (isViewingToday && now && nowMarkerRef.current) {
-                 if (axisView === 'standard') {
-                    scrollLeft = nowMarkerRef.current.offsetLeft - (container.offsetWidth / 2) + (LOCATION_LABEL_WIDTH_PX / 2);
-                } else { // reversed
-                    scrollTop = nowMarkerRef.current.offsetTop - (container.offsetHeight / 2);
-                }
+        let scrollLeft = 8 * hourWidth; // Default scroll to 8am
+        let scrollTop = 8 * hourHeight; // Default scroll to 8am
+
+        if (zoomLevel === 'fit') {
+            scrollLeft = 0; // Fit view starts at 8am
+            scrollTop = 0;
+        } else if (isViewingToday && now) {
+            if (axisView === 'standard' && nowMarkerRef.current) {
+                scrollLeft = nowMarkerRef.current.offsetLeft - (scroller.offsetWidth / 2) + (LOCATION_LABEL_WIDTH_PX / 2);
+            } else if (axisView === 'reversed' && nowMarkerRef.current) {
+                scrollTop = nowMarkerRef.current.offsetTop - (scroller.offsetHeight / 2);
             }
-            
-            container.scrollTo({ 
-                left: axisView === 'standard' ? scrollLeft : 0, 
-                top: axisView === 'reversed' ? scrollTop : 0, 
-                behavior: initialScrollPerformed.current ? 'smooth' : 'auto' 
-            });
-
-            initialScrollPerformed.current = true;
-        };
+        }
         
-        const scrollTimeout = setTimeout(performScroll, 50);
-
-        return () => clearTimeout(scrollTimeout);
-    }, [containerRef, now, isViewingToday, date, hourWidth, hourHeight, axisView, containerSize, zoomLevel]);
+        scroller.scrollTo({ 
+            left: axisView === 'standard' ? scrollLeft : 0, 
+            top: axisView === 'reversed' ? scrollTop : 0, 
+            behavior: triggerScroll === 0 ? 'auto' : 'smooth' 
+        });
+    }, [hourWidth, hourHeight, triggerScroll, isViewingToday, now, zoomLevel, axisView, date, dayEvents]);
 
     const hours = Array.from({ length: 24 }, (_, i) => i);
 
@@ -295,7 +266,8 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
             return;
         }
 
-        if (!viewAsUser.easyBooking || !userCanCreateEvent) return;
+        const canCreateEvent = canCreateAnyEvent(viewAsUser, calendars);
+        if (!viewAsUser.easyBooking || !canCreateEvent) return;
 
         const rect = e.currentTarget.getBoundingClientRect();
         
@@ -320,7 +292,7 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
         }
         
         onEasyBooking({ startTime, location });
-    }, [hourWidth, hourHeight, onEasyBooking, userCanCreateEvent, viewAsUser.easyBooking]);
+    }, [hourWidth, hourHeight, onEasyBooking, calendars, viewAsUser]);
 
     const getEventPositionReversed = (event: Event) => {
         const startHour = event.startTime.getHours();
@@ -342,8 +314,8 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
     }
     
     const renderStandardView = () => (
-        <Card className="h-full flex flex-col">
-            <div style={{ width: `${LOCATION_LABEL_WIDTH_PX + (24 * hourWidth)}px`}} className="flex flex-col flex-1">
+        <div className="flex-1 overflow-x-auto overflow-y-hidden" ref={timelineScrollerRef}>
+            <div style={{ width: `${LOCATION_LABEL_WIDTH_PX + (24 * hourWidth)}px`}} className="flex flex-col flex-1 h-full">
                 <CardHeader className="p-0 border-b sticky top-0 bg-background z-20 flex flex-row">
                     <div className="w-[160px] shrink-0 border-r p-2 flex items-center font-normal text-sm sticky left-0 bg-muted z-30">Location</div>
                     {hours.map(hour => (
@@ -399,14 +371,14 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
                     </CardContent>
                 )}
             </div>
-        </Card>
+        </div>
     );
     
     const renderReversedView = () => (
-        <Card className="h-full flex flex-col">
+        <div className="flex-1 flex flex-col" ref={timelineScrollerRef}>
             <CardContent className="p-0 relative flex-1">
                 <div className="grid grid-cols-[auto,1fr] min-h-full h-full">
-                    <div className="w-20 border-r bg-muted">
+                    <div className="w-20 border-r bg-muted/50">
                         {hours.map(hour => (
                             <div key={hour} className="relative text-right pr-2 border-b" style={{ height: `${hourHeight}px` }}>
                                 <span className="text-xs text-muted-foreground relative -top-2">{format(addHours(startOfDay(date), hour), viewAsUser.timeFormat === '24h' ? 'HH:00' : 'h a')}</span>
@@ -465,7 +437,7 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
                                                                     <TooltipTrigger asChild>
                                                                         <div className="relative">
                                                                             <Avatar className="h-6 w-6">
-                                                                                <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
+                                                                                <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar"/>
                                                                                 <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
                                                                             </Avatar>
                                                                             {roleIcon && (
@@ -510,7 +482,7 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
                     </div>
                 </div>
             </CardContent>
-        </Card>
+        </div>
     );
 
     return axisView === 'reversed' ? renderReversedView() : renderStandardView();

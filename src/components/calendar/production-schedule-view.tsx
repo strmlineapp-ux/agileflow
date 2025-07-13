@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useMemo, useState, useRef, useCallback, useLayoutEffect } from 'react';
@@ -236,7 +235,7 @@ const ProductionScheduleLocationRow = React.memo(({
 
     return (
         <div className={cn("flex", { "border-b": !isLast }, {"bg-muted/10": index % 2 !== 0})}>
-            <div className="w-[160px] shrink-0 p-2 border-r flex items-start justify-between bg-card sticky left-0 z-30">
+            <div className="w-[160px] shrink-0 p-2 border-r flex items-start justify-between bg-muted sticky left-0 z-30">
                 <div className="flex items-start gap-1 cursor-pointer flex-1 min-w-0" onClick={() => toggleLocationCollapse(dayIso, location)}>
                     {isLocationCollapsed ? <GoogleSymbol name="chevron_right" className="mt-1" /> : <GoogleSymbol name="expand_more" className="mt-1" />}
                     <p className="font-normal text-sm" title={alias ? location : undefined}>{alias || location}</p>
@@ -316,17 +315,15 @@ const ProductionScheduleLocationRow = React.memo(({
 ProductionScheduleLocationRow.displayName = 'ProductionScheduleLocationRow';
 
 
-export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLevel, onEasyBooking, onEventClick }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', onEasyBooking: (data: { startTime: Date, location?: string }) => void, onEventClick: (event: Event) => void }) => {
+export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLevel, onEasyBooking, onEventClick, triggerScroll }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', onEasyBooking: (data: { startTime: Date, location?: string }) => void, onEventClick: (event: Event) => void, triggerScroll: number }) => {
     const { users, teams, viewAsUser, events, calendars, userStatusAssignments, setUserStatusAssignments, appSettings } = useUser();
 
     const [now, setNow] = useState<Date | null>(null);
     const [hourWidth, setHourWidth] = useState(DEFAULT_HOUR_WIDTH_PX);
-    const initialScrollPerformed = useRef(false);
-    const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
-
-    const todayCardRef = useRef<HTMLDivElement>(null);
-    const nowMarkerRef = useRef<HTMLDivElement>(null);
-    const dayScrollerRefs = useRef<Map<string, HTMLDivElement | null>>(new Map());
+    
+    const dayCardRefs = useRef<Map<string, HTMLDivElement | null>>(new Map());
+    const timelineScrollerRefs = useRef<Map<string, HTMLDivElement | null>>(new Map());
+    const nowMarkerRefs = useRef<Map<string, HTMLDivElement | null>>(new Map());
 
     const [collapsedDays, setCollapsedDays] = useState<Set<string>>(new Set());
     const [collapsedLocations, setCollapsedLocations] = useState<Record<string, Set<string>>>({});
@@ -338,9 +335,6 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
     const [addCheckPopoverOpen, setAddCheckPopoverOpen] = useState<Record<string, boolean>>({});
     const [checkSearchTerm, setCheckSearchTerm] = useState('');
     
-    const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars);
-    const canManageStatus = viewAsUser.isAdmin;
-
     const timeFormatTimeline = viewAsUser.timeFormat === '24h' ? 'HH:mm' : 'h a';
     const timeFormatEvent = viewAsUser.timeFormat === '24h' ? 'HH:mm' : 'h:mm a';
 
@@ -372,7 +366,8 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
             return;
         }
 
-        if (!viewAsUser.easyBooking || !userCanCreateEvent) return;
+        const canCreateEvent = canCreateAnyEvent(viewAsUser, calendars);
+        if (!viewAsUser.easyBooking || !canCreateEvent) return;
 
         const rect = e.currentTarget.getBoundingClientRect();
         const x = e.clientX - rect.left;
@@ -383,7 +378,7 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
         const startTime = new Date(day);
         startTime.setHours(hour, minutes, 0, 0);
         onEasyBooking({ startTime, location });
-    }, [hourWidth, onEasyBooking, userCanCreateEvent, viewAsUser.easyBooking]);
+    }, [hourWidth, onEasyBooking, calendars, viewAsUser]);
 
     useEffect(() => {
         const timer = setInterval(() => setNow(new Date()), 60 * 1000);
@@ -450,70 +445,46 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
     }, [weeklyScheduleData]);
     
     useEffect(() => {
-        initialScrollPerformed.current = false;
-    }, [date, zoomLevel]);
-
-    useLayoutEffect(() => {
-        const firstScroller = Array.from(dayScrollerRefs.current.values())[0];
-        if (!firstScroller) return;
-
-        const resizeObserver = new ResizeObserver(entries => {
-            for (let entry of entries) {
-                setContainerSize({ width: entry.contentRect.width, height: entry.contentRect.height });
-            }
-        });
-
-        resizeObserver.observe(firstScroller);
-        setContainerSize({ width: firstScroller.offsetWidth, height: firstScroller.offsetHeight });
-
-        return () => resizeObserver.disconnect();
-    }, [weeklyScheduleData]);
-
-    useEffect(() => {
-        if (containerSize.width > 0) {
-            const isFit = zoomLevel === 'fit';
-            const newHourWidth = isFit ? (containerSize.width - LOCATION_LABEL_WIDTH_PX) / 12 : DEFAULT_HOUR_WIDTH_PX;
-            setHourWidth(newHourWidth);
-        }
-    }, [zoomLevel, containerSize]);
-
-    useEffect(() => {
-        if (isCurrentWeek && containerRef.current && todayCardRef.current && !initialScrollPerformed.current) {
-            containerRef.current.scrollTo({ top: todayCardRef.current.offsetTop - 20, behavior: 'smooth' });
-        }
-    }, [date, containerRef, isCurrentWeek]);
-
-    useEffect(() => {
-        if (initialScrollPerformed.current) return;
+        timelineScrollerRefs.current.forEach(scroller => {
+            if (!scroller) return;
+            
+            const resizeObserver = new ResizeObserver(entries => {
+                for (let entry of entries) {
+                    const isFit = zoomLevel === 'fit';
+                    const newHourWidth = isFit ? (entry.contentRect.width - LOCATION_LABEL_WIDTH_PX) / 12 : DEFAULT_HOUR_WIDTH_PX;
+                    setHourWidth(newHourWidth);
+                }
+            });
         
-        const todayIso = weekDays.find(isToday)?.toISOString();
-        const scroller = todayIso ? dayScrollerRefs.current.get(todayIso) : undefined;
+            resizeObserver.observe(scroller);
+            return () => resizeObserver.disconnect();
+        });
+    }, [zoomLevel, weeklyScheduleData]);
 
-        const scrollLogic = (s: HTMLDivElement | null | undefined, key: string) => {
-            if (!s) return;
-            let scrollLeft = 8 * hourWidth; // Default to 8am
-            if (zoomLevel === 'fit') {
-                scrollLeft = 0;
-            } else if (isCurrentWeek && now && key === todayIso) {
-                scrollLeft = (now.getHours() + now.getMinutes() / 60) * hourWidth - (s.offsetWidth / 2) + (LOCATION_LABEL_WIDTH_PX / 2);
+    useEffect(() => {
+        if(triggerScroll > 0) {
+            const todayIso = weekDays.find(isToday)?.toISOString();
+            const todayCard = todayIso ? dayCardRefs.current.get(todayIso) : undefined;
+            if (isCurrentWeek && containerRef.current && todayCard) {
+                containerRef.current.scrollTo({ top: todayCard.offsetTop - 20, behavior: 'smooth' });
             }
-            s.scrollTo({ left: scrollLeft, behavior: 'auto' });
-        };
 
-        dayScrollerRefs.current.forEach(scrollLogic);
-
-        if(dayScrollerRefs.current.size > 0) {
-            initialScrollPerformed.current = true;
+            const scroller = todayIso ? timelineScrollerRefs.current.get(todayIso) : undefined;
+            if(scroller && now) {
+                let scrollLeft = 8 * hourWidth; // Default scroll to 8am
+                if (zoomLevel !== 'fit') {
+                    scrollLeft = (now.getHours() + now.getMinutes() / 60) * hourWidth - (scroller.offsetWidth / 2) + (LOCATION_LABEL_WIDTH_PX / 2);
+                }
+                scroller.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+            }
         }
-
-    }, [now, isCurrentWeek, weekDays, hourWidth, containerSize, zoomLevel]);
-
+    }, [triggerScroll, isCurrentWeek, hourWidth, now, zoomLevel]);
 
     const toggleDayCollapse = useCallback((dayIso: string) => {
         setCollapsedDays(prev => {
             const newSet = new Set(prev);
-            if (newSet.has(dayIso)) newSet.delete(location);
-            else newSet.add(location);
+            if (newSet.has(dayIso)) newSet.delete(dayIso);
+            else newSet.add(dayIso);
             return newSet;
         });
     }, []);
@@ -593,16 +564,9 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
                     .filter(loc => loc.toLowerCase().includes(checkSearchTerm.toLowerCase()));
 
                 return (
-                    <Card key={dayIso} ref={isDayToday ? todayCardRef : null}>
+                    <Card key={dayIso} ref={el => dayCardRefs.current.set(dayIso, el)}>
                         <CardHeader className="p-2 bg-muted/50 flex flex-row items-center justify-between gap-4">
-                            <div className="flex items-center gap-2 justify-center flex-1">
-                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleDayCollapse(dayIso)}>
-                                    {isDayCollapsed ? <GoogleSymbol name="chevron_right" /> : <GoogleSymbol name="expand_more" />}
-                                    <span className="sr-only">{isDayCollapsed ? "Expand day" : "Collapse day"}</span>
-                                </Button>
-                                <span className={cn("font-normal text-sm", { "text-primary": isDayToday })}>{format(day, 'EEE, MMMM d, yyyy').toUpperCase()}</span>
-                            </div>
-                            <div className="absolute left-4 top-1/2 -translate-y-1/2 flex flex-wrap items-center gap-2">
+                            <div className="flex items-center gap-2">
                                 {allChecksToRender.map(location => {
                                     const assignedUserId = dailyCheckAssignments[dayIso]?.[location];
                                     const assignedUser = users.find(u => u.userId === assignedUserId);
@@ -687,12 +651,19 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
                                     </Popover>
                                 )}
                             </div>
-                            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-wrap items-center gap-2">
+                             <div className="flex items-center gap-2">
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleDayCollapse(dayIso)}>
+                                    {isDayCollapsed ? <GoogleSymbol name="chevron_right" /> : <GoogleSymbol name="expand_more" />}
+                                    <span className="sr-only">{isDayCollapsed ? "Expand day" : "Collapse day"}</span>
+                                </Button>
+                                <span className={cn("font-normal text-sm", { "text-primary": isDayToday })}>{format(day, 'EEE, MMMM d, yyyy').toUpperCase()}</span>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-2">
                                 {dayStatusAssignments.map(({ userId, status }) => {
                                     const user = users.find(u => u.userId === userId);
                                     return user ? <UserStatusBadge key={userId} status={status}>{user.displayName}</UserStatusBadge> : null;
                                 })}
-                                {canManageStatus && 
+                                {canManageAnyCheckLocation && 
                                     <TooltipProvider>
                                         <Tooltip>
                                             <TooltipTrigger asChild>
@@ -705,9 +676,9 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
                             </div>
                         </CardHeader>
                         {!isDayCollapsed && (
-                            <div className="overflow-x-auto" ref={el => dayScrollerRefs.current.set(dayIso, el)}>
+                            <div className="overflow-x-auto" ref={el => timelineScrollerRefs.current.set(dayIso, el)}>
                                 <div style={{ width: `${LOCATION_LABEL_WIDTH_PX + (24 * hourWidth)}px`}}>
-                                    <CardHeader className="p-0 border-b sticky top-0 bg-background z-20 flex flex-row">
+                                    <CardHeader className="p-0 sticky top-0 bg-background z-20 flex flex-row">
                                         <div className="w-[160px] shrink-0 border-r p-2 flex items-center font-normal text-sm sticky left-0 bg-muted z-30">Location</div>
                                         {hours.map(hour => <div key={hour} className="shrink-0 text-left p-2 border-r bg-muted" style={{ width: `${hourWidth}px`}}><span className="text-xs text-muted-foreground">{format(addHours(startOfDay(day), hour), timeFormatTimeline)}</span></div>)}
                                     </CardHeader>
@@ -733,7 +704,7 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
                                                 onEventClick={onEventClick}
                                             />
                                         ))}
-                                        {isDayToday && now && <div ref={nowMarkerRef} className="absolute top-0 bottom-0 z-20 pointer-events-none" style={{ left: `${LOCATION_LABEL_WIDTH_PX + calculateCurrentTimePosition()}px` }}><div className="relative w-px h-full bg-primary"></div></div>}
+                                        {isDayToday && now && <div ref={el => nowMarkerRefs.current.set(dayIso, el)} className="absolute top-0 bottom-0 z-20 pointer-events-none" style={{ left: `${LOCATION_LABEL_WIDTH_PX + calculateCurrentTimePosition()}px` }}><div className="relative w-px h-full bg-primary"></div></div>}
                                     </CardContent>
                                 </div>
                             </div>

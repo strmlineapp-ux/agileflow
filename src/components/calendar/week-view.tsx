@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useState, useMemo, useRef, useCallback, useLayoutEffect } from 'react';
@@ -21,16 +20,15 @@ const isHoliday = (day: Date) => {
 
 const DEFAULT_HOUR_HEIGHT_PX = 60;
 
-export const WeekView = React.memo(({ date, containerRef, zoomLevel, onEasyBooking, onEventClick }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', onEasyBooking: (data: { startTime: Date, location?: string }) => void, onEventClick: (event: Event) => void }) => {
+export const WeekView = React.memo(({ date, containerRef, zoomLevel, onEasyBooking, onEventClick, triggerScroll }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', onEasyBooking: (data: { startTime: Date, location?: string }) => void, onEventClick: (event: Event) => void, triggerScroll: number }) => {
     const { viewAsUser, events, calendars, users, teams } = useUser();
     const [now, setNow] = useState<Date | null>(null);
     const nowMarkerRef = useRef<HTMLDivElement>(null);
+    const timelineScrollerRef = useRef<HTMLDivElement>(null);
+
     const [hourHeight, setHourHeight] = useState(DEFAULT_HOUR_HEIGHT_PX);
     const [showWeekends, setShowWeekends] = useState(false);
-    const initialScrollPerformed = useRef(false);
-    const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
-    
-    const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars);
+
     const weekStart = useMemo(() => startOfWeek(date, { weekStartsOn: 1 }), [date]);
     const weekDays = useMemo(() => eachDayOfInterval({ start: weekStart, end: addDays(weekStart, 6) }), [weekStart]);
     const isCurrentWeek = useMemo(() => weekDays.some(isToday), [weekDays]);
@@ -51,7 +49,8 @@ export const WeekView = React.memo(({ date, containerRef, zoomLevel, onEasyBooki
             return;
         }
 
-        if (!viewAsUser.easyBooking || !userCanCreateEvent) return;
+        const canCreateEvent = canCreateAnyEvent(viewAsUser, calendars);
+        if (!viewAsUser.easyBooking || !canCreateEvent) return;
 
         const rect = e.currentTarget.getBoundingClientRect();
         const y = e.clientY - rect.top;
@@ -62,7 +61,7 @@ export const WeekView = React.memo(({ date, containerRef, zoomLevel, onEasyBooki
         const startTime = new Date(day);
         startTime.setHours(hour, minutes, 0, 0);
         onEasyBooking({ startTime });
-    }, [hourHeight, onEasyBooking, userCanCreateEvent, viewAsUser.easyBooking]);
+    }, [hourHeight, onEasyBooking, calendars, viewAsUser]);
 
     useEffect(() => {
         if (isCurrentWeek) {
@@ -75,54 +74,33 @@ export const WeekView = React.memo(({ date, containerRef, zoomLevel, onEasyBooki
     }, [isCurrentWeek]);
 
     useEffect(() => {
-        initialScrollPerformed.current = false;
-    }, [date, zoomLevel]);
-
-    useLayoutEffect(() => {
-        const container = containerRef.current;
-        if (!container) return;
-
+        if (!timelineScrollerRef.current) return;
+        
         const resizeObserver = new ResizeObserver(entries => {
             for (let entry of entries) {
-                setContainerSize({ width: entry.contentRect.width, height: entry.contentRect.height });
+                const isFit = zoomLevel === 'fit';
+                const newHourHeight = isFit ? entry.contentRect.height / 12 : DEFAULT_HOUR_HEIGHT_PX;
+                setHourHeight(newHourHeight);
             }
         });
-
-        resizeObserver.observe(container);
-        setContainerSize({ width: container.offsetWidth, height: container.offsetHeight });
-
-        return () => resizeObserver.disconnect();
-    }, [containerRef]);
-
-    useEffect(() => {
-        if (containerSize.height > 0) {
-            const isFit = zoomLevel === 'fit';
-            const newHourHeight = isFit ? containerSize.height / 12 : DEFAULT_HOUR_HEIGHT_PX;
-            setHourHeight(newHourHeight);
-        }
-    }, [zoomLevel, containerSize]);
-
-    useEffect(() => {
-        const container = containerRef.current;
-        if (!container || initialScrollPerformed.current || containerSize.height === 0) return;
     
-        const performScroll = () => {
-            let scrollTop = 8 * hourHeight; // Default scroll to 8am
-            if (zoomLevel === 'fit') {
-                scrollTop = 0; // For 'fit' view, start from the top (8am)
-            } else if (isCurrentWeek && now && nowMarkerRef.current) {
-                scrollTop = nowMarkerRef.current.offsetTop - (container.offsetHeight / 2);
-            }
-            container.scrollTo({ top: scrollTop, behavior: 'smooth' });
-            initialScrollPerformed.current = true;
-        };
+        resizeObserver.observe(timelineScrollerRef.current);
+        return () => resizeObserver.disconnect();
+    }, [zoomLevel]);
 
-        const scrollTimeout = setTimeout(performScroll, 50);
-
-        return () => clearTimeout(scrollTimeout);
-
-    }, [containerRef, now, isCurrentWeek, date, hourHeight, containerSize, zoomLevel]);
-
+    useEffect(() => {
+        const scroller = timelineScrollerRef.current;
+        if (!scroller) return;
+    
+        let scrollTop = 8 * hourHeight; // Default scroll to 8am
+        if (zoomLevel === 'fit') {
+            scrollTop = 0;
+        } else if (isCurrentWeek && now && nowMarkerRef.current) {
+            scrollTop = nowMarkerRef.current.offsetTop - (scroller.offsetHeight / 2);
+        }
+        
+        scroller.scrollTo({ top: scrollTop, behavior: triggerScroll === 0 ? 'auto' : 'smooth' });
+    }, [hourHeight, triggerScroll, isCurrentWeek, now, zoomLevel]);
 
     const hours = Array.from({ length: 24 }, (_, i) => i);
 
@@ -183,117 +161,119 @@ export const WeekView = React.memo(({ date, containerRef, zoomLevel, onEasyBooki
                     })}
                 </div>
             </CardHeader>
-            <CardContent className="p-0 relative flex-1">
-                <div className={cn("grid min-h-full", gridColsClass)}>
-                    {/* Timeline */}
-                    <div className="w-20 border-r bg-muted">
-                        {hours.map((hour, index) => (
-                            <div key={hour} className={cn("relative text-right pr-2 border-b", {"bg-background": index % 2 !== 0})} style={{ height: `${hourHeight}px` }}>
-                                <span className="text-xs text-muted-foreground relative -top-2">{format(addHours(startOfDay(date), hour), timeFormatTimeline)}</span>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Day columns */}
-                    {displayedDays.map((day, index) => {
-                        return (
-                            <div 
-                                key={day.toString()} 
-                                className={cn("relative border-l", { "bg-muted/10": index % 2 !== 0 })}
-                                onClick={(e) => handleEasyBookingClick(e, day)}
-                            >
-                                {/* Lunch Break Cue */}
-                                <div
-                                    className="absolute inset-x-0 lunch-break-pattern z-0 pointer-events-none"
-                                    style={{
-                                        top: `${12 * hourHeight}px`,
-                                        height: `${2.5 * hourHeight}px`
-                                    }}
-                                    title="Lunch Break"
-                                />
-                                {/* Grid lines */}
-                                {hours.map(hour => (
-                                    <div key={hour} className="border-b" style={{ height: `${hourHeight}px` }}></div>
-                                ))}
-                                {/* Events */}
-                                <div className="absolute inset-0 z-10">
-                                    {getEventsForDay(day).map(event => {
-                                        const { top, height } = getEventPosition(event);
-                                        const colors = calendarColorMap[event.calendarId];
-                                        return (
-                                            <div 
-                                                key={event.eventId} 
-                                                data-event-id={event.eventId}
-                                                onClick={(e) => { e.stopPropagation(); onEventClick(event); }}
-                                                className={cn(
-                                                    "absolute left-1 right-1 p-1 rounded-md shadow-sm cursor-pointer flex flex-col overflow-hidden"
-                                                )}
-                                                style={{ top: `${top}px`, height: `${height}px`, backgroundColor: colors?.bg, color: colors?.text }}
-                                            >
-                                                <div className="flex items-center gap-2 flex-wrap mb-1">
-                                                    <PriorityBadge priorityId={event.priority} />
-                                                    {event.roleAssignments && Object.keys(event.roleAssignments).length > 0 && (
-                                                        <div className="flex flex-wrap -space-x-2">
-                                                            {Object.entries(event.roleAssignments).filter(([, userId]) => !!userId).map(([role, userId]) => {
-                                                                const user = users.find(u => u.userId === userId);
-                                                                if (!user) return null;
-                                                                const teamForEvent = teams.find(t => t.id === event.calendarId);
-                                                                const roleInfo = teamForEvent?.allBadges.find(b => b.name === role);
-                                                                const roleIcon = roleInfo?.icon;
-                                                                const roleColor = roleInfo?.color;
-
-                                                                return (
-                                                                <TooltipProvider key={role}>
-                                                                    <Tooltip>
-                                                                        <TooltipTrigger asChild>
-                                                                            <div className="relative">
-                                                                                <Avatar className="h-6 w-6">
-                                                                                    <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
-                                                                                    <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                                                                                </Avatar>
-                                                                                {roleIcon && (
-                                                                                    <div 
-                                                                                        className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-background flex items-center justify-center"
-                                                                                        style={{ backgroundColor: roleColor, color: getContrastColor(roleColor || '#ffffff') }}
-                                                                                    >
-                                                                                        <GoogleSymbol name={roleIcon} style={{fontSize: '10px'}} />
-                                                                                    </div>
-                                                                                )}
-                                                                            </div>
-                                                                        </TooltipTrigger>
-                                                                        <TooltipContent>
-                                                                            <p className="flex items-center gap-1">
-                                                                            {roleIcon && <GoogleSymbol name={roleIcon} className="text-sm" />}
-                                                                            <span>{role}: {user.displayName}</span>
-                                                                            </p>
-                                                                        </TooltipContent>
-                                                                    </Tooltip>
-                                                                </TooltipProvider>
-                                                                );
-                                                            })}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <p className="font-normal text-xs truncate leading-tight">{event.title}</p>
-                                                <p className="text-[10px] opacity-90 truncate">{format(event.startTime, timeFormatEvent)} - {format(event.endTime, timeFormatEvent)}</p>
-                                            </div>
-                                        )
-                                    })}
-                                    {isToday(day) && now && (
-                                        <div 
-                                            ref={nowMarkerRef}
-                                            className="absolute w-full z-10 pointer-events-none"
-                                            style={{ top: `${calculateCurrentTimePosition()}px` }}
-                                        >
-                                            <div className="relative h-px bg-primary"></div>
-                                        </div>
-                                    )}
+            <div className="flex-1 overflow-y-auto" ref={timelineScrollerRef}>
+                <CardContent className="p-0 relative">
+                    <div className={cn("grid min-h-full", gridColsClass)}>
+                        {/* Timeline */}
+                        <div className="w-20 border-r bg-muted">
+                            {hours.map((hour, index) => (
+                                <div key={hour} className={cn("relative text-right pr-2 border-b", {"bg-background": index % 2 !== 0})} style={{ height: `${hourHeight}px` }}>
+                                    <span className="text-xs text-muted-foreground relative -top-2">{format(addHours(startOfDay(date), hour), timeFormatTimeline)}</span>
                                 </div>
-                            </div>
-                        )
-                    })}
-                </div>
-            </CardContent>
+                            ))}
+                        </div>
+
+                        {/* Day columns */}
+                        {displayedDays.map((day, index) => {
+                            return (
+                                <div 
+                                    key={day.toString()} 
+                                    className={cn("relative border-l", { "bg-muted/10": index % 2 !== 0 })}
+                                    onClick={(e) => handleEasyBookingClick(e, day)}
+                                >
+                                    {/* Lunch Break Cue */}
+                                    <div
+                                        className="absolute inset-x-0 lunch-break-pattern z-0 pointer-events-none"
+                                        style={{
+                                            top: `${12 * hourHeight}px`,
+                                            height: `${2.5 * hourHeight}px`
+                                        }}
+                                        title="Lunch Break"
+                                    />
+                                    {/* Grid lines */}
+                                    {hours.map(hour => (
+                                        <div key={hour} className="border-b" style={{ height: `${hourHeight}px` }}></div>
+                                    ))}
+                                    {/* Events */}
+                                    <div className="absolute inset-0 z-10">
+                                        {getEventsForDay(day).map(event => {
+                                            const { top, height } = getEventPosition(event);
+                                            const colors = calendarColorMap[event.calendarId];
+                                            return (
+                                                <div 
+                                                    key={event.eventId} 
+                                                    data-event-id={event.eventId}
+                                                    onClick={(e) => { e.stopPropagation(); onEventClick(event); }}
+                                                    className={cn(
+                                                        "absolute left-1 right-1 p-1 rounded-md shadow-sm cursor-pointer flex flex-col overflow-hidden"
+                                                    )}
+                                                    style={{ top: `${top}px`, height: `${height}px`, backgroundColor: colors?.bg, color: colors?.text }}
+                                                >
+                                                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                                                        <PriorityBadge priorityId={event.priority} />
+                                                        {event.roleAssignments && Object.keys(event.roleAssignments).length > 0 && (
+                                                            <div className="flex flex-wrap -space-x-2">
+                                                                {Object.entries(event.roleAssignments).filter(([, userId]) => !!userId).map(([role, userId]) => {
+                                                                    const user = users.find(u => u.userId === userId);
+                                                                    if (!user) return null;
+                                                                    const teamForEvent = teams.find(t => t.id === event.calendarId);
+                                                                    const roleInfo = teamForEvent?.allBadges.find(b => b.name === role);
+                                                                    const roleIcon = roleInfo?.icon;
+                                                                    const roleColor = roleInfo?.color;
+
+                                                                    return (
+                                                                    <TooltipProvider key={role}>
+                                                                        <Tooltip>
+                                                                            <TooltipTrigger asChild>
+                                                                                <div className="relative">
+                                                                                    <Avatar className="h-6 w-6">
+                                                                                        <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar"/>
+                                                                                        <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                                                                    </Avatar>
+                                                                                    {roleIcon && (
+                                                                                        <div 
+                                                                                            className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-background flex items-center justify-center"
+                                                                                            style={{ backgroundColor: roleColor, color: getContrastColor(roleColor || '#ffffff') }}
+                                                                                        >
+                                                                                            <GoogleSymbol name={roleIcon} style={{fontSize: '10px'}} />
+                                                                                        </div>
+                                                                                    )}
+                                                                                </div>
+                                                                            </TooltipTrigger>
+                                                                            <TooltipContent>
+                                                                                <p className="flex items-center gap-1">
+                                                                                {roleIcon && <GoogleSymbol name={roleIcon} className="text-sm" />}
+                                                                                <span>{role}: {user.displayName}</span>
+                                                                                </p>
+                                                                            </TooltipContent>
+                                                                        </Tooltip>
+                                                                    </TooltipProvider>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <p className="font-normal text-xs truncate leading-tight">{event.title}</p>
+                                                    <p className="text-[10px] opacity-90 truncate">{format(event.startTime, timeFormatEvent)} - {format(event.endTime, timeFormatEvent)}</p>
+                                                </div>
+                                            )
+                                        })}
+                                        {isToday(day) && now && (
+                                            <div 
+                                                ref={nowMarkerRef}
+                                                className="absolute w-full z-10 pointer-events-none"
+                                                style={{ top: `${calculateCurrentTimePosition()}px` }}
+                                            >
+                                                <div className="relative h-px bg-primary"></div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
+                </CardContent>
+            </div>
         </Card>
     );
 });
