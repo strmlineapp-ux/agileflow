@@ -495,7 +495,6 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, ...props }: 
     const iconSearchInputRef = useRef<HTMLInputElement>(null);
     
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-    const isSystemPage = useMemo(() => ['page-admin-management', 'page-notifications', 'page-settings'].includes(page.id), [page.id]);
     
     const handleSaveName = useCallback(() => {
         const newName = nameInputRef.current?.value.trim();
@@ -545,7 +544,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, ...props }: 
     const displayPath = page.isDynamic ? `${page.path}/[teamId]` : page.path;
 
     return (
-        <Card {...props}>
+        <Card className="group relative" {...props}>
             {!isPinned && (
               <TooltipProvider>
                   <Tooltip>
@@ -656,7 +655,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, ...props }: 
                         </div>
                     </div>
                      <div className="flex items-center" onPointerDown={(e) => e.stopPropagation()}>
-                        {!isSystemPage && (
+                        {!isPinned && (
                             <>
                                 <PageAccessControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
                                 <PageTabsControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
@@ -762,11 +761,18 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
     const { toast } = useToast();
     const [searchTerm, setSearchTerm] = useState('');
     const [activePage, setActivePage] = useState<AppPage | null>(null);
+    const searchInputRef = useRef<HTMLInputElement>(null);
     
     const pinnedTopIds = useMemo(() => ['page-admin-management', 'page-overview', 'page-calendar', 'page-tasks'], []);
     const pinnedBottomIds = useMemo(() => ['page-notifications', 'page-settings'], []);
     const allPinnedIds = useMemo(() => new Set([...pinnedTopIds, ...pinnedBottomIds]), [pinnedTopIds, pinnedBottomIds]);
     
+    useEffect(() => {
+        if (isActive && searchInputRef.current) {
+            searchInputRef.current.focus();
+        }
+    }, [isActive]);
+
     const handleUpdatePage = useCallback((pageId: string, data: Partial<AppPage>) => {
         const newPages = appSettings.pages.map(p => p.id === pageId ? { ...p, ...data } : p);
         updateAppSettings({ pages: newPages });
@@ -867,7 +873,7 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
                 <div className="flex items-center justify-between">
                     <DuplicateZone onAdd={handleAddPage} />
                     <div className="flex items-center">
-                        <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search pages..." autoFocus={isActive} />
+                        <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search pages..." inputRef={searchInputRef} autoFocus={isActive} />
                     </div>
                 </div>
                 
@@ -1107,6 +1113,14 @@ function SortableTabCard({ id, tab, onUpdate }: { id: string, tab: AppTab, onUpd
 export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab; isSingleTabPage?: boolean, isActive?: boolean }) => {
     const { appSettings, updateAppSettings, updateAppTab } = useUser();
     const [searchTerm, setSearchTerm] = useState('');
+    const searchInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (isActive) {
+            searchInputRef.current?.focus();
+        }
+    }, [isActive]);
+
 
     const handleUpdateTab = useCallback((tabId: string, data: Partial<AppTab>) => {
         const newTabs = appSettings.tabs.map(t => t.id === tabId ? { ...t, ...data } : t);
@@ -1145,7 +1159,7 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
             <div className="space-y-8">
                 <div className="flex items-center justify-end">
                      <div className="flex items-center">
-                        <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search by name or desc..." autoFocus={isActive} />
+                        <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search by name or desc..." inputRef={searchInputRef} autoFocus={isActive} />
                     </div>
                 </div>
                 <SortableContext items={tabIds} strategy={verticalListSortingStrategy}>
