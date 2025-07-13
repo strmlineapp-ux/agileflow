@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -178,6 +177,10 @@ function EventTemplateForm({
 
 
 export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab }) {
+  if (!team) {
+    return null;
+  }
+  
   const { updateTeam, updateAppTab } = useUser();
   const { toast } = useToast();
 
