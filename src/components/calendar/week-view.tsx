@@ -73,18 +73,19 @@ export const WeekView = React.memo(({ date, containerRef, zoomLevel, onEasyBooki
         }
     }, [isCurrentWeek]);
 
-    useEffect(() => {
-        if (!timelineScrollerRef.current) return;
+    useLayoutEffect(() => {
+        const scroller = timelineScrollerRef.current;
+        if (!scroller) return;
         
-        const resizeObserver = new ResizeObserver(entries => {
-            for (let entry of entries) {
-                const isFit = zoomLevel === 'fit';
-                const newHourHeight = isFit ? entry.contentRect.height / 12 : DEFAULT_HOUR_HEIGHT_PX;
-                setHourHeight(newHourHeight);
-            }
-        });
-    
-        resizeObserver.observe(timelineScrollerRef.current);
+        const handleResize = () => {
+            const isFit = zoomLevel === 'fit';
+            const newHourHeight = isFit ? scroller.clientHeight / 12 : DEFAULT_HOUR_HEIGHT_PX;
+            setHourHeight(newHourHeight);
+        };
+        
+        handleResize(); // Initial calculation
+        const resizeObserver = new ResizeObserver(handleResize);
+        resizeObserver.observe(scroller);
         return () => resizeObserver.disconnect();
     }, [zoomLevel]);
 
@@ -94,7 +95,7 @@ export const WeekView = React.memo(({ date, containerRef, zoomLevel, onEasyBooki
     
         let scrollTop = 8 * hourHeight; // Default scroll to 8am
         if (zoomLevel === 'fit') {
-            scrollTop = 0;
+            scrollTop = 8 * hourHeight; 
         } else if (isCurrentWeek && now && nowMarkerRef.current) {
             scrollTop = nowMarkerRef.current.offsetTop - (scroller.offsetHeight / 2);
         }
@@ -130,14 +131,14 @@ export const WeekView = React.memo(({ date, containerRef, zoomLevel, onEasyBooki
 
     return (
         <Card className="h-full flex flex-col">
-            <CardHeader className="p-0 border-b sticky top-0 bg-background z-10">
+            <CardHeader className="p-0 border-b sticky top-0 bg-muted z-10">
                 <div className={cn("grid", gridColsClass)}>
-                    <div className="w-20 bg-muted"></div> {/* Timeline spacer */}
+                    <div className="w-20"></div> {/* Timeline spacer */}
                     {displayedDays.map((day, index) => {
                         const isWeekend = isSaturday(day) || isSunday(day);
                         const isDayHoliday = isHoliday(day);
                         return (
-                            <div key={day.toString()} className={cn("text-center p-2 border-l bg-muted", { "bg-muted/50": isWeekend || isDayHoliday })}>
+                            <div key={day.toString()} className={cn("text-center p-2 border-l", { "bg-muted/50": isWeekend || isDayHoliday })}>
                                 <p className={cn("text-sm font-normal", { "text-muted-foreground": isWeekend || isDayHoliday })}>{format(day, 'EEE')}</p>
                                 <p className={cn(
                                     "text-2xl font-normal",

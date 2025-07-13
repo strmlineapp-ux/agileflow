@@ -80,7 +80,7 @@ export const MonthView = React.memo(({ date, containerRef, onEventClick }: { dat
                 key={key} 
                 ref={isDayToday ? todayRef : null}
                 className={cn(
-                "border-r border-b p-2 flex flex-col min-h-[120px]",
+                "border-r border-b p-2 flex flex-col",
                 { "bg-muted/10": colIndex % 2 !== 0 },
                 { "bg-accent/10": isDayToday },
                 { "bg-muted/50": !isDayToday && (isWeekend || isDayHoliday) && isSameMonth(day, date) }
@@ -93,7 +93,7 @@ export const MonthView = React.memo(({ date, containerRef, onEventClick }: { dat
                 )}>
                     {format(day, 'd')}
                 </span>
-                <div className="mt-1 space-y-1 overflow-y-auto">
+                <div className="mt-1 space-y-1 overflow-y-auto flex-1">
                     {dayEvents.map(event => {
                          const calendarColors = calendarColorMap[event.calendarId];
                          const priorityInfo = getPriorityDisplay(event.priority);
@@ -119,7 +119,7 @@ export const MonthView = React.memo(({ date, containerRef, onEventClick }: { dat
                 </div>
             </div>
         )
-    }, [getEventsForDay, onEventClick, calendarColorMap, getPriorityDisplay, startingDayIndex]);
+    }, [getEventsForDay, onEventClick, calendarColorMap, getPriorityDisplay, startingDayIndex, date]);
 
     let dayCells: React.ReactNode[] = [];
     if (showWeekends) {
@@ -169,7 +169,7 @@ export const MonthView = React.memo(({ date, containerRef, onEventClick }: { dat
                 ))}
             </div>
             <CardContent className="p-0 flex-1 flex flex-col">
-                <div className={cn("grid flex-1", gridColsClass)}>
+                <div className={cn("grid flex-1", gridColsClass, `grid-rows-6`)}>
                     {dayCells}
                 </div>
             </CardContent>

@@ -121,9 +121,9 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
         case 'month':
             return <MonthView date={currentDate} containerRef={viewContainerRef} onEventClick={onEventClick} />;
         case 'week':
-            return <WeekView date={currentDate} containerRef={viewContainerRef} zoomLevel={zoomLevel} onEasyBooking={handleEasyBooking} onEventClick={onEventClick} />;
+            return <WeekView date={currentDate} containerRef={viewContainerRef} zoomLevel={zoomLevel} onEasyBooking={handleEasyBooking} onEventClick={onEventClick} triggerScroll={triggerScroll} />;
         case 'day':
-            return <DayView date={currentDate} containerRef={viewContainerRef} zoomLevel={zoomLevel} axisView={dayViewAxis} onEasyBooking={handleEasyBooking} onEventClick={onEventClick} />;
+            return <DayView date={currentDate} containerRef={viewContainerRef} zoomLevel={zoomLevel} axisView={dayViewAxis} onEasyBooking={handleEasyBooking} onEventClick={onEventClick} triggerScroll={triggerScroll} />;
         case 'production-schedule':
             return <ProductionScheduleView date={currentDate} containerRef={viewContainerRef} zoomLevel={zoomLevel} onEasyBooking={handleEasyBooking} onEventClick={onEventClick} triggerScroll={triggerScroll} />;
         default:
