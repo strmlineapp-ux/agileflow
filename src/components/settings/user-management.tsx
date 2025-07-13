@@ -212,11 +212,13 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
     const [searchTerm, setSearchTerm] = useState('');
     
     const { currentUser, otherUsers } = useMemo(() => {
-        const filtered = users.filter(user => user.displayName.toLowerCase().includes(searchTerm.toLowerCase()));
-        return {
-            currentUser: filtered.find(u => u.userId === realUser.userId),
-            otherUsers: filtered.filter(u => u.userId !== realUser.userId),
-        };
+        const currentUser = users.find(u => u.userId === realUser.userId);
+        
+        const otherUsers = users
+            .filter(user => user.userId !== realUser.userId)
+            .filter(user => user.displayName.toLowerCase().includes(searchTerm.toLowerCase()));
+
+        return { currentUser, otherUsers };
     }, [users, realUser.userId, searchTerm]);
 
     return (
@@ -247,4 +249,3 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
         </>
     )
 }
-
