@@ -92,11 +92,12 @@ function CompactSearchIconPicker({
           className={cn("p-0 flex items-center justify-center", buttonClassName)}
           style={color ? { color } : {}}
           disabled={disabled}
+          onPointerDown={(e) => e.stopPropagation()}
         >
           <GoogleSymbol name={icon} className={cn("text-3xl", iconClassName)} weight={weight} />
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0">
+      <PopoverContent className="w-80 p-0" onPointerDown={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-1 p-2 border-b">
             <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
             <input
@@ -377,7 +378,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                         <TooltipProvider>
                                             <Tooltip>
                                                 <TooltipTrigger asChild>
-                                                    <PopoverTrigger asChild disabled={!isEditable}>
+                                                    <PopoverTrigger asChild disabled={!isEditable} onPointerDown={(e) => e.stopPropagation()}>
                                                         <button
                                                             className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card", isEditable && "cursor-pointer")}
                                                             style={{ backgroundColor: badge.color }}
@@ -422,7 +423,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <span onClick={() => isEditable && !isDragging && setIsEditingName(true)} className={cn("text-base break-words font-normal", isEditable && "cursor-pointer")}>{badge.name}</span>
+                                            <span onPointerDown={(e) => {e.stopPropagation(); if (isEditable && !isDragging) setIsEditingName(true)}} className={cn("text-base break-words font-normal", isEditable && "cursor-pointer")}>{badge.name}</span>
                                         </TooltipTrigger>
                                         <TooltipContent><p>{isEditable ? "Click to edit" : "Properties are managed by the owner."}</p></TooltipContent>
                                     </Tooltip>
@@ -449,7 +450,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                             <TooltipTrigger asChild>
                                 <p 
                                     className={cn("text-sm text-muted-foreground min-h-[20px] break-words", isEditable && "cursor-text")} 
-                                    onClick={() => isEditable && !isDragging && setIsEditingDescription(true)}
+                                    onPointerDown={(e) => { e.stopPropagation(); if (isEditable && !isDragging) setIsEditingDescription(true)}}
                                 >
                                     {badge.description || (isEditable ? 'Click to add description.' : 'No description.')}
                                 </p>
@@ -524,7 +525,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                             <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <PopoverTrigger asChild disabled={!isEditable}>
+                                        <PopoverTrigger asChild disabled={!isEditable} onPointerDown={(e) => e.stopPropagation()}>
                                             <button
                                                 className={cn("absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-background", isEditable && "cursor-pointer")}
                                                 style={{ backgroundColor: badge.color }}
@@ -571,7 +572,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <p className={cn("text-sm text-muted-foreground min-h-[20px] break-words", isEditable && "cursor-text")} onClick={() => isEditable && !isDragging && setIsEditingDescription(true)}>
+                                <p className={cn("text-sm text-muted-foreground min-h-[20px] break-words", isEditable && "cursor-text")} onPointerDown={(e) => {e.stopPropagation(); if (isEditable && !isDragging) setIsEditingDescription(true);}}>
                                     {badge.description || (isEditable ? 'Click to add description.' : 'No description.')}
                                 </p>
                             </TooltipTrigger>
@@ -606,7 +607,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <PopoverTrigger asChild disabled={!isEditable}>
+                                            <PopoverTrigger asChild disabled={!isEditable} onPointerDown={(e) => e.stopPropagation()}>
                                                 <button
                                                     className={cn("absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-background", isEditable && "cursor-pointer")}
                                                     style={{ backgroundColor: badge.color }}
@@ -695,7 +696,7 @@ function SortableCollectionCard({ collection, allBadges, onUpdateCollection, onD
 }) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: `collection::${collection.id}`,
-        data: { type: 'collection', collection }
+        data: { type: 'collection', collection, isSharedPreview }
     });
 
     const style = {
@@ -874,8 +875,8 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                                     {!isViewer && (
                                         <>
                                             <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                                                <PopoverTrigger asChild disabled={!isOwned}><button className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background", !isOwned ? "cursor-not-allowed" : "cursor-pointer")} style={{ backgroundColor: collection.color }} /></PopoverTrigger>
-                                                <PopoverContent className="w-auto p-2">
+                                                <PopoverTrigger asChild disabled={!isOwned} onPointerDown={(e) => e.stopPropagation()}><button className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background", !isOwned ? "cursor-not-allowed" : "cursor-pointer")} style={{ backgroundColor: collection.color }} /></PopoverTrigger>
+                                                <PopoverContent className="w-auto p-2" onPointerDown={(e) => e.stopPropagation()}>
                                                     <div className="grid grid-cols-8 gap-1">
                                                         {predefinedColors.map(color => (
                                                             <button key={color} className="h-6 w-6 rounded-full border" style={{ backgroundColor: color }} onClick={() => {onUpdateCollection(collection.id, { color }); setIsColorPopoverOpen(false);}}/>
