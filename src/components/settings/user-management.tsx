@@ -63,7 +63,7 @@ const SettingSelect = ({
           <Button
             key={option.value}
             variant="ghost"
-            className="justify-start h-8 px-2"
+            className="justify-start h-8 px-2 w-auto"
             onClick={() => {
               onSave(option.value);
               setIsOpen(false);
@@ -147,6 +147,7 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
                             <div>
                                 <p className="font-semibold text-lg">{user.displayName}</p>
                                 <p className="text-sm text-muted-foreground">{user.email}</p>
+                                <p className="text-sm font-medium">{user.title || <span className="italic text-muted-foreground">Not provided</span>}</p>
                             </div>
                           </div>
                             <AccordionTrigger className="py-2 text-sm text-muted-foreground justify-end hover:no-underline [&[data-state=open]>span]:rotate-180" />
@@ -155,71 +156,59 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
                         <AccordionContent>
                            <CardContent className="p-2 pt-0 pb-1">
                                <div className="border-t pt-2">
-                                <div className="p-2 grid grid-cols-1 md:grid-cols-2 gap-x-8">
-                                    {/* Left Column */}
-                                    <div className="space-y-0">
-                                        <div className="space-y-0">
-                                            <p className="text-sm font-medium h-9 flex items-center">{user.title || <span className="italic text-muted-foreground">Not provided</span>}</p>
-                                        </div>
-                                         {isCurrentUser && (
-                                            <div className="flex items-center gap-2 h-9">
-                                                <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                                                    <TooltipProvider>
+                                <div className="p-2">
+                                    {isCurrentUser && (
+                                    <>
+                                        <div className="flex items-center gap-2">
+                                            <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <PopoverTrigger asChild>
+                                                                <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" style={{ color: 'hsl(var(--primary))' }}>
+                                                                    <GoogleSymbol name="palette" weight={100} />
+                                                                </Button>
+                                                            </PopoverTrigger>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>Set custom primary color</TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
+                                                <PopoverContent className="w-auto p-2">
+                                                    <div className="grid grid-cols-8 gap-1">
+                                                        {predefinedColors.map(color => (
+                                                            <button key={color} className="h-6 w-6 rounded-full border" style={{ backgroundColor: color }} onClick={() => handleSetPrimaryColor(color)} aria-label={`Set color to ${color}`}/>
+                                                        ))}
+                                                        <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
+                                                            <GoogleSymbol name="colorize" className="text-muted-foreground" />
+                                                            <Input type="color" value={realUser.primaryColor || '#000000'} onChange={(e) => handleSetPrimaryColor(e.target.value)} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" aria-label="Custom color picker"/>
+                                                        </div>
+                                                    </div>
+                                                </PopoverContent>
+                                            </Popover>
+                                            <div className="relative">
+                                                <div className="flex h-10 items-center justify-center p-0 text-muted-foreground">
+                                                    {THEME_OPTIONS.map(theme => (
+                                                        <TooltipProvider key={theme.name}>
                                                         <Tooltip>
                                                             <TooltipTrigger asChild>
-                                                                <PopoverTrigger asChild>
-                                                                    <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" style={{ color: 'hsl(var(--primary))' }}>
-                                                                        <GoogleSymbol name="palette" weight={100} />
-                                                                    </Button>
-                                                                </PopoverTrigger>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    onClick={() => handleThemeChange(theme.name as any)}
+                                                                    className={cn(
+                                                                    "rounded-none gap-2 py-1.5 hover:bg-transparent",
+                                                                    realUser.theme === theme.name ? "text-primary" : "hover:text-foreground"
+                                                                    )}
+                                                                >
+                                                                    <GoogleSymbol name={theme.icon} className="text-lg" weight={100} />
+                                                                </Button>
                                                             </TooltipTrigger>
-                                                            <TooltipContent>Set custom primary color</TooltipContent>
-                                                        </Tooltip>
-                                                    </TooltipProvider>
-                                                    <PopoverContent className="w-auto p-2">
-                                                        <div className="grid grid-cols-8 gap-1">
-                                                            {predefinedColors.map(color => (
-                                                                <button key={color} className="h-6 w-6 rounded-full border" style={{ backgroundColor: color }} onClick={() => handleSetPrimaryColor(color)} aria-label={`Set color to ${color}`}/>
-                                                            ))}
-                                                            <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
-                                                                <GoogleSymbol name="colorize" className="text-muted-foreground" />
-                                                                <Input type="color" value={realUser.primaryColor || '#000000'} onChange={(e) => handleSetPrimaryColor(e.target.value)} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" aria-label="Custom color picker"/>
-                                                            </div>
-                                                        </div>
-                                                    </PopoverContent>
-                                                </Popover>
-                                                <div className="relative">
-                                                    <div className="flex h-10 items-center justify-center p-0 text-muted-foreground">
-                                                        {THEME_OPTIONS.map(theme => (
-                                                          <TooltipProvider key={theme.name}>
-                                                            <Tooltip>
-                                                                <TooltipTrigger asChild>
-                                                                  <Button
-                                                                      variant="ghost"
-                                                                      size="sm"
-                                                                      onClick={() => handleThemeChange(theme.name as any)}
-                                                                      className={cn(
-                                                                      "rounded-none gap-2 py-1.5 hover:bg-transparent",
-                                                                      realUser.theme === theme.name ? "text-primary" : "hover:text-foreground"
-                                                                      )}
-                                                                  >
-                                                                      <GoogleSymbol name={theme.icon} className="text-lg" weight={100} />
-                                                                      {theme.label}
-                                                                  </Button>
-                                                                </TooltipTrigger>
-                                                                <TooltipContent><p>{theme.tooltip}</p></TooltipContent>
-                                                              </Tooltip>
-                                                          </TooltipProvider>
-                                                        ))}
-                                                    </div>
+                                                            <TooltipContent><p>{theme.tooltip}</p></TooltipContent>
+                                                            </Tooltip>
+                                                        </TooltipProvider>
+                                                    ))}
                                                 </div>
                                             </div>
-                                        )}
-                                    </div>
-                                    {/* Right Column */}
-                                    <div className="space-y-1">
-                                        {isCurrentUser && (
-                                        <>
                                             <SettingSelect
                                                 value={realUser.defaultCalendarView || 'day'}
                                                 onSave={(newValue) => updateUser(realUser.userId, { defaultCalendarView: newValue as any})}
@@ -257,9 +246,9 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
                                                 </TooltipContent>
                                                 </Tooltip>
                                             </TooltipProvider>
-                                        </>
-                                        )}
-                                    </div>
+                                        </div>
+                                    </>
+                                    )}
                                 </div>
                                </div>
                            </CardContent>
