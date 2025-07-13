@@ -49,7 +49,7 @@ const SettingSelect = ({
         <Tooltip>
           <TooltipTrigger asChild>
             <PopoverTrigger asChild>
-              <Button variant="ghost" className="flex items-center gap-1 text-muted-foreground hover:text-foreground hover:bg-transparent">
+              <Button variant="ghost" className="flex items-center gap-1 text-muted-foreground hover:bg-transparent hover:text-foreground">
                 <GoogleSymbol name={icon} className="text-xl" weight={100} />
                 <span className="text-sm">{currentLabel}</span>
               </Button>
@@ -63,7 +63,7 @@ const SettingSelect = ({
           <Button
             key={option.value}
             variant="ghost"
-            className="w-full justify-start"
+            className="w-full justify-start h-8 px-2"
             onClick={() => {
               onSave(option.value);
               setIsOpen(false);
@@ -179,46 +179,48 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
                         <AccordionContent>
                            <CardContent className="p-2 pt-0 pb-1">
                                <div className="border-t pt-2">
-                                <div className="p-2 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1">
+                                <div className="p-2 grid grid-cols-1 md:grid-cols-2 gap-x-8">
                                     {/* Left Column */}
-                                    <div className="space-y-0">
-                                        <p className="text-sm font-medium h-9 flex items-center">{user.title || <span className="italic text-muted-foreground">Not provided</span>}</p>
-                                        <TooltipProvider>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <div
-                                                        className={cn(
-                                                            "text-sm h-9 flex items-center",
-                                                            isCurrentUser && !editingPhoneUserId && "cursor-pointer"
-                                                        )}
-                                                        onClick={() => {
-                                                            if (isCurrentUser && !editingPhoneUserId) {
-                                                                setEditingPhoneUserId(user.userId);
-                                                                setPhoneValue(user.phone || '');
-                                                            }
-                                                        }}
-                                                    >
-                                                        {editingPhoneUserId === user.userId && isCurrentUser ? (
-                                                            <Input
-                                                                ref={phoneInputRef}
-                                                                value={phoneValue}
-                                                                onChange={(e) => setPhoneValue(e.target.value)}
-                                                                onBlur={handleSavePhone}
-                                                                onKeyDown={(e) => {
-                                                                    if (e.key === 'Enter') handleSavePhone();
-                                                                    if (e.key === 'Escape') setEditingPhoneUserId(null);
-                                                                }}
-                                                                className="h-auto p-0 text-sm border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                                                                placeholder="Not provided"
-                                                            />
-                                                        ) : (
-                                                            user.phone || <span className="italic text-muted-foreground">Not provided</span>
-                                                        )}
-                                                    </div>
-                                                </TooltipTrigger>
-                                                {isCurrentUser && <TooltipContent><p>Click to edit contact info</p></TooltipContent>}
-                                            </Tooltip>
-                                        </TooltipProvider>
+                                    <div className="space-y-2">
+                                        <div className="space-y-0">
+                                            <p className="text-sm font-medium h-9 flex items-center">{user.title || <span className="italic text-muted-foreground">Not provided</span>}</p>
+                                            <TooltipProvider>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <div
+                                                            className={cn(
+                                                                "text-sm h-9 flex items-center",
+                                                                isCurrentUser && !editingPhoneUserId && "cursor-pointer"
+                                                            )}
+                                                            onClick={() => {
+                                                                if (isCurrentUser && !editingPhoneUserId) {
+                                                                    setEditingPhoneUserId(user.userId);
+                                                                    setPhoneValue(user.phone || '');
+                                                                }
+                                                            }}
+                                                        >
+                                                            {editingPhoneUserId === user.userId && isCurrentUser ? (
+                                                                <Input
+                                                                    ref={phoneInputRef}
+                                                                    value={phoneValue}
+                                                                    onChange={(e) => setPhoneValue(e.target.value)}
+                                                                    onBlur={handleSavePhone}
+                                                                    onKeyDown={(e) => {
+                                                                        if (e.key === 'Enter') handleSavePhone();
+                                                                        if (e.key === 'Escape') setEditingPhoneUserId(null);
+                                                                    }}
+                                                                    className="h-auto p-0 text-sm border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                                                                    placeholder="Not provided"
+                                                                />
+                                                            ) : (
+                                                                user.phone || <span className="italic text-muted-foreground">Not provided</span>
+                                                            )}
+                                                        </div>
+                                                    </TooltipTrigger>
+                                                    {isCurrentUser && <TooltipContent><p>Click to edit contact info</p></TooltipContent>}
+                                                </Tooltip>
+                                            </TooltipProvider>
+                                        </div>
                                          {isCurrentUser && (
                                             <div className="flex items-center gap-2 h-9">
                                                 <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
@@ -247,7 +249,7 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
                                                     </PopoverContent>
                                                 </Popover>
                                                 <div className="relative">
-                                                    <div className="flex h-10 items-center justify-center p-0 text-muted-foreground border-b">
+                                                    <div className="flex h-10 items-center justify-center p-0 text-muted-foreground">
                                                         {THEME_OPTIONS.map(theme => (
                                                           <TooltipProvider key={theme.name}>
                                                             <Tooltip>
@@ -305,7 +307,7 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
                                             <TooltipProvider>
                                                 <Tooltip>
                                                 <TooltipTrigger asChild>
-                                                    <Button variant="ghost" onClick={() => updateUser(realUser.userId, { easyBooking: !realUser.easyBooking })} className="flex items-center gap-1 text-muted-foreground hover:text-foreground hover:bg-transparent">
+                                                    <Button variant="ghost" onClick={() => updateUser(realUser.userId, { easyBooking: !realUser.easyBooking })} className="flex items-center gap-1 text-muted-foreground hover:bg-transparent hover:text-foreground">
                                                         <GoogleSymbol name={realUser.easyBooking ? 'toggle_on' : 'toggle_off'} className="text-2xl" weight={100} />
                                                         <span className="text-sm">Easy Booking</span>
                                                     </Button>
