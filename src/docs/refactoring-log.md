@@ -70,21 +70,22 @@ The fix involved restructuring the JSX to ensure the `<PopoverTrigger>` and `<Po
 The fix resolved the parsing error and restored the functionality of the "Pages" management tab. This reinforces the importance of adhering to the component structure expected by UI libraries like Radix.
 
 ---
-### 2024-07-27: **Architecture Migration to `@dnd-kit`**
+### 2024-07-28: **Architecture Migration to `@dnd-kit`**
 
 **Status**: ✅ Completed
 
 **Problem**:
-The previous drag-and-drop library was unable to reliably handle the application's responsive, multi-row grid layouts, leading to critical bugs where card rows would move incorrectly and items could be dragged outside their intended containers. This was due to an intrinsic limitation in the library's ability to calculate geometry in complex, responsive flexbox and grid layouts.
+Several key management components (`CalendarManagement`, `TeamManagement`, `BadgeManagement`) were still using the outdated and unstable `react-beautiful-dnd` library. This created architectural inconsistencies and was a source of persistent drag-and-drop bugs, especially in responsive layouts.
 
 **Solution**:
-A full migration to the more modern and robust **`@dnd-kit`** library was executed.
+A full migration to the modern and robust **`@dnd-kit`** library was executed across all remaining components.
 
-1.  **Library Replacement**: The old library was completely removed from project dependencies and replaced with `@dnd-kit/core` and `@dnd-kit/sortable`.
-
-2.  **Component Refactoring**: All components using drag-and-drop were refactored to use `dnd-kit`'s modern, hooks-based API (`useSortable`, `useDraggable`, `useDroppable`). This provided finer-grained control and a more stable implementation.
-
-3.  **Sensors for Better Input**: `dnd-kit`'s sensor system (`PointerSensor`, `KeyboardSensor`) was implemented to provide a better user experience for both mouse and keyboard-based interactions.
+1.  **Library Standardization**: All drag-and-drop functionality has been unified under the `@dnd-kit` ecosystem, including `@dnd-kit/core` and `@dnd-kit/sortable`.
+2.  **Component Refactoring**: The following components were fully refactored to use `dnd-kit`'s modern, hooks-based API (`useSortable`, `useDraggable`, `useDroppable`):
+    *   `src/components/calendar/calendar-management.tsx`
+    *   `src/components/service-delivery/team-management.tsx`
+    *   `src/components/teams/badge-management.tsx`
+3.  **Documentation Update**: The `Draggable Card Management blueprint` in the design system has been updated to name `@dnd-kit` as the single source of truth for all drag-and-drop implementations.
 
 **Outcome**:
-The migration to `@dnd-kit` was a complete success. It immediately resolved all of the persistent layout and positioning bugs. The drag-and-drop functionality is now smooth, predictable, and works flawlessly across all responsive management pages. The resulting code is cleaner, more modern, and more maintainable, aligning better with current React best practices.
+The migration is complete. All drag-and-drop features across the entire application now use a single, stable, and modern library. This resolves critical layout and positioning bugs, improves performance, and establishes a consistent architectural pattern for all future development.
