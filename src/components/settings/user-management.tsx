@@ -28,6 +28,7 @@ const SettingSelect = ({
   placeholder,
   icon,
   tooltip,
+  disabled = false,
 }: {
   value: string;
   onSave: (newValue: string) => void;
@@ -35,6 +36,7 @@ const SettingSelect = ({
   placeholder: string;
   icon: string;
   tooltip: string;
+  disabled?: boolean;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const currentLabel = options.find(opt => opt.value === value)?.label || placeholder;
@@ -45,7 +47,7 @@ const SettingSelect = ({
             <Tooltip>
                 <TooltipTrigger asChild>
                     <PopoverTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:bg-transparent hover:text-foreground">
+                        <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:bg-transparent hover:text-foreground" disabled={disabled}>
                             <GoogleSymbol name={icon} className="text-xl" weight={100} />
                         </Button>
                     </PopoverTrigger>
@@ -62,8 +64,8 @@ const SettingSelect = ({
                 variant="ghost"
                 className="justify-start h-8 px-2"
                 onClick={() => {
-                onSave(option.value);
-                setIsOpen(false);
+                  onSave(option.value);
+                  setIsOpen(false);
                 }}
             >
                 {option.label}
@@ -74,18 +76,18 @@ const SettingSelect = ({
   );
 };
 
-function UserCard({ user, isCurrentUser }: { user: User, isCurrentUser: boolean }) {
-    const { realUser, updateUser, linkGoogleCalendar } = useUser();
+function UserCard({ user, isCurrentUser, canEditPreferences }: { user: User, isCurrentUser: boolean, canEditPreferences: boolean }) {
+    const { updateUser, linkGoogleCalendar } = useUser();
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
     
     const handleSetPrimaryColor = (color: string) => {
-      updateUser(realUser.userId, { primaryColor: color });
+      updateUser(user.userId, { primaryColor: color });
       setIsColorPopoverOpen(false);
     }
     
     const handleThemeChange = () => {
-        const newTheme = realUser.theme === 'dark' ? 'light' : 'dark';
-        updateUser(realUser.userId, { theme: newTheme, primaryColor: undefined });
+        const newTheme = user.theme === 'dark' ? 'light' : 'dark';
+        updateUser(user.userId, { theme: newTheme, primaryColor: undefined });
     }
     
     return (
@@ -103,8 +105,16 @@ function UserCard({ user, isCurrentUser }: { user: User, isCurrentUser: boolean 
                                         </Avatar>
                                         <span className={cn(
                                             "absolute bottom-0 right-0 block h-3.5 w-3.5 rounded-full ring-2 ring-card",
-                                            user.googleCalendarLinked ? "bg-green-500" : "bg-gray-400"
-                                        )} />
+                                            user.googleCalendarLinked ? "bg-green-500" : "bg-gray-400",
+                                            isCurrentUser && !user.googleCalendarLinked && "cursor-pointer"
+                                        )} 
+                                        onClick={(e) => {
+                                            if (isCurrentUser && !user.googleCalendarLinked) {
+                                              e.stopPropagation();
+                                              linkGoogleCalendar(user.userId);
+                                            }
+                                        }}
+                                        />
                                     </div>
                                 </TooltipTrigger>
                                 <TooltipContent>
@@ -118,7 +128,7 @@ function UserCard({ user, isCurrentUser }: { user: User, isCurrentUser: boolean 
                             <p className="text-sm text-muted-foreground">{user.email}</p>
                         </div>
                     </div>
-                    {isCurrentUser && (
+                    {canEditPreferences && (
                         <div className="flex items-center gap-1">
                             <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
                                 <TooltipProvider>
@@ -140,7 +150,7 @@ function UserCard({ user, isCurrentUser }: { user: User, isCurrentUser: boolean 
                                         ))}
                                         <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
                                             <GoogleSymbol name="colorize" className="text-muted-foreground" />
-                                            <Input type="color" value={realUser.primaryColor || '#000000'} onChange={(e) => handleSetPrimaryColor(e.target.value)} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" aria-label="Custom color picker"/>
+                                            <Input type="color" value={user.primaryColor || '#000000'} onChange={(e) => handleSetPrimaryColor(e.target.value)} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" aria-label="Custom color picker"/>
                                         </div>
                                     </div>
                                 </PopoverContent>
@@ -155,16 +165,16 @@ function UserCard({ user, isCurrentUser }: { user: User, isCurrentUser: boolean 
                                             onClick={handleThemeChange}
                                             className="h-9 w-9 text-muted-foreground hover:bg-transparent hover:text-foreground"
                                         >
-                                            <GoogleSymbol name={realUser.theme === 'dark' ? 'dark_mode' : 'light_mode'} className="text-lg" weight={100} />
+                                            <GoogleSymbol name={user.theme === 'dark' ? 'dark_mode' : 'light_mode'} className="text-lg" weight={100} />
                                         </Button>
                                     </TooltipTrigger>
-                                    <TooltipContent><p>Switch to {realUser.theme === 'dark' ? 'Light' : 'Dark'} Theme</p></TooltipContent>
+                                    <TooltipContent><p>Switch to {user.theme === 'dark' ? 'Light' : 'Dark'} Theme</p></TooltipContent>
                                 </Tooltip>
                             </TooltipProvider>
 
                             <SettingSelect
-                                value={realUser.defaultCalendarView || 'day'}
-                                onSave={(newValue) => updateUser(realUser.userId, { defaultCalendarView: newValue as any})}
+                                value={user.defaultCalendarView || 'day'}
+                                onSave={(newValue) => updateUser(user.userId, { defaultCalendarView: newValue as any})}
                                 options={[
                                     { value: "month", label: "Month" },
                                     { value: "week", label: "Week" },
@@ -176,8 +186,8 @@ function UserCard({ user, isCurrentUser }: { user: User, isCurrentUser: boolean 
                                 tooltip="Default Calendar View"
                             />
                             <SettingSelect
-                                value={realUser.timeFormat || '12h'}
-                                onSave={(newValue) => updateUser(realUser.userId, { timeFormat: newValue as any})}
+                                value={user.timeFormat || '12h'}
+                                onSave={(newValue) => updateUser(user.userId, { timeFormat: newValue as any})}
                                 options={[
                                     { value: "12h", label: "12-Hour" },
                                     { value: "24h", label: "24-Hour" },
@@ -189,12 +199,12 @@ function UserCard({ user, isCurrentUser }: { user: User, isCurrentUser: boolean 
                             <TooltipProvider>
                                 <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" onClick={() => updateUser(realUser.userId, { easyBooking: !realUser.easyBooking })} className="h-9 w-9 text-muted-foreground hover:bg-transparent hover:text-foreground">
-                                        <GoogleSymbol name={realUser.easyBooking ? 'toggle_on' : 'toggle_off'} className="text-2xl" weight={100} />
+                                    <Button variant="ghost" size="icon" onClick={() => updateUser(user.userId, { easyBooking: !user.easyBooking })} className="h-9 w-9 text-muted-foreground hover:bg-transparent hover:text-foreground">
+                                        <GoogleSymbol name={user.easyBooking ? 'toggle_on' : 'toggle_off'} className="text-2xl" weight={100} />
                                     </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                    <p>Easy Booking: <span className="font-semibold">{realUser.easyBooking ? 'On' : 'Off'}</span>. Click empty calendar slots to quickly create events.</p>
+                                    <p>Easy Booking: <span className="font-semibold">{user.easyBooking ? 'On' : 'Off'}</span>. Click empty calendar slots to quickly create events.</p>
                                 </TooltipContent>
                                 </Tooltip>
                             </TooltipProvider>
@@ -208,21 +218,24 @@ function UserCard({ user, isCurrentUser }: { user: User, isCurrentUser: boolean 
 
 
 export function UserManagement({ showSearch = false }: { showSearch?: boolean }) {
-    const { realUser, users } = useUser();
+    const { realUser, viewAsUser, users } = useUser();
     const [searchTerm, setSearchTerm] = useState('');
     
     const { currentUser, otherUsers } = useMemo(() => {
-        const currentUser = users.find(u => u.userId === realUser.userId);
+        const currentUser = users.find(u => u.userId === viewAsUser.userId);
         
         const otherUsers = users
-            .filter(user => user.userId !== realUser.userId)
+            .filter(user => user.userId !== viewAsUser.userId)
             .filter(user => user.displayName.toLowerCase().includes(searchTerm.toLowerCase()));
 
         return { currentUser, otherUsers };
-    }, [users, realUser.userId, searchTerm]);
+    }, [users, viewAsUser.userId, searchTerm]);
+
+    const isCurrentUser = realUser.userId === viewAsUser.userId;
+    const canEditPreferences = isCurrentUser || realUser.isAdmin;
 
     return (
-        <>
+        <div className="space-y-6">
           {showSearch && (
               <div className="flex justify-end mb-4">
                   <CompactSearchInput 
@@ -233,19 +246,18 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
                   />
               </div>
           )}
-          <div className="space-y-6">
-            {currentUser && <UserCard user={currentUser} isCurrentUser={true} />}
-            
-            {otherUsers.length > 0 && (
-                <div className="flex flex-wrap -m-2">
-                    {otherUsers.map(user => (
-                        <div key={user.userId} className="p-2 w-full sm:w-1/2 md:w-1/3 lg:w-1/4 xl:w-1/5">
-                            <UserCard user={user} isCurrentUser={false} />
-                        </div>
-                    ))}
-                </div>
-            )}
-          </div>
-        </>
+          
+          {currentUser && <UserCard user={currentUser} isCurrentUser={isCurrentUser} canEditPreferences={canEditPreferences} />}
+          
+          {otherUsers.length > 0 && (
+              <div className="flex flex-wrap -m-2">
+                  {otherUsers.map(user => (
+                      <div key={user.userId} className="p-2 w-full sm:w-1/2 md:w-1/3 lg:w-1/4 xl:w-1/5">
+                          <UserCard user={user} isCurrentUser={false} canEditPreferences={false} />
+                      </div>
+                  ))}
+              </div>
+          )}
+        </div>
     )
 }
