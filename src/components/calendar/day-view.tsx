@@ -180,10 +180,8 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
     
     useEffect(() => {
         initialScrollPerformed.current = false;
-    }, [date]);
+    }, [date, zoomLevel, axisView]);
 
-    // This layout effect observes the container size and updates state
-    // It's more stable than calculating size in a normal useEffect
     useLayoutEffect(() => {
         const container = containerRef.current;
         if (!container) return;
@@ -200,51 +198,52 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
         return () => resizeObserver.disconnect();
     }, [containerRef]);
 
-    // Effect for calculating dimensions based on zoom and view axis, now dependent on stable containerSize
     useEffect(() => {
-        const isFit = zoomLevel === 'fit';
-        if (axisView === 'standard') {
-            if (containerSize.width > 0) {
-                const newHourWidth = isFit ? (containerSize.width - LOCATION_LABEL_WIDTH_PX) / 12 : DEFAULT_HOUR_WIDTH_PX;
-                setHourWidth(newHourWidth);
+        if (zoomLevel === 'fit') {
+            if (axisView === 'standard') {
+                if (containerSize.width > 0) {
+                    const newHourWidth = (containerSize.width - LOCATION_LABEL_WIDTH_PX) / 12;
+                    setHourWidth(newHourWidth);
+                }
+            } else { // reversed
+                if (containerSize.height > 0) {
+                    const newHourHeight = containerSize.height / 12;
+                    setHourHeight(newHourHeight);
+                }
             }
-        } else { // Reversed axis
-            if (containerSize.height > 0) {
-                const newHourHeight = isFit ? containerSize.height / 12 : DEFAULT_HOUR_HEIGHT_PX;
-                setHourHeight(newHourHeight);
-            }
+        } else { // normal zoom
+            setHourWidth(DEFAULT_HOUR_WIDTH_PX);
+            setHourHeight(DEFAULT_HOUR_HEIGHT_PX);
         }
     }, [zoomLevel, axisView, containerSize]);
 
-    // Effect for scrolling to current time or a default position
     useEffect(() => {
         const container = containerRef.current;
-        if (!container || initialScrollPerformed.current) return;
+        if (!container || initialScrollPerformed.current || (containerSize.width === 0 && containerSize.height === 0)) return;
 
         const performScroll = () => {
             if (isViewingToday && now && nowMarkerRef.current) {
                 if (axisView === 'standard') {
-                    container.scrollTo({ left: nowMarkerRef.current.offsetLeft - (container.offsetWidth / 2), behavior: 'smooth' });
-                } else {
-                    container.scrollTo({ top: nowMarkerRef.current.offsetTop - (container.offsetHeight / 2), behavior: 'smooth' });
+                    const scrollLeft = nowMarkerRef.current.offsetLeft - (container.offsetWidth / 2) + (LOCATION_LABEL_WIDTH_PX / 2);
+                    container.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+                } else { // reversed
+                    const scrollTop = nowMarkerRef.current.offsetTop - (container.offsetHeight / 2);
+                    container.scrollTo({ top: scrollTop, behavior: 'smooth' });
                 }
-            } else {
-                // Scroll to a default position (e.g., 7 AM) on other days
+            } else { // Not today, scroll to 8am
                 if (axisView === 'standard') {
                     container.scrollTo({ left: 7 * hourWidth, behavior: 'auto' });
-                } else {
+                } else { // reversed
                     container.scrollTo({ top: 7 * hourHeight, behavior: 'auto' });
                 }
             }
             initialScrollPerformed.current = true;
         };
-
-        // Delay scroll slightly to allow dimensions to stabilize
+        
         const scrollTimeout = setTimeout(performScroll, 50);
 
         return () => clearTimeout(scrollTimeout);
-
-    }, [containerRef, now, isViewingToday, date, hourWidth, hourHeight, axisView]);
+    }, [containerRef, now, isViewingToday, date, hourWidth, hourHeight, axisView, containerSize]);
 
     const hours = Array.from({ length: 24 }, (_, i) => i);
 
@@ -305,7 +304,7 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
 
             startTime = new Date(day);
             startTime.setHours(hour, minutes, 0, 0);
-        } else { // reversed
+        } else {
             const y = e.clientY - rect.top;
             const clickedHour = y / hourHeight;
             const hour = Math.floor(clickedHour);
@@ -340,10 +339,10 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
     const renderStandardView = () => (
         <Card className="h-full flex flex-col border-0">
             <div style={{ width: `${LOCATION_LABEL_WIDTH_PX + (24 * hourWidth)}px`}}>
-                <CardHeader className="p-0 border-b sticky top-0 bg-card z-20 flex flex-row">
-                    <div className="w-[160px] shrink-0 border-r p-2 flex items-center font-normal text-sm sticky left-0 bg-muted/50 z-30">Location</div>
+                <CardHeader className="p-0 border-b sticky top-0 bg-muted z-20 flex flex-row">
+                    <div className="w-[160px] shrink-0 border-r p-2 flex items-center font-normal text-sm sticky left-0 bg-muted z-30">Location</div>
                     {hours.map(hour => (
-                        <div key={hour} className="shrink-0 text-left p-2 border-r bg-muted/50" style={{ width: `${hourWidth}px` }}>
+                        <div key={hour} className="shrink-0 text-left p-2 border-r bg-muted" style={{ width: `${hourWidth}px` }}>
                             <span className="text-xs text-muted-foreground">{format(addHours(startOfDay(date), hour), timeFormatTimeline)}</span>
                         </div>
                     ))}
@@ -402,8 +401,7 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
         <Card className="h-full flex flex-col border-0">
             <CardContent className="p-0 relative flex-1">
                 <div className="grid grid-cols-[auto,1fr] min-h-full">
-                    {/* Timeline */}
-                    <div className="w-20 border-r bg-muted/50">
+                    <div className="w-20 border-r bg-muted">
                         {hours.map(hour => (
                             <div key={hour} className="relative text-right pr-2 border-b" style={{ height: `${hourHeight}px` }}>
                                 <span className="text-xs text-muted-foreground relative -top-2">{format(addHours(startOfDay(date), hour), viewAsUser.timeFormat === '24h' ? 'HH:00' : 'h a')}</span>
@@ -411,9 +409,7 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
                         ))}
                     </div>
 
-                    {/* Day column */}
                     <div className="relative" onClick={(e) => handleEasyBookingClick(e, 'reversed', date)}>
-                        {/* Lunch Break Cue */}
                         <div
                             className="absolute inset-x-0 lunch-break-pattern z-0 pointer-events-none"
                             style={{
@@ -422,12 +418,10 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
                             }}
                             title="Lunch Break"
                         />
-                        {/* Grid lines */}
                         {hours.map(hour => (
                             <div key={hour} className="border-b" style={{ height: `${hourHeight}px` }}></div>
                         ))}
 
-                        {/* Events or No Events Message */}
                         {dayEvents.length === 0 ? (
                              <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
                                 No events scheduled for this day.

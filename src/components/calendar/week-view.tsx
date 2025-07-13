@@ -76,7 +76,7 @@ export const WeekView = React.memo(({ date, containerRef, zoomLevel, onEasyBooki
 
     useEffect(() => {
         initialScrollPerformed.current = false;
-    }, [date]);
+    }, [date, zoomLevel]);
 
     useLayoutEffect(() => {
         const container = containerRef.current;
@@ -94,7 +94,6 @@ export const WeekView = React.memo(({ date, containerRef, zoomLevel, onEasyBooki
         return () => resizeObserver.disconnect();
     }, [containerRef]);
 
-    // Effect for calculating hour height based on zoom
     useEffect(() => {
         if (containerSize.height > 0) {
             const isFit = zoomLevel === 'fit';
@@ -103,10 +102,9 @@ export const WeekView = React.memo(({ date, containerRef, zoomLevel, onEasyBooki
         }
     }, [zoomLevel, containerSize]);
 
-    // Effect for scrolling to current time or a default position
     useEffect(() => {
         const container = containerRef.current;
-        if (!container || initialScrollPerformed.current) return;
+        if (!container || initialScrollPerformed.current || containerSize.height === 0) return;
     
         const performScroll = () => {
             if (isCurrentWeek && now && nowMarkerRef.current) {
@@ -117,12 +115,11 @@ export const WeekView = React.memo(({ date, containerRef, zoomLevel, onEasyBooki
             initialScrollPerformed.current = true;
         };
 
-        // Delay scroll slightly to allow dimensions to stabilize
         const scrollTimeout = setTimeout(performScroll, 50);
 
         return () => clearTimeout(scrollTimeout);
 
-    }, [containerRef, now, isCurrentWeek, date, hourHeight]);
+    }, [containerRef, now, isCurrentWeek, date, hourHeight, containerSize]);
 
 
     const hours = Array.from({ length: 24 }, (_, i) => i);
@@ -152,7 +149,7 @@ export const WeekView = React.memo(({ date, containerRef, zoomLevel, onEasyBooki
     const gridColsClass = showWeekends ? 'grid-cols-[auto,1fr,1fr,1fr,1fr,1fr,1fr,1fr]' : 'grid-cols-[auto,1fr,1fr,1fr,1fr,1fr]';
 
     return (
-        <Card className="h-full flex flex-col border-0">
+        <Card className="h-full flex flex-col">
             <CardHeader className="p-0 border-b sticky top-0 bg-muted/50 z-10">
                 <div className={cn("grid", gridColsClass)}>
                     <div className="w-20"></div> {/* Timeline spacer */}
