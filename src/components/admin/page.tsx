@@ -22,6 +22,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { CompactSearchInput } from '@/components/common/compact-search-input';
+import { corePages, coreTabs } from '@/lib/core-data';
 import {
   DndContext,
   closestCenter,
@@ -766,10 +767,8 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
     const [activePage, setActivePage] = useState<AppPage | null>(null);
     const searchInputRef = useRef<HTMLInputElement>(null);
     
-    const pinnedTopIds = useMemo(() => ['page-admin-management', 'page-overview', 'page-calendar', 'page-tasks'], []);
-    const pinnedBottomIds = useMemo(() => ['page-notifications', 'page-settings'], []);
-    const allPinnedIds = useMemo(() => new Set([...pinnedTopIds, ...pinnedBottomIds]), [pinnedTopIds, pinnedBottomIds]);
-    
+    const pinnedIds = useMemo(() => new Set(corePages.map(p => p.id)), []);
+
     useEffect(() => {
         if (isActive && searchInputRef.current) {
             searchInputRef.current.focus();
@@ -809,7 +808,8 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
             access: { users: [], teams: [] }
         };
         
-        const lastTopPinnedIndex = appSettings.pages.findIndex(p => p.id === pinnedTopIds[pinnedTopIds.length - 1]);
+        const lastPinnedCorePage = corePages[corePages.length - 1];
+        const lastTopPinnedIndex = appSettings.pages.findIndex(p => p.id === lastPinnedCorePage.id);
         
         const newPages = [...appSettings.pages];
         newPages.splice(lastTopPinnedIndex + 1, 0, newPage);
@@ -854,7 +854,7 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
             const oldIndex = appSettings.pages.findIndex(p => p.id === active.id);
             const newIndex = appSettings.pages.findIndex(p => p.id === over!.id);
             
-            if (allPinnedIds.has(appSettings.pages[newIndex].id)) {
+            if (pinnedIds.has(appSettings.pages[newIndex].id)) {
                 return;
             }
 
@@ -889,13 +889,13 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
                                 page={page}
                                 onUpdate={handleUpdatePage}
                                 onDelete={handleDeletePage}
-                                isPinned={allPinnedIds.has(page.id)}
+                                isPinned={pinnedIds.has(page.id)}
                             />
                         ))}
                     </div>
                 </SortableContext>
                 <DragOverlay>
-                    {activePage ? <PageCard page={activePage} onUpdate={() => {}} onDelete={() => {}} isPinned={allPinnedIds.has(activePage.id)} /> : null}
+                    {activePage ? <PageCard page={activePage} onUpdate={() => {}} onDelete={() => {}} isPinned={pinnedIds.has(activePage.id)} /> : null}
                 </DragOverlay>
             </div>
         </DndContext>
@@ -916,6 +916,8 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
 
     const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
     const [isEditingDescription, setIsEditingDescription] = useState(false);
+    
+    const isCoreTab = useMemo(() => coreTabs.some(t => t.id === tab.id), [tab.id]);
 
     const handleSaveName = useCallback(() => {
         const newName = nameInputRef.current?.value.trim();
@@ -1068,7 +1070,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                         ) : (
                             <h3 className="font-headline cursor-text text-base font-thin" onClick={() => setIsEditingName(true)}>{tab.name}</h3>
                         )}
-                        <Badge variant="outline">{tab.componentKey}</Badge>
+                        <Badge variant={isCoreTab ? "default" : "outline"}>{isCoreTab ? "Core" : tab.componentKey}</Badge>
                     </div>
                     {isEditingDescription ? (
                         <Textarea 
@@ -1091,6 +1093,8 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
 }
 
 function SortableTabCard({ id, tab, onUpdate }: { id: string, tab: AppTab, onUpdate: (id: string, data: Partial<AppTab>) => void; }) {
+    const isCoreTab = useMemo(() => coreTabs.some(t => t.id === tab.id), [tab.id]);
+
     const {
         attributes,
         listeners,
@@ -1098,7 +1102,7 @@ function SortableTabCard({ id, tab, onUpdate }: { id: string, tab: AppTab, onUpd
         transform,
         transition,
         isDragging,
-    } = useSortable({id});
+    } = useSortable({id, disabled: isCoreTab});
 
     const style = {
         transform: CSS.Transform.toString(transform),

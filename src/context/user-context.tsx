@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { hexToHsl } from '@/lib/utils';
 import { getOwnershipContext } from '@/lib/permissions';
 import { googleSymbolNames } from '@/lib/google-symbols';
+import { corePages, coreTabs, globalBadges } from '@/lib/core-data';
 
 // Helper to simulate async operations
 const simulateApi = (delay = 50) => new Promise(res => setTimeout(res, delay));
@@ -85,7 +86,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const [allBadges, setAllBadges] = useState<Badge[]>(() => {
     const badgesMap = new Map<string, Badge>();
-    (mockAppSettings.globalBadges || []).forEach(badge => {
+    (globalBadges || []).forEach(badge => {
         if (!badgesMap.has(badge.id)) badgesMap.set(badge.id, badge);
     });
     mockTeams.forEach(team => {
