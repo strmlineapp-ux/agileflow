@@ -34,12 +34,16 @@ export function CompactSearchInput({
   useEffect(() => {
     if (autoFocus && !initialFocusDone) {
       setIsSearching(true);
-      setTimeout(() => {
-        inputRef.current?.focus();
-        setInitialFocusDone(true);
-      }, 100);
+      setInitialFocusDone(true);
     }
   }, [autoFocus, initialFocusDone, inputRef]);
+  
+  useEffect(() => {
+    if (isSearching && inputRef.current) {
+        setTimeout(() => inputRef.current?.focus(), 50);
+    }
+  }, [isSearching, inputRef]);
+
 
   if (isSearching) {
     return (
@@ -50,7 +54,7 @@ export function CompactSearchInput({
           placeholder={placeholder}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          onBlur={() => { if (!searchTerm) setIsSearching(false); }}
+          onBlur={() => { if (!searchTerm && !autoFocus) setIsSearching(false); }}
           className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 font-thin"
         />
       </div>

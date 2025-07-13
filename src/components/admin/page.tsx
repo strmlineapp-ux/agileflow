@@ -240,10 +240,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
                         </div>
                     </CardHeader>
                      <CardContent className="flex-grow">
-                         <UserDropZone id="user-list" users={filteredNonAdminUsers} >
-                           {filteredNonAdminUsers.length === 0 && (
-                                <></>
-                            )}
+                         <UserDropZone id="user-list" users={filteredNonAdminUsers}>
                          </UserDropZone>
                     </CardContent>
                   </Card>
@@ -502,8 +499,8 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, ...props }: 
     
     const handleSaveName = useCallback(() => {
         setIsEditingName(false);
-        const newName = nameInputRef.current?.value.trim();
-        if (newName && newName !== page.name) {
+        const newName = nameInputRef.current?.value;
+        if (newName && newName.trim() && newName !== page.name) {
             onUpdate(page.id, { name: newName });
         }
     }, [page.id, page.name, onUpdate]);
@@ -682,10 +679,17 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, ...props }: 
             <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                 <DialogContent className="max-w-md" onPointerDownCapture={(e) => e.stopPropagation()}>
                     <div className="absolute top-4 right-4">
-                        <Button variant="ghost" size="icon" onClick={() => onDelete(page.id)}>
-                            <GoogleSymbol name="check" className="text-xl" weight={100} />
-                            <span className="sr-only">Confirm Delete</span>
-                        </Button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10 p-0" onClick={() => onDelete(page.id)}>
+                              <GoogleSymbol name="delete" className="text-4xl" weight={100} />
+                              <span className="sr-only">Delete Page</span>
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent><p>Delete Page</p></TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
                     <DialogHeader>
                         <DialogTitle>Delete "{page.name}"?</DialogTitle>
@@ -1172,7 +1176,7 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
                                 />
                             ))
                         ) : (
-                            <p className="text-center text-muted-foreground p-4">No tabs found.</p>
+                            <></>
                         )}
                     </div>
                 </SortableContext>
