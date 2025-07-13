@@ -147,12 +147,11 @@ export const MonthView = React.memo(({ date, containerRef, onEventClick }: { dat
     }
 
     return (
-        <Card className="flex flex-col h-full">
-            <div className={cn("grid border-b border-t sticky top-0 bg-card z-10", gridColsClass)}>
+        <Card className="flex flex-col h-full border-0">
+            <div className={cn("grid border-b border-t sticky top-0 bg-muted/50 z-10", gridColsClass)}>
                 {displayedWeekdays.map((day, index) => (
                     <div key={day} className={cn("text-center font-medium p-2 text-sm border-r last:border-r-0 relative", 
-                        { "bg-muted/10": index % 2 !== 0},
-                        { "bg-muted/50 text-muted-foreground/50": (day === 'Sat' || day === 'Sun') },
+                        { "bg-muted": (day === 'Sat' || day === 'Sun') },
                         { "text-muted-foreground": !(day === 'Sat' || day === 'Sun') }
                     )}>
                         {day}

@@ -152,15 +152,15 @@ export const WeekView = React.memo(({ date, containerRef, zoomLevel, onEasyBooki
     const gridColsClass = showWeekends ? 'grid-cols-[auto,1fr,1fr,1fr,1fr,1fr,1fr,1fr]' : 'grid-cols-[auto,1fr,1fr,1fr,1fr,1fr]';
 
     return (
-        <Card className="h-full flex flex-col">
-            <CardHeader className="p-0 border-b sticky top-0 bg-card z-10">
+        <Card className="h-full flex flex-col border-0">
+            <CardHeader className="p-0 border-b sticky top-0 bg-muted/50 z-10">
                 <div className={cn("grid", gridColsClass)}>
                     <div className="w-20"></div> {/* Timeline spacer */}
                     {displayedDays.map((day, index) => {
                         const isWeekend = isSaturday(day) || isSunday(day);
                         const isDayHoliday = isHoliday(day);
                         return (
-                            <div key={day.toString()} className={cn("text-center p-2 border-l relative", { "bg-muted/10": index % 2 !== 0 }, { "bg-muted/50": isWeekend || isDayHoliday })}>
+                            <div key={day.toString()} className={cn("text-center p-2 border-l relative", { "bg-muted": isWeekend || isDayHoliday })}>
                                 <p className={cn("text-sm font-normal", { "text-muted-foreground/50": isWeekend || isDayHoliday })}>{format(day, 'EEE')}</p>
                                 <p className={cn(
                                     "text-2xl font-normal",
@@ -187,9 +187,9 @@ export const WeekView = React.memo(({ date, containerRef, zoomLevel, onEasyBooki
             <CardContent className="p-0 relative">
                 <div className={cn("grid min-h-full", gridColsClass)}>
                     {/* Timeline */}
-                    <div className="w-20 border-r">
+                    <div className="w-20 border-r bg-muted/50">
                         {hours.map((hour, index) => (
-                            <div key={hour} className={cn("relative text-right pr-2 border-b", {"bg-muted/10": index % 2 !== 0})} style={{ height: `${hourHeight}px` }}>
+                            <div key={hour} className={cn("relative text-right pr-2 border-b", {"bg-muted": index % 2 !== 0})} style={{ height: `${hourHeight}px` }}>
                                 <span className="text-xs text-muted-foreground relative -top-2">{format(addHours(startOfDay(date), hour), timeFormatTimeline)}</span>
                             </div>
                         ))}

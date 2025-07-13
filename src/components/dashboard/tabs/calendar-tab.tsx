@@ -17,6 +17,7 @@ import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { type Event, type AppPage } from '@/types';
 import { EventDetailsDialog } from '@/components/calendar/event-details-dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Card } from '@/components/ui/card';
 
 export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
   const { realUser, viewAsUser, calendars } = useUser();
@@ -213,7 +214,7 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
               </Tabs>
           </div>
         </div>
-        <div className="flex-1" ref={viewContainerRef}>
+        <div className="flex-1 overflow-auto" ref={viewContainerRef}>
             {renderCurrentView()}
         </div>
       </div>

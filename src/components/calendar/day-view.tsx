@@ -338,12 +338,12 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
     }
     
     const renderStandardView = () => (
-        <Card className="h-full flex flex-col">
+        <Card className="h-full flex flex-col border-0">
             <div style={{ width: `${LOCATION_LABEL_WIDTH_PX + (24 * hourWidth)}px`}}>
                 <CardHeader className="p-0 border-b sticky top-0 bg-card z-20 flex flex-row">
-                    <div className="w-[160px] shrink-0 border-r p-2 flex items-center font-normal text-sm sticky left-0 bg-card z-30">Location</div>
+                    <div className="w-[160px] shrink-0 border-r p-2 flex items-center font-normal text-sm sticky left-0 bg-muted/50 z-30">Location</div>
                     {hours.map(hour => (
-                        <div key={hour} className="shrink-0 text-left p-2 border-r" style={{ width: `${hourWidth}px` }}>
+                        <div key={hour} className="shrink-0 text-left p-2 border-r bg-muted/50" style={{ width: `${hourWidth}px` }}>
                             <span className="text-xs text-muted-foreground">{format(addHours(startOfDay(date), hour), timeFormatTimeline)}</span>
                         </div>
                     ))}
@@ -399,11 +399,11 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
     );
     
     const renderReversedView = () => (
-        <Card className="h-full flex flex-col">
+        <Card className="h-full flex flex-col border-0">
             <CardContent className="p-0 relative flex-1">
                 <div className="grid grid-cols-[auto,1fr] min-h-full">
                     {/* Timeline */}
-                    <div className="w-20 border-r">
+                    <div className="w-20 border-r bg-muted/50">
                         {hours.map(hour => (
                             <div key={hour} className="relative text-right pr-2 border-b" style={{ height: `${hourHeight}px` }}>
                                 <span className="text-xs text-muted-foreground relative -top-2">{format(addHours(startOfDay(date), hour), viewAsUser.timeFormat === '24h' ? 'HH:00' : 'h a')}</span>
