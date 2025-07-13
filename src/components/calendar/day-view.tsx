@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useMemo, useState, useRef, useCallback, useLayoutEffect } from 'react';
@@ -196,7 +197,7 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
         const resizeObserver = new ResizeObserver(handleResize);
         resizeObserver.observe(scroller);
         return () => resizeObserver.disconnect();
-    }, [zoomLevel, axisView]);
+    }, [zoomLevel, axisView, dayEvents]); // Re-run when view changes
 
 
     useEffect(() => {
@@ -205,15 +206,24 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
 
         let scrollLeft = 8 * hourWidth; // Default scroll to 8am
         let scrollTop = 8 * hourHeight; // Default scroll to 8am
+        
+        const centerOnTime = (timeInHours: number) => {
+            if (axisView === 'standard') {
+                return (timeInHours * hourWidth) - (scroller.offsetWidth / 2) + (LOCATION_LABEL_WIDTH_PX / 2);
+            } else {
+                return (timeInHours * hourHeight) - (scroller.offsetHeight / 2);
+            }
+        };
 
         if (zoomLevel === 'fit') {
-            scrollLeft = axisView === 'standard' ? 8 * hourWidth : 0;
-            scrollTop = axisView === 'reversed' ? 8 * hourHeight : 0;
+            scrollLeft = axisView === 'standard' ? centerOnTime(8) : 0;
+            scrollTop = axisView === 'reversed' ? centerOnTime(8) : 0;
         } else if (isViewingToday && now) {
-            if (axisView === 'standard' && nowMarkerRef.current) {
-                scrollLeft = nowMarkerRef.current.offsetLeft - (scroller.offsetWidth / 2) + (LOCATION_LABEL_WIDTH_PX / 2);
-            } else if (axisView === 'reversed' && nowMarkerRef.current) {
-                scrollTop = nowMarkerRef.current.offsetTop - (scroller.offsetHeight / 2);
+            const nowInHours = now.getHours() + now.getMinutes() / 60;
+            if (axisView === 'standard') {
+                scrollLeft = centerOnTime(nowInHours);
+            } else {
+                scrollTop = centerOnTime(nowInHours);
             }
         }
         
@@ -317,7 +327,7 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
     }
     
     const renderStandardView = () => (
-        <Card className="h-full flex flex-col">
+        <Card className="h-full flex flex-col flex-1">
             <div className="overflow-x-auto overflow-y-hidden" ref={timelineScrollerRef}>
                 <div style={{ width: `${LOCATION_LABEL_WIDTH_PX + (24 * hourWidth)}px`}} className="flex flex-col flex-1 h-full">
                     <CardHeader className="p-0 border-b sticky top-0 bg-muted z-20 flex flex-row">
@@ -380,7 +390,7 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
     );
     
     const renderReversedView = () => (
-        <Card className="h-full flex flex-col">
+        <Card className="h-full flex flex-col flex-1">
             <div className="flex-1 overflow-y-auto" ref={timelineScrollerRef}>
                 <CardContent className="p-0 relative flex-1">
                     <div className="grid grid-cols-[auto,1fr] min-h-full h-full">
@@ -491,7 +501,7 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
             </div>
         </Card>
     );
-
+    
     return axisView === 'reversed' ? renderReversedView() : renderStandardView();
 });
 DayView.displayName = 'DayView';
