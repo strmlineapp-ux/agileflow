@@ -14,6 +14,7 @@ import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { googleSymbolNames } from '@/lib/google-symbols';
+import { corePages } from '@/lib/core-data';
 import { cn, getContrastColor } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -235,7 +236,9 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive, activeTab }: 
                         </div>
                     </CardHeader>
                      <CardContent className="flex-grow">
-                         <UserDropZone id="user-list" users={filteredNonAdminUsers} />
+                         <UserDropZone id="user-list" users={filteredNonAdminUsers}>
+                           {filteredNonAdminUsers.length === 0 && <p className="text-center text-xs text-muted-foreground"></p>}
+                         </UserDropZone>
                     </CardContent>
                   </Card>
             </div>
