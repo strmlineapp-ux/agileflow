@@ -13,6 +13,10 @@ import { GoogleSymbol } from '../icons/google-symbol';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }) {
+  if (!team) {
+    return null;
+  }
+  
   const { updateTeam, updateAppTab } = useUser();
   const { toast } = useToast();
 
