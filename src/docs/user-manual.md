@@ -22,10 +22,10 @@ Once your access has been approved, you can sign in:
 
 The main navigation is located in the sidebar on the left, providing quick, icon-based access to all sections of the app. Hover over an icon to see its name.
 
-- **Main Navigation**: Access to core features like the Calendar, Overview, and Tasks.
+- **Main Navigation**: Access to core features like the Calendar, Overview, Tasks, and Settings.
 - **Team Management**: If you have permission to manage a team, a link to that team's management page will appear here.
 - **Admin Pages**: If you are an Admin, you will see links to the Admin and Service Delivery pages.
-- **User Profile**: At the bottom of the sidebar, you can access your profile, user preferences, notifications, and the "View as" feature (for Admins). The Settings page is only accessible from this menu.
+- **User Profile**: At the bottom of the sidebar, you can access your profile, notifications, and the "View as" feature (for Admins).
 
 ## 3. Dashboard Overview
 
@@ -70,7 +70,7 @@ The **Notifications** page keeps you informed. This page has no visible header; 
 
 ## 7. Settings & Preferences
 
-Access your preferences by clicking your avatar in the bottom-left corner of the sidebar and selecting **"Account Settings"**. This page has no visible header.
+The **Settings** page can be accessed from the main sidebar. It contains your personal account preferences. This page has no visible header.
 
 - **Change Colour Scheme**: Choose between `light` and `dark` themes. You can also select a custom primary color to override the theme's default.
 - **Set Default Calendar View**: Select which calendar view you want to see when you log in.
@@ -85,7 +85,7 @@ Access your preferences by clicking your avatar in the bottom-left corner of the
 This is the central control panel for configuring the application itself. It does not have a page header.
 - **Admin Management**: Manage system administrators by dragging and dropping users between the "Admins" and "Users" lists. Granting or revoking admin status requires a 2-Factor Authentication code for security. For safety, the system prevents you from removing the last system administrator. The "Search users" input is automatically focused for convenience.
 - **Pages**: Configure the application's navigation. Create new pages, define their URL path, and control who has access to them (by user or team). You can intuitively reorder pages by dragging and dropping them in the grid. Key system pages are pinned and cannot be moved. You can also instantly duplicate any page by dragging it onto the "Add New Page" (+) button. The search box is automatically focused when you switch to this tab.
-- **Tabs**: Manage the reusable content blocks (tabs) in a simple list view. The search bar is automatically focused when you switch to this tab.
+- **Tabs**: Manage the reusable content blocks (tabs) in a simple list view. The order of this list can be changed via drag-and-drop and affects the order in which tabs appear in popovers, like the "Manage Tabs" control on the Pages screen. The search bar is automatically focused when you switch to this tab.
 
 ### 8.2 Service Delivery Management (`/dashboard/service-delivery`)
 This is the central hub for global application settings.

@@ -46,8 +46,6 @@ export function Sidebar() {
           tooltip: `${page.name}: ${team.name}`,
         }));
       }
-      
-      if (page.id === 'page-settings') return null;
 
       return {
         id: page.id,
@@ -167,12 +165,6 @@ export function Sidebar() {
                 )}
                 
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                    <Link href="/dashboard/settings" className="font-thin">
-                        <GoogleSymbol name="manage_accounts" className="mr-2 text-lg" weight={100} />
-                        <span>Account Settings</span>
-                    </Link>
-                </DropdownMenuItem>
                 
                 {realUser.userId === viewAsUser.userId && (
                   <DropdownMenuItem onSelect={() => linkGoogleCalendar(realUser.userId)} disabled={realUser.googleCalendarLinked} className="font-thin">
