@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useRef, useMemo, useCallback } from 'react';
@@ -18,6 +17,7 @@ import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { type Event, type AppPage } from '@/types';
 import { EventDetailsDialog } from '@/components/calendar/event-details-dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Card } from '@/components/ui/card';
 
 export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
   const { realUser, viewAsUser, calendars } = useUser();
@@ -29,10 +29,7 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
   const [initialEventData, setInitialEventData] = useState<any>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   
-  const monthViewContainerRef = useRef<HTMLDivElement>(null);
-  const dayViewContainerRef = useRef<HTMLDivElement>(null);
-  const weekViewContainerRef = useRef<HTMLDivElement>(null);
-  const productionScheduleViewContainerRef = useRef<HTMLDivElement>(null);
+  const viewContainerRef = useRef<HTMLDivElement>(null);
   
   const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars);
 
@@ -117,6 +114,21 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
   const onEventClick = useCallback((event: Event) => {
     setSelectedEvent(event);
   }, []);
+
+  const renderCurrentView = () => {
+    switch (view) {
+        case 'month':
+            return <MonthView date={currentDate} containerRef={viewContainerRef} onEventClick={onEventClick} />;
+        case 'week':
+            return <WeekView date={currentDate} containerRef={viewContainerRef} zoomLevel={zoomLevel} onEasyBooking={handleEasyBooking} onEventClick={onEventClick} />;
+        case 'day':
+            return <DayView date={currentDate} containerRef={viewContainerRef} zoomLevel={zoomLevel} axisView={dayViewAxis} onEasyBooking={handleEasyBooking} onEventClick={onEventClick} />;
+        case 'production-schedule':
+            return <ProductionScheduleView date={currentDate} containerRef={viewContainerRef} zoomLevel={zoomLevel} onEasyBooking={handleEasyBooking} onEventClick={onEventClick} />;
+        default:
+            return null;
+    }
+  };
   
   return (
     <>
@@ -202,20 +214,9 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
               </Tabs>
           </div>
         </div>
-        <div className="flex-1 relative">
-            <div className={view === 'month' ? 'absolute inset-0 overflow-y-auto' : 'hidden'} ref={monthViewContainerRef}>
-                {view === 'month' && <MonthView date={currentDate} containerRef={monthViewContainerRef} onEventClick={onEventClick} />}
-            </div>
-            <div className={view === 'week' ? 'absolute inset-0 overflow-y-auto' : 'hidden'} ref={weekViewContainerRef}>
-                {view === 'week' && <WeekView date={currentDate} containerRef={weekViewContainerRef} zoomLevel={zoomLevel} onEasyBooking={handleEasyBooking} onEventClick={onEventClick} />}
-            </div>
-            <div className={view === 'day' ? 'absolute inset-0 overflow-auto' : 'hidden'} ref={dayViewContainerRef}>
-                {view === 'day' && <DayView date={currentDate} containerRef={dayViewContainerRef} zoomLevel={zoomLevel} axisView={dayViewAxis} onEasyBooking={handleEasyBooking} onEventClick={onEventClick} />}
-            </div>
-            <div className={view === 'production-schedule' ? 'absolute inset-0 overflow-auto' : 'hidden'} ref={productionScheduleViewContainerRef}>
-                {view === 'production-schedule' && <ProductionScheduleView date={currentDate} containerRef={productionScheduleViewContainerRef} zoomLevel={zoomLevel} onEasyBooking={handleEasyBooking} onEventClick={onEventClick} />}
-            </div>
-        </div>
+        <Card className="flex-1 overflow-hidden" ref={viewContainerRef}>
+            {renderCurrentView()}
+        </Card>
       </div>
       <EventDetailsDialog
         event={selectedEvent}
