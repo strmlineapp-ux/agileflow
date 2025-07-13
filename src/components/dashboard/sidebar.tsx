@@ -81,7 +81,9 @@ export function Sidebar() {
           {orderedNavItems.map((item) => {
               if (!item) return null;
               const isNotifications = item.id === 'page-notifications';
-              const isActive = pathname === item.path || (item.path !== '/dashboard' && pathname.startsWith(item.path));
+              const isActive = pathname.startsWith(item.path) && 
+                (pathname === item.path || pathname.charAt(item.path.length) === '/');
+
 
               return (
                 <Tooltip key={item.id}>

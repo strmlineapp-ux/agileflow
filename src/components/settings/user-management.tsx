@@ -152,7 +152,7 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
                                                         </Button>
                                                     </PopoverTrigger>
                                                 </TooltipTrigger>
-                                                <TooltipContent>Set custom primary color</TooltipContent>
+                                                <TooltipContent><p>Set custom primary color</p></TooltipContent>
                                             </Tooltip>
                                         </TooltipProvider>
                                         <PopoverContent className="w-auto p-2">

@@ -501,11 +501,11 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, ...props }: 
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     
     const handleSaveName = useCallback(() => {
+        setIsEditingName(false);
         const newName = nameInputRef.current?.value.trim();
         if (newName && newName !== page.name) {
             onUpdate(page.id, { name: newName });
         }
-        setIsEditingName(false);
     }, [page.id, page.name, onUpdate]);
 
     useEffect(() => {
@@ -782,7 +782,7 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
     
     const handleDuplicatePage = useCallback((sourcePage: AppPage) => {
         const newName = `${sourcePage.name} (Copy)`;
-        const newPath = `/dashboard/${newName.toLowerCase().replace(/\s+/g, '-')}-${crypto.randomUUID().slice(0, 4)}`;
+        const newPath = `/dashboard/${newName.toLowerCase().replace(/\s+/g, '-').replace(/[()]/g, '')}-${crypto.randomUUID().slice(0, 4)}`;
         
         const newPage: AppPage = {
             ...JSON.parse(JSON.stringify(sourcePage)),
