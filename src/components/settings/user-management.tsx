@@ -73,9 +73,8 @@ const SettingSelect = ({
   );
 };
 
-
 export function UserManagement({ showSearch = false }: { showSearch?: boolean }) {
-    const { realUser, users, updateUser, linkGoogleCalendar, allBadges } = useUser();
+    const { realUser, users, updateUser, linkGoogleCalendar } = useUser();
     const { toast } = useToast();
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
@@ -136,7 +135,7 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
                                 </TooltipProvider>
                                 <div>
                                     <p className="font-semibold text-lg">{user.displayName}</p>
-                                    <p className="text-sm font-medium">{user.title || <span className="italic text-muted-foreground">Not provided</span>}</p>
+                                    <p className="text-sm text-muted-foreground">{user.title || <span className="italic">Not provided</span>}</p>
                                     <p className="text-sm text-muted-foreground">{user.email}</p>
                                 </div>
                             </div>
