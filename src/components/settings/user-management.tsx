@@ -216,7 +216,7 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
                                             </Button>
                                         </TooltipTrigger>
                                         <TooltipContent>
-                                            <p>Easy Booking: Click empty calendar slots to quickly create events.</p>
+                                            <p>Easy Booking: <span className="font-semibold">{realUser.easyBooking ? 'On' : 'Off'}</span>. Click empty calendar slots to quickly create events.</p>
                                         </TooltipContent>
                                         </Tooltip>
                                     </TooltipProvider>

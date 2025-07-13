@@ -545,7 +545,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, ...props }: 
 
     const filteredIcons = useMemo(() => googleSymbolNames.filter(icon => icon.toLowerCase().includes(iconSearch.toLowerCase())), [iconSearch]);
     
-    const displayPath = page.isDynamic ? `${page.path}/[teamId]` : page.path;
+    const displayPath = page.isDynamic ? `${page.path}/[...]` : page.path;
 
     return (
         <Card className="group relative" {...props}>
@@ -781,10 +781,14 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
     }, [appSettings.pages, updateAppSettings]);
     
     const handleDuplicatePage = useCallback((sourcePage: AppPage) => {
+        const newName = `${sourcePage.name} (Copy)`;
+        const newPath = `/dashboard/${newName.toLowerCase().replace(/\s+/g, '-')}-${crypto.randomUUID().slice(0, 4)}`;
+        
         const newPage: AppPage = {
             ...JSON.parse(JSON.stringify(sourcePage)),
             id: crypto.randomUUID(),
-            name: `${sourcePage.name} (Copy)`,
+            name: newName,
+            path: newPath,
             isDynamic: sourcePage.isDynamic,
         };
         const sourceIndex = appSettings.pages.findIndex(p => p.id === sourcePage.id);
@@ -1091,8 +1095,6 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
 }
 
 function SortableTabCard({ id, tab, onUpdate }: { id: string, tab: AppTab, onUpdate: (id: string, data: Partial<AppTab>) => void; }) {
-    const isCoreTab = useMemo(() => coreTabs.some(t => t.id === tab.id), [tab.id]);
-
     const {
         attributes,
         listeners,
@@ -1100,7 +1102,7 @@ function SortableTabCard({ id, tab, onUpdate }: { id: string, tab: AppTab, onUpd
         transform,
         transition,
         isDragging,
-    } = useSortable({id, disabled: isCoreTab});
+    } = useSortable({id});
 
     const style = {
         transform: CSS.Transform.toString(transform),
