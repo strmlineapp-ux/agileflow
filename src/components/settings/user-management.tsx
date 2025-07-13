@@ -9,12 +9,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/context/user-context';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { GoogleSymbol } from '../icons/google-symbol';
-import { Badge } from '../ui/badge';
-import { Label } from '../ui/label';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { CompactSearchInput } from '../common/compact-search-input';
@@ -49,7 +46,7 @@ const SettingSelect = ({
         <Tooltip>
           <TooltipTrigger asChild>
             <PopoverTrigger asChild>
-              <Button variant="ghost" className="flex items-center gap-1 text-muted-foreground hover:bg-transparent hover:text-foreground">
+              <Button variant="ghost" className="flex items-center gap-1 text-muted-foreground hover:bg-transparent hover:text-foreground h-9 w-auto px-2">
                 <GoogleSymbol name={icon} className="text-xl" weight={100} />
                 <span className="text-sm">{currentLabel}</span>
               </Button>
@@ -63,7 +60,7 @@ const SettingSelect = ({
           <Button
             key={option.value}
             variant="ghost"
-            className="justify-start h-8 px-2 w-auto"
+            className="justify-start h-8 px-2"
             onClick={() => {
               onSave(option.value);
               setIsOpen(false);
@@ -88,19 +85,15 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
         if (!searchTerm) return users;
         return users.filter(user => user.displayName.toLowerCase().includes(searchTerm.toLowerCase()));
     }, [users, searchTerm]);
-
-    const THEME_OPTIONS = [
-      { name: 'light', label: 'Light', icon: 'light_mode', tooltip: 'Set Light Theme' },
-      { name: 'dark', label: 'Dark', icon: 'dark_mode', tooltip: 'Set Dark Theme' },
-    ];
     
     const handleSetPrimaryColor = (color: string) => {
       updateUser(realUser.userId, { primaryColor: color });
       setIsColorPopoverOpen(false);
     }
     
-    const handleThemeChange = (themeName: 'light' | 'dark') => {
-        updateUser(realUser.userId, { theme: themeName, primaryColor: undefined });
+    const handleThemeChange = () => {
+        const newTheme = realUser.theme === 'dark' ? 'light' : 'dark';
+        updateUser(realUser.userId, { theme: newTheme, primaryColor: undefined });
     }
 
     return (
@@ -185,30 +178,23 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
                                                     </div>
                                                 </PopoverContent>
                                             </Popover>
-                                            <div className="relative">
-                                                <div className="flex h-10 items-center justify-center p-0 text-muted-foreground">
-                                                    {THEME_OPTIONS.map(theme => (
-                                                        <TooltipProvider key={theme.name}>
-                                                        <Tooltip>
-                                                            <TooltipTrigger asChild>
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="sm"
-                                                                    onClick={() => handleThemeChange(theme.name as any)}
-                                                                    className={cn(
-                                                                    "rounded-none gap-2 py-1.5 hover:bg-transparent",
-                                                                    realUser.theme === theme.name ? "text-primary" : "hover:text-foreground"
-                                                                    )}
-                                                                >
-                                                                    <GoogleSymbol name={theme.icon} className="text-lg" weight={100} />
-                                                                </Button>
-                                                            </TooltipTrigger>
-                                                            <TooltipContent><p>{theme.tooltip}</p></TooltipContent>
-                                                            </Tooltip>
-                                                        </TooltipProvider>
-                                                    ))}
-                                                </div>
-                                            </div>
+                                            
+                                            <TooltipProvider>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            onClick={handleThemeChange}
+                                                            className="h-9 w-9 text-muted-foreground hover:bg-transparent hover:text-foreground"
+                                                        >
+                                                            <GoogleSymbol name={realUser.theme === 'dark' ? 'dark_mode' : 'light_mode'} className="text-lg" weight={100} />
+                                                        </Button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent><p>Switch to {realUser.theme === 'dark' ? 'Light' : 'Dark'} Theme</p></TooltipContent>
+                                                </Tooltip>
+                                            </TooltipProvider>
+
                                             <SettingSelect
                                                 value={realUser.defaultCalendarView || 'day'}
                                                 onSave={(newValue) => updateUser(realUser.userId, { defaultCalendarView: newValue as any})}
@@ -236,7 +222,7 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
                                             <TooltipProvider>
                                                 <Tooltip>
                                                 <TooltipTrigger asChild>
-                                                    <Button variant="ghost" onClick={() => updateUser(realUser.userId, { easyBooking: !realUser.easyBooking })} className="flex items-center gap-1 text-muted-foreground hover:bg-transparent hover:text-foreground">
+                                                    <Button variant="ghost" onClick={() => updateUser(realUser.userId, { easyBooking: !realUser.easyBooking })} className="flex items-center gap-1 text-muted-foreground hover:bg-transparent hover:text-foreground h-9 px-2">
                                                         <GoogleSymbol name={realUser.easyBooking ? 'toggle_on' : 'toggle_off'} className="text-2xl" weight={100} />
                                                         <span className="text-sm">Easy Booking</span>
                                                     </Button>
