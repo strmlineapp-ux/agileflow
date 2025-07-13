@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -148,7 +147,7 @@ export const MonthView = React.memo(({ date, containerRef, onEventClick }: { dat
     }
 
     return (
-        <Card>
+        <Card className="border-0">
             <div className={cn("grid border-b border-t sticky top-0 bg-card z-10", gridColsClass)}>
                 {displayedWeekdays.map((day, index) => (
                     <div key={day} className={cn("text-center font-medium p-2 text-sm border-r last:border-r-0 relative", 

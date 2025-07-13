@@ -339,7 +339,7 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
     }
     
     const renderStandardView = () => (
-        <Card>
+        <Card className="border-0">
             <div style={{ width: `${LOCATION_LABEL_WIDTH_PX + (24 * hourWidth)}px`}}>
                 <CardHeader className="p-0 border-b sticky top-0 bg-card z-20 flex flex-row">
                     <div className="w-[160px] shrink-0 border-r p-2 flex items-center font-normal text-sm sticky left-0 bg-card z-30">Location</div>
@@ -400,7 +400,7 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
     );
     
     const renderReversedView = () => (
-        <Card>
+        <Card className="border-0">
             <CardContent className="p-0 relative">
                 <div className="grid grid-cols-[auto,1fr] min-h-full">
                     {/* Timeline */}

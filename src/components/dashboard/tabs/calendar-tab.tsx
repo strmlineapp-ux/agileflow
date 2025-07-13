@@ -214,7 +214,7 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
               </Tabs>
           </div>
         </div>
-        <Card className="flex-1 overflow-hidden" ref={viewContainerRef}>
+        <Card className="flex-1 overflow-hidden border-0" ref={viewContainerRef}>
             {renderCurrentView()}
         </Card>
       </div>

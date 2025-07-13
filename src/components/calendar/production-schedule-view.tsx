@@ -592,7 +592,7 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
 
                 return (
                     <div key={dayIso} ref={isDayToday ? todayCardRef : null}>
-                        <Card className="overflow-hidden">
+                        <Card className="overflow-hidden border-0">
                              <div className="p-2 border-b bg-card flex flex-wrap items-center justify-between gap-4">
                                 <div className="flex flex-wrap items-center gap-2">
                                     {allChecksToRender.map(location => {
