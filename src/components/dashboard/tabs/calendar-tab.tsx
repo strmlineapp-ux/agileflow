@@ -1,14 +1,14 @@
 
 'use client';
 
-import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
+import { useState, useRef, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { MonthView } from '@/components/calendar/month-view';
 import { WeekView } from '@/components/calendar/week-view';
 import { DayView } from '@/components/calendar/day-view';
 import { ProductionScheduleView } from '@/components/calendar/production-schedule-view';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { format, addMonths, subMonths, addWeeks, subWeeks, addDays, startOfWeek, getWeek, isToday } from 'date-fns';
+import { format, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays, startOfWeek, getWeek, isToday } from 'date-fns';
 import { useUser } from '@/context/user-context';
 import { canCreateAnyEvent } from '@/lib/permissions';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
@@ -17,6 +17,7 @@ import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { type Event, type AppPage } from '@/types';
 import { EventDetailsDialog } from '@/components/calendar/event-details-dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Card } from '@/components/ui/card';
 
 export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
   const { realUser, viewAsUser, calendars } = useUser();
@@ -68,7 +69,8 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
     if (!isToday(currentDate)) {
         setCurrentDate(today);
     }
-    setTriggerScroll(Date.now());
+    // Incrementing triggerScroll will cause the useEffect in child components to run
+    setTriggerScroll(prev => prev + 1);
   }, [currentDate]);
 
   const handleEasyBooking = useCallback((data: { startTime: Date; location?: string }) => {
