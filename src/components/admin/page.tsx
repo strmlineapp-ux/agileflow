@@ -106,7 +106,7 @@ function UserDropZone({ id, users, children }: { id: string, users: User[], chil
 
 export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab; isSingleTabPage?: boolean, isActive?: boolean }) => {
   const { toast } = useToast();
-  const { users, setUsers } = useUser();
+  const { users, updateUser } = useUser();
   const [is2faDialogOpen, setIs2faDialogOpen] = useState(false);
   const [pendingUserMove, setPendingUserMove] = useState<{ user: User; fromListId: string; destListId: string } | null>(null);
   const [twoFactorCode, setTwoFactorCode] = useState('');
@@ -117,20 +117,9 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
   const [userSearch, setUserSearch] = useState('');
   
   const [activeDragUser, setActiveDragUser] = useState<User | null>(null);
-  const [items, setItems] = useState(() => ({
-    'admin-list': users.filter(u => u.isAdmin),
-    'user-list': users.filter(u => !u.isAdmin),
-  }));
 
-  useEffect(() => {
-    setItems({
-      'admin-list': users.filter(u => u.isAdmin),
-      'user-list': users.filter(u => !u.isAdmin),
-    });
-  }, [users]);
-  
-  const adminUsers = useMemo(() => items['admin-list'], [items]);
-  const nonAdminUsers = useMemo(() => items['user-list'], [items]);
+  const adminUsers = useMemo(() => users.filter(u => u.isAdmin), [users]);
+  const nonAdminUsers = useMemo(() => users.filter(u => !u.isAdmin), [users]);
 
   useEffect(() => {
     if (is2faDialogOpen) {
@@ -168,9 +157,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
   const handleVerify2fa = () => {
     if (twoFactorCode === '123456' && pendingUserMove) {
       const { user } = pendingUserMove;
-      setUsers(currentUsers =>
-        currentUsers.map(u => (u.userId === user.userId ? { ...u, isAdmin: !u.isAdmin } : u))
-      );
+      updateUser(user.userId, { isAdmin: !user.isAdmin });
       toast({ title: 'Success', description: `${user.displayName}'s admin status has been updated.` });
       close2faDialog();
     } else {
