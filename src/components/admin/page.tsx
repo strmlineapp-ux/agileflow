@@ -407,6 +407,8 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
+  
+  const systemTabIds = ['tab-admins', 'tab-settings'];
 
   useEffect(() => {
     if (isOpen) {
@@ -417,8 +419,9 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
   }, [isOpen]);
 
   const filteredTabs = useMemo(() => {
-    if (!searchTerm) return appSettings.tabs;
-    return appSettings.tabs.filter(tab =>
+    const allTabs = appSettings.tabs.filter(tab => !systemTabIds.includes(tab.id));
+    if (!searchTerm) return allTabs;
+    return allTabs.filter(tab =>
       tab.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [appSettings.tabs, searchTerm]);
@@ -558,7 +561,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, ...props }: 
                                   setIsDeleteDialogOpen(true);
                               }}
                           >
-                              <GoogleSymbol name="delete" className="text-lg" weight={100} />
+                              <GoogleSymbol name="cancel" className="text-lg" weight={100} />
                           </Button>
                       </TooltipTrigger>
                       <TooltipContent><p>Delete Page</p></TooltipContent>
