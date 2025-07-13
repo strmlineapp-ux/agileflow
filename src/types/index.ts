@@ -1,4 +1,5 @@
 
+
 import type React from 'react';
 
 export interface AppTab {
@@ -202,3 +203,4 @@ export interface BookableLocation {
   id: string;
   name: string;
 }
+

@@ -18,7 +18,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        body: ['var(--font-space-grotesk)', 'sans-serif'],
+        sans: ['var(--font-roboto)', 'sans-serif'],
         headline: ['var(--font-roboto)', 'sans-serif'],
       },
       fontWeight: {
@@ -94,3 +94,4 @@ export default {
   },
   plugins: [require('tailwindcss-animate')],
 } satisfies Config;
+
