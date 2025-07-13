@@ -50,7 +50,6 @@ export interface User {
   googleCalendarId?: string;
   avatarUrl?: string;
   location?: string;
-  phone?: string;
   title?: string;
   roles?: string[]; // Contains names of Badges assigned to the user
   directReports?: string[];

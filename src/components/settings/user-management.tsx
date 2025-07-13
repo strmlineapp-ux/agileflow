@@ -63,7 +63,7 @@ const SettingSelect = ({
           <Button
             key={option.value}
             variant="ghost"
-            className="w-full justify-start h-8 px-2"
+            className="justify-start h-8 px-2"
             onClick={() => {
               onSave(option.value);
               setIsOpen(false);
@@ -80,9 +80,6 @@ const SettingSelect = ({
 
 export function UserManagement({ showSearch = false }: { showSearch?: boolean }) {
     const { realUser, users, updateUser, linkGoogleCalendar, allBadges } = useUser();
-    const [editingPhoneUserId, setEditingPhoneUserId] = useState<string | null>(null);
-    const [phoneValue, setPhoneValue] = useState('');
-    const phoneInputRef = useRef<HTMLInputElement>(null);
     const { toast } = useToast();
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
@@ -91,27 +88,6 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
         if (!searchTerm) return users;
         return users.filter(user => user.displayName.toLowerCase().includes(searchTerm.toLowerCase()));
     }, [users, searchTerm]);
-
-    useEffect(() => {
-        if (editingPhoneUserId && phoneInputRef.current) {
-            phoneInputRef.current.focus();
-            phoneInputRef.current.select();
-        }
-    }, [editingPhoneUserId]);
-   
-    const handleSavePhone = async () => {
-        if (!editingPhoneUserId) return;
-        
-        if (editingPhoneUserId !== realUser.userId) {
-            toast({ variant: 'destructive', title: 'Error', description: 'You can only edit your own phone number.' });
-            setEditingPhoneUserId(null);
-            return;
-        }
-        
-        await updateUser(editingPhoneUserId, { phone: phoneValue });
-        setEditingPhoneUserId(null);
-        toast({ title: 'Success', description: 'Contact number updated.' });
-    };
 
     const THEME_OPTIONS = [
       { name: 'light', label: 'Light', icon: 'light_mode', tooltip: 'Set Light Theme' },
@@ -181,45 +157,9 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
                                <div className="border-t pt-2">
                                 <div className="p-2 grid grid-cols-1 md:grid-cols-2 gap-x-8">
                                     {/* Left Column */}
-                                    <div className="space-y-2">
+                                    <div className="space-y-0">
                                         <div className="space-y-0">
                                             <p className="text-sm font-medium h-9 flex items-center">{user.title || <span className="italic text-muted-foreground">Not provided</span>}</p>
-                                            <TooltipProvider>
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <div
-                                                            className={cn(
-                                                                "text-sm h-9 flex items-center",
-                                                                isCurrentUser && !editingPhoneUserId && "cursor-pointer"
-                                                            )}
-                                                            onClick={() => {
-                                                                if (isCurrentUser && !editingPhoneUserId) {
-                                                                    setEditingPhoneUserId(user.userId);
-                                                                    setPhoneValue(user.phone || '');
-                                                                }
-                                                            }}
-                                                        >
-                                                            {editingPhoneUserId === user.userId && isCurrentUser ? (
-                                                                <Input
-                                                                    ref={phoneInputRef}
-                                                                    value={phoneValue}
-                                                                    onChange={(e) => setPhoneValue(e.target.value)}
-                                                                    onBlur={handleSavePhone}
-                                                                    onKeyDown={(e) => {
-                                                                        if (e.key === 'Enter') handleSavePhone();
-                                                                        if (e.key === 'Escape') setEditingPhoneUserId(null);
-                                                                    }}
-                                                                    className="h-auto p-0 text-sm border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                                                                    placeholder="Not provided"
-                                                                />
-                                                            ) : (
-                                                                user.phone || <span className="italic text-muted-foreground">Not provided</span>
-                                                            )}
-                                                        </div>
-                                                    </TooltipTrigger>
-                                                    {isCurrentUser && <TooltipContent><p>Click to edit contact info</p></TooltipContent>}
-                                                </Tooltip>
-                                            </TooltipProvider>
                                         </div>
                                          {isCurrentUser && (
                                             <div className="flex items-center gap-2 h-9">
