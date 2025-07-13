@@ -22,7 +22,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { CompactSearchInput } from '@/components/common/compact-search-input';
-import { corePages, coreTabs } from '@/lib/core-data';
 import {
   DndContext,
   closestCenter,
@@ -105,7 +104,7 @@ function UserDropZone({ id, users, children }: { id: string, users: User[], chil
   )
 }
 
-export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab; isSingleTabPage?: boolean, isActive?: boolean }) => {
+export const AdminsManagement = ({ tab, isSingleTabPage, isActive, activeTab }: { tab: AppTab; isSingleTabPage?: boolean, isActive?: boolean, activeTab?: string }) => {
   const { toast } = useToast();
   const { users, updateUser } = useUser();
   const [is2faDialogOpen, setIs2faDialogOpen] = useState(false);
@@ -223,8 +222,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
                         </div>
                     </CardHeader>
                     <CardContent className="flex-grow">
-                        <UserDropZone id="admin-list" users={filteredAdminUsers}>
-                        </UserDropZone>
+                        <UserDropZone id="admin-list" users={filteredAdminUsers} />
                     </CardContent>
                   </Card>
                   <Card className="flex flex-col h-full bg-transparent border-0">
@@ -232,13 +230,12 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
                         <div className="flex items-center justify-between gap-4">
                             <CardTitle className="font-thin text-base">Users ({filteredNonAdminUsers.length})</CardTitle>
                              <div className="flex items-center gap-1">
-                                <CompactSearchInput searchTerm={userSearch} setSearchTerm={setUserSearch} placeholder="Search users..." autoFocus={isActive} tooltipText="Search Users" />
+                                <CompactSearchInput searchTerm={userSearch} setSearchTerm={setUserSearch} placeholder="Search users..." autoFocus={isActive || activeTab === undefined} tooltipText="Search Users" />
                             </div>
                         </div>
                     </CardHeader>
                      <CardContent className="flex-grow">
-                         <UserDropZone id="user-list" users={filteredNonAdminUsers}>
-                         </UserDropZone>
+                         <UserDropZone id="user-list" users={filteredNonAdminUsers} />
                     </CardContent>
                   </Card>
             </div>
@@ -572,7 +569,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
               {...(!isPinned && props.dragHandleProps)}
             >
                 <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-2 flex-1 min-w-0" onPointerDown={(e) => { if(canManage) e.stopPropagation(); }}>
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
                         <div className="relative">
                             <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                                 <TooltipProvider>
@@ -640,7 +637,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
                                 </PopoverContent>
                             </Popover>
                         </div>
-                        <div className="flex-1 min-w-0">
+                        <div className="flex-1 min-w-0" onPointerDown={(e) => { if(isEditingName) e.stopPropagation(); }}>
                             <div className="flex items-center gap-1">
                                 {isEditingName ? (
                                     <Input 

@@ -162,7 +162,7 @@ export default function DynamicPage() {
                     const contextTeam = tab.contextTeamId ? teams.find(t => t.id === tab.contextTeamId) : dynamicTeam;
                     return (
                         <TabsContent key={tab.id} value={tab.id} className="mt-4">
-                        {ContentComponent ? <ContentComponent tab={tab} team={contextTeam} page={pageConfig} isSingleTabPage={false} isActive={activeTab === tab.id} isTeamSpecificPage={pageConfig.isDynamic} /> : <div>Component for {tab.name} not found.</div>}
+                        {ContentComponent ? <ContentComponent tab={tab} team={contextTeam} page={pageConfig} isSingleTabPage={false} isActive={activeTab === tab.id} activeTab={activeTab} isTeamSpecificPage={pageConfig.isDynamic} /> : <div>Component for {tab.name} not found.</div>}
                         </TabsContent>
                     );
                 })}
