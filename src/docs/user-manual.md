@@ -25,7 +25,7 @@ The main navigation is located in the sidebar on the left, providing quick, icon
 - **Main Navigation**: Access to core features like the Calendar, Overview, and Tasks.
 - **Team Management**: If you have permission to manage a team, a link to that team's management page will appear here.
 - **Admin Pages**: If you are an Admin, you will see links to the Admin and Service Delivery pages.
-- **User Profile**: At the bottom of the sidebar, you can access your profile, user preferences, notifications, and the "View as" feature (for Admins). The Settings page is only accessible from this menu.
+- **User Profile**: At the bottom of the sidebar, you can access your profile, user preferences, notifications, and the "View as" feature (for Admins). The **Settings** page is only accessible from this menu.
 
 ## 3. Dashboard Overview
 
@@ -77,7 +77,7 @@ Access your preferences by clicking your avatar in the bottom-left corner of the
 - **Set Time Format**: Choose between 12-hour and 24-hour time display.
 - **Enable Easy Booking**: Toggle the quick-create event feature.
 - **Edit Contact Info**: Click the arrow on your user row to expand it. You can edit your own phone number.
-- **Link Google Calendar**: To connect your Google Calendar, click the grey status dot on your avatar. A tooltip will confirm the action. A simulated Google sign-in will appear and, once complete, will enable features like creating Google Meet links for your events.
+- **Link Google Calendar**: To connect your Google Calendar, hover over the status dot on your avatar in the sidebar user menu. If disconnected, a tooltip will prompt you to click to connect. A simulated Google sign-in will appear and, once complete, will enable features like creating Google Meet links for your events.
 
 ## 8. Management Pages (Admin & Manager Roles)
 
