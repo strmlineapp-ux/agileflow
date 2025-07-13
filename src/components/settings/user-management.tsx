@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, Fragment, useRef, useEffect, useMemo } from 'react';
@@ -26,50 +25,49 @@ const predefinedColors = [
     '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
 ];
 
-const InlineSelectEditor = ({
+const SettingSelect = ({
   value,
   onSave,
   options,
   placeholder,
+  icon,
 }: {
   value: string;
   onSave: (newValue: string) => void;
   options: { value: string; label: string }[];
   placeholder: string;
+  icon: string;
 }) => {
-  const [isEditing, setIsEditing] = useState(false);
-
-  if (isEditing) {
-    return (
-      <Select
-        defaultValue={value}
-        onValueChange={(newValue) => {
-          onSave(newValue);
-          setIsEditing(false);
-        }}
-        onOpenChange={(isOpen) => !isOpen && setIsEditing(false)}
-        defaultOpen
-      >
-        <SelectTrigger className="h-8 w-[180px] text-sm">
-          <SelectValue placeholder={placeholder} />
-        </SelectTrigger>
-        <SelectContent>
-          {options.map(option => (
-            <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    );
-  }
-
+  const [isOpen, setIsOpen] = useState(false);
   const currentLabel = options.find(opt => opt.value === value)?.label || placeholder;
 
   return (
-    <Button variant="ghost" className="h-8 justify-start p-2 text-sm text-muted-foreground hover:text-primary" onClick={() => setIsEditing(true)}>
-      {currentLabel}
-    </Button>
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
+          <GoogleSymbol name={icon} className="text-xl" weight={100} />
+          <span className="text-sm">{currentLabel}</span>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-1" align="start">
+        {options.map(option => (
+          <Button
+            key={option.value}
+            variant="ghost"
+            className="w-full justify-start"
+            onClick={() => {
+              onSave(option.value);
+              setIsOpen(false);
+            }}
+          >
+            {option.label}
+          </Button>
+        ))}
+      </PopoverContent>
+    </Popover>
   );
 };
+
 
 export function UserManagement({ showSearch = false }: { showSearch?: boolean }) {
     const { realUser, users, updateUser, linkGoogleCalendar, allBadges } = useUser();
@@ -172,9 +170,9 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
                         <AccordionContent>
                            <CardContent>
                                <div className="border-t pt-4">
-                                <div className="p-2 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                                <div className="p-2 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
                                     {/* Left Column */}
-                                    <div className="space-y-4">
+                                    <div className="space-y-2">
                                         <p className="text-sm font-medium">{user.title || <span className="italic text-muted-foreground">Not provided</span>}</p>
                                         <div
                                             className={cn(
@@ -241,8 +239,8 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
                                                             size="sm"
                                                             onClick={() => handleThemeChange(theme.name as any)}
                                                             className={cn(
-                                                            "rounded-none gap-2 py-1.5",
-                                                            realUser.theme === theme.name ? "text-primary" : ""
+                                                            "rounded-none gap-2 py-1.5 hover:bg-transparent",
+                                                            realUser.theme === theme.name ? "text-primary" : "hover:text-foreground"
                                                             )}
                                                         >
                                                             <GoogleSymbol name={theme.icon} className="text-lg" weight={100} />
@@ -255,72 +253,44 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
                                         )}
                                     </div>
                                     {/* Right Column */}
-                                    <div className="space-y-4">
+                                    <div className="space-y-2">
                                         {isCurrentUser && (
                                         <>
-                                            <div className="flex items-center gap-0.5">
-                                                <TooltipProvider>
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 text-muted-foreground cursor-default hover:bg-transparent">
-                                                                <GoogleSymbol name="edit_calendar" className="text-xl" weight={100} />
-                                                            </Button>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>
-                                                            <p>Default Calendar View</p>
-                                                        </TooltipContent>
-                                                    </Tooltip>
-                                                </TooltipProvider>
-                                                <InlineSelectEditor
-                                                    value={realUser.defaultCalendarView || 'day'}
-                                                    onSave={(newValue) => updateUser(realUser.userId, { defaultCalendarView: newValue as any})}
-                                                    options={[
-                                                        { value: "month", label: "Month" },
-                                                        { value: "week", label: "Week" },
-                                                        { value: "day", label: "Day" },
-                                                        { value: "production-schedule", label: "Production Schedule" },
-                                                    ]}
-                                                    placeholder="Select Default View"
-                                                />
-                                            </div>
-                                            <div className="flex items-center gap-0.5">
-                                                <TooltipProvider>
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                          <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 text-muted-foreground cursor-default hover:bg-transparent">
-                                                              <GoogleSymbol name="schedule" className="text-xl" weight={100} />
-                                                          </Button>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>
-                                                          <p>Time Format</p>
-                                                        </TooltipContent>
-                                                    </Tooltip>
-                                                </TooltipProvider>
-                                                <InlineSelectEditor
-                                                    value={realUser.timeFormat || '12h'}
-                                                    onSave={(newValue) => updateUser(realUser.userId, { timeFormat: newValue as any})}
-                                                    options={[
-                                                        { value: "12h", label: "12-Hour" },
-                                                        { value: "24h", label: "24-Hour" },
-                                                    ]}
-                                                    placeholder="Select Time Format"
-                                                />
-                                            </div>
-                                            <div className="flex items-center gap-1">
-                                                <TooltipProvider>
-                                                  <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                      <Button variant="ghost" onClick={() => updateUser(realUser.userId, { easyBooking: !realUser.easyBooking })} className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
-                                                          <GoogleSymbol name={realUser.easyBooking ? 'toggle_on' : 'toggle_off'} className="text-2xl" weight={100} />
-                                                          <span className="text-sm">Easy Booking</span>
-                                                      </Button>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                      <p>Click empty calendar slots to quickly create events.</p>
-                                                    </TooltipContent>
-                                                  </Tooltip>
-                                                </TooltipProvider>
-                                            </div>
+                                            <SettingSelect
+                                                value={realUser.defaultCalendarView || 'day'}
+                                                onSave={(newValue) => updateUser(realUser.userId, { defaultCalendarView: newValue as any})}
+                                                options={[
+                                                    { value: "month", label: "Month" },
+                                                    { value: "week", label: "Week" },
+                                                    { value: "day", label: "Day" },
+                                                    { value: "production-schedule", label: "Production Schedule" },
+                                                ]}
+                                                placeholder="Select Default View"
+                                                icon="edit_calendar"
+                                            />
+                                            <SettingSelect
+                                                value={realUser.timeFormat || '12h'}
+                                                onSave={(newValue) => updateUser(realUser.userId, { timeFormat: newValue as any})}
+                                                options={[
+                                                    { value: "12h", label: "12-Hour" },
+                                                    { value: "24h", label: "24-Hour" },
+                                                ]}
+                                                placeholder="Select Time Format"
+                                                icon="schedule"
+                                            />
+                                            <TooltipProvider>
+                                                <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Button variant="ghost" onClick={() => updateUser(realUser.userId, { easyBooking: !realUser.easyBooking })} className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
+                                                        <GoogleSymbol name={realUser.easyBooking ? 'toggle_on' : 'toggle_off'} className="text-2xl" weight={100} />
+                                                        <span className="text-sm">Easy Booking</span>
+                                                    </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    <p>Click empty calendar slots to quickly create events.</p>
+                                                </TooltipContent>
+                                                </Tooltip>
+                                            </TooltipProvider>
                                         </>
                                         )}
                                     </div>
