@@ -65,7 +65,7 @@ const DayViewLocationRow = React.memo(({
     return (
         <div className={cn("flex", { "border-b": !isLast }, { "bg-muted/10": index % 2 !== 0 })}>
             <div 
-                className="w-[160px] shrink-0 p-2 border-r flex items-start justify-start bg-card sticky left-0 z-30 gap-1 cursor-pointer"
+                className="w-[160px] shrink-0 p-2 border-r flex items-start justify-start bg-muted sticky left-0 z-30 gap-1 cursor-pointer"
                 onClick={() => toggleLocationCollapse(location)}
             >
                 {isCollapsed ? <GoogleSymbol name="chevron_right" className="text-lg mt-1" /> : <GoogleSymbol name="expand_more" className="text-lg mt-1" />}
@@ -202,12 +202,12 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
         if (zoomLevel === 'fit') {
             if (axisView === 'standard') {
                 if (containerSize.width > 0) {
-                    const newHourWidth = (containerSize.width - LOCATION_LABEL_WIDTH_PX) / 12;
+                    const newHourWidth = (containerSize.width - LOCATION_LABEL_WIDTH_PX) / 12; // Fit 12 hours (8am-8pm)
                     setHourWidth(newHourWidth);
                 }
             } else { // reversed
                 if (containerSize.height > 0) {
-                    const newHourHeight = containerSize.height / 12;
+                    const newHourHeight = containerSize.height / 12; // Fit 12 hours (8am-8pm)
                     setHourHeight(newHourHeight);
                 }
             }
@@ -222,28 +222,33 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
         if (!container || initialScrollPerformed.current || (containerSize.width === 0 && containerSize.height === 0)) return;
 
         const performScroll = () => {
-            if (isViewingToday && now && nowMarkerRef.current) {
-                if (axisView === 'standard') {
-                    const scrollLeft = nowMarkerRef.current.offsetLeft - (container.offsetWidth / 2) + (LOCATION_LABEL_WIDTH_PX / 2);
-                    container.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+            let scrollLeft = 8 * hourWidth; // Default to 8am
+            let scrollTop = 8 * hourHeight; // Default to 8am
+            
+            if (zoomLevel === 'fit') {
+                 scrollLeft = 0;
+                 scrollTop = 0;
+            } else if (isViewingToday && now && nowMarkerRef.current) {
+                 if (axisView === 'standard') {
+                    scrollLeft = nowMarkerRef.current.offsetLeft - (container.offsetWidth / 2) + (LOCATION_LABEL_WIDTH_PX / 2);
                 } else { // reversed
-                    const scrollTop = nowMarkerRef.current.offsetTop - (container.offsetHeight / 2);
-                    container.scrollTo({ top: scrollTop, behavior: 'smooth' });
-                }
-            } else { // Not today, scroll to 8am
-                if (axisView === 'standard') {
-                    container.scrollTo({ left: 7 * hourWidth, behavior: 'auto' });
-                } else { // reversed
-                    container.scrollTo({ top: 7 * hourHeight, behavior: 'auto' });
+                    scrollTop = nowMarkerRef.current.offsetTop - (container.offsetHeight / 2);
                 }
             }
+            
+            container.scrollTo({ 
+                left: axisView === 'standard' ? scrollLeft : 0, 
+                top: axisView === 'reversed' ? scrollTop : 0, 
+                behavior: initialScrollPerformed.current ? 'smooth' : 'auto' 
+            });
+
             initialScrollPerformed.current = true;
         };
         
         const scrollTimeout = setTimeout(performScroll, 50);
 
         return () => clearTimeout(scrollTimeout);
-    }, [containerRef, now, isViewingToday, date, hourWidth, hourHeight, axisView, containerSize]);
+    }, [containerRef, now, isViewingToday, date, hourWidth, hourHeight, axisView, containerSize, zoomLevel]);
 
     const hours = Array.from({ length: 24 }, (_, i) => i);
 
@@ -337,9 +342,9 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
     }
     
     const renderStandardView = () => (
-        <Card className="h-full flex flex-col border-0">
-            <div style={{ width: `${LOCATION_LABEL_WIDTH_PX + (24 * hourWidth)}px`}}>
-                <CardHeader className="p-0 border-b sticky top-0 bg-muted z-20 flex flex-row">
+        <Card className="h-full flex flex-col">
+            <div style={{ width: `${LOCATION_LABEL_WIDTH_PX + (24 * hourWidth)}px`}} className="flex flex-col flex-1">
+                <CardHeader className="p-0 border-b sticky top-0 bg-background z-20 flex flex-row">
                     <div className="w-[160px] shrink-0 border-r p-2 flex items-center font-normal text-sm sticky left-0 bg-muted z-30">Location</div>
                     {hours.map(hour => (
                         <div key={hour} className="shrink-0 text-left p-2 border-r bg-muted" style={{ width: `${hourWidth}px` }}>
@@ -348,11 +353,11 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
                     ))}
                 </CardHeader>
                 {allLocations.length === 0 && dayEvents.length === 0 ? (
-                     <div className="flex items-center justify-center h-40 text-muted-foreground">
+                     <div className="flex items-center justify-center h-40 text-muted-foreground flex-1">
                         No events scheduled for this day.
                     </div>
                 ) : (
-                    <CardContent className="p-0 relative">
+                    <CardContent className="p-0 relative flex-1">
                         <div
                             className="absolute inset-y-0 lunch-break-pattern z-0 pointer-events-none"
                             style={{
@@ -398,9 +403,9 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
     );
     
     const renderReversedView = () => (
-        <Card className="h-full flex flex-col border-0">
+        <Card className="h-full flex flex-col">
             <CardContent className="p-0 relative flex-1">
-                <div className="grid grid-cols-[auto,1fr] min-h-full">
+                <div className="grid grid-cols-[auto,1fr] min-h-full h-full">
                     <div className="w-20 border-r bg-muted">
                         {hours.map(hour => (
                             <div key={hour} className="relative text-right pr-2 border-b" style={{ height: `${hourHeight}px` }}>

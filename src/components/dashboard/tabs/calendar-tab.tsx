@@ -1,14 +1,14 @@
 
 'use client';
 
-import { useState, useRef, useMemo, useCallback } from 'react';
+import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { MonthView } from '@/components/calendar/month-view';
 import { WeekView } from '@/components/calendar/week-view';
 import { DayView } from '@/components/calendar/day-view';
 import { ProductionScheduleView } from '@/components/calendar/production-schedule-view';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { format, addMonths, subMonths, addWeeks, subWeeks, addDays, startOfWeek, getWeek } from 'date-fns';
+import { format, addMonths, subMonths, addWeeks, subWeeks, addDays, startOfWeek, getWeek, isToday } from 'date-fns';
 import { useUser } from '@/context/user-context';
 import { canCreateAnyEvent } from '@/lib/permissions';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
@@ -17,7 +17,6 @@ import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { type Event, type AppPage } from '@/types';
 import { EventDetailsDialog } from '@/components/calendar/event-details-dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Card } from '@/components/ui/card';
 
 export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
   const { realUser, viewAsUser, calendars } = useUser();
@@ -28,11 +27,12 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
   const [isNewEventOpen, setIsNewEventOpen] = useState(false);
   const [initialEventData, setInitialEventData] = useState<any>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [triggerScroll, setTriggerScroll] = useState(0);
   
   const viewContainerRef = useRef<HTMLDivElement>(null);
   
   const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars);
-
+  
   const handlePrev = useCallback(() => {
     switch (view) {
       case 'month':
@@ -64,11 +64,12 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
   }, [view]);
 
   const goToToday = useCallback(() => {
-    setCurrentDate(new Date());
-    if (view === 'production-schedule' || view === 'day' || view === 'week') {
-      setZoomLevel('normal');
+    const today = new Date();
+    if (!isToday(currentDate)) {
+        setCurrentDate(today);
     }
-  }, [view]);
+    setTriggerScroll(Date.now());
+  }, [currentDate]);
 
   const handleEasyBooking = useCallback((data: { startTime: Date; location?: string }) => {
     if (!viewAsUser.easyBooking || !userCanCreateEvent) return;
@@ -124,7 +125,7 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
         case 'day':
             return <DayView date={currentDate} containerRef={viewContainerRef} zoomLevel={zoomLevel} axisView={dayViewAxis} onEasyBooking={handleEasyBooking} onEventClick={onEventClick} />;
         case 'production-schedule':
-            return <ProductionScheduleView date={currentDate} containerRef={viewContainerRef} zoomLevel={zoomLevel} onEasyBooking={handleEasyBooking} onEventClick={onEventClick} />;
+            return <ProductionScheduleView date={currentDate} containerRef={viewContainerRef} zoomLevel={zoomLevel} onEasyBooking={handleEasyBooking} onEventClick={onEventClick} triggerScroll={triggerScroll} />;
         default:
             return null;
     }
@@ -189,7 +190,7 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
                           <span className="sr-only">{zoomLevel === 'normal' ? 'Fit to view' : 'Reset view'}</span>
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>{zoomLevel === 'normal' ? 'Fit to view' : 'Reset view'}</TooltipContent>
+                    <TooltipContent>{zoomLevel === 'normal' ? 'Fit to view (8am-8pm)' : 'Reset view'}</TooltipContent>
                   </Tooltip>
                 )}
                 {view === 'day' && (
@@ -214,7 +215,7 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
               </Tabs>
           </div>
         </div>
-        <div className="flex-1 overflow-auto" ref={viewContainerRef}>
+        <div className="flex-1 overflow-auto flex flex-col" ref={viewContainerRef}>
             {renderCurrentView()}
         </div>
       </div>

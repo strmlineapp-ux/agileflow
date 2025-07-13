@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useMemo, useState, useRef, useCallback, useLayoutEffect } from 'react';
@@ -487,15 +488,16 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
         
         const todayIso = weekDays.find(isToday)?.toISOString();
         const scroller = todayIso ? dayScrollerRefs.current.get(todayIso) : undefined;
-    
-        const scrollLogic = (s: HTMLDivElement | null | undefined) => {
+
+        const scrollLogic = (s: HTMLDivElement | null | undefined, key: string) => {
             if (!s) return;
-            if (isCurrentWeek && now && s === scroller) {
-                const scrollLeft = (now.getHours() + now.getMinutes() / 60) * hourWidth - (s.offsetWidth / 2) + (LOCATION_LABEL_WIDTH_PX / 2);
-                s.scrollTo({ left: scrollLeft, behavior: 'smooth' });
-            } else {
-                s.scrollTo({ left: 7 * hourWidth, behavior: 'auto' });
+            let scrollLeft = 8 * hourWidth; // Default to 8am
+            if (zoomLevel === 'fit') {
+                scrollLeft = 0;
+            } else if (isCurrentWeek && now && key === todayIso) {
+                scrollLeft = (now.getHours() + now.getMinutes() / 60) * hourWidth - (s.offsetWidth / 2) + (LOCATION_LABEL_WIDTH_PX / 2);
             }
+            s.scrollTo({ left: scrollLeft, behavior: 'auto' });
         };
 
         dayScrollerRefs.current.forEach(scrollLogic);
@@ -504,14 +506,14 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
             initialScrollPerformed.current = true;
         }
 
-    }, [now, isCurrentWeek, weekDays, hourWidth, containerSize]);
+    }, [now, isCurrentWeek, weekDays, hourWidth, containerSize, zoomLevel]);
 
 
     const toggleDayCollapse = useCallback((dayIso: string) => {
         setCollapsedDays(prev => {
             const newSet = new Set(prev);
-            if (newSet.has(dayIso)) newSet.delete(dayIso);
-            else newSet.add(dayIso);
+            if (newSet.has(dayIso)) newSet.delete(location);
+            else newSet.add(location);
             return newSet;
         });
     }, []);
@@ -591,125 +593,123 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
                     .filter(loc => loc.toLowerCase().includes(checkSearchTerm.toLowerCase()));
 
                 return (
-                    <Card key={dayIso} ref={isDayToday ? todayCardRef : null} className="overflow-hidden border-0">
-                        <CardHeader className="p-2 border-b bg-muted flex flex-row items-center justify-between gap-4">
-                            <div className="flex items-center gap-2">
+                    <Card key={dayIso} ref={isDayToday ? todayCardRef : null}>
+                        <CardHeader className="p-2 bg-muted/50 flex flex-row items-center justify-between gap-4">
+                            <div className="flex items-center gap-2 justify-center flex-1">
                                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleDayCollapse(dayIso)}>
                                     {isDayCollapsed ? <GoogleSymbol name="chevron_right" /> : <GoogleSymbol name="expand_more" />}
                                     <span className="sr-only">{isDayCollapsed ? "Expand day" : "Collapse day"}</span>
                                 </Button>
                                 <span className={cn("font-normal text-sm", { "text-primary": isDayToday })}>{format(day, 'EEE, MMMM d, yyyy').toUpperCase()}</span>
                             </div>
-                            <div className="flex flex-wrap items-center justify-between flex-1 gap-2">
-                                <div className="flex flex-wrap items-center gap-2">
-                                    {allChecksToRender.map(location => {
-                                        const assignedUserId = dailyCheckAssignments[dayIso]?.[location];
-                                        const assignedUser = users.find(u => u.userId === assignedUserId);
-                                        const canManageThisCheckLocation = viewAsUser.isAdmin || teams.some(t =>
-                                            (t.checkLocations || []).includes(location) && (t.locationCheckManagers || []).includes(viewAsUser.userId)
-                                        );
-                                        const isTempCheck = tempChecksForDaySet.has(location);
+                            <div className="absolute left-4 top-1/2 -translate-y-1/2 flex flex-wrap items-center gap-2">
+                                {allChecksToRender.map(location => {
+                                    const assignedUserId = dailyCheckAssignments[dayIso]?.[location];
+                                    const assignedUser = users.find(u => u.userId === assignedUserId);
+                                    const canManageThisCheckLocation = viewAsUser.isAdmin || teams.some(t =>
+                                        (t.checkLocations || []).includes(location) && (t.locationCheckManagers || []).includes(viewAsUser.userId)
+                                    );
+                                    const isTempCheck = tempChecksForDaySet.has(location);
 
-                                        const pillContent = (
-                                            <>
-                                                {locationAliasMap[location] || location}
-                                                {assignedUser && <span className="ml-2 font-normal text-muted-foreground">({`${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}`})</span>}
-                                                {!assignedUser && canManageThisCheckLocation && <GoogleSymbol name="person_add" weight={100} className="ml-2" />}
-                                            </>
-                                        );
-                                        
-                                        const dailyCheckUsers = users.filter(user => teams.some(t => (t.checkLocations || []).includes(location) && (t.locationCheckManagers || []).includes(viewAsUser.userId) && (t.members || []).includes(user.userId) ));
+                                    const pillContent = (
+                                        <>
+                                            {locationAliasMap[location] || location}
+                                            {assignedUser && <span className="ml-2 font-normal text-muted-foreground">({`${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}`})</span>}
+                                            {!assignedUser && canManageThisCheckLocation && <GoogleSymbol name="person_add" weight={100} className="ml-2" />}
+                                        </>
+                                    );
+                                    
+                                    const dailyCheckUsers = users.filter(user => teams.some(t => (t.checkLocations || []).includes(location) && (t.locationCheckManagers || []).includes(viewAsUser.userId) && (t.members || []).includes(user.userId) ));
 
-                                        const pill = canManageThisCheckLocation ? (
-                                            <Popover key={location}><PopoverTrigger asChild><Button variant={assignedUser ? "default" : "outline"} size="sm" className={cn("rounded-full h-8", isTempCheck && "border-dashed")}>{pillContent}</Button></PopoverTrigger>
-                                                <PopoverContent className="w-56 p-0">
-                                                    <div className="p-2 border-b"><p className="text-sm font-normal text-center">{locationAliasMap[location] || location}</p></div>
-                                                    <div className="flex flex-col gap-1 max-h-48 overflow-y-auto p-1">
-                                                        {dailyCheckUsers.length > 0 ? dailyCheckUsers.filter(user => user.userId !== assignedUserId).map(user => (
-                                                            <Button key={user.userId} variant="ghost" className="justify-start h-8" onClick={() => handleAssignCheck(dayIso, location, user.userId)}>
-                                                                <Avatar className="h-6 w-6 mr-2"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
-                                                                <span className="text-sm">{user.displayName}</span>
-                                                            </Button>
-                                                        )) : <p className="text-sm text-muted-foreground text-center p-2">No users to assign.</p>}
-                                                    </div>
-                                                    {assignedUser && <div className="p-1 border-t"><Button variant="outline" size="sm" className="w-full text-destructive hover:text-destructive" onClick={() => handleAssignCheck(dayIso, location, null)}>Unassign</Button></div>}
-                                                </PopoverContent>
-                                            </Popover>
-                                        ) : (<Button key={location} variant={assignedUser ? "default" : "outline"} size="sm" className={cn("rounded-full h-8", isTempCheck && "border-dashed")} disabled>{pillContent}</Button>);
-                                        
-                                        return isTempCheck ? (
-                                            <div key={location} className="group relative">
-                                                {pill}
-                                                <button onClick={() => handleRemoveTempCheck(dayIso, location)} className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <GoogleSymbol name="close" className="text-xs" />
-                                                </button>
-                                            </div>
-                                        ) : pill;
-                                    })}
-
-                                    {canManageAnyCheckLocation && (
-                                        <Popover open={addCheckPopoverOpen[dayIso] || false} onOpenChange={(isOpen) => setAddCheckPopoverOpen(prev => ({ ...prev, [dayIso]: isOpen }))}>
-                                            <PopoverTrigger asChild>
-                                                <TooltipProvider>
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-                                                                <GoogleSymbol name="playlist_add_check_circle" weight={100} />
-                                                            </Button>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent><p>Add Temporary Check</p></TooltipContent>
-                                                    </Tooltip>
-                                                </TooltipProvider>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="w-[300px] p-0">
-                                                <div className="p-2 border-b">
-                                                    <Input
-                                                        placeholder="Search locations..."
-                                                        value={checkSearchTerm}
-                                                        onChange={(e) => setCheckSearchTerm(e.target.value)}
-                                                    />
+                                    const pill = canManageThisCheckLocation ? (
+                                        <Popover key={location}><PopoverTrigger asChild><Button variant={assignedUser ? "default" : "outline"} size="sm" className={cn("rounded-full h-8", isTempCheck && "border-dashed")}>{pillContent}</Button></PopoverTrigger>
+                                            <PopoverContent className="w-56 p-0">
+                                                <div className="p-2 border-b"><p className="text-sm font-normal text-center">{locationAliasMap[location] || location}</p></div>
+                                                <div className="flex flex-col gap-1 max-h-48 overflow-y-auto p-1">
+                                                    {dailyCheckUsers.length > 0 ? dailyCheckUsers.filter(user => user.userId !== assignedUserId).map(user => (
+                                                        <Button key={user.userId} variant="ghost" className="justify-start h-8" onClick={() => handleAssignCheck(dayIso, location, user.userId)}>
+                                                            <Avatar className="h-6 w-6 mr-2"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
+                                                            <span className="text-sm">{user.displayName}</span>
+                                                        </Button>
+                                                    )) : <p className="text-sm text-muted-foreground text-center p-2">No users to assign.</p>}
                                                 </div>
-                                                <ScrollArea className="h-48">
-                                                    {availableLocationsForTempCheck.length > 0 ? availableLocationsForTempCheck.map(loc => (
-                                                    <div 
-                                                        key={loc} 
-                                                        className="p-2 hover:bg-accent cursor-pointer text-sm"
-                                                        onClick={() => handleAddTempCheck(dayIso, loc)}
-                                                    >
-                                                        {locationAliasMap[loc] || loc}
-                                                    </div>
-                                                    )) : (
-                                                    <p className="p-4 text-center text-sm text-muted-foreground">No matching locations.</p>
-                                                    )}
-                                                </ScrollArea>
+                                                {assignedUser && <div className="p-1 border-t"><Button variant="outline" size="sm" className="w-full text-destructive hover:text-destructive" onClick={() => handleAssignCheck(dayIso, location, null)}>Unassign</Button></div>}
                                             </PopoverContent>
                                         </Popover>
-                                    )}
-                                </div>
-                                <div className="flex flex-wrap items-center gap-2">
-                                    {dayStatusAssignments.map(({ userId, status }) => {
-                                        const user = users.find(u => u.userId === userId);
-                                        return user ? <UserStatusBadge key={userId} status={status}>{user.displayName}</UserStatusBadge> : null;
-                                    })}
-                                    {canManageStatus && 
-                                        <TooltipProvider>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenStatusDialog(dayIso)}><GoogleSymbol name="account_circle_off" weight={100} /><span className="sr-only">Edit user statuses</span></Button>
-                                                </TooltipTrigger>
-                                                <TooltipContent><p>Manage User Statuses</p></TooltipContent>
-                                            </Tooltip>
-                                        </TooltipProvider>
-                                    }
-                                </div>
+                                    ) : (<Button key={location} variant={assignedUser ? "default" : "outline"} size="sm" className={cn("rounded-full h-8", isTempCheck && "border-dashed")} disabled>{pillContent}</Button>);
+                                    
+                                    return isTempCheck ? (
+                                        <div key={location} className="group relative">
+                                            {pill}
+                                            <button onClick={() => handleRemoveTempCheck(dayIso, location)} className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <GoogleSymbol name="close" className="text-xs" />
+                                            </button>
+                                        </div>
+                                    ) : pill;
+                                })}
+
+                                {canManageAnyCheckLocation && (
+                                    <Popover open={addCheckPopoverOpen[dayIso] || false} onOpenChange={(isOpen) => setAddCheckPopoverOpen(prev => ({ ...prev, [dayIso]: isOpen }))}>
+                                        <PopoverTrigger asChild>
+                                            <TooltipProvider>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+                                                            <GoogleSymbol name="playlist_add_check_circle" weight={100} />
+                                                        </Button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent><p>Add Temporary Check</p></TooltipContent>
+                                                </Tooltip>
+                                            </TooltipProvider>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-[300px] p-0">
+                                            <div className="p-2 border-b">
+                                                <Input
+                                                    placeholder="Search locations..."
+                                                    value={checkSearchTerm}
+                                                    onChange={(e) => setCheckSearchTerm(e.target.value)}
+                                                />
+                                            </div>
+                                            <ScrollArea className="h-48">
+                                                {availableLocationsForTempCheck.length > 0 ? availableLocationsForTempCheck.map(loc => (
+                                                <div 
+                                                    key={loc} 
+                                                    className="p-2 hover:bg-accent cursor-pointer text-sm"
+                                                    onClick={() => handleAddTempCheck(dayIso, loc)}
+                                                >
+                                                    {locationAliasMap[loc] || loc}
+                                                </div>
+                                                )) : (
+                                                <p className="p-4 text-center text-sm text-muted-foreground">No matching locations.</p>
+                                                )}
+                                            </ScrollArea>
+                                        </PopoverContent>
+                                    </Popover>
+                                )}
+                            </div>
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-wrap items-center gap-2">
+                                {dayStatusAssignments.map(({ userId, status }) => {
+                                    const user = users.find(u => u.userId === userId);
+                                    return user ? <UserStatusBadge key={userId} status={status}>{user.displayName}</UserStatusBadge> : null;
+                                })}
+                                {canManageStatus && 
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenStatusDialog(dayIso)}><GoogleSymbol name="account_circle_off" weight={100} /><span className="sr-only">Edit user statuses</span></Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent><p>Manage User Statuses</p></TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                }
                             </div>
                         </CardHeader>
                         {!isDayCollapsed && (
                             <div className="overflow-x-auto" ref={el => dayScrollerRefs.current.set(dayIso, el)}>
                                 <div style={{ width: `${LOCATION_LABEL_WIDTH_PX + (24 * hourWidth)}px`}}>
-                                    <CardHeader className="p-0 border-b sticky top-0 bg-card z-20 flex flex-row">
-                                        <div className="w-[160px] shrink-0 border-r p-2 flex items-center font-normal text-sm sticky left-0 bg-muted/50 z-30">Location</div>
-                                        {hours.map(hour => <div key={hour} className="shrink-0 text-left p-2 border-r bg-muted/50" style={{ width: `${hourWidth}px`}}><span className="text-xs text-muted-foreground">{format(addHours(startOfDay(day), hour), timeFormatTimeline)}</span></div>)}
+                                    <CardHeader className="p-0 border-b sticky top-0 bg-background z-20 flex flex-row">
+                                        <div className="w-[160px] shrink-0 border-r p-2 flex items-center font-normal text-sm sticky left-0 bg-muted z-30">Location</div>
+                                        {hours.map(hour => <div key={hour} className="shrink-0 text-left p-2 border-r bg-muted" style={{ width: `${hourWidth}px`}}><span className="text-xs text-muted-foreground">{format(addHours(startOfDay(day), hour), timeFormatTimeline)}</span></div>)}
                                     </CardHeader>
                                     <CardContent className="p-0 relative">
                                         <div className="absolute inset-y-0 lunch-break-pattern z-0 pointer-events-none" style={{ left: `${LOCATION_LABEL_WIDTH_PX + 12 * hourWidth}px`, width: `${2.5 * hourWidth}px` }} title="Lunch Break" />
