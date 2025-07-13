@@ -29,13 +29,17 @@ export function CompactSearchInput({
   const [isSearching, setIsSearching] = useState(autoFocus || !!searchTerm);
   const internalInputRef = useRef<HTMLInputElement>(null);
   const inputRef = externalInputRef || internalInputRef;
+  const [initialFocusDone, setInitialFocusDone] = useState(false);
 
   useEffect(() => {
-    if (autoFocus || isSearching) {
+    if (autoFocus && !initialFocusDone) {
       setIsSearching(true);
-      setTimeout(() => inputRef.current?.focus(), 100);
+      setTimeout(() => {
+        inputRef.current?.focus();
+        setInitialFocusDone(true);
+      }, 100);
     }
-  }, [isSearching, autoFocus, inputRef]);
+  }, [autoFocus, initialFocusDone, inputRef]);
 
   if (isSearching) {
     return (

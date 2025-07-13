@@ -242,7 +242,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppT
                      <CardContent className="flex-grow">
                          <UserDropZone id="user-list" users={filteredNonAdminUsers} >
                            {filteredNonAdminUsers.length === 0 && (
-                                <div className="text-center text-sm text-muted-foreground p-4 border-2 border-dashed rounded-lg">No other users found.</div>
+                                <></>
                             )}
                          </UserDropZone>
                     </CardContent>
@@ -773,12 +773,6 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
     
     const pinnedIds = useMemo(() => new Set(corePages.map(p => p.id)), []);
 
-    useEffect(() => {
-        if (isActive && searchInputRef.current) {
-            searchInputRef.current.focus();
-        }
-    }, [isActive]);
-
     const handleUpdatePage = useCallback((pageId: string, data: Partial<AppPage>) => {
         const newPages = appSettings.pages.map(p => p.id === pageId ? { ...p, ...data } : p);
         updateAppSettings({ pages: newPages });
@@ -1125,13 +1119,6 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
     const { appSettings, updateAppSettings, updateAppTab } = useUser();
     const [searchTerm, setSearchTerm] = useState('');
     const searchInputRef = useRef<HTMLInputElement>(null);
-
-    useEffect(() => {
-        if (isActive) {
-            searchInputRef.current?.focus();
-        }
-    }, [isActive]);
-
 
     const handleUpdateTab = useCallback((tabId: string, data: Partial<AppTab>) => {
         const newTabs = appSettings.tabs.map(t => t.id === tabId ? { ...t, ...data } : t);
