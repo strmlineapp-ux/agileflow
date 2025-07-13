@@ -76,7 +76,7 @@ const SettingSelect = ({
   );
 };
 
-function UserCard({ user, isCurrentUser, canEditPreferences }: { user: User, isCurrentUser: boolean, canEditPreferences: boolean }) {
+function UserCard({ user, isCurrentUser, canEditPreferences, className }: { user: User, isCurrentUser: boolean, canEditPreferences: boolean, className?: string }) {
     const { updateUser, linkGoogleCalendar } = useUser();
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
     
@@ -91,7 +91,7 @@ function UserCard({ user, isCurrentUser, canEditPreferences }: { user: User, isC
     }
     
     return (
-        <Card className="bg-transparent">
+        <Card className={cn("bg-transparent", className)}>
             <CardHeader>
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-4">
@@ -236,6 +236,8 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
 
     return (
         <div className="space-y-6">
+          {currentUser && <UserCard user={currentUser} isCurrentUser={isCurrentUser} canEditPreferences={canEditPreferences} className="border-0" />}
+
           {showSearch && (
               <div className="flex justify-end mb-4">
                   <CompactSearchInput 
@@ -246,8 +248,6 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
                   />
               </div>
           )}
-          
-          {currentUser && <UserCard user={currentUser} isCurrentUser={isCurrentUser} canEditPreferences={canEditPreferences} />}
           
           {otherUsers.length > 0 && (
               <div className="flex flex-wrap -m-2">
