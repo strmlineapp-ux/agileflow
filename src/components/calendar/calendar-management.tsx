@@ -70,6 +70,9 @@ function CalendarCard({ calendar, onUpdate, onDelete, isDragging, dragHandleProp
   
   const [iconSearch, setIconSearch] = useState('');
   const iconSearchInputRef = useRef<HTMLInputElement>(null);
+  
+  const [isEditingGCalId, setIsEditingGCalId] = useState(false);
+  const gcalIdInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isIconPopoverOpen) {
@@ -88,6 +91,10 @@ function CalendarCard({ calendar, onUpdate, onDelete, isDragging, dragHandleProp
   useEffect(() => {
     if (isEditingTitle) titleInputRef.current?.focus();
   }, [isEditingTitle]);
+
+  useEffect(() => {
+      if (isEditingGCalId) gcalIdInputRef.current?.focus();
+  }, [isEditingGCalId]);
 
   const handleSaveName = () => {
     const newName = nameInputRef.current?.value.trim();
@@ -113,6 +120,19 @@ function CalendarCard({ calendar, onUpdate, onDelete, isDragging, dragHandleProp
   const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') handleSaveTitle();
     else if (e.key === 'Escape') setIsEditingTitle(false);
+  };
+
+  const handleSaveGCalId = () => {
+    const newId = gcalIdInputRef.current?.value.trim() || '';
+    if (newId !== calendar.googleCalendarId) {
+        onUpdate(calendar.id, { googleCalendarId: newId });
+    }
+    setIsEditingGCalId(false);
+  };
+
+  const handleGCalIdKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') handleSaveGCalId();
+      else if (e.key === 'Escape') setIsEditingGCalId(false);
   };
 
   return (
@@ -202,7 +222,7 @@ function CalendarCard({ calendar, onUpdate, onDelete, isDragging, dragHandleProp
           </DropdownMenu>
         </div>
       </CardHeader>
-      <CardContent className="flex-grow space-y-4 pt-0">
+      <CardContent className="flex-grow space-y-2 pt-0">
         <div>
           {isEditingTitle ? (
             <Input
@@ -216,6 +236,22 @@ function CalendarCard({ calendar, onUpdate, onDelete, isDragging, dragHandleProp
           ) : (
             <p className="text-sm italic cursor-text min-h-[20px]" onClick={() => setIsEditingTitle(true)}>
               {calendar.defaultEventTitle || 'Click to set default title'}
+            </p>
+          )}
+        </div>
+         <div>
+          {isEditingGCalId ? (
+            <Input
+              ref={gcalIdInputRef}
+              defaultValue={calendar.googleCalendarId}
+              onBlur={handleSaveGCalId}
+              onKeyDown={handleGCalIdKeyDown}
+              className="h-auto p-0 text-sm italic font-normal border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+              placeholder="Google Calendar ID (e.g., user@domain.com)"
+            />
+          ) : (
+            <p className="text-sm italic cursor-text min-h-[20px] text-muted-foreground" onClick={() => setIsEditingGCalId(true)}>
+              {calendar.googleCalendarId || 'Link to Google Calendar'}
             </p>
           )}
         </div>

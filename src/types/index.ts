@@ -203,4 +203,3 @@ export interface BookableLocation {
   id: string;
   name: string;
 }
-
