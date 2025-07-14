@@ -10,6 +10,7 @@ import { hexToHsl } from '@/lib/utils';
 import { getOwnershipContext } from '@/lib/permissions';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { corePages, coreTabs, globalBadges } from '@/lib/core-data';
+import { syncCalendar } from '@/ai/flows/sync-calendar-flow';
 
 // Helper to simulate async operations
 const simulateApi = (delay = 50) => new Promise(res => setTimeout(res, delay));
@@ -213,21 +214,51 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       setCalendars(reordered);
   }, []);
 
+  const triggerGoogleCalendarSync = useCallback(async (calendarId: string) => {
+    const calendarToSync = calendars.find(c => c.id === calendarId);
+    if (calendarToSync?.googleCalendarId) {
+      try {
+        console.log(`Auto-syncing calendar: ${calendarToSync.name}`);
+        await syncCalendar({ googleCalendarId: calendarToSync.googleCalendarId });
+        // Optional: Add a subtle success log or notification if needed
+      } catch (error) {
+        console.error(`Auto-sync for calendar ${calendarToSync.name} failed:`, error);
+        // Optional: Add error handling, e.g., logging to a service
+      }
+    }
+  }, [calendars]);
+
   const addEvent = useCallback(async (newEventData: Omit<Event, 'eventId'>) => {
     const event: Event = { ...newEventData, eventId: crypto.randomUUID() };
     await simulateApi();
     setEvents(currentEvents => [...currentEvents, event]);
-  }, []);
+    triggerGoogleCalendarSync(event.calendarId);
+  }, [triggerGoogleCalendarSync]);
 
   const updateEvent = useCallback(async (eventId: string, eventData: Partial<Omit<Event, 'eventId'>>) => {
     await simulateApi();
-    setEvents(currentEvents => currentEvents.map(e => e.eventId === eventId ? { ...e, ...eventData, lastUpdated: new Date() } as Event : e));
-  }, []);
+    let calendarIdToSync: string | null = null;
+    setEvents(currentEvents => currentEvents.map(e => {
+        if (e.eventId === eventId) {
+            const updatedEvent = { ...e, ...eventData, lastUpdated: new Date() } as Event;
+            calendarIdToSync = updatedEvent.calendarId;
+            return updatedEvent;
+        }
+        return e;
+    }));
+    if (calendarIdToSync) {
+        triggerGoogleCalendarSync(calendarIdToSync);
+    }
+  }, [triggerGoogleCalendarSync]);
 
   const deleteEvent = useCallback(async (eventId: string) => {
+    const eventToDelete = events.find(e => e.eventId === eventId);
+    if (!eventToDelete) return;
+    
     await simulateApi();
     setEvents(currentEvents => currentEvents.filter(e => e.eventId !== eventId));
-  }, []);
+    triggerGoogleCalendarSync(eventToDelete.calendarId);
+  }, [events, triggerGoogleCalendarSync]);
 
   const addLocation = useCallback(async (locationName: string) => {
       const newLocation: BookableLocation = { id: crypto.randomUUID(), name: locationName };
