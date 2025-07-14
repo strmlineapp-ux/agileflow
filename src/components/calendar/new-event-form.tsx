@@ -12,7 +12,6 @@ import { canManageEventOnCalendar } from '@/lib/permissions';
 import { cn, getContrastColor } from '@/lib/utils';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { createMeetLink } from '@/ai/flows/create-meet-link-flow';
-import { createMeetingNotes } from '@/ai/flows/create-meeting-notes-flow';
 import { type User, type SharedCalendar, type Attachment, type AttachmentType, type Attendee, type Event, type Badge } from '@/types';
 
 import { Button } from '@/components/ui/button';
@@ -22,7 +21,7 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from '@/component
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogHeader, DialogTitle, DialogContent, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -120,7 +119,6 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
 
   const [isLoading, setIsLoading] = React.useState(false);
   const [isCreatingMeetLink, setIsCreatingMeetLink] = React.useState(false);
-  const [isCreatingNotes, setIsCreatingNotes] = React.useState(false);
   const [guestSearch, setGuestSearch] = React.useState('');
   const [isGuestPopoverOpen, setIsGuestPopoverOpen] = React.useState(false);
   const [isLinkDialogOpen, setIsLinkDialogOpen] = React.useState(false);
@@ -783,25 +781,6 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                           <span>Add Link</span>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          disabled={isCreatingNotes}
-                          onSelect={async () => {
-                            setIsCreatingNotes(true);
-                            try {
-                              const eventTitle = form.getValues('title') || 'New Event';
-                              const result = await createMeetingNotes({ title: eventTitle });
-                              handleAddAttachment('docs', result.notesTitle, result.notesLink);
-                            } catch (error) {
-                              console.error('Failed to create meeting notes:', error);
-                              toast({ variant: 'destructive', title: 'Error', description: 'Could not generate meeting notes.' });
-                            } finally {
-                              setIsCreatingNotes(false);
-                            }
-                          }}
-                        >
-                          <GoogleDocsIcon className="mr-2 h-4 w-4" />
-                          <span>{isCreatingNotes ? 'Generating...' : 'Create Meeting Notes'}</span>
-                        </DropdownMenuItem>
                         <DropdownMenuItem
                           disabled={isCreatingMeetLink || !selectedCalendar?.googleCalendarId}
                           onSelect={async () => {

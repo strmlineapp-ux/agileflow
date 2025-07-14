@@ -81,48 +81,6 @@ This entity represents an internal AgileFlow calendar. It acts as a logical cont
 | `roleAssignmentsLabel?: string` | **Internal.** A custom label for the "Role Assignments" section in the event details view. |
 
 
-## Event Data Synchronization with Google Calendar
-
-When an AgileFlow calendar is linked to a Google Calendar via its `googleCalendarId`, it enables a two-way data mapping between the rich, specialized features of AgileFlow and the general-purpose structure of Google Calendar.
-
-### AgileFlow to Google Calendar
-
-AgileFlow-specific concepts like **Badges**, **Priorities**, and **Role Assignments** do not have direct equivalents in Google Calendar. To preserve this information, AgileFlow formats it into a structured, human-readable block within the Google Calendar event's **description field**.
-
-**Example of a synced event description in Google Calendar:**
-```
-[AgileFlow Event Details]
---------------------------------
-Priority: P0 (Highest priority)
-
-Role Assignments:
-• Video Director: Bernardo Resende
-• Camera Op.: Reno Adriaanse
-
-View this event in AgileFlow: https://agileflow.app/event/evt_12345
-```
-This ensures that essential context is visible to users directly within their Google Calendar.
-
-### Google Calendar to AgileFlow
-
-When an event is synced from Google Calendar into AgileFlow, native Google features are translated into AgileFlow's data model. The following table details how advanced Google Calendar attributes are interpreted.
-
-| Google Calendar Attribute | AgileFlow Interpretation & Mapping |
-| :--- | :--- |
-| **Location (Resources)** | Maps directly to AgileFlow's `Event.location` field. A Google "Resource" (like a conference room) would be treated as a location string. |
-| **Notifications** | Notification settings are specific to each platform and user. They are not synchronized to avoid redundancy. |
-| **Availability** | This setting ("Free" or "Busy") is not mapped. AgileFlow assumes all scheduled events represent "Busy" time for the participants and resources involved. |
-| **Visibility** | Maps to AgileFlow's access control. A "Public" Google event is visible to anyone who can see the AgileFlow calendar. A "Private" event is visible only to its assigned attendees. |
-| **Create Meeting Notes** | This creates a Google Doc and attaches it. On sync, AgileFlow parses this as an `Attachment` object with `type: 'docs'`. |
-| **All-day** | An all-day event is mapped in AgileFlow by setting its `startTime` to `00:00` and `endTime` to `23:59`. The UI can then render this as an all-day banner. |
-| **Recurrency** | Maps to the `Event.recurrenceRule` field in AgileFlow (e.g., an iCal RRULE string) to store the pattern. The backend would generate individual event instances from this rule. |
-| **Guest permissions** | These are specific to Google Calendar's UI and are not synchronized. AgileFlow uses its own permission model based on user roles and calendar ownership. |
-| **Find a time** | This is a UI feature for scheduling, not an event attribute, and therefore has nothing to sync. AgileFlow has its own scheduling views for this purpose. |
-| **Join by phone** | This information is part of the Google Meet conference data. It is accessible via the Meet link attached to the AgileFlow event. |
-| **Calendar event ownership** | Maps directly to AgileFlow's `Event.createdBy` field, which stores the `userId` of the event's creator. |
-| **Publish event** | This Google feature generates a public URL for an event. It is not used by AgileFlow, which manages access internally. |
-
-
 ## Application-Wide Settings
 **Firestore Document**: `/app-settings/global` (A singleton document)
 
@@ -225,6 +183,7 @@ This represents a specific, functional role or skill. The single source of truth
 | `icon: string` | The Google Symbol name for the badge's icon. |
 | `color: string` | The hex color code for the badge's icon and outline. |
 | `description?: string` | An optional description shown in tooltips. |
+
 
 
 
