@@ -83,7 +83,7 @@ This pattern replaces large, card-style "Add New" buttons with a more compact an
 This is the consistent reference pattern for allowing a user to change both an icon and its color.
 
 - **Trigger:** A single, interactive unit composed of a primary icon button and a smaller color swatch badge overlaid on its corner.
-- **Icon Sizing**: The trigger button's icon should be large and prominent, specifically using `text-9xl` within a `h-24 w-24` button.
+- **Icon Sizing**: The trigger button's icon should be large and prominent, specifically using `text-6xl` with `weight={100}` inside a `h-12 w-12` button.
 - **Interaction:**
   - Clicking the main part of the button opens an icon picker popover. This popover uses the **Compact Search Input** pattern for filtering. The icons inside this picker are rendered at `text-4xl` with `weight={100}` inside `h-8 w-8` buttons for clarity and ease of selection.
   - Clicking the color swatch badge opens a color picker popover.
