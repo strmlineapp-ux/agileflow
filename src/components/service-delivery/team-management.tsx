@@ -342,7 +342,7 @@ function TeamCard({
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild onClick={(e) => e.stopPropagation()} disabled={!canManageTeam}>
-                                                <button className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background", canManageTeam && "cursor-pointer")} style={{ backgroundColor: team.color }} />
+                                                <button className={cn("absolute -bottom-1 -right-1 h-5 w-5 rounded-full border-2 border-background", canManageTeam && "cursor-pointer")} style={{ backgroundColor: team.color }} />
                                             </PopoverTrigger>
                                         </TooltipTrigger>
                                         <TooltipContent><p>Change Color</p></TooltipContent>
@@ -357,10 +357,10 @@ function TeamCard({
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <div 
-                                                className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-card flex items-center justify-center text-white"
+                                                className="absolute -top-1 -right-1 h-5 w-5 rounded-full border-2 border-card flex items-center justify-center text-white"
                                                 style={{ backgroundColor: ownerColor }}
                                             >
-                                                <GoogleSymbol name={shareIcon} style={{fontSize: '10px'}}/>
+                                                <GoogleSymbol name={shareIcon} style={{fontSize: '12px'}}/>
                                             </div>
                                         </TooltipTrigger>
                                         <TooltipContent><p>{shareIconTitle}</p></TooltipContent>
