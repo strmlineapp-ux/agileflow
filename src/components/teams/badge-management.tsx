@@ -53,20 +53,20 @@ const predefinedColors = [
 
 function CompactSearchIconPicker({
   icon,
-  color,
   onUpdateIcon,
   buttonClassName,
   iconClassName,
   disabled = false,
   weight,
+  style,
 }: {
   icon: string,
-  color?: string,
   onUpdateIcon: (iconName: string) => void,
   buttonClassName?: string,
   iconClassName?: string,
   disabled?: boolean,
   weight?: number,
+  style?: React.CSSProperties,
 }) {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [iconSearch, setIconSearch] = useState('');
@@ -88,14 +88,14 @@ function CompactSearchIconPicker({
   return (
     <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
       <PopoverTrigger asChild>
-        <button
+        <Button
+          variant="ghost"
           className={cn("p-0 flex items-center justify-center", buttonClassName)}
-          style={color ? { color } : {}}
           disabled={disabled}
           onPointerDown={(e) => e.stopPropagation()}
         >
-          <GoogleSymbol name={icon} className={cn("text-3xl", iconClassName)} weight={weight} />
-        </button>
+          <GoogleSymbol name={icon} className={cn(iconClassName)} weight={weight} style={style} />
+        </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0" onPointerDown={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-1 p-2 border-b">
@@ -360,13 +360,15 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                         <span>
-                                            <CompactSearchIconPicker 
-                                                icon={badge.icon} 
-                                                color={badge.color} 
-                                                onUpdateIcon={(icon) => onUpdateBadge({ icon })}
-                                                disabled={!isEditable}
-                                                iconClassName="text-2xl" 
-                                            />
+                                            <Button variant="ghost" className="h-14 w-14" disabled={!isEditable}>
+                                                <CompactSearchIconPicker 
+                                                    icon={badge.icon} 
+                                                    onUpdateIcon={(icon) => onUpdateBadge({ icon })}
+                                                    disabled={!isEditable}
+                                                    weight={100}
+                                                    style={{ fontSize: '48px' }}
+                                                />
+                                            </Button>
                                         </span>
                                     </TooltipTrigger>
                                     <TooltipContent><p>{isEditable ? "Change Icon" : "Properties are managed by the owner."}</p></TooltipContent>
@@ -507,13 +509,15 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <span>
-                                <CompactSearchIconPicker 
-                                    icon={badge.icon} 
-                                    color={badge.color} 
-                                    onUpdateIcon={(icon) => onUpdateBadge({ icon })}
-                                    disabled={!isEditable}
-                                    iconClassName="text-xl" 
-                                />
+                                <Button variant="ghost" className="h-14 w-14" disabled={!isEditable}>
+                                    <CompactSearchIconPicker 
+                                        icon={badge.icon} 
+                                        onUpdateIcon={(icon) => onUpdateBadge({ icon })}
+                                        disabled={!isEditable}
+                                        weight={100}
+                                        style={{ fontSize: '48px' }}
+                                    />
+                                </Button>
                             </span>
                         </TooltipTrigger>
                         <TooltipContent><p>{isEditable ? "Change Icon" : "Properties are managed by the owner."}</p></TooltipContent>
@@ -866,11 +870,10 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                                 <div className="relative" onPointerDown={(e) => e.stopPropagation()}>
                                     <CompactSearchIconPicker 
                                         icon={collection.icon} 
-                                        color={collection.color} 
                                         onUpdateIcon={(icon) => onUpdateCollection(collection.id, { icon })}
                                         disabled={!isOwned}
-                                        iconClassName="text-5xl"
                                         weight={100}
+                                        style={{ fontSize: '48px' }}
                                         buttonClassName="h-14 w-14"
                                     />
                                     {!isViewer && (
