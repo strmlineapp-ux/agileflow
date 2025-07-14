@@ -81,6 +81,40 @@ This entity represents an internal AgileFlow calendar. It acts as a logical cont
 | `roleAssignmentsLabel?: string` | **Internal.** A custom label for the "Role Assignments" section in the event details view. |
 
 
+## Event Data Synchronization with Google Calendar
+
+When an AgileFlow calendar is linked to a Google Calendar via its `googleCalendarId`, it enables a two-way data mapping between the rich, specialized features of AgileFlow and the general-purpose structure of Google Calendar.
+
+### AgileFlow to Google Calendar
+
+AgileFlow-specific concepts like **Badges**, **Priorities**, and **Role Assignments** do not have direct equivalents in Google Calendar. To preserve this information, AgileFlow formats it into a structured, human-readable block within the Google Calendar event's **description field**.
+
+**Example of a synced event description in Google Calendar:**
+```
+[AgileFlow Event Details]
+--------------------------------
+Priority: P0 (Highest priority)
+
+Role Assignments:
+• Video Director: Bernardo Resende
+• Camera Op.: Reno Adriaanse
+
+View this event in AgileFlow: https://agileflow.app/event/evt_12345
+```
+This ensures that essential context is visible to users directly within their Google Calendar.
+
+### Google Calendar to AgileFlow
+
+When an event is synced from Google Calendar into AgileFlow, native Google features are translated into AgileFlow's data model:
+
+| Google Calendar Feature | AgileFlow Mapping |
+| :--- | :--- |
+| **Google Meet Link** | The URL is extracted and stored as an `Attachment` object with the `type: 'meet'`. This allows the AgileFlow UI to display a dedicated "Join with Google Meet" button. |
+| **Google Drive Attachments** | Links to Google Docs, Sheets, Slides, or other Drive files are parsed and stored as individual `Attachment` objects with the corresponding `type` ('docs', 'sheets', etc.) and URL. |
+| **Event Attendees** | The guest list is synced to the `attendees` array on the AgileFlow `Event` object. |
+| **Event Description** | The description is parsed to find the `[AgileFlow Event Details]` block. If found, the system can re-hydrate the event with its correct priority and role assignments. Any text outside this block is stored as the event's `description`. |
+
+
 ## Application-Wide Settings
 **Firestore Document**: `/app-settings/global` (A singleton document)
 
@@ -183,4 +217,5 @@ This represents a specific, functional role or skill. The single source of truth
 | `icon: string` | The Google Symbol name for the badge's icon. |
 | `color: string` | The hex color code for the badge's icon and outline. |
 | `description?: string` | An optional description shown in tooltips. |
+
 
