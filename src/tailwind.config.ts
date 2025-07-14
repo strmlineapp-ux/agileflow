@@ -18,11 +18,11 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['var(--font-roboto)', 'sans-serif'],
-        headline: ['var(--font-roboto)', 'sans-serif'],
+        body: ["var(--font-pt-sans)"],
+        headline: ["var(--font-space-grotesk)"],
       },
       fontWeight: {
-          thin: '100',
+          light: '300',
       },
       colors: {
         border: "hsl(var(--border))",
@@ -94,4 +94,3 @@ export default {
   },
   plugins: [require('tailwindcss-animate')],
 } satisfies Config;
-

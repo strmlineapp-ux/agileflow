@@ -13,8 +13,9 @@ export const GoogleSymbol = React.forwardRef<
     filled?: boolean;
     variant?: GoogleSymbolVariant;
     weight?: number;
+    size?: number;
   } & React.HTMLAttributes<HTMLSpanElement>
->(({ name, className, filled, variant = 'outlined', weight = 400, ...props }, ref) => {
+>(({ name, className, filled, variant = 'outlined', weight, size, ...props }, ref) => {
   const style: React.CSSProperties & { fontVariationSettings?: string } = { ...props.style };
   
   const settings = [];
@@ -23,6 +24,12 @@ export const GoogleSymbol = React.forwardRef<
   }
   if (weight) {
       settings.push(`'wght' ${weight}`);
+  }
+  
+  // Use optical size if provided, otherwise it will inherit from font-size
+  if (size) {
+    settings.push(`'opsz' ${size}`);
+    style.fontSize = `${size}px`;
   }
 
   if (settings.length > 0) {
