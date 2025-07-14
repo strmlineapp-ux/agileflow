@@ -85,6 +85,7 @@ const formSchema = z.object({
   description: z.string().optional(),
   attachments: z.array(z.any()).optional(),
   attendees: z.array(AttendeeSchema).optional(),
+  recurrenceRule: z.string().optional(),
 }).refine(data => {
     if (data.startTime && data.endTime) {
         return data.endTime > data.startTime;
@@ -156,6 +157,7 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
         description: event.description || '',
         attachments: event.attachments || [],
         attendees: event.attendees || [],
+        recurrenceRule: event.recurrenceRule || '',
     } : {
       title: '',
       calendarId: initialData?.calendarId || defaultCalendarId || '',
@@ -167,6 +169,7 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
       description: '',
       attachments: [],
       attendees: [],
+      recurrenceRule: '',
       ...initialData,
     },
   });
@@ -781,7 +784,7 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                           }}
                         >
                           <GoogleDocsIcon className="mr-2 h-4 w-4" />
-                          <span>Create Meeting Notes</span>
+                          <span>{isCreatingNotes ? 'Generating...' : 'Create Meeting Notes'}</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           disabled={isCreatingMeetLink || !selectedCalendar?.googleCalendarId}
