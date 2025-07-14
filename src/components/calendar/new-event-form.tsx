@@ -784,8 +784,9 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
-                          disabled={isCreatingMeetLink}
+                          disabled={isCreatingMeetLink || !selectedCalendar?.googleCalendarId}
                           onSelect={async () => {
+                            if (!selectedCalendar?.googleCalendarId) return;
                             setIsCreatingMeetLink(true);
                             try {
                               const eventTitle = form.getValues('title') || 'New Event';
