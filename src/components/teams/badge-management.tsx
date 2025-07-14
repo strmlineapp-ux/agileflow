@@ -450,7 +450,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                             <TooltipTrigger asChild>
                                 <p 
                                     className={cn("text-sm text-muted-foreground min-h-[20px] break-words", isEditable && "cursor-text")} 
-                                    onPointerDown={(e) => { e.stopPropagation(); if (isEditable && !isDragging) setIsEditingDescription(true)}}
+                                    onPointerDown={(e) => { e.stopPropagation(); if (isEditable && !isDragging) setIsEditingDescription(true);}}
                                 >
                                     {badge.description || (isEditable ? 'Click to add description.' : 'No description.')}
                                 </p>

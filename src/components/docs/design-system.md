@@ -83,7 +83,7 @@ This pattern replaces large, card-style "Add New" buttons with a more compact an
 This is the consistent reference pattern for allowing a user to change both an icon and its color.
 
 - **Trigger:** A single, interactive unit composed of a primary icon button and a smaller color swatch badge overlaid on its corner.
-- **Icon Sizing**: The trigger button's icon should be large and prominent, specifically using `text-7xl` with `weight={100}` inside a `h-20 w-20` button.
+- **Icon Sizing**: The trigger button's icon should be large and prominent, specifically using `text-5xl` with `weight={100}` inside a `h-14 w-14` button.
 - **Interaction:**
   - Clicking the main part of the button opens an icon picker popover. This popover uses the **Compact Search Input** pattern for filtering. The icons inside this picker are rendered at `text-4xl` with `weight={100}` inside `h-8 w-8` buttons for clarity and ease of selection.
   - Clicking the color swatch badge opens a color picker popover.
@@ -283,7 +283,7 @@ The application supports two distinct color themes, `light` and `dark`, which ca
 
 -   **Dark Theme**:
     -   **Aesthetic**: Modern and focused, using a dark charcoal background (`--background: 0 0% 8%`) and light grey text (`--foreground: 0 0% 67%`).
-    -   **Primary Color**: A vibrant, energetic orange (`#D8620E` or `hsl(25 88% 45%)`) that provides a strong contrast for key actions.
+    -   **Primary Color**: A vibrant, energetic orange (`#D8620E` or `hsl(25 88% 45%)`) used for key actions.
     -   **Accent Color**: A warm, golden yellow (`hsl(43 55% 71%)`) used in button hover gradients.
 
 - **Custom Primary Color**: Users can select a custom primary color using a color picker popover, which is triggered by a ghost-style palette icon button. This custom color overrides the theme's default primary color.
