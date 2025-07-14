@@ -380,7 +380,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                                 <TooltipTrigger asChild>
                                                     <PopoverTrigger asChild disabled={!isEditable} onPointerDown={(e) => e.stopPropagation()}>
                                                         <button
-                                                            className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card", isEditable && "cursor-pointer")}
+                                                            className={cn("absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-card", isEditable && "cursor-pointer")}
                                                             style={{ backgroundColor: badge.color }}
                                                             aria-label="Change badge color"
                                                         />
