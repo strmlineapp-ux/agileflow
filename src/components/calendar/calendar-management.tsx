@@ -123,7 +123,7 @@ function CalendarCard({ calendar, onUpdate, onDelete, isDragging, dragHandleProp
   };
 
   const handleSaveGCalId = () => {
-    const newId = gcalIdInputRef.current?.value.trim() || '';
+    const newId = gcalIdInputRef.current?.value.trim() || undefined;
     if (newId !== calendar.googleCalendarId) {
         onUpdate(calendar.id, { googleCalendarId: newId });
     }
@@ -427,7 +427,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="max-w-md">
           <div className="absolute top-4 right-4">
-              <Button variant="ghost" size="icon" className="hover:text-destructive hover:bg-transparent p-0" onClick={handleDelete}>
+              <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10 p-0" onClick={handleDelete}>
                   <GoogleSymbol name="delete" className="text-4xl" weight={100} />
                   <span className="sr-only">Delete Calendar</span>
               </Button>
