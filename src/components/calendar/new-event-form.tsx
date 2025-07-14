@@ -758,9 +758,25 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                         <TooltipContent><p>Attach File</p></TooltipContent>
                       </Tooltip>
                       <DropdownMenuContent align="start">
+                        <DropdownMenuItem onSelect={() => handleAddAttachment('drive', 'New Google Drive File')}>
+                            <GoogleDriveIcon className="mr-2 h-4 w-4" />
+                            <span>Attach from Drive</span>
+                        </DropdownMenuItem>
+                         <DropdownMenuItem onSelect={() => handleAddAttachment('sheets', 'New Spreadsheet')}>
+                            <GoogleSheetsIcon className="mr-2 h-4 w-4" />
+                            <span>New Sheet</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => handleAddAttachment('slides', 'New Presentation')}>
+                            <GoogleSlidesIcon className="mr-2 h-4 w-4" />
+                            <span>New Slides</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => handleAddAttachment('forms', 'New Form')}>
+                            <GoogleFormsIcon className="mr-2 h-4 w-4" />
+                            <span>New Form</span>
+                        </DropdownMenuItem>
                         <DropdownMenuItem onSelect={() => handleAddAttachment('local', 'design_brief.pdf')}>
                           <GoogleSymbol name="description" className="mr-2 text-lg" />
-                          <span>Attach file</span>
+                          <span>Attach local file</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem onSelect={() => { setIsLinkDialogOpen(true); }}>
                           <GoogleSymbol name="link" className="mr-2 text-lg" />
