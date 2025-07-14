@@ -82,8 +82,8 @@ function EventTemplateForm({
             <div className="flex items-center gap-2 border rounded-md px-2 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
                 <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                     <PopoverTrigger asChild>
-                        <Button variant="ghost" size="icon" className="p-0 shrink-0 h-12 w-12">
-                            <GoogleSymbol name={icon} style={{fontSize: '60px'}} weight={100} />
+                        <Button variant="ghost" size="icon" className="p-0 shrink-0 h-14 w-14">
+                            <GoogleSymbol name={icon} style={{fontSize: '48px'}} weight={100} />
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-80 p-0">
