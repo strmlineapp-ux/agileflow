@@ -306,8 +306,8 @@ function TeamCard({
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild onClick={(e) => e.stopPropagation()} disabled={!canManageTeam}>
-                                                <button className="h-12 w-12 flex items-center justify-center">
-                                                    <GoogleSymbol name={team.icon} className="text-6xl" weight={100} />
+                                                <button className="h-24 w-24 flex items-center justify-center">
+                                                    <GoogleSymbol name={team.icon} className="text-9xl" weight={100} />
                                                 </button>
                                             </PopoverTrigger>
                                         </TooltipTrigger>

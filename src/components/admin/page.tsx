@@ -577,8 +577,8 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
-                                                <button className="h-12 w-12 flex items-center justify-center">
-                                                    <GoogleSymbol name={page.icon} className="text-6xl" weight={100} />
+                                                <button className="h-24 w-24 flex items-center justify-center">
+                                                    <GoogleSymbol name={page.icon} className="text-9xl" weight={100} />
                                                 </button>
                                             </PopoverTrigger>
                                         </TooltipTrigger>
@@ -1186,5 +1186,3 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
     );
 };
 // #endregion
-
-    
