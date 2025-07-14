@@ -79,6 +79,36 @@ A specialized weekly view for production planning, organized by location across 
 -   **User Statuses**: On the right side of each day's header, color-coded pills show which users are absent (e.g., PTO, Sick). Managers can click the `account_circle_off` icon to open a dialog and manage these statuses for the day.
 -   **Location Rows**: Similar to the Day View, each day's card contains rows for pinned locations, displaying all events scheduled in those locations for that specific day.
 
+### 4.3 Google Calendar Integration: A Seamless Two-Way Sync
+
+AgileFlow's calendar is designed to work in perfect harmony with your Google Calendar, creating a powerful, unified scheduling experience. Here’s how the deep, two-way integration works:
+
+**Linking Your Calendars**
+
+The first step is to link an AgileFlow calendar to its Google Calendar counterpart. On the **Service Delivery > Manage Calendars** page, each calendar card has a field for a **Google Calendar ID**. By pasting the ID from your shared Google Calendar here (it typically looks like an email address), you unlock a suite of powerful integration features.
+
+**How Two-Way Synchronization Works**
+
+Once linked, AgileFlow keeps your calendars perfectly aligned through a smart, two-way sync:
+
+*   **AgileFlow to Google Calendar (Real-Time Push)**: When you create, edit, or delete an event in AgileFlow on a linked calendar, the change is instantly and automatically pushed to the real Google Calendar. You don’t have to do anything extra.
+
+*   **Google Calendar to AgileFlow (Manual & Automated Pull)**:
+    *   **Manual Sync**: You can click the "Sync" button on any calendar card in the "Manage Calendars" view to immediately pull the latest updates from Google Calendar.
+    *   **Automatic Sync**: Behind the scenes, AgileFlow is designed to automatically sync all linked calendars on a regular schedule, ensuring data is always fresh without any manual effort.
+
+**Feature Mapping: The Best of Both Worlds**
+
+AgileFlow intelligently translates features between the two platforms:
+
+*   **Google Meet & Meeting Notes**: When creating an event in AgileFlow, the "Add Attachment" dropdown allows you to trigger Google Calendar's native functions. AgileFlow delegates the request to Google, which creates the Meet link or the notes document and attaches it. The result is then synced back and appears on your AgileFlow event instantly.
+
+*   **Badges and Priorities**: AgileFlow-specific details like event Priority and assigned Role Badges are neatly formatted and stored in the description of the Google Calendar event, so you have full context no matter where you are viewing it.
+
+*   **All-Day Events**: Events that last a full day are displayed as a compact banner at the top of the timeline in the Week, Day, and Production Schedule views, keeping your main schedule clean and readable.
+
+This deep integration ensures that you can leverage the specialized planning tools of AgileFlow while staying perfectly in sync with the broader Google Calendar ecosystem.
+
 ## 5. Tasks
 
 The **Tasks** page helps you stay on top of your work.
