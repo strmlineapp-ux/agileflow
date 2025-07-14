@@ -306,8 +306,8 @@ function TeamCard({
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild onClick={(e) => e.stopPropagation()} disabled={!canManageTeam}>
-                                                <Button variant="ghost" className="h-20 w-20 flex items-center justify-center p-0">
-                                                    <GoogleSymbol name={team.icon} weight={100} style={{ fontSize: '72px' }}/>
+                                                <Button variant="ghost" className="h-12 w-12 flex items-center justify-center p-0">
+                                                    <GoogleSymbol name={team.icon} weight={100} style={{ fontSize: '60px' }}/>
                                                 </Button>
                                             </PopoverTrigger>
                                         </TooltipTrigger>
@@ -329,7 +329,7 @@ function TeamCard({
                                         <TooltipProvider key={iconName}>
                                         <Tooltip>
                                             <TooltipTrigger asChild>
-                                            <Button variant={team.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(team.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="h-8 w-8 p-0"><GoogleSymbol name={iconName} className="text-4xl" weight={100} /></Button>
+                                            <Button variant={team.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(team.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="h-8 w-8 p-0"><GoogleSymbol name={iconName} style={{fontSize: '24px'}} weight={100} /></Button>
                                             </TooltipTrigger>
                                             <TooltipContent><p>{iconName}</p></TooltipContent>
                                         </Tooltip>
