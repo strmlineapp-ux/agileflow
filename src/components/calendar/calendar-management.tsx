@@ -16,6 +16,7 @@ import { googleSymbolNames } from '@/lib/google-symbols';
 import { ScrollArea } from '../ui/scroll-area';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
+import { syncCalendar } from '@/ai/flows/sync-calendar-flow';
 import {
   DndContext,
   closestCenter,
@@ -73,6 +74,7 @@ function CalendarCard({ calendar, onUpdate, onDelete, isDragging, dragHandleProp
   
   const [isEditingGCalId, setIsEditingGCalId] = useState(false);
   const gcalIdInputRef = useRef<HTMLInputElement>(null);
+  const {toast} = useToast();
 
   useEffect(() => {
     if (isIconPopoverOpen) {
@@ -134,6 +136,20 @@ function CalendarCard({ calendar, onUpdate, onDelete, isDragging, dragHandleProp
       if (e.key === 'Enter') handleSaveGCalId();
       else if (e.key === 'Escape') setIsEditingGCalId(false);
   };
+
+  const handleSync = async () => {
+    if (!calendar.googleCalendarId) return;
+    toast({ title: 'Sync Started', description: `Syncing with ${calendar.name}...` });
+    try {
+        const result = await syncCalendar({ googleCalendarId: calendar.googleCalendarId });
+        console.log('Sync Result:', result);
+        toast({ title: 'Sync Complete', description: `Found ${result.syncedEventCount} events in ${calendar.name}.` });
+    } catch (error) {
+        console.error('Sync failed:', error);
+        toast({ variant: 'destructive', title: 'Sync Failed', description: 'Could not sync calendar.' });
+    }
+  };
+
 
   return (
     <Card className={cn("flex flex-col group bg-transparent relative", isDragging && "shadow-xl")} {...dragHandleProps}>
@@ -214,6 +230,12 @@ function CalendarCard({ calendar, onUpdate, onDelete, isDragging, dragHandleProp
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+                {calendar.googleCalendarId && (
+                    <DropdownMenuItem onClick={handleSync}>
+                        <GoogleSymbol name="sync" className="mr-2" weight={100}/>
+                        Sync with Google
+                    </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={() => onDelete(calendar)} className="text-destructive focus:text-destructive">
                     <GoogleSymbol name="delete" className="mr-2" weight={100}/>
                     Delete Calendar
