@@ -578,7 +578,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
                                                 <Button variant="ghost" className="h-14 w-14 flex items-center justify-center p-0">
-                                                    <GoogleSymbol name={page.icon} style={{ fontSize: '48px', color: page.color }} weight={100} />
+                                                    <GoogleSymbol name={page.icon} style={{ fontSize: '48px' }} weight={100} />
                                                 </Button>
                                             </PopoverTrigger>
                                         </TooltipTrigger>
@@ -587,7 +587,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
                                 </TooltipProvider>
                                 <PopoverContent className="w-80 p-0" onPointerDownCapture={(e) => e.stopPropagation()}>
                                     <div className="flex items-center gap-1 p-2 border-b">
-                                        <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                                        <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
                                         <input
                                             ref={iconSearchInputRef}
                                             placeholder="Search icons..."
@@ -606,7 +606,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
                                             onClick={() => { onUpdate(page.id, { icon: iconName }); setIsIconPopoverOpen(false);}}
                                             className="h-8 w-8 p-0"
                                             >
-                                            <GoogleSymbol name={iconName} style={{fontSize: '24px'}} weight={100} />
+                                            <GoogleSymbol name={iconName} weight={100} style={{fontSize: '24px'}}/>
                                             </Button>
                                         </TooltipTrigger>
                                         <TooltipContent><p>{iconName}</p></TooltipContent>
@@ -1010,7 +1010,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                                 <TooltipTrigger asChild>
                                     <PopoverTrigger asChild>
                                         <button className="h-10 w-10 flex items-center justify-center">
-                                            <GoogleSymbol name={tab.icon} className="text-4xl" weight={100} />
+                                            <GoogleSymbol name={tab.icon} style={{fontSize: '40px'}} weight={100} />
                                         </button>
                                     </PopoverTrigger>
                                 </TooltipTrigger>
@@ -1038,7 +1038,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                                     onClick={() => { onUpdate(tab.id, { icon: iconName }); setIsIconPopoverOpen(false);}}
                                     className="h-8 w-8 p-0"
                                     >
-                                    <GoogleSymbol name={iconName} className="text-4xl" weight={100} />
+                                    <GoogleSymbol name={iconName} style={{fontSize: '24px'}} weight={100} />
                                     </Button>
                                 </TooltipTrigger>
                                 <TooltipContent><p>{iconName}</p></TooltipContent>

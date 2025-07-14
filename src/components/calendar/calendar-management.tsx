@@ -163,7 +163,7 @@ function CalendarCard({ calendar, onUpdate, onDelete, isDragging, dragHandleProp
                             <TooltipTrigger asChild>
                                 <PopoverTrigger asChild>
                                     <Button variant="ghost" className="h-14 w-14 flex items-center justify-center p-0">
-                                        <GoogleSymbol name={calendar.icon} style={{ fontSize: '48px', color: calendar.color }} weight={100} />
+                                        <GoogleSymbol name={calendar.icon} style={{ fontSize: '48px' }} weight={100} />
                                     </Button>
                                 </PopoverTrigger>
                             </TooltipTrigger>
@@ -172,7 +172,7 @@ function CalendarCard({ calendar, onUpdate, onDelete, isDragging, dragHandleProp
                     </TooltipProvider>
                     <PopoverContent className="w-80 p-0">
                         <div className="flex items-center gap-1 p-2 border-b">
-                            <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                            <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
                             <input
                                 ref={iconSearchInputRef}
                                 placeholder="Search icons..."

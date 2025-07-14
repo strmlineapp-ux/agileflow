@@ -24,20 +24,9 @@ export const GoogleSymbol = React.forwardRef<
       settings.push(`'wght' ${weight}`);
   }
   
-  // Extract font-size from style or className to apply to opsz
-  let fontSize: string | number | undefined = style.fontSize;
-  if (!fontSize && className) {
-    const sizeClass = className.match(/text-([a-z0-9]+)/);
-    if(sizeClass) {
-        // This is a simplification; a production app might need a lookup table for Tailwind sizes.
-        // For now, we'll try to extract a numeric value if possible.
-        // This part is tricky because Tailwind classes aren't directly mappable to opsz values.
-        // A better approach is setting font-size directly via style prop.
-    }
-  }
-
-  if (fontSize) {
-    const numericSize = parseInt(typeof fontSize === 'string' ? fontSize : String(fontSize), 10);
+  // Directly use the fontSize from style prop to set the opsz
+  if (style.fontSize) {
+    const numericSize = parseInt(String(style.fontSize), 10);
     if (!isNaN(numericSize)) {
       settings.push(`'opsz' ${numericSize}`);
     }
