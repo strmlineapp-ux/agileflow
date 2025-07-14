@@ -207,7 +207,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive, activeTab }: 
     <div className="space-y-6">
         {isSingleTabPage && (
              <div className="flex items-center gap-3">
-                <GoogleSymbol name={tab.icon} className="text-6xl" weight={100} />
+                <GoogleSymbol name={tab.icon} style={{fontSize: '60px'}} weight={100} />
                 <h1 className="font-headline text-3xl font-thin">{tab.name}</h1>
              </div>
         )}
@@ -606,7 +606,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
                                             onClick={() => { onUpdate(page.id, { icon: iconName }); setIsIconPopoverOpen(false);}}
                                             className="h-8 w-8 p-0"
                                             >
-                                            <GoogleSymbol name={iconName} className="text-4xl" weight={100} />
+                                            <GoogleSymbol name={iconName} style={{fontSize: '24px'}} />
                                             </Button>
                                         </TooltipTrigger>
                                         <TooltipContent><p>{iconName}</p></TooltipContent>

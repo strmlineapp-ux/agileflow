@@ -4,7 +4,7 @@
 import { Button } from '@/components/ui/button';
 import { TaskList } from '@/components/tasks/task-list';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
-import { type AppPage } from '@/types';
+import { type AppTab } from '@/types';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export function TasksContent({ tab: pageConfig, isSingleTabPage }: { tab: AppPage, isSingleTabPage?: boolean }) {
@@ -13,7 +13,7 @@ export function TasksContent({ tab: pageConfig, isSingleTabPage }: { tab: AppPag
     <div className="flex flex-col gap-6">
        <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <GoogleSymbol name={pageConfig.icon} className="text-6xl" />
+          <GoogleSymbol name={pageConfig.icon} style={{fontSize: '60px'}} weight={100}/>
            <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>

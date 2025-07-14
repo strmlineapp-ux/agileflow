@@ -162,8 +162,8 @@ function CalendarCard({ calendar, onUpdate, onDelete, isDragging, dragHandleProp
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <PopoverTrigger asChild>
-                                    <Button variant="ghost" className="h-8 w-8 flex items-center justify-center p-0">
-                                        <GoogleSymbol name={calendar.icon} weight={100} style={{ fontSize: '24px' }}/>
+                                    <Button variant="ghost" className="h-12 w-12 flex items-center justify-center p-0">
+                                        <GoogleSymbol name={calendar.icon} weight={100} style={{ fontSize: '60px' }}/>
                                     </Button>
                                 </PopoverTrigger>
                             </TooltipTrigger>
@@ -185,7 +185,7 @@ function CalendarCard({ calendar, onUpdate, onDelete, isDragging, dragHandleProp
                           <TooltipProvider key={iconName}>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <Button variant={calendar.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(calendar.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="h-8 w-8 p-0"><GoogleSymbol name={iconName} className="text-4xl" weight={100} /></Button>
+                                <Button variant={calendar.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(calendar.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="h-8 w-8 p-0"><GoogleSymbol name={iconName} style={{fontSize: '24px'}} weight={100} /></Button>
                               </TooltipTrigger>
                               <TooltipContent><p>{iconName}</p></TooltipContent>
                             </Tooltip>
