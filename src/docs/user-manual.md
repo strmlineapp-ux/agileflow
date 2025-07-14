@@ -39,6 +39,7 @@ The calendar is a powerful tool for visualizing and managing your team's schedul
 - Click the **(+)** icon in the header to open the new event form.
 - Fill in the details, including title, date, time, location, and priority.
 - You can add attachments, request specific roles for the event, and invite guests.
+- **Google Integration**: From the attachments dropdown, you can automatically generate a **Google Meet link** or create a new **Google Doc for meeting notes**, which will be attached directly to the event. This is only available for AgileFlow calendars that have been linked to a real Google Calendar.
 - **Easy Booking**: In your user preferences, you can enable "Easy Booking," which allows you to click on any empty time slot in the Day, Week, or Production Schedule views to quickly open the new event form with the time pre-filled.
 
 ### 4.2 Calendar Views & Controls
@@ -58,10 +59,8 @@ A traditional monthly grid layout.
 A 7-day vertical timeline view.
 -   **Layout**: A horizontal grid with a fixed timeline on the left and a column for each day of the week.
 -   **Day Columns**: Each column is a vertical representation of a single day, displaying the day's name and number at the top.
--   **Events**: Events are rendered as colored blocks within their respective day's column. Each block is positioned and sized vertically according to its start and end times. The blocks are rich with information:
-    -   **Priority Badge**: A colored badge at the top of the event block indicates its importance.
-    -   **Assigned User Avatars**: A row of circular avatars shows who is assigned to the event. A secondary, smaller icon badge is overlaid on each avatar to show their specific role (e.g., a camera icon for a "Camera Op."). Hovering over an avatar reveals a tooltip with the user's full name and their role.
-    -   **Details**: The event's title and time range are clearly displayed within the block.
+-   **Events**: Events are rendered as colored blocks within their respective day's column. Each block is positioned and sized vertically according to its start and end times. They display the same rich information as the Day View (priority, avatars, title, time).
+-   **All-Day Events**: Events that span an entire day appear as a compact banner at the top of their day's column, preventing them from cluttering the main timeline.
 -   **"Now" Marker**: On the current day, a horizontal red line dynamically indicates the current time, providing a clear reference point.
 
 #### Day View
@@ -69,7 +68,7 @@ A detailed horizontal timeline for a single day, organized by location.
 -   **Layout**: A horizontal timeline where each row represents a different location. This view is ideal for understanding resource allocation and potential conflicts.
 -   **Location Rows**: Each row is labeled with a location's name on the left.
     -   **Collapsible Rows**: Rows for locations with no scheduled events are automatically collapsed to save space. Users can also manually click on any location's name to toggle its row's visibility, allowing them to focus on what's important.
--   **Events**: Events appear as colored blocks within their location's row, positioned and sized horizontally according to their start and end times. They display the same rich information as the Week View (priority, avatars, title, time).
+-   **Events**: Events appear as colored blocks within their location's row, positioned and sized horizontally according to their start and end times. They display rich information like priority badges, assigned user avatars (with their role icon), the event title, and the time range.
 -   **Axis Toggle**: A "Swap Axis" button in the header allows you to switch to a **Reversed (Vertical) View**. In this mode, the timeline runs top-to-bottom in a single column, and all events for the day are displayed within it, providing a more traditional agenda-style layout.
 
 #### Production Schedule

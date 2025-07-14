@@ -12,6 +12,7 @@ import { canManageEventOnCalendar } from '@/lib/permissions';
 import { cn, getContrastColor } from '@/lib/utils';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { createMeetLink } from '@/ai/flows/create-meet-link-flow';
+import { createMeetingNotes } from '@/ai/flows/create-meeting-notes-flow';
 import { type User, type SharedCalendar, type Attachment, type AttachmentType, type Attendee, type Event, type Badge } from '@/types';
 
 import { Button } from '@/components/ui/button';
@@ -118,6 +119,7 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
 
   const [isLoading, setIsLoading] = React.useState(false);
   const [isCreatingMeetLink, setIsCreatingMeetLink] = React.useState(false);
+  const [isCreatingNotes, setIsCreatingNotes] = React.useState(false);
   const [guestSearch, setGuestSearch] = React.useState('');
   const [isGuestPopoverOpen, setIsGuestPopoverOpen] = React.useState(false);
   const [isLinkDialogOpen, setIsLinkDialogOpen] = React.useState(false);
@@ -762,27 +764,25 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                           <span>Add Link</span>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onSelect={() => handleAddAttachment('drive', 'Project Assets')}>
-                          <GoogleDriveIcon className="mr-2 h-4 w-4" />
-                          <span>Google Drive</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => handleAddAttachment('docs', 'Meeting Notes')}>
+                        <DropdownMenuItem
+                          disabled={isCreatingNotes}
+                          onSelect={async () => {
+                            setIsCreatingNotes(true);
+                            try {
+                              const eventTitle = form.getValues('title') || 'New Event';
+                              const result = await createMeetingNotes({ title: eventTitle });
+                              handleAddAttachment('docs', result.notesTitle, result.notesLink);
+                            } catch (error) {
+                              console.error('Failed to create meeting notes:', error);
+                              toast({ variant: 'destructive', title: 'Error', description: 'Could not generate meeting notes.' });
+                            } finally {
+                              setIsCreatingNotes(false);
+                            }
+                          }}
+                        >
                           <GoogleDocsIcon className="mr-2 h-4 w-4" />
-                          <span>Google Docs</span>
+                          <span>Create Meeting Notes</span>
                         </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => handleAddAttachment('sheets', 'Budget Tracker')}>
-                          <GoogleSheetsIcon className="mr-2 h-4 w-4" />
-                          <span>Google Sheets</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => handleAddAttachment('slides', 'Presentation Deck')}>
-                          <GoogleSlidesIcon className="mr-2 h-4 w-4" />
-                          <span>Google Slides</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => handleAddAttachment('forms', 'Feedback Form')}>
-                          <GoogleFormsIcon className="mr-2 h-4 w-4" />
-                          <span>Google Forms</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
                         <DropdownMenuItem
                           disabled={isCreatingMeetLink || !selectedCalendar?.googleCalendarId}
                           onSelect={async () => {

@@ -176,6 +176,7 @@ export interface Event {
   createdAt: Date;
   lastUpdated: Date;
   syncToGoogleCalendar?: boolean;
+  recurrenceRule?: string; // iCal RRULE string for recurring events
 }
 
 export type UserStatus = 'PTO' | 'PTO (AM)' | 'PTO (PM)' | 'TOIL' | 'TOIL (AM)' | 'TOIL (PM)' | 'Sick' | 'Offsite' | 'Training';

@@ -115,7 +115,7 @@ When an event is synced from Google Calendar into AgileFlow, native Google featu
 | **Visibility** | Maps to AgileFlow's access control. A "Public" Google event is visible to anyone who can see the AgileFlow calendar. A "Private" event is visible only to its assigned attendees. |
 | **Create Meeting Notes** | This creates a Google Doc and attaches it. On sync, AgileFlow parses this as an `Attachment` object with `type: 'docs'`. |
 | **All-day** | An all-day event is mapped in AgileFlow by setting its `startTime` to `00:00` and `endTime` to `23:59`. The UI can then render this as an all-day banner. |
-| **Recurrency** | Would require a new `Event.recurrenceRule` field in AgileFlow (e.g., an iCal RRULE string) to store the pattern. The backend would generate individual event instances from this rule. |
+| **Recurrency** | Maps to the `Event.recurrenceRule` field in AgileFlow (e.g., an iCal RRULE string) to store the pattern. The backend would generate individual event instances from this rule. |
 | **Guest permissions** | These are specific to Google Calendar's UI and are not synchronized. AgileFlow uses its own permission model based on user roles and calendar ownership. |
 | **Find a time** | This is a UI feature for scheduling, not an event attribute, and therefore has nothing to sync. AgileFlow has its own scheduling views for this purpose. |
 | **Join by phone** | This information is part of the Google Meet conference data. It is accessible via the Meet link attached to the AgileFlow event. |
@@ -225,6 +225,7 @@ This represents a specific, functional role or skill. The single source of truth
 | `icon: string` | The Google Symbol name for the badge's icon. |
 | `color: string` | The hex color code for the badge's icon and outline. |
 | `description?: string` | An optional description shown in tooltips. |
+
 
 
 
