@@ -83,7 +83,7 @@ function EventTemplateForm({
                 <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                     <PopoverTrigger asChild>
                         <Button variant="ghost" size="icon" className="p-0 shrink-0 h-24 w-24">
-                            <GoogleSymbol name={icon} style={{fontSize: '128px'}} weight={100} />
+                            <GoogleSymbol name={icon} style={{fontSize: '96px'}} weight={100} />
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-80 p-0">
