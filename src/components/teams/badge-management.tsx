@@ -869,9 +869,9 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                                         color={collection.color} 
                                         onUpdateIcon={(icon) => onUpdateCollection(collection.id, { icon })}
                                         disabled={!isOwned}
-                                        iconClassName="text-9xl"
+                                        iconClassName="text-5xl"
                                         weight={100}
-                                        buttonClassName="h-24 w-24"
+                                        buttonClassName="h-14 w-14"
                                     />
                                     {!isViewer && (
                                         <>
