@@ -99,7 +99,7 @@ function CompactSearchIconPicker({
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0" onPointerDown={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-1 p-2 border-b">
-            <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+            <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
             <input
               ref={searchInputRef}
               placeholder="Search icons..."
@@ -360,15 +360,14 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                         <span>
-                                            <Button variant="ghost" className="h-14 w-14" disabled={!isEditable}>
-                                                <CompactSearchIconPicker 
-                                                    icon={badge.icon} 
-                                                    onUpdateIcon={(icon) => onUpdateBadge({ icon })}
-                                                    disabled={!isEditable}
-                                                    weight={100}
-                                                    style={{ fontSize: '48px' }}
-                                                />
-                                            </Button>
+                                            <CompactSearchIconPicker 
+                                                icon={badge.icon} 
+                                                onUpdateIcon={(icon) => onUpdateBadge({ icon })}
+                                                disabled={!isEditable}
+                                                weight={100}
+                                                buttonClassName="h-10 w-10"
+                                                style={{ fontSize: '36px', color: badge.color }}
+                                            />
                                         </span>
                                     </TooltipTrigger>
                                     <TooltipContent><p>{isEditable ? "Change Icon" : "Properties are managed by the owner."}</p></TooltipContent>
@@ -509,15 +508,14 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <span>
-                                <Button variant="ghost" className="h-14 w-14" disabled={!isEditable}>
-                                    <CompactSearchIconPicker 
-                                        icon={badge.icon} 
-                                        onUpdateIcon={(icon) => onUpdateBadge({ icon })}
-                                        disabled={!isEditable}
-                                        weight={100}
-                                        style={{ fontSize: '48px' }}
-                                    />
-                                </Button>
+                                <CompactSearchIconPicker 
+                                    icon={badge.icon} 
+                                    onUpdateIcon={(icon) => onUpdateBadge({ icon })}
+                                    disabled={!isEditable}
+                                    weight={100}
+                                    buttonClassName="h-10 w-10"
+                                    style={{ fontSize: '36px', color: badge.color }}
+                                />
                             </span>
                         </TooltipTrigger>
                         <TooltipContent><p>{isEditable ? "Change Icon" : "Properties are managed by the owner."}</p></TooltipContent>
@@ -599,11 +597,13 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                 className="flex items-center gap-1.5 p-1 pl-2 rounded-full text-sm border-2 h-8"
             >
                 <div className="relative">
-                    <CompactSearchIconPicker
+                     <CompactSearchIconPicker
                         icon={badge.icon}
                         onUpdateIcon={(icon) => onUpdateBadge({ icon })}
                         iconClassName="text-base"
                         disabled={!isEditable}
+                        weight={100}
+                        style={{ color: badge.color }}
                     />
                      {!isViewer && (
                         <>
