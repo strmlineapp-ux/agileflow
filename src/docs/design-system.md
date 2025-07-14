@@ -82,7 +82,8 @@ This pattern replaces large, card-style "Add New" buttons with a more compact an
 ### 6. Icon & Color Editing Flow
 This is the consistent reference pattern for allowing a user to change both an icon and its color.
 
-- **Trigger:** A single, interactive unit composed of a primary icon button and a smaller color swatch badge overlaid on its corner. The primary button icon should be large and prominent (`text-6xl`).
+- **Trigger:** A single, interactive unit composed of a primary icon button and a smaller color swatch badge overlaid on its corner.
+- **Sizing:** The trigger button should be a `h-8 w-8` button, and the icon inside it should be sized using `text-4xl`.
 - **Interaction:**
   - Clicking the main part of the button opens an icon picker popover. This popover uses the **Compact Search Input** pattern for filtering. The icons inside this picker are rendered at `text-4xl` with `weight={100}` inside `h-8 w-8` buttons for clarity and ease of selection.
   - Clicking the color swatch badge opens a color picker popover.
@@ -247,7 +248,7 @@ This pattern describes the user interface for assigning and unassigning badges t
 ### 16. Compact Preferences Row
 This pattern provides a dense, icon-driven interface for managing a series of user-specific settings. It is designed to be placed within a user's card or profile view, offering quick access without taking up significant vertical space.
 
-- **Appearance**: A horizontal row of icon-only buttons. Each button represents a single user preference (e.g., Theme, Time Format).
+- **Appearance**: A horizontal row of icon-only buttons.
 - **Interaction**:
     - **Tooltip on Hover**: Hovering over any icon button **must** display a `<Tooltip>` that clearly describes the setting and its current value (e.g., "Theme: Dark" or "Easy Booking: On"). This is critical for usability as the icons alone do not convey the current state.
     - **Popover on Click**: Clicking an icon button opens a compact `<Popover>` containing the options for that setting.
@@ -267,7 +268,6 @@ This pattern provides a dense, icon-driven interface for managing a series of us
   - A `weight={100}` is used for **all icons** to maintain a light, clean aesthetic.
   - Icons inside pickers (like the icon picker) are `text-4xl` inside `h-8 w-8` buttons for clarity and ease of selection.
   - Large, circular 'Add New' buttons use `text-4xl` for prominence.
-  - Icon picker *trigger* buttons use a large `text-6xl` icon inside a `h-12 w-12` button.
 - **Filled Icons**: To use the filled style of an icon, pass the `filled` prop to the component: `<GoogleSymbol name="star" filled />`. This works with any of the three main styles.
 - **Hover Behavior**: The color of icons on hover is typically determined by their parent element. For example, an icon inside a `<Button variant="ghost">` will change to the primary theme color on hover because the button's text color changes, and the icon inherits that color. This creates a clean and predictable interaction.
 - **Destructive Actions**: Delete or other destructive action icons (like `delete`, `close`, `cancel`) are `text-muted-foreground` by default and become `text-destructive` on hover to provide a clear but not overwhelming visual warning.
@@ -317,6 +317,3 @@ This is the single source of truth for indicating user interaction state across 
     - **Placement**: This is context-dependent. Color-pickers are typically placed on the bottom-right corner of their parent icon. Ownership status icons are typically placed on the top-left corner to create visual balance.
     - **Application**: Used for displaying a team admin status, a shared status on a role icon, or a `share` icon on a shared Badge.
 -   **Badges in Assorted View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
-
-    
-

@@ -3,19 +3,14 @@ import type { Metadata } from 'next';
 import { Toaster } from "@/components/ui/toaster";
 import './globals.css';
 import { UserProvider } from '@/context/user-context';
-import { Space_Grotesk, PT_Sans } from 'next/font/google';
+import { Roboto } from 'next/font/google';
 
-const spaceGrotesk = Space_Grotesk({
+const roboto = Roboto({
   subsets: ['latin'],
-  weight: ['300', '400', '500', '700'],
-  variable: '--font-space-grotesk',
+  weight: ['100', '300', '400', '500', '700'],
+  variable: '--font-roboto',
 });
 
-const ptSans = PT_Sans({
-  subsets: ['latin'],
-  weight: ['400', '700'],
-  variable: '--font-pt-sans',
-});
 
 export const metadata: Metadata = {
   title: 'AgileFlow',
@@ -32,7 +27,7 @@ export default function RootLayout({
       <head>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
       </head>
-      <body className={`${spaceGrotesk.variable} ${ptSans.variable} font-body antialiased`}>
+      <body className={`${roboto.variable} font-body antialiased`}>
         <UserProvider>
           {children}
           <Toaster />

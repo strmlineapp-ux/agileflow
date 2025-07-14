@@ -4,7 +4,6 @@ import React from 'react';
 
 type GoogleSymbolVariant = 'outlined' | 'rounded' | 'sharp';
 
-// Using a forwardRef so it can be used with asChild prop in some shadcn components
 export const GoogleSymbol = React.forwardRef<
   HTMLSpanElement,
   { 
@@ -13,9 +12,8 @@ export const GoogleSymbol = React.forwardRef<
     filled?: boolean;
     variant?: GoogleSymbolVariant;
     weight?: number;
-    size?: number;
   } & React.HTMLAttributes<HTMLSpanElement>
->(({ name, className, filled, variant = 'outlined', weight, size, ...props }, ref) => {
+>(({ name, className, filled, variant = 'outlined', weight, ...props }, ref) => {
   const style: React.CSSProperties & { fontVariationSettings?: string } = { ...props.style };
   
   const settings = [];
@@ -26,10 +24,23 @@ export const GoogleSymbol = React.forwardRef<
       settings.push(`'wght' ${weight}`);
   }
   
-  // Use optical size if provided, otherwise it will inherit from font-size
-  if (size) {
-    settings.push(`'opsz' ${size}`);
-    style.fontSize = `${size}px`;
+  // Extract font-size from style or className to apply to opsz
+  let fontSize: string | number | undefined = style.fontSize;
+  if (!fontSize && className) {
+    const sizeClass = className.match(/text-([a-z0-9]+)/);
+    if(sizeClass) {
+        // This is a simplification; a production app might need a lookup table for Tailwind sizes.
+        // For now, we'll try to extract a numeric value if possible.
+        // This part is tricky because Tailwind classes aren't directly mappable to opsz values.
+        // A better approach is setting font-size directly via style prop.
+    }
+  }
+
+  if (fontSize) {
+    const numericSize = parseInt(typeof fontSize === 'string' ? fontSize : String(fontSize), 10);
+    if (!isNaN(numericSize)) {
+      settings.push(`'opsz' ${numericSize}`);
+    }
   }
 
   if (settings.length > 0) {
