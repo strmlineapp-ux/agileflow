@@ -6,7 +6,6 @@ import { type SharedCalendar, type AppTab } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle as UIDialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { GoogleSymbol } from '../icons/google-symbol';
@@ -300,18 +299,20 @@ function CalendarCard({
                     </div>
                 </div>
                 <div onPointerDown={(e) => e.stopPropagation()}>
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={handleSync} disabled={!calendar.googleCalendarId} onPointerDown={(e) => e.stopPropagation()}>
-                                    <GoogleSymbol name="sync" weight={100} />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p>{calendar.googleCalendarId ? 'Sync with Google Calendar' : 'Link a Google Calendar ID to enable sync'}</p>
-                            </TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
+                  <TooltipProvider>
+                      <Tooltip>
+                          <TooltipTrigger asChild>
+                              <span onPointerDown={(e) => e.stopPropagation()}>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={handleSync} disabled={!calendar.googleCalendarId}>
+                                      <GoogleSymbol name="sync" weight={100} />
+                                  </Button>
+                              </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                              <p>{calendar.googleCalendarId ? 'Sync with Google Calendar' : 'Link a Google Calendar ID to enable sync'}</p>
+                          </TooltipContent>
+                      </Tooltip>
+                  </TooltipProvider>
                 </div>
             </div>
         </CardHeader>
