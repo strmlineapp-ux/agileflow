@@ -6,6 +6,7 @@ import { useUser } from '@/context/user-context';
 import { type SharedCalendar, type AppTab } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle as UIDialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -208,7 +209,26 @@ function CalendarCard({
   };
 
   return (
-    <Card className="flex flex-col group bg-transparent relative" {...dragHandleProps} onClick={() => { if (!isDragging) setIsExpanded(!isExpanded); }}>
+    <Card className="group relative flex flex-col bg-transparent" {...dragHandleProps} onClick={() => { if (!isDragging) setIsExpanded(!isExpanded); }}>
+       <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                        onPointerDown={(e) => {
+                            e.stopPropagation();
+                            onDelete(calendar);
+                        }}
+                    >
+                        <GoogleSymbol name="cancel" className="text-lg" weight={100} />
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent><p>Delete Calendar</p></TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
+
       <CardHeader className="p-2 cursor-pointer">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
@@ -293,10 +313,6 @@ function CalendarCard({
                         Sync with Google
                     </DropdownMenuItem>
                 )}
-                <DropdownMenuItem onClick={() => onDelete(calendar)} className="text-destructive focus:text-destructive">
-                    <GoogleSymbol name="delete" className="mr-2" weight={100}/>
-                    Delete Calendar
-                </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -507,22 +523,22 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
         </SortableContext>
       </div>
       
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="max-w-md">
-          <div className="absolute top-4 right-4">
-              <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10 p-0" onClick={handleDelete}>
-                  <GoogleSymbol name="delete" className="text-4xl" weight={100} />
-                  <span className="sr-only">Delete Calendar</span>
-              </Button>
-          </div>
-          <DialogHeader>
-              <UIDialogTitle>Delete "{editingCalendar?.name}"?</UIDialogTitle>
-              <DialogDescription>
-                This action cannot be undone. This will permanently delete the calendar and all of its associated events.
-              </DialogDescription>
-          </DialogHeader>
-        </DialogContent>
-      </Dialog>
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent onPointerDownCapture={(e) => e.stopPropagation()}>
+          <AlertDialogHeader>
+              <AlertDialogTitle>Delete "{editingCalendar?.name}"?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This is a high-risk action. This will permanently delete the calendar and all of its associated events. This action cannot be undone.
+              </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className={buttonVariants({ variant: "destructive" })}>
+              Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DndContext>
   );
 }

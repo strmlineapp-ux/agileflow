@@ -128,7 +128,7 @@ This is the application's perfected, gold-standard pattern for managing a collec
     -   **`@dnd-kit` is the required library.** The older `react-beautiful-dnd` library was found to be incompatible with this type of responsive layout.
     -   `flex-grow-0` and `flex-shrink-0` **must** be used on draggable items. This prevents the remaining items in a row from expanding or shrinking, which causes the grid to reflow unstably when an item is being dragged.
 -   **Initiating a Drag**: To provide a clean, handle-free interface, the drag action is initiated by clicking and dragging any non-interactive part of the card. The drag listener from `dnd-kit`'s `useSortable` hook is applied to the main card container. To prevent accidental drags when a click is intended, the `PointerSensor` for `dnd-kit` is configured with an `activationConstraint` that requires the pointer to move a small distance before a drag is initiated.
--   **Click vs. Drag**: The `@dnd-kit` library can differentiate between a single click and a drag action. The default state for cards is **collapsed**. Clicking any card toggles its expanded state to reveal more details (e.g., the URL path on a Page card).
+-   **Click vs. Drag**: The `@dnd-kit` library can differentiate between a single click and a drag action. The default state for cards is **collapsed**. Clicking any card, including pinned ones, toggles its expanded state to reveal more details (e.g., the URL path on a Page card).
 -   **Preventing Interaction Conflicts**:
     -   To allow buttons, popovers, and other controls *inside* the draggable card to function correctly, they must stop the `pointerdown` event from propagating up to the card's drag listener. **This is a critical implementation detail and must be done by adding `onPointerDown={(e) => e.stopPropagation()}` to every interactive element within the card.**
     -   To prevent conflicts with keyboard interactions inside a card (like an **Inline Editor**), the `useSortable` hook for the draggable card **must** be temporarily disabled while the internal component is in an editing state. This is done by passing a `disabled: isEditing` flag to the hook, preventing `@dnd-kit`'s keyboard listeners (e.g., spacebar to lift) from firing while the user is typing.
@@ -147,7 +147,7 @@ This is the application's perfected, gold-standard pattern for managing a collec
     -   **Destructive Zones (Deleting):** The drop area is highlighted with a `1px` ring in the destructive theme color (`ring-1 ring-destructive`).
 -   **Contextual Hover Actions**:
     - **Item-level**: To maintain a clean UI, action icons like "Remove User" or "Delete Badge" must appear only when hovering over their specific context. This is achieved by adding a `group` class to the *individual item's container*. The icon button inside is then styled with `opacity-0 group-hover:opacity-100`.
-    - **Delete Icon**: The standard icon for deleting an item (like a Page or Team) is a circular `cancel` icon. To create this affordance in the corner of a card, the button can be positioned absolutely (e.g., `-top-2 -right-2`).
+    - **Delete Icon**: The standard icon for deleting an item (like a Page or Calendar) is a circular `cancel` icon. To create this affordance in the corner of a card, the button can be positioned absolutely (e.g., `-top-2 -right-2`).
     - **Card-level**: Deleting an entire card (like a Team or Collection) is a high-impact action. To prevent accidental clicks, this functionality should be placed within a `<DropdownMenu>` in the card's header, not triggered by a direct hover icon.
 -   **Drag-to-Duplicate**:
     -   **Interaction**: A designated "Add New" icon (`<Button>`) acts as a drop zone, implemented using the `useDroppable` hook from `dnd-kit`. While a card is being dragged, this zone becomes highlighted to indicate it can accept a drop.
@@ -317,5 +317,3 @@ This is the single source of truth for indicating user interaction state across 
     - **Placement**: This is context-dependent. Color-pickers are typically placed on the bottom-right corner of their parent icon. Ownership status icons are typically placed on the top-left corner to create visual balance.
     - **Application**: Used for displaying a team admin status, a shared status on a role icon, or a `share` icon on a shared Badge.
 -   **Badges in Assorted View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
-
-    
