@@ -63,7 +63,11 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
     const memberIds = useMemo(() => members.map(m => m.userId), [members]);
     
     const sensors = useSensors(
-        useSensor(PointerSensor),
+        useSensor(PointerSensor, {
+          activationConstraint: {
+            distance: 8,
+          },
+        }),
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates,
         })

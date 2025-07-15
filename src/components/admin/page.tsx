@@ -198,7 +198,11 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive, activeTab }: 
   };
   
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
@@ -826,7 +830,11 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
     };
     
     const sensors = useSensors(
-        useSensor(PointerSensor),
+        useSensor(PointerSensor, {
+          activationConstraint: {
+            distance: 8,
+          },
+        }),
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates,
         })
@@ -1137,7 +1145,11 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
     const tabIds = useMemo(() => filteredTabs.map(t => t.id), [filteredTabs]);
     
     const sensors = useSensors(
-        useSensor(PointerSensor),
+        useSensor(PointerSensor, {
+          activationConstraint: {
+            distance: 8,
+          },
+        }),
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates,
         })

@@ -680,7 +680,11 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
     };
     
     const sensors = useSensors(
-        useSensor(PointerSensor),
+        useSensor(PointerSensor, {
+          activationConstraint: {
+            distance: 8,
+          },
+        }),
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates,
         })
