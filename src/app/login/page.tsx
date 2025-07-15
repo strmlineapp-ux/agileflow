@@ -1,6 +1,6 @@
 import { LoginForm } from '@/components/auth/login-form';
 import Logo from '@/components/icons/logo';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardDescription } from '@/components/ui/card';
 
 export default function LoginPage() {
   return (
@@ -12,8 +12,9 @@ export default function LoginPage() {
               className="mb-2 text-muted-foreground"
               iconClassName="text-primary"
             />
+            <CardDescription>Sign in to your AgileFlow workspace</CardDescription>
           </CardHeader>
-          <CardContent className="p-2 pt-0">
+          <CardContent className="p-2">
             <LoginForm />
           </CardContent>
         </Card>
