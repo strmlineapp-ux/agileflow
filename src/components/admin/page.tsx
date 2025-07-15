@@ -105,7 +105,7 @@ function UserDropZone({ id, users, children }: { id: string, users: User[], chil
   )
 }
 
-export const AdminsManagement = ({ tab, isSingleTabPage, isActive, activeTab }: { tab: AppTab; isSingleTabPage?: boolean, isActive?: boolean, activeTab?: string }) => {
+export const AdminsManagement = ({ tab, isSingleTabPage, isActive, activeTab, page }: { tab: AppTab; isSingleTabPage?: boolean, isActive?: boolean, activeTab?: string, page: AppPage }) => {
   const { toast } = useToast();
   const { users, updateUser } = useUser();
   const [is2faDialogOpen, setIs2faDialogOpen] = useState(false);
@@ -563,8 +563,8 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
               </TooltipProvider>
             )}
             <CardHeader
-              className={cn("p-2", !isPinned && "cursor-pointer")}
-              onClick={() => {if (!isPinned && !isDragging) setIsExpanded(!isExpanded);}}
+              className={cn("p-2", "cursor-pointer")}
+              onClick={() => {if (!isDragging) setIsExpanded(!isExpanded);}}
               {...(!isPinned && props.dragHandleProps)}
             >
                 <div className="flex items-start justify-between">
