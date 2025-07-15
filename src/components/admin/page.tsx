@@ -205,12 +205,6 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive, activeTab }: 
 
   return (
     <div className="space-y-6">
-        {isSingleTabPage && (
-             <div className="flex items-center gap-3">
-                <GoogleSymbol name={tab.icon} className="text-4xl" weight={100} />
-                <h1 className="font-headline text-3xl font-thin">{tab.name}</h1>
-             </div>
-        )}
         <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card className="flex flex-col h-full bg-transparent border-0">

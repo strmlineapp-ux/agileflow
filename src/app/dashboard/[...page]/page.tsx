@@ -114,7 +114,7 @@ export default function DynamicPage() {
     const isSingleTabPage = pageTabs.length === 1;
 
     // Don't show header for seamless single-tab pages
-    const showHeader = !isSingleTabPage || !['tab-overview', 'tab-notifications', 'tab-settings', 'tab-admins'].includes(pageTabs[0]?.id);
+    const showHeader = !isSingleTabPage || !['tab-overview', 'tab-notifications', 'tab-settings'].includes(pageTabs[0]?.id);
       
     const pageTitle = pageConfig.isDynamic && dynamicTeam ? `${dynamicTeam.name} ${pageConfig.name}` : pageConfig.name;
 
