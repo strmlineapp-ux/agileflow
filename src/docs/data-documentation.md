@@ -6,7 +6,7 @@ This document provides a detailed breakdown of the data structures, entities, an
 
 ## Multi-Tenant Architecture
 
-AgileFlow is designed as a multi-tenant application, where each company or organization (a "tenant") operates within its own completely isolated Firebase project. This ensures the highest level of data privacy and security.
+AgileFlow is designed as a multi-tenant application, where each company or organization (a "tenant") operates within its own completely isolated Firebase project. This ensures the highest level of data privacy, security, and scalability.
 
 ### Tenant Identification & Configuration
 
@@ -14,7 +14,7 @@ AgileFlow is designed as a multi-tenant application, where each company or organ
 2.  **Dynamic Configuration**: The application uses a dynamic lookup mechanism (simulated in `/src/lib/firebase.ts`) to fetch the specific Firebase configuration for the tenant making a request.
 3.  **Data Isolation**: Because each tenant has a unique `projectId`, all their data—including Firestore documents, Storage files, and authenticated users—resides in a separate, dedicated Google Cloud project. There is no possibility of data crossover between tenants.
 
-### Tenant Parameters
+### Tenant Parameters & Independence
 
 Each tenant's configuration consists of a standard set of Firebase project keys. It is essential that each tenant has its own unique set of these keys, as they point to their independent cloud resources.
 
@@ -26,6 +26,11 @@ Each tenant's configuration consists of a standard set of Firebase project keys.
 | `storageBucket` | **Cloud Storage Bucket.** The unique bucket for storing files like user uploads or images. |
 | `messagingSenderId` | **Sender ID.** Used for Firebase Cloud Messaging (push notifications). |
 | `appId` | **App ID.** A unique identifier for the specific Firebase web app instance within the tenant's project. |
+
+#### Database Location and Scaling
+A major advantage of this architecture is that because each tenant has their own project, they have full control over their Firestore database:
+*   **Location Independence**: Each tenant can choose the physical region (e.g., `us-central`, `europe-west`) for their database. This is crucial for performance and data residency compliance (like GDPR).
+*   **Independent Scaling & Billing**: Each tenant is on their own billing plan with Google Cloud. They can independently scale their database usage up or down and are responsible for their own costs, without impacting any other tenant.
 
 **Important Architectural Note:** Application pages are configured within the `AppSettings` object and are not hardcoded entities. Any references to them in documentation are purely as examples of how a dynamic page can be constructed. The codebase should not treat these pages as special or distinct from any other page an administrator might create.
 
