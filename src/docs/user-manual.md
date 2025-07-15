@@ -7,14 +7,15 @@ Welcome to AgileFlow, your team's central hub for managing tasks, scheduling eve
 ## 1. Getting Started
 
 ### 1.1 Requesting Access
-To begin using AgileFlow, you must first request access from an administrator.
-1.  Navigate to the main page and click the "Sign up" link.
-2.  Enter your email address and click "Request Access".
-3.  An administrator will review your request and grant you access.
+To begin using AgileFlow, you must first be invited or request access to your company's specific workspace from an administrator.
+1.  Navigate to your company's unique AgileFlow URL (e.g., `your-company.agileflow.app`).
+2.  Click the "Sign up" link.
+3.  Enter your email address to request access to the workspace.
+4.  An administrator for your company will review your request and grant you access.
 
 ### 1.2 Signing In
 Once your access has been approved, you can sign in:
-1.  Navigate to the login page.
+1.  Navigate to your company's login page.
 2.  Enter your email and password.
 3.  You will be taken to your default calendar view.
 
