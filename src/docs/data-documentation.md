@@ -4,7 +4,7 @@
 
 This document provides a detailed breakdown of the data structures, entities, and their relationships within the AgileFlow application. The data architecture is designed for a **Firestore (NoSQL) database environment**, which influences how data is structured and related. It serves as a technical reference for understanding how data flows through the system and interacts with internal and external services.
 
-**Important Architectural Note:** Pages like "Service Delivery" are configured within the `AppSettings` object and are not hardcoded entities. Any references to them in documentation are purely as examples of how a dynamic page can be constructed. The codebase should not treat these pages as special or distinct from any other page an administrator might create.
+**Important Architectural Note:** Application pages are configured within the `AppSettings` object and are not hardcoded entities. Any references to them in documentation are purely as examples of how a dynamic page can be constructed. The codebase should not treat these pages as special or distinct from any other page an administrator might create.
 
 ## User Entity
 **Firestore Collection**: `/users/{userId}`
@@ -67,7 +67,7 @@ When a user creates a new shareable item (like a **Team** or **Badge Collection*
 ## Shared Calendar Entity
 **Firestore Collection**: `/calendars/{calendarId}`
 
-This entity represents an internal AgileFlow calendar. It acts as a logical container for events within the application and can be linked to a real, external Google Calendar for future synchronization. These are managed on the **Service Delivery** page.
+This entity represents an internal AgileFlow calendar. It acts as a logical container for events within the application and can be linked to a real, external Google Calendar for future synchronization. These are managed on a dynamically configured page by an administrator (e.g., a page with a "Calendars" tab).
 
 | Data Point | Description & Link to Services |
 | :--- | :--- |
@@ -183,10 +183,6 @@ This represents a specific, functional role or skill. The single source of truth
 | `icon: string` | The Google Symbol name for the badge's icon. |
 | `color: string` | The hex color code for the badge's icon and outline. |
 | `description?: string` | An optional description shown in tooltips. |
-
-
-
-
 
 
 
