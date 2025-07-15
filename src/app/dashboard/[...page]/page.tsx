@@ -22,7 +22,7 @@ import { NotificationsContent } from '@/components/dashboard/tabs/notifications-
 import { SettingsContent } from '@/components/dashboard/tabs/settings-tab';
 import { CalendarPageContent } from '@/components/dashboard/tabs/calendar-tab';
 import { CalendarManagement } from '@/components/calendar/calendar-management';
-import { TeamManagement } from '@/components/service-delivery/team-management';
+import { TeamManagement } from '@/components/teams/team-management';
 
 const componentMap: Record<string, React.ComponentType<any>> = {
   // Admin Page Tabs
@@ -41,7 +41,7 @@ const componentMap: Record<string, React.ComponentType<any>> = {
   tasks: TasksContent,
   notifications: NotificationsContent,
   settings: SettingsContent,
-  // Service Delivery Tabs
+  // Correctly mapped generic components
   calendars: CalendarManagement,
   teams: TeamManagement,
 };
@@ -122,7 +122,7 @@ export default function DynamicPage() {
         return (
             <div className="flex flex-col gap-6">
                 <div className="flex items-center gap-3">
-                    <GoogleSymbol name={pageConfig.icon} className="text-6xl" weight={100} />
+                    <GoogleSymbol name={pageConfig.icon} className="text-4xl" weight={100} />
                     <h1 className="font-headline text-3xl font-thin">{pageTitle}</h1>
                 </div>
                 <div className="p-4 border-2 border-dashed rounded-lg text-center text-muted-foreground">
@@ -144,7 +144,7 @@ export default function DynamicPage() {
         <div className="flex flex-col gap-6">
             {showHeader && (
                 <div className="flex items-center gap-3">
-                    <GoogleSymbol name={pageConfig.icon} className="text-6xl" weight={100} />
+                    <GoogleSymbol name={pageConfig.icon} className="text-4xl" weight={100} />
                     <h1 className="font-headline text-3xl font-thin">{pageTitle}</h1>
                 </div>
             )}
