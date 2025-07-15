@@ -2,7 +2,30 @@
 
 # AgileFlow: Data Documentation
 
-This document provides a detailed breakdown of the data structures, entities, and their relationships within the AgileFlow application. The data architecture is designed for a **Firestore (NoSQL) database environment**, which influences how data is structured and related. It serves as a technical reference for understanding how data flows through the system and interacts with internal and external services.
+This document provides a detailed breakdown of the data structures, entities, and their relationships within the AgileFlow application. It serves as a technical reference for understanding how data flows through the system and interacts with internal and external services.
+
+## Multi-Tenant Architecture
+
+AgileFlow is designed as a multi-tenant application, where each company or organization (a "tenant") operates within its own completely isolated Firebase project. This ensures the highest level of data privacy and security.
+
+### Tenant Identification & Configuration
+
+1.  **Tenant ID**: Each tenant is identified by a unique ID, which typically corresponds to a subdomain (e.g., `tenant-a.agileflow.app`).
+2.  **Dynamic Configuration**: The application uses a dynamic lookup mechanism (simulated in `/src/lib/firebase.ts`) to fetch the specific Firebase configuration for the tenant making a request.
+3.  **Data Isolation**: Because each tenant has a unique `projectId`, all their data—including Firestore documents, Storage files, and authenticated users—resides in a separate, dedicated Google Cloud project. There is no possibility of data crossover between tenants.
+
+### Tenant Parameters
+
+Each tenant's configuration consists of a standard set of Firebase project keys. It is essential that each tenant has its own unique set of these keys, as they point to their independent cloud resources.
+
+| Parameter | Purpose & Importance for Isolation |
+| :--- | :--- |
+| `apiKey` | **API Key.** Authorizes requests to Firebase services for this specific project. |
+| `authDomain` | **Authentication Domain.** The dedicated domain for Firebase Authentication actions (e.g., `tenant-a.firebaseapp.com`). |
+| `projectId` | **Project ID.** The globally unique identifier for the tenant's Google Cloud project. **This is the most critical key for ensuring database and resource isolation.** |
+| `storageBucket` | **Cloud Storage Bucket.** The unique bucket for storing files like user uploads or images. |
+| `messagingSenderId` | **Sender ID.** Used for Firebase Cloud Messaging (push notifications). |
+| `appId` | **App ID.** A unique identifier for the specific Firebase web app instance within the tenant's project. |
 
 **Important Architectural Note:** Application pages are configured within the `AppSettings` object and are not hardcoded entities. Any references to them in documentation are purely as examples of how a dynamic page can be constructed. The codebase should not treat these pages as special or distinct from any other page an administrator might create.
 
@@ -93,8 +116,8 @@ This entity, `AppSettings`, holds global configuration data that allows for cust
 | `pages: AppPage[]` | **The core of the dynamic navigation.** This is an array of objects defining every page in the application. The order of pages in this array directly corresponds to their order in the sidebar navigation. The order is managed on the **Admin Management** page using the "Draggable Card Management" UI pattern. Each page object includes its name, icon, URL path, access control rules, and a list of associated `tab.id`s that should be rendered on it. |
 | `tabs: AppTab[]` | **The core of the dynamic content.** This is an array of objects defining all reusable content tabs. The order of tabs in this array defines their default order in popovers (like "Manage Tabs") and can be reordered by an admin on the "Tabs" management page. Each object includes the tab's name, icon, and a `componentKey` that maps it to a React component. |
 | `globalBadges: Badge[]` | An array of globally-defined badges. These are typically owned by a system process and are managed on the **Badge Management** page of any team. |
-| `calendarManagementLabel?: string` | An alias for the "Manage Calendars" tab. |
-| `teamManagementLabel?: string` | An alias for the "Team Management" tab. |
+| `calendarManagementLabel?: string` | An alias for the "Manage Calendars" tab on a dynamically created management page. |
+| `teamManagementLabel?: string` | An alias for the "Team Management" tab on a dynamically created management page. |
 
 ### AppPage Entity
 A sub-entity of `AppSettings`, `AppPage` defines a single entry in the application's navigation.
