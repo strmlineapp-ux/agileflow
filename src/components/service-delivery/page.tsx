@@ -80,7 +80,7 @@ export default function ServiceDeliveryPage() {
         <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
           <PopoverTrigger asChild>
             <button className="shrink-0 h-12 w-12 flex items-center justify-center">
-              <GoogleSymbol name={pageConfig.icon} className="text-6xl" weight={100} />
+              <GoogleSymbol name={pageConfig.icon} className="text-4xl" weight={100} />
             </button>
           </PopoverTrigger>
           <PopoverContent className="w-80 p-0">

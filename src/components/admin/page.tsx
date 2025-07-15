@@ -207,7 +207,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive, activeTab }: 
     <div className="space-y-6">
         {isSingleTabPage && (
              <div className="flex items-center gap-3">
-                <GoogleSymbol name={tab.icon} style={{fontSize: '60px'}} weight={100} />
+                <GoogleSymbol name={tab.icon} className="text-4xl" weight={100} />
                 <h1 className="font-headline text-3xl font-thin">{tab.name}</h1>
              </div>
         )}
@@ -578,7 +578,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
                                                 <Button variant="ghost" className="h-14 w-14 flex items-center justify-center p-0">
-                                                    <GoogleSymbol name={page.icon} style={{ fontSize: '48px' }} weight={100} />
+                                                    <GoogleSymbol name={page.icon} weight={100} style={{ fontSize: '48px' }}/>
                                                 </Button>
                                             </PopoverTrigger>
                                         </TooltipTrigger>
@@ -1010,7 +1010,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                                 <TooltipTrigger asChild>
                                     <PopoverTrigger asChild>
                                         <button className="h-10 w-10 flex items-center justify-center">
-                                            <GoogleSymbol name={tab.icon} style={{fontSize: '40px'}} weight={100} />
+                                            <GoogleSymbol name={tab.icon} className="text-4xl" weight={100} />
                                         </button>
                                     </PopoverTrigger>
                                 </TooltipTrigger>

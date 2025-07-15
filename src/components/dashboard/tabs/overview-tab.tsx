@@ -20,7 +20,7 @@ export function OverviewContent({ tab: pageConfig, isSingleTabPage }: { tab: App
        {isSingleTabPage && (
           <div className="flex items-center gap-3">
              <h1 className="font-headline text-3xl font-thin flex items-center gap-3">
-                <GoogleSymbol name={pageConfig.icon} className="text-6xl" weight={100} />
+                <GoogleSymbol name={pageConfig.icon} className="text-4xl" weight={100} />
                 <span>{pageConfig.name}</span>
               </h1>
           </div>

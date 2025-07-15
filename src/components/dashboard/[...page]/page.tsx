@@ -46,6 +46,9 @@ const componentMap: Record<string, React.ComponentType<any>> = {
   teams: TeamManagement,
 };
 
+const ADMIN_PAGE_ID = 'page-admin-management';
+const ADMIN_TAB_ORDER = ['tab-admins', 'tab-admin-pages', 'tab-admin-tabs'];
+
 
 export default function DynamicPage() {
     const params = useParams();
@@ -82,10 +85,13 @@ export default function DynamicPage() {
         if (pageConfig) {
             const pageTabs = appSettings.tabs.filter(t => pageConfig.associatedTabs.includes(t.id));
             if (pageTabs.length > 0) {
-                setActiveTab(pageTabs[0].id);
+                // Only set active tab if it's not already set or if the current active tab is no longer valid for this page
+                if (!activeTab || !pageTabs.find(t => t.id === activeTab)) {
+                    setActiveTab(pageTabs[0].id);
+                }
             }
         }
-    }, [pageConfig, appSettings.tabs]);
+    }, [pageConfig, appSettings.tabs, activeTab]);
 
     if (loading) {
         return <Skeleton className="h-full w-full" />;
@@ -95,7 +101,16 @@ export default function DynamicPage() {
         return <div className="p-4">404 - Page not found or team data is missing for path: {currentPath}</div>;
     }
     
-    const pageTabs = appSettings.tabs.filter(t => pageConfig.associatedTabs.includes(t.id));
+    const pageTabs = useMemo(() => {
+      // If we are on the admin page, force a specific order.
+      if (pageConfig.id === ADMIN_PAGE_ID) {
+          const adminTabs = new Map(appSettings.tabs.filter(t => pageConfig.associatedTabs.includes(t.id)).map(t => [t.id, t]));
+          return ADMIN_TAB_ORDER.map(id => adminTabs.get(id)).filter((t): t is AppTab => !!t);
+      }
+      // Otherwise, use the order from appSettings.
+      return appSettings.tabs.filter(t => pageConfig.associatedTabs.includes(t.id));
+    }, [pageConfig, appSettings.tabs]);
+
     const isSingleTabPage = pageTabs.length === 1;
 
     // Don't show header for seamless single-tab pages
@@ -107,7 +122,7 @@ export default function DynamicPage() {
         return (
             <div className="flex flex-col gap-6">
                 <div className="flex items-center gap-3">
-                    <GoogleSymbol name={pageConfig.icon} className="text-6xl" weight={100} />
+                    <GoogleSymbol name={pageConfig.icon} className="text-4xl" weight={100} />
                     <h1 className="font-headline text-3xl font-thin">{pageTitle}</h1>
                 </div>
                 <div className="p-4 border-2 border-dashed rounded-lg text-center text-muted-foreground">
@@ -129,7 +144,7 @@ export default function DynamicPage() {
         <div className="flex flex-col gap-6">
             {showHeader && (
                 <div className="flex items-center gap-3">
-                    <GoogleSymbol name={pageConfig.icon} className="text-6xl" weight={100} />
+                    <GoogleSymbol name={pageConfig.icon} className="text-4xl" weight={100} />
                     <h1 className="font-headline text-3xl font-thin">{pageTitle}</h1>
                 </div>
             )}
@@ -147,7 +162,7 @@ export default function DynamicPage() {
                     const contextTeam = tab.contextTeamId ? teams.find(t => t.id === tab.contextTeamId) : dynamicTeam;
                     return (
                         <TabsContent key={tab.id} value={tab.id} className="mt-4">
-                        {ContentComponent ? <ContentComponent tab={tab} team={contextTeam} page={pageConfig} isSingleTabPage={false} isActive={activeTab === tab.id} isTeamSpecificPage={pageConfig.isDynamic} /> : <div>Component for {tab.name} not found.</div>}
+                        {ContentComponent ? <ContentComponent tab={tab} team={contextTeam} page={pageConfig} isSingleTabPage={false} isActive={activeTab === tab.id} activeTab={activeTab} isTeamSpecificPage={pageConfig.isDynamic} /> : <div>Component for {tab.name} not found.</div>}
                         </TabsContent>
                     );
                 })}
