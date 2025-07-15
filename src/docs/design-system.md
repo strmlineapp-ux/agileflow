@@ -127,8 +127,8 @@ This is the application's perfected, gold-standard pattern for managing a collec
 -   **Critical Stability Properties**:
     -   **`@dnd-kit` is the required library.** The older `react-beautiful-dnd` library was found to be incompatible with this type of responsive layout.
     -   `flex-grow-0` and `flex-shrink-0` **must** be used on draggable items. This prevents the remaining items in a row from expanding or shrinking, which causes the grid to reflow unstably when an item is being dragged.
--   **Initiating a Drag**: To provide a clean, handle-free interface, the drag action is initiated by clicking and dragging any non-interactive part of the card. The drag listener from `dnd-kit`'s `useSortable` hook is applied to the main card container.
--   **Click vs. Drag**: The `@dnd-kit` library can differentiate between a single click and a drag action. This is achieved by adding an `onClick` handler to the same element as the drag listeners. The handler must check the `isDragging` state provided by the `useSortable` hook and prevent the click action from executing if a drag is in progress. The default state for cards is **collapsed**. Clicking the card toggles its expanded state to reveal more details (e.g., the URL path on a Page card).
+-   **Initiating a Drag**: To provide a clean, handle-free interface, the drag action is initiated by clicking and dragging any non-interactive part of the card. The drag listener from `dnd-kit`'s `useSortable` hook is applied to the main card container. To prevent accidental drags when a click is intended, the `PointerSensor` for `dnd-kit` is configured with an `activationConstraint` that requires the pointer to move a small distance before a drag is initiated.
+-   **Click vs. Drag**: The `@dnd-kit` library can differentiate between a single click and a drag action. The default state for cards is **collapsed**. Clicking any card toggles its expanded state to reveal more details (e.g., the URL path on a Page card).
 -   **Preventing Interaction Conflicts**:
     -   To allow buttons, popovers, and other controls *inside* the draggable card to function correctly, they must stop the `pointerdown` event from propagating up to the card's drag listener. **This is a critical implementation detail and must be done by adding `onPointerDown={(e) => e.stopPropagation()}` to every interactive element within the card.**
     -   To prevent conflicts with keyboard interactions inside a card (like an **Inline Editor**), the `useSortable` hook for the draggable card **must** be temporarily disabled while the internal component is in an editing state. This is done by passing a `disabled: isEditing` flag to the hook, preventing `@dnd-kit`'s keyboard listeners (e.g., spacebar to lift) from firing while the user is typing.
@@ -138,7 +138,7 @@ This is the application's perfected, gold-standard pattern for managing a collec
 -   **Unique Draggable IDs**: It is critical that every `Draggable` component has a globally unique `draggableId`. If the same item (e.g., a user) can appear in multiple lists, you must create a unique ID for each instance. A common pattern is to combine the list's ID with the item's ID (e.g., `draggableId={'${list.id}-${item.id}'}`). This prevents the drag-and-drop library from trying to move all instances of the item simultaneously.
 -   **Draggable & Pinned States**:
     -   **Draggable Cards**: Most cards can be freely reordered within the grid. The `useSortable` hook allows this.
-    -   **Pinned Cards**: Certain cards are designated as "pinned" and cannot be dragged. This is achieved by disabling the `useSortable` hook for those specific items (`disabled: true`). They act as fixed anchors in the layout.
+    -   **Pinned Cards**: Certain cards are designated as "pinned" and cannot be dragged. This is achieved by disabling the `useSortable` hook for those specific items (`disabled: true`). They act as fixed anchors in the layout, but can still be clicked to expand and view their details.
 -   **Reordering with Guardrails**:
     -   **Interaction**: Users can drag any non-pinned card and drop it between other non-pinned cards to change its order. The grid reflows smoothly to show the drop position.
     -   **Guardrail Logic**: The `onDragEnd` handler must contain logic to prevent reordering pinned items. If a user attempts to drop an item into a position occupied by a pinned item, the operation should be cancelled or reverted.
@@ -196,7 +196,7 @@ When a **high-risk destructive action** requires user confirmation (like deletin
   - The icon is `text-4xl` with a `weight={100}` for a large but light appearance.
   - The active tab is indicated by colored text (`text-primary`).
   - The entire tab list has a subtle divider underneath it, separating it from the content below.
-- **Application**: Used for all main page-level tab navigation, such as on the Admin and Team Management pages.
+- **Application**: Used for all main page-level tab navigation, such as on the Admin, Service Delivery, and Team Management pages.
 
 ---
 
