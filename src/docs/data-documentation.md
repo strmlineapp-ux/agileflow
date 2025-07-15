@@ -23,6 +23,12 @@ The correct, secure workflow is as follows:
 2.  **Secure Key Management**: The configuration keys for this new project are then securely added to the application's central tenant configuration store (currently simulated in `firebase.ts`, but would be a secure database in production).
 3.  **Tenant Access**: The tenant is then given their unique subdomain (e.g., `new-company.agileflow.app`) to access their isolated environment. They never handle API keys directly.
 
+#### Implementation & Development Strategy
+
+It's recommended to **postpone the implementation of a tenant management UI and the automated provisioning script** for a later development stage. This approach allows the team to focus on building the core application features that deliver immediate value to the first users. The current architecture, with a simulated tenant lookup in `firebase.ts`, provides a robust foundation for development and can be easily transitioned to a fully automated system when the application is ready to scale.
+
+When the time is right, the automated script would use the Google Cloud SDK to programmatically create and configure new Firebase projects, and a secure internal admin panel would be built to manage the tenant configurations in the master database.
+
 ### Tenant Parameters & Independence
 
 Each tenant's configuration consists of a standard set of Firebase project keys. It is essential that each tenant has its own unique set of these keys, as they point to their independent cloud resources.
@@ -221,4 +227,3 @@ This represents a specific, functional role or skill. The single source of truth
 | `color: string` | The hex color code for the badge's icon and outline. |
 | `description?: string` | An optional description shown in tooltips. |
 
-    
