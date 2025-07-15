@@ -24,7 +24,7 @@ The main navigation is located in the sidebar on the left, providing quick, icon
 
 - **Main Navigation**: Access to core features like the Calendar, Overview, and Tasks.
 - **Team Management**: If you have permission to manage a team, a link to that team's management page will appear here.
-- **Admin Pages**: If you are an Admin, you will see links to the Admin and Service Delivery pages.
+- **Admin Pages**: If you are an Admin, you will see links to the Admin page.
 - **User Profile**: At the bottom of the sidebar, you can access your profile, user preferences, notifications, and the "View as" feature (for Admins). The **Settings** page is only accessible from this menu.
 
 ## 3. Dashboard Overview
@@ -88,13 +88,9 @@ This is the central control panel for configuring the application itself. It doe
 - **Admin Management**: Manage system administrators by dragging and dropping users between the "Admins" and "Users" lists. Granting or revoking admin status requires a 2-Factor Authentication code for security. For safety, the system prevents you from removing the last system administrator. The "Search users" input is automatically focused for convenience.
 - **Pages**: Configure the application's navigation. Create new pages, define their URL path, and control who has access to them (by user or team). You can intuitively reorder pages by dragging and dropping them in the grid. Key system pages are pinned and cannot be moved. You can also instantly duplicate any page by dragging it onto the "Add New Page" (+) button. A duplicated page is a completely independent copy with its own unique URL path.
 - **Tabs**: Manage the reusable content blocks (tabs) in a simple list view. The order of this list can be changed via drag-and-drop and affects the default order in which tabs appear in popovers, like the "Manage Tabs" control on the Pages screen. The default order is: `Calendars`, `Teams`, `Members`, `Badges`, `Locations`, `Workstations`, `Templates`, `Overview`, `Calendar`, `Tasks`, `Admin Management`, `Settings`, `Pages`, and `Tabs`.
+- **Calendar & Team Management**: Admins can also create pages to manage global application settings, such as creating shared calendars or managing teams. These pages typically use the "Calendars" or "Teams" tab components.
 
-### 8.2 Service Delivery Management (`/dashboard/service-delivery`)
-This is the central hub for global application settings.
-- **Manage Calendars**: Create, edit, or delete shared calendars. Deleting a calendar is a high-impact action and must be done from the dropdown menu on its card.
-- **Manage Teams**: This tab provides a powerful, dynamic interface for managing user groups (called "Teams"). You can drag and drop your owned teams to a shared panel to make them available to others, or drag a shared team from that panel onto your board to link it. To unlink a shared team, simply drag it from your board back to the shared panel.
-
-### 8.3 Team Management (`/dashboard/teams/[teamId]`)
+### 8.2 Team Management (`/dashboard/teams/[teamId]`)
 This page is for managing the specifics of an individual team.
 - **Team Members**: View all members of the team. Team Admins are now listed in a dedicated column on the left for clarity, while all other members are in a responsive grid on the right. You have full flexibility to manage Team Admins, including removing the last one. You can also click on the "Team Admins" and "Members" titles to rename them for your team.
 - **Badge Management**: Create and manage your team's badge collections. To share a collection, simply drag its card to the "Shared Collections" panel. To link a collection from another team, drag it from the shared panel onto your main board. To **activate** a collection for your team, click on its ghosted card; clicking an active card will deactivate it. To **delete** a collection you own, use the dropdown menu on its card.
@@ -103,12 +99,15 @@ This page is for managing the specifics of an individual team.
 - **Event Templates**: Create reusable templates for common events. You can edit a template's name by clicking on it directly. Click the edit icon on the template card to manage its requested roles.
 - **Location Check Managers**: Assign users who are allowed to manage the daily check assignments for this team's locations.
 
-### 8.4 View As Another User (Admin Only)
+### 8.3 View As Another User (Admin Only)
 Administrators can view the application from another user's perspective.
 1.  Click your avatar in the bottom-left corner of the sidebar.
 2.  Select "View as" from the dropdown menu.
 3.  Choose a user from the list.
 4.  A banner will appear at the top of the screen indicating whose view you are using. To return to your own view, repeat the process and select "Return to your view".
 
+
+    
+    
 
     

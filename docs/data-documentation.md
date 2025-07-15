@@ -4,7 +4,7 @@
 
 This document provides a detailed breakdown of the data structures, entities, and their relationships within the AgileFlow application. The data architecture is designed for a **Firestore (NoSQL) database environment**, which influences how data is structured and related. It serves as a technical reference for understanding how data flows through the system and interacts with internal and external services.
 
-**Important Architectural Note:** Pages like "Service Delivery" are configured within the `AppSettings` object and are not hardcoded entities. Any references to them in documentation are purely as examples of how a dynamic page can be constructed. The codebase should not treat these pages as special or distinct from any other page an administrator might create.
+**Important Architectural Note:** Application pages are configured within the `AppSettings` object and are not hardcoded entities. Any references to them in documentation are purely as examples of how a dynamic page can be constructed. The codebase should not treat these pages as special or distinct from any other page an administrator might create.
 
 ## User Entity
 **Firestore Collection**: `/users/{userId}`
@@ -67,7 +67,7 @@ When a user creates a new shareable item (like a **Team** or **Badge Collection*
 ## Shared Calendar Entity
 **Firestore Collection**: `/calendars/{calendarId}`
 
-This entity represents an internal AgileFlow calendar. It acts as a logical container for events within the application and can be linked to a real, external Google Calendar for future synchronization. These are managed on the **Service Delivery** page.
+This entity represents an internal AgileFlow calendar. It acts as a logical container for events within the application and can be linked to a real, external Google Calendar for future synchronization. These are managed on a dynamically configured page by an administrator (e.g., a page with a "Calendars" tab).
 
 | Data Point | Description & Link to Services |
 | :--- | :--- |
@@ -93,8 +93,8 @@ This entity, `AppSettings`, holds global configuration data that allows for cust
 | `pages: AppPage[]` | **The core of the dynamic navigation.** This is an array of objects defining every page in the application. The order of pages in this array directly corresponds to their order in the sidebar navigation. The order is managed on the **Admin Management** page using the "Draggable Card Management" UI pattern. Each page object includes its name, icon, URL path, access control rules, and a list of associated `tab.id`s that should be rendered on it. |
 | `tabs: AppTab[]` | **The core of the dynamic content.** This is an array of objects defining all reusable content tabs. The order of tabs in this array defines their default order in popovers (like "Manage Tabs") and can be reordered by an admin on the "Tabs" management page. Each object includes the tab's name, icon, and a `componentKey` that maps it to a React component. |
 | `globalBadges: Badge[]` | An array of globally-defined badges. These are typically owned by a system process and are managed on the **Badge Management** page of any team. |
-| `calendarManagementLabel?: string` | An alias for the "Manage Calendars" tab on the Service Delivery page. |
-| `teamManagementLabel?: string` | An alias for the "Team Management" tab on the Service Delivery page. |
+| `calendarManagementLabel?: string` | An alias for the "Manage Calendars" tab. |
+| `teamManagementLabel?: string` | An alias for the "Team Management" tab. |
 
 ### AppPage Entity
 A sub-entity of `AppSettings`, `AppPage` defines a single entry in the application's navigation.
@@ -185,3 +185,8 @@ This represents a specific, functional role or skill. The single source of truth
 | `description?: string` | An optional description shown in tooltips. |
 
 
+
+
+
+
+    
