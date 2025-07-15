@@ -105,7 +105,7 @@ A sub-entity of `AppSettings`, `AppPage` defines a single entry in the applicati
 | `name: string` | The display name for the page. |
 | `icon: string` | The Google Symbol name for the page's icon. |
 | `color: string` | The hex color for the page's icon. |
-| `path: string` | The base URL path for the page (e.g., `/dashboard/service-delivery` or `/dashboard/teams`). |
+| `path: string` | The base URL path for the page (e.g., `/dashboard/projects` or `/dashboard/teams`). |
 | `isDynamic: boolean` | If `false`, `path` is a fixed URL. If `true`, the `path` acts as a template, and the system will append an entity ID (e.g., a team ID) to create unique URLs like `/dashboard/teams/team-id-1`. |
 | `associatedTabs: string[]` | An array of `AppTab` IDs that define the content to be rendered on this page. A page must have at least one tab to be visible. |
 | `access: { users: string[], teams: string[] }` | An object containing arrays of `userId`s and `teamId`s who can access this page. |
@@ -184,6 +184,4 @@ This represents a specific, functional role or skill. The single source of truth
 | `color: string` | The hex color code for the badge's icon and outline. |
 | `description?: string` | An optional description shown in tooltips. |
 
-
-
-
+    

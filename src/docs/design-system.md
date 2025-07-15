@@ -196,7 +196,7 @@ When a **high-risk destructive action** requires user confirmation (like deletin
   - The icon is `text-4xl` with a `weight={100}` for a large but light appearance.
   - The active tab is indicated by colored text (`text-primary`).
   - The entire tab list has a subtle divider underneath it, separating it from the content below.
-- **Application**: Used for all main page-level tab navigation, such as on the Admin, Service Delivery, and Team Management pages.
+- **Application**: Used for all main page-level tab navigation, such as on the Admin and Team Management pages.
 
 ---
 
@@ -313,9 +313,9 @@ This is the single source of truth for indicating user interaction state across 
 - **Lunch Break Pattern**: A subtle diagonal line pattern is used in calendar views to visually block out the typical lunch period (12:00 - 14:30). This serves as a non-intrusive reminder to avoid scheduling meetings during that time.
 - **Icon as Badge**: An icon displayed as a small, circular overlay on another element (e.g., an Avatar or another icon) to provide secondary information.
     - **Appearance**: A circular badge with a `border-2` of the parent element's background color (e.g., `border-background`) to create a "punched out" effect. The icon inside should be sized proportionally.
-    - **Sizing**: The standard size for these badges (e.g., color-pickers, ownership status icons) is `h-5 w-5` (`20x20px`). The `GoogleSymbol` inside should be sized to fit, for example using `style={{fontSize: '12px'}}`.
+    - **Sizing**: The standard size for these badges (e.g., color-pickers, ownership status icons) is `h-7 w-7` (`28x28px`). The `GoogleSymbol` inside should be sized to fit, for example using `style={{fontSize: '14px'}}`.
     - **Placement**: This is context-dependent. Color-pickers are typically placed on the bottom-right corner of their parent icon. Ownership status icons are typically placed on the top-left corner to create visual balance.
     - **Application**: Used for displaying a team admin status, a shared status on a role icon, or a `share` icon on a shared Badge.
 -   **Badges in Assorted View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
 
-```
+    
