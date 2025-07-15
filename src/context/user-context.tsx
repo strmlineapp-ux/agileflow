@@ -4,13 +4,15 @@
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
 import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type BadgeCollectionOwner, type BadgeCollection } from '@/types';
 import { mockUsers as initialUsers, mockCalendars as initialCalendars, mockEvents as initialEvents, mockLocations as initialLocations, mockTeams, mockAppSettings } from '@/lib/mock-data';
-import { GoogleAuthProvider } from 'firebase/auth';
+import { GoogleAuthProvider, getAuth } from 'firebase/auth';
+import { getFirestore } from "firebase/firestore";
 import { useToast } from '@/hooks/use-toast';
 import { hexToHsl } from '@/lib/utils';
 import { getOwnershipContext } from '@/lib/permissions';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { corePages, coreTabs, globalBadges } from '@/lib/core-data';
 import { syncCalendar } from '@/ai/flows/sync-calendar-flow';
+import { getFirebaseAppForTenant } from '@/lib/firebase';
 
 // Helper to simulate async operations
 const simulateApi = (delay = 50) => new Promise(res => setTimeout(res, delay));
@@ -83,6 +85,15 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [events, setEvents] = useState<Event[]>(initialEvents);
   const [locations, setLocations] = useState<BookableLocation[]>(initialLocations);
   
+  // --- Multi-Tenant Simulation ---
+  // In a real app, the `tenantId` would come from middleware based on the subdomain.
+  // Here, we hardcode it to 'default' to demonstrate the pattern.
+  const tenantId = 'default'; 
+  const app = getFirebaseAppForTenant(tenantId);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  // --- End Multi-Tenant Simulation ---
+
   const [appSettings, setAppSettings] = useState<AppSettings>(() => {
     // Correctly merge core and dynamic data at initialization
     const corePageIds = new Set(corePages.map(p => p.id));

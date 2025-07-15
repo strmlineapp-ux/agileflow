@@ -52,14 +52,6 @@ export function getFirebaseAppForTenant(tenantId: string = 'default'): FirebaseA
   return initializeApp(config, appName);
 }
 
-
-// To maintain compatibility with existing single-tenant code, we export a default setup.
-// In a full refactor, all calls would use getFirebaseAppForTenant(currentTenantId).
-const defaultApp = getFirebaseAppForTenant('default');
-const auth = getAuth(defaultApp);
-const db = getFirestore(defaultApp);
-
-export { auth, db, GoogleAuthProvider };
-// The 'app' export is deprecated in favor of the dynamic getFirebaseAppForTenant
-// but kept for now to avoid breaking existing imports if any.
-export const app = defaultApp;
+// To enforce the new multi-tenant pattern, we only export the dynamic function
+// and the provider. Components must now call getFirebaseAppForTenant() themselves.
+export { GoogleAuthProvider };
