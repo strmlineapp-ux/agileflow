@@ -70,14 +70,14 @@ function SortableCalendarCard({ calendar, onUpdate, onDelete, ...props }: { cale
           onUpdate={onUpdate}
           onDelete={onDelete}
           isDragging={isDragging}
-          dragHandleProps={{...attributes, ...listeners}}
+          dragHandleProps={listeners}
           isEditingName={isEditingName}
           setIsEditingName={setIsEditingName}
           isEditingTitle={isEditingTitle}
           setIsEditingTitle={setIsEditingTitle}
           isEditingGCalId={isEditingGCalId}
           setIsEditingGCalId={setIsEditingGCalId}
-          {...props}
+          {...attributes}
         />
       </div>
     </div>
@@ -209,7 +209,7 @@ function CalendarCard({
   };
 
   return (
-    <Card className="group relative flex flex-col bg-transparent" {...dragHandleProps} onClick={() => { if (!isDragging) setIsExpanded(!isExpanded); }}>
+    <Card className="group relative flex flex-col bg-transparent">
        <TooltipProvider>
             <Tooltip>
                 <TooltipTrigger asChild>
@@ -229,7 +229,7 @@ function CalendarCard({
             </Tooltip>
         </TooltipProvider>
 
-      <CardHeader className="p-2 cursor-pointer">
+      <CardHeader className="p-2 cursor-pointer" {...dragHandleProps} onClick={() => { if (!isDragging) setIsExpanded(!isExpanded); }}>
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
              <div className="relative">
@@ -301,8 +301,8 @@ function CalendarCard({
             </div>
           </div>
           <DropdownMenu>
-            <DropdownMenuTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground absolute top-2 right-2 opacity-0 group-hover:opacity-100">
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground absolute top-2 right-2 opacity-0 group-hover:opacity-100" onPointerDown={(e) => e.stopPropagation()}>
                     <GoogleSymbol name="more_vert" weight={100} />
                 </Button>
             </DropdownMenuTrigger>
@@ -318,7 +318,7 @@ function CalendarCard({
         </div>
       </CardHeader>
       {isExpanded && (
-        <CardContent className="flex-grow space-y-2 pt-0">
+        <CardContent className="flex-grow space-y-2 pt-0 p-2">
           <div onPointerDown={(e) => e.stopPropagation()}>
             {isEditingTitle ? (
               <Input

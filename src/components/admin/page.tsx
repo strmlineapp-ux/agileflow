@@ -476,7 +476,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
   );
 }
 
-function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingName, setIsEditingName, ...props }: { 
+function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingName, setIsEditingName, dragHandleProps }: { 
     page: AppPage; 
     onUpdate: (id: string, data: Partial<AppPage>) => void; 
     onDelete: (id: string) => void; 
@@ -484,7 +484,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
     isDragging?: boolean;
     isEditingName: boolean;
     setIsEditingName: (isEditing: boolean) => void;
-    [key:string]: any; 
+    dragHandleProps?: any;
 }) {
     const { viewAsUser } = useUser();
     const canManage = viewAsUser.isAdmin;
@@ -541,7 +541,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
     const displayPath = page.isDynamic ? `${page.path}/[...]` : page.path;
 
     return (
-        <Card className="group relative" {...props}>
+        <Card className="group relative">
             {!isPinned && (
               <TooltipProvider>
                   <Tooltip>
@@ -563,9 +563,9 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
               </TooltipProvider>
             )}
             <CardHeader
-              className={cn("p-2", "cursor-pointer")}
+              className={cn("p-2", !isPinned && "cursor-pointer")}
               onClick={() => {if (!isDragging) setIsExpanded(!isExpanded);}}
-              {...(!isPinned && props.dragHandleProps)}
+              {...dragHandleProps}
             >
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -722,6 +722,7 @@ function SortablePageCard({ id, page, onUpdate, onDelete, isPinned }: { id: stri
         <div 
             ref={setNodeRef} 
             style={style} 
+            {...attributes}
             className="p-2 basis-full sm:basis-[calc(50%-1rem)] md:basis-[calc(33.333%-1rem)] lg:basis-[calc(25%-1rem)] xl:basis-[calc(20%-1rem)] 2xl:basis-[calc(16.666%-1rem)] flex-grow-0 flex-shrink-0"
         >
              <div className={cn(isDragging && "opacity-75")}>
@@ -731,7 +732,6 @@ function SortablePageCard({ id, page, onUpdate, onDelete, isPinned }: { id: stri
                     onDelete={onDelete} 
                     isPinned={isPinned}
                     dragHandleProps={!isPinned ? listeners : undefined}
-                    {...attributes}
                     isDragging={isDragging}
                     isEditingName={isEditingName}
                     setIsEditingName={setIsEditingName}
