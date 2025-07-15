@@ -15,7 +15,6 @@ import { cn } from '@/lib/utils';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { ScrollArea } from '../ui/scroll-area';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
 import { syncCalendar } from '@/ai/flows/sync-calendar-flow';
 import {
   DndContext,
@@ -228,128 +227,129 @@ function CalendarCard({
             </Tooltip>
         </TooltipProvider>
 
-      <CardHeader className="p-2 cursor-pointer" {...dragHandleProps} onClick={() => { if (!isDragging) setIsExpanded(!isExpanded); }}>
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-             <div className="relative">
-                <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
+      <div className="cursor-pointer flex-grow" {...dragHandleProps} onClick={() => { if (!isDragging) setIsExpanded(!isExpanded); }}>
+        <CardHeader className="p-2">
+            <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                    <div className="relative">
+                        <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
+                                            <Button variant="ghost" className="h-14 w-14 flex items-center justify-center p-0">
+                                                <GoogleSymbol name={calendar.icon} style={{ fontSize: '48px' }} weight={100} />
+                                            </Button>
+                                        </PopoverTrigger>
+                                    </TooltipTrigger>
+                                    <TooltipContent><p>Change Icon</p></TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                            <PopoverContent className="w-80 p-0" onPointerDown={(e) => e.stopPropagation()}>
+                                <div className="flex items-center gap-1 p-2 border-b">
+                                    <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
+                                    <input
+                                        ref={iconSearchInputRef}
+                                        placeholder="Search icons..."
+                                        value={iconSearch}
+                                        onChange={(e) => setIconSearch(e.target.value)}
+                                        className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                                    />
+                                </div>
+                                <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (
+                                <TooltipProvider key={iconName}>
+                                    <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button variant={calendar.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(calendar.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="h-8 w-8 p-0"><GoogleSymbol name={iconName} style={{fontSize: '24px'}} weight={100} /></Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent><p>{iconName}</p></TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                                ))}</div></ScrollArea>
+                            </PopoverContent>
+                        </Popover>
+                        <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
+                                            <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background cursor-pointer" style={{ backgroundColor: calendar.color }} />
+                                        </PopoverTrigger>
+                                    </TooltipTrigger>
+                                    <TooltipContent><p>Change Color</p></TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                            <PopoverContent className="w-auto p-2" onPointerDown={(e) => e.stopPropagation()}>
+                            <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdate(calendar.id, { color: c }); setIsColorPopoverOpen(false);}}></button>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={calendar.color} onChange={(e) => onUpdate(calendar.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
+                            </PopoverContent>
+                        </Popover>
+                    </div>
+                    <div onPointerDown={(e) => e.stopPropagation()}>
+                    {isEditingName ? (
+                        <Input
+                        ref={nameInputRef}
+                        defaultValue={calendar.name}
+                        onKeyDown={handleNameKeyDown}
+                        className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                        />
+                    ) : (
+                        <CardTitle className="font-headline text-xl font-thin cursor-pointer" onClick={(e) => {e.stopPropagation(); setIsEditingName(true);}}>
+                        {calendar.name}
+                        </CardTitle>
+                    )}
+                    </div>
+                </div>
+                <div onPointerDown={(e) => e.stopPropagation()}>
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
-                                    <Button variant="ghost" className="h-14 w-14 flex items-center justify-center p-0">
-                                        <GoogleSymbol name={calendar.icon} style={{ fontSize: '48px' }} weight={100} />
-                                    </Button>
-                                </PopoverTrigger>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground opacity-0 group-hover:opacity-100" onClick={handleSync} disabled={!calendar.googleCalendarId}>
+                                    <GoogleSymbol name="sync" weight={100} />
+                                </Button>
                             </TooltipTrigger>
-                            <TooltipContent><p>Change Icon</p></TooltipContent>
+                            <TooltipContent>
+                                <p>{calendar.googleCalendarId ? 'Sync with Google Calendar' : 'Link a Google Calendar ID to enable sync'}</p>
+                            </TooltipContent>
                         </Tooltip>
                     </TooltipProvider>
-                    <PopoverContent className="w-80 p-0" onPointerDown={(e) => e.stopPropagation()}>
-                        <div className="flex items-center gap-1 p-2 border-b">
-                            <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
-                            <input
-                                ref={iconSearchInputRef}
-                                placeholder="Search icons..."
-                                value={iconSearch}
-                                onChange={(e) => setIconSearch(e.target.value)}
-                                className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
-                            />
-                        </div>
-                        <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (
-                          <TooltipProvider key={iconName}>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button variant={calendar.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(calendar.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="h-8 w-8 p-0"><GoogleSymbol name={iconName} style={{fontSize: '24px'}} weight={100} /></Button>
-                              </TooltipTrigger>
-                              <TooltipContent><p>{iconName}</p></TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        ))}</div></ScrollArea>
-                    </PopoverContent>
-                </Popover>
-                <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
-                                    <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background cursor-pointer" style={{ backgroundColor: calendar.color }} />
-                                </PopoverTrigger>
-                            </TooltipTrigger>
-                            <TooltipContent><p>Change Color</p></TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                    <PopoverContent className="w-auto p-2" onPointerDown={(e) => e.stopPropagation()}>
-                    <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdate(calendar.id, { color: c }); setIsColorPopoverOpen(false);}}></button>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={calendar.color} onChange={(e) => onUpdate(calendar.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
-                    </PopoverContent>
-                </Popover>
+                </div>
+            </div>
+        </CardHeader>
+        {isExpanded && (
+            <CardContent className="space-y-2 pt-0 p-2">
+            <div onPointerDown={(e) => e.stopPropagation()}>
+                {isEditingTitle ? (
+                <Input
+                    ref={titleInputRef}
+                    defaultValue={calendar.defaultEventTitle}
+                    onKeyDown={handleTitleKeyDown}
+                    className="h-auto p-0 text-sm italic font-normal border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                    placeholder="Click to set default title"
+                />
+                ) : (
+                <p className="text-sm italic cursor-text min-h-[20px]" onClick={(e) => {e.stopPropagation(); setIsEditingTitle(true)}}>
+                    {calendar.defaultEventTitle || 'Click to set default title'}
+                </p>
+                )}
             </div>
             <div onPointerDown={(e) => e.stopPropagation()}>
-              {isEditingName ? (
+                {isEditingGCalId ? (
                 <Input
-                  ref={nameInputRef}
-                  defaultValue={calendar.name}
-                  onKeyDown={handleNameKeyDown}
-                  className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                    ref={gcalIdInputRef}
+                    defaultValue={calendar.googleCalendarId}
+                    onKeyDown={handleGCalIdKeyDown}
+                    className="h-auto p-0 text-sm italic font-normal border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                    placeholder="Google Calendar ID (e.g., user@domain.com)"
                 />
-              ) : (
-                <CardTitle className="font-headline text-xl font-thin cursor-pointer" onClick={(e) => {e.stopPropagation(); setIsEditingName(true);}}>
-                  {calendar.name}
-                </CardTitle>
-              )}
-            </div>
-          </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground absolute top-2 right-2 opacity-0 group-hover:opacity-100" onPointerDown={(e) => e.stopPropagation()}>
-                    <GoogleSymbol name="more_vert" weight={100} />
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" onPointerDown={(e) => e.stopPropagation()}>
-                {calendar.googleCalendarId && (
-                    <DropdownMenuItem onClick={handleSync}>
-                        <GoogleSymbol name="sync" className="mr-2" weight={100}/>
-                        Sync with Google
-                    </DropdownMenuItem>
+                ) : (
+                <p className="text-sm italic cursor-text min-h-[20px] text-muted-foreground" onClick={(e) => {e.stopPropagation(); setIsEditingGCalId(true)}}>
+                    {calendar.googleCalendarId || 'Link to Google Calendar'}
+                </p>
                 )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </CardHeader>
-      {isExpanded && (
-        <CardContent className="flex-grow space-y-2 pt-0 p-2">
-          <div onPointerDown={(e) => e.stopPropagation()}>
-            {isEditingTitle ? (
-              <Input
-                ref={titleInputRef}
-                defaultValue={calendar.defaultEventTitle}
-                onKeyDown={handleTitleKeyDown}
-                className="h-auto p-0 text-sm italic font-normal border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                placeholder="Click to set default title"
-              />
-            ) : (
-              <p className="text-sm italic cursor-text min-h-[20px]" onClick={(e) => {e.stopPropagation(); setIsEditingTitle(true)}}>
-                {calendar.defaultEventTitle || 'Click to set default title'}
-              </p>
-            )}
-          </div>
-           <div onPointerDown={(e) => e.stopPropagation()}>
-            {isEditingGCalId ? (
-              <Input
-                ref={gcalIdInputRef}
-                defaultValue={calendar.googleCalendarId}
-                onKeyDown={handleGCalIdKeyDown}
-                className="h-auto p-0 text-sm italic font-normal border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                placeholder="Google Calendar ID (e.g., user@domain.com)"
-              />
-            ) : (
-              <p className="text-sm italic cursor-text min-h-[20px] text-muted-foreground" onClick={(e) => {e.stopPropagation(); setIsEditingGCalId(true)}}>
-                {calendar.googleCalendarId || 'Link to Google Calendar'}
-              </p>
-            )}
-          </div>
-        </CardContent>
-      )}
+            </div>
+            </CardContent>
+        )}
+      </div>
     </Card>
   );
 }
