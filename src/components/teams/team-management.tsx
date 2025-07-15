@@ -11,7 +11,25 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { cn, getContrastColor } from '@/lib/utils';
 import { GoogleSymbol } from '../icons/google-symbol';
-import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProps } from 'react-beautiful-dnd';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  useDroppable,
+  useDraggable,
+  DragOverlay,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  rectSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { getOwnershipContext } from '@/lib/permissions';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
@@ -22,21 +40,6 @@ import { Badge } from '../ui/badge';
 import { CardDescription } from '../ui/card';
 import { googleSymbolNames } from '@/lib/google-symbols';
 
-// Wrapper to fix issues with react-beautiful-dnd and React 18 Strict Mode
-const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
-  const [enabled, setEnabled] = useState(false);
-  useEffect(() => {
-    const animation = requestAnimationFrame(() => setEnabled(true));
-    return () => {
-      cancelAnimationFrame(animation);
-      setEnabled(false);
-    };
-  }, []);
-  if (!enabled) {
-    return null;
-  }
-  return <Droppable {...props}>{children}</Droppable>;
-};
 
 const predefinedColors = [
     '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
@@ -121,8 +124,8 @@ function TeamCard({
     onRemoveUser,
     onAddUser,
     onSetAdmin,
-    dragHandleProps,
     isSharedPreview = false,
+    ...props
 }: { 
     team: Team; 
     users: User[];
@@ -132,8 +135,8 @@ function TeamCard({
     onRemoveUser: (teamId: string, userId: string) => void;
     onAddUser: (teamId: string, userId: string) => void;
     onSetAdmin: (teamId: string, userId: string) => void;
-    dragHandleProps?: any;
     isSharedPreview?: boolean;
+    [key: string]: any;
 }) {
     const { viewAsUser } = useUser();
     const nameInputRef = useRef<HTMLInputElement>(null);
@@ -148,6 +151,11 @@ function TeamCard({
     const [userSearch, setUserSearch] = useState('');
     const addUserSearchInputRef = useRef<HTMLInputElement>(null);
     
+    const { setNodeRef: setUsersDroppableRef, isOver: isUsersDroppableOver } = useDroppable({
+        id: `team-users:${team.id}`,
+        data: { type: 'user-list', teamId: team.id },
+    });
+
     const owner = useMemo(() => {
         return users.find(u => u.userId === team.owner.id);
     }, [team.owner.id, users]);
@@ -210,8 +218,8 @@ function TeamCard({
     };
 
     return (
-        <Card className="flex flex-col h-full group bg-transparent relative">
-            <div {...dragHandleProps}>
+        <Card className="flex flex-col h-full group bg-transparent relative" {...props}>
+            <div {...props.dragHandleProps}>
                 <CardHeader>
                     <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -220,18 +228,18 @@ function TeamCard({
                                     <TooltipProvider>
                                         <Tooltip>
                                             <TooltipTrigger asChild>
-                                                <PopoverTrigger asChild onClick={(e) => e.stopPropagation()} disabled={!canManageTeam}>
-                                                    <button className="h-12 w-12 flex items-center justify-center">
-                                                        <GoogleSymbol name={team.icon} className="text-6xl" weight={100} />
-                                                    </button>
+                                                <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={!canManageTeam}>
+                                                    <Button variant="ghost" className="h-14 w-14">
+                                                        <GoogleSymbol name={team.icon} style={{ fontSize: '48px' }} weight={100} />
+                                                    </Button>
                                                 </PopoverTrigger>
                                             </TooltipTrigger>
                                             <TooltipContent><p>Change Icon</p></TooltipContent>
                                         </Tooltip>
                                     </TooltipProvider>
-                                    <PopoverContent className="w-80 p-0">
+                                    <PopoverContent className="w-80 p-0" onPointerDown={(e) => e.stopPropagation()}>
                                         <div className="flex items-center gap-1 p-2 border-b">
-                                            <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                                            <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
                                             <input
                                                 ref={iconSearchInputRef}
                                                 placeholder="Search icons..."
@@ -256,14 +264,14 @@ function TeamCard({
                                     <TooltipProvider>
                                         <Tooltip>
                                             <TooltipTrigger asChild>
-                                                <PopoverTrigger asChild onClick={(e) => e.stopPropagation()} disabled={!canManageTeam}>
+                                                <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={!canManageTeam}>
                                                     <button className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background", canManageTeam && "cursor-pointer")} style={{ backgroundColor: team.color }} />
                                                 </PopoverTrigger>
                                             </TooltipTrigger>
                                             <TooltipContent><p>Change Color</p></TooltipContent>
                                         </Tooltip>
                                     </TooltipProvider>
-                                    <PopoverContent className="w-auto p-2">
+                                    <PopoverContent className="w-auto p-2" onPointerDown={(e) => e.stopPropagation()}>
                                     <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdate(team.id, { color: c }); setIsColorPopoverOpen(false);}}></button>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={team.color} onChange={(e) => onUpdate(team.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
                                     </PopoverContent>
                                 </Popover>
@@ -272,10 +280,10 @@ function TeamCard({
                                         <Tooltip>
                                             <TooltipTrigger asChild>
                                                 <div 
-                                                    className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-card flex items-center justify-center text-white"
+                                                    className="absolute -top-1 -right-1 h-7 w-7 rounded-full border-2 border-card flex items-center justify-center text-white"
                                                     style={{ backgroundColor: ownerColor }}
                                                 >
-                                                    <GoogleSymbol name={shareIcon} style={{fontSize: '10px'}}/>
+                                                    <GoogleSymbol name={shareIcon} style={{fontSize: '14px'}}/>
                                                 </div>
                                             </TooltipTrigger>
                                             <TooltipContent><p>{shareIconTitle}</p></TooltipContent>
@@ -290,33 +298,33 @@ function TeamCard({
                                         defaultValue={team.name}
                                         onBlur={handleSaveName}
                                         onKeyDown={handleNameKeyDown}
-                                        onClick={(e) => e.stopPropagation()}
+                                        onPointerDown={(e) => e.stopPropagation()}
                                         className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
                                     />
                                 ) : (
-                                    <CardTitle className={cn("font-headline text-xl font-thin truncate", canManageTeam && "cursor-pointer")} onClick={(e) => {e.stopPropagation(); if (canManageTeam) setIsEditingName(true)}}>
+                                    <CardTitle className={cn("font-headline text-xl font-thin truncate", canManageTeam && "cursor-pointer")} onPointerDown={(e) => {e.stopPropagation(); if (canManageTeam) setIsEditingName(true)}}>
                                         {team.name}
                                     </CardTitle>
                                 )}
                             </div>
                         </div>
-                        <div className="flex items-center">
+                        <div className="flex items-center" onPointerDown={(e) => e.stopPropagation()}>
                             {canManageTeam && !isSharedPreview && (
                                 <Popover open={isAddUserPopoverOpen} onOpenChange={setIsAddUserPopoverOpen}>
                                     <TooltipProvider>
                                         <Tooltip>
                                             <TooltipTrigger asChild>
-                                                <PopoverTrigger asChild disabled={!canManageTeam} onClick={(e) => e.stopPropagation()}>
+                                                <PopoverTrigger asChild disabled={!canManageTeam} onPointerDown={(e) => e.stopPropagation()}>
                                                     <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary"><GoogleSymbol name="group_add" weight={100} /></Button>
                                                 </PopoverTrigger>
                                             </TooltipTrigger>
                                             <TooltipContent><p>Add User</p></TooltipContent>
                                         </Tooltip>
                                     </TooltipProvider>
-                                    <PopoverContent className="w-64 p-0" onClick={(e) => e.stopPropagation()}>
+                                    <PopoverContent className="w-64 p-0" onPointerDown={(e) => e.stopPropagation()}>
                                         <div className="p-2 border-b">
                                             <div className="flex items-center gap-1 w-full">
-                                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
                                                 <input
                                                     ref={addUserSearchInputRef}
                                                     placeholder="Search..."
@@ -329,7 +337,7 @@ function TeamCard({
                                         <ScrollArea className="h-64">
                                             <div className="p-2 space-y-1">
                                                 {availableUsersToAdd.map(user => (
-                                                    <div key={user.userId} onClick={() => {onAddUser(team.id, user.userId); setIsAddUserPopoverOpen(false);}} className="flex items-center gap-2 p-2 rounded-md hover:bg-muted cursor-pointer">
+                                                    <div key={user.userId} onPointerDown={() => {onAddUser(team.id, user.userId); setIsAddUserPopoverOpen(false);}} className="flex items-center gap-2 p-2 rounded-md hover:bg-muted cursor-pointer">
                                                         <Avatar className="h-8 w-8"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0,2)}</AvatarFallback></Avatar>
                                                         <p className="font-normal text-sm">{user.displayName}</p>
                                                     </div>
@@ -344,19 +352,19 @@ function TeamCard({
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                             <DropdownMenuTrigger asChild disabled={isSharedPreview} onClick={(e) => e.stopPropagation()}><Button variant="ghost" size="icon"><GoogleSymbol name="more_vert" weight={100} /></Button></DropdownMenuTrigger>
+                                             <DropdownMenuTrigger asChild disabled={isSharedPreview} onPointerDown={(e) => e.stopPropagation()}><Button variant="ghost" size="icon"><GoogleSymbol name="more_vert" weight={100} /></Button></DropdownMenuTrigger>
                                         </TooltipTrigger>
                                         <TooltipContent><p>More Options</p></TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
-                                <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                                <DropdownMenuContent align="end" onPointerDown={(e) => e.stopPropagation()}>
                                     {canManageTeam && (
-                                        <DropdownMenuItem onClick={() => onToggleShare(team)} disabled={isSharedPreview}>
+                                        <DropdownMenuItem onPointerDown={() => onToggleShare(team)} disabled={isSharedPreview}>
                                             <GoogleSymbol name={team.isShared ? 'share_off' : 'share'} className="mr-2 text-lg"/>
                                             {team.isShared ? 'Unshare Team' : 'Share Team'}
                                         </DropdownMenuItem>
                                     )}
-                                    <DropdownMenuItem onClick={() => onDelete(team)} className={cn(!canManageTeam && 'text-primary focus:text-primary')}>
+                                    <DropdownMenuItem onPointerDown={() => onDelete(team)} className={cn(!canManageTeam && 'text-primary focus:text-primary')}>
                                         <GoogleSymbol name={canManageTeam ? "delete" : "link_off"} className="mr-2 text-lg"/>
                                         {canManageTeam ? 'Delete Team' : 'Unlink Team'}
                                     </DropdownMenuItem>
@@ -368,44 +376,55 @@ function TeamCard({
             </div>
             <CardContent className="flex-grow pt-0 flex flex-col">
                 <ScrollArea className="max-h-48 pr-2 flex-grow">
-                    <StrictModeDroppable droppableId={team.id} type="user-card" isDropDisabled={isSharedPreview} isCombineEnabled={false}>
-                        {(provided, snapshot) => (
-                            <div
-                                ref={provided.innerRef}
-                                {...provided.droppableProps}
-                                className={cn(
-                                    "min-h-[60px] rounded-md p-2 -m-2 space-y-1 transition-colors",
-                                    snapshot.isDraggingOver && "ring-1 ring-border ring-inset"
-                                )}>
-                                {teamMembers.map((user, index) => (
-                                    <Draggable key={user.userId} draggableId={`user-${team.id}-${user.userId}`} index={index} isDragDisabled={false}>
-                                        {(provided, snapshot) => (
-                                            <div
-                                                ref={provided.innerRef}
-                                                {...provided.draggableProps}
-                                                {...provided.dragHandleProps}
-                                                className={cn(snapshot.isDragging && "opacity-50 shadow-lg")}
-                                            >
-                                            <UserCard 
-                                                user={user} 
-                                                onRemove={() => onRemoveUser(team.id, user.userId)}
-                                                isTeamAdmin={(team.teamAdmins || []).includes(user.userId)}
-                                                onSetAdmin={() => onSetAdmin(team.id, user.userId)}
-                                                canManage={canManageTeam}
-                                                memberCount={team.members.length}
-                                            />
-                                            </div>
-                                        )}
-                                    </Draggable>
-                                ))}
-                                {provided.placeholder}
-                            </div>
-                        )}
-                    </StrictModeDroppable>
+                    <div ref={setUsersDroppableRef} className={cn("min-h-[60px] rounded-md p-2 -m-2 space-y-1 transition-colors", isUsersDroppableOver && "ring-1 ring-border ring-inset")}>
+                        {teamMembers.map((user) => (
+                          <UserCard 
+                              key={user.userId}
+                              user={user} 
+                              onRemove={() => onRemoveUser(team.id, user.userId)}
+                              isTeamAdmin={(team.teamAdmins || []).includes(user.userId)}
+                              onSetAdmin={() => onSetAdmin(team.id, user.userId)}
+                              canManage={canManageTeam}
+                              memberCount={team.members.length}
+                          />
+                        ))}
+                    </div>
                 </ScrollArea>
             </CardContent>
         </Card>
     );
+}
+
+function SortableTeamCard({team, ...props}: {team: Team, [key: string]: any}) {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+        id: team.id,
+        data: { type: 'team-card', team, isSharedPreview: props.isSharedPreview },
+    });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+    };
+    
+    return (
+        <div ref={setNodeRef} style={style} {...attributes} {...listeners} className={cn(
+            "p-3 basis-full md:basis-1/2 flex-grow-0 flex-shrink-0 transition-all duration-300",
+            props.isSharedPanelOpen ? "lg:w-full" : "lg:basis-1/3",
+            isDragging && "opacity-80 shadow-2xl z-50"
+        )}>
+            <TeamCard team={team} {...props} />
+        </div>
+    )
+}
+
+function TeamManagementDropZone({id, type, children, className}: {id: string, type: string, children: React.ReactNode, className?: string}) {
+    const { setNodeRef, isOver } = useDroppable({ id, data: { type } });
+    
+    return (
+        <div ref={setNodeRef} className={cn(className, isOver && "ring-1 ring-border ring-inset")}>
+            {children}
+        </div>
+    )
 }
 
 export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: AppTab; page: AppPage; isSingleTabPage?: boolean }) {
@@ -576,108 +595,99 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
             .filter(t => t.name.toLowerCase().includes(sharedSearchTerm.toLowerCase()));
     }, [teams, displayedTeams, sharedSearchTerm, viewAsUser.userId]);
     
-    const onDragEnd = (result: DropResult) => {
-        const { source, destination, draggableId, type } = result;
-        if (!destination) return;
+    const onDragEnd = (result: DragEndEvent) => {
+        const { active, over } = result;
+        if (!over) return;
         const allVisibleTeams = [...displayedTeams, ...sharedTeams];
 
-        // --- Dragging to the SHARED PANEL ---
-        if (type === 'team-card' && destination.droppableId === 'shared-teams-panel') {
-            const teamToDrop = teams.find(t => t.id === draggableId);
-            if (teamToDrop) {
-                if (canManageTeam(teamToDrop)) {
-                    // It's an owned team. If not shared, share it.
-                    if (!teamToDrop.isShared) {
-                        handleToggleShare(teamToDrop);
+        const activeDataType = active.data.current?.type;
+
+        if (activeDataType === 'team-card') {
+             if (over.id === 'shared-teams-panel') {
+                const teamToDrop = teams.find(t => t.id === active.id);
+                if (teamToDrop) {
+                    if (canManageTeam(teamToDrop)) {
+                        if (!teamToDrop.isShared) handleToggleShare(teamToDrop);
+                    } else {
+                        const updatedLinkedTeamIds = (viewAsUser.linkedTeamIds || []).filter(id => id !== teamToDrop.id);
+                        updateUser(viewAsUser.userId, { linkedTeamIds: updatedLinkedTeamIds });
+                        toast({ title: "Team Unlinked", description: `"${teamToDrop.name}" has been unlinked.`});
                     }
-                } else {
-                    // It's a linked team. Unlink it by dropping back.
-                    const updatedLinkedTeamIds = (viewAsUser.linkedTeamIds || []).filter(id => id !== teamToDrop.id);
-                    updateUser(viewAsUser.userId, { linkedTeamIds: updatedLinkedTeamIds });
-                    toast({ title: "Team Unlinked", description: `"${teamToDrop.name}" has been unlinked from your board.`});
                 }
+                return;
             }
-            return;
-        }
 
-        // --- Dragging from SHARED PANEL to MAIN BOARD (Linking) ---
-        if (type === 'team-card' && source.droppableId === 'shared-teams-panel' && destination.droppableId === 'teams-list') {
-             updateUser(viewAsUser.userId, { 
-                linkedTeamIds: Array.from(new Set([...(viewAsUser.linkedTeamIds || []), draggableId]))
-            });
-            toast({ title: 'Team Linked', description: `The shared team is now visible on your board.` });
-            return;
-        }
-
-        // Handle reordering teams in the main list
-        if (type === 'team-card' && source.droppableId === 'teams-list' && destination.droppableId === 'teams-list') {
-            const reordered = Array.from(displayedTeams);
-            const [movedItem] = reordered.splice(source.index, 1);
-            reordered.splice(destination.index, 0, movedItem);
-            reorderTeams(reordered);
-            return;
-        }
-
-        if (type === 'team-card' && destination.droppableId === 'duplicate-team-zone') {
-             const teamToDuplicate = allVisibleTeams.find(t => t.id === draggableId);
-
-            if(teamToDuplicate) {
-                const owner = getOwnershipContext(page, viewAsUser);
-                const newTeamData: Omit<Team, 'id'> = {
-                    name: `${teamToDuplicate.name} (Copy)`,
-                    icon: teamToDuplicate.icon,
-                    color: teamToDuplicate.color,
-                    owner: owner,
-                    isShared: false,
-                    members: [...teamToDuplicate.members],
-                    teamAdmins: [...(teamToDuplicate.teamAdmins || [])],
-                    teamAdminsLabel: teamToDuplicate.teamAdminsLabel,
-                    membersLabel: teamToDuplicate.membersLabel,
-                    locationCheckManagers: teamToDuplicate.locationCheckManagers,
-                    allBadges: JSON.parse(JSON.stringify(teamToDuplicate.allBadges || [])),
-                    badgeCollections: JSON.parse(JSON.stringify(teamToDuplicate.badgeCollections || [])),
-                    userBadgesLabel: teamToDuplicate.userBadgesLabel,
-                    pinnedLocations: [...(teamToDuplicate.pinnedLocations || [])],
-                    checkLocations: [...(teamToDuplicate.checkLocations || [])],
-                    locationAliases: { ...(teamToDuplicate.locationAliases || {}) },
-                    workstations: [...(teamToDuplicate.workstations || [])],
-                    eventTemplates: JSON.parse(JSON.stringify(teamToDuplicate.eventTemplates || [])),
-                };
-                
-                if (owner.id === viewAsUser.userId && !newTeamData.members.includes(viewAsUser.userId)) {
-                    newTeamData.members.push(viewAsUser.userId);
-                    newTeamData.teamAdmins?.push(viewAsUser.userId);
-                }
-
-                addTeam(newTeamData);
-                
-                const wasLinked = (viewAsUser.linkedTeamIds || []).includes(teamToDuplicate.id);
-                if (wasLinked) {
-                    const updatedLinkedTeamIds = (viewAsUser.linkedTeamIds || []).filter(id => id !== teamToDuplicate.id);
-                    updateUser(viewAsUser.userId, { linkedTeamIds: updatedLinkedTeamIds });
-                }
-
-                toast({ title: 'Team Copied', description: 'A new, independent team has been created.' });
+            if(active.data.current?.isSharedPreview && over.id === 'teams-list') {
+                 updateUser(viewAsUser.userId, { 
+                    linkedTeamIds: Array.from(new Set([...(viewAsUser.linkedTeamIds || []), active.id as string]))
+                });
+                toast({ title: 'Team Linked' });
+                return;
             }
-            return;
-        }
-        
-        if (type === 'user-card') {
-            const destTeamId = destination.droppableId;
-            const userId = draggableId.split('-').pop();
-            if (!userId) return;
+            
+            if (over.id === 'duplicate-team-zone') {
+                 const teamToDuplicate = allVisibleTeams.find(t => t.id === active.id);
 
-            const destTeam = teams.find(t => t.id === destTeamId);
-            if (destTeam && canManageTeam(destTeam)) {
-                handleAddUserToTeam(destTeamId, userId);
-            } else {
-                 toast({ variant: 'destructive', title: 'Permission Denied', description: 'You do not have permission to add users to this team.' });
+                if(teamToDuplicate) {
+                    const owner = getOwnershipContext(page, viewAsUser);
+                    const newTeamData: Omit<Team, 'id'> = {
+                        name: `${teamToDuplicate.name} (Copy)`,
+                        icon: teamToDuplicate.icon,
+                        color: teamToDuplicate.color,
+                        owner: owner,
+                        isShared: false,
+                        members: [...teamToDuplicate.members],
+                        teamAdmins: [...(teamToDuplicate.teamAdmins || [])],
+                        teamAdminsLabel: teamToDuplicate.teamAdminsLabel,
+                        membersLabel: teamToDuplicate.membersLabel,
+                        locationCheckManagers: teamToDuplicate.locationCheckManagers,
+                        allBadges: JSON.parse(JSON.stringify(teamToDuplicate.allBadges || [])),
+                        badgeCollections: JSON.parse(JSON.stringify(teamToDuplicate.badgeCollections || [])),
+                        userBadgesLabel: teamToDuplicate.userBadgesLabel,
+                        pinnedLocations: [...(teamToDuplicate.pinnedLocations || [])],
+                        checkLocations: [...(teamToDuplicate.checkLocations || [])],
+                        locationAliases: { ...(teamToDuplicate.locationAliases || {}) },
+                        workstations: [...(teamToDuplicate.workstations || [])],
+                        eventTemplates: JSON.parse(JSON.stringify(teamToDuplicate.eventTemplates || [])),
+                    };
+                    
+                    if (owner.id === viewAsUser.userId && !newTeamData.members.includes(viewAsUser.userId)) {
+                        newTeamData.members.push(viewAsUser.userId);
+                        newTeamData.teamAdmins?.push(viewAsUser.userId);
+                    }
+
+                    addTeam(newTeamData);
+                    
+                    const wasLinked = (viewAsUser.linkedTeamIds || []).includes(teamToDuplicate.id);
+                    if (wasLinked) {
+                        const updatedLinkedTeamIds = (viewAsUser.linkedTeamIds || []).filter(id => id !== teamToDuplicate.id);
+                        updateUser(viewAsUser.userId, { linkedTeamIds: updatedLinkedTeamIds });
+                    }
+
+                    toast({ title: 'Team Copied', description: 'A new, independent team has been created.' });
+                }
+                return;
+            }
+
+            if (active.id !== over.id) {
+                const oldIndex = displayedTeams.findIndex(t => t.id === active.id);
+                const newIndex = displayedTeams.findIndex(t => t.id === over.id);
+                if (oldIndex > -1 && newIndex > -1) {
+                  reorderTeams(arrayMove(displayedTeams, oldIndex, newIndex));
+                }
             }
         }
     };
+    
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
 
     return (
-        <DragDropContext onDragEnd={onDragEnd}>
+        <DndContext sensors={sensors} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
             <div className="flex gap-4">
                  <div className="flex-1 transition-all duration-300 flex flex-col gap-6">
                     <div className="flex items-center justify-between">
@@ -696,30 +706,19 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                                   </Tooltip>
                               </TooltipProvider>
                             )}
-                            <StrictModeDroppable droppableId="duplicate-team-zone" type="team-card" isDropDisabled={false} isCombineEnabled={false}>
-                                {(provided, snapshot) => (
-                                    <div
-                                        ref={provided.innerRef}
-                                        {...provided.droppableProps}
-                                        className={cn(
-                                            "rounded-full transition-all p-0.5",
-                                            snapshot.isDraggingOver && "ring-1 ring-border ring-inset"
-                                        )}
-                                    >
-                                        <TooltipProvider>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <Button variant="ghost" size="icon" className="rounded-full p-0" onClick={handleAddTeam}>
-                                                        <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
-                                                        <span className="sr-only">New Team or Drop to Duplicate</span>
-                                                    </Button>
-                                                </TooltipTrigger>
-                                                <TooltipContent><p>{snapshot.isDraggingOver ? 'Drop to Duplicate' : 'Add New Team'}</p></TooltipContent>
-                                            </Tooltip>
-                                        </TooltipProvider>
-                                    </div>
-                                )}
-                            </StrictModeDroppable>
+                            <TeamManagementDropZone id="duplicate-team-zone" type="team-card" className="rounded-full">
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="rounded-full p-0" onClick={handleAddTeam}>
+                                                <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
+                                                <span className="sr-only">New Team or Drop to Duplicate</span>
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>Add New Team</p></TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            </TeamManagementDropZone>
                         </div>
                         <div className="flex items-center gap-1">
                             {!isSearching ? (
@@ -752,97 +751,69 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                         </div>
                     </div>
 
-                    <StrictModeDroppable droppableId="teams-list" type="team-card" isDropDisabled={false} isCombineEnabled={false}>
-                        {(provided) => (
-                            <div className="flex flex-wrap -m-3" ref={provided.innerRef} {...provided.droppableProps}>
-                                {displayedTeams.map((team, index) => (
-                                    <Draggable key={team.id} draggableId={team.id} index={index} type="team-card">
-                                        {(provided, snapshot) => (
-                                            <div
-                                                ref={provided.innerRef}
-                                                {...provided.draggableProps}
-                                                className={cn(
-                                                    "p-3 basis-full md:basis-1/2 flex-grow-0 flex-shrink-0 transition-all duration-300",
-                                                    isSharedPanelOpen ? "lg:w-full" : "lg:basis-1/3"
-                                                )}
-                                            >
-                                                <TeamCard 
-                                                    team={team} 
+                    <SortableContext items={displayedTeams.map(t => t.id)} strategy={rectSortingStrategy}>
+                        <TeamManagementDropZone id="teams-list" type="team-card" className="flex flex-wrap -m-3">
+                            {displayedTeams.map((team) => (
+                                <SortableTeamCard
+                                    key={team.id}
+                                    team={team} 
+                                    users={users}
+                                    onUpdate={handleUpdate} 
+                                    onDelete={handleDelete}
+                                    onToggleShare={handleToggleShare}
+                                    onRemoveUser={handleRemoveUserFromTeam}
+                                    onAddUser={handleAddUserToTeam}
+                                    onSetAdmin={handleSetAdmin}
+                                    isSharedPanelOpen={isSharedPanelOpen}
+                                />
+                            ))}
+                        </TeamManagementDropZone>
+                    </SortableContext>
+                </div>
+                 <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96 p-2" : "w-0")}>
+                    <TeamManagementDropZone id="shared-teams-panel" type="team-card" className="h-full rounded-lg">
+                        <Card className={cn("transition-opacity duration-300 h-full bg-transparent", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
+                            <CardHeader>
+                                <div className="flex items-center justify-between">
+                                    <CardTitle className="font-headline font-thin text-xl">Shared Teams</CardTitle>
+                                    <div className="flex items-center gap-1 p-1">
+                                        <GoogleSymbol name="search" className="text-muted-foreground text-lg" />
+                                        <input
+                                            ref={sharedSearchInputRef}
+                                            placeholder="Search shared teams..."
+                                            value={sharedSearchTerm}
+                                            onChange={(e) => setSharedSearchTerm(e.target.value)}
+                                            className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                                        />
+                                    </div>
+                                </div>
+                                <CardDescription>Drag a team you own here to share it. Drag a team to your board to link it.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="h-full">
+                                <ScrollArea className="h-full">
+                                    <SortableContext items={sharedTeams.map(t => t.id)} strategy={rectSortingStrategy}>
+                                        <div className="space-y-2">
+                                            {sharedTeams.map((team) => (
+                                                <SortableTeamCard
+                                                    key={team.id}
+                                                    team={team}
                                                     users={users}
-                                                    onUpdate={handleUpdate} 
+                                                    onUpdate={handleUpdate}
                                                     onDelete={handleDelete}
                                                     onToggleShare={handleToggleShare}
                                                     onRemoveUser={handleRemoveUserFromTeam}
                                                     onAddUser={handleAddUserToTeam}
                                                     onSetAdmin={handleSetAdmin}
-                                                    dragHandleProps={provided.dragHandleProps}
+                                                    isSharedPreview={true}
                                                 />
-                                            </div>
-                                        )}
-                                    </Draggable>
-                                ))}
-                                {provided.placeholder}
-                            </div>
-                        )}
-                    </StrictModeDroppable>
-                </div>
-                 <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96 p-2" : "w-0")}>
-                    <StrictModeDroppable droppableId="shared-teams-panel" type="team-card" isDropDisabled={false} isCombineEnabled={false}>
-                        {(provided, snapshot) => (
-                            <div 
-                                ref={provided.innerRef} 
-                                {...provided.droppableProps} 
-                                className={cn("h-full rounded-lg transition-all", snapshot.isDraggingOver && "ring-1 ring-border ring-inset")}
-                            >
-                                <Card className={cn("transition-opacity duration-300 h-full bg-transparent", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
-                                    <CardHeader>
-                                        <div className="flex items-center justify-between">
-                                            <CardTitle className="font-headline font-thin text-xl">Shared Teams</CardTitle>
-                                            <div className="flex items-center gap-1 p-1">
-                                                <GoogleSymbol name="search" className="text-muted-foreground text-lg" />
-                                                <input
-                                                    ref={sharedSearchInputRef}
-                                                    placeholder="Search shared teams..."
-                                                    value={sharedSearchTerm}
-                                                    onChange={(e) => setSharedSearchTerm(e.target.value)}
-                                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
-                                                />
-                                            </div>
+                                            ))}
+                                            {sharedTeams.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">No other teams are currently shared.</p>}
                                         </div>
-                                        <CardDescription>Drag a team you own here to share it. Drag a team to your board to link it.</CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="h-full">
-                                        <ScrollArea className="h-full">
-                                            <div className="space-y-2">
-                                                {sharedTeams.map((team, index) => (
-                                                    <Draggable key={team.id} draggableId={team.id} index={index} type="team-card">
-                                                    {(provided, snapshot) => (
-                                                        <div ref={provided.innerRef} {...provided.draggableProps} className={cn("w-full cursor-grab", snapshot.isDragging && "shadow-xl opacity-80")}>
-                                                        <TeamCard
-                                                            dragHandleProps={provided.dragHandleProps}
-                                                            team={team}
-                                                            users={users}
-                                                            onUpdate={handleUpdate}
-                                                            onDelete={handleDelete}
-                                                            onToggleShare={handleToggleShare}
-                                                            onRemoveUser={handleRemoveUserFromTeam}
-                                                            onAddUser={handleAddUserToTeam}
-                                                            onSetAdmin={handleSetAdmin}
-                                                            isSharedPreview={true}
-                                                        />
-                                                        </div>
-                                                    )}
-                                                    </Draggable>
-                                                ))}
-                                                {provided.placeholder}
-                                                {sharedTeams.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">No other teams are currently shared.</p>}
-                                            </div>
-                                        </ScrollArea>
-                                    </CardContent>
-                                </Card>
-                            </div>
-                        )}
-                    </StrictModeDroppable>
+                                    </SortableContext>
+                                </ScrollArea>
+                            </CardContent>
+                        </Card>
+                    </TeamManagementDropZone>
                 </div>
             </div>
             <Dialog open={!!teamToDelete} onOpenChange={() => setTeamToDelete(null)}>
@@ -866,6 +837,6 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                     </DialogHeader>
                 </DialogContent>
             </Dialog>
-        </DragDropContext>
+        </DndContext>
     );
 }
