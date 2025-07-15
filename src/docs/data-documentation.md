@@ -19,15 +19,9 @@ AgileFlow is designed as a multi-tenant application, where each company or organ
 **Important Security Note:** The process of creating a new tenant and configuring their Firebase project is a privileged, administrative action. **A UI should NOT be created for tenants to enter their own Firebase details**, as this would be a significant security risk.
 
 The correct, secure workflow is as follows:
-1.  **Admin Provisioning**: When a new tenant signs up, a system administrator for AgileFlow uses secure, backend scripts (e.g., Google Cloud SDK) to create a new, dedicated Firebase project for that tenant.
+1.  **Admin Provisioning**: When a new tenant signs up, a system administrator for AgileFlow uses secure, backend scripts (e.g., Google Cloud SDK) to programmatically create a new, dedicated Firebase project for that tenant.
 2.  **Secure Key Management**: The configuration keys for this new project are then securely added to the application's central tenant configuration store (currently simulated in `firebase.ts`, but would be a secure database in production).
 3.  **Tenant Access**: The tenant is then given their unique subdomain (e.g., `new-company.agileflow.app`) to access their isolated environment. They never handle API keys directly.
-
-#### Implementation & Development Strategy
-
-It's recommended to **postpone the implementation of a tenant management UI and the automated provisioning script** for a later development stage. This approach allows the team to focus on building the core application features that deliver immediate value to the first users. The current architecture, with a simulated tenant lookup in `firebase.ts`, provides a robust foundation for development and can be easily transitioned to a fully automated system when the application is ready to scale.
-
-When the time is right, the automated script would use the Google Cloud SDK to programmatically create and configure new Firebase projects, and a secure internal admin panel would be built to manage the tenant configurations in the master database.
 
 ### Tenant Parameters & Independence
 
@@ -42,10 +36,6 @@ Each tenant's configuration consists of a standard set of Firebase project keys.
 | `messagingSenderId` | **Sender ID.** Used for Firebase Cloud Messaging (push notifications). |
 | `appId` | **App ID.** A unique identifier for the specific Firebase web app instance within the tenant's project. |
 
-#### Database Location and Scaling
-A major advantage of this architecture is that because each tenant has their own project, they have full control over their Firestore database:
-*   **Location Independence**: Each tenant can choose the physical region (e.g., `us-central`, `europe-west`) for their database. This is crucial for performance and data residency compliance (like GDPR).
-*   **Independent Scaling & Billing**: Each tenant is on their own billing plan with Google Cloud. They can independently scale their database usage up or down and are responsible for their own costs, without impacting any other tenant.
 
 **Important Architectural Note:** Application pages are configured within the `AppSettings` object and are not hardcoded entities. Any references to them in documentation are purely as examples of how a dynamic page can be constructed. The codebase should not treat these pages as special or distinct from any other page an administrator might create.
 
@@ -110,7 +100,21 @@ When a user creates a new shareable item (like a **Team** or **Badge Collection*
 ## Shared Calendar Entity
 **Firestore Collection**: `/calendars/{calendarId}`
 
-This entity represents an internal AgileFlow calendar. It acts as a logical container for events within the application and can be linked to a real, external Google Calendar for future synchronization. These are managed on a dynamically configured page by an administrator (e.g., a page with a "Calendars" tab).
+This entity represents an internal AgileFlow calendar. These are managed on a dynamically configured page by an administrator (e.g., a page with a "Calendars" tab).
+
+### Future-State Calendar Linking
+
+The current implementation uses a simple `googleCalendarId` text field for developers to manually link an internal calendar to an external Google Calendar. The final, user-facing implementation will be more robust and intuitive. The ideal workflow will be:
+
+1.  **Onboarding**: During the initial sign-in or from their user settings, a user will grant the application permission to access their Google Calendar account.
+2.  **Calendar Management UI**: When creating or editing an AgileFlow calendar, an administrator will be presented with two options:
+    *   **"Create New Google Calendar"**: This action will trigger a flow that programmatically creates a new, corresponding calendar in the administrator's connected Google account.
+    *   **"Link Existing Google Calendar"**: This will trigger a flow that fetches and displays a list of all calendars the administrator owns or has permission to manage in their Google account. They can then select the appropriate calendar from this list to create the link.
+3.  **Synchronization**: Once linked, event synchronization will be handled automatically by a background process, ensuring both calendars stay up-to-date.
+
+This approach abstracts away the complexity of calendar IDs and provides a seamless, secure experience for the administrator.
+
+### SharedCalendar Data
 
 | Data Point | Description & Link to Services |
 | :--- | :--- |
@@ -118,7 +122,7 @@ This entity represents an internal AgileFlow calendar. It acts as a logical cont
 | `name: string` | **Internal.** The display name for the calendar within the application. |
 | `icon: string` | **Internal.** The Google Symbol name for the calendar's icon. |
 | `color: string` | **Internal.** The hex color code used for this calendar's events in the UI. |
-| `googleCalendarId?: string` | **External (Google Calendar).** The unique ID of the Google Calendar that this internal calendar is linked to. This ID can be found in the settings of a shared Google Calendar and typically looks like an email address (e.g., `your-calendar-id@group.calendar.google.com`). This is the key for enabling event synchronization. |
+| `googleCalendarId?: string` | **External (Google Calendar).** The unique ID of the Google Calendar that this internal calendar is linked to. This is currently set manually but will be populated automatically by the future calendar linking flow. |
 | `managers?: string[]` | **Internal.** An array of `userId`s for users who can manage this calendar's events and settings. |
 | `defaultEventTitle?: string` | **Internal.** A placeholder string for the title of new events created on this calendar. |
 | `roleAssignmentsLabel?: string` | **Internal.** A custom label for the "Role Assignments" section in the event details view. |
@@ -226,4 +230,5 @@ This represents a specific, functional role or skill. The single source of truth
 | `icon: string` | The Google Symbol name for the badge's icon. |
 | `color: string` | The hex color code for the badge's icon and outline. |
 | `description?: string` | An optional description shown in tooltips. |
+
 

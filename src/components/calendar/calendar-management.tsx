@@ -303,7 +303,7 @@ function CalendarCard({
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground opacity-0 group-hover:opacity-100" onClick={handleSync} disabled={!calendar.googleCalendarId}>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={handleSync} disabled={!calendar.googleCalendarId} onPointerDown={(e) => e.stopPropagation()}>
                                     <GoogleSymbol name="sync" weight={100} />
                                 </Button>
                             </TooltipTrigger>
