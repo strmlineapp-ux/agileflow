@@ -4,9 +4,10 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useUser } from '@/context/user-context';
 import { type SharedCalendar, type AppTab, type User } from '@/types';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription as UICardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle as UIDialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription as UIAlertDialogDescription, AlertDialogFooter, AlertDialogHeader as UIAlertDialogHeader, AlertDialogTitle as UIAlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { GoogleSymbol } from '../icons/google-symbol';
@@ -359,7 +360,7 @@ function CalendarCard({
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <span 
-                                                className={cn("italic text-xs text-muted-foreground", canManage && "cursor-pointer hover:border-b hover:border-dashed")} 
+                                                className={cn("italic text-xs text-muted-foreground", canManage && "cursor-pointer")} 
                                                 onClick={() => canManage && setIsEditingTitle(true)}
                                             >
                                                 {calendar.defaultEventTitle || 'No default title'}
@@ -696,7 +697,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                                 <CardTitle className="font-headline font-thin text-xl">Shared Calendars</CardTitle>
                                 <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." autoFocus={isSharedPanelOpen} />
                             </div>
-                            <DialogDescription>Drag a calendar to your board to link it.</DialogDescription>
+                            <UICardDescription>Drag a calendar to your board to link it.</UICardDescription>
                         </CardHeader>
                         <CardContent className="flex-1 p-2 overflow-hidden">
                             <ScrollArea className="h-full">
@@ -735,3 +736,4 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
     </DndContext>
   );
 }
+

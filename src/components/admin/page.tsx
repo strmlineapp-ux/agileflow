@@ -439,7 +439,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
               <TooltipContent><p>Manage Associated Tabs</p></TooltipContent>
           </Tooltip>
       </TooltipProvider>
-      <PopoverContent className="w-80 p-0" onPointerDown={(e) => e.stopPropagation()}>
+      <PopoverContent className="w-80 p-0" onPointerDownCapture={(e) => e.stopPropagation()}>
         <div className="p-2 border-b">
           <div className="flex items-center gap-1 w-full">
             <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
@@ -665,7 +665,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
             </div>
             {isExpanded && (
                 <CardContent className="p-2 pt-0">
-                    <p className={cn("text-xs text-muted-foreground truncate font-thin", !isPinned && "cursor-pointer hover:text-primary")} onClick={handlePathClick}>
+                    <p className={cn("text-xs text-muted-foreground truncate font-thin", !isPinned && "cursor-pointer hover:border-b hover:border-dashed")} onClick={handlePathClick}>
                       {displayPath}
                     </p>
                 </CardContent>
