@@ -158,184 +158,182 @@ function CalendarCard({
 
   return (
     <>
-    <Card className="group relative flex flex-col bg-transparent h-full">
-        <div onPointerDown={(e) => { e.stopPropagation(); handleDeleteClick(); }}>
-            {!isSharedPreview && (
-            <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                        >
-                            <GoogleSymbol name="cancel" className="text-lg" weight={100} />
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent><p>{canManage ? "Delete Calendar" : "Unlink Calendar"}</p></TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
-            )}
-        </div>
-
-        <div className="p-2 flex-grow flex flex-col" {...dragHandleProps}>
-            <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                    <div className="relative">
-                        <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={!canManage}>
-                                            <Button variant="ghost" className="h-14 w-14 flex items-center justify-center p-0">
-                                                <GoogleSymbol name={calendar.icon} style={{ fontSize: '48px' }} weight={100} />
-                                            </Button>
-                                        </PopoverTrigger>
-                                    </TooltipTrigger>
-                                    <TooltipContent><p>Change Icon</p></TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                            <PopoverContent className="w-80 p-0" onPointerDown={(e) => e.stopPropagation()}>
-                                <div className="flex items-center gap-1 p-2 border-b">
-                                    <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
-                                    <input
-                                        ref={iconSearchInputRef}
-                                        placeholder="Search icons..."
-                                        value={iconSearch}
-                                        onChange={(e) => setIconSearch(e.target.value)}
-                                        className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
-                                    />
-                                </div>
-                                <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (
-                                <TooltipProvider key={iconName}>
-                                    <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button variant={calendar.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(calendar.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="h-8 w-8 p-0"><GoogleSymbol name={iconName} style={{fontSize: '24px'}} weight={100} /></Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent><p>{iconName}</p></TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                                ))}</div></ScrollArea>
-                            </PopoverContent>
-                        </Popover>
-                        <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={!canManage}>
-                                            <button className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background", canManage && "cursor-pointer")} style={{ backgroundColor: calendar.color }} />
-                                        </PopoverTrigger>
-                                    </TooltipTrigger>
-                                    <TooltipContent><p>Change Color</p></TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                            <PopoverContent className="w-auto p-2" onPointerDown={(e) => e.stopPropagation()}>
-                            <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdate(calendar.id, { color: c }); setIsColorPopoverOpen(false);}}></button>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={calendar.color} onChange={(e) => onUpdate(calendar.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
-                            </PopoverContent>
-                        </Popover>
-                         {shareIcon && (
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <div 
-                                            className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-card flex items-center justify-center text-white"
-                                            style={{ backgroundColor: shareIconColor }}
-                                        >
-                                            <GoogleSymbol name={shareIcon} style={{fontSize: '10px'}}/>
-                                        </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent><p>{shareIconTitle}</p></TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                        )}
-                    </div>
-                    <div onPointerDown={(e) => { e.stopPropagation(); }}>
-                    {isEditingName && canManage ? (
-                        <Input
-                        ref={nameInputRef}
-                        defaultValue={calendar.name}
-                        onKeyDown={handleNameKeyDown}
-                        onBlur={handleSaveName}
-                        className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                        />
-                    ) : (
-                        <CardTitle className={cn("font-headline text-xl font-thin", canManage && "cursor-pointer")} onPointerDown={(e) => {e.stopPropagation(); if (canManage) setIsEditingName(true);}}>
-                        {calendar.name}
-                        </CardTitle>
-                    )}
-                    </div>
-                </div>
-                 <span onPointerDown={(e) => e.stopPropagation()}>
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <span tabIndex={0} onKeyDown={(e) => { if(e.key === 'Enter' || e.key === ' ') { handleSync(e as any); }}}>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-8 w-8 text-muted-foreground"
-                                        onClick={handleSync}
-                                        disabled={!calendar.googleCalendarId}
-                                    >
-                                        <GoogleSymbol name="sync" weight={100} />
-                                    </Button>
-                                </span>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                            <p>
-                                {calendar.googleCalendarId
-                                ? "Sync with Google Calendar"
-                                : "Link a Google Calendar ID to enable sync"}
-                            </p>
-                            </TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                 </span>
-            </div>
-            
-            <div className="flex-grow"/>
-
-            {isExpanded && (
-                <CardContent className="p-2 pt-0">
-                    <p className="text-xs text-muted-foreground font-thin">
-                        Google Calendar ID: {calendar.googleCalendarId || <span className="italic">Not linked</span>}
-                    </p>
-                </CardContent>
-            )}
-            
-            <div className="absolute bottom-1 right-1">
-                <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
-                    <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
-                </Button>
-            </div>
-        </div>
-
-        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-            <DialogContent className="max-w-md" onPointerDownCapture={(e) => e.stopPropagation()}>
-                <div className="absolute top-4 right-4">
-                  <TooltipProvider>
-                    <Tooltip>
+      <Card className="group relative flex flex-col bg-transparent h-full">
+          <div onPointerDown={(e) => { e.stopPropagation(); handleDeleteClick(); }}>
+              {!isSharedPreview && (
+              <TooltipProvider>
+                  <Tooltip>
                       <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="hover:text-destructive p-0 hover:bg-transparent" onClick={() => { onDelete(calendar); setIsDeleteDialogOpen(false); }}>
-                          <GoogleSymbol name="delete" className="text-4xl" weight={100} />
-                          <span className="sr-only">Delete Calendar</span>
-                        </Button>
+                          <Button
+                              variant="ghost"
+                              size="icon"
+                              className="absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                          >
+                              <GoogleSymbol name="cancel" className="text-lg" weight={100} />
+                          </Button>
                       </TooltipTrigger>
-                      <TooltipContent><p>Delete Calendar</p></TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-                <DialogHeader>
-                    <UIDialogTitle>Delete "{calendar?.name}"?</UIDialogTitle>
-                    <DialogDescription>
-                        {calendar.isShared 
-                            ? "This calendar is shared. Deleting it will remove it for all users." 
-                            : "This will permanently delete the calendar and its configuration."}
-                        This action cannot be undone.
-                    </DialogDescription>
-                </DialogHeader>
-            </DialogContent>
-        </Dialog>
+                      <TooltipContent><p>{canManage ? "Delete Calendar" : "Unlink Calendar"}</p></TooltipContent>
+                  </Tooltip>
+              </TooltipProvider>
+              )}
+          </div>
+
+          <div className="p-2 flex-grow flex flex-col" {...dragHandleProps}>
+              <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                      <div className="relative">
+                          <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
+                              <TooltipProvider>
+                                  <Tooltip>
+                                      <TooltipTrigger asChild>
+                                          <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={!canManage}>
+                                              <Button variant="ghost" className="h-14 w-14 flex items-center justify-center p-0">
+                                                  <GoogleSymbol name={calendar.icon} style={{ fontSize: '48px' }} weight={100} />
+                                              </Button>
+                                          </PopoverTrigger>
+                                      </TooltipTrigger>
+                                      <TooltipContent><p>Change Icon</p></TooltipContent>
+                                  </Tooltip>
+                              </TooltipProvider>
+                              <PopoverContent className="w-80 p-0" onPointerDown={(e) => e.stopPropagation()}>
+                                  <div className="flex items-center gap-1 p-2 border-b">
+                                      <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
+                                      <input
+                                          ref={iconSearchInputRef}
+                                          placeholder="Search icons..."
+                                          value={iconSearch}
+                                          onChange={(e) => setIconSearch(e.target.value)}
+                                          className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                                      />
+                                  </div>
+                                  <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (
+                                  <TooltipProvider key={iconName}>
+                                      <Tooltip>
+                                      <TooltipTrigger asChild>
+                                          <Button variant={calendar.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(calendar.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="h-8 w-8 p-0"><GoogleSymbol name={iconName} style={{fontSize: '24px'}} weight={100} /></Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent><p>{iconName}</p></TooltipContent>
+                                      </Tooltip>
+                                  </TooltipProvider>
+                                  ))}</div></ScrollArea>
+                              </PopoverContent>
+                          </Popover>
+                          <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                              <TooltipProvider>
+                                  <Tooltip>
+                                      <TooltipTrigger asChild>
+                                          <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={!canManage}>
+                                              <button className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background", canManage && "cursor-pointer")} style={{ backgroundColor: calendar.color }} />
+                                          </PopoverTrigger>
+                                      </TooltipTrigger>
+                                      <TooltipContent><p>Change Color</p></TooltipContent>
+                                  </Tooltip>
+                              </TooltipProvider>
+                              <PopoverContent className="w-auto p-2" onPointerDown={(e) => e.stopPropagation()}>
+                              <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdate(calendar.id, { color: c }); setIsColorPopoverOpen(false);}}></button>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={calendar.color} onChange={(e) => onUpdate(calendar.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
+                              </PopoverContent>
+                          </Popover>
+                           {shareIcon && (
+                              <TooltipProvider>
+                                  <Tooltip>
+                                      <TooltipTrigger asChild>
+                                          <div 
+                                              className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-card flex items-center justify-center text-white"
+                                              style={{ backgroundColor: shareIconColor }}
+                                          >
+                                              <GoogleSymbol name={shareIcon} style={{fontSize: '10px'}}/>
+                                          </div>
+                                      </TooltipTrigger>
+                                      <TooltipContent><p>{shareIconTitle}</p></TooltipContent>
+                                  </Tooltip>
+                              </TooltipProvider>
+                          )}
+                      </div>
+                      <div onPointerDown={(e) => { e.stopPropagation(); }}>
+                      {isEditingName && canManage ? (
+                          <Input
+                          ref={nameInputRef}
+                          defaultValue={calendar.name}
+                          onKeyDown={handleNameKeyDown}
+                          onBlur={handleSaveName}
+                          className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                          />
+                      ) : (
+                          <CardTitle className={cn("font-headline text-xl font-thin", canManage && "cursor-pointer")} onPointerDown={(e) => {e.stopPropagation(); if (canManage) setIsEditingName(true);}}>
+                          {calendar.name}
+                          </CardTitle>
+                      )}
+                      </div>
+                  </div>
+                   <span onPointerDown={(e) => e.stopPropagation()}>
+                      <TooltipProvider>
+                          <Tooltip>
+                              <TooltipTrigger asChild>
+                                  <span tabIndex={0} onKeyDown={(e) => { if(e.key === 'Enter' || e.key === ' ') { handleSync(e as any); }}}>
+                                      <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-8 w-8 text-muted-foreground"
+                                          onClick={handleSync}
+                                          disabled={!calendar.googleCalendarId}
+                                      >
+                                          <GoogleSymbol name="sync" weight={100} />
+                                      </Button>
+                                  </span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                              <p>
+                                  {calendar.googleCalendarId
+                                  ? "Sync with Google Calendar"
+                                  : "Link a Google Calendar ID to enable sync"}
+                              </p>
+                              </TooltipContent>
+                          </Tooltip>
+                      </TooltipProvider>
+                   </span>
+              </div>
+              
+              <div className="flex-grow"/>
+
+              {isExpanded && (
+                  <CardContent className="p-2 pt-0">
+                      <p className="text-xs text-muted-foreground font-thin">
+                          Google Calendar ID: {calendar.googleCalendarId || <span className="italic">Not linked</span>}
+                      </p>
+                  </CardContent>
+              )}
+              
+              <div className="absolute bottom-1 right-1">
+                  <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
+                      <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
+                  </Button>
+              </div>
+          </div>
+      </Card>
+
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <DialogContent className="max-w-md" onPointerDownCapture={(e) => e.stopPropagation()}>
+              <div className="absolute top-4 right-4">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="hover:text-destructive p-0 hover:bg-transparent" onClick={() => { onDelete(calendar); setIsDeleteDialogOpen(false); }}>
+                        <GoogleSymbol name="delete" className="text-4xl" weight={100} />
+                        <span className="sr-only">Delete Calendar</span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent><p>Delete Calendar</p></TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <DialogHeader>
+                  <UIDialogTitle>Delete "{calendar?.name}"?</UIDialogTitle>
+                  <DialogDescription>
+                      This will permanently delete the calendar. This action cannot be undone.
+                  </DialogDescription>
+              </DialogHeader>
+          </DialogContent>
+      </Dialog>
     </>
   );
 }
@@ -571,8 +569,9 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                         </TooltipProvider>
                     </div>
                 </div>
-                <div className="flex-1 overflow-y-auto -m-2">
-                    <CalendarDropZone id="main-calendars-grid" type="calendar-grid" className="h-full flex flex-wrap content-start">
+                <div className="flex-1 flex flex-col overflow-y-auto -m-2">
+                    <CalendarDropZone id="main-calendars-grid" type="calendar-grid" className="h-full">
+                      <div className="flex flex-wrap content-start">
                         <SortableContext items={calendarIds} strategy={rectSortingStrategy}>
                             {displayedCalendars.map((calendar) => (
                                 <SortableCalendarCard
@@ -583,6 +582,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                                 />
                             ))}
                         </SortableContext>
+                      </div>
                     </CalendarDropZone>
                 </div>
             </div>
