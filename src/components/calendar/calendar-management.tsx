@@ -7,7 +7,6 @@ import { type SharedCalendar, type AppTab, type User } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription as UICardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle as UIDialogTitle } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription as UIAlertDialogDescription, AlertDialogFooter, AlertDialogHeader as UIAlertDialogHeader, AlertDialogTitle as UIAlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { GoogleSymbol } from '../icons/google-symbol';
@@ -175,7 +174,7 @@ function CalendarCard({
 
   return (
     <>
-      <Card className="group relative flex flex-col bg-transparent h-full" {...dragHandleProps}>
+      <Card className="group relative flex flex-col bg-transparent h-full">
           {!isSharedPreview && (
               <div onPointerDown={(e) => { e.stopPropagation(); setIsDeleteDialogOpen(true); }}>
                   <TooltipProvider>
@@ -195,7 +194,7 @@ function CalendarCard({
               </div>
           )}
 
-          <div className="p-2 flex-grow flex flex-col">
+          <div className="p-2 flex-grow flex flex-col" {...dragHandleProps}>
               <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                       <div className="relative">
@@ -276,7 +275,7 @@ function CalendarCard({
                           className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
                           />
                       ) : (
-                          <CardTitle className={cn("font-headline text-xl font-thin break-words", canManage && "cursor-pointer")} onPointerDown={(e) => {e.stopPropagation(); if (canManage) setIsEditingName(true);}}>
+                          <CardTitle className={cn("font-headline text-xl font-thin break-words", canManage && "cursor-pointer")} onClick={(e) => {e.stopPropagation(); if (canManage) setIsEditingName(true);}}>
                           {calendar.name}
                           </CardTitle>
                       )}
@@ -344,34 +343,32 @@ function CalendarCard({
               {isExpanded && (
                   <CardContent className="p-2 pt-0 mt-2" onPointerDown={(e) => e.stopPropagation()}>
                     <div className="space-y-1">
-                        <div
-                            className="text-sm min-h-[36px] flex items-center"
-                        >
-                            {isEditingTitle && canManage ? (
-                                <Input
-                                    ref={titleInputRef}
-                                    defaultValue={calendar.defaultEventTitle}
-                                    onKeyDown={handleTitleKeyDown}
-                                    onBlur={handleSaveTitle}
-                                    className="h-auto p-0 text-xs font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                                />
-                            ) : (
-                                 <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <span 
-                                                className={cn("italic text-xs text-muted-foreground", canManage && "cursor-pointer")} 
-                                                onClick={() => canManage && setIsEditingTitle(true)}
-                                            >
-                                                {calendar.defaultEventTitle || 'No default title'}
-                                            </span>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                            <p>Default Event Title</p>
-                                        </TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                            )}
+                        <div className="text-sm min-h-[36px] flex items-center mt-2">
+                          <TooltipProvider>
+                              <Tooltip>
+                                  <TooltipTrigger asChild>
+                                      {isEditingTitle && canManage ? (
+                                          <Input
+                                              ref={titleInputRef}
+                                              defaultValue={calendar.defaultEventTitle}
+                                              onKeyDown={handleTitleKeyDown}
+                                              onBlur={handleSaveTitle}
+                                              className="h-auto p-0 text-xs font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                                          />
+                                      ) : (
+                                          <span 
+                                              className={cn("italic text-xs text-muted-foreground", canManage && "cursor-pointer")} 
+                                              onClick={() => canManage && setIsEditingTitle(true)}
+                                          >
+                                              {calendar.defaultEventTitle || 'No default title'}
+                                          </span>
+                                      )}
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                      <p>Default Event Title</p>
+                                  </TooltipContent>
+                              </Tooltip>
+                          </TooltipProvider>
                         </div>
                       </div>
                   </CardContent>
@@ -736,4 +733,3 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
     </DndContext>
   );
 }
-
