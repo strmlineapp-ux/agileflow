@@ -5,7 +5,7 @@ import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { useUser } from '@/context/user-context';
 import { type SharedCalendar, type AppTab } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -226,10 +226,10 @@ function CalendarCard({
             </Tooltip>
         </TooltipProvider>
 
-      <div className="cursor-pointer flex-grow" {...dragHandleProps} onClick={() => { if (!isDragging) setIsExpanded(!isExpanded); }}>
+      <div className="cursor-pointer flex-grow" onClick={() => { if (!isDragging) setIsExpanded(!isExpanded); }}>
         <CardHeader className="p-2">
             <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3" {...dragHandleProps}>
                     <div className="relative">
                         <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                             <TooltipProvider>
@@ -302,15 +302,17 @@ function CalendarCard({
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                           <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-muted-foreground"
-                              onClick={handleSync}
-                              disabled={!calendar.googleCalendarId}
-                            >
-                              <GoogleSymbol name="sync" weight={100} />
-                            </Button>
+                           <span tabIndex={0} onKeyDown={(e) => { if(e.key === 'Enter' || e.key === ' ') { handleSync(); }}}>
+                              <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-muted-foreground"
+                                  onClick={handleSync}
+                                  disabled={!calendar.googleCalendarId}
+                                >
+                                  <GoogleSymbol name="sync" weight={100} />
+                                </Button>
+                           </span>
                         </TooltipTrigger>
                         <TooltipContent>
                           <p>
@@ -393,8 +395,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
   const { calendars, reorderCalendars, addCalendar, updateCalendar, deleteCalendar, updateAppTab, appSettings } = useUser();
   const { toast } = useToast();
 
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [editingCalendar, setEditingCalendar] = useState<SharedCalendar | null>(null);
+  const [calendarToDelete, setCalendarToDelete] = useState<SharedCalendar | null>(null);
   
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
@@ -432,8 +433,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
   };
 
   const openDeleteDialog = (calendar: SharedCalendar) => {
-    setEditingCalendar(calendar);
-    setIsDeleteDialogOpen(true);
+    setCalendarToDelete(calendar);
   };
   
   const handleUpdate = async (calendarId: string, data: Partial<SharedCalendar>) => {
@@ -442,10 +442,9 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
   };
 
   const handleDelete = async () => {
-    if (editingCalendar) {
-      await deleteCalendar(editingCalendar.id);
-      setIsDeleteDialogOpen(false);
-      setEditingCalendar(null);
+    if (calendarToDelete) {
+      await deleteCalendar(calendarToDelete.id);
+      setCalendarToDelete(null);
     }
   };
   
@@ -529,17 +528,17 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
         </SortableContext>
       </div>
       
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <AlertDialog open={!!calendarToDelete} onOpenChange={() => setCalendarToDelete(null)}>
         <AlertDialogContent onPointerDownCapture={(e) => e.stopPropagation()}>
           <AlertDialogHeader>
-              <AlertDialogTitle>Delete "{editingCalendar?.name}"?</AlertDialogTitle>
+              <AlertDialogTitle>Delete "{calendarToDelete?.name}"?</AlertDialogTitle>
               <AlertDialogDescription>
                 This is a high-risk action. This will permanently delete the calendar and all of its associated events. This action cannot be undone.
               </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className={buttonVariants({ variant: "destructive" })}>
+            <AlertDialogAction onClick={handleDelete}>
               Continue
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -548,3 +547,4 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
     </DndContext>
   );
 }
+
