@@ -92,7 +92,7 @@ This is the consistent reference pattern for allowing a user to change both an i
 ---
 
 ### 7. Entity Sharing & Linking
-This pattern describes how a single entity (like a **Team** or **Badge Collection**) can exist in multiple contexts while maintaining a single source of truth. It works in tandem with the **Draggable Card Management blueprint**.
+This pattern describes how a single entity (like a **Team**, **Calendar**, or **Badge Collection**) can exist in multiple contexts while maintaining a single source of truth. It works in tandem with the **Draggable Card Management blueprint**.
 
 - **Mechanism**:
     - **Sharing via Side Panel**: The primary UI for sharing is a side panel that acts as a "discovery pool". The owner of an item can share it by dragging its card from their main management board and dropping it into this "Shared Items" panel.
@@ -100,7 +100,7 @@ This pattern describes how a single entity (like a **Team** or **Badge Collectio
         - **Side Panel Content**: The side panel displays all items shared by *other* users/teams, allowing the current user to discover and link them. It does **not** show items that the current user already has on their own management board.
     - **Linking (Contextual)**: This action's behavior depends on the context of the management page.
         - **Contextual Management (e.g., Badge Collections within a Team)**: A user can link a shared item to their own context by dragging it from the "Shared Items" panel and dropping it onto their management board. This creates a *link* to the original item, not a copy.
-        - **Global Management (e.g., Teams)**: For top-level entities like Teams, "linking" is an explicit action. Dragging a shared team from the panel to the main board adds the team's ID to the current user's `linkedTeamIds` array, bringing it into their management scope without making them a member.
+        - **Global Management (e.g., Teams, Calendars)**: For top-level entities, "linking" is an explicit action. Dragging a shared item from the panel to the main board adds the item's ID to the current user's corresponding `linked...Ids` array, bringing it into their management scope without making them a member or owner.
 - **Visual Cues**:
   - **Owned & Shared Externally (`upload`)**: An item created by the current user/team that has been explicitly shared with others is marked with an `upload` icon overlay. This indicates it is the "source of truth." **The color of this icon badge matches the owner's color.**
   - **Internally Linked (`change_circle`)**: An item that is used in multiple places within the *same* context (e.g., a badge appearing in two collections on one team's board) is marked with a `change_circle` icon overlay on its linked instances. **The color of this icon badge matches the owner's color.**
@@ -116,7 +116,7 @@ This pattern describes how a single entity (like a **Team** or **Badge Collectio
     - Deleting a *shared-to-you* or *internally linked* instance only removes that specific link/instance. This is a low-risk action confirmed via a `Compact Action Dialog`.
     - Deleting the *original, shared* item will trigger a high-risk `AlertDialog` to prevent accidental removal of a widely-used resource.
     - Deleting an *original, un-shared* item is a low-risk action confirmed via a `Compact Action Dialog`.
-- **Application**: This is the required pattern for sharing **Teams** and **Badge Collections**.
+- **Application**: This is the required pattern for sharing **Teams**, **Calendars**, and **Badge Collections**.
 
 ---
 
@@ -127,8 +127,8 @@ This is the application's perfected, gold-standard pattern for managing a collec
 -   **Critical Stability Properties**:
     -   **`@dnd-kit` is the required library.** The older `react-beautiful-dnd` library was found to be incompatible with this type of responsive layout.
     -   `flex-grow-0` and `flex-shrink-0` **must** be used on draggable items. This prevents the remaining items in a row from expanding or shrinking, which causes the grid to reflow unstably when an item is being dragged.
--   **Initiating a Drag**: The drag action is initiated by clicking and dragging the main header of the card. The drag listener from `dnd-kit`'s `useSortable` hook is applied to the card header.
--   **Expand/Collapse**: Cards are collapsed by default. To expand a card and view its details, the user must click a dedicated `expand_more` icon button. This provides a clear, unambiguous affordance and avoids conflicts with other click actions on the card.
+-   **Initiating a Drag**: To provide a clean interface, the drag action is initiated by clicking and dragging any non-interactive part of the card. The drag listener from `dnd-kit`'s `useSortable` hook is applied to the main card container.
+-   **Expand/Collapse**: Cards are collapsed by default. To expand a card and view its details, the user must click a dedicated `expand_more` icon button, typically in the bottom-right corner. This provides a clear, unambiguous affordance and avoids conflicts with other click actions on the card.
 -   **Preventing Interaction Conflicts**:
     -   To allow buttons, popovers, and other controls *inside* the draggable card to function correctly, they must stop the `pointerdown` event from propagating up to the card's drag listener. **This is a critical implementation detail and must be done by adding `onPointerDown={(e) => e.stopPropagation()}` to every interactive element within the card.**
     -   To prevent conflicts with keyboard interactions inside a card (like an **Inline Editor**), the `useSortable` hook for the draggable card **must** be temporarily disabled while the internal component is in an editing state. This is done by passing a `disabled: isEditing` flag to the hook, preventing `@dnd-kit`'s keyboard listeners (e.g., spacebar to lift) from firing while the user is typing.
@@ -138,7 +138,7 @@ This is the application's perfected, gold-standard pattern for managing a collec
 -   **Unique Draggable IDs**: It is critical that every `Draggable` component has a globally unique `draggableId`. If the same item (e.g., a user) can appear in multiple lists, you must create a unique ID for each instance. A common pattern is to combine the list's ID with the item's ID (e.g., `draggableId={'${list.id}-${item.id}'}`). This prevents the drag-and-drop library from trying to move all instances of the item simultaneously.
 -   **Draggable & Pinned States**:
     -   **Draggable Cards**: Most cards can be freely reordered within the grid. The `useSortable` hook allows this.
-    -   **Pinned Cards**: Certain cards are designated as "pinned" and cannot be dragged. This is achieved by disabling the `useSortable` hook for those specific items (`disabled: true`). They act as fixed anchors in the layout, but can still be clicked to expand and view their details via the dedicated expand icon.
+    -   **Pinned Cards**: Certain cards are designated as "pinned" and cannot be dragged. This is achieved by disabling the `useSortable` hook for those specific items (`disabled: true`). They act as fixed anchors in the layout.
 -   **Reordering with Guardrails**:
     -   **Interaction**: Users can drag any non-pinned card and drop it between other non-pinned cards to change its order. The grid reflows smoothly to show the drop position.
     -   **Guardrail Logic**: The `onDragEnd` handler must contain logic to prevent reordering pinned items. If a user attempts to drop an item into a position occupied by a pinned item, the operation should be cancelled or reverted.
@@ -315,5 +315,4 @@ This is the single source of truth for indicating user interaction state across 
     - **Appearance**: A circular badge with a `border-2` of the parent element's background color (e.g., `border-background`) to create a "punched out" effect. The icon inside should be sized proportionally.
     - **Sizing**: The standard size for these badges (e.g., color-pickers, ownership status icons) is `h-7 w-7` (`28x28px`). The `GoogleSymbol` inside should be sized to fit, for example using `style={{fontSize: '14px'}}`.
     - **Placement**: This is context-dependent. Color-pickers are typically placed on the bottom-right corner of their parent icon. Ownership status icons are typically placed on the top-left corner to create visual balance.
-    - **Application**: Used for displaying a team admin status, a shared status on a role icon, or a `share` icon on a shared Badge.
 -   **Badges in Assorted View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.

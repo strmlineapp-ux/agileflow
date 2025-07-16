@@ -49,12 +49,14 @@ function CalendarCard({
     onUpdate,
     onDelete,
     isDragging,
+    dragHandleProps,
     isSharedPreview = false,
 }: {
     calendar: SharedCalendar;
     onUpdate: (id: string, data: Partial<SharedCalendar>) => void;
     onDelete: (calendar: SharedCalendar) => void;
     isDragging?: boolean;
+    dragHandleProps?: any;
     isSharedPreview?: boolean;
 }) {
   const { viewAsUser, users } = useUser();
@@ -139,7 +141,7 @@ function CalendarCard({
   }
 
   return (
-    <Card className="group relative flex flex-col bg-transparent">
+    <Card className="group relative flex flex-col bg-transparent" {...dragHandleProps}>
         {canManage && (
           <TooltipProvider>
               <Tooltip>
@@ -238,6 +240,7 @@ function CalendarCard({
                         ref={nameInputRef}
                         defaultValue={calendar.name}
                         onKeyDown={handleNameKeyDown}
+                        onBlur={handleSaveName}
                         className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
                         />
                     ) : (
@@ -275,11 +278,11 @@ function CalendarCard({
                  </span>
             </div>
         </div>
-      <div className="absolute bottom-1 right-1">
-          <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
-            <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
-          </Button>
-      </div>
+        <div className="absolute bottom-1 right-1">
+            <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
+                <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
+            </Button>
+        </div>
     </Card>
   );
 }
@@ -297,7 +300,7 @@ function SortableCalendarCard({ calendar, onUpdate, onDelete, isSharedPreview = 
   };
   
   return (
-    <div ref={setNodeRef} style={style} {...listeners} {...attributes} className={cn(props.className)}>
+    <div ref={setNodeRef} style={style} className={cn(props.className)}>
       <div className={cn(isDragging && "opacity-75")}>
         <CalendarCard
           calendar={calendar}
@@ -305,6 +308,7 @@ function SortableCalendarCard({ calendar, onUpdate, onDelete, isSharedPreview = 
           onDelete={onDelete}
           isDragging={isDragging}
           isSharedPreview={isSharedPreview}
+          dragHandleProps={{...attributes, ...listeners}}
         />
       </div>
     </div>
@@ -364,11 +368,19 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
   const [sharedSearchTerm, setSharedSearchTerm] = useState('');
   const [mainSearchTerm, setMainSearchTerm] = useState('');
 
+  const sharedSearchInputRef = useRef<HTMLInputElement>(null);
+
   const title = appSettings.calendarManagementLabel || tab.name;
 
   useEffect(() => {
     if (isEditingTitle) titleInputRef.current?.focus();
   }, [isEditingTitle]);
+
+  useEffect(() => {
+    if (isSharedPanelOpen) {
+        setTimeout(() => sharedSearchInputRef.current?.focus(), 100);
+    }
+  }, [isSharedPanelOpen]);
 
   const handleSaveTitle = () => {
     const newName = titleInputRef.current?.value.trim();
@@ -529,7 +541,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                         <CardHeader>
                             <div className="flex items-center justify-between">
                                 <CardTitle className="font-headline font-thin text-xl">Shared Calendars</CardTitle>
-                                <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." autoFocus={isSharedPanelOpen} />
+                                <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." inputRef={sharedSearchInputRef} autoFocus={isSharedPanelOpen} />
                             </div>
                             <CardDescription>Drag a calendar to your board to link it.</CardDescription>
                         </CardHeader>
@@ -575,4 +587,5 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
     </DndContext>
   );
 }
+
 
