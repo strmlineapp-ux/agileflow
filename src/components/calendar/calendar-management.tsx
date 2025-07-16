@@ -5,7 +5,7 @@ import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { useUser } from '@/context/user-context';
 import { type SharedCalendar, type AppTab } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -143,7 +143,7 @@ function CalendarCard({
   }
 
   return (
-    <Card className="group relative flex flex-col bg-transparent" {...dragHandleProps}>
+    <Card className="group relative flex flex-col bg-transparent">
         {canManage && (
           <TooltipProvider>
               <Tooltip>
@@ -165,7 +165,7 @@ function CalendarCard({
           </TooltipProvider>
         )}
 
-        <div className="p-2 flex-grow">
+        <div className="p-2 flex-grow" {...dragHandleProps}>
             <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                     <div className="relative">
@@ -298,7 +298,6 @@ function SortableCalendarCard({ calendar, onUpdate, onDelete, isSharedPreview = 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    zIndex: isDragging ? 10 : 'auto',
   };
   
   return (
@@ -411,6 +410,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
             ...JSON.parse(JSON.stringify(sourceCalendar)),
             name: `${sourceCalendar.name} (Copy)`,
             isShared: false,
+            owner: { type: 'user', id: viewAsUser.userId }, // Assign new ownership
         };
     } else {
         newCalendarData = {
@@ -545,7 +545,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                     </SortableContext>
                 </div>
             </div>
-            <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96 p-2" : "w-0")}>
+            <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96" : "w-0")}>
                 <CalendarDropZone id="shared-calendars-panel" type="shared-calendar-panel" className="h-full rounded-lg">
                     <Card className={cn("transition-opacity duration-300 h-full bg-transparent flex flex-col", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
                         <CardHeader>
@@ -607,7 +607,3 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
     </DndContext>
   );
 }
-
-
-
-
