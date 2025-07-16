@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
@@ -192,7 +193,8 @@ function CalendarCard({
       else if (e.key === 'Escape') setIsEditingGCalId(false);
   };
 
-  const handleSync = async () => {
+  const handleSync = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!calendar.googleCalendarId) return;
     toast({ title: 'Sync Started', description: `Syncing with ${calendar.name}...` });
     try {
