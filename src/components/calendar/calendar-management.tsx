@@ -250,7 +250,7 @@ function CalendarCard({
                     )}
                     </div>
                 </div>
-                 <span onPointerDown={(e) => e.stopPropagation()}>
+                <span onPointerDown={(e) => e.stopPropagation()}>
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
@@ -300,7 +300,11 @@ function SortableCalendarCard({ calendar, onUpdate, onDelete, isSharedPreview = 
   };
   
   return (
-    <div ref={setNodeRef} style={style} className={cn(props.className)}>
+    <div 
+        ref={setNodeRef} 
+        style={style}
+        className={cn(props.className, "p-2 basis-full sm:basis-[calc(50%-1rem)] md:basis-[calc(33.333%-1rem)] lg:basis-[calc(25%-1rem)] xl:basis-[calc(20%-1rem)] 2xl:basis-[calc(16.666%-1rem)] flex-grow-0 flex-shrink-0")}
+    >
       <div className={cn(isDragging && "opacity-75")}>
         <CalendarCard
           calendar={calendar}
@@ -528,7 +532,6 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                                     calendar={calendar}
                                     onUpdate={handleUpdate}
                                     onDelete={openDeleteDialog}
-                                    className="p-2 basis-full sm:basis-[calc(50%-1rem)] md:basis-[calc(33.333%-1rem)] lg:basis-[calc(25%-1rem)] xl:basis-[calc(20%-1rem)] 2xl:basis-[calc(16.666%-1rem)] flex-grow-0 flex-shrink-0"
                                 />
                             ))}
                         </div>
@@ -587,5 +590,6 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
     </DndContext>
   );
 }
+
 
 
