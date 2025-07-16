@@ -96,7 +96,7 @@ This pattern describes how a single entity (like a **Team**, **Calendar**, or **
 
 - **Mechanism**:
     - **Sharing via Side Panel**: The primary UI for sharing is a side panel that acts as a "discovery pool". The owner of an item can share it by dragging its card from their main management board and dropping it into this "Shared Items" panel.
-        - **Behavior**: This action sets an `isShared` flag on the item but **does not remove it from the owner's board**. The item's visual state updates to show it is shared.
+        - **Behavior**: This action sets an `isShared` flag on the item but **does not remove it from the owner's board**. The item's visual state updates to show it is shared. **Dropping it back on the panel will unshare it.**
         - **Side Panel Content**: The side panel displays all items shared by *other* users/teams, allowing the current user to discover and link them. It does **not** show items that the current user already has on their own management board.
     - **Linking (Contextual)**: This action's behavior depends on the context of the management page.
         - **Contextual Management (e.g., Badge Collections within a Team)**: A user can link a shared item to their own context by dragging it from the "Shared Items" panel and dropping it onto their management board. This creates a *link* to the original item, not a copy.
@@ -109,13 +109,8 @@ This pattern describes how a single entity (like a **Team**, **Calendar**, or **
 - **Behavior**:
   - Editing a shared item (e.g., changing a team's name) modifies the original "source of truth" item, and the changes are instantly reflected in all other places where it is used.
   - **Local Overrides**: For linked Badge Collections, the `applications` (e.g., "Team Members", "Events") can be modified locally without affecting the original, allowing teams to customize how they use a shared resource.
-  - **Unlinking & Copying**: When a user "deletes" a linked shared item (like a Team), the system does not delete the original. Instead, it performs two actions:
-    1.  **Creates an independent copy** of the team with the original name and configuration. The ownership of this new copy is assigned to the current user's context. Its member list is empty.
-    2.  **Removes the linked team's ID** from the user's `linkedTeamIds` array, effectively "unlinking" it from their view.
-  - **Smart Deletion**: Deleting an item follows contextual rules:
-    - Deleting a *shared-to-you* or *internally linked* instance only removes that specific link/instance. This is a low-risk action confirmed via a `Compact Action Dialog`.
-    - Deleting the *original, shared* item will trigger a high-risk `AlertDialog` to prevent accidental removal of a widely-used resource.
-    - Deleting an *original, un-shared* item is a low-risk action confirmed via a `Compact Action Dialog`.
+  - **Unlinking & Copying**: When a user clicks "delete" on a *linked* item (like a Team or Calendar), it is simply unlinked from their view, and the original item is unaffected. This is a low-risk action.
+  - **Smart Deletion**: Deleting an item *owned* by the user is confirmed via a `Compact Action Dialog`. This is a low-risk action as it only affects the user's own data.
 - **Application**: This is the required pattern for sharing **Teams**, **Calendars**, and **Badge Collections**.
 
 ---
@@ -173,19 +168,12 @@ This is a minimalist dialog for focused actions, such as entering a code or a sh
     - Clicking the action icon in the corner performs the primary action.
     - Clicking the overlay dismisses the dialog without performing the action.
     - **When a dialog is triggered from a draggable element, its `<DialogContent>` must capture pointer events using `onPointerDownCapture={(e) => e.stopPropagation()}`. This prevents a click inside the dialog from being interpreted as a drag action on the underlying card.**
-- **Application**: Used for Two-Factor Authentication, quick edits, and for confirming lower-risk destructive actions, such as deleting a **Page**, a **Team**, a **Workstation**, or an un-shared **Badge Collection**.
+- **Application**: Used for Two-Factor Authentication, quick edits, and for confirming lower-risk destructive actions, such as deleting a **Page**, a **Team**, a **Calendar**, a **Workstation**, or an un-shared **Badge Collection**.
 
 ---
 
 ### 10. Compact Deletion Dialog
-When a **high-risk destructive action** requires user confirmation (like deleting a **Calendar** or a shared **Badge Collection**), the standard `AlertDialog` component is used. This is distinct from the `Compact Action Dialog` as it is intentionally more difficult to dismiss.
-
-- **Appearance**: A modal dialog centered on the screen, overlaying the content.
-- **Interaction**:
-    - The dialog contains a clear title, a description of the consequences, and explicit "Cancel" and "Continue" (or similar) buttons in the footer.
-    - The "Continue" button for the destructive action is styled with the `destructive` variant to draw attention.
-- **Behavior**: Clicking "Cancel" closes the dialog with no action taken. Clicking "Continue" performs the destructive action. This dialog **cannot** be dismissed by clicking the overlay, forcing an explicit choice.
-- **Application**: Used for confirming the deletion of **major entities** where accidental dismissal could be problematic, such as Calendars or shared Badge Collections.
+This pattern is **deprecated**. All deletion confirmations now use the **Compact Action Dialog** for a more consistent and streamlined user experience. This avoids the use of the intentionally modal `AlertDialog` for actions within the main application flow.
 
 ---
 

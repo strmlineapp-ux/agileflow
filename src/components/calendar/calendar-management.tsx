@@ -3,7 +3,7 @@
 
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useUser } from '@/context/user-context';
-import { type SharedCalendar, type AppTab } from '@/types';
+import { type SharedCalendar, type AppTab, type User } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle as UIDialogTitle } from '@/components/ui/dialog';
@@ -180,7 +180,7 @@ function CalendarCard({
 
           <div className="p-2 flex-grow flex flex-col" {...dragHandleProps}>
               <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
                       <div className="relative">
                           <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                               <TooltipProvider>
@@ -249,17 +249,17 @@ function CalendarCard({
                               </TooltipProvider>
                           )}
                       </div>
-                      <div onPointerDown={(e) => { e.stopPropagation(); }}>
+                      <div className="flex-1 min-w-0" onPointerDown={(e) => { e.stopPropagation(); }}>
                       {isEditingName && canManage ? (
                           <Input
                           ref={nameInputRef}
                           defaultValue={calendar.name}
                           onKeyDown={handleNameKeyDown}
                           onBlur={handleSaveName}
-                          className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                          className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
                           />
                       ) : (
-                          <CardTitle className={cn("font-headline text-xl font-thin", canManage && "cursor-pointer")} onPointerDown={(e) => {e.stopPropagation(); if (canManage) setIsEditingName(true);}}>
+                          <CardTitle className={cn("font-headline text-xl font-thin break-words", canManage && "cursor-pointer")} onPointerDown={(e) => {e.stopPropagation(); if (canManage) setIsEditingName(true);}}>
                           {calendar.name}
                           </CardTitle>
                       )}
@@ -448,7 +448,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
             ...JSON.parse(JSON.stringify(sourceCalendar)),
             name: `${sourceCalendar.name} (Copy)`,
             isShared: false,
-            owner: { type: 'user', id: viewAsUser.userId }, // Assign new ownership
+            owner: { type: 'user', id: viewAsUser.userId },
         };
     } else {
         newCalendarData = {
@@ -456,6 +456,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
             icon: 'calendar_month',
             color: predefinedColors[calendarCount % predefinedColors.length],
             owner: { type: 'user', id: viewAsUser.userId },
+            defaultEventTitle: 'New Calendar Event',
         };
     }
     addCalendar(newCalendarData);
@@ -501,11 +502,11 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
       }
 
       if (over.id === 'shared-calendars-panel') {
-        if (activeCalendar.owner.id === viewAsUser.userId) { // Owned calendar dragged to share
-            if (!activeCalendar.isShared) {
-              updateCalendar(activeCalendar.id, { isShared: true });
-              toast({ title: 'Calendar Shared' });
-            }
+        const isOwner = activeCalendar.owner.id === viewAsUser.userId;
+        if (isOwner) { // Owned calendar dragged to share/unshare
+            const newSharedState = !activeCalendar.isShared;
+            updateCalendar(activeCalendar.id, { isShared: newSharedState });
+            toast({ title: newSharedState ? 'Calendar Shared' : 'Calendar Unshared' });
         } else { // Linked calendar dragged back to unlink
             const updatedLinkedIds = (viewAsUser.linkedCalendarIds || []).filter(id => id !== activeCalendar.id);
             updateUser(viewAsUser.userId, { linkedCalendarIds: updatedLinkedIds });
@@ -569,9 +570,9 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                         </TooltipProvider>
                     </div>
                 </div>
-                <div className="flex-1 flex flex-col overflow-y-auto -m-2">
+                <div className="flex-1 flex flex-col overflow-y-auto">
                     <CalendarDropZone id="main-calendars-grid" type="calendar-grid" className="h-full">
-                      <div className="flex flex-wrap content-start">
+                      <div className="flex flex-wrap content-start -m-2">
                         <SortableContext items={calendarIds} strategy={rectSortingStrategy}>
                             {displayedCalendars.map((calendar) => (
                                 <SortableCalendarCard
