@@ -3,9 +3,9 @@
 
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useUser } from '@/context/user-context';
-import { type SharedCalendar, type AppTab, type User } from '@/types';
+import { type SharedCalendar, type AppTab } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -25,7 +25,9 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
+  type DragStartEvent,
   useDroppable,
+  DragOverlay,
 } from '@dnd-kit/core';
 import {
   arrayMove,
@@ -163,7 +165,7 @@ function CalendarCard({
           </TooltipProvider>
         )}
 
-        <div className="p-2">
+        <div className="p-2 flex-grow">
             <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                     <div className="relative">
@@ -250,7 +252,7 @@ function CalendarCard({
                     )}
                     </div>
                 </div>
-                <span onPointerDown={(e) => e.stopPropagation()}>
+                 <span onPointerDown={(e) => e.stopPropagation()}>
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
@@ -305,7 +307,7 @@ function SortableCalendarCard({ calendar, onUpdate, onDelete, isSharedPreview = 
         style={style}
         className={cn(props.className, "p-2 basis-full sm:basis-[calc(50%-1rem)] md:basis-[calc(33.333%-1rem)] lg:basis-[calc(25%-1rem)] xl:basis-[calc(20%-1rem)] 2xl:basis-[calc(16.666%-1rem)] flex-grow-0 flex-shrink-0")}
     >
-      <div className={cn(isDragging && "opacity-75")}>
+      <div className={cn(isDragging && "opacity-0")}>
         <CalendarCard
           calendar={calendar}
           onUpdate={onUpdate}
@@ -363,6 +365,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
   const { viewAsUser, calendars, reorderCalendars, addCalendar, updateCalendar, deleteCalendar, updateAppTab, appSettings } = useUser();
   const { toast } = useToast();
 
+  const [activeCalendar, setActiveCalendar] = useState<SharedCalendar | null>(null);
   const [calendarToDelete, setCalendarToDelete] = useState<SharedCalendar | null>(null);
   
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -415,7 +418,6 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
             icon: 'calendar_month',
             color: predefinedColors[calendarCount % predefinedColors.length],
             owner: { type: 'user', id: viewAsUser.userId },
-            defaultEventTitle: 'New Event',
         };
     }
     addCalendar(newCalendarData);
@@ -452,7 +454,12 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
     return calendars.filter(c => c.isShared && !displayedIds.has(c.id) && c.name.toLowerCase().includes(sharedSearchTerm.toLowerCase()));
   }, [calendars, displayedCalendars, sharedSearchTerm]);
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const onDragStart = (event: DragStartEvent) => {
+    setActiveCalendar(event.active.data.current?.calendar || null);
+  };
+
+  const onDragEnd = (event: DragEndEvent) => {
+      setActiveCalendar(null);
       const { active, over } = event;
       if (!over) return;
   
@@ -488,7 +495,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
   const calendarIds = useMemo(() => displayedCalendars.map(c => c.id), [displayedCalendars]);
 
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+    <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
         <div className="flex gap-4 h-full">
             <div className="flex-1 flex flex-col gap-6">
                 <div className="flex items-center justify-between">
@@ -523,9 +530,9 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                         </TooltipProvider>
                     </div>
                 </div>
-                <CalendarDropZone id="main-calendars-grid" type="calendar-grid" className="flex-1">
+                 <div className="flex-1">
                     <SortableContext items={calendarIds} strategy={rectSortingStrategy}>
-                        <div className="flex flex-wrap -m-2">
+                        <CalendarDropZone id="main-calendars-grid" type="calendar-grid" className="flex flex-wrap -m-2">
                             {displayedCalendars.map((calendar) => (
                                 <SortableCalendarCard
                                     key={calendar.id}
@@ -534,9 +541,9 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                                     onDelete={openDeleteDialog}
                                 />
                             ))}
-                        </div>
+                        </CalendarDropZone>
                     </SortableContext>
-                </CalendarDropZone>
+                </div>
             </div>
             <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96 p-2" : "w-0")}>
                 <CalendarDropZone id="shared-calendars-panel" type="shared-calendar-panel" className="h-full rounded-lg">
@@ -571,6 +578,16 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
             </div>
       </div>
       
+       <DragOverlay>
+        {activeCalendar ? (
+            <CalendarCard 
+                calendar={activeCalendar} 
+                onUpdate={()=>{}} 
+                onDelete={()=>{}} 
+            />
+        ) : null}
+      </DragOverlay>
+
       <AlertDialog open={!!calendarToDelete} onOpenChange={() => setCalendarToDelete(null)}>
         <AlertDialogContent onPointerDownCapture={(e) => e.stopPropagation()}>
           <AlertDialogHeader>
@@ -590,6 +607,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
     </DndContext>
   );
 }
+
 
 
 
