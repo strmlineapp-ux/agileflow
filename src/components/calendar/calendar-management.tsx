@@ -5,7 +5,7 @@ import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { useUser } from '@/context/user-context';
 import { type SharedCalendar, type AppTab } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -279,31 +279,31 @@ function CalendarCard({
                 </div>
                  <div className="flex items-center">
                     <span onPointerDown={(e) => e.stopPropagation()}>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                           <span tabIndex={calendar.googleCalendarId ? 0 : -1} onKeyDown={(e) => { if(e.key === 'Enter' || e.key === ' ') { handleSync(e as any); }}}>
-                              <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-muted-foreground"
-                                  onClick={handleSync}
-                                  disabled={!calendar.googleCalendarId}
-                                >
-                                  <GoogleSymbol name="sync" weight={100} />
-                                </Button>
-                           </span>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>
-                            {calendar.googleCalendarId
-                              ? "Sync with Google Calendar"
-                              : "Link a Google Calendar ID to enable sync"}
-                          </p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </span>
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <span tabIndex={calendar.googleCalendarId ? 0 : -1} onKeyDown={(e) => { if(e.key === 'Enter' || e.key === ' ') { handleSync(e as any); }}}>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 text-muted-foreground"
+                                            onClick={handleSync}
+                                            disabled={!calendar.googleCalendarId}
+                                        >
+                                            <GoogleSymbol name="sync" weight={100} />
+                                        </Button>
+                                    </span>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                <p>
+                                    {calendar.googleCalendarId
+                                    ? "Sync with Google Calendar"
+                                    : "Link a Google Calendar ID to enable sync"}
+                                </p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    </span>
                  </div>
             </div>
         </div>
