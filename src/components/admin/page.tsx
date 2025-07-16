@@ -563,8 +563,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
               </TooltipProvider>
             )}
             <CardHeader
-              className={cn("p-2", !isPinned && "cursor-pointer")}
-              onClick={() => {if (!isDragging) setIsExpanded(!isExpanded);}}
+              className="p-2"
               {...dragHandleProps}
             >
                 <div className="flex items-start justify-between">
@@ -664,6 +663,9 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
                                 <PageTabsControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
                             </>
                         )}
+                        <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground">
+                            <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
+                        </Button>
                     </div>
                 </div>
             </CardHeader>
@@ -721,8 +723,7 @@ function SortablePageCard({ id, page, onUpdate, onDelete, isPinned }: { id: stri
     return (
         <div 
             ref={setNodeRef} 
-            style={style} 
-            {...attributes}
+            style={style}
             className="p-2 basis-full sm:basis-[calc(50%-1rem)] md:basis-[calc(33.333%-1rem)] lg:basis-[calc(25%-1rem)] xl:basis-[calc(20%-1rem)] 2xl:basis-[calc(16.666%-1rem)] flex-grow-0 flex-shrink-0"
         >
              <div className={cn(isDragging && "opacity-75")}>
@@ -731,7 +732,7 @@ function SortablePageCard({ id, page, onUpdate, onDelete, isPinned }: { id: stri
                     onUpdate={onUpdate} 
                     onDelete={onDelete} 
                     isPinned={isPinned}
-                    dragHandleProps={!isPinned ? listeners : undefined}
+                    dragHandleProps={!isPinned ? { ...attributes, ...listeners } : undefined}
                     isDragging={isDragging}
                     isEditingName={isEditingName}
                     setIsEditingName={setIsEditingName}

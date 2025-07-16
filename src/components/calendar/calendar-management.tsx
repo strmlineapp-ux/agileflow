@@ -226,10 +226,10 @@ function CalendarCard({
             </Tooltip>
         </TooltipProvider>
 
-      <div className="cursor-pointer flex-grow" onClick={() => { if (!isDragging) setIsExpanded(!isExpanded); }}>
+      <div {...dragHandleProps}>
         <CardHeader className="p-2">
             <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3" {...dragHandleProps}>
+                <div className="flex items-center gap-3">
                     <div className="relative">
                         <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                             <TooltipProvider>
@@ -298,11 +298,12 @@ function CalendarCard({
                     )}
                     </div>
                 </div>
-                 <span onPointerDown={(e) => e.stopPropagation()}>
+                 <div className="flex items-center">
+                    <span onPointerDown={(e) => e.stopPropagation()}>
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                           <span tabIndex={0} onKeyDown={(e) => { if(e.key === 'Enter' || e.key === ' ') { handleSync(); }}}>
+                           <span tabIndex={calendar.googleCalendarId ? 0 : -1} onKeyDown={(e) => { if(e.key === 'Enter' || e.key === ' ') { handleSync(); }}}>
                               <Button
                                   variant="ghost"
                                   size="icon"
@@ -324,26 +325,32 @@ function CalendarCard({
                       </Tooltip>
                     </TooltipProvider>
                   </span>
+                  <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground">
+                    <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
+                  </Button>
+                 </div>
             </div>
         </CardHeader>
-        {isExpanded && (
-            <CardContent className="space-y-2 pt-0 p-2">
-            <div onPointerDown={(e) => e.stopPropagation()}>
-                {isEditingTitle ? (
-                <Input
-                    ref={titleInputRef}
-                    defaultValue={calendar.defaultEventTitle}
-                    onKeyDown={handleTitleKeyDown}
-                    className="h-auto p-0 text-sm italic font-normal border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                    placeholder="Click to set default title"
-                />
-                ) : (
-                <p className="text-sm italic cursor-text min-h-[20px]" onClick={(e) => {e.stopPropagation(); setIsEditingTitle(true)}}>
-                    {calendar.defaultEventTitle || 'Click to set default title'}
-                </p>
-                )}
-            </div>
-             <p className="text-sm italic cursor-text min-h-[20px] text-muted-foreground" onPointerDown={(e) => {e.stopPropagation(); setIsEditingGCalId(true)}} onClick={(e) => {e.stopPropagation(); setIsEditingGCalId(true)}}>
+      </div>
+      {isExpanded && (
+        <CardContent className="space-y-2 pt-0 p-2">
+          <div onPointerDown={(e) => e.stopPropagation()}>
+            {isEditingTitle ? (
+            <Input
+                ref={titleInputRef}
+                defaultValue={calendar.defaultEventTitle}
+                onKeyDown={handleTitleKeyDown}
+                className="h-auto p-0 text-sm italic font-normal border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                placeholder="Click to set default title"
+            />
+            ) : (
+            <p className="text-sm italic cursor-text min-h-[20px]" onClick={(e) => {e.stopPropagation(); setIsEditingTitle(true)}}>
+                {calendar.defaultEventTitle || 'Click to set default title'}
+            </p>
+            )}
+          </div>
+          <div onPointerDown={(e) => e.stopPropagation()}>
+             <p className="text-sm italic cursor-text min-h-[20px] text-muted-foreground" onClick={(e) => {e.stopPropagation(); setIsEditingGCalId(true)}}>
                 {isEditingGCalId ? (
                 <Input
                     ref={gcalIdInputRef}
@@ -356,9 +363,9 @@ function CalendarCard({
                     calendar.googleCalendarId || 'Link to Google Calendar'
                 )}
             </p>
-            </CardContent>
-        )}
-      </div>
+          </div>
+        </CardContent>
+      )}
     </Card>
   );
 }
@@ -547,4 +554,3 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
     </DndContext>
   );
 }
-
