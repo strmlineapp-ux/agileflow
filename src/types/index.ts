@@ -1,5 +1,4 @@
 
-
 import type React from 'react';
 
 export interface AppTab {
@@ -146,6 +145,7 @@ export interface SharedCalendar {
   color: string;
   owner: { type: 'user', id: string };
   googleCalendarId?: string;
+  isShared?: boolean;
   defaultEventTitle?: string;
   roleAssignmentsLabel?: string;
 }

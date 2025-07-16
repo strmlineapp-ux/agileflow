@@ -3,8 +3,8 @@
 
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useUser } from '@/context/user-context';
-import { type SharedCalendar, type AppTab } from '@/types';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { type SharedCalendar, type AppTab, type User } from '@/types';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
@@ -16,6 +16,7 @@ import { googleSymbolNames } from '@/lib/google-symbols';
 import { ScrollArea } from '../ui/scroll-area';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { syncCalendar } from '@/ai/flows/sync-calendar-flow';
+import { CompactSearchInput } from '@/components/common/compact-search-input';
 import {
   DndContext,
   closestCenter,
@@ -31,6 +32,7 @@ import {
   SortableContext,
   sortableKeyboardCoordinates,
   rectSortingStrategy,
+  verticalListSortingStrategy,
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -42,67 +44,25 @@ const predefinedColors = [
     '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
 ];
 
-function SortableCalendarCard({ calendar, onUpdate, onDelete, ...props }: { calendar: SharedCalendar; onUpdate: (id: string, data: Partial<SharedCalendar>) => void; onDelete: (calendar: SharedCalendar) => void; }) {
-  const [isEditingName, setIsEditingName] = useState(false);
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
-  
-  const isEditing = isEditingName || isEditingTitle;
-  
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: calendar.id,
-    disabled: isEditing,
-  });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    zIndex: isDragging ? 10 : 'auto',
-  };
-  
-  return (
-    <div ref={setNodeRef} style={style} className="p-2 basis-full sm:basis-[calc(50%-1rem)] md:basis-[calc(33.333%-1rem)] lg:basis-[calc(25%-1rem)] xl:basis-[calc(20%-1rem)] 2xl:basis-[calc(16.666%-1rem)] flex-grow-0 flex-shrink-0">
-      <div className={cn(isDragging && "opacity-75")}>
-        <CalendarCard
-          calendar={calendar}
-          onUpdate={onUpdate}
-          onDelete={onDelete}
-          isDragging={isDragging}
-          dragHandleProps={{...attributes, ...listeners}}
-          isEditingName={isEditingName}
-          setIsEditingName={setIsEditingName}
-          isEditingTitle={isEditingTitle}
-          setIsEditingTitle={setIsEditingTitle}
-        />
-      </div>
-    </div>
-  );
-}
-
-
 function CalendarCard({
     calendar,
     onUpdate,
     onDelete,
     isDragging,
     dragHandleProps,
-    isEditingName,
-    setIsEditingName,
-    isEditingTitle,
-    setIsEditingTitle,
+    isSharedPreview = false,
 }: {
     calendar: SharedCalendar;
     onUpdate: (id: string, data: Partial<SharedCalendar>) => void;
     onDelete: (calendar: SharedCalendar) => void;
     isDragging?: boolean;
     dragHandleProps?: any;
-    isEditingName: boolean;
-    setIsEditingName: (isEditing: boolean) => void;
-    isEditingTitle: boolean;
-    setIsEditingTitle: (isEditing: boolean) => void;
+    isSharedPreview?: boolean;
 }) {
+  const { viewAsUser, users } = useUser();
   const [isExpanded, setIsExpanded] = useState(false);
   const nameInputRef = useRef<HTMLInputElement>(null);
-  const titleInputRef = useRef<HTMLInputElement>(null);
+  const [isEditingName, setIsEditingName] = useState(false);
   
   const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
   const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
@@ -112,21 +72,16 @@ function CalendarCard({
 
   const {toast} = useToast();
   
+  const ownerUser = useMemo(() => users.find(u => u.userId === calendar.owner.id), [users, calendar.owner.id]);
+  const canManage = useMemo(() => !isSharedPreview && viewAsUser.userId === calendar.owner.id, [isSharedPreview, viewAsUser, calendar]);
+
   const handleSaveName = useCallback(() => {
     const newName = nameInputRef.current?.value.trim();
     if (newName && newName !== calendar.name) {
       onUpdate(calendar.id, { name: newName });
     }
     setIsEditingName(false);
-  }, [calendar.id, calendar.name, onUpdate, setIsEditingName]);
-
-  const handleSaveTitle = useCallback(() => {
-    const newTitle = titleInputRef.current?.value.trim();
-    if (newTitle !== calendar.defaultEventTitle) {
-      onUpdate(calendar.id, { defaultEventTitle: newTitle });
-    }
-    setIsEditingTitle(false);
-  }, [calendar.id, calendar.defaultEventTitle, onUpdate, setIsEditingTitle]);
+  }, [calendar.id, calendar.name, onUpdate]);
 
   useEffect(() => {
     if (isIconPopoverOpen) {
@@ -139,37 +94,26 @@ function CalendarCard({
   const filteredIcons = useMemo(() => googleSymbolNames.filter(name => name.toLowerCase().includes(iconSearch.toLowerCase())), [iconSearch]);
   
   useEffect(() => {
-    const setupInlineEditor = (isEditing: boolean, ref: React.RefObject<HTMLInputElement>, onSave: () => void) => {
-      if (!isEditing) return;
-      
-      const handleOutsideClick = (event: MouseEvent) => {
-        if (ref.current && !ref.current.contains(event.target as Node)) {
-          onSave();
-        }
-      };
-      
-      document.addEventListener("mousedown", handleOutsideClick);
-      ref.current?.focus();
-      ref.current?.select();
-      
-      return () => document.removeEventListener("mousedown", handleOutsideClick);
+    if (!isEditingName) return;
+    
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (nameInputRef.current && !nameInputRef.current.contains(event.target as Node)) {
+        handleSaveName();
+      }
     };
-
-    setupInlineEditor(isEditingName, nameInputRef, handleSaveName);
-    setupInlineEditor(isEditingTitle, titleInputRef, handleSaveTitle);
-
-  }, [isEditingName, isEditingTitle, handleSaveName, handleSaveTitle]);
+    
+    document.addEventListener("mousedown", handleOutsideClick);
+    nameInputRef.current?.focus();
+    nameInputRef.current?.select();
+    
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, [isEditingName, handleSaveName]);
 
   const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') { e.preventDefault(); nameInputRef.current?.blur(); }
     else if (e.key === 'Escape') setIsEditingName(false);
   };
   
-  const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') { e.preventDefault(); titleInputRef.current?.blur(); }
-    else if (e.key === 'Escape') setIsEditingTitle(false);
-  };
-
   const handleSync = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!calendar.googleCalendarId) return;
@@ -184,26 +128,40 @@ function CalendarCard({
     }
   };
 
+  let shareIcon: string | null = null;
+  let shareIconTitle: string = '';
+  let shareIconColor = ownerUser?.primaryColor || '#64748B';
+
+  if (canManage && calendar.isShared) {
+      shareIcon = 'upload';
+      shareIconTitle = 'Owned by you and shared';
+  } else if (!canManage && calendar.isShared) {
+      shareIcon = 'downloading';
+      shareIconTitle = `Shared by ${ownerUser?.displayName || 'another user'}`;
+  }
+
   return (
     <Card className="group relative flex flex-col bg-transparent">
-       <TooltipProvider>
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                        onPointerDown={(e) => {
-                            e.stopPropagation();
-                            onDelete(calendar);
-                        }}
-                    >
-                        <GoogleSymbol name="cancel" className="text-lg" weight={100} />
-                    </Button>
-                </TooltipTrigger>
-                <TooltipContent><p>Delete Calendar</p></TooltipContent>
-            </Tooltip>
-        </TooltipProvider>
+        {canManage && (
+          <TooltipProvider>
+              <Tooltip>
+                  <TooltipTrigger asChild>
+                      <Button
+                          variant="ghost"
+                          size="icon"
+                          className="absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                          onPointerDown={(e) => {
+                              e.stopPropagation();
+                              onDelete(calendar);
+                          }}
+                      >
+                          <GoogleSymbol name="cancel" className="text-lg" weight={100} />
+                      </Button>
+                  </TooltipTrigger>
+                  <TooltipContent><p>Delete Calendar</p></TooltipContent>
+              </Tooltip>
+          </TooltipProvider>
+        )}
 
       <div {...dragHandleProps}>
         <div className="p-2">
@@ -214,7 +172,7 @@ function CalendarCard({
                             <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
+                                        <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={!canManage}>
                                             <Button variant="ghost" className="h-14 w-14 flex items-center justify-center p-0">
                                                 <GoogleSymbol name={calendar.icon} style={{ fontSize: '48px' }} weight={100} />
                                             </Button>
@@ -250,8 +208,8 @@ function CalendarCard({
                             <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
-                                            <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background cursor-pointer" style={{ backgroundColor: calendar.color }} />
+                                        <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={!canManage}>
+                                            <button className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background", canManage && "cursor-pointer")} style={{ backgroundColor: calendar.color }} />
                                         </PopoverTrigger>
                                     </TooltipTrigger>
                                     <TooltipContent><p>Change Color</p></TooltipContent>
@@ -261,9 +219,24 @@ function CalendarCard({
                             <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdate(calendar.id, { color: c }); setIsColorPopoverOpen(false);}}></button>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={calendar.color} onChange={(e) => onUpdate(calendar.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
                             </PopoverContent>
                         </Popover>
+                         {shareIcon && (
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <div 
+                                            className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-card flex items-center justify-center text-white"
+                                            style={{ backgroundColor: shareIconColor }}
+                                        >
+                                            <GoogleSymbol name={shareIcon} style={{fontSize: '10px'}}/>
+                                        </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent><p>{shareIconTitle}</p></TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        )}
                     </div>
                     <div onPointerDown={(e) => e.stopPropagation()}>
-                    {isEditingName ? (
+                    {isEditingName && canManage ? (
                         <Input
                         ref={nameInputRef}
                         defaultValue={calendar.name}
@@ -271,7 +244,7 @@ function CalendarCard({
                         className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
                         />
                     ) : (
-                        <CardTitle className="font-headline text-xl font-thin cursor-pointer" onClick={(e) => {e.stopPropagation(); setIsEditingName(true);}}>
+                        <CardTitle className={cn("font-headline text-xl font-thin", canManage && "cursor-pointer")} onPointerDown={(e) => {e.stopPropagation(); if (canManage) setIsEditingName(true);}}>
                         {calendar.name}
                         </CardTitle>
                     )}
@@ -308,25 +281,6 @@ function CalendarCard({
             </div>
         </div>
       </div>
-      {isExpanded && (
-        <CardContent className="space-y-2 pt-0 p-2">
-          <div onPointerDown={(e) => e.stopPropagation()}>
-            {isEditingTitle ? (
-            <Input
-                ref={titleInputRef}
-                defaultValue={calendar.defaultEventTitle}
-                onKeyDown={handleTitleKeyDown}
-                className="h-auto p-0 text-sm italic font-normal border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                placeholder="Click to set default title"
-            />
-            ) : (
-            <p className="text-sm italic cursor-text min-h-[20px]" onClick={(e) => {e.stopPropagation(); setIsEditingTitle(true)}}>
-                {calendar.defaultEventTitle || 'Click to set default title'}
-            </p>
-            )}
-          </div>
-        </CardContent>
-      )}
       <div className="absolute bottom-1 right-1">
           <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
             <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
@@ -335,6 +289,35 @@ function CalendarCard({
     </Card>
   );
 }
+
+function SortableCalendarCard({ calendar, onUpdate, onDelete, isSharedPreview = false, ...props }: { calendar: SharedCalendar; onUpdate: (id: string, data: Partial<SharedCalendar>) => void; onDelete: (calendar: SharedCalendar) => void; isSharedPreview?: boolean; [key: string]: any; }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: calendar.id,
+    data: { type: 'calendar', calendar, isSharedPreview }
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 10 : 'auto',
+  };
+  
+  return (
+    <div ref={setNodeRef} style={style} className={cn(props.className)}>
+      <div className={cn(isDragging && "opacity-75")}>
+        <CalendarCard
+          calendar={calendar}
+          onUpdate={onUpdate}
+          onDelete={onDelete}
+          isDragging={isDragging}
+          dragHandleProps={{...attributes, ...listeners}}
+          isSharedPreview={isSharedPreview}
+        />
+      </div>
+    </div>
+  );
+}
+
 
 function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
   const { isOver, setNodeRef } = useDroppable({ id });
@@ -364,8 +347,19 @@ function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
   );
 }
 
+function CalendarDropZone({ id, type, children, className }: { id: string; type: string; children: React.ReactNode; className?: string; }) {
+  const { setNodeRef, isOver } = useDroppable({ id, data: { type } });
+
+  return (
+    <div ref={setNodeRef} className={cn(className, isOver && "ring-1 ring-border ring-inset")}>
+      {children}
+    </div>
+  );
+}
+
+
 export function CalendarManagement({ tab }: { tab: AppTab }) {
-  const { calendars, reorderCalendars, addCalendar, updateCalendar, deleteCalendar, updateAppTab, appSettings } = useUser();
+  const { viewAsUser, calendars, reorderCalendars, addCalendar, updateCalendar, deleteCalendar, updateAppTab, appSettings } = useUser();
   const { toast } = useToast();
 
   const [calendarToDelete, setCalendarToDelete] = useState<SharedCalendar | null>(null);
@@ -373,6 +367,11 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
   
+  const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
+  const [sharedSearchTerm, setSharedSearchTerm] = useState('');
+  const sharedSearchInputRef = useRef<HTMLInputElement>(null);
+  const [mainSearchTerm, setMainSearchTerm] = useState('');
+
   const title = appSettings.calendarManagementLabel || tab.name;
 
   useEffect(() => {
@@ -392,17 +391,27 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
     else if (e.key === 'Escape') setIsEditingTitle(false);
   };
   
-  const handleAddCalendar = () => {
+  const handleAddCalendar = (sourceCalendar?: SharedCalendar) => {
     const calendarCount = calendars.length;
-    const newName = `New Calendar ${calendarCount + 1}`;
-    addCalendar({
-      name: newName,
-      icon: 'calendar_month',
-      color: predefinedColors[calendarCount % predefinedColors.length],
-      owner: { type: 'user', id: '1' }, // Default to current user in a real app
-      defaultEventTitle: 'New Event',
-    });
-    toast({ title: 'New Calendar Added', description: `"${newName}" has been created.` });
+    let newCalendarData: Omit<SharedCalendar, 'id'>;
+
+    if (sourceCalendar) {
+        newCalendarData = {
+            ...JSON.parse(JSON.stringify(sourceCalendar)),
+            name: `${sourceCalendar.name} (Copy)`,
+            isShared: false,
+        };
+    } else {
+        newCalendarData = {
+            name: `New Calendar ${calendarCount + 1}`,
+            icon: 'calendar_month',
+            color: predefinedColors[calendarCount % predefinedColors.length],
+            owner: { type: 'user', id: viewAsUser.userId },
+            defaultEventTitle: 'New Event',
+        };
+    }
+    addCalendar(newCalendarData);
+    toast({ title: 'New Calendar Added' });
   };
 
   const openDeleteDialog = (calendar: SharedCalendar) => {
@@ -421,84 +430,141 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
     }
   };
   
-  const handleDuplicateCalendar = (sourceCalendar: SharedCalendar) => {
-      const newName = `${sourceCalendar.name} (Copy)`;
-      if (calendars.some(c => c.name === newName)) {
-          toast({ variant: 'destructive', title: 'Error', description: `A calendar named "${newName}" already exists.` });
-          return;
-      }
-      const newCalendarData: Omit<SharedCalendar, 'id'> = {
-          ...JSON.parse(JSON.stringify(sourceCalendar)),
-          name: newName,
-      };
-      addCalendar(newCalendarData);
-      toast({ title: 'Success', description: `Calendar "${newName}" created.` });
-  };
-  
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
+
+  const displayedCalendars = useMemo(() => {
+    return calendars.filter(c => c.name.toLowerCase().includes(mainSearchTerm.toLowerCase()));
+  }, [calendars, mainSearchTerm]);
+
+  const sharedCalendars = useMemo(() => {
+    const displayedIds = new Set(displayedCalendars.map(c => c.id));
+    return calendars.filter(c => c.isShared && !displayedIds.has(c.id) && c.name.toLowerCase().includes(sharedSearchTerm.toLowerCase()));
+  }, [calendars, displayedCalendars, sharedSearchTerm]);
 
   const handleDragEnd = (event: DragEndEvent) => {
       const { active, over } = event;
+      if (!over) return;
   
-      if (over?.id === 'duplicate-calendar-zone') {
-        const calendarToDuplicate = calendars.find(c => c.id === active.id);
-        if (calendarToDuplicate) {
-            handleDuplicateCalendar(calendarToDuplicate);
-        }
+      const activeCalendar = active.data.current?.calendar as SharedCalendar;
+      if (!activeCalendar) return;
+
+      if (over.id === 'duplicate-calendar-zone') {
+        handleAddCalendar(activeCalendar);
         return;
       }
-  
-      if (active.id !== over?.id && over?.id) {
-          const oldIndex = calendars.findIndex(p => p.id === active.id);
-          const newIndex = calendars.findIndex(p => p.id === over!.id);
-          const reordered = arrayMove(calendars, oldIndex, newIndex);
-          reorderCalendars(reordered);
+
+      if (over.id === 'shared-calendars-panel' && activeCalendar.owner.id === viewAsUser.userId && !activeCalendar.isShared) {
+        updateCalendar(activeCalendar.id, { isShared: true });
+        toast({ title: 'Calendar Shared' });
+        return;
+      }
+      
+      if (active.data.current?.isSharedPreview && over.id === 'main-calendars-grid') {
+        // This is a simplified "linking" action. In a real app with separate user data,
+        // you would add the calendar ID to the current user's linked list.
+        // For this prototype, we just treat it as if it's on the main board.
+        // The filtering logic already handles displaying it.
+        toast({ title: 'Calendar Linked' });
+        return;
+      }
+      
+      if (over.id.toString().startsWith('calendar-') && active.id !== over.id) {
+          const oldIndex = displayedCalendars.findIndex(p => p.id === active.id);
+          const newIndex = displayedCalendars.findIndex(p => p.id === over.id);
+          if (oldIndex !== -1 && newIndex !== -1) {
+            reorderCalendars(arrayMove(displayedCalendars, oldIndex, newIndex));
+          }
       }
   };
   
-  const calendarIds = useMemo(() => calendars.map(c => c.id), [calendars]);
+  const calendarIds = useMemo(() => displayedCalendars.map(c => c.id), [displayedCalendars]);
 
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-      <div className="space-y-6">
-        <div className="flex items-center gap-2">
-            {isEditingTitle ? (
-              <Input ref={titleInputRef} defaultValue={title} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
-            ) : (
-              <TooltipProvider>
-                  <Tooltip>
-                      <TooltipTrigger asChild>
-                          <h3 className="font-headline text-2xl font-thin tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{title}</h3>
-                      </TooltipTrigger>
-                      {tab.description && (
-                          <TooltipContent><p className="max-w-xs">{tab.description}</p></TooltipContent>
-                      )}
-                  </Tooltip>
-              </TooltipProvider>
-            )}
-            <DuplicateZone id="duplicate-calendar-zone" onAdd={handleAddCalendar} />
-        </div>
-        <SortableContext items={calendarIds} strategy={rectSortingStrategy}>
-            <div className="flex flex-wrap -m-2">
-                {calendars.map((calendar) => (
-                    <SortableCalendarCard
-                        key={calendar.id}
-                        calendar={calendar}
-                        onUpdate={handleUpdate}
-                        onDelete={openDeleteDialog}
-                    />
-                ))}
+        <div className="flex gap-4 h-full">
+            <div className="flex-1 flex flex-col gap-6">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        {isEditingTitle ? (
+                          <Input ref={titleInputRef} defaultValue={title} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
+                        ) : (
+                          <TooltipProvider>
+                              <Tooltip>
+                                  <TooltipTrigger asChild>
+                                      <h3 className="font-headline text-2xl font-thin tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{title}</h3>
+                                  </TooltipTrigger>
+                                  {tab.description && (
+                                      <TooltipContent><p className="max-w-xs">{tab.description}</p></TooltipContent>
+                                  )}
+                              </Tooltip>
+                          </TooltipProvider>
+                        )}
+                        <DuplicateZone id="duplicate-calendar-zone" onAdd={() => handleAddCalendar()} />
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <CompactSearchInput searchTerm={mainSearchTerm} setSearchTerm={setMainSearchTerm} placeholder="Search calendars..." />
+                         <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)}>
+                                        <GoogleSymbol name="dynamic_feed" weight={100} />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent><p>Show Shared Calendars</p></TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    </div>
+                </div>
+                <CalendarDropZone id="main-calendars-grid" type="calendar-grid" className="flex-1">
+                    <SortableContext items={calendarIds} strategy={rectSortingStrategy}>
+                        <div className="flex flex-wrap -m-2">
+                            {displayedCalendars.map((calendar) => (
+                                <SortableCalendarCard
+                                    key={calendar.id}
+                                    calendar={calendar}
+                                    onUpdate={handleUpdate}
+                                    onDelete={openDeleteDialog}
+                                    className="p-2 basis-full sm:basis-[calc(50%-1rem)] md:basis-[calc(33.333%-1rem)] lg:basis-[calc(25%-1rem)] xl:basis-[calc(20%-1rem)] 2xl:basis-[calc(16.666%-1rem)] flex-grow-0 flex-shrink-0"
+                                />
+                            ))}
+                        </div>
+                    </SortableContext>
+                </CalendarDropZone>
             </div>
-        </SortableContext>
+            <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96 p-2" : "w-0")}>
+                <CalendarDropZone id="shared-calendars-panel" type="shared-calendar-panel" className="h-full rounded-lg">
+                    <Card className={cn("transition-opacity duration-300 h-full bg-transparent flex flex-col", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
+                        <CardHeader>
+                            <div className="flex items-center justify-between">
+                                <CardTitle className="font-headline font-thin text-xl">Shared</CardTitle>
+                                <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." />
+                            </div>
+                            <CardDescription>Drag a calendar to your board to link it.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="flex-1 p-2 overflow-hidden">
+                            <ScrollArea className="h-full">
+                                <SortableContext items={sharedCalendars.map(c => c.id)} strategy={verticalListSortingStrategy}>
+                                    <div className="space-y-2">
+                                        {sharedCalendars.map(calendar => (
+                                            <SortableCalendarCard 
+                                                key={calendar.id}
+                                                calendar={calendar}
+                                                onUpdate={handleUpdate}
+                                                onDelete={openDeleteDialog}
+                                                isSharedPreview={true}
+                                                className="p-0"
+                                            />
+                                        ))}
+                                    </div>
+                                </SortableContext>
+                            </ScrollArea>
+                        </CardContent>
+                    </Card>
+                </CalendarDropZone>
+            </div>
       </div>
       
       <AlertDialog open={!!calendarToDelete} onOpenChange={() => setCalendarToDelete(null)}>
