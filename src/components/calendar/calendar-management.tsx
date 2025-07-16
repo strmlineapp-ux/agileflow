@@ -4,7 +4,7 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useUser } from '@/context/user-context';
 import { type SharedCalendar, type AppTab, type User } from '@/types';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle as UIDialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -50,16 +50,18 @@ function CalendarCard({
     calendar,
     onUpdate,
     onDelete,
+    dragHandleProps,
     isDragging,
     isSharedPreview = false,
 }: {
     calendar: SharedCalendar;
     onUpdate: (id: string, data: Partial<SharedCalendar>) => void;
     onDelete: (calendar: SharedCalendar) => void;
+    dragHandleProps?: any;
     isDragging?: boolean;
     isSharedPreview?: boolean;
 }) {
-  const { viewAsUser, users, updateUser } = useUser();
+  const { viewAsUser, users } = useUser();
   const [isExpanded, setIsExpanded] = useState(false);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
@@ -73,6 +75,8 @@ function CalendarCard({
   const iconSearchInputRef = useRef<HTMLInputElement>(null);
   
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
+  const [googleCalendarIdInput, setGoogleCalendarIdInput] = useState('');
 
   const {toast} = useToast();
   
@@ -146,6 +150,15 @@ function CalendarCard({
         toast({ variant: 'destructive', title: 'Sync Failed', description: 'Could not sync calendar.' });
     }
   };
+  
+  const handleSaveGoogleCalendarId = () => {
+    if (canManage) {
+        onUpdate(calendar.id, { googleCalendarId: googleCalendarIdInput });
+        toast({ title: 'Success', description: 'Google Calendar ID linked.' });
+    }
+    setIsLinkDialogOpen(false);
+    setGoogleCalendarIdInput('');
+  };
 
   let shareIcon: string | null = null;
   let shareIconTitle: string = '';
@@ -159,16 +172,11 @@ function CalendarCard({
       shareIconTitle = `Shared by ${ownerUser?.displayName || 'another user'}`;
   }
 
-  const handleDeleteClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onDelete(calendar);
-  };
-
   return (
     <>
-      <Card className="group relative flex flex-col bg-transparent h-full">
+      <Card className="group relative flex flex-col bg-transparent h-full" {...dragHandleProps}>
           {!isSharedPreview && (
-              <div onPointerDown={handleDeleteClick}>
+              <div onPointerDown={(e) => { e.stopPropagation(); setIsDeleteDialogOpen(true); }}>
                   <TooltipProvider>
                       <Tooltip>
                           <TooltipTrigger asChild>
@@ -246,10 +254,10 @@ function CalendarCard({
                                   <Tooltip>
                                       <TooltipTrigger asChild>
                                           <div 
-                                              className="absolute -top-1 -right-1 h-7 w-7 rounded-full border-2 border-card flex items-center justify-center text-white"
+                                              className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-card flex items-center justify-center text-white"
                                               style={{ backgroundColor: shareIconColor }}
                                           >
-                                              <GoogleSymbol name={shareIcon} style={{fontSize: '14px'}}/>
+                                              <GoogleSymbol name={shareIcon} style={{fontSize: '10px'}}/>
                                           </div>
                                       </TooltipTrigger>
                                       <TooltipContent><p>{shareIconTitle}</p></TooltipContent>
@@ -273,12 +281,12 @@ function CalendarCard({
                       )}
                       </div>
                   </div>
-                   <div className='flex items-center'>
-                    {calendar.googleCalendarId &&
+                   <div className='flex items-center' onPointerDown={(e) => e.stopPropagation()}>
+                    {calendar.googleCalendarId ? (
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <button onPointerDown={(e) => e.stopPropagation()}>
+                                    <button>
                                         <GoogleSymbol name="cloud_sync" className="text-muted-foreground" weight={100} />
                                     </button>
                                 </TooltipTrigger>
@@ -289,7 +297,18 @@ function CalendarCard({
                                 </TooltipContent>
                             </Tooltip>
                         </TooltipProvider>
-                    }
+                    ) : canManage && (
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => setIsLinkDialogOpen(true)}>
+                                        <GoogleSymbol name="add_link" weight={100} />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Link Google Calendar</TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    )}
                    <span onPointerDown={(e) => e.stopPropagation()}>
                       <TooltipProvider>
                           <Tooltip>
@@ -323,7 +342,7 @@ function CalendarCard({
 
               {isExpanded && (
                   <CardContent className="p-2 pt-0 mt-2" onPointerDown={(e) => e.stopPropagation()}>
-                     <div className="space-y-1">
+                    <div className="space-y-1">
                         <div
                             className="text-sm min-h-[36px] flex items-center"
                         >
@@ -340,8 +359,8 @@ function CalendarCard({
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <span 
-                                                className={cn("italic text-xs text-muted-foreground", canManage && "cursor-pointer")} 
-                                                onClick={() => setIsEditingTitle(true)}
+                                                className={cn("italic text-xs text-muted-foreground", canManage && "cursor-pointer hover:border-b hover:border-dashed")} 
+                                                onClick={() => canManage && setIsEditingTitle(true)}
                                             >
                                                 {calendar.defaultEventTitle || 'No default title'}
                                             </span>
@@ -364,6 +383,47 @@ function CalendarCard({
               </div>
           </div>
       </Card>
+      <Dialog open={isLinkDialogOpen} onOpenChange={setIsLinkDialogOpen}>
+        <DialogContent className="max-w-md">
+            <div className="absolute top-4 right-4">
+              <Button variant="ghost" size="icon" onClick={handleSaveGoogleCalendarId}>
+                  <GoogleSymbol name="check" className="text-xl" />
+                  <span className="sr-only">Link Calendar</span>
+              </Button>
+            </div>
+            <DialogHeader>
+                <UIDialogTitle>Link Google Calendar</UIDialogTitle>
+                <DialogDescription>
+                    Paste the Google Calendar ID here to link it for syncing.
+                </DialogDescription>
+            </DialogHeader>
+            <div className="pt-4">
+              <Input
+                  id="google-calendar-id"
+                  placeholder="your-calendar-id@group.calendar.google.com"
+                  value={googleCalendarIdInput}
+                  onChange={(e) => setGoogleCalendarIdInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSaveGoogleCalendarId()}
+              />
+            </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="max-w-md" onPointerDownCapture={(e) => e.stopPropagation()}>
+            <div className="absolute top-4 right-4">
+                <Button variant="ghost" size="icon" className="hover:text-destructive p-0 hover:bg-transparent" onClick={() => { onDelete(calendar); setIsDeleteDialogOpen(false); }}>
+                    <GoogleSymbol name="delete" className="text-4xl" weight={100} />
+                    <span className="sr-only">Delete Calendar</span>
+                </Button>
+            </div>
+            <DialogHeader>
+                <UIDialogTitle>Delete "{calendar.name}"?</UIDialogTitle>
+                <DialogDescription>
+                    This will permanently delete the calendar. This action cannot be undone.
+                </DialogDescription>
+            </DialogHeader>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
@@ -383,12 +443,17 @@ function SortableCalendarCard({ calendar, ...props }: { calendar: SharedCalendar
     <div 
         ref={setNodeRef} 
         style={style}
-        className={cn("p-2 flex-grow-0 flex-shrink-0", props.isSharedPreview ? "w-full" : "basis-full sm:basis-[calc(50%-1rem)] md:basis-[calc(33.333%-1rem)] lg:basis-[calc(25%-1rem)] xl:basis-[calc(20%-1rem)] 2xl:basis-[calc(16.666%-1rem)]")}
+        className={cn(
+          "p-2 flex-grow-0 flex-shrink-0 transition-all duration-300", 
+          props.isSharedPreview 
+            ? "w-full" 
+            : "basis-full sm:basis-[calc(50%-1rem)] md:basis-[calc(33.333%-1rem)] lg:basis-[calc(25%-1rem)] xl:basis-[calc(20%-1rem)] 2xl:basis-[calc(16.666%-1rem)]"
+        )}
     >
         <CalendarCard
           calendar={calendar}
           isDragging={isDragging}
-          {...{...attributes, ...listeners}}
+          dragHandleProps={{...attributes, ...listeners}}
           {...props}
         />
     </div>
@@ -494,9 +559,6 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
   
   const handleUpdate = async (calendarId: string, data: Partial<SharedCalendar>) => {
     await updateCalendar(calendarId, data);
-    if(Object.keys(data).length > 1 || !('name' in data)) { // Don't toast for every keystroke on name change
-        toast({ title: 'Success', description: 'Calendar updated successfully.' });
-    }
   };
   
   const handleDelete = (calendar: SharedCalendar) => {
@@ -634,7 +696,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                                 <CardTitle className="font-headline font-thin text-xl">Shared Calendars</CardTitle>
                                 <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." autoFocus={isSharedPanelOpen} />
                             </div>
-                            <CardDescription>Drag a calendar to your board to link it.</CardDescription>
+                            <DialogDescription>Drag a calendar to your board to link it.</DialogDescription>
                         </CardHeader>
                         <CardContent className="flex-1 p-2 overflow-hidden">
                             <ScrollArea className="h-full">
