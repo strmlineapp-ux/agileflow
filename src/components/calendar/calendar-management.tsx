@@ -53,12 +53,14 @@ function CalendarCard({
     onDelete,
     isDragging,
     isSharedPreview = false,
+    dragHandleProps
 }: {
     calendar: SharedCalendar;
     onUpdate: (id: string, data: Partial<SharedCalendar>) => void;
     onDelete: (calendar: SharedCalendar) => void;
     isDragging?: boolean;
     isSharedPreview?: boolean;
+    dragHandleProps?: any;
 }) {
   const { viewAsUser, users } = useUser();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -136,13 +138,13 @@ function CalendarCard({
   if (canManage && calendar.isShared) {
       shareIcon = 'upload';
       shareIconTitle = 'Owned by you and shared';
-  } else if (!canManage && calendar.isShared) {
+  } else if (!canManage && !isSharedPreview) { // It's a linked calendar on the main board
       shareIcon = 'downloading';
       shareIconTitle = `Shared by ${ownerUser?.displayName || 'another user'}`;
   }
 
   return (
-    <Card className="group relative flex flex-col bg-transparent h-full">
+    <Card className="group relative flex flex-col bg-transparent h-full" {...dragHandleProps}>
         {canManage && (
           <TooltipProvider>
               <Tooltip>
@@ -255,7 +257,7 @@ function CalendarCard({
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <span tabIndex={0} onKeyDown={(e) => { if(e.key === 'Enter' || e.key === ' ') { handleSync(e); }}}>
+                                <span tabIndex={0} onKeyDown={(e) => { if(e.key === 'Enter' || e.key === ' ') { handleSync(e as any); }}}>
                                     <Button
                                         variant="ghost"
                                         size="icon"
@@ -281,7 +283,7 @@ function CalendarCard({
         </div>
         {isExpanded && (
             <CardContent className="p-2 pt-0">
-                <p>More details...</p>
+                <p className="text-xs text-muted-foreground">More details coming soon...</p>
             </CardContent>
         )}
         <div className="absolute bottom-1 right-1">
@@ -308,18 +310,16 @@ function SortableCalendarCard({ calendar, onUpdate, onDelete, isSharedPreview = 
     <div 
         ref={setNodeRef} 
         style={style}
-        {...props}
         className={cn(props.className, "p-2 basis-full sm:basis-[calc(50%-1rem)] md:basis-[calc(33.333%-1rem)] lg:basis-[calc(25%-1rem)] xl:basis-[calc(20%-1rem)] 2xl:basis-[calc(16.666%-1rem)] flex-grow-0 flex-shrink-0")}
     >
-      <div className={cn(isDragging && "opacity-0")} {...listeners} {...attributes}>
         <CalendarCard
           calendar={calendar}
           onUpdate={onUpdate}
           onDelete={onDelete}
           isDragging={isDragging}
           isSharedPreview={isSharedPreview}
+          dragHandleProps={{...attributes, ...listeners}}
         />
-      </div>
     </div>
   );
 }
@@ -357,7 +357,7 @@ function CalendarDropZone({ id, type, children, className }: { id: string; type:
   const { setNodeRef, isOver } = useDroppable({ id, data: { type } });
 
   return (
-    <div ref={setNodeRef} className={cn(className, isOver && "ring-1 ring-border ring-inset")}>
+    <div ref={setNodeRef} className={cn(className, "transition-all", isOver && "ring-1 ring-border ring-inset")}>
       {children}
     </div>
   );
@@ -539,9 +539,9 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                         </TooltipProvider>
                     </div>
                 </div>
-                <div className="flex-1">
-                    <SortableContext items={calendarIds} strategy={rectSortingStrategy}>
-                        <CalendarDropZone id="main-calendars-grid" type="calendar-grid" className="flex flex-wrap -m-2">
+                <div className="flex-1 overflow-y-auto -m-2">
+                    <CalendarDropZone id="main-calendars-grid" type="calendar-grid" className="h-full flex flex-wrap content-start">
+                        <SortableContext items={calendarIds} strategy={rectSortingStrategy}>
                             {displayedCalendars.map((calendar) => (
                                 <SortableCalendarCard
                                     key={calendar.id}
@@ -550,8 +550,8 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                                     onDelete={openDeleteDialog}
                                 />
                             ))}
-                        </CalendarDropZone>
-                    </SortableContext>
+                        </SortableContext>
+                    </CalendarDropZone>
                 </div>
             </div>
             <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96" : "w-0")}>
@@ -560,7 +560,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                         <CardHeader>
                             <div className="flex items-center justify-between">
                                 <CardTitle className="font-headline font-thin text-xl">Shared Calendars</CardTitle>
-                                <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." inputRef={sharedSearchInputRef} autoFocus={isSharedPanelOpen} />
+                                <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." autoFocus={isSharedPanelOpen} />
                             </div>
                             <CardDescription>Drag a calendar to your board to link it.</CardDescription>
                         </CardHeader>
