@@ -5,8 +5,7 @@ import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { useUser } from '@/context/user-context';
 import { type SharedCalendar, type AppTab } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button, buttonVariants } from '@/components/ui/button';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle as AlertDialogTitleComponent } from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle as UIDialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -62,7 +61,7 @@ function CalendarCard({
     isSharedPreview?: boolean;
     dragHandleProps?: any;
 }) {
-  const { viewAsUser, users } = useUser();
+  const { viewAsUser, users, updateUser } = useUser();
   const [isExpanded, setIsExpanded] = useState(false);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const [isEditingName, setIsEditingName] = useState(false);
@@ -72,6 +71,8 @@ function CalendarCard({
   
   const [iconSearch, setIconSearch] = useState('');
   const iconSearchInputRef = useRef<HTMLInputElement>(null);
+  
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const {toast} = useToast();
   
@@ -143,30 +144,41 @@ function CalendarCard({
       shareIconTitle = `Shared by ${ownerUser?.displayName || 'another user'}`;
   }
 
-  return (
-    <Card className="group relative flex flex-col bg-transparent h-full" {...dragHandleProps}>
-        {canManage && (
-          <TooltipProvider>
-              <Tooltip>
-                  <TooltipTrigger asChild>
-                      <Button
-                          variant="ghost"
-                          size="icon"
-                          className="absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                          onPointerDown={(e) => {
-                              e.stopPropagation();
-                              onDelete(calendar);
-                          }}
-                      >
-                          <GoogleSymbol name="cancel" className="text-lg" weight={100} />
-                      </Button>
-                  </TooltipTrigger>
-                  <TooltipContent><p>Delete Calendar</p></TooltipContent>
-              </Tooltip>
-          </TooltipProvider>
-        )}
+  const handleDeleteClick = () => {
+    if (!canManage) {
+        // This is an unlinking action
+        const updatedLinkedIds = (viewAsUser.linkedCalendarIds || []).filter(id => id !== calendar.id);
+        updateUser(viewAsUser.userId, { linkedCalendarIds: updatedLinkedIds });
+        toast({ title: 'Calendar Unlinked', description: `"${calendar.name}" has been removed from your board.`});
+    } else {
+        // This is a true deletion action
+        setIsDeleteDialogOpen(true);
+    }
+  };
 
-        <div className="p-2 flex-grow">
+  return (
+    <>
+    <Card className="group relative flex flex-col bg-transparent h-full">
+        <div onPointerDown={(e) => { e.stopPropagation(); handleDeleteClick(); }}>
+            {!isSharedPreview && (
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                        >
+                            <GoogleSymbol name="cancel" className="text-lg" weight={100} />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent><p>{canManage ? "Delete Calendar" : "Unlink Calendar"}</p></TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+            )}
+        </div>
+
+        <div className="p-2 flex-grow flex flex-col" {...dragHandleProps}>
             <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                     <div className="relative">
@@ -280,18 +292,51 @@ function CalendarCard({
                     </TooltipProvider>
                  </span>
             </div>
+            
+            <div className="flex-grow"/>
+
+            {isExpanded && (
+                <CardContent className="p-2 pt-0">
+                    <p className="text-xs text-muted-foreground font-thin">
+                        Google Calendar ID: {calendar.googleCalendarId || <span className="italic">Not linked</span>}
+                    </p>
+                </CardContent>
+            )}
+            
+            <div className="absolute bottom-1 right-1">
+                <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
+                    <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
+                </Button>
+            </div>
         </div>
-        {isExpanded && (
-            <CardContent className="p-2 pt-0">
-                <p className="text-xs text-muted-foreground">More details coming soon...</p>
-            </CardContent>
-        )}
-        <div className="absolute bottom-1 right-1">
-            <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
-                <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
-            </Button>
-        </div>
-    </Card>
+
+        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+            <DialogContent className="max-w-md" onPointerDownCapture={(e) => e.stopPropagation()}>
+                <div className="absolute top-4 right-4">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" className="hover:text-destructive p-0 hover:bg-transparent" onClick={() => { onDelete(calendar); setIsDeleteDialogOpen(false); }}>
+                          <GoogleSymbol name="delete" className="text-4xl" weight={100} />
+                          <span className="sr-only">Delete Calendar</span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent><p>Delete Calendar</p></TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <DialogHeader>
+                    <UIDialogTitle>Delete "{calendar?.name}"?</UIDialogTitle>
+                    <DialogDescription>
+                        {calendar.isShared 
+                            ? "This calendar is shared. Deleting it will remove it for all users." 
+                            : "This will permanently delete the calendar and its configuration."}
+                        This action cannot be undone.
+                    </DialogDescription>
+                </DialogHeader>
+            </DialogContent>
+        </Dialog>
+    </>
   );
 }
 
@@ -369,14 +414,12 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
   const { toast } = useToast();
 
   const [activeCalendar, setActiveCalendar] = useState<SharedCalendar | null>(null);
-  const [calendarToDelete, setCalendarToDelete] = useState<SharedCalendar | null>(null);
   
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
   
   const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
   const [sharedSearchTerm, setSharedSearchTerm] = useState('');
-  const sharedSearchInputRef = useRef<HTMLInputElement>(null);
   const [mainSearchTerm, setMainSearchTerm] = useState('');
 
   const title = appSettings.calendarManagementLabel || tab.name;
@@ -420,21 +463,10 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
     addCalendar(newCalendarData);
     toast({ title: 'New Calendar Added' });
   };
-
-  const openDeleteDialog = (calendar: SharedCalendar) => {
-    setCalendarToDelete(calendar);
-  };
   
   const handleUpdate = async (calendarId: string, data: Partial<SharedCalendar>) => {
     await updateCalendar(calendarId, data);
     toast({ title: 'Success', description: 'Calendar updated successfully.' });
-  };
-
-  const handleDelete = async () => {
-    if (calendarToDelete) {
-      await deleteCalendar(calendarToDelete.id);
-      setCalendarToDelete(null);
-    }
   };
   
   const sensors = useSensors(
@@ -547,7 +579,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                                     key={calendar.id}
                                     calendar={calendar}
                                     onUpdate={handleUpdate}
-                                    onDelete={openDeleteDialog}
+                                    onDelete={deleteCalendar}
                                 />
                             ))}
                         </SortableContext>
@@ -573,7 +605,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                                                 key={calendar.id}
                                                 calendar={calendar}
                                                 onUpdate={handleUpdate}
-                                                onDelete={openDeleteDialog}
+                                                onDelete={deleteCalendar}
                                                 isSharedPreview={true}
                                                 className="p-0"
                                             />
@@ -599,49 +631,6 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
             </div>
         ) : null}
       </DragOverlay>
-
-      {calendarToDelete?.isShared ? (
-          <AlertDialog open={!!calendarToDelete} onOpenChange={() => setCalendarToDelete(null)}>
-            <AlertDialogContent onPointerDownCapture={(e) => e.stopPropagation()}>
-              <AlertDialogHeader>
-                  <AlertDialogTitleComponent>Delete "{calendarToDelete?.name}"?</AlertDialogTitleComponent>
-                  <AlertDialogDescription>
-                    This calendar is shared. This action is high-risk and will permanently delete the calendar and all of its associated events from all users. This cannot be undone.
-                  </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDelete} className={cn(buttonVariants({variant: 'destructive'}))}>
-                  Delete Shared Calendar
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-      ) : (
-          <Dialog open={!!calendarToDelete} onOpenChange={() => setCalendarToDelete(null)}>
-            <DialogContent className="max-w-md" onPointerDownCapture={(e) => e.stopPropagation()}>
-                <div className="absolute top-4 right-4">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="hover:text-destructive p-0 hover:bg-transparent" onClick={handleDelete}>
-                          <GoogleSymbol name="delete" className="text-4xl" weight={100} />
-                          <span className="sr-only">Delete Calendar</span>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent><p>Delete Calendar</p></TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-                <DialogHeader>
-                    <UIDialogTitle>Delete "{calendarToDelete?.name}"?</UIDialogTitle>
-                    <DialogDescription>
-                        This will permanently delete the calendar and its configuration. This action cannot be undone.
-                    </DialogDescription>
-                </DialogHeader>
-            </DialogContent>
-          </Dialog>
-      )}
     </DndContext>
   );
 }
