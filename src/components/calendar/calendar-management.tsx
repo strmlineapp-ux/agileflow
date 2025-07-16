@@ -318,7 +318,6 @@ function CalendarCard({
                           Google Calendar ID: {calendar.googleCalendarId || <span className="italic">Not linked</span>}
                       </p>
                       <div className="text-xs text-muted-foreground font-thin flex items-center gap-1 mt-1">
-                          <span className="shrink-0">Default Title:</span>
                           {isEditingTitle && canManage ? (
                                <Input
                                   ref={titleInputRef}
@@ -328,9 +327,16 @@ function CalendarCard({
                                   className="h-auto p-0 text-xs font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
                                   />
                           ) : (
-                            <span className={cn("italic", canManage && "cursor-pointer hover:border-b hover:border-dashed")} onClick={() => setIsEditingTitle(true)}>
-                                {calendar.defaultEventTitle || 'none'}
-                            </span>
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <span className={cn("italic", canManage && "cursor-pointer")} onClick={() => setIsEditingTitle(true)}>
+                                            {calendar.defaultEventTitle || 'none'}
+                                        </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent><p>Default Event Title</p></TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
                           )}
                       </div>
                   </CardContent>
@@ -386,7 +392,7 @@ function SortableCalendarCard({ calendar, ...props }: { calendar: SharedCalendar
     <div 
         ref={setNodeRef} 
         style={style}
-        className={cn(props.className, "p-2 basis-full sm:basis-[calc(50%-1rem)] md:basis-[calc(33.333%-1rem)] lg:basis-[calc(25%-1rem)] xl:basis-[calc(20%-1rem)] 2xl:basis-[calc(16.666%-1rem)] flex-grow-0 flex-shrink-0")}
+        className={cn("p-2 flex-grow-0 flex-shrink-0", props.isSharedPreview ? "w-full" : "basis-full sm:basis-[calc(50%-1rem)] md:basis-[calc(33.333%-1rem)] lg:basis-[calc(25%-1rem)] xl:basis-[calc(20%-1rem)] 2xl:basis-[calc(16.666%-1rem)]")}
     >
         <CalendarCard
           calendar={calendar}
@@ -482,12 +488,13 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
             owner: { type: 'user', id: viewAsUser.userId },
         };
     } else {
+        const newName = `New Calendar ${calendarCount + 1}`;
         newCalendarData = {
-            name: `New Calendar ${calendarCount + 1}`,
+            name: newName,
             icon: 'calendar_month',
             color: predefinedColors[calendarCount % predefinedColors.length],
             owner: { type: 'user', id: viewAsUser.userId },
-            defaultEventTitle: `New Calendar ${calendarCount + 1} Event`,
+            defaultEventTitle: `New ${newName} Event`,
         };
     }
     addCalendar(newCalendarData);
@@ -637,7 +644,6 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                                                 onUpdate={handleUpdate}
                                                 onDelete={deleteCalendar}
                                                 isSharedPreview={true}
-                                                className="p-0"
                                             />
                                         ))}
                                     </div>
