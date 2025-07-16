@@ -7,7 +7,6 @@ import { type SharedCalendar, type AppTab, type User } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle as UIDialogTitle } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { GoogleSymbol } from '../icons/google-symbol';
@@ -53,14 +52,12 @@ function CalendarCard({
     onDelete,
     isDragging,
     isSharedPreview = false,
-    dragHandleProps
 }: {
     calendar: SharedCalendar;
     onUpdate: (id: string, data: Partial<SharedCalendar>) => void;
     onDelete: (calendar: SharedCalendar) => void;
     isDragging?: boolean;
     isSharedPreview?: boolean;
-    dragHandleProps?: any;
 }) {
   const { viewAsUser, users, updateUser } = useUser();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -164,7 +161,7 @@ function CalendarCard({
 
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsDeleteDialogOpen(true);
+    onDelete(calendar);
   };
 
   return (
@@ -189,7 +186,7 @@ function CalendarCard({
               </div>
           )}
 
-          <div className="p-2 flex-grow flex flex-col" {...dragHandleProps}>
+          <div className="p-2 flex-grow flex flex-col">
               <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                       <div className="relative">
@@ -276,6 +273,23 @@ function CalendarCard({
                       )}
                       </div>
                   </div>
+                   <div className='flex items-center'>
+                    {calendar.googleCalendarId &&
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <button onPointerDown={(e) => e.stopPropagation()}>
+                                        <GoogleSymbol name="cloud_sync" className="text-muted-foreground" weight={100} />
+                                    </button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                <p>
+                                    {calendar.googleCalendarId}
+                                </p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    }
                    <span onPointerDown={(e) => e.stopPropagation()}>
                       <TooltipProvider>
                           <Tooltip>
@@ -302,35 +316,43 @@ function CalendarCard({
                           </Tooltip>
                       </TooltipProvider>
                    </span>
+                   </div>
               </div>
               
               <div className="flex-grow"/>
 
               {isExpanded && (
-                  <CardContent className="p-2 pt-0" onPointerDown={(e) => e.stopPropagation()}>
-                      <p className="text-xs text-muted-foreground truncate font-thin mt-2">
-                          Google Calendar ID: {calendar.googleCalendarId || <span className="italic">Not linked</span>}
-                      </p>
-                      <div className="text-xs text-muted-foreground font-thin flex items-center gap-1 mt-2">
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <span className={cn("italic", canManage && "cursor-pointer")} onClick={() => setIsEditingTitle(true)}>
-                                        {calendar.defaultEventTitle || 'none'}
-                                    </span>
-                                </TooltipTrigger>
-                                <TooltipContent><p>Default Event Title</p></TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                        {isEditingTitle && canManage && (
-                            <Input
-                                ref={titleInputRef}
-                                defaultValue={calendar.defaultEventTitle}
-                                onKeyDown={handleTitleKeyDown}
-                                onBlur={handleSaveTitle}
-                                className="h-auto p-0 text-xs font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                            />
-                        )}
+                  <CardContent className="p-2 pt-0 mt-2" onPointerDown={(e) => e.stopPropagation()}>
+                     <div className="space-y-1">
+                        <div
+                            className="text-sm min-h-[36px] flex items-center"
+                        >
+                            {isEditingTitle && canManage ? (
+                                <Input
+                                    ref={titleInputRef}
+                                    defaultValue={calendar.defaultEventTitle}
+                                    onKeyDown={handleTitleKeyDown}
+                                    onBlur={handleSaveTitle}
+                                    className="h-auto p-0 text-xs font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                                />
+                            ) : (
+                                 <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <span 
+                                                className={cn("italic text-xs text-muted-foreground", canManage && "cursor-pointer")} 
+                                                onClick={() => setIsEditingTitle(true)}
+                                            >
+                                                {calendar.defaultEventTitle || 'No default title'}
+                                            </span>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>Default Event Title</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            )}
+                        </div>
                       </div>
                   </CardContent>
               )}
@@ -342,47 +364,20 @@ function CalendarCard({
               </div>
           </div>
       </Card>
-
-       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-          <DialogContent className="max-w-md" onPointerDownCapture={(e) => e.stopPropagation()}>
-              <div className="absolute top-4 right-4">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="hover:text-destructive p-0 hover:bg-transparent" onClick={() => { onDelete(calendar); setIsDeleteDialogOpen(false); }}>
-                        <GoogleSymbol name="delete" className="text-4xl" weight={100} />
-                        <span className="sr-only">{canManage ? "Delete" : "Unlink"} Calendar</span>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent><p>{canManage ? "Delete" : "Unlink"} Calendar</p></TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              <DialogHeader>
-                  <UIDialogTitle>{canManage ? "Delete" : "Unlink"} "{calendar.name}"?</UIDialogTitle>
-                  <DialogDescription>
-                      {canManage 
-                        ? "This will permanently delete the calendar and remove it from all teams. This action cannot be undone."
-                        : `This will remove the calendar from your board. You can re-link it later from the shared panel.`
-                      }
-                  </DialogDescription>
-              </DialogHeader>
-          </DialogContent>
-      </Dialog>
     </>
   );
 }
 
 function SortableCalendarCard({ calendar, ...props }: { calendar: SharedCalendar; [key: string]: any; }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: calendar.id,
-    data: { type: 'calendar', calendar, isSharedPreview: props.isSharedPreview }
-  });
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+        id: calendar.id,
+        data: { type: 'calendar', calendar, isSharedPreview: props.isSharedPreview }
+    });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+    };
   
   return (
     <div 
@@ -393,7 +388,7 @@ function SortableCalendarCard({ calendar, ...props }: { calendar: SharedCalendar
         <CalendarCard
           calendar={calendar}
           isDragging={isDragging}
-          dragHandleProps={{...attributes, ...listeners}}
+          {...{...attributes, ...listeners}}
           {...props}
         />
     </div>
@@ -615,7 +610,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                     </div>
                 </div>
                 <div className="flex-1 min-h-0 flex flex-col">
-                    <CalendarDropZone id="main-calendars-grid" type="calendar-grid" className="flex-1 overflow-y-auto">
+                    <CalendarDropZone id="main-calendars-grid" type="calendar-grid" className="flex-1 overflow-y-auto pt-2 -mt-2">
                       <div className="flex flex-wrap content-start -m-2">
                         <SortableContext items={calendarIds} strategy={rectSortingStrategy}>
                             {displayedCalendars.map((calendar) => (
