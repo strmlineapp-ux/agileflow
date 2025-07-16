@@ -250,34 +250,32 @@ function CalendarCard({
                     )}
                     </div>
                 </div>
-                 <div className="flex items-center">
-                    <span onPointerDown={(e) => e.stopPropagation()}>
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <span tabIndex={calendar.googleCalendarId ? 0 : -1} onKeyDown={(e) => { if(e.key === 'Enter' || e.key === ' ') { handleSync(e as any); }}}>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-8 w-8 text-muted-foreground"
-                                            onClick={handleSync}
-                                            disabled={!calendar.googleCalendarId}
-                                        >
-                                            <GoogleSymbol name="sync" weight={100} />
-                                        </Button>
-                                    </span>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                <p>
-                                    {calendar.googleCalendarId
-                                    ? "Sync with Google Calendar"
-                                    : "Link a Google Calendar ID to enable sync"}
-                                </p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    </span>
-                 </div>
+                 <span onPointerDown={(e) => e.stopPropagation()}>
+                     <TooltipProvider>
+                         <Tooltip>
+                             <TooltipTrigger asChild>
+                                 <span tabIndex={calendar.googleCalendarId ? 0 : -1} onKeyDown={(e) => { if(e.key === 'Enter' || e.key === ' ') { handleSync(e as any); }}}>
+                                     <Button
+                                         variant="ghost"
+                                         size="icon"
+                                         className="h-8 w-8 text-muted-foreground"
+                                         onClick={handleSync}
+                                         disabled={!calendar.googleCalendarId}
+                                     >
+                                         <GoogleSymbol name="sync" weight={100} />
+                                     </Button>
+                                 </span>
+                             </TooltipTrigger>
+                             <TooltipContent>
+                             <p>
+                                 {calendar.googleCalendarId
+                                 ? "Sync with Google Calendar"
+                                 : "Link a Google Calendar ID to enable sync"}
+                             </p>
+                             </TooltipContent>
+                         </Tooltip>
+                     </TooltipProvider>
+                 </span>
             </div>
         </div>
       </div>
@@ -369,7 +367,6 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
   
   const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
   const [sharedSearchTerm, setSharedSearchTerm] = useState('');
-  const sharedSearchInputRef = useRef<HTMLInputElement>(null);
   const [mainSearchTerm, setMainSearchTerm] = useState('');
 
   const title = appSettings.calendarManagementLabel || tab.name;
@@ -471,7 +468,8 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
         return;
       }
       
-      if (over.id.toString().startsWith('calendar-') && active.id !== over.id) {
+      const isCalendarCardDrop = active.data.current?.type === 'calendar' && over.data.current?.type === 'calendar';
+      if (isCalendarCardDrop && active.id !== over.id) {
           const oldIndex = displayedCalendars.findIndex(p => p.id === active.id);
           const newIndex = displayedCalendars.findIndex(p => p.id === over.id);
           if (oldIndex !== -1 && newIndex !== -1) {
@@ -539,8 +537,8 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                     <Card className={cn("transition-opacity duration-300 h-full bg-transparent flex flex-col", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
                         <CardHeader>
                             <div className="flex items-center justify-between">
-                                <CardTitle className="font-headline font-thin text-xl">Shared</CardTitle>
-                                <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." />
+                                <CardTitle className="font-headline font-thin text-xl">Shared Calendars</CardTitle>
+                                <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." autoFocus={isSharedPanelOpen} />
                             </div>
                             <CardDescription>Drag a calendar to your board to link it.</CardDescription>
                         </CardHeader>
