@@ -75,7 +75,6 @@ function SortableCalendarCard({ calendar, onUpdate, onDelete, ...props }: { cale
           setIsEditingTitle={setIsEditingTitle}
           isEditingGCalId={isEditingGCalId}
           setIsEditingGCalId={setIsEditingGCalId}
-          {...attributes}
         />
       </div>
     </div>
@@ -193,8 +192,7 @@ function CalendarCard({
       else if (e.key === 'Escape') setIsEditingGCalId(false);
   };
 
-  const handleSync = async (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleSync = async () => {
     if (!calendar.googleCalendarId) return;
     toast({ title: 'Sync Started', description: `Syncing with ${calendar.name}...` });
     try {
@@ -304,8 +302,7 @@ function CalendarCard({
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <span tabIndex={0} onPointerDown={(e) => e.stopPropagation()}>
-                            <Button
+                           <Button
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8 text-muted-foreground"
@@ -314,7 +311,6 @@ function CalendarCard({
                             >
                               <GoogleSymbol name="sync" weight={100} />
                             </Button>
-                          </span>
                         </TooltipTrigger>
                         <TooltipContent>
                           <p>
