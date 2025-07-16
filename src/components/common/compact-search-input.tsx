@@ -29,16 +29,15 @@ export function CompactSearchInput({
   const [isSearching, setIsSearching] = useState(autoFocus || !!searchTerm);
   const internalInputRef = useRef<HTMLInputElement>(null);
   const inputRef = externalInputRef || internalInputRef;
-  const [initialFocusDone, setInitialFocusDone] = useState(false);
 
   useEffect(() => {
-    if (isSearching && autoFocus && !initialFocusDone) {
+    if (autoFocus) {
+      setIsSearching(true);
       setTimeout(() => {
         inputRef.current?.focus();
-        setInitialFocusDone(true);
       }, 50);
     }
-  }, [isSearching, autoFocus, initialFocusDone, inputRef]);
+  }, [autoFocus, inputRef]);
 
   const handleIconClick = () => {
     setIsSearching(true);

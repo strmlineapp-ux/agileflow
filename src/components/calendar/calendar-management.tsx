@@ -49,14 +49,12 @@ function CalendarCard({
     onUpdate,
     onDelete,
     isDragging,
-    dragHandleProps,
     isSharedPreview = false,
 }: {
     calendar: SharedCalendar;
     onUpdate: (id: string, data: Partial<SharedCalendar>) => void;
     onDelete: (calendar: SharedCalendar) => void;
     isDragging?: boolean;
-    dragHandleProps?: any;
     isSharedPreview?: boolean;
 }) {
   const { viewAsUser, users } = useUser();
@@ -163,7 +161,6 @@ function CalendarCard({
           </TooltipProvider>
         )}
 
-      <div {...dragHandleProps}>
         <div className="p-2">
             <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
@@ -235,7 +232,7 @@ function CalendarCard({
                             </TooltipProvider>
                         )}
                     </div>
-                    <div onPointerDown={(e) => e.stopPropagation()}>
+                    <div onPointerDown={(e) => { e.stopPropagation(); }}>
                     {isEditingName && canManage ? (
                         <Input
                         ref={nameInputRef}
@@ -251,34 +248,33 @@ function CalendarCard({
                     </div>
                 </div>
                  <span onPointerDown={(e) => e.stopPropagation()}>
-                     <TooltipProvider>
-                         <Tooltip>
-                             <TooltipTrigger asChild>
-                                 <span tabIndex={calendar.googleCalendarId ? 0 : -1} onKeyDown={(e) => { if(e.key === 'Enter' || e.key === ' ') { handleSync(e as any); }}}>
-                                     <Button
-                                         variant="ghost"
-                                         size="icon"
-                                         className="h-8 w-8 text-muted-foreground"
-                                         onClick={handleSync}
-                                         disabled={!calendar.googleCalendarId}
-                                     >
-                                         <GoogleSymbol name="sync" weight={100} />
-                                     </Button>
-                                 </span>
-                             </TooltipTrigger>
-                             <TooltipContent>
-                             <p>
-                                 {calendar.googleCalendarId
-                                 ? "Sync with Google Calendar"
-                                 : "Link a Google Calendar ID to enable sync"}
-                             </p>
-                             </TooltipContent>
-                         </Tooltip>
-                     </TooltipProvider>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <span tabIndex={0} onKeyDown={(e) => { if(e.key === 'Enter' || e.key === ' ') { handleSync(e as any); }}}>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 text-muted-foreground"
+                                        onClick={handleSync}
+                                        disabled={!calendar.googleCalendarId}
+                                    >
+                                        <GoogleSymbol name="sync" weight={100} />
+                                    </Button>
+                                </span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                            <p>
+                                {calendar.googleCalendarId
+                                ? "Sync with Google Calendar"
+                                : "Link a Google Calendar ID to enable sync"}
+                            </p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
                  </span>
             </div>
         </div>
-      </div>
       <div className="absolute bottom-1 right-1">
           <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
             <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
@@ -301,14 +297,13 @@ function SortableCalendarCard({ calendar, onUpdate, onDelete, isSharedPreview = 
   };
   
   return (
-    <div ref={setNodeRef} style={style} className={cn(props.className)}>
+    <div ref={setNodeRef} style={style} {...listeners} {...attributes} className={cn(props.className)}>
       <div className={cn(isDragging && "opacity-75")}>
         <CalendarCard
           calendar={calendar}
           onUpdate={onUpdate}
           onDelete={onDelete}
           isDragging={isDragging}
-          dragHandleProps={{...attributes, ...listeners}}
           isSharedPreview={isSharedPreview}
         />
       </div>
@@ -460,10 +455,6 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
       }
       
       if (active.data.current?.isSharedPreview && over.id === 'main-calendars-grid') {
-        // This is a simplified "linking" action. In a real app with separate user data,
-        // you would add the calendar ID to the current user's linked list.
-        // For this prototype, we just treat it as if it's on the main board.
-        // The filtering logic already handles displaying it.
         toast({ title: 'Calendar Linked' });
         return;
       }
@@ -584,3 +575,4 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
     </DndContext>
   );
 }
+
