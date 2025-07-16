@@ -164,13 +164,7 @@ function CalendarCard({
 
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (canManage) {
-        setIsDeleteDialogOpen(true);
-    } else { // Handle unlinking
-        const updatedLinkedIds = (viewAsUser.linkedCalendarIds || []).filter(id => id !== calendar.id);
-        updateUser(viewAsUser.userId, { linkedCalendarIds: updatedLinkedIds });
-        toast({ title: 'Calendar Unlinked', description: `"${calendar.name}" has been removed from your board.`});
-    }
+    setIsDeleteDialogOpen(true);
   };
 
   return (
@@ -314,30 +308,29 @@ function CalendarCard({
 
               {isExpanded && (
                   <CardContent className="p-2 pt-0" onPointerDown={(e) => e.stopPropagation()}>
-                      <p className="text-xs text-muted-foreground truncate font-thin">
+                      <p className="text-xs text-muted-foreground truncate font-thin mt-2">
                           Google Calendar ID: {calendar.googleCalendarId || <span className="italic">Not linked</span>}
                       </p>
-                      <div className="text-xs text-muted-foreground font-thin flex items-center gap-1 mt-1">
-                          {isEditingTitle && canManage ? (
-                               <Input
-                                  ref={titleInputRef}
-                                  defaultValue={calendar.defaultEventTitle}
-                                  onKeyDown={handleTitleKeyDown}
-                                  onBlur={handleSaveTitle}
-                                  className="h-auto p-0 text-xs font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                                  />
-                          ) : (
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <span className={cn("italic", canManage && "cursor-pointer")} onClick={() => setIsEditingTitle(true)}>
-                                            {calendar.defaultEventTitle || 'none'}
-                                        </span>
-                                    </TooltipTrigger>
-                                    <TooltipContent><p>Default Event Title</p></TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                          )}
+                      <div className="text-xs text-muted-foreground font-thin flex items-center gap-1 mt-2">
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <span className={cn("italic", canManage && "cursor-pointer")} onClick={() => setIsEditingTitle(true)}>
+                                        {calendar.defaultEventTitle || 'none'}
+                                    </span>
+                                </TooltipTrigger>
+                                <TooltipContent><p>Default Event Title</p></TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                        {isEditingTitle && canManage && (
+                            <Input
+                                ref={titleInputRef}
+                                defaultValue={calendar.defaultEventTitle}
+                                onKeyDown={handleTitleKeyDown}
+                                onBlur={handleSaveTitle}
+                                className="h-auto p-0 text-xs font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                            />
+                        )}
                       </div>
                   </CardContent>
               )}
@@ -358,17 +351,20 @@ function CalendarCard({
                     <TooltipTrigger asChild>
                       <Button variant="ghost" size="icon" className="hover:text-destructive p-0 hover:bg-transparent" onClick={() => { onDelete(calendar); setIsDeleteDialogOpen(false); }}>
                         <GoogleSymbol name="delete" className="text-4xl" weight={100} />
-                        <span className="sr-only">Delete Calendar</span>
+                        <span className="sr-only">{canManage ? "Delete" : "Unlink"} Calendar</span>
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent><p>Delete Calendar</p></TooltipContent>
+                    <TooltipContent><p>{canManage ? "Delete" : "Unlink"} Calendar</p></TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               </div>
               <DialogHeader>
-                  <UIDialogTitle>Delete "{calendar.name}"?</UIDialogTitle>
+                  <UIDialogTitle>{canManage ? "Delete" : "Unlink"} "{calendar.name}"?</UIDialogTitle>
                   <DialogDescription>
-                      This will permanently delete the calendar and remove it from all teams. This action cannot be undone.
+                      {canManage 
+                        ? "This will permanently delete the calendar and remove it from all teams. This action cannot be undone."
+                        : `This will remove the calendar from your board. You can re-link it later from the shared panel.`
+                      }
                   </DialogDescription>
               </DialogHeader>
           </DialogContent>
@@ -508,6 +504,18 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
     }
   };
   
+  const handleDelete = (calendar: SharedCalendar) => {
+    const isOwner = calendar.owner.id === viewAsUser.userId;
+    if (isOwner) {
+        deleteCalendar(calendar.id);
+        toast({ title: 'Calendar Deleted' });
+    } else { // Unlink
+        const updatedLinkedIds = (viewAsUser.linkedCalendarIds || []).filter(id => id !== calendar.id);
+        updateUser(viewAsUser.userId, { linkedCalendarIds: updatedLinkedIds });
+        toast({ title: 'Calendar Unlinked', description: `"${calendar.name}" has been removed from your board.`});
+    }
+  };
+  
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
@@ -582,7 +590,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                           <TooltipProvider>
                               <Tooltip>
                                   <TooltipTrigger asChild>
-                                      <h3 className="font-headline text-2xl font-thin tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>{title}</h3>
+                                      <h3 className="font-headline text-2xl font-thin tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{title}</h3>
                                   </TooltipTrigger>
                                   {tab.description && (
                                       <TooltipContent><p className="max-w-xs">{tab.description}</p></TooltipContent>
@@ -606,8 +614,8 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                         </TooltipProvider>
                     </div>
                 </div>
-                <div className="flex-1 overflow-y-auto">
-                    <CalendarDropZone id="main-calendars-grid" type="calendar-grid" className="h-full">
+                <div className="flex-1 min-h-0 flex flex-col">
+                    <CalendarDropZone id="main-calendars-grid" type="calendar-grid" className="flex-1 overflow-y-auto">
                       <div className="flex flex-wrap content-start -m-2">
                         <SortableContext items={calendarIds} strategy={rectSortingStrategy}>
                             {displayedCalendars.map((calendar) => (
@@ -615,7 +623,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                                     key={calendar.id}
                                     calendar={calendar}
                                     onUpdate={handleUpdate}
-                                    onDelete={deleteCalendar}
+                                    onDelete={handleDelete}
                                 />
                             ))}
                         </SortableContext>
@@ -642,7 +650,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                                                 key={calendar.id}
                                                 calendar={calendar}
                                                 onUpdate={handleUpdate}
-                                                onDelete={deleteCalendar}
+                                                onDelete={handleDelete}
                                                 isSharedPreview={true}
                                             />
                                         ))}

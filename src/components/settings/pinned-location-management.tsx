@@ -145,7 +145,7 @@ export function PinnedLocationManagement({ team, tab }: { team: Team, tab: AppTa
                   className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
               />
           ) : (
-              <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text border-b border-dashed border-transparent hover:border-foreground" onClick={() => setIsEditingTitle(true)}>
+              <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>
                   {tab.name}
               </h2>
           )}
