@@ -13,8 +13,8 @@ export const canManageEventOnCalendar = (user: User, calendar: SharedCalendar): 
         return true;
     }
 
-    // Check if the user is a designated manager for this specific calendar
-    if (calendar.managers?.includes(user.userId)) {
+    // Check if the user is the owner of this calendar
+    if (calendar.owner.id === user.userId) {
         return true;
     }
     
@@ -34,8 +34,8 @@ export const canCreateAnyEvent = (user: User, allCalendars: SharedCalendar[]): b
         return allCalendars.length > 0;
     }
 
-    // Check if the user is a manager of AT LEAST ONE calendar.
-    return allCalendars.some(calendar => calendar.managers?.includes(user.userId));
+    // Check if the user is the owner of AT LEAST ONE calendar.
+    return allCalendars.some(calendar => calendar.owner.id === user.userId);
 };
 
 

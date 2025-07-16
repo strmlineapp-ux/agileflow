@@ -562,10 +562,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
                   </Tooltip>
               </TooltipProvider>
             )}
-            <CardHeader
-              className="p-2"
-              {...dragHandleProps}
-            >
+            <div className="p-2" {...dragHandleProps}>
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                         <div className="relative">
@@ -663,12 +660,9 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
                                 <PageTabsControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
                             </>
                         )}
-                        <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground">
-                            <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
-                        </Button>
                     </div>
                 </div>
-            </CardHeader>
+            </div>
             {isExpanded && (
                 <CardContent className="p-2 pt-0">
                     <p className={cn("text-xs text-muted-foreground truncate font-thin", !isPinned && "cursor-pointer hover:text-primary")} onClick={handlePathClick}>
@@ -676,6 +670,11 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
                     </p>
                 </CardContent>
             )}
+            <div className="absolute bottom-1 right-1">
+                <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
+                    <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
+                </Button>
+            </div>
             <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                 <DialogContent className="max-w-md" onPointerDownCapture={(e) => e.stopPropagation()}>
                     <div className="absolute top-4 right-4">
@@ -732,7 +731,7 @@ function SortablePageCard({ id, page, onUpdate, onDelete, isPinned }: { id: stri
                     onUpdate={onUpdate} 
                     onDelete={onDelete} 
                     isPinned={isPinned}
-                    dragHandleProps={!isPinned ? { ...attributes, ...listeners } : undefined}
+                    dragHandleProps={{ ...attributes, ...listeners }}
                     isDragging={isDragging}
                     isEditingName={isEditingName}
                     setIsEditingName={setIsEditingName}

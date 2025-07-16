@@ -51,10 +51,10 @@ export const mockUsers: User[] = [
 ];
 
 export const mockCalendars: SharedCalendar[] = [
-    { id: 'production', name: 'Production', icon: 'campaign', color: '#22C55E', managers: ['4'] },
-    { id: 'video-production', name: 'Video Production', icon: 'movie', color: '#FBBF24', managers: ['1'] },
-    { id: 'live-events', name: 'Live Events', icon: 'videocam', color: '#3B82F6', managers: ['3'] },
-    { id: 'dreamtek', name: 'Dreamtek', icon: 'business_center', color: '#8B5CF6', managers: ['2'] },
+    { id: 'production', name: 'Production', icon: 'campaign', color: '#22C55E', owner: { type: 'user', id: '4' } },
+    { id: 'video-production', name: 'Video Production', icon: 'movie', color: '#FBBF24', owner: { type: 'user', id: '1' } },
+    { id: 'live-events', name: 'Live Events', icon: 'videocam', color: '#3B82F6', owner: { type: 'user', id: '3' }, googleCalendarId: 'live-events-calendar@google.com' },
+    { id: 'dreamtek', name: 'Dreamtek', icon: 'business_center', color: '#8B5CF6', owner: { type: 'user', id: '2' } },
 ];
 
 export const mockLocations: BookableLocation[] = [

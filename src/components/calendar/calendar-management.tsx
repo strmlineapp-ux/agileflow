@@ -45,9 +45,8 @@ const predefinedColors = [
 function SortableCalendarCard({ calendar, onUpdate, onDelete, ...props }: { calendar: SharedCalendar; onUpdate: (id: string, data: Partial<SharedCalendar>) => void; onDelete: (calendar: SharedCalendar) => void; }) {
   const [isEditingName, setIsEditingName] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [isEditingGCalId, setIsEditingGCalId] = useState(false);
   
-  const isEditing = isEditingName || isEditingTitle || isEditingGCalId;
+  const isEditing = isEditingName || isEditingTitle;
   
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: calendar.id,
@@ -68,13 +67,11 @@ function SortableCalendarCard({ calendar, onUpdate, onDelete, ...props }: { cale
           onUpdate={onUpdate}
           onDelete={onDelete}
           isDragging={isDragging}
-          dragHandleProps={listeners}
+          dragHandleProps={{...attributes, ...listeners}}
           isEditingName={isEditingName}
           setIsEditingName={setIsEditingName}
           isEditingTitle={isEditingTitle}
           setIsEditingTitle={setIsEditingTitle}
-          isEditingGCalId={isEditingGCalId}
-          setIsEditingGCalId={setIsEditingGCalId}
         />
       </div>
     </div>
@@ -92,8 +89,6 @@ function CalendarCard({
     setIsEditingName,
     isEditingTitle,
     setIsEditingTitle,
-    isEditingGCalId,
-    setIsEditingGCalId
 }: {
     calendar: SharedCalendar;
     onUpdate: (id: string, data: Partial<SharedCalendar>) => void;
@@ -104,13 +99,10 @@ function CalendarCard({
     setIsEditingName: (isEditing: boolean) => void;
     isEditingTitle: boolean;
     setIsEditingTitle: (isEditing: boolean) => void;
-    isEditingGCalId: boolean;
-    setIsEditingGCalId: (isEditing: boolean) => void;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
-  const gcalIdInputRef = useRef<HTMLInputElement>(null);
   
   const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
   const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
@@ -135,14 +127,6 @@ function CalendarCard({
     }
     setIsEditingTitle(false);
   }, [calendar.id, calendar.defaultEventTitle, onUpdate, setIsEditingTitle]);
-  
-  const handleSaveGCalId = useCallback(() => {
-    const newId = gcalIdInputRef.current?.value.trim() || undefined;
-    if (newId !== calendar.googleCalendarId) {
-        onUpdate(calendar.id, { googleCalendarId: newId });
-    }
-    setIsEditingGCalId(false);
-  }, [calendar.id, calendar.googleCalendarId, onUpdate, setIsEditingGCalId]);
 
   useEffect(() => {
     if (isIconPopoverOpen) {
@@ -173,9 +157,8 @@ function CalendarCard({
 
     setupInlineEditor(isEditingName, nameInputRef, handleSaveName);
     setupInlineEditor(isEditingTitle, titleInputRef, handleSaveTitle);
-    setupInlineEditor(isEditingGCalId, gcalIdInputRef, handleSaveGCalId);
 
-  }, [isEditingName, isEditingTitle, isEditingGCalId, handleSaveName, handleSaveTitle, handleSaveGCalId]);
+  }, [isEditingName, isEditingTitle, handleSaveName, handleSaveTitle]);
 
   const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') { e.preventDefault(); nameInputRef.current?.blur(); }
@@ -187,12 +170,8 @@ function CalendarCard({
     else if (e.key === 'Escape') setIsEditingTitle(false);
   };
 
-  const handleGCalIdKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter') { e.preventDefault(); gcalIdInputRef.current?.blur(); }
-      else if (e.key === 'Escape') setIsEditingGCalId(false);
-  };
-
-  const handleSync = async () => {
+  const handleSync = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!calendar.googleCalendarId) return;
     toast({ title: 'Sync Started', description: `Syncing with ${calendar.name}...` });
     try {
@@ -227,7 +206,7 @@ function CalendarCard({
         </TooltipProvider>
 
       <div {...dragHandleProps}>
-        <CardHeader className="p-2">
+        <div className="p-2">
             <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                     <div className="relative">
@@ -303,7 +282,7 @@ function CalendarCard({
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                           <span tabIndex={calendar.googleCalendarId ? 0 : -1} onKeyDown={(e) => { if(e.key === 'Enter' || e.key === ' ') { handleSync(); }}}>
+                           <span tabIndex={calendar.googleCalendarId ? 0 : -1} onKeyDown={(e) => { if(e.key === 'Enter' || e.key === ' ') { handleSync(e as any); }}}>
                               <Button
                                   variant="ghost"
                                   size="icon"
@@ -325,12 +304,9 @@ function CalendarCard({
                       </Tooltip>
                     </TooltipProvider>
                   </span>
-                  <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground">
-                    <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
-                  </Button>
                  </div>
             </div>
-        </CardHeader>
+        </div>
       </div>
       {isExpanded && (
         <CardContent className="space-y-2 pt-0 p-2">
@@ -349,23 +325,13 @@ function CalendarCard({
             </p>
             )}
           </div>
-          <div onPointerDown={(e) => e.stopPropagation()}>
-             <p className="text-sm italic cursor-text min-h-[20px] text-muted-foreground" onClick={(e) => {e.stopPropagation(); setIsEditingGCalId(true)}}>
-                {isEditingGCalId ? (
-                <Input
-                    ref={gcalIdInputRef}
-                    defaultValue={calendar.googleCalendarId}
-                    onKeyDown={handleGCalIdKeyDown}
-                    className="h-auto p-0 text-sm italic font-normal border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                    placeholder="Google Calendar ID (e.g., user@domain.com)"
-                />
-                ) : (
-                    calendar.googleCalendarId || 'Link to Google Calendar'
-                )}
-            </p>
-          </div>
         </CardContent>
       )}
+      <div className="absolute bottom-1 right-1">
+          <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
+            <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
+          </Button>
+      </div>
     </Card>
   );
 }
@@ -433,7 +399,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
       name: newName,
       icon: 'calendar_month',
       color: predefinedColors[calendarCount % predefinedColors.length],
-      managers: [],
+      owner: { type: 'user', id: '1' }, // Default to current user in a real app
       defaultEventTitle: 'New Event',
     });
     toast({ title: 'New Calendar Added', description: `"${newName}" has been created.` });
@@ -545,7 +511,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>
+            <AlertDialogAction onClick={handleDelete} className={cn(buttonVariants({variant: 'destructive'}))}>
               Continue
             </AlertDialogAction>
           </AlertDialogFooter>
