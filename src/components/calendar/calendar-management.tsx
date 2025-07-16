@@ -298,22 +298,30 @@ function CalendarCard({
                     )}
                     </div>
                 </div>
-                <div onPointerDown={(e) => e.stopPropagation()}>
-                  <TooltipProvider>
+                 <span onPointerDown={(e) => e.stopPropagation()}>
+                    <TooltipProvider>
                       <Tooltip>
-                          <TooltipTrigger asChild>
-                              <span onPointerDown={(e) => e.stopPropagation()}>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={handleSync} disabled={!calendar.googleCalendarId}>
-                                      <GoogleSymbol name="sync" weight={100} />
-                                  </Button>
-                              </span>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                              <p>{calendar.googleCalendarId ? 'Sync with Google Calendar' : 'Link a Google Calendar ID to enable sync'}</p>
-                          </TooltipContent>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground"
+                            onClick={handleSync}
+                            disabled={!calendar.googleCalendarId}
+                          >
+                            <GoogleSymbol name="sync" weight={100} />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>
+                            {calendar.googleCalendarId
+                              ? "Sync with Google Calendar"
+                              : "Link a Google Calendar ID to enable sync"}
+                          </p>
+                        </TooltipContent>
                       </Tooltip>
-                  </TooltipProvider>
-                </div>
+                    </TooltipProvider>
+                  </span>
             </div>
         </CardHeader>
         {isExpanded && (
@@ -333,7 +341,7 @@ function CalendarCard({
                 </p>
                 )}
             </div>
-            <div onPointerDown={(e) => e.stopPropagation()}>
+             <p className="text-sm italic cursor-text min-h-[20px] text-muted-foreground" onPointerDown={(e) => {e.stopPropagation(); setIsEditingGCalId(true)}} onClick={(e) => {e.stopPropagation(); setIsEditingGCalId(true)}}>
                 {isEditingGCalId ? (
                 <Input
                     ref={gcalIdInputRef}
@@ -343,11 +351,9 @@ function CalendarCard({
                     placeholder="Google Calendar ID (e.g., user@domain.com)"
                 />
                 ) : (
-                <p className="text-sm italic cursor-text min-h-[20px] text-muted-foreground" onClick={(e) => {e.stopPropagation(); setIsEditingGCalId(true)}}>
-                    {calendar.googleCalendarId || 'Link to Google Calendar'}
-                </p>
+                    calendar.googleCalendarId || 'Link to Google Calendar'
                 )}
-            </div>
+            </p>
             </CardContent>
         )}
       </div>
