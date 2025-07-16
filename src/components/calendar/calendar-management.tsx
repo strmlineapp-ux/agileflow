@@ -51,14 +51,12 @@ function CalendarCard({
     onUpdate,
     onDelete,
     isDragging,
-    dragHandleProps,
     isSharedPreview = false,
 }: {
     calendar: SharedCalendar;
     onUpdate: (id: string, data: Partial<SharedCalendar>) => void;
     onDelete: (calendar: SharedCalendar) => void;
     isDragging?: boolean;
-    dragHandleProps?: any;
     isSharedPreview?: boolean;
 }) {
   const { viewAsUser, users } = useUser();
@@ -116,8 +114,7 @@ function CalendarCard({
     else if (e.key === 'Escape') setIsEditingName(false);
   };
   
-  const handleSync = async (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleSync = async () => {
     if (!calendar.googleCalendarId) return;
     toast({ title: 'Sync Started', description: `Syncing with ${calendar.name}...` });
     try {
@@ -165,7 +162,7 @@ function CalendarCard({
           </TooltipProvider>
         )}
 
-        <div className="p-2 flex-grow" {...dragHandleProps}>
+        <div className="p-2 flex-grow">
             <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                     <div className="relative">
@@ -256,7 +253,7 @@ function CalendarCard({
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <span tabIndex={0} onKeyDown={(e) => { if(e.key === 'Enter' || e.key === ' ') { handleSync(e as any); }}}>
+                                <span tabIndex={0} onKeyDown={(e) => { if(e.key === 'Enter' || e.key === ' ') { handleSync(); }}}>
                                     <Button
                                         variant="ghost"
                                         size="icon"
@@ -306,14 +303,13 @@ function SortableCalendarCard({ calendar, onUpdate, onDelete, isSharedPreview = 
         style={style}
         className={cn(props.className, "p-2 basis-full sm:basis-[calc(50%-1rem)] md:basis-[calc(33.333%-1rem)] lg:basis-[calc(25%-1rem)] xl:basis-[calc(20%-1rem)] 2xl:basis-[calc(16.666%-1rem)] flex-grow-0 flex-shrink-0")}
     >
-      <div className={cn(isDragging && "opacity-0")}>
+      <div className={cn(isDragging && "opacity-0")} {...attributes} {...listeners}>
         <CalendarCard
           calendar={calendar}
           onUpdate={onUpdate}
           onDelete={onDelete}
           isDragging={isDragging}
           isSharedPreview={isSharedPreview}
-          dragHandleProps={{...attributes, ...listeners}}
         />
       </div>
     </div>
@@ -361,7 +357,7 @@ function CalendarDropZone({ id, type, children, className }: { id: string; type:
 
 
 export function CalendarManagement({ tab }: { tab: AppTab }) {
-  const { viewAsUser, calendars, reorderCalendars, addCalendar, updateCalendar, deleteCalendar, updateAppTab, appSettings } = useUser();
+  const { viewAsUser, calendars, reorderCalendars, addCalendar, updateCalendar, deleteCalendar, updateAppTab, appSettings, updateUser } = useUser();
   const { toast } = useToast();
 
   const [activeCalendar, setActiveCalendar] = useState<SharedCalendar | null>(null);
@@ -372,9 +368,8 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
   
   const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
   const [sharedSearchTerm, setSharedSearchTerm] = useState('');
-  const [mainSearchTerm, setMainSearchTerm] = useState('');
-
   const sharedSearchInputRef = useRef<HTMLInputElement>(null);
+  const [mainSearchTerm, setMainSearchTerm] = useState('');
 
   const title = appSettings.calendarManagementLabel || tab.name;
 
@@ -446,8 +441,10 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
   );
 
   const displayedCalendars = useMemo(() => {
-    return calendars.filter(c => c.name.toLowerCase().includes(mainSearchTerm.toLowerCase()));
-  }, [calendars, mainSearchTerm]);
+    return calendars
+      .filter(c => c.owner.id === viewAsUser.userId || (viewAsUser.linkedCalendarIds || []).includes(c.id))
+      .filter(c => c.name.toLowerCase().includes(mainSearchTerm.toLowerCase()));
+  }, [calendars, mainSearchTerm, viewAsUser]);
 
   const sharedCalendars = useMemo(() => {
     const displayedIds = new Set(displayedCalendars.map(c => c.id));
@@ -471,14 +468,23 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
         return;
       }
 
-      if (over.id === 'shared-calendars-panel' && activeCalendar.owner.id === viewAsUser.userId && !activeCalendar.isShared) {
-        updateCalendar(activeCalendar.id, { isShared: true });
-        toast({ title: 'Calendar Shared' });
+      if (over.id === 'shared-calendars-panel') {
+        if (activeCalendar.owner.id === viewAsUser.userId && !activeCalendar.isShared) {
+          updateCalendar(activeCalendar.id, { isShared: true });
+          toast({ title: 'Calendar Shared' });
+        } else if (activeCalendar.owner.id !== viewAsUser.userId) {
+          // Unlink by dropping a linked calendar back to the shared pool
+          const updatedLinkedIds = (viewAsUser.linkedCalendarIds || []).filter(id => id !== activeCalendar.id);
+          updateUser(viewAsUser.userId, { linkedCalendarIds: updatedLinkedIds });
+          toast({ title: 'Calendar Unlinked' });
+        }
         return;
       }
       
       if (active.data.current?.isSharedPreview && over.id === 'main-calendars-grid') {
-        toast({ title: 'Calendar Linked' });
+         const updatedLinkedIds = [...(viewAsUser.linkedCalendarIds || []), activeCalendar.id];
+         updateUser(viewAsUser.userId, { linkedCalendarIds: updatedLinkedIds });
+         toast({ title: 'Calendar Linked' });
         return;
       }
       
@@ -580,11 +586,14 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
       
        <DragOverlay>
         {activeCalendar ? (
-            <CalendarCard 
-                calendar={activeCalendar} 
-                onUpdate={()=>{}} 
-                onDelete={()=>{}} 
-            />
+            <div className="p-2 basis-full sm:basis-[calc(50%-1rem)] md:basis-[calc(33.333%-1rem)] lg:basis-[calc(25%-1rem)] xl:basis-[calc(20%-1rem)] 2xl:basis-[calc(16.666%-1rem)] flex-grow-0 flex-shrink-0">
+                <CalendarCard 
+                    calendar={activeCalendar} 
+                    onUpdate={()=>{}} 
+                    onDelete={()=>{}} 
+                    isSharedPreview={activeCalendar.owner.id !== viewAsUser.userId}
+                />
+            </div>
         ) : null}
       </DragOverlay>
 

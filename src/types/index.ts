@@ -60,6 +60,7 @@ export interface User {
   timeFormat?: '12h' | '24h';
   linkedTeamIds?: string[];
   linkedCollectionIds?: string[];
+  linkedCalendarIds?: string[];
 }
 
 export interface EventTemplate {
