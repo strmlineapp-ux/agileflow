@@ -83,7 +83,7 @@ This pattern replaces large, card-style "Add New" buttons with a more compact an
 This is the consistent reference pattern for allowing a user to change both an icon and its color.
 
 - **Trigger:** A single, interactive unit composed of a primary icon button and a smaller color swatch badge overlaid on its corner.
-- **Icon Sizing**: The trigger button's icon should be compact and clear. The gold standard is a `h-7 w-7` button containing a `GoogleSymbol` with its font size set to `28px` and a `font-weight` of `100`.
+- **Icon Sizing**: The trigger button's icon should be compact and clear. The gold standard is a `h-8 w-8` button containing a `GoogleSymbol` with its font size set to `32px` and a `font-weight` of `100`.
 - **Interaction:**
   - Clicking the main part of the button opens an icon picker popover. This popover uses the **Compact Search Input** pattern for filtering. The icons inside this picker are rendered at `text-4xl` with `weight={100}` inside `h-8 w-8` buttons for clarity and ease of selection.
   - Clicking the color swatch badge opens a color picker popover.
@@ -167,7 +167,7 @@ This is a minimalist dialog for focused actions, such as entering a code or a sh
 - **Behavior**:
     - Clicking the action icon in the corner performs the primary action.
     - Clicking the overlay dismisses the dialog without performing the action.
-    - **When a dialog is triggered from a draggable element, its `<DialogContent>` must capture pointer events using `onPointerDownCapture={(e) => e.stopPropagation()}`. This prevents a click inside the dialog from being interpreted as a drag action on the underlying card.
+    - **When a dialog is triggered from a draggable element, its `<DialogContent>` must capture pointer events using `onPointerDownCapture={(e) => e.stopPropagation()}`. This prevents a click inside the dialog from being interpreted as a drag action on the underlying card.**
 - **Application**: Used for Two-Factor Authentication, quick edits, and for confirming lower-risk destructive actions, such as deleting a **Page**, a **Team**, a **Calendar**, a **Workstation**, or an un-shared **Badge Collection**.
 
 ---
