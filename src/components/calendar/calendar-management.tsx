@@ -203,8 +203,8 @@ function CalendarCard({
                                   <Tooltip>
                                       <TooltipTrigger asChild>
                                           <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={!canManage}>
-                                              <Button variant="ghost" className="h-14 w-14 flex items-center justify-center p-0">
-                                                  <GoogleSymbol name={calendar.icon} className="text-5xl" weight={100} />
+                                              <Button variant="ghost" className="h-6 w-6 flex items-center justify-center p-0">
+                                                  <GoogleSymbol name={calendar.icon} style={{ fontSize: '28px' }} weight={100} />
                                               </Button>
                                           </PopoverTrigger>
                                       </TooltipTrigger>
@@ -265,7 +265,7 @@ function CalendarCard({
                               </TooltipProvider>
                           )}
                       </div>
-                      <div className="flex-1 min-w-0" onClick={(e) => { e.stopPropagation(); if (canManage) setIsEditingName(true);}}>
+                      <div className="flex-1 min-w-0" onClick={(e) => { if (canManage) { e.stopPropagation(); setIsEditingName(true); }}}>
                       {isEditingName && canManage ? (
                           <Input
                           ref={nameInputRef}
@@ -353,7 +353,7 @@ function CalendarCard({
                                               defaultValue={calendar.defaultEventTitle}
                                               onKeyDown={handleTitleKeyDown}
                                               onBlur={handleSaveTitle}
-                                              className="h-auto p-0 text-xs font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                                              className="h-auto p-0 text-xs font-thin border-0 rounded-none shadow-none bg-transparent"
                                           />
                                       ) : (
                                           <span 

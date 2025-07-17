@@ -83,11 +83,11 @@ This pattern replaces large, card-style "Add New" buttons with a more compact an
 This is the consistent reference pattern for allowing a user to change both an icon and its color.
 
 - **Trigger:** A single, interactive unit composed of a primary icon button and a smaller color swatch badge overlaid on its corner.
-- **Icon Sizing**: The trigger button's icon should be large and prominent, specifically using `text-5xl` with `weight={100}` inside a `h-14 w-14` button.
+- **Icon Sizing**: The trigger button's icon should be compact and clear. The gold standard is a `h-6 w-6` button containing a `GoogleSymbol` with its font size set to `28px`.
 - **Interaction:**
   - Clicking the main part of the button opens an icon picker popover. This popover uses the **Compact Search Input** pattern for filtering. The icons inside this picker are rendered at `text-4xl` with `weight={100}` inside `h-8 w-8` buttons for clarity and ease of selection.
   - Clicking the color swatch badge opens a color picker popover.
-- **Application:** Used for editing team icons/colors, and page icons/colors.
+- **Application:** Used for editing team icons/colors, page icons/colors, and badge collection icons/colors.
 
 ---
 
@@ -109,8 +109,7 @@ This pattern describes how a single entity (like a **Team**, **Calendar**, or **
 - **Behavior**:
   - Editing a shared item (e.g., changing a team's name) modifies the original "source of truth" item, and the changes are instantly reflected in all other places where it is used.
   - **Local Overrides**: For linked Badge Collections, the `applications` (e.g., "Team Members", "Events") can be modified locally without affecting the original, allowing teams to customize how they use a shared resource.
-  - **Unlinking & Copying**: When a user clicks "delete" on a *linked* item (like a Team or Calendar), it is simply unlinked from their view, and the original item is unaffected. This is a low-risk action.
-  - **Smart Deletion**: Deleting an item *owned* by the user is confirmed via a `Compact Action Dialog`. This is a low-risk action as it only affects the user's own data.
+  - **Smart Deletion & Unlinking**: Clicking the "delete" icon on a *linked* item (like a Team or Calendar) simply unlinks it from the user's view, and the original item is unaffected. This is a low-risk action. Deleting an item *owned* by the user is confirmed via a `Compact Action Dialog`.
 - **Application**: This is the required pattern for sharing **Teams**, **Calendars**, and **Badge Collections**.
 
 ---
@@ -146,7 +145,8 @@ This is the application's perfected, gold-standard pattern for managing a collec
     - **Card-level**: Deleting an entire card (like a Team or Collection) is a high-impact action. To prevent accidental clicks, this functionality should be placed within a `<DropdownMenu>` in the card's header, not triggered by a direct hover icon.
 -   **Drag-to-Duplicate**:
     -   **Interaction**: A designated "Add New" icon (`<Button>`) acts as a drop zone, implemented using the `useDroppable` hook from `dnd-kit`. While a card is being dragged, this zone becomes highlighted to indicate it can accept a drop.
-    -   **Behavior**: Dropping any card (pinned or not, from the main board or the shared panel) onto this zone creates a deep, independent copy of the original. The new card is given a unique ID, a modified name (e.g., with `(Copy)`), and a unique URL path. It is placed immediately after the original in the list. Its ownership is assigned to the current user's context, and its member list is reset to be empty.
+    -   **Behavior**: Dropping any card (pinned or not, from the main board or the shared panel) creates a deep, independent copy of the original. The new card is given a unique ID, a modified name (e.g., with `(Copy)`), and a unique URL path. It is placed immediately after the original in the list. Its ownership is assigned to the current user's context.
+    -   **Smart Unlinking**: If the duplicated card was a *linked* item (e.g., a shared calendar from another user), the original linked item is automatically removed from the user's board after the copy is created. This provides a clean "copy and replace" workflow.
 -   **Drag-to-Assign**: This pattern allows sub-items (like **Users** or **Badges**) to be moved between different parent cards.
     - **Interaction**: A user can drag an item (e.g., a User) from one card's list.
     - **Behavior**: As the item is dragged over another card, that card's drop zone (using `useDroppable`) becomes highlighted. Dropping the item assigns it to the new card's collection. The original item may be removed or remain, depending on the context. This is handled by the `onDragEnd` logic.
@@ -301,6 +301,6 @@ This is the single source of truth for indicating user interaction state across 
 - **Lunch Break Pattern**: A subtle diagonal line pattern is used in calendar views to visually block out the typical lunch period (12:00 - 14:30). This serves as a non-intrusive reminder to avoid scheduling meetings during that time.
 - **Icon as Badge**: An icon displayed as a small, circular overlay on another element (e.g., an Avatar or another icon) to provide secondary information.
     - **Appearance**: A circular badge with a `border-2` of the parent element's background color (e.g., `border-background`) to create a "punched out" effect. The icon inside should be sized proportionally.
-    - **Sizing**: The standard size for these badges (e.g., color-pickers, ownership status icons) is `h-7 w-7` (`28x28px`). The `GoogleSymbol` inside should be sized to fit, for example using `style={{fontSize: '14px'}}`.
+    - **Sizing**: The standard size for these badges (e.g., color-pickers, ownership status icons) is `h-4 w-4` (`16x16px`). The `GoogleSymbol` inside should be sized to fit, for example using `style={{fontSize: '10px'}}`.
     - **Placement**: This is context-dependent. Color-pickers are typically placed on the bottom-right corner of their parent icon. Ownership status icons are typically placed on the top-left corner to create visual balance.
 -   **Badges in Assorted View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.

@@ -873,8 +873,8 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                                         onUpdateIcon={(icon) => onUpdateCollection(collection.id, { icon })}
                                         disabled={!isOwned}
                                         weight={100}
-                                        style={{ fontSize: '48px' }}
-                                        buttonClassName="h-14 w-14"
+                                        style={{ fontSize: '28px' }}
+                                        buttonClassName="h-6 w-6"
                                     />
                                     {!isViewer && (
                                         <>
