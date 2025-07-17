@@ -439,7 +439,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
               <TooltipContent><p>Manage Associated Tabs</p></TooltipContent>
           </Tooltip>
       </TooltipProvider>
-      <PopoverContent className="w-80 p-0" onPointerDown={(e) => e.stopPropagation()}>
+      <PopoverContent className="w-80 p-0" onPointerDownCapture={(e) => e.stopPropagation()}>
         <div className="p-2 border-b">
           <div className="flex items-center gap-1 w-full">
             <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
@@ -572,7 +572,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
                                                 <Button variant="ghost" className="h-14 w-14 flex items-center justify-center p-0">
-                                                    <GoogleSymbol name={page.icon} weight={100} style={{ fontSize: '48px' }}/>
+                                                    <GoogleSymbol name={page.icon} weight={100} className="text-5xl"/>
                                                 </Button>
                                             </PopoverTrigger>
                                         </TooltipTrigger>
@@ -600,7 +600,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
                                             onClick={() => { onUpdate(page.id, { icon: iconName }); setIsIconPopoverOpen(false);}}
                                             className="h-8 w-8 p-0"
                                             >
-                                            <GoogleSymbol name={iconName} weight={100} style={{fontSize: '24px'}}/>
+                                            <GoogleSymbol name={iconName} weight={100} className="text-4xl"/>
                                             </Button>
                                         </TooltipTrigger>
                                         <TooltipContent><p>{iconName}</p></TooltipContent>

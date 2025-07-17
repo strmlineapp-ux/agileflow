@@ -204,7 +204,7 @@ function CalendarCard({
                                       <TooltipTrigger asChild>
                                           <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={!canManage}>
                                               <Button variant="ghost" className="h-14 w-14 flex items-center justify-center p-0">
-                                                  <GoogleSymbol name={calendar.icon} style={{ fontSize: '48px' }} weight={100} />
+                                                  <GoogleSymbol name={calendar.icon} className="text-5xl" weight={100} />
                                               </Button>
                                           </PopoverTrigger>
                                       </TooltipTrigger>
@@ -226,7 +226,7 @@ function CalendarCard({
                                   <TooltipProvider key={iconName}>
                                       <Tooltip>
                                       <TooltipTrigger asChild>
-                                          <Button variant={calendar.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(calendar.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="h-8 w-8 p-0"><GoogleSymbol name={iconName} style={{fontSize: '24px'}} weight={100} /></Button>
+                                          <Button variant={calendar.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(calendar.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="h-8 w-8 p-0"><GoogleSymbol name={iconName} className="text-4xl" weight={100} /></Button>
                                       </TooltipTrigger>
                                       <TooltipContent><p>{iconName}</p></TooltipContent>
                                       </Tooltip>
@@ -265,7 +265,7 @@ function CalendarCard({
                               </TooltipProvider>
                           )}
                       </div>
-                      <div className="flex-1 min-w-0" onPointerDown={(e) => { e.stopPropagation(); }}>
+                      <div className="flex-1 min-w-0" onClick={(e) => { e.stopPropagation(); if (canManage) setIsEditingName(true);}}>
                       {isEditingName && canManage ? (
                           <Input
                           ref={nameInputRef}
@@ -276,7 +276,7 @@ function CalendarCard({
                           className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
                           />
                       ) : (
-                          <CardTitle className={cn("font-headline text-xl font-thin break-words", canManage && "cursor-pointer")} onClick={(e) => {e.stopPropagation(); if (canManage) setIsEditingName(true);}}>
+                          <CardTitle className={cn("font-headline text-xl font-thin break-words", canManage && "cursor-pointer")}>
                           {calendar.name}
                           </CardTitle>
                       )}
@@ -344,7 +344,6 @@ function CalendarCard({
               {isExpanded && (
                   <CardContent className="p-2 pt-0 mt-2" onPointerDown={(e) => e.stopPropagation()}>
                     <div className="space-y-1">
-                        <div className="text-sm min-h-[36px] flex items-center mt-2">
                           <TooltipProvider>
                               <Tooltip>
                                   <TooltipTrigger asChild>
@@ -371,7 +370,6 @@ function CalendarCard({
                               </Tooltip>
                           </TooltipProvider>
                         </div>
-                      </div>
                   </CardContent>
               )}
               
