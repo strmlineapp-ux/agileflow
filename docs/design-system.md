@@ -96,7 +96,7 @@ This pattern describes how a single entity (like a **Team**, **Calendar**, or **
 
 - **Mechanism**:
     - **Sharing via Side Panel**: The primary UI for sharing is a side panel that acts as a "discovery pool". The owner of an item can share it by dragging its card from their main management board and dropping it into this "Shared Items" panel.
-        - **Behavior**: This action sets an `isShared` flag on the item but **does not remove it from the owner's board**. The item's visual state updates to show it is shared.
+        - **Behavior**: This action sets an `isShared` flag on the item but **does not remove it from the owner's board**. The item's visual state updates to show it is shared. **Dropping it back on the panel will unshare it.**
         - **Side Panel Content**: The side panel displays all items shared by *other* users/teams, allowing the current user to discover and link them. It does **not** show items that the current user already has on their own management board.
     - **Linking (Contextual)**: This action's behavior depends on the context of the management page.
         - **Contextual Management (e.g., Badge Collections within a Team)**: A user can link a shared item to their own context by dragging it from the "Shared Items" panel and dropping it onto their management board. This creates a *link* to the original item, not a copy.
@@ -109,13 +109,7 @@ This pattern describes how a single entity (like a **Team**, **Calendar**, or **
 - **Behavior**:
   - Editing a shared item (e.g., changing a team's name) modifies the original "source of truth" item, and the changes are instantly reflected in all other places where it is used.
   - **Local Overrides**: For linked Badge Collections, the `applications` (e.g., "Team Members", "Events") can be modified locally without affecting the original, allowing teams to customize how they use a shared resource.
-  - **Unlinking & Copying**: When a user "deletes" a linked shared item (like a Team), the system does not delete the original. Instead, it performs two actions:
-    1.  **Creates an independent copy** of the team with the original name and configuration. The ownership of this new copy is assigned to the current user's context. Its member list is empty.
-    2.  **Removes the linked team's ID** from the user's `linkedTeamIds` array, effectively "unlinking" it from their view.
-  - **Smart Deletion**: Deleting an item follows contextual rules:
-    - Deleting a *shared-to-you* or *internally linked* instance only removes that specific link/instance. This is a low-risk action confirmed via a `Compact Action Dialog`.
-    - Deleting the *original, shared* item will trigger a high-risk `AlertDialog` to prevent accidental removal of a widely-used resource.
-    - Deleting an *original, un-shared* item is a low-risk action confirmed via a `Compact Action Dialog`.
+  - **Smart Deletion & Unlinking**: Clicking the "delete" icon on a *linked* item (like a Team or Calendar) simply unlinks it from the user's view, and the original item is unaffected. This is a low-risk action. Deleting an item *owned* by the user is confirmed via a `Compact Action Dialog`.
 - **Application**: This is the required pattern for sharing **Teams**, **Calendars**, and **Badge Collections**.
 
 ---
@@ -151,7 +145,8 @@ This is the application's perfected, gold-standard pattern for managing a collec
     - **Card-level**: Deleting an entire card (like a Team or Collection) is a high-impact action. To prevent accidental clicks, this functionality should be placed within a `<DropdownMenu>` in the card's header, not triggered by a direct hover icon.
 -   **Drag-to-Duplicate**:
     -   **Interaction**: A designated "Add New" icon (`<Button>`) acts as a drop zone, implemented using the `useDroppable` hook from `dnd-kit`. While a card is being dragged, this zone becomes highlighted to indicate it can accept a drop.
-    -   **Behavior**: Dropping any card (pinned or not, from the main board or the shared panel) onto this zone creates a deep, independent copy of the original. The new card is given a unique ID, a modified name (e.g., with `(Copy)`), and a unique URL path. It is placed immediately after the original in the list. Its ownership is assigned to the current user's context, and its member list is reset to be empty.
+    -   **Behavior**: Dropping any card (pinned or not, from the main board or the shared panel) creates a deep, independent copy of the original. The new card is given a unique ID, a modified name (e.g., with `(Copy)`), and a unique URL path. It is placed immediately after the original in the list. Its ownership is assigned to the current user's context.
+    -   **Smart Unlinking**: If the duplicated card was a *linked* item (e.g., a shared calendar from another user), the original linked item is automatically removed from the user's board after the copy is created. This provides a clean "copy and replace" workflow.
 -   **Drag-to-Assign**: This pattern allows sub-items (like **Users** or **Badges**) to be moved between different parent cards.
     - **Interaction**: A user can drag an item (e.g., a User) from one card's list.
     - **Behavior**: As the item is dragged over another card, that card's drop zone (using `useDroppable`) becomes highlighted. Dropping the item assigns it to the new card's collection. The original item may be removed or remain, depending on the context. This is handled by the `onDragEnd` logic.
@@ -172,20 +167,13 @@ This is a minimalist dialog for focused actions, such as entering a code or a sh
 - **Behavior**:
     - Clicking the action icon in the corner performs the primary action.
     - Clicking the overlay dismisses the dialog without performing the action.
-    - **When a dialog is triggered from a draggable element, its `<DialogContent>` must capture pointer events using `onPointerDownCapture={(e) => e.stopPropagation()}`. This prevents a click inside the dialog from being interpreted as a drag action on the underlying card.**
-- **Application**: Used for Two-Factor Authentication, quick edits, and for confirming lower-risk destructive actions, such as deleting a **Page**, a **Team**, a **Workstation**, or an un-shared **Badge Collection**.
+    - **When a dialog is triggered from a draggable element, its `<DialogContent>` must capture pointer events using `onPointerDownCapture={(e) => e.stopPropagation()}`. This prevents a click inside the dialog from being interpreted as a drag action on the underlying card.
+- **Application**: Used for Two-Factor Authentication, quick edits, and for confirming lower-risk destructive actions, such as deleting a **Page**, a **Team**, a **Calendar**, a **Workstation**, or an un-shared **Badge Collection**.
 
 ---
 
 ### 10. Compact Deletion Dialog
-When a **high-risk destructive action** requires user confirmation (like deleting a **Calendar** or a shared **Badge Collection**), the standard `AlertDialog` component is used. This is distinct from the `Compact Action Dialog` as it is intentionally more difficult to dismiss.
-
-- **Appearance**: A modal dialog centered on the screen, overlaying the content.
-- **Interaction**:
-    - The dialog contains a clear title, a description of the consequences, and explicit "Cancel" and "Continue" (or similar) buttons in the footer.
-    - The "Continue" button for the destructive action is styled with the `destructive` variant to draw attention.
-- **Behavior**: Clicking "Cancel" closes the dialog with no action taken. Clicking "Continue" performs the destructive action. This dialog **cannot** be dismissed by clicking the overlay, forcing an explicit choice.
-- **Application**: Used for confirming the deletion of **major entities** where accidental dismissal could be problematic, such as Calendars or shared Badge Collections.
+This pattern is **deprecated**. All deletion confirmations now use the **Compact Action Dialog** for a more consistent and streamlined user experience. This avoids the use of the intentionally modal `AlertDialog` for actions within the main application flow.
 
 ---
 
@@ -313,7 +301,7 @@ This is the single source of truth for indicating user interaction state across 
 - **Lunch Break Pattern**: A subtle diagonal line pattern is used in calendar views to visually block out the typical lunch period (12:00 - 14:30). This serves as a non-intrusive reminder to avoid scheduling meetings during that time.
 - **Icon as Badge**: An icon displayed as a small, circular overlay on another element (e.g., an Avatar or another icon) to provide secondary information.
     - **Appearance**: A circular badge with a `border-2` of the parent element's background color (e.g., `border-background`) to create a "punched out" effect. The icon inside should be sized proportionally.
-    - **Sizing**: The standard size for these badges (e.g., color-pickers, ownership status icons) is `h-7 w-7` (`28x28px`). The `GoogleSymbol` inside should be sized to fit, for example using `style={{fontSize: '14px'}}`.
+    - **Sizing**: The standard size for these badges (e.g., color-pickers, ownership status icons) is `h-4 w-4` (`16x16px`). The `GoogleSymbol` inside should be sized to fit, for example using `style={{fontSize: '10px'}}`.
     - **Placement**: This is context-dependent. Color-pickers are typically placed on the bottom-right corner of their parent icon. Ownership status icons are typically placed on the top-left corner to create visual balance.
-    - **Application**: Used for displaying a team admin status, a shared status on a role icon, or a `share` icon on a shared Badge.
 -   **Badges in Assorted View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
+
