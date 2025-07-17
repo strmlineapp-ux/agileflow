@@ -874,7 +874,7 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                                         disabled={!isOwned}
                                         weight={100}
                                         style={{ fontSize: '28px' }}
-                                        buttonClassName="h-6 w-6"
+                                        buttonClassName="h-7 w-7"
                                     />
                                     {!isViewer && (
                                         <>
@@ -1502,7 +1502,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                         <div 
                             className={cn("h-full rounded-lg transition-all")}
                         >
-                            <Card className={cn("transition-opacity duration-300 h-full bg-transparent", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
+                            <Card className={cn("transition-opacity duration-300 h-full bg-transparent flex flex-col", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
                                 <CardHeader>
                                     <div className="flex items-center justify-between">
                                         <CardTitle className="font-headline font-thin text-xl">Shared Collections</CardTitle>

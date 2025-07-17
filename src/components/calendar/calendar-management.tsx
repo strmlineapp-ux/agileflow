@@ -203,7 +203,7 @@ function CalendarCard({
                                   <Tooltip>
                                       <TooltipTrigger asChild>
                                           <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={!canManage}>
-                                              <Button variant="ghost" className="h-6 w-6 flex items-center justify-center p-0">
+                                              <Button variant="ghost" className="h-7 w-7 flex items-center justify-center p-0">
                                                   <GoogleSymbol name={calendar.icon} style={{ fontSize: '28px' }} weight={100} />
                                               </Button>
                                           </PopoverTrigger>
@@ -276,7 +276,7 @@ function CalendarCard({
                           className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
                           />
                       ) : (
-                          <CardTitle className={cn("font-headline text-xl font-thin break-words", canManage && "cursor-pointer")}>
+                          <CardTitle onClick={(e) => { if(canManage) { e.stopPropagation(); setIsEditingName(true)}}} className={cn("font-headline text-xl font-thin break-words", canManage && "cursor-pointer")}>
                           {calendar.name}
                           </CardTitle>
                       )}
