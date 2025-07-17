@@ -272,6 +272,7 @@ function CalendarCard({
                           defaultValue={calendar.name}
                           onKeyDown={handleNameKeyDown}
                           onBlur={handleSaveName}
+                          onClick={(e) => e.stopPropagation()}
                           className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
                           />
                       ) : (
@@ -540,6 +541,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
             name: `${sourceCalendar.name} (Copy)`,
             isShared: false,
             owner: { type: 'user', id: viewAsUser.userId },
+            defaultEventTitle: sourceCalendar.defaultEventTitle ? `${sourceCalendar.defaultEventTitle} (Copy)` : `New Event in ${sourceCalendar.name} (Copy)`,
         };
     } else {
         const newName = `New Calendar ${calendarCount + 1}`;
@@ -601,6 +603,12 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
 
       if (over.id === 'duplicate-calendar-zone') {
         handleAddCalendar(activeCalendar);
+        const isLinked = activeCalendar.owner.id !== viewAsUser.userId;
+        if (isLinked) {
+            const updatedLinkedIds = (viewAsUser.linkedCalendarIds || []).filter(id => id !== activeCalendar.id);
+            updateUser(viewAsUser.userId, { linkedCalendarIds: updatedLinkedIds });
+            toast({ title: 'Calendar Copied', description: `Original shared calendar "${activeCalendar.name}" has been unlinked.`});
+        }
         return;
       }
 
