@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle as UIDialogTitle } from '@/components/ui/dialog';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -622,7 +622,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
-                                                <button className="absolute -bottom-0 -right-0 h-4 w-4 rounded-full border-0 border-background cursor-pointer" style={{ backgroundColor: page.color }} />
+                                                <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-0 border-background cursor-pointer" style={{ backgroundColor: page.color }} />
                                             </PopoverTrigger>
                                         </TooltipTrigger>
                                         <TooltipContent><p>Change Color</p></TooltipContent>
@@ -704,7 +704,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
                       </TooltipProvider>
                     </div>
                     <DialogHeader>
-                        <DialogTitle>Delete "{page.name}"?</DialogTitle>
+                        <UIDialogTitle>Delete "{page.name}"?</UIDialogTitle>
                         <DialogDescription>
                             This will permanently delete the page and its configuration. This action cannot be undone.
                         </DialogDescription>
@@ -1068,7 +1068,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <PopoverTrigger asChild>
-                                        <button className="absolute -bottom-0 -right-0 h-4 w-4 rounded-full border-0 border-background cursor-pointer" style={{ backgroundColor: tab.color }} />
+                                        <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-0 border-background cursor-pointer" style={{ backgroundColor: tab.color }} />
                                     </PopoverTrigger>
                                 </TooltipTrigger>
                                 <TooltipContent><p>Change Color</p></TooltipContent>
