@@ -628,7 +628,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
                                         <TooltipContent><p>Change Color</p></TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
-                                <PopoverContent className="w-auto p-2" onPointerDown={(e) => e.stopPropagation()}>
+                                <PopoverContent className="w-auto p-4" onPointerDown={(e) => e.stopPropagation()}>
                                      <div className="space-y-4">
                                         <HexColorPicker color={color} onChange={setColor} className="!w-full" />
                                         <div className="flex items-center gap-2">
@@ -1074,7 +1074,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                                 <TooltipContent><p>Change Color</p></TooltipContent>
                             </Tooltip>
                         </TooltipProvider>
-                        <PopoverContent className="w-auto p-2">
+                        <PopoverContent className="w-auto p-4">
                              <div className="space-y-4">
                                 <HexColorPicker color={color} onChange={setColor} className="!w-full" />
                                 <div className="flex items-center gap-2">

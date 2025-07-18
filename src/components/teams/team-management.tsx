@@ -39,7 +39,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Badge } from '../ui/badge';
 import { CardDescription } from '../ui/card';
 import { googleSymbolNames } from '@/lib/google-symbols';
-
+import { HexColorPicker, HexColorInput } from 'react-colorful';
 
 const predefinedColors = [
     '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
@@ -147,6 +147,7 @@ function TeamCard({
     const iconSearchInputRef = useRef<HTMLInputElement>(null);
 
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
+    const [color, setColor] = useState(team.color);
     const [isAddUserPopoverOpen, setIsAddUserPopoverOpen] = useState(false);
     const [userSearch, setUserSearch] = useState('');
     const addUserSearchInputRef = useRef<HTMLInputElement>(null);
@@ -271,8 +272,20 @@ function TeamCard({
                                             <TooltipContent><p>Change Color</p></TooltipContent>
                                         </Tooltip>
                                     </TooltipProvider>
-                                    <PopoverContent className="w-auto p-2" onPointerDown={(e) => e.stopPropagation()}>
-                                    <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdate(team.id, { color: c }); setIsColorPopoverOpen(false);}}></button>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={team.color} onChange={(e) => onUpdate(team.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
+                                    <PopoverContent className="w-auto p-4" onPointerDown={(e) => e.stopPropagation()}>
+                                        <div className="space-y-4">
+                                            <HexColorPicker color={color} onChange={setColor} className="!w-full" />
+                                            <div className="flex items-center gap-2">
+                                                <span className="p-2 border rounded-md shadow-sm" style={{ backgroundColor: color }} />
+                                                <HexColorInput prefixed alpha color={color} onChange={setColor} className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50" />
+                                            </div>
+                                            <div className="grid grid-cols-8 gap-1">
+                                                {predefinedColors.map(c => (
+                                                    <button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdate(team.id, { color: c }); setIsColorPopoverOpen(false);}}></button>
+                                                ))}
+                                            </div>
+                                            <Button onClick={() => { onUpdate(team.id, { color }); setIsColorPopoverOpen(false); }} className="w-full">Set Color</Button>
+                                        </div>
                                     </PopoverContent>
                                 </Popover>
                                 {shareIcon && (

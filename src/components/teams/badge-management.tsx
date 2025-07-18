@@ -22,6 +22,7 @@ import { Badge as UiBadge } from '../ui/badge';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '../ui/select';
 import { getOwnershipContext } from '@/lib/permissions';
+import { HexColorPicker, HexColorInput } from 'react-colorful';
 
 import {
   DndContext,
@@ -186,6 +187,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     
     const [isEditingDescription, setIsEditingDescription] = useState(false);
     const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
+    const [color, setColor] = useState(badge.color);
     
     const badgeOwner = useMemo(() => {
         const ownerCollection = allBadges.find(b => b.id === badge.id)?.ownerCollectionId;
@@ -304,29 +306,28 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     const canBeDeleted = !isViewer && !isSharedPreview;
     
     const colorPickerContent = (
-        <PopoverContent className="w-auto p-2" onPointerDown={(e) => e.stopPropagation()}>
-            <div className="grid grid-cols-8 gap-1">
-                {predefinedColors.map(c => (
-                    <button
-                        key={c}
-                        className="h-6 w-6 rounded-full border"
-                        style={{ backgroundColor: c }}
-                        onClick={() => {
-                            onUpdateBadge({ color: c });
-                            setIsColorPopoverOpen(false);
-                        }}
-                    />
-                ))}
-                <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
-                    <GoogleSymbol name="colorize" className="text-muted-foreground" />
-                    <Input
-                        type="color"
-                        value={badge.color}
-                        onChange={(e) => onUpdateBadge({ color: e.target.value })}
-                        className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"
-                        aria-label="Custom color picker"
-                    />
+        <PopoverContent className="w-auto p-4" onPointerDown={(e) => e.stopPropagation()}>
+            <div className="space-y-4">
+                <HexColorPicker color={color} onChange={setColor} className="!w-full" />
+                <div className="flex items-center gap-2">
+                    <span className="p-2 border rounded-md shadow-sm" style={{ backgroundColor: color }} />
+                    <HexColorInput prefixed alpha color={color} onChange={setColor} className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50" />
                 </div>
+                <div className="grid grid-cols-8 gap-1">
+                    {predefinedColors.map(c => (
+                        <button
+                            key={c}
+                            className="h-6 w-6 rounded-full border"
+                            style={{ backgroundColor: c }}
+                            onClick={() => {
+                                onUpdateBadge({ color: c });
+                                setColor(c);
+                                setIsColorPopoverOpen(false);
+                            }}
+                        />
+                    ))}
+                </div>
+                <Button onClick={() => { onUpdateBadge({ color }); setIsColorPopoverOpen(false); }} className="w-full">Set Color</Button>
             </div>
         </PopoverContent>
     );
@@ -754,6 +755,7 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
     
     const [isViewMenuOpen, setIsViewMenuOpen] = useState(false);
     const [editingBadge, setEditingBadge] = useState<Badge | null>(null);
+    const [color, setColor] = useState(collection.color);
     
     const isOwned = useMemo(() => {
         if (isSharedPreview || isViewer) return false;
@@ -879,12 +881,19 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                                         <>
                                             <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
                                                 <PopoverTrigger asChild disabled={!isOwned} onPointerDown={(e) => e.stopPropagation()}><button className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background", !isOwned ? "cursor-not-allowed" : "cursor-pointer")} style={{ backgroundColor: collection.color }} /></PopoverTrigger>
-                                                <PopoverContent className="w-auto p-2" onPointerDown={(e) => e.stopPropagation()}>
-                                                    <div className="grid grid-cols-8 gap-1">
-                                                        {predefinedColors.map(color => (
-                                                            <button key={color} className="h-6 w-6 rounded-full border" style={{ backgroundColor: color }} onClick={() => {onUpdateCollection(collection.id, { color }); setIsColorPopoverOpen(false);}}/>
-                                                        ))}
-                                                        <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={collection.color} onChange={(e) => onUpdateCollection(collection.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div>
+                                                <PopoverContent className="w-auto p-4" onPointerDown={(e) => e.stopPropagation()}>
+                                                    <div className="space-y-4">
+                                                        <HexColorPicker color={color} onChange={setColor} className="!w-full" />
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="p-2 border rounded-md shadow-sm" style={{ backgroundColor: color }} />
+                                                            <HexColorInput prefixed alpha color={color} onChange={setColor} className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50" />
+                                                        </div>
+                                                        <div className="grid grid-cols-8 gap-1">
+                                                            {predefinedColors.map(c => (
+                                                                <button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdateCollection(collection.id, { color: c }); setIsColorPopoverOpen(false);}}/>
+                                                            ))}
+                                                        </div>
+                                                        <Button onClick={() => { onUpdateCollection(collection.id, { color }); setIsColorPopoverOpen(false); }} className="w-full">Set Color</Button>
                                                     </div>
                                                 </PopoverContent>
                                             </Popover>
