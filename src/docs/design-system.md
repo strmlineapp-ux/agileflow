@@ -86,7 +86,7 @@ This is the consistent reference pattern for allowing a user to change both an i
 - **Icon Sizing**: The trigger button's icon should be large and prominent, specifically using a `h-10 w-10` button. The `GoogleSymbol` inside should have its `style={{fontSize: '36px'}}`, `opticalSize={20}`, and `grade={-25}` to create a "large but thin" aesthetic.
 - **Interaction:**
   - Clicking the main part of the button opens an icon picker popover. This popover uses the **Compact Search Input** pattern for filtering. The icons inside this picker are rendered at `text-4xl` with `weight={100}` inside `h-8 w-8` buttons for clarity and ease of selection.
-  - Clicking the color swatch badge opens a color picker popover.
+  - Clicking the color swatch badge opens a color picker popover. The popover presents a user-friendly color wheel (`react-colorful`), a hex input field, and a grid of predefined color swatches. This provides a consistent and powerful color selection experience.
 - **Application:** Used for editing team icons/colors, and page icons/colors.
 
 ---

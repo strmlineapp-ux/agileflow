@@ -45,6 +45,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { HexColorPicker, HexColorInput } from 'react-colorful';
 
 // #region Admin Groups Management Tab
 
@@ -296,6 +297,12 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive, activeTab, pa
 
 // #region Pages Management Tab
 
+const PREDEFINED_COLORS = [
+    '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
+    '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6',
+    '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
+];
+
 function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: Partial<AppPage>) => void }) {
     const { users, teams, appSettings } = useUser();
     const [isOpen, setIsOpen] = useState(false);
@@ -497,6 +504,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
     const iconSearchInputRef = useRef<HTMLInputElement>(null);
     
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [color, setColor] = useState(page.color);
     
     const handleSaveName = useCallback(() => {
         setIsEditingName(false);
@@ -609,7 +617,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
                                     ))}</div></ScrollArea>
                                 </PopoverContent>
                             </Popover>
-                            <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                             <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
@@ -621,13 +629,18 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
                                     </Tooltip>
                                 </TooltipProvider>
                                 <PopoverContent className="w-auto p-2" onPointerDown={(e) => e.stopPropagation()}>
-                                    <div className="grid grid-cols-8 gap-1">
-                                        {['#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
-    '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6',
-    '#A855F7', '#D946EF', '#EC4899', '#F43F5E'].map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => { onUpdate(page.id, { color: c }); setIsColorPopoverOpen(false); }}/>))}
-                                        <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
-                                            <GoogleSymbol name="colorize" className="text-muted-foreground" weight={100} /><Input type="color" value={page.color} onChange={(e) => onUpdate(page.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/>
+                                     <div className="space-y-4">
+                                        <HexColorPicker color={color} onChange={setColor} className="!w-full" />
+                                        <div className="flex items-center gap-2">
+                                            <span className="p-2 border rounded-md shadow-sm" style={{ backgroundColor: color }} />
+                                            <HexColorInput prefixed alpha color={color} onChange={setColor} className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50" />
                                         </div>
+                                        <div className="grid grid-cols-8 gap-1">
+                                            {PREDEFINED_COLORS.map(c => (
+                                                <button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => onUpdate(page.id, { color: c })} />
+                                            ))}
+                                        </div>
+                                        <Button onClick={() => { onUpdate(page.id, { color }); setIsColorPopoverOpen(false); }} className="w-full">Set Color</Button>
                                     </div>
                                 </PopoverContent>
                             </Popover>
@@ -927,6 +940,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
 
     const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
     const [isEditingDescription, setIsEditingDescription] = useState(false);
+    const [color, setColor] = useState(tab.color);
 
     const handleSaveName = useCallback(() => {
         const newName = nameInputRef.current?.value.trim();
@@ -1061,13 +1075,18 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                             </Tooltip>
                         </TooltipProvider>
                         <PopoverContent className="w-auto p-2">
-                            <div className="grid grid-cols-8 gap-1">
-                                {['#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
-                                '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6',
-                                '#A855F7', '#D946EF', '#EC4899', '#F43F5E'].map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => { onUpdate(tab.id, { color: c }); setIsColorPopoverOpen(false); }}/>))}
-                                <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
-                                    <GoogleSymbol name="colorize" className="text-muted-foreground" weight={100} /><Input type="color" value={tab.color} onChange={(e) => onUpdate(tab.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/>
+                             <div className="space-y-4">
+                                <HexColorPicker color={color} onChange={setColor} className="!w-full" />
+                                <div className="flex items-center gap-2">
+                                    <span className="p-2 border rounded-md shadow-sm" style={{ backgroundColor: color }} />
+                                    <HexColorInput prefixed alpha color={color} onChange={setColor} className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50" />
                                 </div>
+                                <div className="grid grid-cols-8 gap-1">
+                                    {PREDEFINED_COLORS.map(c => (
+                                        <button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => onUpdate(tab.id, { color: c })} />
+                                    ))}
+                                </div>
+                                <Button onClick={() => { onUpdate(tab.id, { color }); setIsColorPopoverOpen(false); }} className="w-full">Set Color</Button>
                             </div>
                         </PopoverContent>
                     </Popover>

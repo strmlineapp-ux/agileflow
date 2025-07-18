@@ -38,9 +38,10 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { HexColorPicker, HexColorInput } from 'react-colorful';
 
 
-const predefinedColors = [
+const PREDEFINED_COLORS = [
     '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
     '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6',
     '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
@@ -70,6 +71,7 @@ function CalendarCard({
   
   const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
   const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
+  const [color, setColor] = useState(calendar.color);
   
   const [iconSearch, setIconSearch] = useState('');
   const iconSearchInputRef = useRef<HTMLInputElement>(null);
@@ -246,7 +248,19 @@ function CalendarCard({
                                   </Tooltip>
                               </TooltipProvider>
                               <PopoverContent className="w-auto p-2" onPointerDown={(e) => e.stopPropagation()}>
-                              <div className="grid grid-cols-8 gap-1">{predefinedColors.map(c => (<button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdate(calendar.id, { color: c }); setIsColorPopoverOpen(false);}}></button>))}<div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted"><GoogleSymbol name="colorize" className="text-muted-foreground" /><Input type="color" value={calendar.color} onChange={(e) => onUpdate(calendar.id, { color: e.target.value })} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0"/></div></div>
+                                 <div className="space-y-4">
+                                    <HexColorPicker color={color} onChange={setColor} className="!w-full" />
+                                    <div className="flex items-center gap-2">
+                                        <span className="p-2 border rounded-md shadow-sm" style={{ backgroundColor: color }} />
+                                        <HexColorInput prefixed alpha color={color} onChange={setColor} className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50" />
+                                    </div>
+                                    <div className="grid grid-cols-8 gap-1">
+                                        {PREDEFINED_COLORS.map(c => (
+                                            <button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => onUpdate(calendar.id, { color: c })} />
+                                        ))}
+                                    </div>
+                                    <Button onClick={() => { onUpdate(calendar.id, { color }); setIsColorPopoverOpen(false); }} className="w-full">Set Color</Button>
+                                </div>
                               </PopoverContent>
                           </Popover>
                            {shareIcon && (
@@ -546,7 +560,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
         newCalendarData = {
             name: newName,
             icon: 'calendar_month',
-            color: predefinedColors[calendarCount % predefinedColors.length],
+            color: PREDEFINED_COLORS[calendarCount % PREDEFINED_COLORS.length],
             owner: { type: 'user', id: viewAsUser.userId },
             defaultEventTitle: `New ${newName} Event`,
         };
