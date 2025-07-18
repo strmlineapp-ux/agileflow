@@ -558,7 +558,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
                           <Button
                               variant="ghost"
                               size="icon"
-                              className="absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                              className="absolute -top-3 -right-3 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10"
                               onPointerDown={(e) => {
                                   e.stopPropagation();
                                   setIsDeleteDialogOpen(true);
@@ -623,7 +623,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
-                                                <button className="absolute -bottom-2 -right-2 h-4 w-4 rounded-full border-0 cursor-pointer" style={{ backgroundColor: page.color }} />
+                                                <button className="absolute -bottom-3 -right-3 h-4 w-4 rounded-full border-0 cursor-pointer" style={{ backgroundColor: page.color }} />
                                             </PopoverTrigger>
                                         </TooltipTrigger>
                                         <TooltipContent><p>Change Color</p></TooltipContent>
@@ -1069,7 +1069,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <PopoverTrigger asChild>
-                                        <button className="absolute -bottom-2 -right-2 h-4 w-4 rounded-full border-0 cursor-pointer" style={{ backgroundColor: tab.color }} />
+                                        <button className="absolute -bottom-3 -right-3 h-4 w-4 rounded-full border-0 cursor-pointer" style={{ backgroundColor: tab.color }} />
                                     </PopoverTrigger>
                                 </TooltipTrigger>
                                 <TooltipContent><p>Change Color</p></TooltipContent>
