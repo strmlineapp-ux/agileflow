@@ -14,12 +14,39 @@ import { cn } from '@/lib/utils';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { CompactSearchInput } from '../common/compact-search-input';
+import { HexColorPicker, HexColorInput } from 'react-colorful';
 
 const predefinedColors = [
     '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
     '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6',
     '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
 ];
+
+const CustomColorPicker = ({ user, onUpdate, onClose }: { user: User, onUpdate: (newColor: string) => void, onClose: () => void }) => {
+    const [color, setColor] = useState(user.primaryColor || '#64748B');
+    
+    const handleSave = () => {
+        onUpdate(color);
+        onClose();
+    };
+
+    return (
+        <div className="space-y-4">
+             <HexColorPicker color={color} onChange={setColor} />
+             <div className="flex items-center gap-2">
+                <span className="p-2 border rounded-md shadow-sm" style={{ backgroundColor: color }} />
+                <HexColorInput prefixed alpha color={color} onChange={setColor} className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50" />
+             </div>
+             <div className="grid grid-cols-8 gap-1">
+                {predefinedColors.map(c => (
+                    <button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => onUpdate(c)} />
+                ))}
+            </div>
+            <Button onClick={handleSave} className="w-full">Set Color</Button>
+        </div>
+    );
+};
+
 
 const SettingSelect = ({
   value,
@@ -48,7 +75,7 @@ const SettingSelect = ({
                 <TooltipTrigger asChild>
                     <PopoverTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:bg-transparent hover:text-foreground" disabled={disabled}>
-                            <GoogleSymbol name={icon} className="text-xl" weight={100} />
+                            <GoogleSymbol name={icon} className="text-xl" grade={-25} weight={100} />
                         </Button>
                     </PopoverTrigger>
                 </TooltipTrigger>
@@ -136,23 +163,18 @@ function UserCard({ user, isCurrentUser, canEditPreferences, className }: { user
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild>
                                                 <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" style={{ color: 'hsl(var(--primary))' }}>
-                                                    <GoogleSymbol name="palette" weight={100} />
+                                                    <GoogleSymbol name="palette" grade={-25} weight={100} />
                                                 </Button>
                                             </PopoverTrigger>
                                         </TooltipTrigger>
                                         <TooltipContent><p>Set custom primary color</p></TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
-                                <PopoverContent className="w-auto p-2">
-                                    <div className="grid grid-cols-8 gap-1">
-                                        {predefinedColors.map(color => (
-                                            <button key={color} className="h-6 w-6 rounded-full border" style={{ backgroundColor: color }} onClick={() => handleSetPrimaryColor(color)} aria-label={`Set color to ${color}`}/>
-                                        ))}
-                                        <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
-                                            <GoogleSymbol name="colorize" className="text-muted-foreground" />
-                                            <Input type="color" value={user.primaryColor || '#000000'} onChange={(e) => handleSetPrimaryColor(e.target.value)} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" aria-label="Custom color picker"/>
-                                        </div>
-                                    </div>
+                                <PopoverContent 
+                                    className="w-auto p-4" 
+                                    onPointerDownCapture={(e) => e.stopPropagation()}
+                                >
+                                    <CustomColorPicker user={user} onUpdate={handleSetPrimaryColor} onClose={() => setIsColorPopoverOpen(false)} />
                                 </PopoverContent>
                             </Popover>
                             
@@ -165,7 +187,7 @@ function UserCard({ user, isCurrentUser, canEditPreferences, className }: { user
                                             onClick={handleThemeChange}
                                             className="h-9 w-9 text-muted-foreground hover:bg-transparent hover:text-foreground"
                                         >
-                                            <GoogleSymbol name={user.theme === 'dark' ? 'dark_mode' : 'light_mode'} className="text-lg" weight={100} />
+                                            <GoogleSymbol name={user.theme === 'dark' ? 'dark_mode' : 'light_mode'} className="text-lg" grade={-25} weight={100} />
                                         </Button>
                                     </TooltipTrigger>
                                     <TooltipContent><p>Switch to {user.theme === 'dark' ? 'Light' : 'Dark'} Theme</p></TooltipContent>
@@ -200,7 +222,7 @@ function UserCard({ user, isCurrentUser, canEditPreferences, className }: { user
                                 <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Button variant="ghost" size="icon" onClick={() => updateUser(user.userId, { easyBooking: !user.easyBooking })} className="h-9 w-9 text-muted-foreground hover:bg-transparent hover:text-foreground">
-                                        <GoogleSymbol name={user.easyBooking ? 'toggle_on' : 'toggle_off'} className="text-2xl" weight={100} />
+                                        <GoogleSymbol name={user.easyBooking ? 'toggle_on' : 'toggle_off'} className="text-2xl" grade={-25} weight={100} />
                                     </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>

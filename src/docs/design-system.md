@@ -241,6 +241,7 @@ This pattern provides a dense, icon-driven interface for managing a series of us
     - **Tooltip on Hover**: Hovering over any icon button **must** display a `<Tooltip>` that clearly describes the setting and its current value (e.g., "Theme: Dark" or "Easy Booking: On"). This is critical for usability as the icons alone do not convey the current state.
     - **Popover on Click**: Clicking an icon button opens a compact `<Popover>` containing the options for that setting.
     - **Instant Application**: Selecting an option within the popover immediately applies the change and closes the popover. There is no separate "Save" button.
+    - **Custom Color Picker**: The palette icon opens a popover containing a color wheel, a hex input field, and a grid of predefined color swatches. Selecting a predefined swatch or clicking "Set Color" with a custom color applies the change and closes the popover.
 - **Application**: Used on the **Account Settings** page to manage the current user's theme, primary color, default calendar view, time format, and other boolean preferences.
 
 ## Visual & Theming Elements
@@ -274,7 +275,7 @@ The application supports two distinct color themes, `light` and `dark`, which ca
     -   **Primary Color**: A vibrant, energetic orange (`#D8620E` or `hsl(25 88% 45%)`) used for key actions.
     -   **Accent Color**: A warm, golden yellow (`hsl(43 55% 71%)`) used in button hover gradients.
 
-- **Custom Primary Color**: Users can select a custom primary color using a color picker popover, which is triggered by a ghost-style palette icon button. This custom color overrides the theme's default primary color.
+- **Custom Primary Color**: Users can select a custom primary color using a color picker popover, which is triggered by a ghost-style palette icon button. The popover presents a color wheel, a hex input field, and a grid of predefined swatches. This custom color overrides the theme's default primary color.
 - **Primary Button Gradient**: Primary buttons have a special gradient effect on hover, which is unique to each theme. This provides a subtle but polished visual feedback for key actions.
 - **Text-based Button Hover**: For text-based buttons (like those on the login page), the hover and focus state is indicated *only* by the text color changing to the primary theme color. No background color is applied.
 
