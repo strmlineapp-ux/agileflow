@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -178,7 +179,7 @@ function SortableBadgeItem({ badge, ...props }: { badge: Badge, [key: string]: a
 
 
 function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collectionId, teamId, isSharedPreview = false, isCollectionOwned = false, isViewer = false, isDragging }: { badge: Badge, viewMode: BadgeCollection['viewMode'], onUpdateBadge: (badgeData: Partial<Badge>) => void, onDelete: () => void, collectionId: string, teamId: string, isSharedPreview?: boolean, isCollectionOwned: boolean, isViewer?: boolean, isDragging?: boolean }) {
-    const { toast } = useToast();
+    const { toast } = useUser();
     const { teams, users, viewAsUser, allBadges } = useUser();
     const [isEditingName, setIsEditingName] = useState(false);
     const [currentName, setCurrentName] = useState(badge.name);
@@ -383,7 +384,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                                 <TooltipTrigger asChild>
                                                     <PopoverTrigger asChild disabled={!isEditable} onPointerDown={(e) => e.stopPropagation()}>
                                                         <button
-                                                            className={cn("absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-card", isEditable && "cursor-pointer")}
+                                                            className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-0", isEditable && "cursor-pointer")}
                                                             style={{ backgroundColor: badge.color }}
                                                             aria-label="Change badge color"
                                                         />
@@ -399,7 +400,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                             <Tooltip>
                                                 <TooltipTrigger asChild>
                                                     <div 
-                                                        className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-card flex items-center justify-center text-white"
+                                                        className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white"
                                                         style={{ backgroundColor: shareIconColor }}
                                                     >
                                                         <GoogleSymbol name={shareIcon} style={{fontSize: '10px'}}/>
@@ -531,7 +532,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                     <TooltipTrigger asChild>
                                         <PopoverTrigger asChild disabled={!isEditable} onPointerDown={(e) => e.stopPropagation()}>
                                             <button
-                                                className={cn("absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-background", isEditable && "cursor-pointer")}
+                                                className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-0", isEditable && "cursor-pointer")}
                                                 style={{ backgroundColor: badge.color }}
                                                 aria-label="Change badge color"
                                             />
@@ -547,7 +548,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                         <div
-                                            className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-background flex items-center justify-center text-white"
+                                            className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white"
                                             style={{ backgroundColor: shareIconColor }}
                                         >
                                             <GoogleSymbol name={shareIcon} style={{fontSize: '10px'}} />
@@ -615,7 +616,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild disabled={!isEditable} onPointerDown={(e) => e.stopPropagation()}>
                                                 <button
-                                                    className={cn("absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-background", isEditable && "cursor-pointer")}
+                                                    className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-0", isEditable && "cursor-pointer")}
                                                     style={{ backgroundColor: badge.color }}
                                                     aria-label="Change badge color"
                                                 />
@@ -631,7 +632,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <div
-                                                className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-background flex items-center justify-center text-white"
+                                                className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white"
                                                 style={{ backgroundColor: shareIconColor }}
                                             >
                                                 <GoogleSymbol name={shareIcon} style={{fontSize: '10px'}} />
@@ -883,7 +884,7 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                                     {!isViewer && (
                                         <>
                                             <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                                                <PopoverTrigger asChild disabled={!isOwned} onPointerDown={(e) => e.stopPropagation()}><button className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background", !isOwned ? "cursor-not-allowed" : "cursor-pointer")} style={{ backgroundColor: collection.color }} /></PopoverTrigger>
+                                                <PopoverTrigger asChild disabled={!isOwned} onPointerDown={(e) => e.stopPropagation()}><button className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-0", !isOwned ? "cursor-not-allowed" : "cursor-pointer")} style={{ backgroundColor: collection.color }} /></PopoverTrigger>
                                                 <PopoverContent className="w-auto p-4" onPointerDown={(e) => e.stopPropagation()}>
                                                     <div className="space-y-4">
                                                         <HexColorPicker color={color} onChange={setColor} className="!w-full" />
@@ -905,7 +906,7 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                                                     <Tooltip>
                                                         <TooltipTrigger asChild>
                                                             <div 
-                                                                className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-card flex items-center justify-center text-white"
+                                                                className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white"
                                                                 style={{ backgroundColor: shareIconColor }}
                                                             >
                                                                 <GoogleSymbol name={shareIcon} style={{fontSize: '10px'}}/>
@@ -1091,7 +1092,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         updateUser,
     } = useUser();
 
-    const { toast } = useToast();
+    const { toast } = useUser();
     
     const [collectionToDelete, setCollectionToDelete] = useState<BadgeCollection | null>(null);
     const [badgeToDelete, setBadgeToDelete] = useState<{ collectionId: string, badgeId: string } | null>(null);
@@ -1323,7 +1324,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                 toast({ title: 'Collection Linked' });
                 return;
             }
-
+            
             // Duplicating a collection
             if (over.id === 'duplicate-collection-zone') {
                 const sourceCollection = allBadgeCollections.find(c => c.id === collectionId);

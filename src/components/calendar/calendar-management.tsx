@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
@@ -241,7 +242,7 @@ function CalendarCard({
                                   <Tooltip>
                                       <TooltipTrigger asChild>
                                           <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={!canManage}>
-                                              <button className={cn("absolute -bottom-0 -right-0 h-4 w-4 rounded-full border-0 border-background", canManage && "cursor-pointer")} style={{ backgroundColor: calendar.color }} />
+                                              <button className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-0", canManage && "cursor-pointer")} style={{ backgroundColor: calendar.color }} />
                                           </PopoverTrigger>
                                       </TooltipTrigger>
                                       <TooltipContent><p>Change Color</p></TooltipContent>
@@ -268,7 +269,7 @@ function CalendarCard({
                                   <Tooltip>
                                       <TooltipTrigger asChild>
                                           <div 
-                                              className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-card flex items-center justify-center text-white"
+                                              className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white"
                                               style={{ backgroundColor: shareIconColor }}
                                           >
                                               <GoogleSymbol name={shareIcon} style={{fontSize: '10px'}}/>

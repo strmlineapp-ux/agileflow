@@ -305,8 +305,13 @@ This is the single source of truth for indicating user interaction state across 
 ### Subtle Visual Cues
 
 - **Lunch Break Pattern**: A subtle diagonal line pattern is used in calendar views to visually block out the typical lunch period (12:00 - 14:30). This serves as a non-intrusive reminder to avoid scheduling meetings during that time.
-- **Icon as Badge**: An icon displayed as a small, circular overlay on another element (e.g., an Avatar or another icon) to provide secondary information.
-    - **Appearance**: A circular badge with a `border-0` border.
-    - **Sizing**: The standard size for these badges (e.g., color-pickers, ownership status icons) is `h-4 w-4` (`16x16px`). The `GoogleSymbol` inside should be sized to fit, for example using `style={{fontSize: '10px'}}`.
-    - **Placement**: Placed on the corner of their parent icon using `absolute -bottom-1 -right-1`.
+- **Icon as Badge**: An icon displayed as a small, circular overlay on another element (e.g., an Avatar or another icon) to provide secondary information. This pattern has two main variations:
+    - **Color Picker Trigger**:
+        - **Appearance**: A circular badge with a `border-0`. It is used to trigger a color picker popover.
+        - **Sizing**: `h-4 w-4`.
+        - **Placement**: `absolute -bottom-1 -right-1`.
+    - **Ownership Status Badge**:
+        - **Appearance**: A circular badge with a `border-0`. It displays a status icon (e.g., `upload`).
+        - **Sizing**: `h-4 w-4`.
+        - **Placement**: `absolute -top-1 -right-1`.
 -   **Badges in Assorted View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
