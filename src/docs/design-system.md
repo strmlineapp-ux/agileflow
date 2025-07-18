@@ -85,9 +85,14 @@ This is the consistent reference pattern for allowing a user to change both an i
 - **Trigger:** A single, interactive unit composed of a primary icon button and a smaller color swatch badge overlaid on its corner.
 - **Icon Sizing**: The trigger button's icon should be large and prominent, specifically using a `h-10 w-10` button. The `GoogleSymbol` inside should have its `style={{fontSize: '36px'}}`, `opticalSize={20}`, and `grade={-25}` to create a "large but thin" aesthetic.
 - **Interaction:**
-  - Clicking the main part of the button opens an icon picker popover. This popover uses the **Compact Search Input** pattern for filtering. The icons inside this picker are rendered at `text-4xl` with `weight={100}` inside `h-8 w-8` buttons for clarity and ease of selection.
-  - Clicking the color swatch badge opens a color picker popover. The popover presents a user-friendly color wheel (`react-colorful`), a hex input field, and a grid of predefined color swatches. This provides a consistent and powerful color selection experience.
-- **Application:** Used for editing team icons/colors, and page icons/colors.
+  - **Icon Picker**: Clicking the main part of the button opens an icon picker popover. This popover uses the **Compact Search Input** pattern for filtering. The icons inside this picker are rendered at `text-4xl` with `weight={100}` inside `h-8 w-8` buttons for clarity and ease of selection.
+  - **Color Picker**: Clicking the color swatch badge opens the standard color picker popover.
+- **Color Picker UI**: The popover must contain three elements for a comprehensive user experience:
+    1.  A color wheel and saturation box using the `react-colorful` library's `<HexColorPicker />`.
+    2.  A text input for the HEX color code using `<HexColorInput />`.
+    3.  A grid of predefined color swatches for quick selection.
+    A final "Set Color" button applies the chosen color.
+- **Application:** This is the required pattern for editing the icon and color of any major entity, such as Pages, Calendars, Teams, and Badge Collections.
 
 ---
 
@@ -241,7 +246,7 @@ This pattern provides a dense, icon-driven interface for managing a series of us
     - **Tooltip on Hover**: Hovering over any icon button **must** display a `<Tooltip>` that clearly describes the setting and its current value (e.g., "Theme: Dark" or "Easy Booking: On"). This is critical for usability as the icons alone do not convey the current state.
     - **Popover on Click**: Clicking an icon button opens a compact `<Popover>` containing the options for that setting.
     - **Instant Application**: Selecting an option within the popover immediately applies the change and closes the popover. There is no separate "Save" button.
-    - **Custom Color Picker**: The palette icon opens a popover containing a color wheel, a hex input field, and a grid of predefined color swatches. Selecting a predefined swatch or clicking "Set Color" with a custom color applies the change and closes the popover.
+    - **Custom Color Picker**: The palette icon opens the standard color picker popover, as defined in the **Icon & Color Editing Flow** pattern. Selecting a predefined swatch or clicking "Set Color" with a custom color applies the change and closes the popover.
 - **Application**: Used on the **Account Settings** page to manage the current user's theme, primary color, default calendar view, time format, and other boolean preferences.
 
 ## Visual & Theming Elements
@@ -275,7 +280,7 @@ The application supports two distinct color themes, `light` and `dark`, which ca
     -   **Primary Color**: A vibrant, energetic orange (`#D8620E` or `hsl(25 88% 45%)`) used for key actions.
     -   **Accent Color**: A warm, golden yellow (`hsl(43 55% 71%)`) used in button hover gradients.
 
-- **Custom Primary Color**: Users can select a custom primary color using a color picker popover, which is triggered by a ghost-style palette icon button. The popover presents a color wheel, a hex input field, and a grid of predefined swatches. This custom color overrides the theme's default primary color.
+- **Custom Primary Color**: Users can select a custom primary color using a color picker popover, as defined in the **Icon & Color Editing Flow** pattern. This custom color overrides the theme's default primary color.
 - **Primary Button Gradient**: Primary buttons have a special gradient effect on hover, which is unique to each theme. This provides a subtle but polished visual feedback for key actions.
 - **Text-based Button Hover**: For text-based buttons (like those on the login page), the hover and focus state is indicated *only* by the text color changing to the primary theme color. No background color is applied.
 
@@ -305,3 +310,5 @@ This is the single source of truth for indicating user interaction state across 
     - **Sizing**: The standard size for these badges (e.g., color-pickers, ownership status icons) is `h-4 w-4` (`16x16px`). The `GoogleSymbol` inside should be sized to fit, for example using `style={{fontSize: '10px'}}`.
     - **Placement**: This is context-dependent. Color-pickers are typically placed on the bottom-right corner of their parent icon. Ownership status icons are typically placed on the top-left corner to create visual balance.
 -   **Badges in Assorted View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
+
+    
