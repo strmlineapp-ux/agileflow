@@ -256,7 +256,7 @@ function CalendarCard({
                                     </div>
                                     <div className="grid grid-cols-8 gap-1">
                                         {PREDEFINED_COLORS.map(c => (
-                                            <button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => onUpdate(calendar.id, { color: c })} />
+                                            <button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdate(calendar.id, { color: c }); setIsColorPopoverOpen(false);}} />
                                         ))}
                                     </div>
                                     <Button onClick={() => { onUpdate(calendar.id, { color }); setIsColorPopoverOpen(false); }} className="w-full">Set Color</Button>

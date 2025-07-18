@@ -366,6 +366,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                                 onUpdateIcon={(icon) => onUpdateBadge({ icon })}
                                                 disabled={!isEditable}
                                                 weight={100}
+                                                grade={-25}
                                                 buttonClassName="h-10 w-10"
                                                 style={{ fontSize: '36px', color: badge.color }}
                                             />
@@ -513,6 +514,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                     onUpdateIcon={(icon) => onUpdateBadge({ icon })}
                                     disabled={!isEditable}
                                     weight={100}
+                                    grade={-25}
                                     buttonClassName="h-10 w-10"
                                     style={{ fontSize: '36px', color: badge.color }}
                                 />
@@ -874,6 +876,7 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                                         onUpdateIcon={(icon) => onUpdateCollection(collection.id, { icon })}
                                         disabled={!isOwned}
                                         weight={100}
+                                        grade={-25}
                                         style={{ fontSize: '32px' }}
                                         buttonClassName="h-8 w-8"
                                     />
