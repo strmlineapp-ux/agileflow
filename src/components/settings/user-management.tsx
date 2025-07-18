@@ -41,9 +41,6 @@ const CustomColorPicker = ({ user, onUpdate, onClose }: { user: User, onUpdate: 
                 {predefinedColors.map(c => (
                     <button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => onUpdate(c)} />
                 ))}
-                <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
-                    <Input type="color" value={color} onChange={(e) => onUpdate(e.target.value)} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" aria-label="Custom color picker"/>
-                </div>
             </div>
             <Button onClick={handleSave} className="w-full">Set Color</Button>
         </div>
