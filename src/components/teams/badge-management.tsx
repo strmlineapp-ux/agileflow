@@ -497,8 +497,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                 <TooltipContent><p>{isEditable ? "Click to edit" : "Properties are managed by the owner."}</p></TooltipContent>
             </Tooltip>
         </TooltipProvider>
-    );
-
+    )
 
     if (viewMode === 'list') {
       return (
