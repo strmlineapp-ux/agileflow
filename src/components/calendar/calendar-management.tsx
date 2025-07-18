@@ -241,7 +241,7 @@ function CalendarCard({
                                   <Tooltip>
                                       <TooltipTrigger asChild>
                                           <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={!canManage}>
-                                              <button className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background", canManage && "cursor-pointer")} style={{ backgroundColor: calendar.color }} />
+                                              <button className={cn("absolute -bottom-0 -right-0 h-4 w-4 rounded-full border-0 border-background", canManage && "cursor-pointer")} style={{ backgroundColor: calendar.color }} />
                                           </PopoverTrigger>
                                       </TooltipTrigger>
                                       <TooltipContent><p>Change Color</p></TooltipContent>
