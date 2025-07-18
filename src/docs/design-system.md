@@ -83,7 +83,7 @@ This pattern replaces large, card-style "Add New" buttons with a more compact an
 This is the consistent reference pattern for allowing a user to change both an icon and its color.
 
 - **Trigger:** A single, interactive unit composed of a primary icon button and a smaller color swatch badge overlaid on its corner.
-- **Icon Sizing**: The trigger button's icon should be compact and clear. The gold standard is a `h-8 w-8` button containing a `GoogleSymbol` with its font size set to `32px` and a `font-weight` of `100`.
+- **Icon Sizing**: The trigger button's icon should be large and prominent, specifically using a `h-10 w-10` button containing a `GoogleSymbol` with `style={{fontSize: '36px'}}`, `weight={100}`, and `opticalSize={20}`. This creates a "large but thin" effect.
 - **Interaction:**
   - Clicking the main part of the button opens an icon picker popover. This popover uses the **Compact Search Input** pattern for filtering. The icons inside this picker are rendered at `text-4xl` with `weight={100}` inside `h-8 w-8` buttons for clarity and ease of selection.
   - Clicking the color swatch badge opens a color picker popover.

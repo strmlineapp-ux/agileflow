@@ -203,8 +203,8 @@ function CalendarCard({
                                   <Tooltip>
                                       <TooltipTrigger asChild>
                                           <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={!canManage}>
-                                              <Button variant="ghost" className="h-8 w-8 flex items-center justify-center p-0">
-                                                  <GoogleSymbol name={calendar.icon} style={{ fontSize: '32px' }} weight={100} />
+                                              <Button variant="ghost" className="h-10 w-10 flex items-center justify-center p-0">
+                                                  <GoogleSymbol name={calendar.icon} opticalSize={20} style={{ fontSize: '36px' }} weight={100} />
                                               </Button>
                                           </PopoverTrigger>
                                       </TooltipTrigger>
