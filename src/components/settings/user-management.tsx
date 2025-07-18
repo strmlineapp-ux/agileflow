@@ -32,7 +32,7 @@ const CustomColorPicker = ({ user, onUpdate, onClose }: { user: User, onUpdate: 
 
     return (
         <div className="space-y-4">
-             <HexColorPicker color={color} onChange={setColor} />
+             <HexColorPicker color={color} onChange={setColor} className="!w-full" />
              <div className="flex items-center gap-2">
                 <span className="p-2 border rounded-md shadow-sm" style={{ backgroundColor: color }} />
                 <HexColorInput prefixed alpha color={color} onChange={setColor} className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50" />
@@ -42,7 +42,6 @@ const CustomColorPicker = ({ user, onUpdate, onClose }: { user: User, onUpdate: 
                     <button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => onUpdate(c)} />
                 ))}
                 <div className="relative h-6 w-6 rounded-full border flex items-center justify-center bg-muted">
-                    <GoogleSymbol name="colorize" className="text-muted-foreground" weight={100} />
                     <Input type="color" value={color} onChange={(e) => onUpdate(e.target.value)} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 p-0" aria-label="Custom color picker"/>
                 </div>
             </div>
