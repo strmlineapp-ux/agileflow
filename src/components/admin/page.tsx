@@ -260,7 +260,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive, activeTab, pa
                     </TooltipProvider>
                 </div>
                 <DialogHeader>
-                    <DialogTitle>Two-Factor Authentication</DialogTitle>
+                    <UIDialogTitle>Two-Factor Authentication</UIDialogTitle>
                     <DialogDescription>Enter the 6-digit code from your authenticator app to proceed.</DialogDescription>
                 </DialogHeader>
                 <div
@@ -622,7 +622,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
-                                                <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-0 border-background cursor-pointer" style={{ backgroundColor: page.color }} />
+                                                <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background cursor-pointer" style={{ backgroundColor: page.color }} />
                                             </PopoverTrigger>
                                         </TooltipTrigger>
                                         <TooltipContent><p>Change Color</p></TooltipContent>
@@ -1068,7 +1068,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <PopoverTrigger asChild>
-                                        <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-0 border-background cursor-pointer" style={{ backgroundColor: tab.color }} />
+                                        <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background cursor-pointer" style={{ backgroundColor: tab.color }} />
                                     </PopoverTrigger>
                                 </TooltipTrigger>
                                 <TooltipContent><p>Change Color</p></TooltipContent>
