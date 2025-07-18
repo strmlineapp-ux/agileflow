@@ -83,11 +83,11 @@ This pattern replaces large, card-style "Add New" buttons with a more compact an
 This is the consistent reference pattern for allowing a user to change both an icon and its color.
 
 - **Trigger:** A single, interactive unit composed of a primary icon button and a smaller color swatch badge overlaid on its corner.
-- **Icon Sizing**: The trigger button's icon should be large and prominent, specifically using a `h-10 w-10` button containing a `GoogleSymbol` with `style={{fontSize: '36px'}}`, `weight={100}`, and `opticalSize={20}`. This creates a "large but thin" effect.
+- **Icon Sizing**: The trigger button's icon should be large and prominent, specifically using a `h-10 w-10` button. The `GoogleSymbol` inside should have its `style={{fontSize: '36px'}}`, `opticalSize={20}`, and `grade={-25}` to create a "large but thin" aesthetic.
 - **Interaction:**
   - Clicking the main part of the button opens an icon picker popover. This popover uses the **Compact Search Input** pattern for filtering. The icons inside this picker are rendered at `text-4xl` with `weight={100}` inside `h-8 w-8` buttons for clarity and ease of selection.
   - Clicking the color swatch badge opens a color picker popover.
-- **Application:** Used for editing team icons/colors, page icons/colors, and badge collection icons/colors.
+- **Application:** Used for editing team icons/colors, and page icons/colors.
 
 ---
 
@@ -253,8 +253,8 @@ This pattern provides a dense, icon-driven interface for managing a series of us
 ### Icons & Hover Effects
 - **Icon Set**: We exclusively use **Google Material Symbols** via the `<GoogleSymbol />` component. This ensures a consistent visual language. The font library is a variable font, which means we can adjust its properties.
 - **Icon Sizing & Weight**:
-  - A `weight={100}` is used for **all icons** to maintain a light, clean aesthetic.
-  - Icons inside pickers (like the icon picker) are `text-4xl` inside `h-8 w-8` buttons for clarity and ease of selection.
+  - A `weight={100}` and `grade={-25}` is used for **all icons** to maintain a light, clean aesthetic.
+  - Icons inside pickers (like the icon picker) are `text-4xl` with `weight={100}` inside `h-8 w-8` buttons for clarity and ease of selection.
   - Large, circular 'Add New' buttons use `text-4xl` for prominence.
 - **Filled Icons**: To use the filled style of an icon, pass the `filled` prop to the component: `<GoogleSymbol name="star" filled />`. This works with any of the three main styles.
 - **Hover Behavior**: The color of icons on hover is typically determined by their parent element. For example, an icon inside a `<Button variant="ghost">` will change to the primary theme color on hover because the button's text color changes, and the icon inherits that color. This creates a clean and predictable interaction.

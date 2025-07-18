@@ -572,7 +572,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
                                                 <Button variant="ghost" className="h-10 w-10 flex items-center justify-center p-0">
-                                                    <GoogleSymbol name={page.icon} weight={100} opticalSize={20} style={{ fontSize: '36px' }}/>
+                                                    <GoogleSymbol name={page.icon} weight={100} opticalSize={20} grade={-25} style={{ fontSize: '36px' }}/>
                                                 </Button>
                                             </PopoverTrigger>
                                         </TooltipTrigger>
