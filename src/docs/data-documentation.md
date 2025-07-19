@@ -192,8 +192,7 @@ The `Team` entity is a functional unit that groups users together for collaborat
 | `teamAdmins?: string[]` | A subset of `members` who have administrative privileges for this team (e.g., can add/remove members). |
 | `teamAdminsLabel?: string` | A custom label for the Team Admins list on the Team Members tab. |
 | `membersLabel?: string` | A custom label for the Members list on the Team Members tab. |
-| `allBadges: Badge[]` | A denormalized list of all badges *used by* this team, from both its owned and linked collections. |
-| `badgeCollections: BadgeCollection[]` | A list of `BadgeCollection` objects *used by* this team. This does not imply ownership. |
+| `badgeCollections: BadgeCollection[]` | A list of `BadgeCollection` objects *used by* this team. This does not imply ownership, but rather defines which collections are available for this team to use. |
 | `userBadgesLabel?: string` | A custom label for the "Team Badges" section on the Team Members tab. |
 | `linkedCollectionIds?: string[]` | An array of `collectionId`s for shared Badge Collections that this team has chosen to use. |
 | `activeBadgeCollections?: string[]` | A subset of `badgeCollections` and `linkedCollectionIds` that are currently active for this team. |
@@ -233,4 +232,5 @@ This represents a specific, functional role or skill. The single source of truth
 | `icon: string` | The Google Symbol name for the badge's icon. |
 | `color: string` | The hex color code for the badge's icon and outline. |
 | `description?: string` | An optional description shown in tooltips. |
+
 

@@ -22,15 +22,17 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
   const labelInputRef = useRef<HTMLInputElement>(null);
   
   const canManageRoles = viewAsUser.isAdmin || team.teamAdmins?.includes(viewAsUser.userId);
-  const teamBadgeNames = team.allBadges.map(b => b.name);
   const teamBadgesLabel = team.userBadgesLabel || 'Team Badges';
 
   const userAssignableBadges = useMemo(() => {
-    const userBadgeCollections = team.badgeCollections.filter(c => c.applications?.includes('team members'));
-    const userAssignableBadgeIds = new Set(userBadgeCollections.flatMap(c => c.badgeIds));
+    const activeCollections = team.badgeCollections.filter(c => team.activeBadgeCollections?.includes(c.id));
+    const userAssignableBadgeIds = new Set(
+        activeCollections.filter(c => c.applications?.includes('team members')).flatMap(c => c.badgeIds)
+    );
     return allBadges.filter(b => userAssignableBadgeIds.has(b.id));
-  }, [team.badgeCollections, allBadges]);
-
+  }, [team.badgeCollections, team.activeBadgeCollections, allBadges]);
+  
+  const teamBadgeNames = useMemo(() => new Set(userAssignableBadges.map(b => b.name)), [userAssignableBadges]);
 
   const groupedBadges = useMemo(() => {
     const assignedBadgeIds = new Set(member.roles || []);
@@ -69,14 +71,14 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
         return;
     }
 
-    const currentBadges = new Set(member.roles?.filter(r => teamBadgeNames.includes(r)) || []);
+    const currentBadges = new Set(member.roles?.filter(r => teamBadgeNames.has(r)) || []);
     if (currentBadges.has(badgeName)) {
         currentBadges.delete(badgeName);
     } else {
         currentBadges.add(badgeName);
     }
     
-    const nonTeamRoles = (member.roles || []).filter(role => !teamBadgeNames.includes(role));
+    const nonTeamRoles = (member.roles || []).filter(role => !teamBadgeNames.has(role));
     const finalRoles = [...new Set([...nonTeamRoles, ...Array.from(currentBadges)])];
 
     await updateUser(member.userId, { roles: finalRoles });
