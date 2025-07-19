@@ -672,7 +672,7 @@ function DroppableCollectionContent({ collection, children }: { collection: Badg
         <div 
             ref={setNodeRef}
             className={cn(
-                "min-h-[60px] rounded-md p-2",
+                "min-h-[60px] rounded-md p-2 transition-all",
                 isOver && "ring-1 ring-border ring-inset",
                 collection.viewMode === 'assorted' && "flex flex-wrap gap-2 items-start",
                 collection.viewMode === 'list' && "flex flex-col gap-1",
@@ -851,7 +851,7 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                                    className="absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity z-10"
                                     onPointerDown={(e) => {
                                         e.stopPropagation();
                                         onDeleteCollection(collection);
@@ -923,9 +923,7 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                                         ) : (
                                             <CardTitle onPointerDown={(e) => { e.stopPropagation(); if(isOwned) setIsEditingName(true);}} className={cn("text-2xl font-headline font-thin break-words", isOwned && "cursor-pointer")}>{collection.name}</CardTitle>
                                         )}
-                                        <DroppableDuplicateZone id={`duplicate-badge-zone:${collection.id}`} disabled={!isOwned || isViewer}>
-                                            <Button variant="ghost" size="icon" onPointerDown={(e) => { e.stopPropagation(); onAddBadge(collection.id);}}><GoogleSymbol name="add_circle" className="text-4xl" weight={100} /><span className="sr-only">Add Badge</span></Button>
-                                        </DroppableDuplicateZone>
+                                         <Button variant="ghost" size="icon" onClick={() => onAddBadge(collection.id)} disabled={!isOwned || isViewer}><GoogleSymbol name="add_circle" className="text-4xl" weight={100} /><span className="sr-only">Add Badge</span></Button>
                                     </div>
                                 </div>
                             </div>
@@ -996,27 +994,6 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
     );
 }
 
-function DroppableDuplicateZone({ id, disabled, children }: { id: string, disabled: boolean, children: React.ReactNode }) {
-    const { setNodeRef, isOver } = useDroppable({ id, disabled });
-    const tooltipText = isOver ? 'Drop to Duplicate' : 'Add New Badge';
-    
-    return (
-        <div 
-            ref={setNodeRef}
-            className={cn("rounded-full p-0.5 transition-all", isOver && "ring-1 ring-inset ring-border")}
-        >
-            <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        {children}
-                    </TooltipTrigger>
-                    <TooltipContent><p>{tooltipText}</p></TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
-        </div>
-    );
-}
-
 function DuplicateCollectionZone({ onAdd }: { onAdd: () => void; }) {
   const { isOver, setNodeRef } = useDroppable({ id: 'duplicate-collection-zone' });
   
@@ -1060,8 +1037,6 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         addBadge,
         updateBadge,
         deleteBadge,
-        updateTeam,
-        updateUser,
         reorderBadges,
     } = useUser();
 
@@ -1354,7 +1329,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     return (
         <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
             <div className="flex gap-4 h-full">
-                <div className="flex-1 overflow-hidden">
+                 <div className="flex-1 overflow-hidden">
                   <div className="flex flex-col gap-6 h-full">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
@@ -1401,7 +1376,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                             </div>
                         </div>
                         
-                        <div className="flex-1 min-h-0">
+                         <div className="flex-1 min-h-0">
                             <ScrollArea className="h-full">
                                 <DroppableCollectionContent collection={{ id: 'main-collections-grid' } as any}>
                                 <SortableContext items={collectionsToDisplay.map(c => `collection::${c.id}`)} strategy={rectSortingStrategy}>
@@ -1460,7 +1435,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                             <CardTitle className="font-headline font-thin text-xl">Shared Collections</CardTitle>
                                             <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." inputRef={sharedSearchInputRef} autoFocus={isSharedPanelOpen} tooltipText="Search Shared Collections" />
                                         </div>
-                                        <CardDescription>Drag a collection to link it to your team.</CardDescription>
+                                        <CardDescription>Drag a collection to your board to link it.</CardDescription>
                                     </CardHeader>
                                     <CardContent className="flex-1 p-2 overflow-hidden">
                                         <ScrollArea className="h-full">

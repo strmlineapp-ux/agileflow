@@ -345,7 +345,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setAllBadgeCollections(prev => [...prev, newCollection]);
     if (newBadges.length > 0) setAllBadges(prev => [...prev, ...newBadges]);
     if (contextTeam) {
-        const updatedTeam = { ...contextTeam, badgeCollections: [...contextTeam.badgeCollections, newCollection], allBadges: [...contextTeam.allBadges, ...newBadges], activeBadgeCollections: contextTeam.activeBadgeCollections ? [...contextTeam.activeBadgeCollections] : [] };
+        const updatedTeam = {
+            ...contextTeam,
+            badgeCollections: [...(contextTeam.badgeCollections || []), newCollection],
+            allBadges: [...(contextTeam.allBadges || []), ...newBadges],
+            activeBadgeCollections: [...(contextTeam.activeBadgeCollections || []), newCollection.id],
+        };
         setTeams(currentTeams => currentTeams.map(t => t.id === contextTeam.id ? updatedTeam : t));
     }
   }, [allBadgeCollections.length, allBadges]);
@@ -386,7 +391,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const deleteBadge = useCallback((badgeId: string) => {
     setAllBadges(current => current.filter(b => b.id !== badgeId));
     setAllBadgeCollections(current => current.map(c => ({ ...c, badgeIds: c.badgeIds.filter(id => id !== badgeId) })));
-    setTeams(currentTeams => currentTeams.map(t => ({ ...t, allBadges: t.allBadges.filter(b => b.id !== badgeId), badgeCollections: t.badgeCollections.map(c => ({ ...c, badgeIds: c.badgeIds.filter(id => id !== badgeId) })) })));
+    setTeams(currentTeams => currentTeams.map(t => ({ ...t, allBadges: t.allBadges.filter(b => b.id !== badgeId), badgeCollections: t.badgeCollections.map(c => ({ ...c, badgeIds: c.badgeIds.filter(id => id !== badgeId) }))})));
   }, []);
   
   const reorderBadges = useCallback((collectionId: string, badgeIds: string[]) => {

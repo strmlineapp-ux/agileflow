@@ -95,13 +95,17 @@ export const hasAccess = (user: User, page: AppPage, teams: Team[]): boolean => 
 };
 
 /**
- * Determines the ownership context for a new item. Ownership is always assigned to the active user.
+ * Determines the ownership context for a new item.
  * @param page The current AppPage configuration.
  * @param user The current user object.
  * @param contextTeam The current team, if on a dynamic team page.
- * @returns A BadgeCollectionOwner object, assigning to the user.
+ * @returns A BadgeCollectionOwner object.
  */
 export const getOwnershipContext = (page: AppPage, user: User, contextTeam?: Team): BadgeCollectionOwner => {
-    // Simplified rule: The creator is always the owner.
+    // If we are on a dynamic team page, the team is the owner.
+    if (contextTeam) {
+        return { type: 'team', id: contextTeam.id };
+    }
+    // Otherwise, the current user is the owner.
     return { type: 'user', id: user.userId };
 };
