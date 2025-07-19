@@ -81,6 +81,9 @@ function CalendarCard({
   const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
   const [googleCalendarIdInput, setGoogleCalendarIdInput] = useState('');
   const linkDialogInputRef = useRef<HTMLInputElement>(null);
+  
+  const [isEditingDefaultTitle, setIsEditingDefaultTitle] = useState(false);
+  const defaultTitleInputRef = useRef<HTMLInputElement>(null);
 
   const {toast} = useToast();
   
@@ -94,6 +97,14 @@ function CalendarCard({
     }
     setIsEditingName(false);
   }, [calendar.id, calendar.name, onUpdate, setIsEditingName]);
+
+  const handleSaveDefaultTitle = useCallback(() => {
+    const newTitle = defaultTitleInputRef.current?.value.trim();
+    if (newTitle !== calendar.defaultEventTitle) {
+      onUpdate(calendar.id, { defaultEventTitle: newTitle });
+    }
+    setIsEditingDefaultTitle(false);
+  }, [calendar.id, calendar.defaultEventTitle, onUpdate, setIsEditingDefaultTitle]);
   
   useEffect(() => {
     if (!isEditingName) return;
@@ -109,10 +120,30 @@ function CalendarCard({
         document.removeEventListener("mousedown", handleOutsideClick);
     };
   }, [isEditingName, handleSaveName]);
+  
+  useEffect(() => {
+    if (!isEditingDefaultTitle) return;
+    const handleOutsideClick = (event: MouseEvent) => {
+        if (defaultTitleInputRef.current && !defaultTitleInputRef.current.contains(event.target as Node)) {
+            handleSaveDefaultTitle();
+        }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    defaultTitleInputRef.current?.focus();
+    defaultTitleInputRef.current?.select();
+    return () => {
+        document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, [isEditingDefaultTitle, handleSaveDefaultTitle]);
 
   const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') { e.preventDefault(); handleSaveName(); }
     else if (e.key === 'Escape') setIsEditingName(false);
+  };
+  
+  const handleDefaultTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') { e.preventDefault(); handleSaveDefaultTitle(); }
+    else if (e.key === 'Escape') setIsEditingDefaultTitle(false);
   };
 
   useEffect(() => {
@@ -330,11 +361,26 @@ function CalendarCard({
               {isExpanded && (
                   <CardContent className="p-2 pt-0 mt-2" onPointerDown={(e) => e.stopPropagation()}>
                     <div className="space-y-1">
+                        {isEditingDefaultTitle ? (
+                          <Input
+                            ref={defaultTitleInputRef}
+                            defaultValue={calendar.defaultEventTitle || ''}
+                            onKeyDown={handleDefaultTitleKeyDown}
+                            onBlur={handleSaveDefaultTitle}
+                            className="h-auto p-0 text-xs italic border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                            placeholder="No default title"
+                          />
+                        ) : (
                           <span 
-                              className={cn("italic text-xs text-muted-foreground")} 
+                              className={cn("italic text-xs text-muted-foreground", canManage && "cursor-pointer")} 
+                              onClick={(e) => {
+                                  e.stopPropagation();
+                                  if(canManage) setIsEditingDefaultTitle(true)
+                              }}
                           >
                               {calendar.defaultEventTitle || 'No default title'}
                           </span>
+                        )}
                         </div>
                   </CardContent>
               )}
