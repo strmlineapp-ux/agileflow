@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { type Team, type Badge, type BadgeCollection, type User, type BadgeApplication, type AppTab, type BadgeCollectionOwner, type AppPage } from '@/types';
+import { type Team, type Badge, type BadgeCollection, type User, type BadgeApplication, type AppTab, type AppPage } from '@/types';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { ScrollArea } from '../ui/scroll-area';
@@ -20,6 +20,7 @@ import { Badge as UiBadge } from '../ui/badge';
 import { getOwnershipContext } from '@/lib/permissions';
 import { HexColorPicker, HexColorInput } from 'react-colorful';
 import { CompactSearchInput } from '@/components/common/compact-search-input';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 import {
   DndContext,
@@ -822,6 +823,18 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
 
     const isActive = contextTeam && contextTeam.activeBadgeCollections?.includes(collection.id);
 
+    const viewModeIcons: Record<BadgeCollection['viewMode'], string> = {
+        assorted: 'view_module',
+        detailed: 'view_comfy_alt',
+        list: 'view_list'
+    };
+
+    const viewModeOptions: {mode: BadgeCollection['viewMode'], icon: string, label: string}[] = [
+        { mode: 'assorted', icon: 'view_module', label: 'Assorted View' },
+        { mode: 'detailed', icon: 'view_comfy_alt', label: 'Detailed View' },
+        { mode: 'list', icon: 'view_list', label: 'List View' }
+    ];
+
     return (
         <>
             <Card className="h-full flex flex-col bg-transparent group relative">
@@ -884,35 +897,24 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                                         ) : (
                                             <CardTitle onPointerDown={(e) => { e.stopPropagation(); if(isOwned) setIsEditingName(true);}} className={cn("text-2xl font-headline font-thin break-words", isOwned && "cursor-pointer")}>{collection.name}</CardTitle>
                                         )}
-                                         <Button variant="ghost" size="icon" onClick={() => onAddBadge(collection.id)} disabled={!isOwned || isViewer}><GoogleSymbol name="add_circle" className="text-4xl" weight={100} /><span className="sr-only">Add Badge</span></Button>
                                     </div>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-2 pt-2">
-                                 <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Button variant="ghost" size="icon" className={cn("h-8 w-8", collection.viewMode === 'assorted' ? 'text-primary' : 'text-muted-foreground')} onClick={() => onUpdateCollection(collection.id, { viewMode: 'assorted' })}><GoogleSymbol name="view_module" weight={100} /></Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent><p>Assorted View</p></TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Button variant="ghost" size="icon" className={cn("h-8 w-8", collection.viewMode === 'detailed' ? 'text-primary' : 'text-muted-foreground')} onClick={() => onUpdateCollection(collection.id, { viewMode: 'detailed' })}><GoogleSymbol name="view_comfy_alt" weight={100} /></Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent><p>Detailed View</p></TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Button variant="ghost" size="icon" className={cn("h-8 w-8", collection.viewMode === 'list' ? 'text-primary' : 'text-muted-foreground')} onClick={() => onUpdateCollection(collection.id, { viewMode: 'list' })}><GoogleSymbol name="view_list" weight={100} /></Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent><p>List View</p></TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
+                            <div className="flex items-center gap-2 pt-2" onPointerDown={(e) => e.stopPropagation()}>
+                                <Button variant="ghost" size="icon" onClick={() => onAddBadge(collection.id)} disabled={!isOwned || isViewer} className="h-8 w-8 text-muted-foreground"><GoogleSymbol name="add" weight={100} /><span className="sr-only">Add Badge</span></Button>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground"><GoogleSymbol name={viewModeIcons[collection.viewMode]} weight={100} /></Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent>
+                                        {viewModeOptions.map(({mode, icon, label}) => (
+                                            <DropdownMenuItem key={mode} onClick={() => onUpdateCollection(collection.id, { viewMode: mode })}>
+                                                <GoogleSymbol name={icon} className="mr-2" />
+                                                <span>{label}</span>
+                                            </DropdownMenuItem>
+                                        ))}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
                             </div>
                         </div>
                     </CardHeader>
@@ -995,19 +997,29 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
     );
 }
 
-function DuplicateZone({ id, children }: { id: string; children: React.ReactNode }) {
+function DuplicateZone({ id, onAdd, children }: { id: string; onAdd: () => void; children: React.ReactNode }) {
   const { isOver, setNodeRef } = useDroppable({ id });
-  
+
   return (
-    <div
-      ref={setNodeRef}
-      className={cn(
-        "rounded-full transition-all p-0.5",
-        isOver && "ring-1 ring-border ring-inset"
-      )}
-    >
-        {children}
-    </div>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div
+            ref={setNodeRef}
+            className={cn(
+              "rounded-full transition-all p-0.5",
+              isOver && "ring-1 ring-border ring-inset"
+            )}
+            onClick={onAdd}
+          >
+            {children}
+          </div>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>{isOver ? 'Drop to Duplicate' : 'Add New Collection'}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
 
@@ -1133,7 +1145,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     }, [allBadgeCollections, collectionsToDisplay, sharedSearchTerm]);
 
     const handleAddCollection = (sourceCollection?: BadgeCollection) => {
-      addBadgeCollection(viewAsUser, sourceCollection);
+      addBadgeCollection(viewAsUser, sourceCollection, contextTeam);
     };
     
     const handleDeleteCollection = (collection: BadgeCollection) => {
@@ -1315,18 +1327,11 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                     </TooltipProvider>
                                 )}
                                 {!isViewer && (
-                                    <DuplicateZone id="duplicate-collection-zone">
-                                        <TooltipProvider>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <Button variant="ghost" size="icon" className="rounded-full p-0" onClick={() => handleAddCollection()} onPointerDown={(e) => e.stopPropagation()}>
-                                                        <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
-                                                        <span className="sr-only">New Collection</span>
-                                                    </Button>
-                                                </TooltipTrigger>
-                                                <TooltipContent><p>Add New Collection</p></TooltipContent>
-                                            </Tooltip>
-                                        </TooltipProvider>
+                                    <DuplicateZone id="duplicate-collection-zone" onAdd={() => handleAddCollection()}>
+                                        <Button variant="ghost" size="icon" className="rounded-full p-0" onPointerDown={(e) => e.stopPropagation()}>
+                                            <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
+                                            <span className="sr-only">New Collection</span>
+                                        </Button>
                                     </DuplicateZone>
                                 )}
                             </div>
