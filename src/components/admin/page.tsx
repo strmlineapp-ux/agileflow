@@ -878,23 +878,27 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
         if (over && active.id !== over.id) {
             const oldIndex = appSettings.pages.findIndex(p => p.id === active.id);
             const newIndex = appSettings.pages.findIndex(p => p.id === over.id);
-            
-            // Prevent dropping into pinned area or a pinned item into the non-pinned area
+
             const activeIsPinned = pinnedIds.has(active.id.toString());
             const overIsPinned = pinnedIds.has(over.id.toString());
+            const overItem = appSettings.pages[newIndex];
 
-            if (activeIsPinned !== overIsPinned) {
-                return; // Don't allow moving between pinned and unpinned sections
+            // A non-pinned item cannot be dropped onto a pinned item.
+            if (!activeIsPinned && overIsPinned) {
+                return;
+            }
+
+            // A non-pinned item cannot be dropped into a position that would break up the pinned items.
+            // Check if the item at the new destination index is pinned. If it is, and we are not moving a pinned item, cancel.
+            if (!activeIsPinned && overItem && pinnedIds.has(overItem.id)) {
+                 return;
             }
             
-            if (overIsPinned) {
-                // We don't allow reordering of pinned items, but if we did, logic would be here.
-                // For now, this is effectively a no-op because SortablePageCard is disabled for pinned items.
-                return; 
+            // Allow reordering only within the same group (pinned or unpinned).
+            if (activeIsPinned === overIsPinned) {
+                const reorderedPages = arrayMove(appSettings.pages, oldIndex, newIndex);
+                updateAppSettings({ pages: reorderedPages });
             }
-
-            const reorderedPages = arrayMove(appSettings.pages, oldIndex, newIndex);
-            updateAppSettings({ pages: reorderedPages });
         }
     };
     
