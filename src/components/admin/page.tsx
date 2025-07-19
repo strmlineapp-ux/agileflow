@@ -830,8 +830,8 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
         };
         
         // Ensure new pages are added before any pinned system pages at the end
-        const insertBeforePageIndex = appSettings.pages.findIndex(p => p.id === 'page-notifications');
-        const insertIndex = insertBeforePageIndex !== -1 ? insertBeforePageIndex : appSettings.pages.length;
+        const firstPinnedIndex = appSettings.pages.findIndex(p => pinnedIds.has(p.id));
+        const insertIndex = firstPinnedIndex !== -1 ? firstPinnedIndex : appSettings.pages.length;
 
         const newPages = [...appSettings.pages];
         newPages.splice(insertIndex, 0, newPage);
@@ -882,13 +882,10 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
 
             const activeIsPinned = pinnedIds.has(active.id.toString());
             const overIsPinned = pinnedIds.has(over.id.toString());
-            const overItem = appSettings.pages[newIndex];
-
-            // Prevent a non-pinned item from being dropped into a position occupied by a pinned item.
-            // Also, prevent a non-pinned item from being reordered *before* the last non-pinned item if the target is pinned.
-            const firstPinnedIndex = appSettings.pages.findIndex(p => pinnedIds.has(p.id));
-            if (!activeIsPinned && newIndex >= firstPinnedIndex) {
-                 return;
+            
+            // Prevent a non-pinned item from being dropped into the pinned section.
+            if (!activeIsPinned && overIsPinned) {
+                return;
             }
             
             // Allow reordering only within the same group (pinned or unpinned).
