@@ -200,22 +200,24 @@ function CalendarCard({
     <>
       <Card className="group relative flex flex-col bg-transparent h-full">
           {!isSharedPreview && (
-              <div onPointerDown={(e) => { e.stopPropagation(); setIsDeleteDialogOpen(true); }}>
-                  <TooltipProvider>
-                      <Tooltip>
-                          <TooltipTrigger asChild>
-                              <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                              >
-                                  <GoogleSymbol name="cancel" className="text-lg" weight={100} />
-                              </Button>
-                          </TooltipTrigger>
-                          <TooltipContent><p>{canManage ? "Delete Calendar" : "Unlink Calendar"}</p></TooltipContent>
-                      </Tooltip>
-                  </TooltipProvider>
-              </div>
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                            onPointerDown={(e) => {
+                                e.stopPropagation();
+                                setIsDeleteDialogOpen(true);
+                            }}
+                        >
+                            <GoogleSymbol name="cancel" className="text-lg" weight={100} />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent><p>{canManage ? "Delete Calendar" : "Unlink Calendar"}</p></TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
           )}
 
           <div className="p-2 flex-grow flex flex-col" {...dragHandleProps}>
@@ -690,34 +692,36 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
           </div>
         </div>
         <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96" : "w-0")}>
-          <CalendarDropZone id="shared-calendars-panel" type="shared-calendar-panel" className={cn("h-full rounded-lg transition-all", isSharedPanelOpen ? "p-2" : "p-0")}>
-            <Card className={cn("transition-opacity duration-300 h-full bg-transparent flex flex-col", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="font-headline font-thin text-xl">Shared Calendars</CardTitle>
-                  <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." inputRef={sharedSearchInputRef} autoFocus={isSharedPanelOpen} tooltipText="Search Shared Calendars" />
-                </div>
-                <UICardDescription>Drag a calendar to your board to link it.</UICardDescription>
-              </CardHeader>
-              <CardContent className="flex-1 p-2 overflow-hidden">
-                <ScrollArea className="h-full">
-                  <SortableContext items={sharedCalendars.map(c => c.id)} strategy={verticalListSortingStrategy}>
-                    <div className="space-y-2">
-                      {sharedCalendars.map(calendar => (
-                        <SortableCalendarCard
-                          key={calendar.id}
-                          calendar={calendar}
-                          onUpdate={handleUpdate}
-                          onDelete={handleDelete}
-                          isSharedPreview={true}
-                        />
-                      ))}
+          <div className={cn("h-full rounded-lg transition-all", isSharedPanelOpen ? "p-2" : "p-0")}>
+            <CalendarDropZone id="shared-calendars-panel" type="shared-calendar-panel" className="h-full">
+                <Card className={cn("transition-opacity duration-300 h-full bg-transparent flex flex-col", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
+                <CardHeader>
+                    <div className="flex items-center justify-between">
+                    <CardTitle className="font-headline font-thin text-xl">Shared Calendars</CardTitle>
+                    <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." inputRef={sharedSearchInputRef} autoFocus={isSharedPanelOpen} tooltipText="Search Shared Calendars" />
                     </div>
-                  </SortableContext>
-                </ScrollArea>
-              </CardContent>
-            </Card>
-          </CalendarDropZone>
+                    <UICardDescription>Drag a calendar to your board to link it.</UICardDescription>
+                </CardHeader>
+                <CardContent className="flex-1 p-2 overflow-hidden">
+                    <ScrollArea className="h-full">
+                    <SortableContext items={sharedCalendars.map(c => c.id)} strategy={verticalListSortingStrategy}>
+                        <div className="space-y-2">
+                        {sharedCalendars.map(calendar => (
+                            <SortableCalendarCard
+                            key={calendar.id}
+                            calendar={calendar}
+                            onUpdate={handleUpdate}
+                            onDelete={handleDelete}
+                            isSharedPreview={true}
+                            />
+                        ))}
+                        </div>
+                    </SortableContext>
+                    </ScrollArea>
+                </CardContent>
+                </Card>
+            </CalendarDropZone>
+          </div>
         </div>
       </div>
 
