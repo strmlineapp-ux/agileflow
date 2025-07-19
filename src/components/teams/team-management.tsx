@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
@@ -44,7 +43,7 @@ import { CardDescription } from '../ui/card';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { HexColorPicker, HexColorInput } from 'react-colorful';
 import { CompactSearchInput } from '@/components/common/compact-search-input';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 const predefinedColors = [
     '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
@@ -508,7 +507,9 @@ function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
 export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: AppTab; page: AppPage; isSingleTabPage?: boolean }) {
     const { viewAsUser, users, teams, appSettings, addTeam, updateTeam, deleteTeam, reorderTeams, updateAppTab, updateUser } = useUser();
     const router = useRouter();
+    const pathname = usePathname();
     const { toast } = useToast();
+    const sharedSearchInputRef = useRef<HTMLInputElement>(null);
 
     const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
     const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -532,6 +533,12 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
     useEffect(() => {
         if (isEditingTitle) titleInputRef.current?.focus();
     }, [isEditingTitle]);
+
+    useEffect(() => {
+        if (isSharedPanelOpen) {
+            setTimeout(() => sharedSearchInputRef.current?.focus(), 100);
+        }
+    }, [isSharedPanelOpen]);
 
     const handleSaveTitle = () => {
         const newName = titleInputRef.current?.value.trim();
@@ -645,7 +652,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
 
     const confirmDelete = () => {
         if (!teamToDelete) return;
-        deleteTeam(teamToDelete.id, router.push);
+        deleteTeam(teamToDelete.id, router, pathname);
         setTeamToDelete(null);
     };
     
@@ -754,72 +761,74 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
     return (
         <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
             <div className="flex gap-4 h-full">
-                 <div className="flex-1 transition-all duration-300 flex flex-col gap-6 overflow-hidden">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            {isEditingTitle ? (
-                              <Input ref={titleInputRef} defaultValue={finalTitle} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
-                            ) : (
-                              <TooltipProvider>
-                                  <Tooltip>
-                                      <TooltipTrigger asChild>
-                                          <h2 className="font-headline text-2xl font-thin tracking-tight cursor-pointer" onClick={() => setIsEditingTitle(true)}>{finalTitle}</h2>
-                                      </TooltipTrigger>
-                                      {tab.description && (
-                                          <TooltipContent><p className="max-w-xs">{tab.description}</p></TooltipContent>
-                                      )}
-                                  </Tooltip>
-                              </TooltipProvider>
-                            )}
-                            <DuplicateZone id="duplicate-team-zone" onAdd={() => handleAddTeam()} />
+                 <div className="flex-1 overflow-hidden">
+                    <div className="flex flex-col gap-6 h-full">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                {isEditingTitle ? (
+                                  <Input ref={titleInputRef} defaultValue={finalTitle} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
+                                ) : (
+                                  <TooltipProvider>
+                                      <Tooltip>
+                                          <TooltipTrigger asChild>
+                                              <h2 className="font-headline text-2xl font-thin tracking-tight cursor-pointer" onClick={() => setIsEditingTitle(true)}>{finalTitle}</h2>
+                                          </TooltipTrigger>
+                                          {tab.description && (
+                                              <TooltipContent><p className="max-w-xs">{tab.description}</p></TooltipContent>
+                                          )}
+                                      </Tooltip>
+                                  </TooltipProvider>
+                                )}
+                                <DuplicateZone id="duplicate-team-zone" onAdd={() => handleAddTeam()} />
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search teams..." />
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button variant="ghost" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)}>
+                                                <GoogleSymbol name="dynamic_feed" weight={100} />
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>Show Shared Teams</p></TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-1">
-                            <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search teams..." />
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button variant="ghost" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)}>
-                                            <GoogleSymbol name="dynamic_feed" weight={100} />
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent><p>Show Shared Teams</p></TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                        </div>
-                    </div>
 
-                    <TeamManagementDropZone id="teams-list" type="team-card" className="flex flex-wrap -m-2">
-                         <SortableContext items={teamIds} strategy={rectSortingStrategy}>
-                            {displayedTeams.map((team) => (
-                                <SortableTeamCard
-                                    key={team.id}
-                                    team={team} 
-                                    users={users}
-                                    onUpdate={handleUpdate} 
-                                    onDelete={handleDelete}
-                                    onToggleShare={handleToggleShare}
-                                    onRemoveUser={handleRemoveUserFromTeam}
-                                    onAddUser={handleAddUserToTeam}
-                                    onSetAdmin={handleSetAdmin}
-                                    isEditingName={editingTeamName && activeDragItem?.data?.team?.id === team.id}
-                                    setIsEditingName={(isEditing: boolean) => {
-                                        if (isEditing) {
-                                            setActiveDragItem({type: 'team-card', data: { team }});
-                                        }
-                                        setEditingTeamName(isEditing);
-                                    }}
-                                />
-                            ))}
-                         </SortableContext>
-                    </TeamManagementDropZone>
-                </div>
+                        <TeamManagementDropZone id="teams-list" type="team-card" className="flex flex-wrap -m-2">
+                             <SortableContext items={teamIds} strategy={rectSortingStrategy}>
+                                {displayedTeams.map((team) => (
+                                    <SortableTeamCard
+                                        key={team.id}
+                                        team={team} 
+                                        users={users}
+                                        onUpdate={handleUpdate} 
+                                        onDelete={handleDelete}
+                                        onToggleShare={handleToggleShare}
+                                        onRemoveUser={handleRemoveUserFromTeam}
+                                        onAddUser={handleAddUserToTeam}
+                                        onSetAdmin={handleSetAdmin}
+                                        isEditingName={editingTeamName && activeDragItem?.data?.team?.id === team.id}
+                                        setIsEditingName={(isEditing: boolean) => {
+                                            if (isEditing) {
+                                                setActiveDragItem({type: 'team-card', data: { team }});
+                                            }
+                                            setEditingTeamName(isEditing);
+                                        }}
+                                    />
+                                ))}
+                             </SortableContext>
+                        </TeamManagementDropZone>
+                    </div>
+                 </div>
                  <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96" : "w-0")}>
                     <TeamManagementDropZone id="shared-teams-panel" type="team-card" className={cn("h-full rounded-lg transition-all", isSharedPanelOpen ? "p-2" : "p-0")}>
                         <Card className={cn("transition-opacity duration-300 h-full bg-transparent flex flex-col", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
                             <CardHeader>
                                 <div className="flex items-center justify-between">
                                     <CardTitle className="font-headline font-thin text-xl">Shared Teams</CardTitle>
-                                    <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." autoFocus={isSharedPanelOpen} tooltipText="Search Shared Teams"/>
+                                    <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." inputRef={sharedSearchInputRef} autoFocus={isSharedPanelOpen} tooltipText="Search Shared Teams" />
                                 </div>
                                 <CardDescription>Drag a team you own here to share it. Drag a team to your board to link it.</CardDescription>
                             </CardHeader>

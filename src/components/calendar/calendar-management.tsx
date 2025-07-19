@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
@@ -520,6 +519,7 @@ function CalendarDropZone({ id, type, children, className }: { id: string; type:
 export function CalendarManagement({ tab }: { tab: AppTab }) {
   const { viewAsUser, calendars, addCalendar, updateCalendar, deleteCalendar, updateAppTab, appSettings, updateUser } = useUser();
   const { toast } = useToast();
+  const sharedSearchInputRef = useRef<HTMLInputElement>(null);
 
   const [activeCalendar, setActiveCalendar] = useState<SharedCalendar | null>(null);
   
@@ -528,6 +528,12 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
   const [mainSearchTerm, setMainSearchTerm] = useState('');
 
   const title = appSettings.calendarManagementLabel || tab.name;
+  
+  useEffect(() => {
+    if (isSharedPanelOpen) {
+        setTimeout(() => sharedSearchInputRef.current?.focus(), 100);
+    }
+  }, [isSharedPanelOpen]);
   
   const handleAddCalendar = (sourceCalendar?: SharedCalendar) => {
     const calendarCount = calendars.length;
@@ -642,43 +648,45 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
   return (
     <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
         <div className="flex gap-4 h-full">
-            <div className="flex-1 flex flex-col gap-6 overflow-hidden">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-headline text-2xl font-thin tracking-tight">{title}</h3>
-                      <DuplicateZone id="duplicate-calendar-zone" onAdd={() => handleAddCalendar()} />
+            <div className="flex-1 overflow-hidden">
+                <div className="flex flex-col gap-6 h-full">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-headline text-2xl font-thin tracking-tight">{title}</h3>
+                          <DuplicateZone id="duplicate-calendar-zone" onAdd={() => handleAddCalendar()} />
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <CompactSearchInput searchTerm={mainSearchTerm} setSearchTerm={setMainSearchTerm} placeholder="Search calendars..." />
+                             <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button variant="ghost" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)}>
+                                            <GoogleSymbol name="dynamic_feed" weight={100} />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent><p>Show Shared Calendars</p></TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <CompactSearchInput searchTerm={mainSearchTerm} setSearchTerm={setMainSearchTerm} placeholder="Search calendars..." />
-                         <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)}>
-                                        <GoogleSymbol name="dynamic_feed" weight={100} />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent><p>Show Shared Calendars</p></TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
+                    <div className="flex-1 min-h-0">
+                        <CalendarDropZone id="main-calendars-grid" type="calendar-grid" className="h-full">
+                         <ScrollArea className="h-full">
+                          <div className="flex flex-wrap content-start -m-2">
+                            <SortableContext items={calendarIds} strategy={rectSortingStrategy}>
+                                {displayedCalendars.map((calendar) => (
+                                    <SortableCalendarCard
+                                        key={calendar.id}
+                                        calendar={calendar}
+                                        onUpdate={handleUpdate}
+                                        onDelete={handleDelete}
+                                    />
+                                ))}
+                            </SortableContext>
+                          </div>
+                          </ScrollArea>
+                        </CalendarDropZone>
                     </div>
-                </div>
-                <div className="flex-1 min-h-0">
-                    <CalendarDropZone id="main-calendars-grid" type="calendar-grid" className="h-full">
-                     <ScrollArea className="h-full">
-                      <div className="flex flex-wrap content-start -m-2">
-                        <SortableContext items={calendarIds} strategy={rectSortingStrategy}>
-                            {displayedCalendars.map((calendar) => (
-                                <SortableCalendarCard
-                                    key={calendar.id}
-                                    calendar={calendar}
-                                    onUpdate={handleUpdate}
-                                    onDelete={handleDelete}
-                                />
-                            ))}
-                        </SortableContext>
-                      </div>
-                      </ScrollArea>
-                    </CalendarDropZone>
                 </div>
             </div>
             <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96" : "w-0")}>
@@ -687,7 +695,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                         <CardHeader>
                             <div className="flex items-center justify-between">
                                 <CardTitle className="font-headline font-thin text-xl">Shared Calendars</CardTitle>
-                                <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." autoFocus={isSharedPanelOpen} tooltipText="Search Shared Calendars" />
+                                <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." inputRef={sharedSearchInputRef} autoFocus={isSharedPanelOpen} tooltipText="Search Shared Calendars" />
                             </div>
                             <UICardDescription>Drag a calendar to your board to link it.</UICardDescription>
                         </CardHeader>
@@ -711,7 +719,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                     </Card>
                 </CalendarDropZone>
             </div>
-      </div>
+        </div>
       
        <DragOverlay>
         {activeCalendar ? (

@@ -13,7 +13,7 @@ import { googleSymbolNames } from '@/lib/google-symbols';
 import { corePages, coreTabs, globalBadges } from '@/lib/core-data';
 import { syncCalendar } from '@/ai/flows/sync-calendar-flow';
 import { getFirebaseAppForTenant } from '@/lib/firebase';
-import { usePathname } from 'next/navigation';
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 
 // Helper to simulate async operations
 const simulateApi = (delay = 50) => new Promise(res => setTimeout(res, delay));
@@ -36,7 +36,7 @@ interface UserDataContextType {
   teams: Team[];
   addTeam: (teamData: Omit<Team, 'id'>) => Promise<void>;
   updateTeam: (teamId: string, teamData: Partial<Team>) => Promise<void>;
-  deleteTeam: (teamId: string, navigate: (path: string) => void) => Promise<void>;
+  deleteTeam: (teamId: string, router: AppRouterInstance, pathname: string) => Promise<void>;
   reorderTeams: (reorderedTeams: Team[]) => Promise<void>;
   updateUser: (userId: string, userData: Partial<User>) => Promise<void>;
   notifications: Notification[];
@@ -85,7 +85,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [calendars, setCalendars] = useState<SharedCalendar[]>(initialCalendars);
   const [events, setEvents] = useState<Event[]>(initialEvents);
   const [locations, setLocations] = useState<BookableLocation[]>(initialLocations);
-  const pathname = usePathname();
   
   // --- Multi-Tenant Simulation ---
   // In a real app, the `tenantId` would come from middleware based on the subdomain.
@@ -192,24 +191,34 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setTeams(current => current.map(t => t.id === teamId ? { ...t, ...teamData } as Team : t));
   }, []);
 
-  const deleteTeam = useCallback(async (teamId: string, navigate: (path: string) => void) => {
+  const deleteTeam = useCallback(async (teamId: string, router: AppRouterInstance, pathname: string) => {
     const page = appSettings.pages.find(p => pathname.startsWith(p.path));
     const team = teams.find(t => t.id === teamId);
 
     if (page && team) {
       const userHadAccess = hasAccess(viewAsUser, page, teams);
       const teamsWithoutDeleted = teams.filter(t => t.id !== teamId);
-      const userWillHaveAccess = hasAccess(viewAsUser, page, teamsWithoutDeleted);
+      const userWillLoseAccess = userHadAccess && !hasAccess(viewAsUser, page, teamsWithoutDeleted);
       
-      if (userHadAccess && !userWillHaveAccess) {
-        navigate('/dashboard/notifications');
+      if (userWillLoseAccess) {
+        // Preemptive navigation to prevent crash
+        router.push('/dashboard/notifications');
+        // Now we can proceed to delete the team state after ensuring navigation is triggered.
+        // A small delay helps ensure the navigation starts before the re-render.
+        setTimeout(async () => {
+            await simulateApi();
+            setTeams(current => current.filter(t => t.id !== teamId));
+            toast({ title: 'Success', description: `Team "${team?.name}" has been deleted.` });
+        }, 50);
+        return; // Stop further execution in this path
       }
     }
     
+    // Default case: user access is not affected, or page is not found.
     await simulateApi();
     setTeams(current => current.filter(t => t.id !== teamId));
     toast({ title: 'Success', description: `Team "${team?.name}" has been deleted.` });
-  }, [teams, appSettings, viewAsUser, pathname, toast]);
+  }, [teams, appSettings, viewAsUser, toast]);
 
   const reorderTeams = useCallback(async (reordered: Team[]) => {
       await simulateApi();

@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -1334,98 +1333,100 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     return (
         <DndContext sensors={sensors} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
             <div className="flex gap-4 h-full">
-                <div className="flex-1 transition-all duration-300 flex flex-col gap-6 overflow-hidden">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            {isEditingTitle ? (
-                                <Input
-                                    ref={titleInputRef}
-                                    defaultValue={tab.name}
-                                    onBlur={handleSaveTitle}
-                                    onKeyDown={handleTitleKeyDown}
-                                    className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                                />
-                            ) : (
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
-                                        </TooltipTrigger>
-                                        {tab.description && (
-                                        <TooltipContent>
-                                            <p className="max-w-xs">{tab.description}</p>
-                                        </TooltipContent>
-                                        )}
-                                    </Tooltip>
-                                </TooltipProvider>
-                            )}
-                            {!isViewer && (
-                                <DroppableDuplicateZone id="duplicate-collection-zone" disabled={isViewer}>
-                                    <Button variant="ghost" size="icon" onPointerDown={(e) => { e.stopPropagation(); handleAddCollection(); }} onClick={handleAddCollection}>
-                                        <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
-                                        <span className="sr-only">Add New Collection or Drop to Duplicate</span>
-                                    </Button>
-                                </DroppableDuplicateZone>
-                            )}
+                <div className="flex-1 overflow-hidden">
+                    <div className="flex flex-col gap-6 h-full">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                {isEditingTitle ? (
+                                    <Input
+                                        ref={titleInputRef}
+                                        defaultValue={tab.name}
+                                        onBlur={handleSaveTitle}
+                                        onKeyDown={handleTitleKeyDown}
+                                        className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                                    />
+                                ) : (
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
+                                            </TooltipTrigger>
+                                            {tab.description && (
+                                            <TooltipContent>
+                                                <p className="max-w-xs">{tab.description}</p>
+                                            </TooltipContent>
+                                            )}
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                )}
+                                {!isViewer && (
+                                    <DroppableDuplicateZone id="duplicate-collection-zone" disabled={isViewer}>
+                                        <Button variant="ghost" size="icon" onPointerDown={(e) => { e.stopPropagation(); handleAddCollection(); }} onClick={handleAddCollection}>
+                                            <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
+                                            <span className="sr-only">Add New Collection or Drop to Duplicate</span>
+                                        </Button>
+                                    </DroppableDuplicateZone>
+                                )}
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search collections..." autoFocus={false} />
+                                {!isViewer && (
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Button variant="ghost" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)}>
+                                                    <GoogleSymbol name="dynamic_feed" weight={100} />
+                                                </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent><p>Show Shared Collections</p></TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                )}
+                            </div>
                         </div>
-                        <div className="flex items-center gap-1">
-                            <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search collections..." autoFocus={false} />
-                            {!isViewer && (
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Button variant="ghost" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)}>
-                                                <GoogleSymbol name="dynamic_feed" weight={100} />
-                                            </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent><p>Show Shared Collections</p></TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                            )}
-                        </div>
-                    </div>
-                    
-                    <SortableContext items={collectionsToDisplay.map(c => `collection::${c.id}`)} strategy={rectSortingStrategy}>
-                        <div className={cn("flex flex-wrap -m-2 transition-all duration-300")}>
-                            {collectionsToDisplay.map((collection, index) => {
-                                 const isActive = !isTeamContext || !contextTeam?.activeBadgeCollections || contextTeam.activeBadgeCollections.includes(collection.id);
-                                 const canToggle = isTeamContext && canManageCollections;
+                        
+                        <SortableContext items={collectionsToDisplay.map(c => `collection::${c.id}`)} strategy={rectSortingStrategy}>
+                            <div className={cn("flex flex-wrap -m-2 transition-all duration-300")}>
+                                {collectionsToDisplay.map((collection, index) => {
+                                     const isActive = !isTeamContext || !contextTeam?.activeBadgeCollections || contextTeam.activeBadgeCollections.includes(collection.id);
+                                     const canToggle = isTeamContext && canManageCollections;
 
-                                return (
-                                    <div
-                                        key={collection.id}
-                                        className={cn(
-                                            "p-2 w-full transition-all duration-300",
-                                            isSharedPanelOpen ? "lg:w-1/2" : "lg:w-1/3",
-                                            (canToggle && !isActive) && "opacity-40 hover:opacity-100",
-                                        )}
-                                    >
-                                        <div 
-                                            className={cn("h-full", (canToggle && !isActive) && "cursor-pointer")}
-                                            onPointerDown={(e) => {
-                                               if (canToggle && !isActive) {
-                                                   handleToggleCollectionActive(e, collection.id);
-                                               }
-                                            }}
+                                    return (
+                                        <div
+                                            key={collection.id}
+                                            className={cn(
+                                                "p-2 w-full transition-all duration-300",
+                                                isSharedPanelOpen ? "lg:w-1/2" : "lg:w-1/3",
+                                                (canToggle && !isActive) && "opacity-40 hover:opacity-100",
+                                            )}
                                         >
-                                            <SortableCollectionCard
-                                                collection={collection}
-                                                allBadges={allBadges}
-                                                onUpdateCollection={updateBadgeCollection}
-                                                onDeleteCollection={handleDeleteCollection}
-                                                onAddBadge={addBadge}
-                                                onUpdateBadge={updateBadge}
-                                                onDeleteBadge={handleDeleteBadge}
-                                                onToggleShare={handleToggleShare}
-                                                contextTeam={team}
-                                                isViewer={isViewer}
-                                            />
+                                            <div 
+                                                className={cn("h-full", (canToggle && !isActive) && "cursor-pointer")}
+                                                onPointerDown={(e) => {
+                                                   if (canToggle && !isActive) {
+                                                       handleToggleCollectionActive(e, collection.id);
+                                                   }
+                                                }}
+                                            >
+                                                <SortableCollectionCard
+                                                    collection={collection}
+                                                    allBadges={allBadges}
+                                                    onUpdateCollection={updateBadgeCollection}
+                                                    onDeleteCollection={handleDeleteCollection}
+                                                    onAddBadge={addBadge}
+                                                    onUpdateBadge={updateBadge}
+                                                    onDeleteBadge={handleDeleteBadge}
+                                                    onToggleShare={handleToggleShare}
+                                                    contextTeam={team}
+                                                    isViewer={isViewer}
+                                                />
+                                            </div>
                                         </div>
-                                    </div>
-                                )
-                            })}
-                        </div>
-                    </SortableContext>
+                                    )
+                                })}
+                            </div>
+                        </SortableContext>
+                    </div>
                 </div>
                 
                 {!isViewer && (
@@ -1437,7 +1438,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                 <CardHeader>
                                     <div className="flex items-center justify-between">
                                         <CardTitle className="font-headline font-thin text-xl">Shared Collections</CardTitle>
-                                        <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." autoFocus={isSharedPanelOpen} tooltipText="Search Shared Collections" />
+                                        <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." inputRef={sharedSearchInputRef} autoFocus={isSharedPanelOpen} tooltipText="Search Shared Collections" />
                                     </div>
                                     <CardDescription>Drag a collection to link it to your team.</CardDescription>
                                 </CardHeader>
