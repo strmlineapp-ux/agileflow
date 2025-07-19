@@ -684,7 +684,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
                     </p>
                 </CardContent>
             )}
-            <div className="absolute -bottom-1 -right-1">
+            <div className="absolute -bottom-1 right-0">
                 <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
                     <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
                 </Button>
@@ -829,8 +829,9 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
             access: { users: [], teams: [] }
         };
         
+        // Ensure new pages are added before any pinned system pages at the end
         const insertBeforePageIndex = appSettings.pages.findIndex(p => p.id === 'page-notifications');
-        const insertIndex = insertBeforePageIndex !== -1 ? insertBeforePageIndex : appSettings.pages.length - 2;
+        const insertIndex = insertBeforePageIndex !== -1 ? insertBeforePageIndex : appSettings.pages.length;
 
         const newPages = [...appSettings.pages];
         newPages.splice(insertIndex, 0, newPage);
@@ -883,8 +884,10 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
             const overIsPinned = pinnedIds.has(over.id.toString());
             const overItem = appSettings.pages[newIndex];
 
-            // A non-pinned item cannot be dropped into a position occupied by a pinned item.
-            if (!activeIsPinned && overIsPinned) {
+            // Prevent a non-pinned item from being dropped into a position occupied by a pinned item.
+            // Also, prevent a non-pinned item from being reordered *before* the last non-pinned item if the target is pinned.
+            const firstPinnedIndex = appSettings.pages.findIndex(p => pinnedIds.has(p.id));
+            if (!activeIsPinned && newIndex >= firstPinnedIndex) {
                  return;
             }
             
@@ -1078,7 +1081,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                                 <TooltipTrigger asChild>
                                     <PopoverTrigger asChild>
                                         <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-0 cursor-pointer" style={{ backgroundColor: tab.color }} />
-                                    </PopoverTrigger>
+                                    </TooltipTrigger>
                                 </TooltipTrigger>
                                 <TooltipContent><p>Change Color</p></TooltipContent>
                             </Tooltip>

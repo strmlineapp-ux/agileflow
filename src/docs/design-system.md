@@ -140,7 +140,7 @@ This is the application's perfected, gold-standard pattern for managing a collec
     -   **Pinned Cards**: Certain cards are designated as "pinned" and cannot be dragged. This is achieved by disabling the `useSortable` hook for those specific items (`disabled: true`). They act as fixed anchors in the layout.
 -   **Reordering with Guardrails**:
     -   **Interaction**: Users can drag any non-pinned card and drop it between other non-pinned cards to change its order. The grid reflows smoothly to show the drop position.
-    -   **Guardrail Logic**: The `onDragEnd` handler must contain logic to prevent reordering pinned items. If a user attempts to drop an item into a position occupied by a pinned item, the operation should be cancelled or reverted.
+    -   **Guardrail Logic**: The `onDragEnd` handler must contain logic to prevent reordering pinned items. A non-pinned item cannot be dropped into a position that is at or after the first pinned item in the list.
 -   **Drop Zone Highlighting**: Drop zones provide visual feedback when an item is dragged over them. To maintain a clean UI, highlights primarily use rings without background fills.
     -   **Standard & Duplication Zones (Reordering, Moving, Duplicating):** The drop area is highlighted with a `1px` inset, **colorless** ring using the standard border color (`ring-1 ring-border ring-inset`). This is the universal style for all non-destructive drop actions.
     -   **Destructive Zones (Deleting):** The drop area is highlighted with a `1px` ring in the destructive theme color (`ring-1 ring-destructive`).
@@ -151,6 +151,7 @@ This is the application's perfected, gold-standard pattern for managing a collec
 -   **Drag-to-Duplicate**:
     -   **Interaction**: A designated "Add New" icon (`<Button>`) acts as a drop zone, implemented using the `useDroppable` hook from `dnd-kit`. While a card is being dragged, this zone becomes highlighted to indicate it can accept a drop.
     -   **Behavior**: Dropping any card (pinned or not, from the main board or the shared panel) creates a deep, independent copy of the original. The new card is given a unique ID, a modified name (e.g., with `(Copy)`), and a unique URL path. It is placed immediately after the original in the list. Its ownership is assigned to the current user's context.
+    -   **Smart Creation**: Clicking the "Add New" button will create a fresh, default item. The item is intelligently placed before any pinned items in the list, preserving the integrity of the pinned section.
     -   **Smart Unlinking**: If the duplicated card was a *linked* item (e.g., a shared calendar from another user), the original linked item is automatically removed from the user's board after the copy is created. This provides a clean "copy and replace" workflow.
 -   **Drag-to-Assign**: This pattern allows sub-items (like **Users** or **Badges**) to be moved between different parent cards.
     - **Interaction**: A user can drag an item (e.g., a User) from one card's list.
@@ -306,10 +307,11 @@ This is the single source of truth for indicating user interaction state across 
 
 - **Lunch Break Pattern**: A subtle diagonal line pattern is used in calendar views to visually block out the typical lunch period (12:00 - 14:30). This serves as a non-intrusive reminder to avoid scheduling meetings during that time.
 - **Icon as Badge**: An icon displayed as a small, circular overlay on another element (e.g., an Avatar or another icon) to provide secondary information.
-    - **Appearance**: A circular badge with a `border-0`.
+    - **Appearance**: A circular badge with a `border-0`. It is used to trigger a color picker popover or display a status.
     - **Sizing**: `h-4 w-4`.
     - **Placement**:
       - **Color Picker**: `absolute -bottom-1 -right-1`.
       - **Ownership Status**: `absolute -top-1 -right-1`.
     - **Icon Size (Ownership Status)**: The `GoogleSymbol` inside an ownership status badge should have its size set via `style={{fontSize: '16px'}}`.
 -   **Badges in Assorted View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
+
