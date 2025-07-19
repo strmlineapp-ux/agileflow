@@ -176,7 +176,7 @@ function SortableBadgeItem({ badge, ...props }: { badge: Badge, [key: string]: a
 
 function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collectionId, teamId, isSharedPreview = false, isViewer = false, isDragging }: { badge: Badge, viewMode: BadgeCollection['viewMode'], onUpdateBadge: (badgeData: Partial<Badge>) => void, onDelete: () => void, collectionId: string, teamId: string, isSharedPreview?: boolean, isViewer?: boolean, isDragging?: boolean }) {
     const { toast } = useUser();
-    const { teams, users, viewAsUser, allBadges } = useUser();
+    const { teams, users, viewAsUser, allBadges, allBadgeCollections } = useUser();
     const [isEditingName, setIsEditingName] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
@@ -186,17 +186,10 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     const [color, setColor] = useState(badge.color);
     
     const badgeOwner = useMemo(() => {
-        const ownerCollection = allBadges.find(b => b.id === badge.id)?.ownerCollectionId;
+        const ownerCollection = allBadgeCollections.find(c => c.id === badge.ownerCollectionId);
         if (!ownerCollection) return null;
-
-        for (const team of teams) {
-            const collection = team.badgeCollections?.find(c => c.id === ownerCollection);
-            if (collection) {
-                return users.find(u => u.userId === collection.owner.id);
-            }
-        }
-        return users.find(u => allBadgeCollections.find(c => c.id === ownerCollection)?.owner.id === u.userId) || null;
-    }, [badge.id, allBadges, teams, users]);
+        return users.find(u => u.userId === ownerCollection.owner.id) || null;
+    }, [badge.ownerCollectionId, allBadgeCollections, users]);
     
 
     const isEditable = useMemo(() => {
@@ -262,8 +255,6 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
           setIsEditingDescription(false);
         }
     };
-    
-    const { allBadgeCollections } = useUser();
     
     const isShared = useMemo(() => {
         const ownerCollection = allBadgeCollections.find(c => c.id === badge.ownerCollectionId);
@@ -814,6 +805,23 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
         onUpdateCollection(collection.id, { applications: Array.from(currentApplications) }, contextTeam?.id);
     };
 
+    const handleToggleCollectionActive = (collectionId: string) => {
+        if (!contextTeam) return;
+
+        const wasActive = contextTeam.activeBadgeCollections?.includes(collectionId);
+        const currentActive = new Set(contextTeam.activeBadgeCollections || []);
+        
+        if (wasActive) {
+            currentActive.delete(collectionId);
+        } else {
+            currentActive.add(collectionId);
+        }
+        
+        updateTeam(contextTeam.id, { activeBadgeCollections: Array.from(currentActive) });
+    };
+
+    const isActive = contextTeam && contextTeam.activeBadgeCollections?.includes(collection.id);
+
     return (
         <>
             <Card className="h-full flex flex-col bg-transparent group relative">
@@ -930,25 +938,46 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                         </DroppableCollectionContent>
                     </SortableContext>
                 </CardContent>
-                <CardFooter className="flex items-center justify-end gap-2 p-2 border-t mt-auto">
-                    {APPLICATIONS.map(app => (
-                        <TooltipProvider key={app.key}>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className={cn("h-8 w-8", collection.applications?.includes(app.key) ? 'text-primary' : 'text-muted-foreground')}
-                                        onClick={() => handleToggleApplication(app.key)}
-                                        disabled={!isOwned}
-                                    >
-                                        <GoogleSymbol name={app.icon} weight={100} />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent><p>{app.label}</p></TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    ))}
+                <CardFooter className="flex items-center justify-between gap-2 p-2 border-t mt-auto">
+                    <div>
+                        {contextTeam && !isViewer && (
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className={cn("h-8 w-8", isActive ? 'text-primary' : 'text-muted-foreground')}
+                                            onClick={() => handleToggleCollectionActive(collection.id)}
+                                        >
+                                            <GoogleSymbol name={isActive ? 'check_circle' : 'circle'} weight={100} filled={isActive}/>
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent><p>{isActive ? 'Deactivate' : 'Activate'} for Team</p></TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                        {APPLICATIONS.map(app => (
+                            <TooltipProvider key={app.key}>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className={cn("h-8 w-8", collection.applications?.includes(app.key) ? 'text-primary' : 'text-muted-foreground')}
+                                            onClick={() => handleToggleApplication(app.key)}
+                                            disabled={!isOwned}
+                                        >
+                                            <GoogleSymbol name={app.icon} weight={100} />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent><p>{app.label}</p></TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        ))}
+                    </div>
                 </CardFooter>
             </Card>
             {editingBadge && (
@@ -966,7 +995,7 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
     );
 }
 
-function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
+function DuplicateZone({ id, children }: { id: string; children: React.ReactNode }) {
   const { isOver, setNodeRef } = useDroppable({ id });
   
   return (
@@ -977,19 +1006,7 @@ function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
         isOver && "ring-1 ring-border ring-inset"
       )}
     >
-      <TooltipProvider>
-          <Tooltip>
-              <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full p-0" onClick={onAdd} onPointerDown={(e) => e.stopPropagation()}>
-                    <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
-                    <span className="sr-only">New Collection or Drop to Duplicate</span>
-                  </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                  <p>{isOver ? 'Drop to Duplicate' : 'Add New Collection'}</p>
-              </TooltipContent>
-          </Tooltip>
-      </TooltipProvider>
+        {children}
     </div>
   );
 }
@@ -1079,19 +1096,23 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     };
     
     const collectionsToDisplay = useMemo(() => {
-        const collectionsMap = new Map<string, BadgeCollection>();
+        let collectionsMap: Map<string, BadgeCollection>;
 
         if (isTeamContext && contextTeam) {
-             (contextTeam.badgeCollections || []).forEach(c => collectionsMap.set(c.id, c));
-             (contextTeam.linkedCollectionIds || []).forEach(id => {
-                const linked = allBadgeCollections.find(c => c.id === id);
-                if (linked) collectionsMap.set(id, linked);
+            collectionsMap = new Map((contextTeam.badgeCollections || []).map(c => [c.id, c]));
+            (contextTeam.linkedCollectionIds || []).forEach(id => {
+                if (!collectionsMap.has(id)) {
+                    const linked = allBadgeCollections.find(c => c.id === id);
+                    if (linked) collectionsMap.set(id, linked);
+                }
             });
         } else {
-            (allBadgeCollections.filter(c => c.owner.id === viewAsUser.userId)).forEach(c => collectionsMap.set(c.id, c));
+            collectionsMap = new Map((allBadgeCollections.filter(c => c.owner.id === viewAsUser.userId)).map(c => [c.id, c]));
             (viewAsUser.linkedCollectionIds || []).forEach(id => {
-                const linked = allBadgeCollections.find(c => c.id === id);
-                if (linked) collectionsMap.set(id, linked);
+                if (!collectionsMap.has(id)) {
+                    const linked = allBadgeCollections.find(c => c.id === id);
+                    if (linked) collectionsMap.set(id, linked);
+                }
             });
         }
 
@@ -1100,38 +1121,9 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         if (searchTerm) {
             finalCollections = finalCollections.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
         }
-
-        if (isViewer && contextTeam) {
-            finalCollections = finalCollections.filter(c => contextTeam.activeBadgeCollections?.includes(c.id));
-        }
         
         return finalCollections;
-    }, [allBadgeCollections, isTeamContext, contextTeam, viewAsUser, isViewer, searchTerm]);
-
-    const handleToggleCollectionActive = (e: React.MouseEvent<HTMLDivElement, MouseEvent>, collectionId: string) => {
-        if (!isTeamContext || !canManageCollections || !contextTeam) return;
-        
-        const target = e.target as HTMLElement;
-        const isInteractiveElement = target.closest('button, a, input, [role="menuitem"], [role="option"], [role="tooltip"], [role="dialog"], [draggable="true"]');
-        if (isInteractiveElement) {
-            return;
-        }
-    
-        const wasActive = contextTeam.activeBadgeCollections?.includes(collectionId);
-        const currentActive = new Set(contextTeam.activeBadgeCollections || []);
-        
-        if (wasActive) {
-            currentActive.delete(collectionId);
-        } else {
-            currentActive.add(collectionId);
-        }
-        
-        updateTeam(contextTeam.id, { activeBadgeCollections: Array.from(currentActive) });
-        toast({
-            title: `Collection ${wasActive ? 'Deactivated' : 'Activated'}`,
-            description: `The collection is now ${wasActive ? 'inactive' : 'active'} for the team.`
-        });
-    };
+    }, [allBadgeCollections, isTeamContext, contextTeam, viewAsUser, searchTerm]);
 
     const sharedCollections = useMemo(() => {
         const collectionsOnBoardIds = new Set(collectionsToDisplay.map(c => c.id));
@@ -1141,7 +1133,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     }, [allBadgeCollections, collectionsToDisplay, sharedSearchTerm]);
 
     const handleAddCollection = (sourceCollection?: BadgeCollection) => {
-      addBadgeCollection(viewAsUser, sourceCollection, contextTeam);
+      addBadgeCollection(viewAsUser, sourceCollection);
     };
     
     const handleDeleteCollection = (collection: BadgeCollection) => {
@@ -1249,7 +1241,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         }
     
         if (active.data.current?.isSharedPreview && over.id === 'main-collections-grid') {
-            if (isTeamContext && contextTeam) {
+             if (isTeamContext && contextTeam) {
                 const newLinkedIds = [...(contextTeam.linkedCollectionIds || []), activeCollection.id];
                 updateTeam(contextTeam.id, { linkedCollectionIds: Array.from(new Set(newLinkedIds)) });
             } else {
@@ -1323,7 +1315,19 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                     </TooltipProvider>
                                 )}
                                 {!isViewer && (
-                                    <DuplicateZone id="duplicate-collection-zone" onAdd={() => handleAddCollection()} />
+                                    <DuplicateZone id="duplicate-collection-zone">
+                                        <TooltipProvider>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Button variant="ghost" size="icon" className="rounded-full p-0" onClick={() => handleAddCollection()} onPointerDown={(e) => e.stopPropagation()}>
+                                                        <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
+                                                        <span className="sr-only">New Collection</span>
+                                                    </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent><p>Add New Collection</p></TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
+                                    </DuplicateZone>
                                 )}
                             </div>
                             <div className="flex items-center gap-1">
@@ -1349,9 +1353,9 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                 <SortableContext items={collectionsToDisplay.map(c => `collection::${c.id}`)} strategy={rectSortingStrategy}>
                                     <div className={cn("flex flex-wrap -m-2 transition-all duration-300")}>
                                         {collectionsToDisplay.map((collection, index) => {
-                                            const isActive = !isTeamContext || !contextTeam?.activeBadgeCollections || contextTeam.activeBadgeCollections.includes(collection.id);
-                                            const canToggle = isTeamContext && canManageCollections;
-
+                                            const isActive = isTeamContext && contextTeam?.activeBadgeCollections?.includes(collection.id);
+                                            const canToggle = isTeamContext && !isViewer;
+                                            
                                             return (
                                                 <div
                                                     key={collection.id}
@@ -1361,14 +1365,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                                         (canToggle && !isActive) && "opacity-40 hover:opacity-100",
                                                     )}
                                                 >
-                                                    <div 
-                                                        className={cn("h-full", (canToggle && !isActive) && "cursor-pointer")}
-                                                        onPointerDown={(e) => {
-                                                        if (canToggle && !isActive) {
-                                                            handleToggleCollectionActive(e, collection.id);
-                                                        }
-                                                        }}
-                                                    >
+                                                    <div className={cn("h-full")}>
                                                         <SortableCollectionCard
                                                             collection={collection}
                                                             allBadges={allBadges}

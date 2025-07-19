@@ -8,7 +8,7 @@ import { GoogleAuthProvider, getAuth } from 'firebase/auth';
 import { getFirestore } from "firebase/firestore";
 import { useToast } from '@/hooks/use-toast';
 import { hexToHsl } from '@/lib/utils';
-import { getOwnershipContext, hasAccess } from '@/lib/permissions';
+import { hasAccess } from '@/lib/permissions';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { corePages, coreTabs, globalBadges } from '@/lib/core-data';
 import { syncCalendar } from '@/ai/flows/sync-calendar-flow';
@@ -64,7 +64,7 @@ interface UserDataContextType {
   updateAppTab: (tabId: string, tabData: Partial<AppTab>) => Promise<void>;
   allBadges: Badge[];
   allBadgeCollections: BadgeCollection[];
-  addBadgeCollection: (owner: User, sourceCollection?: BadgeCollection, contextTeam?: Team) => void;
+  addBadgeCollection: (owner: User, sourceCollection?: BadgeCollection) => void;
   updateBadgeCollection: (collectionId: string, data: Partial<BadgeCollection>, teamId?: string) => void;
   deleteBadgeCollection: (collectionId: string) => void;
   addBadge: (collectionId: string, sourceBadge?: Badge) => void;
@@ -121,14 +121,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [allBadges, setAllBadges] = useState<Badge[]>(() => {
     const allInitialBadges = new Set<Badge>();
     globalBadges.forEach(b => allInitialBadges.add(b));
-    mockTeams.forEach(t => {
-      (t.badgeCollections || []).forEach(c => {
-        c.badgeIds.forEach(bId => {
-          const badge = [...videoProdBadges, ...liveEventsBadges].find(b => b.id === bId);
-          if (badge) allInitialBadges.add(badge);
-        })
-      })
-    })
+    videoProdBadges.forEach(b => allInitialBadges.add(b));
+    liveEventsBadges.forEach(b => allInitialBadges.add(b));
 
     return Array.from(allInitialBadges.values());
   });
@@ -327,11 +321,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setAppSettings(current => ({ ...current, tabs: current.tabs.map(t => t.id === tabId ? { ...t, ...tabData } : t) }));
   }, []);
 
-  const addBadgeCollection = useCallback((owner: User, sourceCollection?: BadgeCollection, contextTeam?: Team) => {
+  const addBadgeCollection = useCallback((owner: User, sourceCollection?: BadgeCollection) => {
     const newCollectionId = crypto.randomUUID();
     let newBadges: Badge[] = [];
     let newCollection: BadgeCollection;
-    const ownerContext = getOwnershipContext(owner);
+    const ownerContext = { type: 'user' as const, id: owner.userId };
 
     if (sourceCollection) {
         newBadges = sourceCollection.badgeIds.map(bId => {
@@ -352,23 +346,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     if (newBadges.length > 0) {
         setAllBadges(prev => [...prev, ...newBadges]);
     }
-    
-    // If in a team context, add the new collection to the team's collections
-    if(contextTeam) {
-        setTeams(currentTeams => currentTeams.map(t => {
-            if (t.id === contextTeam.id) {
-                return {
-                    ...t,
-                    badgeCollections: [...(t.badgeCollections || []), newCollection],
-                }
-            }
-            return t;
-        }));
-    }
+}, [allBadgeCollections.length, allBadges]);
 
-  }, [allBadgeCollections.length, allBadges]);
 
   const updateBadgeCollection = useCallback((collectionId: string, data: Partial<BadgeCollection>, teamId?: string) => {
+    // If a teamId is provided, we are updating a local instance within a team's context.
     if (teamId) {
         setTeams(current => current.map(t => {
             if (t.id === teamId) {
@@ -381,6 +363,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             return t;
         }));
     } else {
+        // Otherwise, update the global source of truth.
         setAllBadgeCollections(current => current.map(c => (c.id === collectionId ? { ...c, ...data } : c)));
     }
 }, []);

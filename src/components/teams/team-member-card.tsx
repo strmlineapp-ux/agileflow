@@ -24,11 +24,13 @@ export function TeamMemberCard({ member, team, isViewer }: { member: User, team:
   const teamBadgesLabel = team.userBadgesLabel || 'Team Badges';
 
   const userAssignableBadges = useMemo(() => {
-    const activeCollections = (team.badgeCollections || []).filter(c => team.activeBadgeCollections?.includes(c.id));
-    const userAssignableBadgeIds = new Set(
-        activeCollections.filter(c => c.applications?.includes('team members')).flatMap(c => c.badgeIds)
+    // A badge is assignable if its parent collection is active for the team
+    // AND that collection is configured to be applicable to team members.
+    const activeAndApplicableCollections = (team.badgeCollections || []).filter(
+      c => (team.activeBadgeCollections || []).includes(c.id) && c.applications?.includes('team members')
     );
-    return allBadges.filter(b => userAssignableBadgeIds.has(b.id));
+    const assignableBadgeIds = new Set(activeAndApplicableCollections.flatMap(c => c.badgeIds));
+    return allBadges.filter(b => assignableBadgeIds.has(b.id));
   }, [team.badgeCollections, team.activeBadgeCollections, allBadges]);
   
   const teamBadgeNames = useMemo(() => new Set(userAssignableBadges.map(b => b.name)), [userAssignableBadges]);
