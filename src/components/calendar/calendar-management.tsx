@@ -242,7 +242,7 @@ function CalendarCard({
                                   <Tooltip>
                                       <TooltipTrigger asChild>
                                           <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={!canManage}>
-                                              <button className={cn("absolute -bottom-0 -right-3 h-4 w-4 rounded-full", canManage && "cursor-pointer")} style={{ backgroundColor: calendar.color }} />
+                                              <button className={cn("absolute -bottom-0 -right-3 h-4 w-4 rounded-full border-0", canManage && "cursor-pointer")} style={{ backgroundColor: calendar.color }} />
                                           </PopoverTrigger>
                                       </TooltipTrigger>
                                       <TooltipContent><p>Change Color</p></TooltipContent>
@@ -269,7 +269,7 @@ function CalendarCard({
                                   <Tooltip>
                                       <TooltipTrigger asChild>
                                           <div 
-                                              className="absolute -top-0 -right-3 h-4 w-4 rounded-full flex items-center justify-center text-white"
+                                              className="absolute -top-0 -right-3 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white"
                                               style={{ backgroundColor: shareIconColor }}
                                           >
                                               <GoogleSymbol name={shareIcon} style={{fontSize: '16px'}}/>
@@ -280,7 +280,7 @@ function CalendarCard({
                               </TooltipProvider>
                           )}
                       </div>
-                      <div className="flex-1 min-w-0" onClick={(e) => { if (canManage) { e.stopPropagation(); setIsEditingName(true); }}}>
+                      <div className="flex-1 min-w-0" onPointerDown={(e) => { if (canManage) { e.stopPropagation(); setIsEditingName(true); }}}>
                       {isEditingName && canManage ? (
                           <Input
                           ref={nameInputRef}
@@ -291,7 +291,7 @@ function CalendarCard({
                           className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
                           />
                       ) : (
-                          <CardTitle onClick={(e) => { if(canManage) { e.stopPropagation(); setIsEditingName(true)}}} className={cn("font-headline text-xl font-thin break-words", canManage && "cursor-pointer")}>
+                          <CardTitle onPointerDown={(e) => { if(canManage) { e.stopPropagation(); setIsEditingName(true)}}} className={cn("font-headline text-xl font-thin break-words", canManage && "cursor-pointer")}>
                           {calendar.name}
                           </CardTitle>
                       )}
@@ -341,31 +341,32 @@ function CalendarCard({
               {isExpanded && (
                   <CardContent className="p-2 pt-0 mt-2" onPointerDown={(e) => e.stopPropagation()}>
                     <div className="space-y-1">
-                          <TooltipProvider>
-                              <Tooltip>
-                                  <TooltipTrigger asChild>
-                                      {isEditingTitle && canManage ? (
-                                          <Input
-                                              ref={titleInputRef}
-                                              defaultValue={calendar.defaultEventTitle}
-                                              onKeyDown={handleTitleKeyDown}
-                                              onBlur={handleSaveTitle}
-                                              className="h-auto p-0 text-xs font-thin border-0 rounded-none shadow-none bg-transparent"
-                                          />
-                                      ) : (
-                                          <span 
-                                              className={cn("italic text-xs text-muted-foreground", canManage && "cursor-pointer")} 
-                                              onClick={() => canManage && setIsEditingTitle(true)}
-                                          >
-                                              {calendar.defaultEventTitle || 'No default title'}
-                                          </span>
-                                      )}
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                      <p>Default Event Title</p>
-                                  </TooltipContent>
-                              </Tooltip>
-                          </TooltipProvider>
+                          {isEditingTitle && canManage ? (
+                              <Input
+                                  ref={titleInputRef}
+                                  defaultValue={calendar.defaultEventTitle}
+                                  onKeyDown={handleTitleKeyDown}
+                                  onBlur={handleSaveTitle}
+                                  className="h-auto p-0 text-xs font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                                  placeholder="Default Event Title"
+                              />
+                          ) : (
+                             <TooltipProvider>
+                                 <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <span 
+                                            className={cn("italic text-xs text-muted-foreground", canManage && "cursor-pointer hover:border-b hover:border-dashed")} 
+                                            onClick={() => canManage && setIsEditingTitle(true)}
+                                        >
+                                            {calendar.defaultEventTitle || 'No default title'}
+                                        </span>
+                                    </TooltipTrigger>
+                                     <TooltipContent>
+                                        <p>Default Event Title. {canManage && 'Click to edit.'}</p>
+                                    </TooltipContent>
+                                 </Tooltip>
+                            </TooltipProvider>
+                          )}
                         </div>
                   </CardContent>
               )}

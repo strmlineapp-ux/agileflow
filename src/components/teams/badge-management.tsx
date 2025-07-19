@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -383,7 +384,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                                 <TooltipTrigger asChild>
                                                     <PopoverTrigger asChild disabled={!isEditable} onPointerDown={(e) => e.stopPropagation()}>
                                                         <button
-                                                            className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-0", isEditable && "cursor-pointer")}
+                                                            className={cn("absolute -bottom-0 -right-3 h-4 w-4 rounded-full border-0", isEditable && "cursor-pointer")}
                                                             style={{ backgroundColor: badge.color }}
                                                             aria-label="Change badge color"
                                                         />
@@ -399,7 +400,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                             <Tooltip>
                                                 <TooltipTrigger asChild>
                                                     <div 
-                                                        className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white"
+                                                        className="absolute -top-0 -right-3 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white"
                                                         style={{ backgroundColor: shareIconColor }}
                                                     >
                                                         <GoogleSymbol name={shareIcon} style={{fontSize: '16px'}}/>
@@ -531,11 +532,11 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                     <TooltipTrigger asChild>
                                         <PopoverTrigger asChild disabled={!isEditable} onPointerDown={(e) => e.stopPropagation()}>
                                             <button
-                                                className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-0", isEditable && "cursor-pointer")}
+                                                className={cn("absolute -bottom-0 -right-3 h-4 w-4 rounded-full border-0", isEditable && "cursor-pointer")}
                                                 style={{ backgroundColor: badge.color }}
                                                 aria-label="Change badge color"
                                             />
-                                        </PopoverTrigger>
+                                        </TooltipTrigger>
                                     </TooltipTrigger>
                                     <TooltipContent><p>{isEditable ? 'Change Color' : 'Properties are managed by the owner.'}</p></TooltipContent>
                                 </Tooltip>
@@ -547,7 +548,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                         <div
-                                            className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white"
+                                            className="absolute -top-0 -right-3 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white"
                                             style={{ backgroundColor: shareIconColor }}
                                         >
                                             <GoogleSymbol name={shareIcon} style={{fontSize: '16px'}} />
@@ -615,7 +616,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild disabled={!isEditable} onPointerDown={(e) => e.stopPropagation()}>
                                                 <button
-                                                    className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-0", isEditable && "cursor-pointer")}
+                                                    className={cn("absolute -bottom-0 -right-3 h-4 w-4 rounded-full border-0", isEditable && "cursor-pointer")}
                                                     style={{ backgroundColor: badge.color }}
                                                     aria-label="Change badge color"
                                                 />
@@ -631,7 +632,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <div
-                                                className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white"
+                                                className="absolute -top-0 -right-3 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white"
                                                 style={{ backgroundColor: shareIconColor }}
                                             >
                                                 <GoogleSymbol name={shareIcon} style={{fontSize: '16px'}} />
@@ -883,7 +884,7 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                                     {!isViewer && (
                                         <>
                                             <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                                                <PopoverTrigger asChild disabled={!isOwned} onPointerDown={(e) => e.stopPropagation()}><button className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-0", !isOwned ? "cursor-not-allowed" : "cursor-pointer")} style={{ backgroundColor: collection.color }} /></PopoverTrigger>
+                                                <PopoverTrigger asChild disabled={!isOwned} onPointerDown={(e) => e.stopPropagation()}><button className={cn("absolute -bottom-0 -right-3 h-4 w-4 rounded-full border-0", !isOwned ? "cursor-not-allowed" : "cursor-pointer")} style={{ backgroundColor: collection.color }} /></PopoverTrigger>
                                                 <PopoverContent className="w-auto p-4" onPointerDown={(e) => e.stopPropagation()}>
                                                     <div className="space-y-4">
                                                         <HexColorPicker color={color} onChange={setColor} className="!w-full" />
@@ -905,7 +906,7 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                                                     <Tooltip>
                                                         <TooltipTrigger asChild>
                                                             <div 
-                                                                className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white"
+                                                                className="absolute -top-0 -right-3 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white"
                                                                 style={{ backgroundColor: shareIconColor }}
                                                             >
                                                                 <GoogleSymbol name={shareIcon} style={{fontSize: '16px'}}/>
@@ -1292,63 +1293,17 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     
     const onDragEnd = (result: DragEndEvent) => {
         const { active, over } = result;
-
         if (!over) return;
         
         const activeType = active.data.current?.type;
         const overType = over.data.current?.type;
 
-        // --- Dragging a COLLECTION ---
-        if (activeType === 'collection') {
-            const collectionId = active.data.current?.collection.id;
-
-            // To Shared Panel (Unsharing or Unlinking)
-            if (over.id === 'shared-collections-panel') {
-                const collection = allBadgeCollections.find(c => c.id === collectionId);
-                if (collection && collection.owner.id === viewAsUser.userId) {
-                    handleToggleShare(collectionId);
-                } else if (collection) {
-                    handleDeleteCollection(collection); // This handles unlinking
-                }
-                return;
-            }
-
-            // From Shared Panel (Linking)
-            if (active.data.current?.isSharedPreview && over.id === 'collections-list') {
-                if (team) {
-                    updateTeam(team.id, { linkedCollectionIds: [...(team.linkedCollectionIds || []), collectionId] });
-                } else {
-                    updateUser(viewAsUser.userId, { linkedCollectionIds: [...(viewAsUser.linkedCollectionIds || []), collectionId] });
-                }
-                toast({ title: 'Collection Linked' });
-                return;
-            }
-            
-            // Duplicating a collection
-            if (over.id === 'duplicate-collection-zone') {
-                const sourceCollection = allBadgeCollections.find(c => c.id === collectionId);
-                if (sourceCollection) {
-                    const owner = getOwnershipContext(page, viewAsUser, contextTeam);
-                    addBadgeCollection(owner, sourceCollection, contextTeam);
-                    toast({ title: 'Collection Copied' });
-                }
-                return;
-            }
-
-            // Reordering collections
-            if (overType === 'collection') {
-                const activeIndex = collectionsToDisplay.findIndex(c => c.id === collectionId);
-                const overIndex = collectionsToDisplay.findIndex(c => c.id === over.data.current?.collection.id);
-                // TODO: Implement reordering logic if needed.
-            }
-            return;
-        }
-
         // --- Dragging a BADGE ---
         if (activeType === 'badge') {
             const badge = active.data.current?.badge as Badge;
             const sourceCollectionId = active.data.current?.collectionId;
-            
+            const overCollectionId = over.data.current?.collection?.id;
+
             // Duplicating a badge
             if (over.id === `duplicate-badge-zone:${sourceCollectionId}`) {
                 addBadge(sourceCollectionId, badge);
@@ -1356,33 +1311,16 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                 return;
             }
 
-            // Moving a badge
-            if (overType === 'collection' || overType === 'badge') {
-                const overCollectionId = over.data.current?.collection.id || over.data.current?.collectionId;
-                const overCollection = allBadgeCollections.find(c => c.id === overCollectionId);
-                if (!overCollection) return;
-
-                // Move within the same collection
-                if (sourceCollectionId === overCollectionId) {
-                    const sourceIndex = overCollection.badgeIds.indexOf(badge.id);
-                    const overIndex = over.data.current?.type === 'badge' ? overCollection.badgeIds.indexOf(over.data.current.badge.id) : overCollection.badgeIds.length;
-                    
-                    if (sourceIndex !== -1) {
-                        const reorderedIds = Array.from(overCollection.badgeIds);
-                        reorderedIds.splice(sourceIndex, 1);
-                        reorderedIds.splice(overIndex, 0, badge.id);
-                        updateBadgeCollection(overCollectionId, { badgeIds: reorderedIds });
-                    }
-                } else { // Move to a different collection
-                    if (overCollection.badgeIds.includes(badge.id)) {
-                        toast({ variant: 'default', title: 'Already linked'});
-                        return;
-                    }
-                    const newDestIds = Array.from(overCollection.badgeIds);
-                    newDestIds.push(badge.id);
-                    updateBadgeCollection(overCollection.id, { badgeIds: newDestIds });
-                    toast({ title: 'Badge Shared' });
+            // Move badge to another collection
+            if (overCollectionId && sourceCollectionId !== overCollectionId) {
+                const destCollection = allBadgeCollections.find(c => c.id === overCollectionId);
+                if (destCollection && !destCollection.badgeIds.includes(badge.id)) {
+                    updateBadgeCollection(overCollectionId, {
+                        badgeIds: [...destCollection.badgeIds, badge.id]
+                    });
+                    toast({ title: 'Badge Linked' });
                 }
+                return;
             }
         }
     };

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
@@ -291,7 +292,7 @@ function TeamCard({
                                         <Tooltip>
                                             <TooltipTrigger asChild>
                                                 <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={!canManageTeam}>
-                                                    <button className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-0", canManageTeam && "cursor-pointer")} style={{ backgroundColor: team.color }} />
+                                                    <button className={cn("absolute -bottom-0 -right-3 h-4 w-4 rounded-full border-0", canManageTeam && "cursor-pointer")} style={{ backgroundColor: team.color }} />
                                                 </PopoverTrigger>
                                             </TooltipTrigger>
                                             <TooltipContent><p>Change Color</p></TooltipContent>
@@ -318,7 +319,7 @@ function TeamCard({
                                         <Tooltip>
                                             <TooltipTrigger asChild>
                                                 <div 
-                                                    className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white"
+                                                    className="absolute -top-0 -right-3 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white"
                                                     style={{ backgroundColor: ownerColor }}
                                                 >
                                                     <GoogleSymbol name={shareIcon} style={{fontSize: '16px'}}/>
@@ -386,18 +387,6 @@ function TeamCard({
                                     </PopoverContent>
                                 </Popover>
                             )}
-                             {canManageTeam && !isSharedPreview && (
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => onToggleShare(team)} onPointerDown={(e) => e.stopPropagation()}>
-                                                <GoogleSymbol name={team.isShared ? 'share_off' : 'share'} weight={100} />
-                                            </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent><p>{team.isShared ? 'Unshare Team' : 'Share Team'}</p></TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                             )}
                         </div>
                     </div>
                 </CardHeader>
@@ -630,6 +619,19 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
         const allVisibleTeams = [...displayedTeams, ...sharedTeams];
 
         const activeDataType = active.data.current?.type;
+        
+        // Handle dragging a user card
+        if (activeDataType === 'user') {
+            const user = active.data.current?.user as User;
+            const destTeamId = over.data.current?.teamId;
+            const sourceTeamId = active.data.current?.teamId;
+            
+            if (destTeamId && user && sourceTeamId !== destTeamId) {
+                handleAddUserToTeam(destTeamId, user.userId);
+            }
+            return;
+        }
+
 
         if (activeDataType === 'team-card') {
              if (over.id === 'shared-teams-panel') {
