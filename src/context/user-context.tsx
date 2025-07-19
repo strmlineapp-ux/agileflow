@@ -8,7 +8,7 @@ import { GoogleAuthProvider, getAuth } from 'firebase/auth';
 import { getFirestore } from "firebase/firestore";
 import { useToast } from '@/hooks/use-toast';
 import { hexToHsl } from '@/lib/utils';
-import { hasAccess } from '@/lib/permissions';
+import { hasAccess, getOwnershipContext } from '@/lib/permissions';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { corePages, coreTabs, globalBadges } from '@/lib/core-data';
 import { syncCalendar } from '@/ai/flows/sync-calendar-flow';
@@ -128,20 +128,30 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     return Array.from(collectionsMap.values());
   });
 
-    const [allBadges, setAllBadges] = useState<Badge[]>(() => {
-        const badgesMap = new Map<string, Badge>();
-        const allBadgeSources = [globalBadges, videoProdBadges, liveEventsBadges];
-        
-        allBadgeSources.forEach(source => {
-            source.forEach(badge => {
-                if (!badgesMap.has(badge.id)) {
-                    badgesMap.set(badge.id, badge);
-                }
-            });
+  const [allBadges, setAllBadges] = useState<Badge[]>(() => {
+    const badgesMap = new Map<string, Badge>();
+    const allBadgeSources = [globalBadges, videoProdBadges, liveEventsBadges];
+    
+    allBadgeSources.forEach(source => {
+        source.forEach(badge => {
+            if (!badgesMap.has(badge.id)) {
+                badgesMap.set(badge.id, badge);
+            }
         });
-        
-        return Array.from(badgesMap.values());
     });
+    
+    // Also include badges from team-specific mock data
+    mockTeams.forEach(team => {
+        (team.allBadges || []).forEach(badge => {
+            if (!badgesMap.has(badge.id)) {
+                badgesMap.set(badge.id, badge);
+            }
+        });
+    });
+    
+    return Array.from(badgesMap.values());
+  });
+
 
   const realUser = useMemo(() => users.find(u => u.userId === REAL_USER_ID)!, [users]);
   const viewAsUser = useMemo(() => users.find(u => u.userId === viewAsUserId) || realUser, [users, viewAsUserId, realUser]);
@@ -484,4 +494,3 @@ export function useUser() {
     const data = useUserData();
     return { ...session, ...data };
 }
-

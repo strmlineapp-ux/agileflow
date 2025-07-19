@@ -807,21 +807,18 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
         onUpdateCollection(collection.id, { applications: Array.from(currentApplications) });
     };
 
-    const handleToggleCollectionActive = (collectionId: string) => {
-        if (!contextTeam) return;
-
-        const wasActive = contextTeam.activeBadgeCollections?.includes(collectionId);
+    const handleToggleCollectionActive = () => {
+        if (!contextTeam || isViewer) return;
+        const wasActive = contextTeam.activeBadgeCollections?.includes(collection.id);
         const currentActive = new Set(contextTeam.activeBadgeCollections || []);
-        
         if (wasActive) {
-            currentActive.delete(collectionId);
+            currentActive.delete(collection.id);
         } else {
-            currentActive.add(collectionId);
+            currentActive.add(collection.id);
         }
-        
-        updateTeam(team.id, { activeBadgeCollections: Array.from(currentActive) });
+        updateTeam(contextTeam.id, { activeBadgeCollections: Array.from(currentActive) });
     };
-
+    
     const isActive = contextTeam && contextTeam.activeBadgeCollections?.includes(collection.id);
 
     const viewModeOptions: {mode: BadgeCollection['viewMode'], icon: string, label: string}[] = [
@@ -947,7 +944,7 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                                             variant="ghost"
                                             size="icon"
                                             className={cn("h-8 w-8", isActive ? 'text-primary' : 'text-muted-foreground')}
-                                            onClick={() => handleToggleCollectionActive(collection.id)}
+                                            onClick={handleToggleCollectionActive}
                                         >
                                             <GoogleSymbol name={isActive ? 'check_circle' : 'circle'} weight={100} filled={isActive}/>
                                         </Button>
@@ -1104,7 +1101,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         let ownerIds: Set<string>;
     
         if (isTeamContext && contextTeam) {
-            const hasAdmins = contextTeam.teamAdmins && contextTeam.teamAdmins.length > 0;
+             const hasAdmins = contextTeam.teamAdmins && contextTeam.teamAdmins.length > 0;
             if (hasAdmins) {
                 ownerIds = new Set(contextTeam.teamAdmins);
             } else {
@@ -1140,10 +1137,10 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
             .filter(c => c.name.toLowerCase().includes(sharedSearchTerm.toLowerCase()));
     }, [allBadgeCollections, collectionsToDisplay, sharedSearchTerm]);
 
-    const handleAddCollection = () => {
+    const handleAddCollection = useCallback((sourceCollection?: BadgeCollection) => {
         if (isViewer) return;
-        addBadgeCollection(viewAsUser, undefined);
-    };
+        addBadgeCollection(viewAsUser, sourceCollection);
+    }, [isViewer, addBadgeCollection, viewAsUser]);
 
     const handleDuplicateCollection = (sourceCollection: BadgeCollection) => {
         if (isViewer) return;
@@ -1328,7 +1325,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                     </TooltipProvider>
                                 )}
                                 {!isViewer && (
-                                    <DuplicateZone id="duplicate-collection-zone" onAdd={handleAddCollection} />
+                                    <DuplicateZone id="duplicate-collection-zone" onAdd={() => handleAddCollection()} />
                                 )}
                             </div>
                             <div className="flex items-center gap-1">
@@ -1350,7 +1347,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                         
                          <div className="flex-1 min-h-0">
                             <ScrollArea className="h-full">
-                                <DroppableCollectionContent collection={{ id: 'main-collections-grid' } as any}>
+                                <TeamManagementDropZone id="main-collections-grid" type="collection-grid" className="h-full">
                                 <SortableContext items={collectionsToDisplay.map(c => `collection::${c.id}`)} strategy={rectSortingStrategy}>
                                     <div className={cn("flex flex-wrap -m-2 transition-all duration-300")}>
                                         {collectionsToDisplay.map((collection, index) => {
@@ -1383,7 +1380,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                         })}
                                     </div>
                                 </SortableContext>
-                                </DroppableCollectionContent>
+                                </TeamManagementDropZone>
                             </ScrollArea>
                         </div>
                     </div>
@@ -1392,7 +1389,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                 {!isViewer && (
                      <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96" : "w-0")}>
                          <div className={cn("h-full rounded-lg transition-all", isSharedPanelOpen ? "p-2" : "p-0")}>
-                            <DroppableCollectionContent collection={{ id: 'shared-collections-panel' } as any}>
+                            <TeamManagementDropZone id="shared-collections-panel" type="collection-panel" className="h-full">
                                 <Card className={cn("transition-opacity duration-300 h-full bg-transparent flex flex-col", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
                                     <CardHeader>
                                         <div className="flex items-center justify-between">
@@ -1428,7 +1425,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                         </ScrollArea>
                                     </CardContent>
                                 </Card>
-                            </DroppableCollectionContent>
+                            </TeamManagementDropZone>
                          </div>
                     </div>
                 )}
@@ -1488,4 +1485,14 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     );
 }
 
+function TeamManagementDropZone({id, type, children, className}: {id: string, type: string, children: React.ReactNode, className?: string}) {
+    const { setNodeRef, isOver } = useDroppable({ id, data: { type } });
     
+    return (
+        <div ref={setNodeRef} className={cn(className, isOver && "ring-1 ring-border ring-inset", "transition-all rounded-lg")}>
+            {children}
+        </div>
+    )
+}
+    
+
