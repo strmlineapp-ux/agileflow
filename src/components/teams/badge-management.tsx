@@ -1600,5 +1600,3 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         </DndContext>
     );
 }
-
-    
