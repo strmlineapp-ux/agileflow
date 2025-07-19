@@ -74,7 +74,7 @@ export const mockLocations: BookableLocation[] = [
 
 // Video Production Owned Badges
 const videoProdCollectionId = 'video-prod-collection';
-const videoProdBadges: Badge[] = [
+export const videoProdBadges: Badge[] = [
     { id: 'badge-director', ownerCollectionId: videoProdCollectionId, name: 'Video Director', icon: 'videocam', color: '#FCD34D', description: 'Oversees the creative and technical aspects of a video shoot.' },
     { id: 'badge-dop', ownerCollectionId: videoProdCollectionId, name: 'D.o.P.', icon: 'camera', color: '#FBBF24', description: 'Director of Photography' },
     { id: 'badge-editor', ownerCollectionId: videoProdCollectionId, name: 'Editor', icon: 'edit_note', color: '#F59E0B' },
@@ -86,7 +86,7 @@ const videoProdBadges: Badge[] = [
 
 // Live Events Owned Badges
 const liveEventsCollectionId = 'event-roles-collection';
-const liveEventsBadges: Badge[] = [
+export const liveEventsBadges: Badge[] = [
     { id: 'badge-td', ownerCollectionId: liveEventsCollectionId, name: 'TD', icon: 'engineering', color: '#60A5FA', description: 'Technical Director for live events.' },
     { id: 'badge-1stad', ownerCollectionId: liveEventsCollectionId, name: '1st AD', icon: 'group', color: '#3B82F6' },
     { id: 'badge-cameraop', ownerCollectionId: liveEventsCollectionId, name: 'Camera Op.', icon: 'photo_camera', color: '#2563EB', description: 'Camera Operator' },
@@ -111,7 +111,6 @@ export const mockTeams: Team[] = [
         teamAdminsLabel: 'Prod Team Leads',
         membersLabel: 'Prod Team Members',
         locationCheckManagers: ['1'],
-        allBadges: [...videoProdBadges],
         badgeCollections: [{
             id: videoProdCollectionId,
             owner: { type: 'user', id: '1'},
@@ -147,7 +146,6 @@ export const mockTeams: Team[] = [
         members: ['3', '8', '9', '10', '11', '12', '13', '14'],
         teamAdmins: [],
         locationCheckManagers: ['3'],
-        allBadges: [...liveEventsBadges],
         badgeCollections: [{
             id: liveEventsCollectionId,
             owner: { type: 'user', id: '3'},
@@ -181,7 +179,6 @@ export const mockTeams: Team[] = [
         members: ['4', '15'],
         teamAdmins: [],
         locationCheckManagers: ['4'],
-        allBadges: [],
         badgeCollections: [],
         linkedCollectionIds: [],
     },
@@ -195,7 +192,6 @@ export const mockTeams: Team[] = [
         members: ['2'],
         teamAdmins: ['2'],
         locationCheckManagers: [],
-        allBadges: [],
         badgeCollections: [],
         linkedCollectionIds: [],
     }

@@ -112,7 +112,9 @@ export interface Team {
   teamAdminsLabel?: string;
   membersLabel?: string;
   locationCheckManagers: string[]; // array of userIds who can manage check locations
-  // This represents the collections the team USES, not owns. It's a combination of collections created by the team owner and those linked from other users.
+  // An array of BadgeCollection objects *used by* this team. This does not imply ownership.
+  // This includes collections created by the team's owner and those linked from other users.
+  // The `applications` property on these objects can be a local override.
   badgeCollections: BadgeCollection[];
   userBadgesLabel?: string;
   pinnedLocations?: string[]; // array of location names
@@ -121,6 +123,7 @@ export interface Team {
   workstations?: string[];
   eventTemplates?: EventTemplate[];
   linkedCollectionIds?: string[];
+  // A simple list of collection IDs that are "turned on" for this team.
   activeBadgeCollections?: string[];
 }
 

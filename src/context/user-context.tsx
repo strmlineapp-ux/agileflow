@@ -1,9 +1,10 @@
 
+
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
 import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type BadgeCollectionOwner, type BadgeCollection } from '@/types';
-import { mockUsers as initialUsers, mockCalendars as initialCalendars, mockEvents as initialEvents, mockLocations as initialLocations, mockTeams, mockAppSettings } from '@/lib/mock-data';
+import { mockUsers as initialUsers, mockCalendars as initialCalendars, mockEvents as initialEvents, mockLocations as initialLocations, mockTeams, mockAppSettings, videoProdBadges, liveEventsBadges } from '@/lib/mock-data';
 import { GoogleAuthProvider, getAuth } from 'firebase/auth';
 import { getFirestore } from "firebase/firestore";
 import { useToast } from '@/hooks/use-toast';
@@ -65,7 +66,7 @@ interface UserDataContextType {
   allBadges: Badge[];
   allBadgeCollections: BadgeCollection[];
   addBadgeCollection: (owner: User, sourceCollection?: BadgeCollection) => void;
-  updateBadgeCollection: (collectionId: string, data: Partial<BadgeCollection>) => void;
+  updateBadgeCollection: (collectionId: string, data: Partial<BadgeCollection>, teamId?: string) => void;
   deleteBadgeCollection: (collectionId: string) => void;
   addBadge: (collectionId: string, sourceBadge?: Badge) => void;
   updateBadge: (badgeData: Partial<Badge>) => void;
@@ -119,16 +120,18 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
 
   const [allBadges, setAllBadges] = useState<Badge[]>(() => {
-    const badgesMap = new Map<string, Badge>();
-    (globalBadges || []).forEach(badge => {
-        if (!badgesMap.has(badge.id)) badgesMap.set(badge.id, badge);
-    });
-    mockTeams.forEach(team => {
-        (team.allBadges || []).forEach(badge => {
-            if (!badgesMap.has(badge.id)) badgesMap.set(badge.id, badge);
-        });
-    });
-    return Array.from(badgesMap.values());
+    const allInitialBadges = new Set<Badge>();
+    globalBadges.forEach(b => allInitialBadges.add(b));
+    mockTeams.forEach(t => {
+      (t.badgeCollections || []).forEach(c => {
+        c.badgeIds.forEach(bId => {
+          const badge = [...videoProdBadges, ...liveEventsBadges].find(b => b.id === bId);
+          if (badge) allInitialBadges.add(badge);
+        })
+      })
+    })
+
+    return Array.from(allInitialBadges.values());
   });
 
   const [allBadgeCollections, setAllBadgeCollections] = useState<BadgeCollection[]>(() => {
@@ -326,70 +329,66 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const addBadgeCollection = useCallback((owner: User, sourceCollection?: BadgeCollection) => {
-      const newCollectionId = crypto.randomUUID();
-      let newBadges: Badge[] = [];
-      let newCollection: BadgeCollection;
-      const ownerContext = getOwnershipContext(owner);
+    const newCollectionId = crypto.randomUUID();
+    let newBadges: Badge[] = [];
+    let newCollection: BadgeCollection;
+    const ownerContext = getOwnershipContext(owner);
 
-      if (sourceCollection) {
-          newBadges = sourceCollection.badgeIds.map(bId => {
-              const originalBadge = allBadges.find(b => b.id === bId);
-              if (!originalBadge) return null;
-              return { ...originalBadge, id: crypto.randomUUID(), ownerCollectionId: newCollectionId, name: `${originalBadge.name} (Copy)` };
-          }).filter((b): b is Badge => b !== null);
-          newCollection = { ...JSON.parse(JSON.stringify(sourceCollection)), id: newCollectionId, name: `${sourceCollection.name} (Copy)`, owner: ownerContext, isShared: false, badgeIds: newBadges.map(b => b.id) };
-      } else {
-          const newBadgeId = crypto.randomUUID();
-          const newBadge: Badge = { id: newBadgeId, ownerCollectionId: newCollectionId, name: `New Badge`, icon: googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)], color: predefinedColors[Math.floor(Math.random() * predefinedColors.length)] };
-          newBadges.push(newBadge);
-          newCollection = { id: newCollectionId, name: `New Collection ${allBadgeCollections.length + 1}`, owner: ownerContext, icon: 'category', color: '#64748B', viewMode: 'detailed', badgeIds: [newBadgeId], applications: [], description: 'Badge Collection description', isShared: false };
-      }
-      
-      setAllBadgeCollections(prev => [...prev, newCollection]);
-      
-      if (newBadges.length > 0) {
-          setAllBadges(prev => [...prev, ...newBadges]);
-      }
+    if (sourceCollection) {
+        newBadges = sourceCollection.badgeIds.map(bId => {
+            const originalBadge = allBadges.find(b => b.id === bId);
+            if (!originalBadge) return null;
+            return { ...originalBadge, id: crypto.randomUUID(), ownerCollectionId: newCollectionId, name: `${originalBadge.name} (Copy)` };
+        }).filter((b): b is Badge => b !== null);
+        newCollection = { ...JSON.parse(JSON.stringify(sourceCollection)), id: newCollectionId, name: `${sourceCollection.name} (Copy)`, owner: ownerContext, isShared: false, badgeIds: newBadges.map(b => b.id) };
+    } else {
+        const newBadgeId = crypto.randomUUID();
+        const newBadge: Badge = { id: newBadgeId, ownerCollectionId: newCollectionId, name: `New Badge`, icon: googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)], color: predefinedColors[Math.floor(Math.random() * predefinedColors.length)] };
+        newBadges.push(newBadge);
+        newCollection = { id: newCollectionId, name: `New Collection ${allBadgeCollections.length + 1}`, owner: ownerContext, icon: 'category', color: '#64748B', viewMode: 'detailed', badgeIds: [newBadgeId], applications: [], description: 'Badge Collection description', isShared: false };
+    }
+    
+    setAllBadgeCollections(prev => [...prev, newCollection]);
+    
+    if (newBadges.length > 0) {
+        setAllBadges(prev => [...prev, ...newBadges]);
+    }
+
   }, [allBadgeCollections.length, allBadges]);
 
+  const updateBadgeCollection = useCallback((collectionId: string, data: Partial<BadgeCollection>, teamId?: string) => {
+    if (teamId) {
+        setTeams(current => current.map(t => {
+            if (t.id === teamId) {
+                return {
+                    ...t,
+                    badgeCollections: t.badgeCollections.map(c => c.id === collectionId ? { ...c, ...data } : c)
+                };
+            }
+            return t;
+        }));
+    } else {
+        setAllBadgeCollections(current => current.map(c => (c.id === collectionId ? { ...c, ...data } : c)));
+    }
+}, []);
 
-  const updateBadgeCollection = useCallback((collectionId: string, data: Partial<BadgeCollection>) => {
-    setAllBadgeCollections(current => current.map(c => c.id === collectionId ? { ...c, ...data } : c));
-  }, []);
 
   const deleteBadgeCollection = useCallback((collectionId: string) => {
     const collectionToDelete = allBadgeCollections.find(c => c.id === collectionId);
     if (!collectionToDelete) return;
 
-    // Get a list of all badge IDs owned by the collection being deleted.
     const badgeIdsToDelete = new Set(allBadges.filter(b => b.ownerCollectionId === collectionId).map(b => b.id));
 
-    // Remove the collection itself.
     setAllBadgeCollections(current => current.filter(c => c.id !== collectionId));
-
-    // Remove the badges owned by that collection from the global badge list.
     setAllBadges(current => current.filter(b => !badgeIdsToDelete.has(b.id)));
-    
-    // Also remove the collection from any team that might be linking to it.
-    setTeams(currentTeams => currentTeams.map(t => ({ 
-      ...t, 
-      badgeCollections: t.badgeCollections.filter(c => c.id !== collectionId), 
-      activeBadgeCollections: (t.activeBadgeCollections || []).filter(id => id !== collectionId),
-      linkedCollectionIds: (t.linkedCollectionIds || []).filter(id => id !== collectionId)
-    })));
-
   }, [allBadgeCollections, allBadges]);
 
   const addBadge = useCallback((collectionId: string, sourceBadge?: Badge) => {
     const newBadgeId = crypto.randomUUID();
     const newBadge: Badge = { id: newBadgeId, ownerCollectionId: collectionId, name: sourceBadge ? `${sourceBadge.name} (Copy)` : `New Badge`, icon: sourceBadge?.icon || googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)], color: predefinedColors[Math.floor(Math.random() * predefinedColors.length)] };
     
-    // Add to global badge list
     setAllBadges(prev => [...prev, newBadge]);
-    
-    // Add badge ID to the owning collection in the global list
     setAllBadgeCollections(prev => prev.map(c => c.id === collectionId ? { ...c, badgeIds: [newBadgeId, ...c.badgeIds] } : c));
-    
   }, []);
 
   const updateBadge = useCallback((badgeData: Partial<Badge>) => {
@@ -397,12 +396,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const deleteBadge = useCallback((badgeId: string) => {
-    // Remove from global badge list
     setAllBadges(current => current.filter(b => b.id !== badgeId));
-    
-    // Remove from any collection that might contain it
     setAllBadgeCollections(current => current.map(c => ({ ...c, badgeIds: c.badgeIds.filter(id => id !== badgeId) })));
-    
   }, []);
   
   const reorderBadges = useCallback((collectionId: string, badgeIds: string[]) => {

@@ -688,7 +688,7 @@ function DroppableCollectionContent({ collection, children }: { collection: Badg
 function SortableCollectionCard({ collection, allBadges, onUpdateCollection, onDeleteCollection, onAddBadge, onUpdateBadge, onDeleteBadge, contextTeam, isViewer = false, isSharedPreview = false }: {
     collection: BadgeCollection;
     allBadges: Badge[];
-    onUpdateCollection: (collectionId: string, newValues: Partial<Omit<BadgeCollection, 'id' | 'badgeIds'>>) => void;
+    onUpdateCollection: (collectionId: string, newValues: Partial<Omit<BadgeCollection, 'id' | 'badgeIds'>>, teamId?: string) => void;
     onDeleteCollection: (collection: BadgeCollection) => void;
     onAddBadge: (collectionId: string, sourceBadge?: Badge) => void;
     onUpdateBadge: (badgeData: Partial<Badge>) => void;
@@ -732,7 +732,7 @@ function SortableCollectionCard({ collection, allBadges, onUpdateCollection, onD
 function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDeleteCollection, onAddBadge, onUpdateBadge, onDeleteBadge, dragHandleProps, isSharedPreview = false, contextTeam, isViewer = false }: {
     collection: BadgeCollection;
     allBadges: Badge[];
-    onUpdateCollection: (collectionId: string, newValues: Partial<Omit<BadgeCollection, 'id' | 'badgeIds'>>) => void;
+    onUpdateCollection: (collectionId: string, newValues: Partial<Omit<BadgeCollection, 'id' | 'badgeIds'>>, teamId?: string) => void;
     onDeleteCollection: (collection: BadgeCollection) => void;
     onAddBadge: (collectionId: string, sourceBadge?: Badge) => void;
     onUpdateBadge: (badgeData: Partial<Badge>) => void;
@@ -835,6 +835,16 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
         shareIcon = 'downloading';
         shareIconTitle = `Shared by ${ownerUser?.displayName || 'another user'}`;
     }
+
+    const handleToggleApplication = (application: BadgeApplication) => {
+        const currentApplications = new Set(collection.applications || []);
+        if (currentApplications.has(application)) {
+            currentApplications.delete(application);
+        } else {
+            currentApplications.add(application);
+        }
+        onUpdateCollection(collection.id, { applications: Array.from(currentApplications) }, contextTeam?.id);
+    };
 
     return (
         <>
@@ -972,6 +982,26 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                         </DroppableCollectionContent>
                     </SortableContext>
                 </CardContent>
+                <CardFooter className="flex items-center justify-end gap-2 p-2 border-t mt-auto">
+                    {APPLICATIONS.map(app => (
+                        <TooltipProvider key={app.key}>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className={cn("h-8 w-8", collection.applications?.includes(app.key) ? 'text-primary' : 'text-muted-foreground')}
+                                        onClick={() => handleToggleApplication(app.key)}
+                                        disabled={!isOwned}
+                                    >
+                                        <GoogleSymbol name={app.icon} weight={100} />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent><p>{app.label}</p></TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    ))}
+                </CardFooter>
             </Card>
             {editingBadge && (
                 <Dialog open={!!editingBadge} onOpenChange={(isOpen) => !isOpen && setEditingBadge(null)}>
@@ -1162,7 +1192,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     }, [allBadgeCollections, collectionsToDisplay, sharedSearchTerm]);
 
     const handleAddCollection = (sourceCollection?: BadgeCollection) => {
-      addBadgeCollection(viewAsUser, sourceCollection);
+      addBadgeCollection(viewAsUser, sourceCollection, contextTeam);
     };
     
     const handleDeleteCollection = (collection: BadgeCollection) => {
@@ -1262,7 +1292,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         if (!activeCollection) return;
         
         if (over.id === 'shared-collections-panel') {
-            const isOwner = activeCollection.owner.id === viewAsUser.userId || (contextTeam && activeCollection.owner.id === contextTeam.id);
+            const isOwner = activeCollection.owner.id === viewAsUser.userId;
             if (isOwner) {
                 updateBadgeCollection(activeCollection.id, { isShared: !activeCollection.isShared });
                 toast({ title: activeCollection.isShared ? 'Collection Unshared' : 'Collection Shared' });

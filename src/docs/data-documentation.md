@@ -65,7 +65,7 @@ This table details the information stored directly within each `User` object.
 | `primaryColor?: string` | **Internal.** A user-selected hex color code that overrides the default primary color of their chosen theme. |
 | `defaultCalendarView?: 'month' \| 'week' \| 'day' \| 'production-schedule'` | **Internal.** A UI preference for the default calendar layout. |
 | `easyBooking?: boolean` | **Internal.** A UI preference for enabling quick event creation from the calendar. |
-| `timeFormat?: '12h' \| '24h'` | **Internal.** A UI preference for displaying time in 12-hour or 24-hour format. |
+| `timeFormat?: '12h' \| '24h'` | **Internal.** A UI preference for displaying time in 12-hour or 24-hour time format. |
 | `linkedTeamIds?: string[]` | **Internal.** An array of `teamId`s for shared teams that the user has chosen to display on their management board. |
 | `linkedCollectionIds?: string[]` | **Internal.** An array of `collectionId`s for shared Badge Collections that the user has chosen to display on their management board. |
 | `linkedCalendarIds?: string[]` | **Internal.** An array of `calendarId`s for shared calendars that the user has chosen to display on their management board. |
@@ -192,10 +192,10 @@ The `Team` entity is a functional unit that groups users together for collaborat
 | `teamAdmins?: string[]` | A subset of `members` who have administrative privileges for this team (e.g., can add/remove members). |
 | `teamAdminsLabel?: string` | A custom label for the Team Admins list on the Team Members tab. |
 | `membersLabel?: string` | A custom label for the Members list on the Team Members tab. |
-| `badgeCollections: BadgeCollection[]` | A list of `BadgeCollection` objects *used by* this team. This does not imply ownership, but rather defines which collections are available for this team to use. |
+| `badgeCollections: BadgeCollection[]` | A list of `BadgeCollection` objects *used by* this team. This does not imply ownership. It includes collections created by a user and linked to this team, as well as collections linked from other users. |
 | `userBadgesLabel?: string` | A custom label for the "Team Badges" section on the Team Members tab. |
 | `linkedCollectionIds?: string[]` | An array of `collectionId`s for shared Badge Collections that this team has chosen to use. |
-| `activeBadgeCollections?: string[]` | A subset of `badgeCollections` and `linkedCollectionIds` that are currently active for this team. |
+| `activeBadgeCollections?: string[]` | A subset of `badgeCollections` and `linkedCollectionIds` that are currently active for this team. This determines if the collection's badges are available for assignment within this team. |
 | `pinnedLocations?: string[]` | An array of location names pinned to this team's schedule. |
 | `checkLocations?: string[]` | A subset of pinnedLocations designated for daily checks. |
 | `locationAliases?: { [key:string]: string }` | A map of canonical location names to custom display aliases. |
@@ -232,5 +232,3 @@ This represents a specific, functional role or skill. The single source of truth
 | `icon: string` | The Google Symbol name for the badge's icon. |
 | `color: string` | The hex color code for the badge's icon and outline. |
 | `description?: string` | An optional description shown in tooltips. |
-
-
