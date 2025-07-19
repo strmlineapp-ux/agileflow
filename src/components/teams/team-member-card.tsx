@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -14,18 +13,18 @@ import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { Input } from '../ui/input';
 
-export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
+export function TeamMemberCard({ member, team, isViewer }: { member: User, team: Team, isViewer: boolean }) {
   const { viewAsUser, updateUser, updateTeam, allBadges } = useUser();
   const { toast } = useToast();
 
   const [isEditingLabel, setIsEditingLabel] = useState(false);
   const labelInputRef = useRef<HTMLInputElement>(null);
   
-  const canManageRoles = viewAsUser.isAdmin || team.teamAdmins?.includes(viewAsUser.userId);
+  const canManageRoles = !isViewer && (viewAsUser.isAdmin || team.teamAdmins?.includes(viewAsUser.userId));
   const teamBadgesLabel = team.userBadgesLabel || 'Team Badges';
 
   const userAssignableBadges = useMemo(() => {
-    const activeCollections = team.badgeCollections.filter(c => team.activeBadgeCollections?.includes(c.id));
+    const activeCollections = (team.badgeCollections || []).filter(c => team.activeBadgeCollections?.includes(c.id));
     const userAssignableBadgeIds = new Set(
         activeCollections.filter(c => c.applications?.includes('team members')).flatMap(c => c.badgeIds)
     );
@@ -38,7 +37,7 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
     const assignedBadgeIds = new Set(member.roles || []);
     const groups: { [collectionId: string]: { collectionName: string; badges: Badge[] } } = {};
 
-    team.badgeCollections.forEach(collection => {
+    (team.badgeCollections || []).forEach(collection => {
         if (!collection.applications?.includes('team members')) return;
 
         const assignedInCollection = collection.badgeIds
@@ -155,51 +154,53 @@ export function TeamMemberCard({ member, team }: { member: User, team: Team }) {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="mt-4 space-y-2">
-             <h4 className="text-sm font-normal">
-                {isEditingLabel && canManageRoles ? (
-                    <Input
-                        ref={labelInputRef}
-                        defaultValue={teamBadgesLabel}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') handleSaveLabel();
-                          else if (e.key === 'Escape') setIsEditingLabel(false);
-                        }}
-                        className="h-auto p-0 text-sm font-normal font-headline font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                    />
-                ) : (
-                    <span
-                        className={cn("cursor-text", canManageRoles && "border-b border-dashed border-transparent hover:border-foreground")}
-                        onClick={() => canManageRoles && setIsEditingLabel(true)}
-                    >
-                        {teamBadgesLabel}
-                    </span>
-                )}
-            </h4>
-            <div className="flex flex-col gap-2 min-h-[24px] rounded-md border p-2 bg-muted/20">
-              {userAssignableBadges.length > 0 ? (
-                <>
-                {groupedBadges.map(({ collectionName, badges }) => (
-                    <div key={collectionName}>
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">{collectionName}</p>
-                        <div className="flex flex-wrap gap-1.5">
-                            {badges.map(badge => renderBadge(badge, true))}
+        {!isViewer && (
+            <CardContent>
+            <div className="mt-4 space-y-2">
+                <h4 className="text-sm font-normal">
+                    {isEditingLabel && canManageRoles ? (
+                        <Input
+                            ref={labelInputRef}
+                            defaultValue={teamBadgesLabel}
+                            onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleSaveLabel();
+                            else if (e.key === 'Escape') setIsEditingLabel(false);
+                            }}
+                            className="h-auto p-0 text-sm font-normal font-headline font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                        />
+                    ) : (
+                        <span
+                            className={cn(canManageRoles && "cursor-text border-b border-dashed border-transparent hover:border-foreground")}
+                            onClick={() => canManageRoles && setIsEditingLabel(true)}
+                        >
+                            {teamBadgesLabel}
+                        </span>
+                    )}
+                </h4>
+                <div className="flex flex-col gap-2 min-h-[24px] rounded-md border p-2 bg-muted/20">
+                {userAssignableBadges.length > 0 ? (
+                    <>
+                    {groupedBadges.map(({ collectionName, badges }) => (
+                        <div key={collectionName}>
+                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">{collectionName}</p>
+                            <div className="flex flex-wrap gap-1.5">
+                                {badges.map(badge => renderBadge(badge, true))}
+                            </div>
                         </div>
-                    </div>
-                ))}
-                {unassignedBadges.length > 0 && (
-                     <div className="flex flex-wrap gap-1.5">
-                        {unassignedBadges.map(badge => renderBadge(badge, false))}
-                    </div>
+                    ))}
+                    {unassignedBadges.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                            {unassignedBadges.map(badge => renderBadge(badge, false))}
+                        </div>
+                    )}
+                    </>
+                ) : (
+                    <p className="text-xs text-muted-foreground italic w-full text-center">No assignable badges configured for this team.</p>
                 )}
-                </>
-              ) : (
-                <p className="text-xs text-muted-foreground italic w-full text-center">No assignable badges configured for this team.</p>
-              )}
+                </div>
             </div>
-          </div>
-        </CardContent>
+            </CardContent>
+        )}
       </Card>
     </>
   );

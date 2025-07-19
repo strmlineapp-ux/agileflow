@@ -13,8 +13,8 @@ import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/utils';
 import { GoogleSymbol } from '../icons/google-symbol';
 
-function SortableTeamMember({ member, team }: { member: User, team: Team }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: member.userId });
+function SortableTeamMember({ member, team, isViewer }: { member: User, team: Team, isViewer: boolean }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: member.userId, disabled: isViewer });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -25,14 +25,14 @@ function SortableTeamMember({ member, team }: { member: User, team: Team }) {
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners} className={cn(isDragging && "shadow-xl")}>
-      <TeamMemberCard member={member} team={team} />
+      <TeamMemberCard member={member} team={team} isViewer={isViewer} />
     </div>
   );
 }
 
 
 export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
-    const { users, updateAppTab, updateTeam } = useUser();
+    const { viewAsUser, users, updateAppTab, updateTeam } = useUser();
     
     // Safeguard to prevent rendering if team data is not available.
     if (!team) {
@@ -50,6 +50,12 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
     const teamAdminsLabel = team.teamAdminsLabel || 'Team Admins';
     const membersLabel = team.membersLabel || 'Members';
     
+    const isViewer = useMemo(() => {
+        if (viewAsUser.isAdmin) return false;
+        if (!team.teamAdmins?.length) return !team.members.includes(viewAsUser.userId);
+        return !team.teamAdmins.includes(viewAsUser.userId);
+    }, [viewAsUser, team]);
+
     const teamMembers = useMemo(() => {
         return team.members
             .map(id => users.find(u => u.userId === id))
@@ -188,7 +194,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                         <SortableContext items={adminIds} strategy={verticalListSortingStrategy}>
                             <div className="space-y-4">
                                 {admins.map((member) => (
-                                    <SortableTeamMember key={member.userId} member={member} team={team} />
+                                    <SortableTeamMember key={member.userId} member={member} team={team} isViewer={isViewer} />
                                 ))}
                             </div>
                         </SortableContext>
@@ -216,7 +222,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                             <div className="flex flex-wrap -m-3">
                             {members.map((member) => (
                                 <div key={member.userId} className="p-3 basis-full md:basis-1/2 flex-grow-0 flex-shrink-0">
-                                    <SortableTeamMember member={member} team={team} />
+                                    <SortableTeamMember member={member} team={team} isViewer={isViewer} />
                                 </div>
                             ))}
                             </div>

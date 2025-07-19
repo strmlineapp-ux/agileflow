@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
@@ -65,7 +64,7 @@ interface UserDataContextType {
   updateAppTab: (tabId: string, tabData: Partial<AppTab>) => Promise<void>;
   allBadges: Badge[];
   allBadgeCollections: BadgeCollection[];
-  addBadgeCollection: (owner: User, sourceCollection?: BadgeCollection) => void;
+  addBadgeCollection: (owner: User, sourceCollection?: BadgeCollection, contextTeam?: Team) => void;
   updateBadgeCollection: (collectionId: string, data: Partial<BadgeCollection>, teamId?: string) => void;
   deleteBadgeCollection: (collectionId: string) => void;
   addBadge: (collectionId: string, sourceBadge?: Badge) => void;
@@ -328,7 +327,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setAppSettings(current => ({ ...current, tabs: current.tabs.map(t => t.id === tabId ? { ...t, ...tabData } : t) }));
   }, []);
 
-  const addBadgeCollection = useCallback((owner: User, sourceCollection?: BadgeCollection) => {
+  const addBadgeCollection = useCallback((owner: User, sourceCollection?: BadgeCollection, contextTeam?: Team) => {
     const newCollectionId = crypto.randomUUID();
     let newBadges: Badge[] = [];
     let newCollection: BadgeCollection;
@@ -353,6 +352,19 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     if (newBadges.length > 0) {
         setAllBadges(prev => [...prev, ...newBadges]);
     }
+    
+    // If in a team context, add the new collection to the team's collections
+    if(contextTeam) {
+        setTeams(currentTeams => currentTeams.map(t => {
+            if (t.id === contextTeam.id) {
+                return {
+                    ...t,
+                    badgeCollections: [...(t.badgeCollections || []), newCollection],
+                }
+            }
+            return t;
+        }));
+    }
 
   }, [allBadgeCollections.length, allBadges]);
 
@@ -360,9 +372,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     if (teamId) {
         setTeams(current => current.map(t => {
             if (t.id === teamId) {
+                const updatedCollections = t.badgeCollections?.map(c => c.id === collectionId ? { ...c, ...data } : c);
                 return {
                     ...t,
-                    badgeCollections: t.badgeCollections.map(c => c.id === collectionId ? { ...c, ...data } : c)
+                    badgeCollections: updatedCollections
                 };
             }
             return t;

@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -14,14 +13,10 @@ import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { ScrollArea } from '../ui/scroll-area';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { cn } from '@/lib/utils';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '../ui/dropdown-menu';
 import { Textarea } from '../ui/textarea';
-import { Separator } from '../ui/separator';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle as UIDialogTitle } from '@/components/ui/dialog';
 import { Badge as UiBadge } from '../ui/badge';
-import { Label } from '../ui/label';
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getOwnershipContext } from '@/lib/permissions';
 import { HexColorPicker, HexColorInput } from 'react-colorful';
 import { CompactSearchInput } from '@/components/common/compact-search-input';
@@ -47,8 +42,6 @@ import {
   arrayMove,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Checkbox } from '../ui/checkbox';
-
 
 const predefinedColors = [
     '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
@@ -197,13 +190,14 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
         if (!ownerCollection) return null;
 
         for (const team of teams) {
-            const collection = team.badgeCollections.find(c => c.id === ownerCollection);
+            const collection = team.badgeCollections?.find(c => c.id === ownerCollection);
             if (collection) {
                 return users.find(u => u.userId === collection.owner.id);
             }
         }
-        return null; // Should not happen if data is consistent
+        return users.find(u => allBadgeCollections.find(c => c.id === ownerCollection)?.owner.id === u.userId) || null;
     }, [badge.id, allBadges, teams, users]);
+    
 
     const isEditable = useMemo(() => {
         if (isSharedPreview || isViewer) return false;
@@ -268,21 +262,20 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
           setIsEditingDescription(false);
         }
     };
-
+    
+    const { allBadgeCollections } = useUser();
+    
     const isShared = useMemo(() => {
-        for (const team of teams) {
-            const collection = team.badgeCollections.find(c => c.id === badge.ownerCollectionId);
-            if (collection?.isShared) return true;
-        }
-        return false;
-    }, [badge.ownerCollectionId, teams]);
+        const ownerCollection = allBadgeCollections.find(c => c.id === badge.ownerCollectionId);
+        return ownerCollection?.isShared || false;
+    }, [badge.ownerCollectionId, allBadgeCollections]);
     
     const isThisTheOriginalInstance = badge.ownerCollectionId === collectionId;
 
     const isLinkedInternally = useMemo(() => {
         const currentTeam = teams.find(t => t.id === teamId);
         if (!currentTeam) return false;
-        const count = currentTeam.badgeCollections.reduce((acc, c) => acc + (c.badgeIds.includes(badge.id) ? 1 : 0), 0);
+        const count = currentTeam.badgeCollections?.reduce((acc, c) => acc + (c.badgeIds.includes(badge.id) ? 1 : 0), 0) ?? 0;
         return count > 1;
     }, [teams, badge.id, teamId]);
 
@@ -745,8 +738,6 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
     const { viewAsUser, users, updateUser, updateTeam } = useUser();
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isEditingName, setIsEditingName] = useState(false);
-    const [isEditingDescription, setIsEditingDescription] = useState(false);
-    const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
     
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
     
@@ -781,29 +772,6 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
             document.removeEventListener('mousedown', handleOutsideClick);
         };
     }, [isEditingName, handleSaveName]);
-    
-    const handleSaveDescription = useCallback(() => {
-        const newDescription = descriptionTextareaRef.current?.value || collection.description;
-        if (newDescription?.trim() !== collection.description) {
-            onUpdateCollection(collection.id, { description: newDescription?.trim() });
-        }
-        setIsEditingDescription(false);
-    }, [collection.description, collection.id, onUpdateCollection]);
-    
-    useEffect(() => {
-        if (!isEditingDescription) return;
-        const handleOutsideClick = (event: MouseEvent) => {
-            if (descriptionTextareaRef.current && !descriptionTextareaRef.current.contains(event.target as Node)) {
-                handleSaveDescription();
-            }
-        };
-        document.addEventListener('mousedown', handleOutsideClick);
-        descriptionTextareaRef.current?.focus();
-        descriptionTextareaRef.current?.select();
-        return () => {
-            document.removeEventListener('mousedown', handleOutsideClick);
-        };
-    }, [isEditingDescription, handleSaveDescription]);
 
 
     const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -849,27 +817,7 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
     return (
         <>
             <Card className="h-full flex flex-col bg-transparent group relative">
-                {!isSharedPreview && isOwned && (
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                                    onPointerDown={(e) => {
-                                        e.stopPropagation();
-                                        onDeleteCollection(collection);
-                                    }}
-                                >
-                                    <GoogleSymbol name="cancel" className="text-lg" weight={100} />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent><p>Delete Collection</p></TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                )}
-                <div {...dragHandleProps}>
+                 <div {...dragHandleProps}>
                     <CardHeader>
                         <div className="flex items-start justify-between">
                             <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -1018,8 +966,8 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
     );
 }
 
-function DuplicateCollectionZone({ onAdd }: { onAdd: () => void; }) {
-  const { isOver, setNodeRef } = useDroppable({ id: 'duplicate-collection-zone' });
+function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
+  const { isOver, setNodeRef } = useDroppable({ id });
   
   return (
     <div
@@ -1062,6 +1010,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         updateBadge,
         deleteBadge,
         reorderBadges,
+        updateTeam
     } = useUser();
 
     const { toast } = useUser();
@@ -1258,7 +1207,6 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         if (!over) return;
 
         const activeType = active.data.current?.type;
-        const overType = over.data.current?.type;
         
         if (over.id === 'duplicate-collection-zone' && activeType === 'collection') {
             const sourceCollection = active.data.current?.collection as BadgeCollection;
@@ -1375,7 +1323,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                     </TooltipProvider>
                                 )}
                                 {!isViewer && (
-                                    <DuplicateCollectionZone onAdd={() => handleAddCollection()} />
+                                    <DuplicateZone id="duplicate-collection-zone" onAdd={() => handleAddCollection()} />
                                 )}
                             </div>
                             <div className="flex items-center gap-1">
