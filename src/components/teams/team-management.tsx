@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
@@ -42,6 +41,7 @@ import { Badge } from '../ui/badge';
 import { CardDescription } from '../ui/card';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { HexColorPicker, HexColorInput } from 'react-colorful';
+import { CompactSearchInput } from '@/components/common/compact-search-input';
 
 const predefinedColors = [
     '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
@@ -129,7 +129,6 @@ function TeamCard({
     users,
     onUpdate, 
     onDelete,
-    onToggleShare,
     onRemoveUser,
     onAddUser,
     onSetAdmin,
@@ -140,16 +139,18 @@ function TeamCard({
     users: User[];
     onUpdate: (id: string, data: Partial<Team>) => void;
     onDelete: (team: Team) => void;
-    onToggleShare: (team: Team) => void;
     onRemoveUser: (teamId: string, userId: string) => void;
     onAddUser: (teamId: string, userId: string) => void;
     onSetAdmin: (teamId: string, userId: string) => void;
     isSharedPreview?: boolean;
+    isEditingName: boolean;
+    setIsEditingName: (isEditing: boolean) => void;
+    isDragging?: boolean;
     [key: string]: any;
 }) {
     const { viewAsUser } = useUser();
     const nameInputRef = useRef<HTMLInputElement>(null);
-    const [isEditingName, setIsEditingName] = useState(false);
+    const { isEditingName, setIsEditingName, isDragging } = props;
     
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
     const [iconSearch, setIconSearch] = useState('');
@@ -160,6 +161,7 @@ function TeamCard({
     const [isAddUserPopoverOpen, setIsAddUserPopoverOpen] = useState(false);
     const [userSearch, setUserSearch] = useState('');
     const addUserSearchInputRef = useRef<HTMLInputElement>(null);
+    const [isExpanded, setIsExpanded] = useState(false);
     
     const { setNodeRef: setUsersDroppableRef, isOver: isUsersDroppableOver } = useDroppable({
         id: `team-users:${team.id}`,
@@ -187,9 +189,9 @@ function TeamCard({
     if (team.owner.id === viewAsUser.userId && team.isShared) {
         shareIcon = 'upload';
         shareIconTitle = `Owned & Shared by You`;
-    } else if (team.owner.id !== viewAsUser.userId && team.isShared) {
+    } else if (team.owner.id !== viewAsUser.userId && !isSharedPreview) { // Is a linked team on main board
         shareIcon = 'downloading';
-        shareIconTitle = `Shared from ${ownerName}`;
+        shareIconTitle = `Shared by ${ownerName}`;
     }
 
     useEffect(() => {
@@ -200,9 +202,31 @@ function TeamCard({
         }
     }, [isAddUserPopoverOpen]);
     
+     const handleSaveName = useCallback(() => {
+        const newName = nameInputRef.current?.value.trim();
+        if (newName && newName !== team.name) {
+            onUpdate(team.id, { name: newName });
+        }
+        setIsEditingName(false);
+    }, [team.id, team.name, onUpdate, setIsEditingName]);
+
     useEffect(() => {
-        if (isEditingName) nameInputRef.current?.focus();
-    }, [isEditingName]);
+        if (!isEditingName) return;
+
+        const handleOutsideClick = (event: MouseEvent) => {
+            if (nameInputRef.current && !nameInputRef.current.contains(event.target as Node)) {
+                handleSaveName();
+            }
+        };
+
+        document.addEventListener("mousedown", handleOutsideClick);
+        nameInputRef.current?.focus();
+        nameInputRef.current?.select();
+        
+        return () => {
+            document.removeEventListener("mousedown", handleOutsideClick);
+        };
+    }, [isEditingName, handleSaveName]);
 
     useEffect(() => {
         if (isIconPopoverOpen) {
@@ -213,14 +237,6 @@ function TeamCard({
     }, [isIconPopoverOpen]);
 
     const filteredIcons = useMemo(() => googleSymbolNames.filter(icon => icon.toLowerCase().includes(iconSearch.toLowerCase())), [iconSearch]);
-
-    const handleSaveName = () => {
-        const newName = nameInputRef.current?.value.trim();
-        if (newName && newName !== team.name) {
-            onUpdate(team.id, { name: newName });
-        }
-        setIsEditingName(false);
-    };
 
     const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') handleSaveName();
@@ -330,18 +346,17 @@ function TeamCard({
                                     </TooltipProvider>
                                 )}
                             </div>
-                            <div className="flex items-center gap-1 flex-1 min-w-0">
+                            <div onPointerDown={(e) => { e.stopPropagation(); }} className="flex-1 min-w-0">
                                 {isEditingName && canManageTeam ? (
                                     <Input
                                         ref={nameInputRef}
                                         defaultValue={team.name}
                                         onBlur={handleSaveName}
                                         onKeyDown={handleNameKeyDown}
-                                        onPointerDown={(e) => e.stopPropagation()}
                                         className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
                                     />
                                 ) : (
-                                    <CardTitle className={cn("font-headline text-xl font-thin truncate", canManageTeam && "cursor-pointer")} onPointerDown={(e) => {e.stopPropagation(); if (canManageTeam) setIsEditingName(true)}}>
+                                    <CardTitle className={cn("font-headline text-xl font-thin truncate", canManageTeam && "cursor-pointer")} onClick={() => { if (canManageTeam) setIsEditingName(true); }}>
                                         {team.name}
                                     </CardTitle>
                                 )}
@@ -391,32 +406,41 @@ function TeamCard({
                     </div>
                 </CardHeader>
             </div>
-            <CardContent className="flex-grow pt-0 flex flex-col">
-                <ScrollArea className="max-h-48 pr-2 flex-grow">
-                    <div ref={setUsersDroppableRef} className={cn("min-h-[60px] rounded-md p-2 -m-2 space-y-1 transition-colors", isUsersDroppableOver && "ring-1 ring-border ring-inset")}>
-                        {teamMembers.map((user) => (
-                          <DraggableUserCard 
-                              key={user.userId}
-                              user={user}
-                              teamId={team.id}
-                              onRemove={() => onRemoveUser(team.id, user.userId)}
-                              isTeamAdmin={(team.teamAdmins || []).includes(user.userId)}
-                              onSetAdmin={() => onSetAdmin(team.id, user.userId)}
-                              canManage={canManageTeam}
-                              memberCount={team.members.length}
-                          />
-                        ))}
-                    </div>
-                </ScrollArea>
-            </CardContent>
+            {isExpanded && (
+                <CardContent className="flex-grow pt-0 flex flex-col">
+                    <ScrollArea className="max-h-48 pr-2 flex-grow">
+                        <div ref={setUsersDroppableRef} className={cn("min-h-[60px] rounded-md p-2 -m-2 space-y-1 transition-colors", isUsersDroppableOver && "ring-1 ring-border ring-inset")}>
+                            {teamMembers.map((user) => (
+                            <DraggableUserCard 
+                                key={user.userId}
+                                user={user}
+                                teamId={team.id}
+                                onRemove={() => onRemoveUser(team.id, user.userId)}
+                                isTeamAdmin={(team.teamAdmins || []).includes(user.userId)}
+                                onSetAdmin={() => onSetAdmin(team.id, user.userId)}
+                                canManage={canManageTeam}
+                                memberCount={team.members.length}
+                            />
+                            ))}
+                        </div>
+                    </ScrollArea>
+                </CardContent>
+            )}
+             <div className="absolute -bottom-1 right-0">
+                <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
+                    <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
+                </Button>
+            </div>
         </Card>
     );
 }
 
-function SortableTeamCard({team, isSharedPanelOpen, ...props}: {team: Team, isSharedPanelOpen: boolean, [key: string]: any}) {
+function SortableTeamCard({team, ...props}: {team: Team, [key: string]: any}) {
+    const { isEditingName, setIsEditingName } = props;
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: team.id,
         data: { type: 'team-card', team, isSharedPreview: props.isSharedPreview },
+        disabled: isEditingName,
     });
 
     const style = {
@@ -426,11 +450,13 @@ function SortableTeamCard({team, isSharedPanelOpen, ...props}: {team: Team, isSh
     
     return (
         <div ref={setNodeRef} style={style} className={cn(
-            "p-3 basis-full md:basis-1/2 flex-grow-0 flex-shrink-0 transition-all duration-300",
-            isSharedPanelOpen ? "lg:w-full" : "lg:basis-1/3",
+            "p-2 flex-grow-0 flex-shrink-0 transition-all duration-300",
+            props.isSharedPreview 
+              ? "w-full"
+              : "basis-full sm:basis-[calc(50%-1rem)] md:basis-[calc(33.333%-1rem)] lg:basis-[calc(25%-1rem)] xl:basis-[calc(20%-1rem)] 2xl:basis-[calc(16.666%-1rem)]",
             isDragging && "opacity-80 shadow-2xl z-50"
         )}>
-            <TeamCard team={team} {...props} dragHandleProps={{...attributes, ...listeners}} />
+            <TeamCard team={team} {...props} dragHandleProps={{...attributes, ...listeners}} isDragging={isDragging} />
         </div>
     )
 }
@@ -445,6 +471,34 @@ function TeamManagementDropZone({id, type, children, className}: {id: string, ty
     )
 }
 
+function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
+  const { isOver, setNodeRef } = useDroppable({ id });
+  
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "rounded-full transition-all p-0.5",
+        isOver && "ring-1 ring-border ring-inset"
+      )}
+    >
+      <TooltipProvider>
+          <Tooltip>
+              <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full p-0" onClick={onAdd} onPointerDown={(e) => e.stopPropagation()}>
+                    <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
+                    <span className="sr-only">New Team or Drop to Duplicate</span>
+                  </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                  <p>{isOver ? 'Drop to Duplicate' : 'Add New Team'}</p>
+              </TooltipContent>
+          </Tooltip>
+      </TooltipProvider>
+    </div>
+  );
+}
+
 export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: AppTab; page: AppPage; isSingleTabPage?: boolean }) {
     const { viewAsUser, users, teams, appSettings, addTeam, updateTeam, deleteTeam, reorderTeams, updateAppTab, updateUser } = useUser();
     const { toast } = useToast();
@@ -454,11 +508,10 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
     const titleInputRef = useRef<HTMLInputElement>(null);
     const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
     const [sharedSearchTerm, setSharedSearchTerm] = useState('');
-    const sharedSearchInputRef = useRef<HTMLInputElement>(null);
     
-    const [isSearching, setIsSearching] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
-    const searchInputRef = useRef<HTMLInputElement>(null);
+    const [activeTeamId, setActiveTeamId] = useState<string | null>(null);
+    const [editingTeamName, setEditingTeamName] = useState(false);
     
     const pageTitle = page.isDynamic && teams.find(t => t.id === page.path.split('/')[2]) ? `${teams.find(t => t.id === page.path.split('/')[2])?.name} ${page.name}` : page.name;
     const tabTitle = appSettings.teamManagementLabel || tab.name;
@@ -469,27 +522,9 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
         return team.owner.id === viewAsUser.userId || (team.teamAdmins || []).includes(viewAsUser.userId);
     }, [viewAsUser]);
 
-
-    useEffect(() => {
-        if (isSearching && searchInputRef.current) {
-            searchInputRef.current.focus();
-        }
-    }, [isSearching]);
-
     useEffect(() => {
         if (isEditingTitle) titleInputRef.current?.focus();
     }, [isEditingTitle]);
-
-    useEffect(() => {
-        if (isSharedPanelOpen) {
-            const timer = setTimeout(() => {
-                sharedSearchInputRef.current?.focus();
-            }, 100);
-            return () => clearTimeout(timer);
-        } else {
-            setSharedSearchTerm(''); // Clear search on close
-        }
-    }, [isSharedPanelOpen]);
 
     const handleSaveTitle = () => {
         const newName = titleInputRef.current?.value.trim();
@@ -504,21 +539,39 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
         else if (e.key === 'Escape') setIsEditingTitle(false);
     };
 
-    const handleAddTeam = () => {
+    const handleAddTeam = (sourceTeam?: Team) => {
         const owner = getOwnershipContext(page, viewAsUser);
-        const newTeam: Omit<Team, 'id'> = {
-            name: `New Team ${teams.length + 1}`,
-            icon: 'group',
-            color: predefinedColors[teams.length % predefinedColors.length],
-            owner: owner,
-            isShared: false,
-            members: [owner.id],
-            teamAdmins: [owner.id],
-            locationCheckManagers: [],
-            allBadges: [],
-            badgeCollections: [],
-        };
-        addTeam(newTeam);
+        let newTeamData: Omit<Team, 'id'>;
+
+        if (sourceTeam) {
+            newTeamData = {
+                ...JSON.parse(JSON.stringify(sourceTeam)),
+                name: `${sourceTeam.name} (Copy)`,
+                owner,
+                isShared: false,
+            };
+            if (!newTeamData.members.includes(owner.id)) {
+                newTeamData.members.push(owner.id);
+            }
+             if (!newTeamData.teamAdmins?.includes(owner.id)) {
+                newTeamData.teamAdmins = [...(newTeamData.teamAdmins || []), owner.id];
+            }
+        } else {
+             newTeamData = {
+                name: `New Team ${teams.length + 1}`,
+                icon: 'group',
+                color: predefinedColors[teams.length % predefinedColors.length],
+                owner: owner,
+                isShared: false,
+                members: [owner.id],
+                teamAdmins: [owner.id],
+                locationCheckManagers: [],
+                allBadges: [],
+                badgeCollections: [],
+            };
+        }
+        
+        addTeam(newTeamData);
     };
 
     const handleUpdate = (teamId: string, data: Partial<Team>) => updateTeam(teamId, data);
@@ -614,10 +667,10 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
     }, [teams, displayedTeams, sharedSearchTerm, viewAsUser.userId]);
     
     const onDragEnd = (result: DragEndEvent) => {
+        setActiveTeamId(null);
         const { active, over } = result;
         if (!over) return;
-        const allVisibleTeams = [...displayedTeams, ...sharedTeams];
-
+        
         const activeDataType = active.data.current?.type;
         
         // Handle dragging a user card
@@ -657,45 +710,15 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
             }
             
             if (over.id === 'duplicate-team-zone') {
-                 const teamToDuplicate = allVisibleTeams.find(t => t.id === active.id);
-
-                if(teamToDuplicate) {
-                    const owner = getOwnershipContext(page, viewAsUser);
-                    const newTeamData: Omit<Team, 'id'> = {
-                        name: `${teamToDuplicate.name} (Copy)`,
-                        icon: teamToDuplicate.icon,
-                        color: teamToDuplicate.color,
-                        owner: owner,
-                        isShared: false,
-                        members: [...teamToDuplicate.members],
-                        teamAdmins: [...(teamToDuplicate.teamAdmins || [])],
-                        teamAdminsLabel: teamToDuplicate.teamAdminsLabel,
-                        membersLabel: teamToDuplicate.membersLabel,
-                        locationCheckManagers: teamToDuplicate.locationCheckManagers,
-                        allBadges: JSON.parse(JSON.stringify(teamToDuplicate.allBadges || [])),
-                        badgeCollections: JSON.parse(JSON.stringify(teamToDuplicate.badgeCollections || [])),
-                        userBadgesLabel: teamToDuplicate.userBadgesLabel,
-                        pinnedLocations: [...(teamToDuplicate.pinnedLocations || [])],
-                        checkLocations: [...(teamToDuplicate.checkLocations || [])],
-                        locationAliases: { ...(teamToDuplicate.locationAliases || {}) },
-                        workstations: [...(teamToDuplicate.workstations || [])],
-                        eventTemplates: JSON.parse(JSON.stringify(teamToDuplicate.eventTemplates || [])),
-                    };
-                    
-                    if (owner.id === viewAsUser.userId && !newTeamData.members.includes(viewAsUser.userId)) {
-                        newTeamData.members.push(viewAsUser.userId);
-                        newTeamData.teamAdmins?.push(viewAsUser.userId);
-                    }
-
-                    addTeam(newTeamData);
-                    
+                 const teamToDuplicate = displayedTeams.find(t => t.id === active.id) || sharedTeams.find(t => t.id === active.id);
+                 if(teamToDuplicate) {
+                    handleAddTeam(teamToDuplicate);
                     const wasLinked = (viewAsUser.linkedTeamIds || []).includes(teamToDuplicate.id);
                     if (wasLinked) {
                         const updatedLinkedTeamIds = (viewAsUser.linkedTeamIds || []).filter(id => id !== teamToDuplicate.id);
                         updateUser(viewAsUser.userId, { linkedTeamIds: updatedLinkedTeamIds });
+                        toast({ title: 'Team Copied', description: 'A new, independent team has been created.' });
                     }
-
-                    toast({ title: 'Team Copied', description: 'A new, independent team has been created.' });
                 }
                 return;
             }
@@ -721,8 +744,15 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
         })
     );
 
+    const onDragStart = (event: DragEndEvent) => {
+        setActiveTeamId(event.active.id as string);
+    }
+    
+    const teamIds = useMemo(() => displayedTeams.map(t => t.id), [displayedTeams]);
+    const sharedTeamIds = useMemo(() => sharedTeams.map(t => t.id), [sharedTeams]);
+
     return (
-        <DndContext sensors={sensors} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
+        <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
             <div className="flex gap-4">
                  <div className="flex-1 transition-all duration-300 flex flex-col gap-6">
                     <div className="flex items-center justify-between">
@@ -741,38 +771,10 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                                   </Tooltip>
                               </TooltipProvider>
                             )}
-                            <TeamManagementDropZone id="duplicate-team-zone" type="team-card" className="rounded-full">
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="rounded-full p-0" onClick={handleAddTeam}>
-                                                <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
-                                                <span className="sr-only">New Team or Drop to Duplicate</span>
-                                            </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent><p>Add New Team</p></TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                            </TeamManagementDropZone>
+                            <DuplicateZone id="duplicate-team-zone" onAdd={() => handleAddTeam()} />
                         </div>
                         <div className="flex items-center gap-1">
-                            {!isSearching ? (
-                                <Button variant="ghost" size="icon" onClick={() => setIsSearching(true)} className="text-muted-foreground">
-                                    <GoogleSymbol name="search" />
-                                </Button>
-                            ) : (
-                                <div className="flex items-center gap-1 border-b">
-                                    <GoogleSymbol name="search" className="text-muted-foreground" />
-                                    <input
-                                        ref={searchInputRef}
-                                        placeholder="Search teams..."
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                        onBlur={() => { if (!searchTerm) setIsSearching(false); }}
-                                        className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
-                                    />
-                                </div>
-                            )}
+                            <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search teams..." />
                             <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
@@ -786,8 +788,8 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                         </div>
                     </div>
 
-                    <SortableContext items={displayedTeams.map(t => t.id)} strategy={rectSortingStrategy}>
-                        <TeamManagementDropZone id="teams-list" type="team-card" className="flex flex-wrap -m-3">
+                    <TeamManagementDropZone id="teams-list" type="team-card" className="flex flex-wrap -m-2">
+                         <SortableContext items={teamIds} strategy={rectSortingStrategy}>
                             {displayedTeams.map((team) => (
                                 <SortableTeamCard
                                     key={team.id}
@@ -799,34 +801,31 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                                     onRemoveUser={handleRemoveUserFromTeam}
                                     onAddUser={handleAddUserToTeam}
                                     onSetAdmin={handleSetAdmin}
-                                    isSharedPanelOpen={isSharedPanelOpen}
+                                    isEditingName={editingTeamName && activeTeamId === team.id}
+                                    setIsEditingName={(isEditing: boolean) => {
+                                        if (isEditing) {
+                                            setActiveTeamId(team.id);
+                                        }
+                                        setEditingTeamName(isEditing);
+                                    }}
                                 />
                             ))}
-                        </TeamManagementDropZone>
-                    </SortableContext>
+                         </SortableContext>
+                    </TeamManagementDropZone>
                 </div>
                  <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96 p-2" : "w-0")}>
                     <TeamManagementDropZone id="shared-teams-panel" type="team-card" className="h-full rounded-lg">
-                        <Card className={cn("transition-opacity duration-300 h-full bg-transparent", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
+                        <Card className={cn("transition-opacity duration-300 h-full bg-transparent flex flex-col", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
                             <CardHeader>
                                 <div className="flex items-center justify-between">
                                     <CardTitle className="font-headline font-thin text-xl">Shared Teams</CardTitle>
-                                    <div className="flex items-center gap-1 p-1">
-                                        <GoogleSymbol name="search" className="text-muted-foreground text-lg" />
-                                        <input
-                                            ref={sharedSearchInputRef}
-                                            placeholder="Search shared teams..."
-                                            value={sharedSearchTerm}
-                                            onChange={(e) => setSharedSearchTerm(e.target.value)}
-                                            className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
-                                        />
-                                    </div>
+                                    <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." />
                                 </div>
                                 <CardDescription>Drag a team you own here to share it. Drag a team to your board to link it.</CardDescription>
                             </CardHeader>
-                            <CardContent className="h-full">
+                            <CardContent className="flex-1 p-2 overflow-hidden">
                                 <ScrollArea className="h-full">
-                                    <SortableContext items={sharedTeams.map(t => t.id)} strategy={rectSortingStrategy}>
+                                    <SortableContext items={sharedTeamIds} strategy={verticalListSortingStrategy}>
                                         <div className="space-y-2">
                                             {sharedTeams.map((team) => (
                                                 <SortableTeamCard
@@ -840,7 +839,13 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                                                     onAddUser={handleAddUserToTeam}
                                                     onSetAdmin={handleSetAdmin}
                                                     isSharedPreview={true}
-                                                    isSharedPanelOpen={isSharedPanelOpen}
+                                                    isEditingName={editingTeamName && activeTeamId === team.id}
+                                                    setIsEditingName={(isEditing: boolean) => {
+                                                        if (isEditing) {
+                                                            setActiveTeamId(team.id);
+                                                        }
+                                                        setEditingTeamName(isEditing);
+                                                    }}
                                                 />
                                             ))}
                                             {sharedTeams.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">No other teams are currently shared.</p>}
@@ -852,6 +857,20 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                     </TeamManagementDropZone>
                 </div>
             </div>
+            <DragOverlay>
+                {activeTeamId && (() => {
+                    const activeTeam = teams.find(t => t.id === activeTeamId);
+                    if (!activeTeam) return null;
+                    return (
+                        <TeamCard
+                            team={activeTeam}
+                            users={users}
+                            onUpdate={() => {}} onDelete={() => {}} onToggleShare={() => {}} onRemoveUser={() => {}} onAddUser={() => {}} onSetAdmin={() => {}}
+                            isEditingName={false} setIsEditingName={() => {}} isDragging={true}
+                        />
+                    );
+                })()}
+            </DragOverlay>
             <Dialog open={!!teamToDelete} onOpenChange={() => setTeamToDelete(null)}>
                 <DialogContent className="max-w-md">
                     <div className="absolute top-4 right-4">
