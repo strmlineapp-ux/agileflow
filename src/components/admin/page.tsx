@@ -623,7 +623,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
-                                                <button className="absolute -bottom-0 -right-3 h-4 w-4 rounded-full border-0 cursor-pointer" style={{ backgroundColor: page.color }} />
+                                                <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-0 cursor-pointer" style={{ backgroundColor: page.color }} />
                                             </PopoverTrigger>
                                         </TooltipTrigger>
                                         <TooltipContent><p>Change Color</p></TooltipContent>
@@ -877,10 +877,20 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
 
         if (over && active.id !== over.id) {
             const oldIndex = appSettings.pages.findIndex(p => p.id === active.id);
-            const newIndex = appSettings.pages.findIndex(p => p.id === over!.id);
+            const newIndex = appSettings.pages.findIndex(p => p.id === over.id);
             
-            if (pinnedIds.has(appSettings.pages[newIndex].id)) {
-                return;
+            // Prevent dropping into pinned area or a pinned item into the non-pinned area
+            const activeIsPinned = pinnedIds.has(active.id.toString());
+            const overIsPinned = pinnedIds.has(over.id.toString());
+
+            if (activeIsPinned !== overIsPinned) {
+                return; // Don't allow moving between pinned and unpinned sections
+            }
+            
+            if (overIsPinned) {
+                // We don't allow reordering of pinned items, but if we did, logic would be here.
+                // For now, this is effectively a no-op because SortablePageCard is disabled for pinned items.
+                return; 
             }
 
             const reorderedPages = arrayMove(appSettings.pages, oldIndex, newIndex);
@@ -1069,7 +1079,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <PopoverTrigger asChild>
-                                        <button className="absolute -bottom-0 -right-3 h-4 w-4 rounded-full border-0 cursor-pointer" style={{ backgroundColor: tab.color }} />
+                                        <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-0 cursor-pointer" style={{ backgroundColor: tab.color }} />
                                     </PopoverTrigger>
                                 </TooltipTrigger>
                                 <TooltipContent><p>Change Color</p></TooltipContent>
