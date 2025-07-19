@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
@@ -59,13 +60,14 @@ function DraggableUserCard({ user, onRemove, isTeamAdmin, onSetAdmin, canManage,
     memberCount: number;
     teamId: string;
 }) {
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({
-    id: `user-drag:${teamId}:${user.userId}`,
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useSortable({
+    id: `user-sort:${teamId}:${user.userId}`,
     data: { type: 'user', user, teamId },
   });
   
   const style = {
-    transform: CSS.Translate.toString(transform),
+    transform: CSS.Transform.toString(transform),
+    opacity: isDragging ? 0.5 : 1,
   };
   
   return (
@@ -410,20 +412,22 @@ function TeamCard({
             {isExpanded && (
                 <CardContent className="flex-grow pt-0 flex flex-col">
                     <ScrollArea className="max-h-48 pr-2 flex-grow">
-                        <div ref={setUsersDroppableRef} className={cn("min-h-[60px] rounded-md p-2 -m-2 space-y-1 transition-colors", isUsersDroppableOver && "ring-1 ring-border ring-inset")}>
-                            {teamMembers.map((user) => (
-                            <DraggableUserCard 
-                                key={user.userId}
-                                user={user}
-                                teamId={team.id}
-                                onRemove={() => onRemoveUser(team.id, user.userId)}
-                                isTeamAdmin={(team.teamAdmins || []).includes(user.userId)}
-                                onSetAdmin={() => onSetAdmin(team.id, user.userId)}
-                                canManage={canManageTeam}
-                                memberCount={team.members.length}
-                            />
-                            ))}
-                        </div>
+                        <SortableContext items={teamMembers.map(m => `user-sort:${team.id}:${m.userId}`)} strategy={verticalListSortingStrategy}>
+                            <div ref={setUsersDroppableRef} className={cn("min-h-[60px] rounded-md p-2 -m-2 space-y-1 transition-colors", isUsersDroppableOver && "ring-1 ring-border ring-inset")}>
+                                {teamMembers.map((user) => (
+                                <DraggableUserCard 
+                                    key={user.userId}
+                                    user={user}
+                                    teamId={team.id}
+                                    onRemove={() => onRemoveUser(team.id, user.userId)}
+                                    isTeamAdmin={(team.teamAdmins || []).includes(user.userId)}
+                                    onSetAdmin={() => onSetAdmin(team.id, user.userId)}
+                                    canManage={canManageTeam}
+                                    memberCount={team.members.length}
+                                />
+                                ))}
+                            </div>
+                        </SortableContext>
                     </ScrollArea>
                 </CardContent>
             )}
@@ -511,7 +515,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
     const [sharedSearchTerm, setSharedSearchTerm] = useState('');
     
     const [searchTerm, setSearchTerm] = useState('');
-    const [activeTeamId, setActiveTeamId] = useState<string | null>(null);
+    const [activeDragItem, setActiveDragItem] = useState<{type: string, data: any} | null>(null);
     const [editingTeamName, setEditingTeamName] = useState(false);
     
     const pageTitle = page.isDynamic && teams.find(t => t.id === page.path.split('/')[2]) ? `${teams.find(t => t.id === page.path.split('/')[2])?.name} ${page.name}` : page.name;
@@ -551,12 +555,6 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                 owner,
                 isShared: false,
             };
-            if (!newTeamData.members.includes(owner.id)) {
-                newTeamData.members.push(owner.id);
-            }
-             if (!newTeamData.teamAdmins?.includes(owner.id)) {
-                newTeamData.teamAdmins = [...(newTeamData.teamAdmins || []), owner.id];
-            }
         } else {
              newTeamData = {
                 name: `New Team ${teams.length + 1}`,
@@ -564,8 +562,8 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                 color: predefinedColors[teams.length % predefinedColors.length],
                 owner: owner,
                 isShared: false,
-                members: [owner.id],
-                teamAdmins: [owner.id],
+                members: [],
+                teamAdmins: [],
                 locationCheckManagers: [],
                 allBadges: [],
                 badgeCollections: [],
@@ -610,11 +608,6 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
         
         const currentAdmins = team.teamAdmins || [];
         const isAlreadyAdmin = currentAdmins.includes(userId);
-        
-        if (isAlreadyAdmin && currentAdmins.length === 1 && team.members.length > 1) {
-            toast({ variant: 'destructive', title: 'Cannot Remove Last Admin' });
-            return;
-        }
         
         const newAdmins = isAlreadyAdmin
             ? currentAdmins.filter(id => id !== userId)
@@ -668,26 +661,24 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
     }, [teams, displayedTeams, sharedSearchTerm, viewAsUser.userId]);
     
     const onDragEnd = (result: DragEndEvent) => {
-        setActiveTeamId(null);
+        setActiveDragItem(null);
         const { active, over } = result;
         if (!over) return;
         
-        const activeDataType = active.data.current?.type;
+        const activeType = active.data.current?.type;
+        const overType = over.data.current?.type;
         
         // Handle dragging a user card
-        if (activeDataType === 'user') {
+        if (activeType === 'user') {
             const user = active.data.current?.user as User;
             const destTeamId = over.data.current?.teamId;
-            const sourceTeamId = active.data.current?.teamId;
-            
-            if (destTeamId && user && sourceTeamId !== destTeamId) {
+            if (destTeamId && user) {
                 handleAddUserToTeam(destTeamId, user.userId);
             }
             return;
         }
 
-
-        if (activeDataType === 'team-card') {
+        if (activeType === 'team-card') {
              if (over.id === 'shared-teams-panel') {
                 const teamToDrop = teams.find(t => t.id === active.id);
                 if (teamToDrop) {
@@ -746,7 +737,8 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
     );
 
     const onDragStart = (event: DragEndEvent) => {
-        setActiveTeamId(event.active.id as string);
+        const { type, ...data } = event.active.data.current || {};
+        setActiveDragItem({ type, data });
     }
     
     const teamIds = useMemo(() => displayedTeams.map(t => t.id), [displayedTeams]);
@@ -802,10 +794,10 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                                     onRemoveUser={handleRemoveUserFromTeam}
                                     onAddUser={handleAddUserToTeam}
                                     onSetAdmin={handleSetAdmin}
-                                    isEditingName={editingTeamName && activeTeamId === team.id}
+                                    isEditingName={editingTeamName && activeDragItem?.data?.team?.id === team.id}
                                     setIsEditingName={(isEditing: boolean) => {
                                         if (isEditing) {
-                                            setActiveTeamId(team.id);
+                                            setActiveDragItem({type: 'team-card', data: { team }});
                                         }
                                         setEditingTeamName(isEditing);
                                     }}
@@ -840,10 +832,10 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                                                     onAddUser={handleAddUserToTeam}
                                                     onSetAdmin={handleSetAdmin}
                                                     isSharedPreview={true}
-                                                    isEditingName={editingTeamName && activeTeamId === team.id}
+                                                    isEditingName={editingTeamName && activeDragItem?.data?.team?.id === team.id}
                                                     setIsEditingName={(isEditing: boolean) => {
                                                         if (isEditing) {
-                                                            setActiveTeamId(team.id);
+                                                            setActiveDragItem({type: 'team-card', data: { team }});
                                                         }
                                                         setEditingTeamName(isEditing);
                                                     }}
@@ -859,18 +851,28 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                 </div>
             </div>
             <DragOverlay>
-                {activeTeamId && (() => {
-                    const activeTeam = teams.find(t => t.id === activeTeamId);
-                    if (!activeTeam) return null;
-                    return (
+                {activeDragItem?.type === 'team-card' && activeDragItem?.data?.team ? (
+                    <div className="p-2 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5 flex-grow-0 flex-shrink-0">
                         <TeamCard
-                            team={activeTeam}
+                            team={activeDragItem.data.team}
                             users={users}
                             onUpdate={() => {}} onDelete={() => {}} onToggleShare={() => {}} onRemoveUser={() => {}} onAddUser={() => {}} onSetAdmin={() => {}}
                             isEditingName={false} setIsEditingName={() => {}} isDragging={true}
                         />
-                    );
-                })()}
+                    </div>
+                ) : activeDragItem?.type === 'user' && activeDragItem?.data?.user ? (
+                    <div className="bg-card p-2 rounded-md shadow-lg">
+                        <div className="flex items-center gap-2">
+                            <Avatar className="h-8 w-8">
+                                <AvatarImage src={activeDragItem.data.user.avatarUrl} alt={activeDragItem.data.user.displayName} />
+                                <AvatarFallback>{activeDragItem.data.user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <p className="font-normal text-sm">{activeDragItem.data.user.displayName}</p>
+                            </div>
+                        </div>
+                    </div>
+                ) : null}
             </DragOverlay>
             <Dialog open={!!teamToDelete} onOpenChange={() => setTeamToDelete(null)}>
                 <DialogContent className="max-w-md">

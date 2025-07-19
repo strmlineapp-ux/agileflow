@@ -679,7 +679,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
             </div>
             {isExpanded && (
                 <CardContent className="p-2 pt-0">
-                    <p className={cn("text-xs text-muted-foreground truncate font-thin", !isPinned && "cursor-pointer hover:border-b hover:border-dashed")} onClick={handlePathClick}>
+                    <p className={cn("text-xs text-muted-foreground truncate font-thin", !isPinned && "cursor-pointer")} onClick={handlePathClick}>
                       {displayPath}
                     </p>
                 </CardContent>
@@ -791,6 +791,7 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
     const searchInputRef = useRef<HTMLInputElement>(null);
     
     const pinnedIds = useMemo(() => new Set(corePages.map(p => p.id)), []);
+    const pinnedEndIndex = corePages.findIndex(p => p.id === 'page-notifications');
 
     const handleUpdatePage = useCallback((pageId: string, data: Partial<AppPage>) => {
         const newPages = appSettings.pages.map(p => p.id === pageId ? { ...p, ...data } : p);
@@ -829,11 +830,15 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
             access: { users: [], teams: [] }
         };
         
-        const notificationsIndex = appSettings.pages.findIndex(p => p.id === 'page-notifications');
-        const insertIndex = notificationsIndex !== -1 ? notificationsIndex : appSettings.pages.length - 1;
-
+        const insertIndex = appSettings.pages.findIndex(p => p.id === 'page-notifications');
         const newPages = [...appSettings.pages];
-        newPages.splice(insertIndex, 0, newPage);
+        if (insertIndex !== -1) {
+            newPages.splice(insertIndex, 0, newPage);
+        } else {
+            // Fallback if for some reason the pinned page isn't there
+            const lastPinnedIndex = appSettings.pages.map(p => pinnedIds.has(p.id)).lastIndexOf(true);
+            newPages.splice(lastPinnedIndex, 0, newPage);
+        }
         
         updateAppSettings({ pages: newPages });
     };
@@ -882,10 +887,12 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
             const activeIsPinned = pinnedIds.has(active.id.toString());
             const overIsPinned = pinnedIds.has(over.id.toString());
             
-            // Prevent dragging a non-pinned item into a pinned item's position or vice-versa.
-            if (activeIsPinned !== overIsPinned) {
-                return;
-            }
+            // Prevent dragging non-pinned into pinned areas or vice-versa
+            if (activeIsPinned !== overIsPinned) return;
+            // Prevent reordering pinned items among themselves
+            if (activeIsPinned && overIsPinned) return;
+            // Prevent dragging a custom page into the final pinned block
+            if (!activeIsPinned && newIndex >= pinnedEndIndex && pinnedEndIndex !== -1) return;
             
             const reorderedPages = arrayMove(appSettings.pages, oldIndex, newIndex);
             updateAppSettings({ pages: reorderedPages });

@@ -7,14 +7,15 @@ Welcome to AgileFlow, your team's central hub for managing tasks, scheduling eve
 ## 1. Getting Started
 
 ### 1.1 Requesting Access
-To begin using AgileFlow, you must first request access from an administrator.
-1.  Navigate to the main page and click the "Sign up" link.
-2.  Enter your email address and click "Request Access".
-3.  An administrator will review your request and grant you access.
+To begin using AgileFlow, you must first be invited or request access to your company's specific workspace from an administrator.
+1.  Navigate to your company's unique AgileFlow URL (e.g., `your-company.agileflow.app`).
+2.  Click the "Sign up" link.
+3.  Enter your email address to request access to the workspace.
+4.  An administrator for your company will review your request and grant you access.
 
 ### 1.2 Signing In
 Once your access has been approved, you can sign in:
-1.  Navigate to the login page.
+1.  Navigate to your company's login page.
 2.  Enter your email and password.
 3.  You will be taken to your default calendar view.
 
@@ -86,13 +87,13 @@ Your user preferences appear in a compact, icon-driven row on your user card. Ho
 ### 8.1 Admin (`/dashboard/admin`)
 This is the central control panel for configuring the application itself. It does not have a page header.
 - **Admin Management**: Manage system administrators by dragging and dropping users between the "Admins" and "Users" lists. Granting or revoking admin status requires a 2-Factor Authentication code for security. For safety, the system prevents you from removing the last system administrator. The "Search users" input is automatically focused for convenience.
-- **Pages**: Configure the application's navigation. Create new pages, define their URL path, and control who has access to them (by user or team). You can intuitively reorder pages by dragging and dropping them in the grid. Key system pages are pinned and cannot be moved. You can also instantly duplicate any page by dragging it onto the "Add New Page" (+) button. A duplicated page is a completely independent copy with its own unique URL path.
+- **Pages**: Configure the application's navigation. Create new pages, define their URL path, and control who has access to them (by user or team). You can intuitively reorder pages by dragging and dropping them in the grid. Key system pages are pinned and cannot be moved. You can also instantly duplicate any page by dragging it onto the "Add New Page" (+) button. A duplicated page is a completely independent copy with its own unique URL path. When new pages are created, they are intelligently inserted before the pinned "Notifications" and "Settings" pages.
 - **Tabs**: Manage the reusable content blocks (tabs) in a simple list view. The order of this list can be changed via drag-and-drop and affects the default order in which tabs appear in popovers, like the "Manage Tabs" control on the Pages screen. The default order is: `Calendars`, `Teams`, `Members`, `Badges`, `Locations`, `Workstations`, `Templates`, `Overview`, `Calendar`, `Tasks`, `Admin Management`, `Settings`, `Pages`, and `Tabs`.
-- **Calendar & Team Management**: Admins can also create pages to manage global application settings, such as creating shared calendars or managing teams. These pages typically use the "Calendars" or "Teams" tab components.
+- **Calendar & Team Management**: Admins can create pages to manage global application settings, such as creating shared calendars or managing teams. When creating or editing a calendar, an administrator can choose to link it to an existing Google Calendar they manage or create a new one directly from the app. Once linked, events can be synced between both platforms.
 
 ### 8.2 Team Management (`/dashboard/teams/[teamId]`)
 This page is for managing the specifics of an individual team.
-- **Team Members**: View all members of the team. Team Admins are now listed in a dedicated column on the left for clarity, while all other members are in a responsive grid on the right. You have full flexibility to manage Team Admins, including removing the last one. You can also click on the "Team Admins" and "Members" titles to rename them for your team.
+- **Team Members**: View all members of the team. Team Admins are now listed in a dedicated column on the left for clarity, while all other members are in a responsive grid on the right. You have full flexibility to manage Team Admins, including removing the last one. You can also click on the "Team Admins" and "Members" titles to rename them for your team. You can re-arrange the order of members within the admin or member lists by dragging and dropping them.
 - **Badge Management**: Create and manage your team's badge collections. To share a collection, simply drag its card to the "Shared Collections" panel. To link a collection from another team, drag it from the shared panel onto your main board. To **activate** a collection for your team, click on its ghosted card; clicking an active card will deactivate it. To **delete** a collection you own, use the dropdown menu on its card.
 - **Pinned Locations**: Pin locations to the team's Production Schedule. You can also designate locations as "check locations."
 - **Workstations**: Manage a list of bookable workstations or machines for the team.
@@ -108,6 +109,4 @@ Administrators can view the application from another user's perspective.
 
 
     
-    
-
     
