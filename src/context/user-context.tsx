@@ -70,6 +70,7 @@ interface UserDataContextType {
   addBadge: (collectionId: string, sourceBadge?: Badge) => void;
   updateBadge: (badgeData: Partial<Badge>) => void;
   deleteBadge: (badgeId: string) => void;
+  reorderBadges: (collectionId: string, badgeIds: string[]) => void;
 }
 const UserDataContext = createContext<UserDataContextType | null>(null);
 
@@ -387,6 +388,20 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setAllBadgeCollections(current => current.map(c => ({ ...c, badgeIds: c.badgeIds.filter(id => id !== badgeId) })));
     setTeams(currentTeams => currentTeams.map(t => ({ ...t, allBadges: t.allBadges.filter(b => b.id !== badgeId), badgeCollections: t.badgeCollections.map(c => ({ ...c, badgeIds: c.badgeIds.filter(id => id !== badgeId) })) })));
   }, []);
+  
+  const reorderBadges = useCallback((collectionId: string, badgeIds: string[]) => {
+    setAllBadgeCollections(current => current.map(c => c.id === collectionId ? { ...c, badgeIds } : c));
+    setTeams(currentTeams => currentTeams.map(t => {
+      const isTargetTeam = t.badgeCollections.some(c => c.id === collectionId);
+      if (isTargetTeam) {
+        return {
+          ...t,
+          badgeCollections: t.badgeCollections.map(c => c.id === collectionId ? { ...c, badgeIds } : c)
+        };
+      }
+      return t;
+    }));
+  }, []);
 
   const linkGoogleCalendar = useCallback(async (userId: string) => {
     await simulateApi(1000);
@@ -419,8 +434,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }), [realUser, viewAsUser, users]);
 
   const dataValue = useMemo(() => ({
-    loading, teams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, notifications, setNotifications, userStatusAssignments, setUserStatusAssignments, addUser, linkGoogleCalendar, calendars, reorderCalendars, addCalendar, updateCalendar, deleteCalendar, events, addEvent, updateEvent, deleteEvent, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge,
-  }), [loading, teams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, notifications, setNotifications, userStatusAssignments, setUserStatusAssignments, addUser, linkGoogleCalendar, calendars, reorderCalendars, addCalendar, updateCalendar, deleteCalendar, events, addEvent, updateEvent, deleteEvent, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge]);
+    loading, teams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, notifications, setNotifications, userStatusAssignments, setUserStatusAssignments, addUser, linkGoogleCalendar, calendars, reorderCalendars, addCalendar, updateCalendar, deleteCalendar, events, addEvent, updateEvent, deleteEvent, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges
+  }), [loading, teams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, notifications, setNotifications, userStatusAssignments, setUserStatusAssignments, addUser, linkGoogleCalendar, calendars, reorderCalendars, addCalendar, updateCalendar, deleteCalendar, events, addEvent, updateEvent, deleteEvent, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges]);
 
   return (
     <UserSessionContext.Provider value={sessionValue}>
