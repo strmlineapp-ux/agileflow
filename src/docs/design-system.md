@@ -83,7 +83,7 @@ This pattern replaces large, card-style "Add New" buttons with a more compact an
 This is the consistent reference pattern for allowing a user to change both an icon and its color.
 
 - **Trigger:** A single, interactive unit composed of a primary icon button and a smaller color swatch badge overlaid on its corner.
-- **Icon Sizing**: The trigger button's icon should be large and prominent, specifically using a `h-10 w-10` button. The `GoogleSymbol` inside should have its `style={{fontSize: '36px'}}`, `opticalSize={20}`, and `grade={-25}` to create a "large but thin" aesthetic.
+- **Icon Sizing**: The trigger button's icon should be large and prominent, specifically using a `h-10 w-12` button. The `GoogleSymbol` inside should have its `style={{fontSize: '36px'}}`, `opticalSize={20}`, and `grade={-25}` to create a "large but thin" aesthetic.
 - **Interaction:**
   - **Icon Picker**: Clicking the main part of the button opens an icon picker popover. This popover uses the **Compact Search Input** pattern for filtering. The icons inside this picker are rendered at `text-4xl` with `weight={100}` inside `h-8 w-8` buttons for clarity and ease of selection.
   - **Color Picker**: Clicking the color swatch badge opens the standard color picker popover.
@@ -221,8 +221,8 @@ This pattern is a specialized, ultra-compact version of the standard `<Badge>` c
 - **Appearance**: A very thin, pill-shaped badge with minimal padding. It contains a small icon and a short text label.
 - **Sizing**:
     - The pill has a reduced height and horizontal padding (`py-0 px-1`).
-    - The icon inside is small (e.g., `text-[9px]`).
-    - The text label is also small (e.g., `text-[10px]`).
+    - The icon inside is small, with its size set via `style={{ fontSize: '28px' }}`.
+    - The text label is small (e.g., `text-[10px]`).
 - **Interaction**: A small, circular delete button appears on hover, allowing the user to remove the badge.
 - **Application**: Used in the "assorted" view of **Badge Collections** to display many badges in a compact, scannable format.
 
@@ -306,7 +306,10 @@ This is the single source of truth for indicating user interaction state across 
 
 - **Lunch Break Pattern**: A subtle diagonal line pattern is used in calendar views to visually block out the typical lunch period (12:00 - 14:30). This serves as a non-intrusive reminder to avoid scheduling meetings during that time.
 - **Icon as Badge**: An icon displayed as a small, circular overlay on another element (e.g., an Avatar or another icon) to provide secondary information.
-    - **Appearance**: A circular badge with a `border-0` applied on top of the parent element's background color (e.g., `border-background`) to create a "punched out" effect.
-    - **Sizing**: The standard size for these badges is `h-4 w-4` (`16x16px`). The `GoogleSymbol` inside should be sized to fit, for example using `style={{fontSize: '10px'}}`.
-    - **Placement**: Placed on the bottom-right corner of their parent icon using `absolute -bottom-0 -right-0`.
+    - **Appearance**: A circular badge with a `border-0`.
+    - **Sizing**: `h-4 w-4`.
+    - **Placement**:
+      - **Color Picker**: `absolute -bottom-1 -right-1`.
+      - **Ownership Status**: `absolute -top-1 -right-1`.
+    - **Icon Size (Ownership Status)**: The `GoogleSymbol` inside an ownership status badge should have its size set via `style={{fontSize: '16px'}}`.
 -   **Badges in Assorted View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.

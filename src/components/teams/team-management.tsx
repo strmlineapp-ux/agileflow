@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
@@ -49,73 +48,80 @@ const predefinedColors = [
     '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
 ];
 
-function UserCard({ 
-    user, 
-    onRemove, 
-    isTeamAdmin,
-    onSetAdmin,
-    canManage,
-    memberCount,
-}: { 
-    user: User; 
-    onRemove: () => void; 
+function DraggableUserCard({ user, onRemove, isTeamAdmin, onSetAdmin, canManage, memberCount, teamId }: { 
+    user: User;
+    onRemove: () => void;
     isTeamAdmin: boolean;
     onSetAdmin: () => void;
     canManage: boolean;
     memberCount: number;
+    teamId: string;
 }) {
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+    id: `user-drag:${teamId}:${user.userId}`,
+    data: { type: 'user', user, teamId },
+  });
+  
+  const style = {
+    transform: CSS.Translate.toString(transform),
+  };
+  
   return (
-      <div 
-        className={cn(
-            "group relative flex items-center gap-2 p-1 rounded-md transition-colors",
-            canManage && "cursor-pointer hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
-        )}
-        onClick={(e) => { e.stopPropagation(); if (canManage) onSetAdmin(); }}
-        onKeyDown={(e) => { if(canManage && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onSetAdmin();}}}
-        tabIndex={canManage ? 0 : -1}
-      >
-          <div className="relative">
-            <Avatar className="h-8 w-8">
-                <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
-                <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-            </Avatar>
-             {isTeamAdmin && memberCount > 1 && (
+    <div ref={setNodeRef} style={style} {...listeners} {...attributes}>
+        <div 
+            className={cn(
+                "group relative flex items-center gap-2 p-1 rounded-md transition-colors",
+                canManage && "cursor-pointer hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
+            )}
+            onClick={(e) => { e.stopPropagation(); if (canManage) onSetAdmin(); }}
+            onKeyDown={(e) => { if(canManage && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onSetAdmin();}}}
+            tabIndex={canManage ? 0 : -1}
+        >
+            <div className="relative">
+                <Avatar className="h-8 w-8">
+                    <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
+                    <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                </Avatar>
+                {isTeamAdmin && memberCount > 1 && (
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card flex items-center justify-center bg-primary text-primary-foreground">
+                                    <GoogleSymbol name="key" style={{fontSize: '10px'}}/>
+                                </div>
+                            </TooltipTrigger>
+                            <TooltipContent><p>Team Admin</p></TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                )}
+            </div>
+            <div>
+                <p className="font-normal text-sm">{user.displayName}</p>
+                <p className="text-xs text-muted-foreground">{user.title}</p>
+            </div>
+            {canManage && (
                 <TooltipProvider>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card flex items-center justify-center bg-primary text-primary-foreground">
-                                <GoogleSymbol name="key" style={{fontSize: '10px'}}/>
-                            </div>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="absolute top-0 right-0 h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={(e) => { e.stopPropagation(); onRemove();}}
+                                onPointerDown={(e) => e.stopPropagation()} // Prevent drag from starting
+                            >
+                                <GoogleSymbol name="cancel" className="text-lg" weight={100} />
+                            </Button>
                         </TooltipTrigger>
-                        <TooltipContent><p>Team Admin</p></TooltipContent>
+                        <TooltipContent><p>Remove User</p></TooltipContent>
                     </Tooltip>
                 </TooltipProvider>
             )}
-          </div>
-          <div>
-              <p className="font-normal text-sm">{user.displayName}</p>
-              <p className="text-xs text-muted-foreground">{user.title}</p>
-          </div>
-          {canManage && (
-            <TooltipProvider>
-              <Tooltip>
-                  <TooltipTrigger asChild>
-                      <Button
-                          variant="ghost"
-                          size="icon"
-                          className="absolute top-0 right-0 h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={(e) => { e.stopPropagation(); onRemove();}}
-                      >
-                          <GoogleSymbol name="cancel" className="text-lg" weight={100} />
-                      </Button>
-                  </TooltipTrigger>
-                  <TooltipContent><p>Remove User</p></TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-      </div>
+        </div>
+    </div>
   );
 }
+
 
 function TeamCard({ 
     team, 
@@ -222,6 +228,23 @@ function TeamCard({
 
     return (
         <Card className="flex flex-col h-full group bg-transparent relative" {...props}>
+             {!isSharedPreview && (
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                                onPointerDown={(e) => { e.stopPropagation(); onDelete(team); }}
+                            >
+                                <GoogleSymbol name="cancel" className="text-lg" weight={100} />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent><p>{canManageTeam ? "Delete Team" : "Unlink Team"}</p></TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+            )}
             <div {...props.dragHandleProps}>
                 <CardHeader>
                     <div className="flex items-start justify-between">
@@ -363,28 +386,18 @@ function TeamCard({
                                     </PopoverContent>
                                 </Popover>
                             )}
-                             <DropdownMenu>
+                             {canManageTeam && !isSharedPreview && (
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                             <DropdownMenuTrigger asChild disabled={isSharedPreview} onPointerDown={(e) => e.stopPropagation()}><Button variant="ghost" size="icon"><GoogleSymbol name="more_vert" weight={100} /></Button></DropdownMenuTrigger>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => onToggleShare(team)} onPointerDown={(e) => e.stopPropagation()}>
+                                                <GoogleSymbol name={team.isShared ? 'share_off' : 'share'} weight={100} />
+                                            </Button>
                                         </TooltipTrigger>
-                                        <TooltipContent><p>More Options</p></TooltipContent>
+                                        <TooltipContent><p>{team.isShared ? 'Unshare Team' : 'Share Team'}</p></TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
-                                <DropdownMenuContent align="end" onPointerDown={(e) => e.stopPropagation()}>
-                                    {canManageTeam && (
-                                        <DropdownMenuItem onPointerDown={() => onToggleShare(team)} disabled={isSharedPreview}>
-                                            <GoogleSymbol name={team.isShared ? 'share_off' : 'share'} className="mr-2 text-lg"/>
-                                            {team.isShared ? 'Unshare Team' : 'Share Team'}
-                                        </DropdownMenuItem>
-                                    )}
-                                    <DropdownMenuItem onPointerDown={() => onDelete(team)} className={cn(!canManageTeam && 'text-primary focus:text-primary')}>
-                                        <GoogleSymbol name={canManageTeam ? "delete" : "link_off"} className="mr-2 text-lg"/>
-                                        {canManageTeam ? 'Delete Team' : 'Unlink Team'}
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
+                             )}
                         </div>
                     </div>
                 </CardHeader>
@@ -393,9 +406,10 @@ function TeamCard({
                 <ScrollArea className="max-h-48 pr-2 flex-grow">
                     <div ref={setUsersDroppableRef} className={cn("min-h-[60px] rounded-md p-2 -m-2 space-y-1 transition-colors", isUsersDroppableOver && "ring-1 ring-border ring-inset")}>
                         {teamMembers.map((user) => (
-                          <UserCard 
+                          <DraggableUserCard 
                               key={user.userId}
-                              user={user} 
+                              user={user}
+                              teamId={team.id}
                               onRemove={() => onRemoveUser(team.id, user.userId)}
                               isTeamAdmin={(team.teamAdmins || []).includes(user.userId)}
                               onSetAdmin={() => onSetAdmin(team.id, user.userId)}
@@ -422,12 +436,12 @@ function SortableTeamCard({team, ...props}: {team: Team, [key: string]: any}) {
     };
     
     return (
-        <div ref={setNodeRef} style={style} {...attributes} {...listeners} className={cn(
+        <div ref={setNodeRef} style={style} className={cn(
             "p-3 basis-full md:basis-1/2 flex-grow-0 flex-shrink-0 transition-all duration-300",
             props.isSharedPanelOpen ? "lg:w-full" : "lg:basis-1/3",
             isDragging && "opacity-80 shadow-2xl z-50"
         )}>
-            <TeamCard team={team} {...props} />
+            <TeamCard team={team} {...props} dragHandleProps={{...attributes, ...listeners}} />
         </div>
     )
 }
