@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
@@ -231,7 +232,7 @@ function TeamCard({
                                         <Tooltip>
                                             <TooltipTrigger asChild>
                                                 <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={!canManageTeam}>
-                                                    <Button variant="ghost" className="h-10 w-10 flex items-center justify-center p-0">
+                                                    <Button variant="ghost" className="h-10 w-12 flex items-center justify-center p-0">
                                                         <GoogleSymbol name={team.icon} opticalSize={20} grade={-25} style={{ fontSize: '36px' }} weight={100} />
                                                     </Button>
                                                 </PopoverTrigger>
@@ -267,7 +268,7 @@ function TeamCard({
                                         <Tooltip>
                                             <TooltipTrigger asChild>
                                                 <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={!canManageTeam}>
-                                                    <button className={cn("absolute -bottom-0 -right-0 h-4 w-4 rounded-full border-0 border-background", canManageTeam && "cursor-pointer")} style={{ backgroundColor: team.color }} />
+                                                    <button className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-0", canManageTeam && "cursor-pointer")} style={{ backgroundColor: team.color }} />
                                                 </PopoverTrigger>
                                             </TooltipTrigger>
                                             <TooltipContent><p>Change Color</p></TooltipContent>
@@ -294,10 +295,10 @@ function TeamCard({
                                         <Tooltip>
                                             <TooltipTrigger asChild>
                                                 <div 
-                                                    className="absolute -top-1 -right-1 h-7 w-7 rounded-full border-2 border-card flex items-center justify-center text-white"
+                                                    className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white"
                                                     style={{ backgroundColor: ownerColor }}
                                                 >
-                                                    <GoogleSymbol name={shareIcon} style={{fontSize: '14px'}}/>
+                                                    <GoogleSymbol name={shareIcon} style={{fontSize: '16px'}}/>
                                                 </div>
                                             </TooltipTrigger>
                                             <TooltipContent><p>{shareIconTitle}</p></TooltipContent>

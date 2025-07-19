@@ -558,7 +558,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
                           <Button
                               variant="ghost"
                               size="icon"
-                              className="absolute -top-3 -right-3 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                              className="absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10"
                               onPointerDown={(e) => {
                                   e.stopPropagation();
                                   setIsDeleteDialogOpen(true);
@@ -580,7 +580,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
-                                                <Button variant="ghost" className="h-10 w-10 flex items-center justify-center p-0">
+                                                <Button variant="ghost" className="h-10 w-12 flex items-center justify-center p-0">
                                                     <GoogleSymbol name={page.icon} weight={100} grade={-25} opticalSize={20} style={{ fontSize: '36px' }}/>
                                                 </Button>
                                             </PopoverTrigger>
@@ -623,7 +623,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
-                                                <button className="absolute -bottom-3 -right-3 h-4 w-4 rounded-full border-0 cursor-pointer" style={{ backgroundColor: page.color }} />
+                                                <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-0 cursor-pointer" style={{ backgroundColor: page.color }} />
                                             </PopoverTrigger>
                                         </TooltipTrigger>
                                         <TooltipContent><p>Change Color</p></TooltipContent>
@@ -1026,7 +1026,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <PopoverTrigger asChild>
-                                        <button className="h-10 w-10 flex items-center justify-center">
+                                        <button className="h-10 w-12 flex items-center justify-center">
                                             <GoogleSymbol name={tab.icon} className="text-4xl" weight={100} />
                                         </button>
                                     </PopoverTrigger>
@@ -1069,7 +1069,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <PopoverTrigger asChild>
-                                        <button className="absolute -bottom-3 -right-3 h-4 w-4 rounded-full border-0 cursor-pointer" style={{ backgroundColor: tab.color }} />
+                                        <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-0 cursor-pointer" style={{ backgroundColor: tab.color }} />
                                     </PopoverTrigger>
                                 </TooltipTrigger>
                                 <TooltipContent><p>Change Color</p></TooltipContent>
