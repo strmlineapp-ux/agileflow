@@ -63,11 +63,13 @@ This table details the information stored directly within each `User` object.
 | `directReports?: string[]` | **Internal.** An array of `userId`s for users who report directly to this user. This is currently informational. |
 | `theme?: 'light' \| 'dark'` | **Internal.** A UI preference for the app's color scheme. |
 | `primaryColor?: string` | **Internal.** A user-selected hex color code that overrides the default primary color of their chosen theme. |
-| `defaultCalendarView?: 'month' \| 'week' \| ...` | **Internal.** A UI preference for the default calendar layout. |
+| `defaultCalendarView?: 'month' \| 'week' \| 'day' \| 'production-schedule'` | **Internal.** A UI preference for the default calendar layout. |
 | `easyBooking?: boolean` | **Internal.** A UI preference for enabling quick event creation from the calendar. |
 | `timeFormat?: '12h' \| '24h'` | **Internal.** A UI preference for displaying time in 12-hour or 24-hour format. |
 | `linkedTeamIds?: string[]` | **Internal.** An array of `teamId`s for shared teams that the user has chosen to display on their management board. |
 | `linkedCollectionIds?: string[]` | **Internal.** An array of `collectionId`s for shared Badge Collections that the user has chosen to display on their management board. |
+| `linkedCalendarIds?: string[]` | **Internal.** An array of `calendarId`s for shared calendars that the user has chosen to display on their management board. |
+
 
 ### Dynamic Access Control for Pages & Tabs
 
@@ -122,8 +124,9 @@ This approach abstracts away the complexity of calendar IDs and provides a seaml
 | `name: string` | **Internal.** The display name for the calendar within the application. |
 | `icon: string` | **Internal.** The Google Symbol name for the calendar's icon. |
 | `color: string` | **Internal.** The hex color code used for this calendar's events in the UI. |
+| `owner: { type: 'user', id: string }` | An object that defines who owns the calendar. Ownership dictates who can edit the calendar's properties. |
 | `googleCalendarId?: string` | **External (Google Calendar).** The unique ID of the Google Calendar that this internal calendar is linked to. This is currently set manually but will be populated automatically by the future calendar linking flow. |
-| `managers?: string[]` | **Internal.** An array of `userId`s for users who can manage this calendar's events and settings. |
+| `isShared?: boolean` | **Internal.** If `true`, this calendar will be visible to other users in the application for discovery and linking. |
 | `defaultEventTitle?: string` | **Internal.** A placeholder string for the title of new events created on this calendar. |
 | `roleAssignmentsLabel?: string` | **Internal.** A custom label for the "Role Assignments" section in the event details view. |
 
@@ -230,6 +233,3 @@ This represents a specific, functional role or skill. The single source of truth
 | `icon: string` | The Google Symbol name for the badge's icon. |
 | `color: string` | The hex color code for the badge's icon and outline. |
 | `description?: string` | An optional description shown in tooltips. |
-
-
-

@@ -4,7 +4,7 @@
 
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useUser } from '@/context/user-context';
-import { type SharedCalendar, type AppTab, type User } from '@/types';
+import { type SharedCalendar, type AppTab, type User, type AppPage } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription as UICardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle as UIDialogTitle } from '@/components/ui/dialog';
@@ -54,6 +54,8 @@ function CalendarCard({
     onDelete,
     dragHandleProps,
     isDragging,
+    isEditingName,
+    setIsEditingName,
     isSharedPreview = false,
 }: {
     calendar: SharedCalendar;
@@ -61,13 +63,14 @@ function CalendarCard({
     onDelete: (calendar: SharedCalendar) => void;
     dragHandleProps?: any;
     isDragging?: boolean;
+    isEditingName: boolean;
+    setIsEditingName: (isEditing: boolean) => void;
     isSharedPreview?: boolean;
 }) {
   const { viewAsUser, users } = useUser();
   const [isExpanded, setIsExpanded] = useState(false);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
-  const [isEditingName, setIsEditingName] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   
   const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
@@ -92,7 +95,22 @@ function CalendarCard({
       onUpdate(calendar.id, { name: newName });
     }
     setIsEditingName(false);
-  }, [calendar.id, calendar.name, onUpdate]);
+  }, [calendar.id, calendar.name, onUpdate, setIsEditingName]);
+  
+  useEffect(() => {
+    if (!isEditingName) return;
+    const handleOutsideClick = (event: MouseEvent) => {
+        if (nameInputRef.current && !nameInputRef.current.contains(event.target as Node)) {
+            handleSaveName();
+        }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    nameInputRef.current?.focus();
+    nameInputRef.current?.select();
+    return () => {
+        document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, [isEditingName, handleSaveName]);
 
   const handleSaveTitle = useCallback(() => {
     const newTitle = titleInputRef.current?.value.trim();
@@ -113,22 +131,19 @@ function CalendarCard({
   const filteredIcons = useMemo(() => googleSymbolNames.filter(name => name.toLowerCase().includes(iconSearch.toLowerCase())), [iconSearch]);
   
   useEffect(() => {
+    if (!isEditingTitle) return;
     const handleOutsideClick = (event: MouseEvent) => {
-        if (isEditingName && nameInputRef.current && !nameInputRef.current.contains(event.target as Node)) {
-            handleSaveName();
-        }
-        if (isEditingTitle && titleInputRef.current && !titleInputRef.current.contains(event.target as Node)) {
+        if (titleInputRef.current && !titleInputRef.current.contains(event.target as Node)) {
             handleSaveTitle();
         }
     };
-    if (isEditingName || isEditingTitle) {
-      document.addEventListener("mousedown", handleOutsideClick);
-    }
-    if (isEditingName && nameInputRef.current) nameInputRef.current.select();
-    if (isEditingTitle && titleInputRef.current) titleInputRef.current.select();
+    document.addEventListener("mousedown", handleOutsideClick);
+    titleInputRef.current?.focus();
+    titleInputRef.current?.select();
     
     return () => document.removeEventListener("mousedown", handleOutsideClick);
-  }, [isEditingName, isEditingTitle, handleSaveName, handleSaveTitle]);
+  }, [isEditingTitle, handleSaveTitle]);
+
 
   const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') { e.preventDefault(); handleSaveName(); }
@@ -280,7 +295,7 @@ function CalendarCard({
                               </TooltipProvider>
                           )}
                       </div>
-                      <div className="flex-1 min-w-0" onPointerDown={(e) => { if (canManage) { e.stopPropagation(); setIsEditingName(true); }}}>
+                      <div className="flex-1 min-w-0" onPointerDown={(e) => { e.stopPropagation(); }}>
                       {isEditingName && canManage ? (
                           <Input
                           ref={nameInputRef}
@@ -291,7 +306,7 @@ function CalendarCard({
                           className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
                           />
                       ) : (
-                          <CardTitle onPointerDown={(e) => { if(canManage) { e.stopPropagation(); setIsEditingName(true)}}} className={cn("font-headline text-xl font-thin break-words", canManage && "cursor-pointer")}>
+                          <CardTitle onPointerDown={(e) => { if(canManage && !isDragging) { e.stopPropagation(); setIsEditingName(true)}}} className={cn("font-headline text-xl font-thin break-words", canManage && "cursor-pointer")}>
                           {calendar.name}
                           </CardTitle>
                       )}
@@ -326,9 +341,7 @@ function CalendarCard({
                                    </span>
                                </TooltipTrigger>
                                <TooltipContent>
-                               <p>
-                                   Sync with {calendar.googleCalendarId}
-                               </p>
+                                <p>Sync with {calendar.googleCalendarId}</p>
                                </TooltipContent>
                            </Tooltip>
                        </TooltipProvider>
@@ -355,7 +368,7 @@ function CalendarCard({
                                  <Tooltip>
                                     <TooltipTrigger asChild>
                                         <span 
-                                            className={cn("italic text-xs text-muted-foreground", canManage && "cursor-pointer hover:border-b hover:border-dashed")} 
+                                            className={cn("italic text-xs text-muted-foreground", canManage && "cursor-text hover:border-b hover:border-dashed")} 
                                             onClick={() => canManage && setIsEditingTitle(true)}
                                         >
                                             {calendar.defaultEventTitle || 'No default title'}
@@ -371,7 +384,7 @@ function CalendarCard({
                   </CardContent>
               )}
               
-              <div className="absolute bottom-1 right-1">
+              <div className="absolute -bottom-1 right-0">
                   <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
                       <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
                   </Button>
@@ -424,9 +437,11 @@ function CalendarCard({
 }
 
 function SortableCalendarCard({ calendar, ...props }: { calendar: SharedCalendar; [key: string]: any; }) {
+    const [isEditingName, setIsEditingName] = useState(false);
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: calendar.id,
-        data: { type: 'calendar', calendar, isSharedPreview: props.isSharedPreview }
+        data: { type: 'calendar', calendar, isSharedPreview: props.isSharedPreview },
+        disabled: isEditingName
     });
 
     const style = {
@@ -445,12 +460,16 @@ function SortableCalendarCard({ calendar, ...props }: { calendar: SharedCalendar
             : "basis-full sm:basis-[calc(50%-1rem)] md:basis-[calc(33.333%-1rem)] lg:basis-[calc(25%-1rem)] xl:basis-[calc(20%-1rem)] 2xl:basis-[calc(16.666%-1rem)]"
         )}
     >
-        <CalendarCard
-          calendar={calendar}
-          isDragging={isDragging}
-          dragHandleProps={{...attributes, ...listeners}}
-          {...props}
-        />
+        <div className={cn(isDragging && "opacity-75 shadow-2xl")}>
+            <CalendarCard
+                calendar={calendar}
+                isDragging={isDragging}
+                isEditingName={isEditingName}
+                setIsEditingName={setIsEditingName}
+                dragHandleProps={{...attributes, ...listeners}}
+                {...props}
+            />
+        </div>
     </div>
   );
 }
@@ -730,6 +749,8 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                     onUpdate={()=>{}} 
                     onDelete={()=>{}} 
                     isSharedPreview={activeCalendar.owner.id !== viewAsUser.userId}
+                    isEditingName={false}
+                    setIsEditingName={() => {}}
                 />
             </div>
         ) : null}
