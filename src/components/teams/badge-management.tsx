@@ -17,7 +17,6 @@ import { Textarea } from '../ui/textarea';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle as UIDialogTitle } from '@/components/ui/dialog';
 import { Badge as UiBadge } from '../ui/badge';
-import { getOwnershipContext } from '@/lib/permissions';
 import { HexColorPicker, HexColorInput } from 'react-colorful';
 import { CompactSearchInput } from '@/components/common/compact-search-input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -908,7 +907,7 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent>
                                         {viewModeOptions.map(({mode, icon, label}) => (
-                                            <DropdownMenuItem key={mode} onClick={() => onUpdateCollection(collection.id, { viewMode: mode })}>
+                                            <DropdownMenuItem key={mode} onClick={() => onUpdateCollection(collection.id, { viewMode: mode }, contextTeam?.id)}>
                                                 <GoogleSymbol name={icon} className="mr-2" />
                                                 <span>{label}</span>
                                             </DropdownMenuItem>
@@ -997,29 +996,31 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
     );
 }
 
-function DuplicateZone({ id, onAdd, children }: { id: string; onAdd: () => void; children: React.ReactNode }) {
+function DuplicateCollectionZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
   const { isOver, setNodeRef } = useDroppable({ id });
-
+  
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div
-            ref={setNodeRef}
-            className={cn(
-              "rounded-full transition-all p-0.5",
-              isOver && "ring-1 ring-border ring-inset"
-            )}
-            onClick={onAdd}
-          >
-            {children}
-          </div>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p>{isOver ? 'Drop to Duplicate' : 'Add New Collection'}</p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "rounded-full transition-all p-0.5",
+        isOver && "ring-1 ring-border ring-inset"
+      )}
+    >
+      <TooltipProvider>
+          <Tooltip>
+              <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full p-0" onClick={onAdd} onPointerDown={(e) => e.stopPropagation()}>
+                    <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
+                    <span className="sr-only">New Collection or Drop to Duplicate</span>
+                  </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                  <p>{isOver ? 'Drop to Duplicate' : 'Add New Collection'}</p>
+              </TooltipContent>
+          </Tooltip>
+      </TooltipProvider>
+    </div>
   );
 }
 
@@ -1145,7 +1146,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     }, [allBadgeCollections, collectionsToDisplay, sharedSearchTerm]);
 
     const handleAddCollection = (sourceCollection?: BadgeCollection) => {
-      addBadgeCollection(viewAsUser, sourceCollection, contextTeam);
+      addBadgeCollection(viewAsUser, contextTeam, sourceCollection);
     };
     
     const handleDeleteCollection = (collection: BadgeCollection) => {
@@ -1327,12 +1328,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                     </TooltipProvider>
                                 )}
                                 {!isViewer && (
-                                    <DuplicateZone id="duplicate-collection-zone" onAdd={() => handleAddCollection()}>
-                                        <Button variant="ghost" size="icon" className="rounded-full p-0" onPointerDown={(e) => e.stopPropagation()}>
-                                            <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
-                                            <span className="sr-only">New Collection</span>
-                                        </Button>
-                                    </DuplicateZone>
+                                    <DuplicateCollectionZone id="duplicate-collection-zone" onAdd={() => handleAddCollection()} />
                                 )}
                             </div>
                             <div className="flex items-center gap-1">
