@@ -672,22 +672,22 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
               </div>
             </div>
             <div className="flex-1 min-h-0">
-              <CalendarDropZone id="main-calendars-grid" type="calendar-grid" className="h-full">
                 <ScrollArea className="h-full">
-                  <div className="flex flex-wrap content-start -m-2">
-                    <SortableContext items={calendarIds} strategy={rectSortingStrategy}>
-                      {displayedCalendars.map((calendar) => (
-                        <SortableCalendarCard
-                          key={calendar.id}
-                          calendar={calendar}
-                          onUpdate={handleUpdate}
-                          onDelete={handleDelete}
-                        />
-                      ))}
-                    </SortableContext>
-                  </div>
+                  <CalendarDropZone id="main-calendars-grid" type="calendar-grid" className="h-full">
+                    <div className="flex flex-wrap content-start -m-2">
+                      <SortableContext items={calendarIds} strategy={rectSortingStrategy}>
+                        {displayedCalendars.map((calendar) => (
+                          <SortableCalendarCard
+                            key={calendar.id}
+                            calendar={calendar}
+                            onUpdate={handleUpdate}
+                            onDelete={handleDelete}
+                          />
+                        ))}
+                      </SortableContext>
+                    </div>
+                  </CalendarDropZone>
                 </ScrollArea>
-              </CalendarDropZone>
             </div>
           </div>
         </div>
