@@ -672,7 +672,7 @@ function DroppableCollectionContent({ collection, children }: { collection: Badg
 function SortableCollectionCard({ collection, allBadges, onUpdateCollection, onDeleteCollection, onAddBadge, onUpdateBadge, onDeleteBadge, contextTeam, isViewer = false, isSharedPreview = false }: {
     collection: BadgeCollection;
     allBadges: Badge[];
-    onUpdateCollection: (collectionId: string, newValues: Partial<Omit<BadgeCollection, 'id' | 'badgeIds'>>, teamId?: string) => void;
+    onUpdateCollection: (collectionId: string, newValues: Partial<Omit<BadgeCollection, 'id' | 'badgeIds'>>) => void;
     onDeleteCollection: (collection: BadgeCollection) => void;
     onAddBadge: (collectionId: string, sourceBadge?: Badge) => void;
     onUpdateBadge: (badgeData: Partial<Badge>) => void;
@@ -716,7 +716,7 @@ function SortableCollectionCard({ collection, allBadges, onUpdateCollection, onD
 function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDeleteCollection, onAddBadge, onUpdateBadge, onDeleteBadge, dragHandleProps, isSharedPreview = false, contextTeam, isViewer = false }: {
     collection: BadgeCollection;
     allBadges: Badge[];
-    onUpdateCollection: (collectionId: string, newValues: Partial<Omit<BadgeCollection, 'id' | 'badgeIds'>>, teamId?: string) => void;
+    onUpdateCollection: (collectionId: string, newValues: Partial<Omit<BadgeCollection, 'id' | 'badgeIds'>>) => void;
     onDeleteCollection: (collection: BadgeCollection) => void;
     onAddBadge: (collectionId: string, sourceBadge?: Badge) => void;
     onUpdateBadge: (badgeData: Partial<Badge>) => void;
@@ -802,7 +802,7 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
         } else {
             currentApplications.add(application);
         }
-        onUpdateCollection(collection.id, { applications: Array.from(currentApplications) }, contextTeam?.id);
+        onUpdateCollection(collection.id, { applications: Array.from(currentApplications) });
     };
 
     const handleToggleCollectionActive = (collectionId: string) => {
@@ -907,7 +907,7 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent>
                                         {viewModeOptions.map(({mode, icon, label}) => (
-                                            <DropdownMenuItem key={mode} onClick={() => onUpdateCollection(collection.id, { viewMode: mode }, contextTeam?.id)}>
+                                            <DropdownMenuItem key={mode} onClick={() => onUpdateCollection(collection.id, { viewMode: mode })}>
                                                 <GoogleSymbol name={icon} className="mr-2" />
                                                 <span>{label}</span>
                                             </DropdownMenuItem>
@@ -996,7 +996,7 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
     );
 }
 
-function DuplicateCollectionZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
+function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
   const { isOver, setNodeRef } = useDroppable({ id });
   
   return (
@@ -1109,33 +1109,27 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     };
     
     const collectionsToDisplay = useMemo(() => {
-        let collectionsMap: Map<string, BadgeCollection>;
-
+        let ownerIds: Set<string>;
+    
         if (isTeamContext && contextTeam) {
-            collectionsMap = new Map((contextTeam.badgeCollections || []).map(c => [c.id, c]));
-            (contextTeam.linkedCollectionIds || []).forEach(id => {
-                if (!collectionsMap.has(id)) {
-                    const linked = allBadgeCollections.find(c => c.id === id);
-                    if (linked) collectionsMap.set(id, linked);
-                }
-            });
+            const hasAdmins = contextTeam.teamAdmins && contextTeam.teamAdmins.length > 0;
+            if (hasAdmins) {
+                ownerIds = new Set(contextTeam.teamAdmins);
+            } else {
+                ownerIds = new Set(contextTeam.members);
+            }
         } else {
-            collectionsMap = new Map((allBadgeCollections.filter(c => c.owner.id === viewAsUser.userId)).map(c => [c.id, c]));
-            (viewAsUser.linkedCollectionIds || []).forEach(id => {
-                if (!collectionsMap.has(id)) {
-                    const linked = allBadgeCollections.find(c => c.id === id);
-                    if (linked) collectionsMap.set(id, linked);
-                }
-            });
+            // "My Badges" context: only show collections owned by the current user
+            ownerIds = new Set([viewAsUser.userId]);
         }
-
-        let finalCollections = Array.from(collectionsMap.values());
+    
+        let collections = allBadgeCollections.filter(c => ownerIds.has(c.owner.id));
         
         if (searchTerm) {
-            finalCollections = finalCollections.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
+            collections = collections.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
         }
         
-        return finalCollections;
+        return collections;
     }, [allBadgeCollections, isTeamContext, contextTeam, viewAsUser, searchTerm]);
 
     const sharedCollections = useMemo(() => {
@@ -1146,7 +1140,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     }, [allBadgeCollections, collectionsToDisplay, sharedSearchTerm]);
 
     const handleAddCollection = (sourceCollection?: BadgeCollection) => {
-      addBadgeCollection(viewAsUser, contextTeam, sourceCollection);
+      addBadgeCollection(viewAsUser, sourceCollection);
     };
     
     const handleDeleteCollection = (collection: BadgeCollection) => {
@@ -1328,7 +1322,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                     </TooltipProvider>
                                 )}
                                 {!isViewer && (
-                                    <DuplicateCollectionZone id="duplicate-collection-zone" onAdd={() => handleAddCollection()} />
+                                    <DuplicateZone id="duplicate-collection-zone" onAdd={() => handleAddCollection()} />
                                 )}
                             </div>
                             <div className="flex items-center gap-1">

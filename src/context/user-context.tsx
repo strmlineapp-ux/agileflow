@@ -64,8 +64,8 @@ interface UserDataContextType {
   updateAppTab: (tabId: string, tabData: Partial<AppTab>) => Promise<void>;
   allBadges: Badge[];
   allBadgeCollections: BadgeCollection[];
-  addBadgeCollection: (owner: User, contextTeam: Team | undefined, sourceCollection?: BadgeCollection) => void;
-  updateBadgeCollection: (collectionId: string, data: Partial<BadgeCollection>, teamId?: string) => void;
+  addBadgeCollection: (owner: User, sourceCollection?: BadgeCollection) => void;
+  updateBadgeCollection: (collectionId: string, data: Partial<BadgeCollection>) => void;
   deleteBadgeCollection: (collectionId: string) => void;
   addBadge: (collectionId: string, sourceBadge?: Badge) => void;
   updateBadge: (badgeData: Partial<Badge>) => void;
@@ -118,8 +118,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   });
   const { toast } = useToast();
 
-  const [allBadges, setAllBadges] = useState<Badge[]>([]);
-
   const [allBadgeCollections, setAllBadgeCollections] = useState<BadgeCollection[]>(() => {
     const collectionsMap = new Map<string, BadgeCollection>();
     mockTeams.forEach(team => {
@@ -129,6 +127,24 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     });
     return Array.from(collectionsMap.values());
   });
+
+  const [allBadges, setAllBadges] = useState<Badge[]>(() => {
+    const badgesMap = new Map<string, Badge>();
+    allBadgeCollections.forEach(collection => {
+        collection.badgeIds.forEach(badgeId => {
+            // This assumes a flat list of all possible badges exists somewhere to be looked up.
+            // For mock data, we are pre-populating it from team badge collections.
+            // In a real app, you might fetch all badges from a central 'badges' collection in Firestore.
+        });
+    });
+    // For now, let's just combine all badges from all collections
+    const allBadgesFromCollections = allBadgeCollections.flatMap(c => {
+        // This part needs a source for badge objects. Let's assume allBadges are defined somewhere, maybe in mock data too.
+        // This is a simplification.
+        return [];
+    });
+    return allBadgesFromCollections;
+});
 
   const realUser = useMemo(() => users.find(u => u.userId === REAL_USER_ID)!, [users]);
   const viewAsUser = useMemo(() => users.find(u => u.userId === viewAsUserId) || realUser, [users, viewAsUserId, realUser]);
@@ -314,7 +330,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setAppSettings(current => ({ ...current, tabs: current.tabs.map(t => t.id === tabId ? { ...t, ...tabData } : t) }));
   }, []);
 
-  const addBadgeCollection = useCallback((owner: User, contextTeam: Team | undefined, sourceCollection?: BadgeCollection) => {
+  const addBadgeCollection = useCallback((owner: User, sourceCollection?: BadgeCollection) => {
     const newCollectionId = crypto.randomUUID();
     let newBadges: Badge[] = [];
     let newCollection: BadgeCollection;
@@ -339,36 +355,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     if (newBadges.length > 0) {
         setAllBadges(prev => [...prev, ...newBadges]);
     }
-    
-    // If in a team context, add the new collection to the team's list
-    if (contextTeam) {
-        updateTeam(contextTeam.id, {
-            badgeCollections: [...(contextTeam.badgeCollections || []), newCollection]
-        });
-    }
 
-}, [allBadgeCollections.length, allBadges, updateTeam]);
+}, [allBadgeCollections.length, allBadges]);
 
 
-  const updateBadgeCollection = useCallback((collectionId: string, data: Partial<BadgeCollection>, teamId?: string) => {
-      // Always update the global source of truth
+  const updateBadgeCollection = useCallback((collectionId: string, data: Partial<BadgeCollection>) => {
       setAllBadgeCollections(current => current.map(c => (c.id === collectionId ? { ...c, ...data } : c)));
-  
-      // If a teamId is provided, also update the collection instance within that team's local array.
-      if (teamId) {
-          setTeams(current => current.map(t => {
-              if (t.id === teamId) {
-                  const updatedCollections = (t.badgeCollections || []).map(c => 
-                      c.id === collectionId ? { ...c, ...data } : c
-                  );
-                  return {
-                      ...t,
-                      badgeCollections: updatedCollections
-                  };
-              }
-              return t;
-          }));
-      }
   }, []);
 
 
