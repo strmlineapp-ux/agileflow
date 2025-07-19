@@ -18,6 +18,7 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
+  type DragStartEvent,
   type DragEndEvent,
   useDroppable,
   useDraggable,
@@ -750,7 +751,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
         })
     );
 
-    const onDragStart = (event: DragEndEvent) => {
+    const onDragStart = (event: DragStartEvent) => {
         const { type, ...data } = event.active.data.current || {};
         setActiveDragItem({ type, data });
     }
@@ -795,35 +796,36 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                                 </TooltipProvider>
                             </div>
                         </div>
-
-                        <TeamManagementDropZone id="teams-list" type="team-card" className="flex flex-wrap -m-2">
-                             <SortableContext items={teamIds} strategy={rectSortingStrategy}>
-                                {displayedTeams.map((team) => (
-                                    <SortableTeamCard
-                                        key={team.id}
-                                        team={team} 
-                                        users={users}
-                                        onUpdate={handleUpdate} 
-                                        onDelete={handleDelete}
-                                        onToggleShare={handleToggleShare}
-                                        onRemoveUser={handleRemoveUserFromTeam}
-                                        onAddUser={handleAddUserToTeam}
-                                        onSetAdmin={handleSetAdmin}
-                                        isEditingName={editingTeamName && activeDragItem?.data?.team?.id === team.id}
-                                        setIsEditingName={(isEditing: boolean) => {
-                                            if (isEditing) {
-                                                setActiveDragItem({type: 'team-card', data: { team }});
-                                            }
-                                            setEditingTeamName(isEditing);
-                                        }}
-                                    />
-                                ))}
-                             </SortableContext>
-                        </TeamManagementDropZone>
+                        <div className="h-full overflow-y-auto">
+                            <TeamManagementDropZone id="teams-list" type="team-card" className="flex flex-wrap -m-2">
+                                <SortableContext items={teamIds} strategy={rectSortingStrategy}>
+                                    {displayedTeams.map((team) => (
+                                        <SortableTeamCard
+                                            key={team.id}
+                                            team={team} 
+                                            users={users}
+                                            onUpdate={handleUpdate} 
+                                            onDelete={handleDelete}
+                                            onToggleShare={handleToggleShare}
+                                            onRemoveUser={handleRemoveUserFromTeam}
+                                            onAddUser={handleAddUserToTeam}
+                                            onSetAdmin={handleSetAdmin}
+                                            isEditingName={editingTeamName && activeDragItem?.data?.team?.id === team.id}
+                                            setIsEditingName={(isEditing: boolean) => {
+                                                if (isEditing) {
+                                                    setActiveDragItem({type: 'team-card', data: { team }});
+                                                }
+                                                setEditingTeamName(isEditing);
+                                            }}
+                                        />
+                                    ))}
+                                </SortableContext>
+                            </TeamManagementDropZone>
+                        </div>
                     </div>
                  </div>
-                 <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96" : "w-0")}>
-                    <TeamManagementDropZone id="shared-teams-panel" type="team-card" className={cn("h-full rounded-lg transition-all", isSharedPanelOpen ? "p-2" : "p-0")}>
+                 <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96 p-2" : "w-0 p-0")}>
+                    <TeamManagementDropZone id="shared-teams-panel" type="team-card" className="h-full">
                         <Card className={cn("transition-opacity duration-300 h-full bg-transparent flex flex-col", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
                             <CardHeader>
                                 <div className="flex items-center justify-between">
