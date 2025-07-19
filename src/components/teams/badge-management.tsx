@@ -672,7 +672,7 @@ function DroppableCollectionContent({ collection, children }: { collection: Badg
         <div 
             ref={setNodeRef}
             className={cn(
-                "min-h-[60px] rounded-md p-2 transition-all",
+                "min-h-[60px] rounded-md p-2 transition-all border-2 border-dashed border-transparent",
                 isOver && "ring-1 ring-border ring-inset",
                 collection.viewMode === 'assorted' && "flex flex-wrap gap-2 items-start",
                 collection.viewMode === 'list' && "flex flex-col gap-1",
@@ -755,14 +755,8 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
     const isOwned = useMemo(() => {
         if (isSharedPreview || isViewer) return false;
         if (!viewAsUser) return false;
-        if (collection.owner.type === 'user') {
-            return collection.owner.id === viewAsUser.userId;
-        }
-        if (collection.owner.type === 'team' && contextTeam) {
-            return contextTeam.teamAdmins?.includes(viewAsUser.userId) || contextTeam.owner.id === viewAsUser.userId || (contextTeam.teamAdmins || []).length === 0;
-        }
-        return false;
-    }, [collection.owner, viewAsUser, isSharedPreview, contextTeam, isViewer]);
+        return collection.owner.id === viewAsUser.userId;
+    }, [collection.owner, viewAsUser, isSharedPreview, isViewer]);
     
     const handleSaveName = useCallback(() => {
         const newName = nameInputRef.current?.value || collection.name;
@@ -1168,17 +1162,14 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     }, [allBadgeCollections, collectionsToDisplay, sharedSearchTerm]);
 
     const handleAddCollection = (sourceCollection?: BadgeCollection) => {
-      const owner = getOwnershipContext(page, viewAsUser, contextTeam);
-      addBadgeCollection(owner, sourceCollection, contextTeam);
+      const owner = getOwnershipContext(viewAsUser);
+      addBadgeCollection(owner, sourceCollection);
     };
     
     const handleDeleteCollection = (collection: BadgeCollection) => {
         if (isViewer) return;
         
         let isOwned = collection.owner.id === viewAsUser.userId;
-        if(isTeamContext && contextTeam) {
-            isOwned = collection.owner.id === contextTeam.id || collection.owner.id === viewAsUser.userId;
-        }
 
         if (!isOwned) {
             // Unlink if not owner
@@ -1245,8 +1236,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
             handleAddCollection(sourceCollection);
             // Smart unlinking if duplicating a linked collection
             if (active.data.current?.isSharedPreview) {
-                const ownerContext = getOwnershipContext(page, viewAsUser, contextTeam);
-                if (ownerContext.type === 'team' && contextTeam) {
+                if (contextTeam) {
                     const newLinkedIds = (contextTeam.linkedCollectionIds || []).filter(id => id !== sourceCollection.id);
                     updateTeam(contextTeam.id, { linkedCollectionIds: newLinkedIds });
                 } else {

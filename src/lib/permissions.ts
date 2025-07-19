@@ -85,7 +85,7 @@ export const hasAccess = (user: User, page: AppPage, teams: Team[]): boolean => 
     // Team-based access
     for (const teamId of access.teams) {
         const team = teams.find(t => t.id === teamId);
-        if (team?.members.includes(user.userId) || (team?.teamAdmins || []).includes(user.userId)) {
+        if (team?.members.includes(user.userId) || (team?.teamAdmins || []).includes(viewAsUser.userId)) {
             return true;
         }
     }
@@ -95,17 +95,11 @@ export const hasAccess = (user: User, page: AppPage, teams: Team[]): boolean => 
 };
 
 /**
- * Determines the ownership context for a new item.
- * @param page The current AppPage configuration.
+ * Determines the ownership context for a new item, which is always the current user.
  * @param user The current user object.
- * @param contextTeam The current team, if on a dynamic team page.
- * @returns A BadgeCollectionOwner object.
+ * @returns A BadgeCollectionOwner object pointing to the user.
  */
-export const getOwnershipContext = (page: AppPage, user: User, contextTeam?: Team): BadgeCollectionOwner => {
-    // If we are on a dynamic team page, the team is the owner.
-    if (contextTeam) {
-        return { type: 'team', id: contextTeam.id };
-    }
-    // Otherwise, the current user is the owner.
+export const getOwnershipContext = (user: User): BadgeCollectionOwner => {
+    // Simplified model: Ownership is always assigned to the user.
     return { type: 'user', id: user.userId };
 };

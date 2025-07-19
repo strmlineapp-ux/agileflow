@@ -1,5 +1,4 @@
 
-
 import type React from 'react';
 
 export interface AppTab {
@@ -86,7 +85,7 @@ export interface Badge {
 
 export type BadgeApplication = 'team members' | 'events' | 'tasks' | 'badges';
 
-export type BadgeCollectionOwner = { type: 'user' | 'team'; id: string };
+export type BadgeCollectionOwner = { type: 'user'; id: string };
 
 export interface BadgeCollection {
   id: string;

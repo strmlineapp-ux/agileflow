@@ -64,7 +64,7 @@ interface UserDataContextType {
   updateAppTab: (tabId: string, tabData: Partial<AppTab>) => Promise<void>;
   allBadges: Badge[];
   allBadgeCollections: BadgeCollection[];
-  addBadgeCollection: (owner: BadgeCollectionOwner, sourceCollection?: BadgeCollection, contextTeam?: Team) => void;
+  addBadgeCollection: (owner: BadgeCollectionOwner, sourceCollection?: BadgeCollection) => void;
   updateBadgeCollection: (collectionId: string, data: Partial<BadgeCollection>) => void;
   deleteBadgeCollection: (collectionId: string, contextTeam?: Team) => void;
   addBadge: (collectionId: string, sourceBadge?: Badge) => void;
@@ -325,10 +325,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setAppSettings(current => ({ ...current, tabs: current.tabs.map(t => t.id === tabId ? { ...t, ...tabData } : t) }));
   }, []);
 
-  const addBadgeCollection = useCallback((owner: BadgeCollectionOwner, sourceCollection?: BadgeCollection, contextTeam?: Team) => {
+  const addBadgeCollection = useCallback((owner: BadgeCollectionOwner, sourceCollection?: BadgeCollection) => {
     const newCollectionId = crypto.randomUUID();
     let newBadges: Badge[] = [];
     let newCollection: BadgeCollection;
+
     if (sourceCollection) {
         newBadges = sourceCollection.badgeIds.map(bId => {
             const originalBadge = allBadges.find(b => b.id === bId);
@@ -342,18 +343,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         newBadges.push(newBadge);
         newCollection = { id: newCollectionId, name: `New Collection ${allBadgeCollections.length + 1}`, owner: owner, icon: 'category', color: '#64748B', viewMode: 'detailed', badgeIds: [newBadgeId], applications: [], description: 'Badge Collection description', isShared: false };
     }
+    
     setAllBadgeCollections(prev => [...prev, newCollection]);
-    if (newBadges.length > 0) setAllBadges(prev => [...prev, ...newBadges]);
-    if (contextTeam) {
-        const updatedTeam = {
-            ...contextTeam,
-            badgeCollections: [...(contextTeam.badgeCollections || []), newCollection],
-            allBadges: [...(contextTeam.allBadges || []), ...newBadges],
-            activeBadgeCollections: [...(contextTeam.activeBadgeCollections || []), newCollection.id],
-        };
-        setTeams(currentTeams => currentTeams.map(t => t.id === contextTeam.id ? updatedTeam : t));
+    
+    if (newBadges.length > 0) {
+        setAllBadges(prev => [...prev, ...newBadges]);
     }
-  }, [allBadgeCollections.length, allBadges]);
+}, [allBadgeCollections.length, allBadges]);
+
 
   const updateBadgeCollection = useCallback((collectionId: string, data: Partial<BadgeCollection>) => {
     setAllBadgeCollections(current => current.map(c => c.id === collectionId ? { ...c, ...data } : c));
@@ -391,7 +388,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const deleteBadge = useCallback((badgeId: string) => {
     setAllBadges(current => current.filter(b => b.id !== badgeId));
     setAllBadgeCollections(current => current.map(c => ({ ...c, badgeIds: c.badgeIds.filter(id => id !== badgeId) })));
-    setTeams(currentTeams => currentTeams.map(t => ({ ...t, allBadges: t.allBadges.filter(b => b.id !== badgeId), badgeCollections: t.badgeCollections.map(c => ({ ...c, badgeIds: c.badgeIds.filter(id => id !== badgeId) }))})));
+    setTeams(currentTeams => currentTeams.map(t => ({ ...t, allBadges: t.allBadges.filter(b => b.id !== badgeId), badgeCollections: t.badgeCollections.map(c => ({ ...c, badgeIds: c.badgeIds.filter(id => id !== badgeId) })) })));
   }, []);
   
   const reorderBadges = useCallback((collectionId: string, badgeIds: string[]) => {
