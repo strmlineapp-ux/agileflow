@@ -52,20 +52,18 @@ This pattern provides a clean, minimal interface for search functionality, espec
 ---
 
 ### 4. Text-based Inputs
-This pattern transforms standard form inputs into minimalist, text-like elements, creating a cleaner and more compact interface. It is primarily used for authentication forms.
+This pattern transforms standard form inputs into minimalist, text-like elements, creating a cleaner and more compact interface. It is primarily used for authentication forms and simple dialogs.
 
 -   **Appearance**:
-    -   Initially, the input appears as plain text (a placeholder, like "Email" or "Password") next to an icon. It has no visible border or background.
-    -   It uses a muted color to indicate it's an interactive, but unfocused, element.
+    -   Initially, the input may appear as plain text (a placeholder, like "Email" or "Password") next to an icon. It has no visible border or background. It uses a muted color to indicate it's interactive but unfocused.
+    -   In other contexts (like a dialog), it can be a simple input field with **no border or box shadow**, using only a `focus-visible:ring-0` style to remain unobtrusive.
 -   **Interaction**:
-    -   Clicking on the text or icon transforms the element into a live input field.
-    -   The icon remains visible, and the placeholder text is replaced by the user's cursor.
+    -   Clicking on the text or icon transforms the element into a live input field with the user's cursor.
     -   The input field itself remains borderless and transparent to maintain the clean aesthetic.
 -   **Behavior**:
     -   Standard input behavior applies once focused.
-    -   Pressing 'Enter' or 'Tab' in one field (e.g., Email) should seamlessly transition focus to the next logical field (e.g., Password) without requiring an extra click.
-    -   Losing focus (`onBlur`) without entering any text will revert the element to its initial placeholder state.
--   **Application**: Used for the login and sign-up forms to create a more modern and less cluttered user experience.
+    -   Losing focus (`onBlur`) without entering any text may revert the element to its initial placeholder state.
+-   **Application**: Used for login/sign-up forms and for simple, single-field dialogs like linking a Google Calendar.
 
 ---
 
@@ -173,7 +171,7 @@ This is a minimalist dialog for focused actions, such as entering a code or a sh
 - **Behavior**:
     - Clicking the action icon in the corner performs the primary action.
     - Clicking the overlay dismisses the dialog without performing the action.
-    - **When a dialog is triggered from a draggable element, its `<DialogContent>` must capture pointer events using `onPointerDownCapture={(e) => e.stopPropagation()}`. This prevents a click inside the dialog from being interpreted as a drag action on the underlying card.**
+    - **When a dialog is triggered from a draggable element, its `<DialogContent>` must capture pointer events using `onPointerDownCapture={(e) => e.stopPropagation()}`. This prevents a click inside the dialog from being interpreted as a drag action on the underlying card.
 - **Application**: Used for Two-Factor Authentication, quick edits, and for confirming lower-risk destructive actions, such as deleting a **Page**, a **Team**, a **Calendar**, a **Workstation**, or an un-shared **Badge Collection**.
 
 ---

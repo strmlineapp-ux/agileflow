@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
@@ -83,6 +82,7 @@ function CalendarCard({
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
   const [googleCalendarIdInput, setGoogleCalendarIdInput] = useState('');
+  const linkDialogInputRef = useRef<HTMLInputElement>(null);
 
   const {toast} = useToast();
   
@@ -127,6 +127,12 @@ function CalendarCard({
       setIconSearch('');
     }
   }, [isIconPopoverOpen]);
+
+  useEffect(() => {
+    if (isLinkDialogOpen) {
+      setTimeout(() => linkDialogInputRef.current?.focus(), 100);
+    }
+  }, [isLinkDialogOpen]);
 
   const filteredIcons = useMemo(() => googleSymbolNames.filter(name => name.toLowerCase().includes(iconSearch.toLowerCase())), [iconSearch]);
   
@@ -368,7 +374,7 @@ function CalendarCard({
                                  <Tooltip>
                                     <TooltipTrigger asChild>
                                         <span 
-                                            className={cn("italic text-xs text-muted-foreground", canManage && "cursor-text hover:border-b hover:border-dashed")} 
+                                            className={cn("italic text-xs text-muted-foreground", canManage && "cursor-text")} 
                                             onClick={() => canManage && setIsEditingTitle(true)}
                                         >
                                             {calendar.defaultEventTitle || 'No default title'}
@@ -407,11 +413,13 @@ function CalendarCard({
             </DialogHeader>
             <div className="pt-4">
               <Input
+                  ref={linkDialogInputRef}
                   id="google-calendar-id"
                   placeholder="your-calendar-id@group.calendar.google.com"
                   value={googleCalendarIdInput}
                   onChange={(e) => setGoogleCalendarIdInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSaveGoogleCalendarId()}
+                  className="border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
               />
             </div>
         </DialogContent>
