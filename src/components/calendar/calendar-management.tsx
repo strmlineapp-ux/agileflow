@@ -69,8 +69,6 @@ function CalendarCard({
   const { viewAsUser, users } = useUser();
   const [isExpanded, setIsExpanded] = useState(false);
   const nameInputRef = useRef<HTMLInputElement>(null);
-  const titleInputRef = useRef<HTMLInputElement>(null);
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
   
   const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
   const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
@@ -112,13 +110,10 @@ function CalendarCard({
     };
   }, [isEditingName, handleSaveName]);
 
-  const handleSaveTitle = useCallback(() => {
-    const newTitle = titleInputRef.current?.value.trim();
-    if (newTitle !== calendar.defaultEventTitle) {
-      onUpdate(calendar.id, { defaultEventTitle: newTitle });
-    }
-    setIsEditingTitle(false);
-  }, [calendar.id, calendar.defaultEventTitle, onUpdate]);
+  const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') { e.preventDefault(); handleSaveName(); }
+    else if (e.key === 'Escape') setIsEditingName(false);
+  };
 
   useEffect(() => {
     if (isIconPopoverOpen) {
@@ -135,31 +130,6 @@ function CalendarCard({
   }, [isLinkDialogOpen]);
 
   const filteredIcons = useMemo(() => googleSymbolNames.filter(name => name.toLowerCase().includes(iconSearch.toLowerCase())), [iconSearch]);
-  
-  useEffect(() => {
-    if (!isEditingTitle) return;
-    const handleOutsideClick = (event: MouseEvent) => {
-        if (titleInputRef.current && !titleInputRef.current.contains(event.target as Node)) {
-            handleSaveTitle();
-        }
-    };
-    document.addEventListener("mousedown", handleOutsideClick);
-    titleInputRef.current?.focus();
-    titleInputRef.current?.select();
-    
-    return () => document.removeEventListener("mousedown", handleOutsideClick);
-  }, [isEditingTitle, handleSaveTitle]);
-
-
-  const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') { e.preventDefault(); handleSaveName(); }
-    else if (e.key === 'Escape') setIsEditingName(false);
-  };
-  
-  const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') { e.preventDefault(); handleSaveTitle(); }
-    else if (e.key === 'Escape') setIsEditingTitle(false);
-  };
   
   const handleSync = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -303,16 +273,16 @@ function CalendarCard({
                       </div>
                       <div className="flex-1 min-w-0" onPointerDown={(e) => { e.stopPropagation(); }}>
                       {isEditingName && canManage ? (
-                          <Input
-                          ref={nameInputRef}
-                          defaultValue={calendar.name}
-                          onKeyDown={handleNameKeyDown}
-                          onBlur={handleSaveName}
-                          onClick={(e) => e.stopPropagation()}
-                          className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
-                          />
+                           <Input
+                              ref={nameInputRef}
+                              defaultValue={calendar.name}
+                              onKeyDown={handleNameKeyDown}
+                              onBlur={handleSaveName}
+                              onClick={(e) => e.stopPropagation()}
+                              className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
+                            />
                       ) : (
-                          <CardTitle onPointerDown={(e) => { if(canManage && !isDragging) { e.stopPropagation(); setIsEditingName(true)}}} className={cn("font-headline text-xl font-thin break-words", canManage && "cursor-pointer")}>
+                          <CardTitle onClick={(e) => {e.stopPropagation(); if(canManage && !isDragging) { setIsEditingName(true)}}} className={cn("font-headline text-xl font-thin break-words", canManage && "cursor-pointer")}>
                           {calendar.name}
                           </CardTitle>
                       )}
@@ -360,32 +330,11 @@ function CalendarCard({
               {isExpanded && (
                   <CardContent className="p-2 pt-0 mt-2" onPointerDown={(e) => e.stopPropagation()}>
                     <div className="space-y-1">
-                          {isEditingTitle && canManage ? (
-                              <Input
-                                  ref={titleInputRef}
-                                  defaultValue={calendar.defaultEventTitle}
-                                  onKeyDown={handleTitleKeyDown}
-                                  onBlur={handleSaveTitle}
-                                  className="h-auto p-0 text-xs font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                                  placeholder="Default Event Title"
-                              />
-                          ) : (
-                             <TooltipProvider>
-                                 <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <span 
-                                            className={cn("italic text-xs text-muted-foreground", canManage && "cursor-text")} 
-                                            onClick={() => canManage && setIsEditingTitle(true)}
-                                        >
-                                            {calendar.defaultEventTitle || 'No default title'}
-                                        </span>
-                                    </TooltipTrigger>
-                                     <TooltipContent>
-                                        <p>Default Event Title. {canManage && 'Click to edit.'}</p>
-                                    </TooltipContent>
-                                 </Tooltip>
-                            </TooltipProvider>
-                          )}
+                          <span 
+                              className={cn("italic text-xs text-muted-foreground")} 
+                          >
+                              {calendar.defaultEventTitle || 'No default title'}
+                          </span>
                         </div>
                   </CardContent>
               )}
@@ -419,7 +368,7 @@ function CalendarCard({
                   value={googleCalendarIdInput}
                   onChange={(e) => setGoogleCalendarIdInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSaveGoogleCalendarId()}
-                  className="border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                  className="border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent"
               />
             </div>
         </DialogContent>
@@ -528,31 +477,11 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
 
   const [activeCalendar, setActiveCalendar] = useState<SharedCalendar | null>(null);
   
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const titleInputRef = useRef<HTMLInputElement>(null);
-  
   const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
   const [sharedSearchTerm, setSharedSearchTerm] = useState('');
   const [mainSearchTerm, setMainSearchTerm] = useState('');
 
   const title = appSettings.calendarManagementLabel || tab.name;
-
-  useEffect(() => {
-    if (isEditingTitle) titleInputRef.current?.focus();
-  }, [isEditingTitle]);
-
-  const handleSaveTitle = () => {
-    const newName = titleInputRef.current?.value.trim();
-    if (newName && newName !== title) {
-      updateAppTab(tab.id, { name: newName });
-    }
-    setIsEditingTitle(false);
-  };
-  
-  const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') handleSaveTitle();
-    else if (e.key === 'Escape') setIsEditingTitle(false);
-  };
   
   const handleAddCalendar = (sourceCalendar?: SharedCalendar) => {
     const calendarCount = calendars.length;
@@ -670,21 +599,8 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
             <div className="flex-1 flex flex-col gap-6">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        {isEditingTitle ? (
-                          <Input ref={titleInputRef} defaultValue={title} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
-                        ) : (
-                          <TooltipProvider>
-                              <Tooltip>
-                                  <TooltipTrigger asChild>
-                                      <h3 className="font-headline text-2xl font-thin tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{title}</h3>
-                                  </TooltipTrigger>
-                                  {tab.description && (
-                                      <TooltipContent><p className="max-w-xs">{tab.description}</p></TooltipContent>
-                                  )}
-                              </Tooltip>
-                          </TooltipProvider>
-                        )}
-                        <DuplicateZone id="duplicate-calendar-zone" onAdd={() => handleAddCalendar()} />
+                      <h3 className="font-headline text-2xl font-thin tracking-tight">{title}</h3>
+                      <DuplicateZone id="duplicate-calendar-zone" onAdd={() => handleAddCalendar()} />
                     </div>
                     <div className="flex items-center gap-2">
                         <CompactSearchInput searchTerm={mainSearchTerm} setSearchTerm={setMainSearchTerm} placeholder="Search calendars..." />
