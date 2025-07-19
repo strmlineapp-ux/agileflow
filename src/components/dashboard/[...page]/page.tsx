@@ -1,13 +1,15 @@
 
+
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useUser } from '@/context/user-context';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { type AppTab, type AppPage } from '@/types';
+import { hasAccess } from '@/lib/permissions';
 
 // Import all possible tab components
 import { AdminsManagement, PagesManagement, TabsManagement } from '@/components/admin/page';
@@ -22,7 +24,7 @@ import { NotificationsContent } from '@/components/dashboard/tabs/notifications-
 import { SettingsContent } from '@/components/dashboard/tabs/settings-tab';
 import { CalendarPageContent } from '@/components/dashboard/tabs/calendar-tab';
 import { CalendarManagement } from '@/components/calendar/calendar-management';
-import { TeamManagement } from '@/components/service-delivery/team-management';
+import { TeamManagement } from '@/components/teams/team-management';
 
 const componentMap: Record<string, React.ComponentType<any>> = {
   // Admin Page Tabs
@@ -41,7 +43,7 @@ const componentMap: Record<string, React.ComponentType<any>> = {
   tasks: TasksContent,
   notifications: NotificationsContent,
   settings: SettingsContent,
-  // Service Delivery Tabs
+  // Correctly mapped generic components
   calendars: CalendarManagement,
   teams: TeamManagement,
 };
@@ -52,6 +54,7 @@ const ADMIN_TAB_ORDER = ['tab-admins', 'tab-admin-pages', 'tab-admin-tabs'];
 
 export default function DynamicPage() {
     const params = useParams();
+    const router = useRouter();
     const { loading, appSettings, teams, viewAsUser } = useUser();
     const [activeTab, setActiveTab] = useState<string | undefined>(undefined);
     
@@ -80,6 +83,16 @@ export default function DynamicPage() {
         
         return { pageConfig: page, dynamicTeam: undefined };
     }, [appSettings.pages, currentPath, teams]);
+
+    // Gracefully redirect user if they lose access to the current page
+    useEffect(() => {
+      if (loading || !pageConfig) return;
+
+      if (!hasAccess(viewAsUser, pageConfig, teams)) {
+        router.push('/dashboard/notifications');
+      }
+    }, [viewAsUser, teams, pageConfig, loading, router]);
+
 
     useEffect(() => {
         if (pageConfig) {
@@ -114,7 +127,7 @@ export default function DynamicPage() {
     const isSingleTabPage = pageTabs.length === 1;
 
     // Don't show header for seamless single-tab pages
-    const showHeader = !isSingleTabPage || !['tab-overview', 'tab-notifications', 'tab-settings', 'tab-admins'].includes(pageTabs[0]?.id);
+    const showHeader = !isSingleTabPage || !['tab-overview', 'tab-notifications', 'tab-settings'].includes(pageTabs[0]?.id);
       
     const pageTitle = pageConfig.isDynamic && dynamicTeam ? `${dynamicTeam.name} ${pageConfig.name}` : pageConfig.name;
 

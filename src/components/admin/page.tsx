@@ -791,8 +791,7 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
     const searchInputRef = useRef<HTMLInputElement>(null);
     
     const pinnedIds = useMemo(() => new Set(corePages.map(p => p.id)), []);
-    const pinnedEndIndex = corePages.findIndex(p => p.id === 'page-notifications');
-
+    
     const handleUpdatePage = useCallback((pageId: string, data: Partial<AppPage>) => {
         const newPages = appSettings.pages.map(p => p.id === pageId ? { ...p, ...data } : p);
         updateAppSettings({ pages: newPages });
@@ -835,9 +834,8 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
         if (insertIndex !== -1) {
             newPages.splice(insertIndex, 0, newPage);
         } else {
-            // Fallback if for some reason the pinned page isn't there
-            const lastPinnedIndex = appSettings.pages.map(p => pinnedIds.has(p.id)).lastIndexOf(true);
-            newPages.splice(lastPinnedIndex, 0, newPage);
+            // Fallback: place before the last element if notifications page not found
+            newPages.splice(newPages.length -1, 0, newPage);
         }
         
         updateAppSettings({ pages: newPages });
@@ -887,12 +885,11 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
             const activeIsPinned = pinnedIds.has(active.id.toString());
             const overIsPinned = pinnedIds.has(over.id.toString());
             
-            // Prevent dragging non-pinned into pinned areas or vice-versa
-            if (activeIsPinned !== overIsPinned) return;
             // Prevent reordering pinned items among themselves
             if (activeIsPinned && overIsPinned) return;
-            // Prevent dragging a custom page into the final pinned block
-            if (!activeIsPinned && newIndex >= pinnedEndIndex && pinnedEndIndex !== -1) return;
+            
+            // Prevent dragging a custom page into the pinned section or a pinned one out
+            if (activeIsPinned !== overIsPinned) return;
             
             const reorderedPages = arrayMove(appSettings.pages, oldIndex, newIndex);
             updateAppSettings({ pages: reorderedPages });
@@ -1026,7 +1023,10 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
         }
     };
 
-    const filteredIcons = useMemo(() => googleSymbolNames.filter(icon => icon.toLowerCase().includes(iconSearch.toLowerCase())), [iconSearch]);
+    const filteredIcons = useMemo(() => {
+        if (!iconSearch) return googleSymbolNames;
+        return googleSymbolNames.filter(icon => icon.toLowerCase().includes(iconSearch.toLowerCase()));
+    }, [iconSearch]);
 
     return (
         <Card className={cn("bg-transparent", isDragging && "shadow-xl")}>
