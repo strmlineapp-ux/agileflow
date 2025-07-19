@@ -44,7 +44,7 @@ This pattern provides a clean, minimal interface for search functionality, espec
   - Clicking the button reveals the input field.
   - **Crucially, the input must have a transparent background and no borders or box-shadow**, ensuring it blends seamlessly into the UI.
 - **Behavior:**
-  - **Automatic Focus**: To trigger focus when a parent element (like a side panel) becomes visible, pass an `autoFocus={isPanelOpen}` prop to the component. It will then automatically focus the search input once, when the panel opens.
+  - **Automatic Focus**: To trigger focus when a parent element (like a side panel) becomes visible, pass an `autoFocus={isPanelOpen}` prop to the component. The component's internal `useEffect` hook will then focus the input a single time when the panel opens.
   - **Manual Focus**: Clicking the search icon will always expand the input and focus it.
   - **Collapse on Blur**: The input always collapses back to its icon-only state when it loses focus (`onBlur`) and the field is empty.
 - **Application:** Used for filtering lists of icons, users, or other filterable content within popovers and management pages like the Admin screen.
@@ -210,7 +210,8 @@ This pattern describes how a group of controls in a page header can intelligentl
 - **Behavior**:
   - **Grid Awareness**: The page's main content area (e.g., a card grid) dynamically adjusts the number of columns it displays to best fit the available space.
   - **Control Repositioning**: Header controls are grouped together. This entire group intelligently repositions itself to stay aligned with the edge of the content grid it controls. For example, when a right-hand panel opens, the grid shrinks, and the control group moves left to remain aligned with the grid's new right edge.
-- **Application**: Used on the **Badge Management** and **Team Management** pages to keep the search and panel-toggle icons aligned with the content grid as the "Shared Items" panel is opened and closed.
+- **Implementation**: The main page container should be a flexbox (`flex`). The main content area should have `flex-1` and `overflow-hidden` to prevent it from causing horizontal scrollbars. The collapsible side panel should have a fixed width when open and `w-0` when closed, with its padding also conditionally applied only when open (`p-0` when closed). This ensures it is completely removed from the layout flow when collapsed.
+- **Application**: Used on the **Badge Management**, **Calendar Management**, and **Team Management** pages to keep header controls aligned with the content grid as the "Shared Items" panel is opened and closed.
 
 ---
 
@@ -313,4 +314,3 @@ This is the single source of truth for indicating user interaction state across 
     - **Icon Size (Ownership Status)**: The `GoogleSymbol` inside an ownership status badge should have its size set via `style={{fontSize: '16px'}}`.
 -   **Badges in Assorted View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
 -   **Dashed Underlines**: Dashed underlines are **not permitted** in the application. Any underline should be solid and is typically handled by the default browser or component styles. This ensures a clean and consistent text presentation.
-

@@ -642,7 +642,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
   return (
     <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
         <div className="flex gap-4 h-full">
-            <div className="flex-1 flex flex-col gap-6">
+            <div className="flex-1 flex flex-col gap-6 overflow-hidden">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <h3 className="font-headline text-2xl font-thin tracking-tight">{title}</h3>
@@ -682,7 +682,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                 </div>
             </div>
             <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96" : "w-0")}>
-                <CalendarDropZone id="shared-calendars-panel" type="shared-calendar-panel" className={cn("h-full rounded-lg", isSharedPanelOpen ? "p-2" : "p-0")}>
+                <CalendarDropZone id="shared-calendars-panel" type="shared-calendar-panel" className={cn("h-full rounded-lg transition-all", isSharedPanelOpen ? "p-2" : "p-0")}>
                     <Card className={cn("transition-opacity duration-300 h-full bg-transparent flex flex-col", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
                         <CardHeader>
                             <div className="flex items-center justify-between">

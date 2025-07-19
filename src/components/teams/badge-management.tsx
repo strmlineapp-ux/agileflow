@@ -1333,8 +1333,8 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
 
     return (
         <DndContext sensors={sensors} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
-            <div className="flex gap-4">
-                <div className="flex-1 transition-all duration-300 flex flex-col gap-6">
+            <div className="flex gap-4 h-full">
+                <div className="flex-1 transition-all duration-300 flex flex-col gap-6 overflow-hidden">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             {isEditingTitle ? (
