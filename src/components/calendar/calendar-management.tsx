@@ -242,7 +242,7 @@ function CalendarCard({
                                   <Tooltip>
                                       <TooltipTrigger asChild>
                                           <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={!canManage}>
-                                              <button className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-0", canManage && "cursor-pointer")} style={{ backgroundColor: calendar.color }} />
+                                              <button className={cn("absolute -bottom-0 -right-3 h-4 w-4 rounded-full", canManage && "cursor-pointer")} style={{ backgroundColor: calendar.color }} />
                                           </PopoverTrigger>
                                       </TooltipTrigger>
                                       <TooltipContent><p>Change Color</p></TooltipContent>
@@ -269,7 +269,7 @@ function CalendarCard({
                                   <Tooltip>
                                       <TooltipTrigger asChild>
                                           <div 
-                                              className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white"
+                                              className="absolute -top-0 -right-3 h-4 w-4 rounded-full flex items-center justify-center text-white"
                                               style={{ backgroundColor: shareIconColor }}
                                           >
                                               <GoogleSymbol name={shareIcon} style={{fontSize: '16px'}}/>
@@ -298,22 +298,7 @@ function CalendarCard({
                       </div>
                   </div>
                    <div className='flex items-center' onPointerDown={(e) => e.stopPropagation()}>
-                    {calendar.googleCalendarId ? (
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <button>
-                                        <GoogleSymbol name="cloud_sync" className="text-muted-foreground" weight={100} />
-                                    </button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                <p>
-                                    {calendar.googleCalendarId}
-                                </p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    ) : canManage && (
+                    {canManage && !calendar.googleCalendarId && (
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
@@ -325,32 +310,29 @@ function CalendarCard({
                             </Tooltip>
                         </TooltipProvider>
                     )}
-                   <span onPointerDown={(e) => e.stopPropagation()}>
-                      <TooltipProvider>
-                          <Tooltip>
-                              <TooltipTrigger asChild>
-                                  <span tabIndex={0} onKeyDown={(e) => { if(e.key === 'Enter' || e.key === ' ') { handleSync(e as any); }}}>
-                                      <Button
-                                          variant="ghost"
-                                          size="icon"
-                                          className="h-8 w-8 text-muted-foreground"
-                                          onClick={handleSync}
-                                          disabled={!calendar.googleCalendarId}
-                                      >
-                                          <GoogleSymbol name="sync" weight={100} />
-                                      </Button>
-                                  </span>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                              <p>
-                                  {calendar.googleCalendarId
-                                  ? "Sync with Google Calendar"
-                                  : "Link a Google Calendar ID to enable sync"}
-                              </p>
-                              </TooltipContent>
-                          </Tooltip>
-                      </TooltipProvider>
-                   </span>
+                   {calendar.googleCalendarId && (
+                       <TooltipProvider>
+                           <Tooltip>
+                               <TooltipTrigger asChild>
+                                   <span tabIndex={0} onKeyDown={(e) => { if(e.key === 'Enter' || e.key === ' ') { handleSync(e as any); }}}>
+                                       <Button
+                                           variant="ghost"
+                                           size="icon"
+                                           className="h-8 w-8 text-muted-foreground"
+                                           onClick={handleSync}
+                                       >
+                                           <GoogleSymbol name="sync" weight={100} />
+                                       </Button>
+                                   </span>
+                               </TooltipTrigger>
+                               <TooltipContent>
+                               <p>
+                                   Sync with {calendar.googleCalendarId}
+                               </p>
+                               </TooltipContent>
+                           </Tooltip>
+                       </TooltipProvider>
+                   )}
                    </div>
               </div>
               

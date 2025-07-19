@@ -623,7 +623,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
-                                                <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-0 cursor-pointer" style={{ backgroundColor: page.color }} />
+                                                <button className="absolute -bottom-0 -right-3 h-4 w-4 rounded-full cursor-pointer" style={{ backgroundColor: page.color }} />
                                             </PopoverTrigger>
                                         </TooltipTrigger>
                                         <TooltipContent><p>Change Color</p></TooltipContent>
