@@ -1063,20 +1063,14 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     
     const contextTeam = team;
     const isTeamContext = isTeamSpecificPage && !!contextTeam;
-
-    const canManageCollections = useMemo(() => {
-        if (!contextTeam) return true; // User context is always manageable by the user
-        const admins = contextTeam.teamAdmins || [];
-        if (admins.length > 0) {
-            return admins.includes(viewAsUser.userId);
-        }
-        return contextTeam.members.includes(viewAsUser.userId);
-    }, [contextTeam, viewAsUser]);
     
     const isViewer = useMemo(() => {
-        if (!isTeamContext) return false;
-        return !canManageCollections;
-    }, [isTeamContext, canManageCollections]);
+        if (!isTeamContext) return false; // Not a team context, so not a viewer of a team
+        if (viewAsUser.isAdmin) return false; // Admins can always manage
+        const admins = contextTeam?.teamAdmins || [];
+        if (admins.length > 0) return !admins.includes(viewAsUser.userId);
+        return !contextTeam?.members.includes(viewAsUser.userId);
+    }, [isTeamContext, contextTeam, viewAsUser]);
 
     useEffect(() => {
         if (isEditingTitle) titleInputRef.current?.focus();
@@ -1119,16 +1113,25 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                 ownerIds = new Set(contextTeam.members);
             }
         } else {
-            // "My Badges" context: only show collections owned by the current user
             ownerIds = new Set([viewAsUser.userId]);
         }
     
         let collections = allBadgeCollections.filter(c => ownerIds.has(c.owner.id));
         
+        if (isTeamContext && contextTeam?.linkedCollectionIds) {
+            const linkedCollections = contextTeam.linkedCollectionIds
+                .map(id => allBadgeCollections.find(c => c.id === id))
+                .filter((c): c is BadgeCollection => !!c);
+            collections = [...collections, ...linkedCollections];
+        }
+
         if (searchTerm) {
             collections = collections.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
         }
         
+        // Remove duplicates
+        collections = Array.from(new Map(collections.map(c => [c.id, c])).values());
+
         return collections;
     }, [allBadgeCollections, isTeamContext, contextTeam, viewAsUser, searchTerm]);
 
@@ -1139,8 +1142,14 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
             .filter(c => c.name.toLowerCase().includes(sharedSearchTerm.toLowerCase()));
     }, [allBadgeCollections, collectionsToDisplay, sharedSearchTerm]);
 
-    const handleAddCollection = (sourceCollection?: BadgeCollection) => {
-      addBadgeCollection(viewAsUser, sourceCollection);
+    const handleAddCollection = () => {
+        if (isViewer) return;
+        addBadgeCollection(viewAsUser, undefined, contextTeam);
+    };
+
+    const handleDuplicateCollection = (sourceCollection: BadgeCollection) => {
+        if (isViewer) return;
+        addBadgeCollection(viewAsUser, sourceCollection, contextTeam);
     };
     
     const handleDeleteCollection = (collection: BadgeCollection) => {
@@ -1149,8 +1158,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         let isOwned = collection.owner.id === viewAsUser.userId;
 
         if (!isOwned) {
-            // Unlink if not owner
-             if (contextTeam) {
+            if (contextTeam) {
                 const updatedIds = (contextTeam.linkedCollectionIds || []).filter(id => id !== collection.id);
                 updateTeam(contextTeam.id, { linkedCollectionIds: updatedIds });
             } else {
@@ -1209,7 +1217,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         
         if (over.id === 'duplicate-collection-zone' && activeType === 'collection') {
             const sourceCollection = active.data.current?.collection as BadgeCollection;
-            handleAddCollection(sourceCollection);
+            handleDuplicateCollection(sourceCollection);
             // Smart unlinking if duplicating a linked collection
             if (active.data.current?.isSharedPreview) {
                 if (contextTeam) {
@@ -1322,7 +1330,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                     </TooltipProvider>
                                 )}
                                 {!isViewer && (
-                                    <DuplicateZone id="duplicate-collection-zone" onAdd={() => handleAddCollection()} />
+                                    <DuplicateZone id="duplicate-collection-zone" onAdd={handleAddCollection} />
                                 )}
                             </div>
                             <div className="flex items-center gap-1">
@@ -1357,10 +1365,9 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                                     className={cn(
                                                         "p-2 w-full transition-all duration-300",
                                                         isSharedPanelOpen ? "lg:w-1/2" : "lg:w-1/3",
-                                                        (canToggle && !isActive) && "opacity-40 hover:opacity-100",
                                                     )}
                                                 >
-                                                    <div className={cn("h-full")}>
+                                                    <div className={cn("h-full", (canToggle && !isActive) && "opacity-40 hover:opacity-100")}>
                                                         <SortableCollectionCard
                                                             collection={collection}
                                                             allBadges={allBadges}
@@ -1482,3 +1489,5 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         </DndContext>
     );
 }
+
+    
