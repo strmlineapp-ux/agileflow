@@ -1003,7 +1003,7 @@ function DroppableDuplicateZone({ id, disabled, children }: { id: string, disabl
     return (
         <div 
             ref={setNodeRef}
-            className={cn("rounded-full p-0.5 transition-all", isOver && "ring-1 ring-border ring-inset")}
+            className={cn("rounded-full p-0.5 transition-all", isOver && "ring-1 ring-inset ring-border")}
         >
             <TooltipProvider>
                 <Tooltip>
@@ -1015,6 +1015,34 @@ function DroppableDuplicateZone({ id, disabled, children }: { id: string, disabl
             </TooltipProvider>
         </div>
     );
+}
+
+function DuplicateCollectionZone({ onAdd }: { onAdd: () => void; }) {
+  const { isOver, setNodeRef } = useDroppable({ id: 'duplicate-collection-zone' });
+  
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "rounded-full transition-all p-0.5",
+        isOver && "ring-1 ring-border ring-inset"
+      )}
+    >
+      <TooltipProvider>
+          <Tooltip>
+              <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full p-0" onClick={onAdd} onPointerDown={(e) => e.stopPropagation()}>
+                    <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
+                    <span className="sr-only">New Collection or Drop to Duplicate</span>
+                  </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                  <p>{isOver ? 'Drop to Duplicate' : 'Add New Collection'}</p>
+              </TooltipContent>
+          </Tooltip>
+      </TooltipProvider>
+    </div>
+  );
 }
 
 
@@ -1229,14 +1257,32 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         }
     }, [allBadgeCollections, allBadges, updateBadgeCollection, toast, confirmPermanentDelete]);
     
-    const handleDragEnd = (event: DragEndEvent) => {
+    const onDragEnd = (event: DragEndEvent) => {
         setActiveDragItem(null);
         const { active, over } = event;
         if (!over) return;
-    
+
         const activeType = active.data.current?.type;
         const overType = over.data.current?.type;
-    
+        
+        if (over.id === 'duplicate-collection-zone' && activeType === 'collection') {
+            const sourceCollection = active.data.current?.collection as BadgeCollection;
+            handleAddCollection(sourceCollection);
+            // Smart unlinking if duplicating a linked collection
+            if (active.data.current?.isSharedPreview) {
+                const ownerContext = getOwnershipContext(page, viewAsUser, contextTeam);
+                if (ownerContext.type === 'team' && contextTeam) {
+                    const newLinkedIds = (contextTeam.linkedCollectionIds || []).filter(id => id !== sourceCollection.id);
+                    updateTeam(contextTeam.id, { linkedCollectionIds: newLinkedIds });
+                } else {
+                    const newLinkedIds = (viewAsUser.linkedCollectionIds || []).filter(id => id !== sourceCollection.id);
+                    updateUser(viewAsUser.userId, { linkedCollectionIds: newLinkedIds });
+                }
+                toast({ title: 'Collection Copied', description: 'The original linked collection has been removed.' });
+            }
+            return;
+        }
+
         if (activeType === 'collection') {
             handleCollectionDragEnd(event);
         } else if (activeType === 'badge') {
@@ -1250,25 +1296,10 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     
         const activeCollection = active.data.current?.collection as BadgeCollection;
         if (!activeCollection) return;
-    
-        if (over.id === 'duplicate-collection-zone') {
-            handleAddCollection(activeCollection);
-            if (active.data.current?.isSharedPreview) {
-                const ownerContext = getOwnershipContext(page, viewAsUser, contextTeam);
-                if (ownerContext.type === 'team' && contextTeam) {
-                    const newLinkedIds = (contextTeam.linkedCollectionIds || []).filter(id => id !== activeCollection.id);
-                    updateTeam(contextTeam.id, { linkedCollectionIds: newLinkedIds });
-                } else {
-                    const newLinkedIds = (viewAsUser.linkedCollectionIds || []).filter(id => id !== activeCollection.id);
-                    updateUser(viewAsUser.userId, { linkedCollectionIds: newLinkedIds });
-                }
-                toast({ title: 'Collection Copied', description: 'The original linked collection has been removed.' });
-            }
-            return;
-        }
-    
+        
         if (over.id === 'shared-collections-panel') {
-            if (activeCollection.owner.id === viewAsUser.userId || (contextTeam && activeCollection.owner.id === contextTeam.id)) {
+            const isOwner = activeCollection.owner.id === viewAsUser.userId || (contextTeam && activeCollection.owner.id === contextTeam.id);
+            if (isOwner) {
                 updateBadgeCollection(activeCollection.id, { isShared: !activeCollection.isShared });
                 toast({ title: activeCollection.isShared ? 'Collection Unshared' : 'Collection Shared' });
             }
@@ -1292,7 +1323,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         if (!over) return;
     
         const activeCollectionId = active.data.current?.collectionId;
-        const overCollectionId = over.data.current?.collectionId || over.id;
+        const overCollectionId = over.data.current?.collectionId || (over.data.current?.collection as BadgeCollection)?.id;
         const activeBadge = active.data.current?.badge as Badge;
     
         if (!activeBadge) return;
@@ -1303,7 +1334,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
             if (collection) {
                 const oldIndex = collection.badgeIds.indexOf(active.id.toString().split('::')[1]);
                 const newIndex = collection.badgeIds.indexOf(over.id.toString().split('::')[1]);
-                if (oldIndex !== -1 && newIndex !== -1) {
+                if (oldIndex > -1 && newIndex > -1) {
                     const reordered = arrayMove(collection.badgeIds, oldIndex, newIndex);
                     reorderBadges(collection.id, reordered);
                 }
@@ -1321,7 +1352,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     );
 
     return (
-        <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={handleDragEnd} collisionDetection={closestCenter}>
+        <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
             <div className="flex gap-4 h-full">
                 <div className="flex-1 overflow-hidden">
                   <div className="flex flex-col gap-6 h-full">
@@ -1350,12 +1381,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                     </TooltipProvider>
                                 )}
                                 {!isViewer && (
-                                    <DroppableDuplicateZone id="duplicate-collection-zone" disabled={isViewer}>
-                                        <Button variant="ghost" size="icon" onPointerDown={(e) => { e.stopPropagation(); handleAddCollection(); }}>
-                                            <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
-                                            <span className="sr-only">Add New Collection or Drop to Duplicate</span>
-                                        </Button>
-                                    </DroppableDuplicateZone>
+                                    <DuplicateCollectionZone onAdd={() => handleAddCollection()} />
                                 )}
                             </div>
                             <div className="flex items-center gap-1">
