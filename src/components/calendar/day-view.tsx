@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useEffect, useMemo, useState, useRef, useCallback, useLayoutEffect } from 'react';
@@ -328,7 +329,7 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
     
     const renderStandardView = () => (
         <Card className="h-full flex flex-col flex-1">
-            <div className="overflow-x-auto overflow-y-hidden" ref={timelineScrollerRef}>
+            <div className="overflow-y-hidden" ref={timelineScrollerRef}>
                 <div style={{ width: `${LOCATION_LABEL_WIDTH_PX + (24 * hourWidth)}px`}} className="flex flex-col flex-1 h-full">
                     <CardHeader className="p-0 border-b sticky top-0 bg-muted z-20 flex flex-row">
                         <div className="w-[160px] shrink-0 border-r p-2 flex items-center font-normal text-sm sticky left-0 bg-muted z-30">Location</div>

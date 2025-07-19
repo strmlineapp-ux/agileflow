@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
@@ -518,7 +519,6 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
     const [searchTerm, setSearchTerm] = useState('');
     const [activeDragItem, setActiveDragItem] = useState<{type: string, data: any} | null>(null);
     const [editingTeamName, setEditingTeamName] = useState(false);
-    const sharedSearchInputRef = useRef<HTMLInputElement>(null);
     
     const pageTitle = page.isDynamic && teams.find(t => t.id === page.path.split('/')[2]) ? `${teams.find(t => t.id === page.path.split('/')[2])?.name} ${page.name}` : page.name;
     const tabTitle = appSettings.teamManagementLabel || tab.name;
@@ -532,12 +532,6 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
     useEffect(() => {
         if (isEditingTitle) titleInputRef.current?.focus();
     }, [isEditingTitle]);
-
-    useEffect(() => {
-        if (isSharedPanelOpen && sharedSearchInputRef.current) {
-            setTimeout(() => sharedSearchInputRef.current?.focus(), 100);
-        }
-    }, [isSharedPanelOpen]);
 
     const handleSaveTitle = () => {
         const newName = titleInputRef.current?.value.trim();
@@ -825,7 +819,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                             <CardHeader>
                                 <div className="flex items-center justify-between">
                                     <CardTitle className="font-headline font-thin text-xl">Shared Teams</CardTitle>
-                                    <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." inputRef={sharedSearchInputRef} />
+                                    <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." tooltipText="Search Shared Teams" autoFocus={isSharedPanelOpen} />
                                 </div>
                                 <CardDescription>Drag a team you own here to share it. Drag a team to your board to link it.</CardDescription>
                             </CardHeader>
