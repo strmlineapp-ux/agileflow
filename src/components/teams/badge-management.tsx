@@ -230,7 +230,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
         nameInputRef.current?.select();
         
         return () => {
-            document.removeEventListener('mousedown', handleOutsideClick);
+            document.removeEventListener("mousedown", handleOutsideClick);
         };
     }, [isEditingName, handleSaveName]);
     
@@ -718,7 +718,7 @@ function SortableCollectionCard({ collection, allBadges, onUpdateCollection, onD
 function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDeleteCollection, onAddBadge, onUpdateBadge, onDeleteBadge, dragHandleProps, isSharedPreview = false, contextTeam, isViewer = false }: {
     collection: BadgeCollection;
     allBadges: Badge[];
-    onUpdateCollection: (collectionId: string, newValues: Partial<Omit<BadgeCollection, 'id' | 'badgeIds'>>) => void;
+    onUpdateCollection: (collectionId: string, newValues: Partial<Omit<BadgeCollection, 'id' | 'badgeIds'>>, teamId?: string) => void;
     onDeleteCollection: (collection: BadgeCollection) => void;
     onAddBadge: (collectionId: string, sourceBadge?: Badge) => void;
     onUpdateBadge: (badgeData: Partial<Badge>) => void;
@@ -762,7 +762,7 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
         nameInputRef.current?.focus();
         nameInputRef.current?.select();
         return () => {
-            document.removeEventListener('mousedown', handleOutsideClick);
+            document.removeEventListener("mousedown", handleOutsideClick);
         };
     }, [isEditingName, handleSaveName]);
 
@@ -804,9 +804,9 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
         } else {
             currentApplications.add(application);
         }
-        onUpdateCollection(collection.id, { applications: Array.from(currentApplications) });
+        onUpdateCollection(collection.id, { applications: Array.from(currentApplications) }, contextTeam?.id);
     };
-
+    
     const handleToggleCollectionActive = () => {
         if (!contextTeam || isViewer) return;
         const wasActive = contextTeam.activeBadgeCollections?.includes(collection.id);
@@ -889,11 +889,11 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                                         ) : (
                                             <CardTitle onPointerDown={(e) => { e.stopPropagation(); if(isOwned) setIsEditingName(true);}} className={cn("text-2xl font-headline font-thin break-words", isOwned && "cursor-pointer")}>{collection.name}</CardTitle>
                                         )}
-                                        <Button variant="ghost" size="icon" onClick={() => onAddBadge(collection.id)} disabled={!isOwned || isViewer} className="h-8 w-8 text-muted-foreground"><GoogleSymbol name="add" weight={100} /><span className="sr-only">Add Badge</span></Button>
                                     </div>
                                 </div>
                             </div>
                             <div className="flex items-center gap-2 pt-2" onPointerDown={(e) => e.stopPropagation()}>
+                                <Button variant="ghost" size="icon" onClick={() => onAddBadge(collection.id)} disabled={!isOwned || isViewer} className="h-8 w-8 text-muted-foreground"><GoogleSymbol name="add" weight={100} /><span className="sr-only">Add Badge</span></Button>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
@@ -1139,12 +1139,12 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
 
     const handleAddCollection = useCallback((sourceCollection?: BadgeCollection) => {
         if (isViewer) return;
-        addBadgeCollection(viewAsUser, sourceCollection);
-    }, [isViewer, addBadgeCollection, viewAsUser]);
+        addBadgeCollection(viewAsUser, sourceCollection, contextTeam);
+    }, [isViewer, addBadgeCollection, viewAsUser, contextTeam]);
 
     const handleDuplicateCollection = (sourceCollection: BadgeCollection) => {
         if (isViewer) return;
-        addBadgeCollection(viewAsUser, sourceCollection);
+        handleAddCollection(sourceCollection);
     };
     
     const handleDeleteCollection = (collection: BadgeCollection) => {
@@ -1496,3 +1496,4 @@ function TeamManagementDropZone({id, type, children, className}: {id: string, ty
 }
     
 
+    

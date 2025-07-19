@@ -64,7 +64,7 @@ interface UserDataContextType {
   updateAppTab: (tabId: string, tabData: Partial<AppTab>) => Promise<void>;
   allBadges: Badge[];
   allBadgeCollections: BadgeCollection[];
-  addBadgeCollection: (owner: User, sourceCollection?: BadgeCollection) => void;
+  addBadgeCollection: (owner: User, sourceCollection?: BadgeCollection, contextTeam?: Team) => void;
   updateBadgeCollection: (collectionId: string, data: Partial<BadgeCollection>, teamId?: string) => void;
   deleteBadgeCollection: (collectionId: string) => void;
   addBadge: (collectionId: string, sourceBadge?: Badge) => void;
@@ -337,7 +337,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setAppSettings(current => ({ ...current, tabs: current.tabs.map(t => t.id === tabId ? { ...t, ...tabData } : t) }));
   }, []);
 
-  const addBadgeCollection = useCallback((owner: User, sourceCollection?: BadgeCollection) => {
+  const addBadgeCollection = useCallback((owner: User, sourceCollection?: BadgeCollection, contextTeam?: Team) => {
     const newCollectionId = crypto.randomUUID();
     let newBadges: Badge[] = [];
     let newCollection: BadgeCollection;
@@ -363,14 +363,21 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         setAllBadges(prev => [...prev, ...newBadges]);
     }
 
+    if (contextTeam) {
+        setTeams(currentTeams => currentTeams.map(t => {
+            if (t.id === contextTeam.id) {
+                return { ...t, badgeCollections: [...t.badgeCollections, newCollection] };
+            }
+            return t;
+        }));
+    }
+
 }, [allBadgeCollections.length, allBadges]);
 
 
   const updateBadgeCollection = useCallback((collectionId: string, data: Partial<BadgeCollection>, teamId?: string) => {
-    // Update the master list
     setAllBadgeCollections(current => current.map(c => (c.id === collectionId ? { ...c, ...data } : c)));
 
-    // If a team context is provided, update the local instance within that team
     if (teamId) {
         setTeams(currentTeams => currentTeams.map(team => {
             if (team.id === teamId) {
@@ -494,3 +501,5 @@ export function useUser() {
     const data = useUserData();
     return { ...session, ...data };
 }
+
+    
