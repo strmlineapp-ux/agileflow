@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useMemo, useState, useRef, useCallback, useLayoutEffect } from 'react';
@@ -162,6 +163,8 @@ const ProductionScheduleLocationRow = React.memo(({
     handleAssignCheck,
     handleEasyBookingClick,
     onEventClick,
+    users,
+    teams
 }: {
     day: Date;
     location: string;
@@ -178,8 +181,10 @@ const ProductionScheduleLocationRow = React.memo(({
     handleAssignCheck: (dayIso: string, location: string, userId: string | null) => void;
     handleEasyBookingClick: (e: React.MouseEvent<HTMLDivElement>, day: Date, location: string) => void;
     onEventClick: (event: Event) => void;
+    users: User[];
+    teams: Team[];
 }) => {
-    const { viewAsUser, users, teams } = useUser();
+    const { viewAsUser, allBadges } = useUser();
     
     const dayIso = day.toISOString();
     const isLocationCollapsed = collapsedLocations[dayIso]?.has(location);
@@ -267,7 +272,7 @@ const ProductionScheduleLocationRow = React.memo(({
                                             const user = users.find(u => u.userId === userId);
                                             if (!user) return null;
                                             const teamForEvent = teams.find(t => t.id === event.calendarId);
-                                            const roleInfo = teamForEvent?.allBadges.find(b => b.name === role);
+                                            const roleInfo = teamForEvent?.badgeCollections.flatMap(c => c.badgeIds).map(id => allBadges.find(b => b.id === id)).find(b => b?.name === role);
                                             const roleIcon = roleInfo?.icon;
                                             const roleColor = roleInfo?.color;
 
@@ -704,6 +709,8 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
                                                 handleAssignCheck={handleAssignCheck}
                                                 handleEasyBookingClick={handleEasyBookingClick}
                                                 onEventClick={onEventClick}
+                                                users={users}
+                                                teams={teams}
                                             />
                                         ))}
                                         {isDayToday && now && <div ref={el => nowMarkerRefs.current.set(dayIso, el)} className="absolute top-0 bottom-0 z-20 pointer-events-none" style={{ left: `${LOCATION_LABEL_WIDTH_PX + calculateCurrentTimePosition()}px` }}><div className="relative w-px h-full bg-primary"></div></div>}
