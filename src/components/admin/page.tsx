@@ -829,7 +829,6 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
             access: { users: [], teams: [] }
         };
         
-        // Ensure new pages are added before any pinned system pages at the end
         const firstPinnedIndex = appSettings.pages.findIndex(p => pinnedIds.has(p.id));
         const insertIndex = firstPinnedIndex !== -1 ? firstPinnedIndex : appSettings.pages.length;
 
@@ -883,16 +882,12 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
             const activeIsPinned = pinnedIds.has(active.id.toString());
             const overIsPinned = pinnedIds.has(over.id.toString());
             
-            // Prevent a non-pinned item from being dropped into the pinned section.
-            if (!activeIsPinned && overIsPinned) {
+            if (activeIsPinned !== overIsPinned) {
                 return;
             }
             
-            // Allow reordering only within the same group (pinned or unpinned).
-            if (activeIsPinned === overIsPinned) {
-                const reorderedPages = arrayMove(appSettings.pages, oldIndex, newIndex);
-                updateAppSettings({ pages: reorderedPages });
-            }
+            const reorderedPages = arrayMove(appSettings.pages, oldIndex, newIndex);
+            updateAppSettings({ pages: reorderedPages });
         }
     };
     
@@ -1078,7 +1073,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                                 <TooltipTrigger asChild>
                                     <PopoverTrigger asChild>
                                         <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-0 cursor-pointer" style={{ backgroundColor: tab.color }} />
-                                    </TooltipTrigger>
+                                    </PopoverTrigger>
                                 </TooltipTrigger>
                                 <TooltipContent><p>Change Color</p></TooltipContent>
                             </Tooltip>
