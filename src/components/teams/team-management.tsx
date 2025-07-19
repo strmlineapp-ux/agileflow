@@ -471,7 +471,7 @@ function TeamManagementDropZone({id, type, children, className}: {id: string, ty
     const { setNodeRef, isOver } = useDroppable({ id, data: { type } });
     
     return (
-        <div ref={setNodeRef} className={cn(className, isOver && "ring-1 ring-border ring-inset")}>
+        <div ref={setNodeRef} className={cn(className, isOver && "ring-1 ring-border ring-inset", "transition-all rounded-lg")}>
             {children}
         </div>
     )

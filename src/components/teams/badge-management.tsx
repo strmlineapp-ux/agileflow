@@ -672,8 +672,8 @@ function DroppableCollectionContent({ collection, children }: { collection: Badg
         <div 
             ref={setNodeRef}
             className={cn(
-                "min-h-[60px] rounded-md border-2 border-dashed border-transparent p-2",
-                isOver && "border-primary bg-primary/10",
+                "min-h-[60px] rounded-md p-2",
+                isOver && "ring-1 ring-border ring-inset",
                 collection.viewMode === 'assorted' && "flex flex-wrap gap-2 items-start",
                 collection.viewMode === 'list' && "flex flex-col gap-1",
                 collection.viewMode === 'detailed' && "flex flex-wrap -m-2"
