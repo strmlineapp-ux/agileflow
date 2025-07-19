@@ -127,7 +127,7 @@ This is the application's perfected, gold-standard pattern for managing a collec
     -   **`@dnd-kit` is the required library.** The older `react-beautiful-dnd` library was found to be incompatible with this type of responsive layout.
     -   `flex-grow-0` and `flex-shrink-0` **must** be used on draggable items. This prevents the remaining items in a row from expanding or shrinking, which causes the grid to reflow unstably when an item is being dragged.
 -   **Initiating a Drag**: To provide a clean interface, the drag action is initiated by clicking and dragging any non-interactive part of the card. The drag listener from `dnd-kit`'s `useSortable` hook is applied to the main card container.
--   **Expand/Collapse**: Cards are collapsed by default. To expand a card and view its details, the user must click a dedicated `expand_more` icon button, typically in the bottom-right corner. This provides a clear, unambiguous affordance and avoids conflicts with other click actions on the card.
+-   **Expand/Collapse**: Cards are collapsed by default. To expand a card and view its details, the user must click a dedicated `expand_more` icon button, positioned at `absolute -bottom-1 right-0`. This provides a clear, unambiguous affordance and avoids conflicts with other click actions on the card.
 -   **Preventing Interaction Conflicts**:
     -   To allow buttons, popovers, and other controls *inside* the draggable card to function correctly, they must stop the `pointerdown` event from propagating up to the card's drag listener. **This is a critical implementation detail and must be done by adding `onPointerDown={(e) => e.stopPropagation()}` to every interactive element within the card.**
     -   To prevent conflicts with keyboard interactions inside a card (like an **Inline Editor**), the `useSortable` hook for the draggable card **must** be temporarily disabled while the internal component is in an editing state. This is done by passing a `disabled: isEditing` flag to the hook, preventing `@dnd-kit`'s keyboard listeners (e.g., spacebar to lift) from firing while the user is typing.
@@ -310,8 +310,8 @@ This is the single source of truth for indicating user interaction state across 
     - **Appearance**: A circular badge with a `border-0`. It is used to trigger a color picker popover or display a status.
     - **Sizing**: `h-4 w-4`.
     - **Placement**:
-      - **Color Picker**: `absolute -bottom-1 -right-1`.
-      - **Ownership Status**: `absolute -top-1 -right-1`.
+      - **Color Picker**: `absolute -bottom-0 -right-3`.
+      - **Ownership Status**: `absolute -top-0 -right-3`.
     - **Icon Size (Ownership Status)**: The `GoogleSymbol` inside an ownership status badge should have its size set via `style={{fontSize: '16px'}}`.
 -   **Badges in Assorted View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
 

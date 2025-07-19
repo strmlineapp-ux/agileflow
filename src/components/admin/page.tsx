@@ -623,7 +623,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
-                                                <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-0 cursor-pointer" style={{ backgroundColor: page.color }} />
+                                                <button className="absolute -bottom-0 -right-3 h-4 w-4 rounded-full border-0 cursor-pointer" style={{ backgroundColor: page.color }} />
                                             </PopoverTrigger>
                                         </TooltipTrigger>
                                         <TooltipContent><p>Change Color</p></TooltipContent>
@@ -882,7 +882,7 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
             const activeIsPinned = pinnedIds.has(active.id.toString());
             const overIsPinned = pinnedIds.has(over.id.toString());
             
-            if (activeIsPinned !== overIsPinned) {
+            if (activeIsPinned || (overIsPinned && newIndex < oldIndex)) {
                 return;
             }
             
@@ -1003,7 +1003,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
     const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
           e.preventDefault();
-          nameInputRef.current?.blur();
+          handleSaveName();
         } else if (e.key === 'Escape') {
           setIsEditingName(false);
         }
@@ -1072,7 +1072,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <PopoverTrigger asChild>
-                                        <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-0 cursor-pointer" style={{ backgroundColor: tab.color }} />
+                                        <button className="absolute -bottom-0 -right-3 h-4 w-4 rounded-full border-0 cursor-pointer" style={{ backgroundColor: tab.color }} />
                                     </PopoverTrigger>
                                 </TooltipTrigger>
                                 <TooltipContent><p>Change Color</p></TooltipContent>
