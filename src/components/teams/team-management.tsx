@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
@@ -44,6 +43,7 @@ import { CardDescription } from '../ui/card';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { HexColorPicker, HexColorInput } from 'react-colorful';
 import { CompactSearchInput } from '@/components/common/compact-search-input';
+import { useRouter } from 'next/navigation';
 
 const predefinedColors = [
     '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
@@ -86,7 +86,7 @@ function DraggableUserCard({ user, onRemove, isTeamAdmin, onSetAdmin, canManage,
                     <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
                     <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
-                {isTeamAdmin && memberCount > 1 && (
+                {isTeamAdmin && (
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
@@ -255,7 +255,7 @@ function TeamCard({
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                                className="absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity z-10"
                                 onPointerDown={(e) => { e.stopPropagation(); onDelete(team); }}
                             >
                                 <GoogleSymbol name="cancel" className="text-lg" weight={100} />
@@ -506,6 +506,7 @@ function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
 
 export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: AppTab; page: AppPage; isSingleTabPage?: boolean }) {
     const { viewAsUser, users, teams, appSettings, addTeam, updateTeam, deleteTeam, reorderTeams, updateAppTab, updateUser } = useUser();
+    const router = useRouter();
     const { toast } = useToast();
 
     const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
@@ -517,6 +518,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
     const [searchTerm, setSearchTerm] = useState('');
     const [activeDragItem, setActiveDragItem] = useState<{type: string, data: any} | null>(null);
     const [editingTeamName, setEditingTeamName] = useState(false);
+    const sharedSearchInputRef = useRef<HTMLInputElement>(null);
     
     const pageTitle = page.isDynamic && teams.find(t => t.id === page.path.split('/')[2]) ? `${teams.find(t => t.id === page.path.split('/')[2])?.name} ${page.name}` : page.name;
     const tabTitle = appSettings.teamManagementLabel || tab.name;
@@ -530,6 +532,12 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
     useEffect(() => {
         if (isEditingTitle) titleInputRef.current?.focus();
     }, [isEditingTitle]);
+
+    useEffect(() => {
+        if (isSharedPanelOpen && sharedSearchInputRef.current) {
+            setTimeout(() => sharedSearchInputRef.current?.focus(), 100);
+        }
+    }, [isSharedPanelOpen]);
 
     const handleSaveTitle = () => {
         const newName = titleInputRef.current?.value.trim();
@@ -554,6 +562,8 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                 name: `${sourceTeam.name} (Copy)`,
                 owner,
                 isShared: false,
+                members: [],
+                teamAdmins: [],
             };
         } else {
              newTeamData = {
@@ -618,27 +628,30 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
 
     const handleRemoveUserFromTeam = useCallback((teamId: string, userId: string) => {
         const team = teams.find(t => t.id === teamId);
-        if (!team || !canManageTeam(team)) {
-             toast({ variant: 'destructive', title: 'Permission Denied', description: 'You cannot remove users from teams you do not have permission to manage.' });
+        if (!team) return;
+
+        if (!canManageTeam(team)) {
+             toast({ variant: 'destructive', title: 'Permission Denied', description: 'You cannot remove users from this team.' });
             return;
         }
         
         const updatedMembers = team.members.filter(id => id !== userId);
-        
-        if (updatedMembers.length === 0) {
-            setTeamToDelete(team);
-            return;
-        }
-
         const newTeamAdmins = (team.teamAdmins || []).filter(id => id !== userId);
         updateTeam(teamId, { members: updatedMembers, teamAdmins: newTeamAdmins });
         toast({ title: 'User Removed' });
-    }, [teams, updateTeam, toast, canManageTeam]);
+
+        if (viewAsUser.userId === userId) {
+            // Check if user will lose access to the current page. The page path for dynamic team pages is like /dashboard/teams/[teamId]
+            const currentPageId = page.path.split('/')[2];
+            if (teamId === currentPageId) {
+                router.push('/dashboard/notifications');
+            }
+        }
+    }, [teams, updateTeam, toast, canManageTeam, viewAsUser.userId, page.path, router]);
 
     const confirmDelete = () => {
         if (!teamToDelete) return;
-        deleteTeam(teamToDelete.id);
-        toast({ title: 'Success', description: `Team "${teamToDelete.name}" has been deleted.` });
+        deleteTeam(teamToDelete.id, router.push);
         setTeamToDelete(null);
     };
     
@@ -812,7 +825,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                             <CardHeader>
                                 <div className="flex items-center justify-between">
                                     <CardTitle className="font-headline font-thin text-xl">Shared Teams</CardTitle>
-                                    <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." />
+                                    <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." inputRef={sharedSearchInputRef} />
                                 </div>
                                 <CardDescription>Drag a team you own here to share it. Drag a team to your board to link it.</CardDescription>
                             </CardHeader>
@@ -856,7 +869,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                         <TeamCard
                             team={activeDragItem.data.team}
                             users={users}
-                            onUpdate={() => {}} onDelete={() => {}} onToggleShare={() => {}} onRemoveUser={() => {}} onAddUser={() => {}} onSetAdmin={() => {}}
+                            onUpdate={() => {}} onDelete={() => {}} onRemoveUser={() => {}} onAddUser={() => {}} onSetAdmin={() => {}}
                             isEditingName={false} setIsEditingName={() => {}} isDragging={true}
                         />
                     </div>
@@ -880,7 +893,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                          <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10 p-0" onClick={confirmDelete}>
+                                    <Button variant="ghost" className="text-destructive hover:bg-transparent p-0" onClick={confirmDelete}>
                                         <GoogleSymbol name="delete" className="text-4xl" weight={100} />
                                         <span className="sr-only">Delete Team</span>
                                     </Button>
