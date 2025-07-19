@@ -413,7 +413,7 @@ function TeamCard({
     );
 }
 
-function SortableTeamCard({team, ...props}: {team: Team, [key: string]: any}) {
+function SortableTeamCard({team, isSharedPanelOpen, ...props}: {team: Team, isSharedPanelOpen: boolean, [key: string]: any}) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: team.id,
         data: { type: 'team-card', team, isSharedPreview: props.isSharedPreview },
@@ -427,7 +427,7 @@ function SortableTeamCard({team, ...props}: {team: Team, [key: string]: any}) {
     return (
         <div ref={setNodeRef} style={style} className={cn(
             "p-3 basis-full md:basis-1/2 flex-grow-0 flex-shrink-0 transition-all duration-300",
-            props.isSharedPanelOpen ? "lg:w-full" : "lg:basis-1/3",
+            isSharedPanelOpen ? "lg:w-full" : "lg:basis-1/3",
             isDragging && "opacity-80 shadow-2xl z-50"
         )}>
             <TeamCard team={team} {...props} dragHandleProps={{...attributes, ...listeners}} />
@@ -840,6 +840,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                                                     onAddUser={handleAddUserToTeam}
                                                     onSetAdmin={handleSetAdmin}
                                                     isSharedPreview={true}
+                                                    isSharedPanelOpen={isSharedPanelOpen}
                                                 />
                                             ))}
                                             {sharedTeams.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">No other teams are currently shared.</p>}
