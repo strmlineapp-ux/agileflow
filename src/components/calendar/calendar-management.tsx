@@ -647,92 +647,92 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
 
   return (
     <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
-        <div className="flex gap-4 h-full">
-            <div className="flex-1 overflow-hidden">
-                <div className="flex flex-col gap-6 h-full">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-headline text-2xl font-thin tracking-tight">{title}</h3>
-                          <DuplicateZone id="duplicate-calendar-zone" onAdd={() => handleAddCalendar()} />
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <CompactSearchInput searchTerm={mainSearchTerm} setSearchTerm={setMainSearchTerm} placeholder="Search calendars..." />
-                             <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button variant="ghost" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)}>
-                                            <GoogleSymbol name="dynamic_feed" weight={100} />
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent><p>Show Shared Calendars</p></TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                        </div>
-                    </div>
-                    <div className="flex-1 min-h-0">
-                        <CalendarDropZone id="main-calendars-grid" type="calendar-grid" className="h-full">
-                         <ScrollArea className="h-full">
-                          <div className="flex flex-wrap content-start -m-2">
-                            <SortableContext items={calendarIds} strategy={rectSortingStrategy}>
-                                {displayedCalendars.map((calendar) => (
-                                    <SortableCalendarCard
-                                        key={calendar.id}
-                                        calendar={calendar}
-                                        onUpdate={handleUpdate}
-                                        onDelete={handleDelete}
-                                    />
-                                ))}
-                            </SortableContext>
-                          </div>
-                          </ScrollArea>
-                        </CalendarDropZone>
-                    </div>
-                </div>
+      <div className="flex gap-4 h-full">
+        <div className="flex-1 overflow-hidden">
+          <div className="flex flex-col gap-6 h-full">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <h3 className="font-headline text-2xl font-thin tracking-tight">{title}</h3>
+                <DuplicateZone id="duplicate-calendar-zone" onAdd={() => handleAddCalendar()} />
+              </div>
+              <div className="flex items-center gap-2">
+                <CompactSearchInput searchTerm={mainSearchTerm} setSearchTerm={setMainSearchTerm} placeholder="Search calendars..." autoFocus={true} tooltipText="Search Calendars" />
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)}>
+                        <GoogleSymbol name="dynamic_feed" weight={100} />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent><p>Show Shared Calendars</p></TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
             </div>
-            <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96" : "w-0")}>
-                <CalendarDropZone id="shared-calendars-panel" type="shared-calendar-panel" className={cn("h-full rounded-lg transition-all", isSharedPanelOpen ? "p-2" : "p-0")}>
-                    <Card className={cn("transition-opacity duration-300 h-full bg-transparent flex flex-col", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
-                        <CardHeader>
-                            <div className="flex items-center justify-between">
-                                <CardTitle className="font-headline font-thin text-xl">Shared Calendars</CardTitle>
-                                <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." inputRef={sharedSearchInputRef} autoFocus={isSharedPanelOpen} tooltipText="Search Shared Calendars" />
-                            </div>
-                            <UICardDescription>Drag a calendar to your board to link it.</UICardDescription>
-                        </CardHeader>
-                        <CardContent className="flex-1 p-2 overflow-hidden">
-                            <ScrollArea className="h-full">
-                                <SortableContext items={sharedCalendars.map(c => c.id)} strategy={verticalListSortingStrategy}>
-                                    <div className="space-y-2">
-                                        {sharedCalendars.map(calendar => (
-                                            <SortableCalendarCard 
-                                                key={calendar.id}
-                                                calendar={calendar}
-                                                onUpdate={handleUpdate}
-                                                onDelete={handleDelete}
-                                                isSharedPreview={true}
-                                            />
-                                        ))}
-                                    </div>
-                                </SortableContext>
-                            </ScrollArea>
-                        </CardContent>
-                    </Card>
-                </CalendarDropZone>
+            <div className="flex-1 min-h-0">
+              <CalendarDropZone id="main-calendars-grid" type="calendar-grid" className="h-full">
+                <ScrollArea className="h-full">
+                  <div className="flex flex-wrap content-start -m-2">
+                    <SortableContext items={calendarIds} strategy={rectSortingStrategy}>
+                      {displayedCalendars.map((calendar) => (
+                        <SortableCalendarCard
+                          key={calendar.id}
+                          calendar={calendar}
+                          onUpdate={handleUpdate}
+                          onDelete={handleDelete}
+                        />
+                      ))}
+                    </SortableContext>
+                  </div>
+                </ScrollArea>
+              </CalendarDropZone>
             </div>
+          </div>
         </div>
-      
-       <DragOverlay>
+        <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96" : "w-0")}>
+          <CalendarDropZone id="shared-calendars-panel" type="shared-calendar-panel" className={cn("h-full rounded-lg transition-all", isSharedPanelOpen ? "p-2" : "p-0")}>
+            <Card className={cn("transition-opacity duration-300 h-full bg-transparent flex flex-col", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="font-headline font-thin text-xl">Shared Calendars</CardTitle>
+                  <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." inputRef={sharedSearchInputRef} autoFocus={isSharedPanelOpen} tooltipText="Search Shared Calendars" />
+                </div>
+                <UICardDescription>Drag a calendar to your board to link it.</UICardDescription>
+              </CardHeader>
+              <CardContent className="flex-1 p-2 overflow-hidden">
+                <ScrollArea className="h-full">
+                  <SortableContext items={sharedCalendars.map(c => c.id)} strategy={verticalListSortingStrategy}>
+                    <div className="space-y-2">
+                      {sharedCalendars.map(calendar => (
+                        <SortableCalendarCard
+                          key={calendar.id}
+                          calendar={calendar}
+                          onUpdate={handleUpdate}
+                          onDelete={handleDelete}
+                          isSharedPreview={true}
+                        />
+                      ))}
+                    </div>
+                  </SortableContext>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          </CalendarDropZone>
+        </div>
+      </div>
+
+      <DragOverlay>
         {activeCalendar ? (
-            <div className="p-2 basis-full sm:basis-[calc(50%-1rem)] md:basis-[calc(33.333%-1rem)] lg:basis-[calc(25%-1rem)] xl:basis-[calc(20%-1rem)] 2xl:basis-[calc(16.666%-1rem)] flex-grow-0 flex-shrink-0">
-                <CalendarCard 
-                    calendar={activeCalendar} 
-                    onUpdate={()=>{}} 
-                    onDelete={()=>{}} 
-                    isSharedPreview={activeCalendar.owner.id !== viewAsUser.userId}
-                    isEditingName={false}
-                    setIsEditingName={() => {}}
-                />
-            </div>
+          <div className="p-2 basis-full sm:basis-[calc(50%-1rem)] md:basis-[calc(33.333%-1rem)] lg:basis-[calc(25%-1rem)] xl:basis-[calc(20%-1rem)] 2xl:basis-[calc(16.666%-1rem)] flex-grow-0 flex-shrink-0">
+            <CalendarCard
+              calendar={activeCalendar}
+              onUpdate={() => {}}
+              onDelete={() => {}}
+              isSharedPreview={activeCalendar.owner.id !== viewAsUser.userId}
+              isEditingName={false}
+              setIsEditingName={() => {}}
+            />
+          </div>
         ) : null}
       </DragOverlay>
     </DndContext>

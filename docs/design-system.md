@@ -44,7 +44,7 @@ This pattern provides a clean, minimal interface for search functionality, espec
   - Clicking the button reveals the input field.
   - **Crucially, the input must have a transparent background and no borders or box-shadow**, ensuring it blends seamlessly into the UI.
 - **Behavior:**
-  - **Automatic Focus**: If configured with `autoFocus`, the input gains focus as soon as its parent tab becomes visible. This is a one-time action per tab load.
+  - **Automatic Focus**: To trigger focus when a parent element (like a side panel) becomes visible, pass an `autoFocus={isPanelOpen}` prop to the component. The component's internal `useEffect` hook will then focus the input a single time when the panel opens.
   - **Manual Focus**: Clicking the search icon will always expand the input and focus it.
   - **Collapse on Blur**: The input always collapses back to its icon-only state when it loses focus (`onBlur`) and the field is empty.
 - **Application:** Used for filtering lists of icons, users, or other filterable content within popovers and management pages like the Admin screen.
@@ -203,14 +203,17 @@ This pattern is **deprecated**. All deletion confirmations now use the **Compact
 
 ---
 
-### 13. Responsive Header Controls
-This pattern describes how a group of controls in a page header can intelligently adapt to changes in the layout, such as the opening and closing of a side panel. It is the required header pattern for pages that use the **Draggable Card Management blueprint** and **Entity Sharing & Linking** patterns.
+### 13. Responsive Layout with Collapsible Panel
+This pattern describes how to create a two-column layout where one column (a side panel) can be expanded and collapsed without causing horizontal overflow or scrollbars on the main page. This is the required layout for pages that use the **Entity Sharing & Linking** pattern.
 
-- **Trigger**: Expanding or collapsing a panel that affects the main content area's width.
-- **Behavior**:
-  - **Grid Awareness**: The page's main content area (e.g., a card grid) dynamically adjusts the number of columns it displays to best fit the available space.
-  - **Control Repositioning**: Header controls are grouped together. This entire group intelligently repositions itself to stay aligned with the edge of the content grid it controls. For example, when a right-hand panel opens, the grid shrinks, and the control group moves left to remain aligned with the grid's new right edge.
-- **Application**: Used on the **Badge Management** and **Team Management** pages to keep the search and panel-toggle icons aligned with the content grid as the "Shared Items" panel is opened and closed.
+- **Structure**: The page should be contained within a main flex container (`<div className="flex h-full gap-4">`).
+- **Main Content Area**: The primary content area must be wrapped in a container that allows it to grow while managing its own overflow.
+  - The wrapper `div` should have `flex-1` (to grow) and `overflow-hidden` (to prevent its contents from causing a page-level scrollbar).
+  - The direct child of this wrapper should be a `div` with `h-full` and `overflow-y-auto` to allow the content inside to scroll vertically if needed.
+- **Collapsible Side Panel**:
+  - The panel `div` should have a fixed width when open (e.g., `w-96`) and `w-0` when closed.
+  - **Crucially, padding must also be conditional.** The panel should have padding (e.g., `p-2`) only when it is open. When closed, it must have `p-0` to ensure it occupies zero space.
+- **Application**: Used on the **Badge Management**, **Calendar Management**, and **Team Management** pages to ensure a smooth and clean layout when the "Shared Items" panel is toggled.
 
 ---
 
@@ -308,7 +311,7 @@ This is the single source of truth for indicating user interaction state across 
     - **Appearance**: A circular badge with a `border-0`. It is used to trigger a color picker popover or display a status.
     - **Sizing**: `h-4 w-4`.
     - **Placement**:
-      - **Color Picker**: `absolute -bottom-0 -right-3`.
+      - **Color Picker**: `absolute -bottom-1 -right-3`.
       - **Ownership Status**: `absolute -top-0 -right-3`.
     - **Icon Size (Ownership Status)**: The `GoogleSymbol` inside an ownership status badge should have its size set via `style={{fontSize: '16px'}}`.
 -   **Badges in Assorted View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
