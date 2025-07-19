@@ -65,7 +65,7 @@ interface UserDataContextType {
   allBadges: Badge[];
   allBadgeCollections: BadgeCollection[];
   addBadgeCollection: (owner: User, sourceCollection?: BadgeCollection) => void;
-  updateBadgeCollection: (collectionId: string, data: Partial<BadgeCollection>) => void;
+  updateBadgeCollection: (collectionId: string, data: Partial<BadgeCollection>, teamId?: string) => void;
   deleteBadgeCollection: (collectionId: string) => void;
   addBadge: (collectionId: string, sourceBadge?: Badge) => void;
   updateBadge: (badgeData: Partial<Badge>) => void;
@@ -327,7 +327,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setAppSettings(current => ({ ...current, tabs: current.tabs.map(t => t.id === tabId ? { ...t, ...tabData } : t) }));
   }, []);
 
-  const addBadgeCollection = useCallback((owner: User, sourceCollection?: BadgeCollection, contextTeam?: Team) => {
+  const addBadgeCollection = useCallback((owner: User, sourceCollection?: BadgeCollection) => {
     const newCollectionId = crypto.randomUUID();
     let newBadges: Badge[] = [];
     let newCollection: BadgeCollection;
@@ -484,3 +484,4 @@ export function useUser() {
     const data = useUserData();
     return { ...session, ...data };
 }
+
