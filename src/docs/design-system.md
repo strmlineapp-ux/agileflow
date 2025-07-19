@@ -308,7 +308,9 @@ This is the single source of truth for indicating user interaction state across 
     - **Appearance**: A circular badge with a `border-0`. It is used to trigger a color picker popover or display a status.
     - **Sizing**: `h-4 w-4`.
     - **Placement**:
-      - **Color Picker**: `absolute -bottom-0 -right-3`.
+      - **Color Picker**: `absolute -bottom-1 -right-3`.
       - **Ownership Status**: `absolute -top-0 -right-3`.
     - **Icon Size (Ownership Status)**: The `GoogleSymbol` inside an ownership status badge should have its size set via `style={{fontSize: '16px'}}`.
 -   **Badges in Assorted View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
+-   **Dashed Underlines**: Dashed underlines are **not permitted** in the application. Any underline should be solid and is typically handled by the default browser or component styles. This ensures a clean and consistent text presentation.
+

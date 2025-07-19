@@ -814,7 +814,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                     </TeamManagementDropZone>
                 </div>
                  <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96" : "w-0")}>
-                    <TeamManagementDropZone id="shared-teams-panel" type="team-card" className={cn("h-full rounded-lg", isSharedPanelOpen && "p-2")}>
+                    <TeamManagementDropZone id="shared-teams-panel" type="team-card" className={cn("h-full rounded-lg", isSharedPanelOpen ? "p-2" : "p-0")}>
                         <Card className={cn("transition-opacity duration-300 h-full bg-transparent flex flex-col", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
                             <CardHeader>
                                 <div className="flex items-center justify-between">

@@ -24,6 +24,7 @@ import { Label } from '../ui/label';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '../ui/select';
 import { getOwnershipContext } from '@/lib/permissions';
 import { HexColorPicker, HexColorInput } from 'react-colorful';
+import { CompactSearchInput } from '@/components/common/compact-search-input';
 
 import {
   DndContext,
@@ -1368,23 +1369,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                             )}
                         </div>
                         <div className="flex items-center gap-1">
-                            {!isSearching ? (
-                                <Button variant="ghost" size="icon" onClick={() => setIsSearching(true)} className="text-muted-foreground">
-                                    <GoogleSymbol name="search" />
-                                </Button>
-                            ) : (
-                                <div className="flex items-center gap-1 border-b">
-                                    <GoogleSymbol name="search" className="text-muted-foreground" />
-                                    <input
-                                        ref={searchInputRef}
-                                        placeholder="Search collections..."
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                        onBlur={() => { if (!searchTerm) setIsSearching(false); }}
-                                        className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
-                                    />
-                                </div>
-                            )}
+                            <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search collections..." autoFocus={false} />
                             {!isViewer && (
                                 <TooltipProvider>
                                     <Tooltip>
@@ -1444,12 +1429,9 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                 </div>
                 
                 {!isViewer && (
-                     <div className={cn(
-                        "transition-all duration-300",
-                        isSharedPanelOpen ? "w-96" : "w-0"
-                    )}>
+                     <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96" : "w-0")}>
                         <div 
-                            className={cn("h-full rounded-lg transition-all", isSharedPanelOpen && "p-2")}
+                            className={cn("h-full rounded-lg transition-all", isSharedPanelOpen ? "p-2" : "p-0")}
                         >
                             <Card className={cn("transition-opacity duration-300 h-full bg-transparent flex flex-col", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
                                 <CardHeader>

@@ -662,8 +662,9 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                         </TooltipProvider>
                     </div>
                 </div>
-                <div className="flex-1 min-h-0 flex flex-col">
-                    <CalendarDropZone id="main-calendars-grid" type="calendar-grid" className="flex-1 overflow-y-auto pt-2 -mt-2">
+                <div className="flex-1 min-h-0">
+                    <CalendarDropZone id="main-calendars-grid" type="calendar-grid" className="h-full">
+                     <ScrollArea className="h-full">
                       <div className="flex flex-wrap content-start -m-2">
                         <SortableContext items={calendarIds} strategy={rectSortingStrategy}>
                             {displayedCalendars.map((calendar) => (
@@ -676,11 +677,12 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                             ))}
                         </SortableContext>
                       </div>
+                      </ScrollArea>
                     </CalendarDropZone>
                 </div>
             </div>
             <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96" : "w-0")}>
-                <CalendarDropZone id="shared-calendars-panel" type="shared-calendar-panel" className={cn("h-full rounded-lg", isSharedPanelOpen && "p-2")}>
+                <CalendarDropZone id="shared-calendars-panel" type="shared-calendar-panel" className={cn("h-full rounded-lg", isSharedPanelOpen ? "p-2" : "p-0")}>
                     <Card className={cn("transition-opacity duration-300 h-full bg-transparent flex flex-col", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
                         <CardHeader>
                             <div className="flex items-center justify-between">
