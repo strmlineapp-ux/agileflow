@@ -228,9 +228,9 @@ function CalendarCard({
                                   <Tooltip>
                                       <TooltipTrigger asChild>
                                           <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={!canManage}>
-                                              <Button variant="ghost" className="h-10 w-12 flex items-center justify-center p-0">
-                                                  <GoogleSymbol name={calendar.icon} opticalSize={20} grade={-25} style={{ fontSize: '36px' }} weight={100} />
-                                              </Button>
+                                               <Button variant="ghost" className="h-10 w-12 flex items-center justify-center p-0">
+                                                    <GoogleSymbol name={calendar.icon} opticalSize={20} grade={-25} style={{ fontSize: '36px' }} weight={100} />
+                                                </Button>
                                           </PopoverTrigger>
                                       </TooltipTrigger>
                                       <TooltipContent><p>Change Icon</p></TooltipContent>
@@ -302,7 +302,7 @@ function CalendarCard({
                               </TooltipProvider>
                           )}
                       </div>
-                      <div className="flex-1 min-w-0" onPointerDown={(e) => { e.stopPropagation(); }}>
+                      <div className="flex-1 min-w-0" onPointerDown={(e) => { if(canManage) e.stopPropagation(); }}>
                       {isEditingName && canManage ? (
                            <Input
                               ref={nameInputRef}
@@ -361,7 +361,7 @@ function CalendarCard({
               {isExpanded && (
                   <CardContent className="p-2 pt-0 mt-2" onPointerDown={(e) => e.stopPropagation()}>
                     <div className="space-y-1">
-                        {isEditingDefaultTitle ? (
+                       {isEditingDefaultTitle ? (
                           <Input
                             ref={defaultTitleInputRef}
                             defaultValue={calendar.defaultEventTitle || ''}

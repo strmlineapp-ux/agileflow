@@ -52,20 +52,18 @@ This pattern provides a clean, minimal interface for search functionality, espec
 ---
 
 ### 4. Text-based Inputs
-This pattern transforms standard form inputs into minimalist, text-like elements, creating a cleaner and more compact interface. It is primarily used for authentication forms.
+This pattern transforms standard form inputs into minimalist, text-like elements, creating a cleaner and more compact interface. It is primarily used for authentication forms and simple dialogs.
 
 -   **Appearance**:
-    -   Initially, the input appears as plain text (a placeholder, like "Email" or "Password") next to an icon. It has no visible border or background.
-    -   It uses a muted color to indicate it's an interactive, but unfocused, element.
+    -   Initially, the input may appear as plain text (a placeholder, like "Email" or "Password") next to an icon. It has no visible border or background. It uses a muted color to indicate it's interactive but unfocused.
+    -   In other contexts (like a dialog), it can be a simple input field with **no border or box shadow**, using only a `focus-visible:ring-0` style to remain unobtrusive.
 -   **Interaction**:
-    -   Clicking on the text or icon transforms the element into a live input field.
-    -   The icon remains visible, and the placeholder text is replaced by the user's cursor.
+    -   Clicking on the text or icon transforms the element into a live input field with the user's cursor.
     -   The input field itself remains borderless and transparent to maintain the clean aesthetic.
 -   **Behavior**:
     -   Standard input behavior applies once focused.
-    -   Pressing 'Enter' or 'Tab' in one field (e.g., Email) should seamlessly transition focus to the next logical field (e.g., Password) without requiring an extra click.
-    -   Losing focus (`onBlur`) without entering any text will revert the element to its initial placeholder state.
--   **Application**: Used for the login and sign-up forms to create a more modern and less cluttered user experience.
+    -   Losing focus (`onBlur`) without entering any text may revert the element to its initial placeholder state.
+-   **Application**: Used for login/sign-up forms and for simple, single-field dialogs like linking a Google Calendar.
 
 ---
 
@@ -83,11 +81,16 @@ This pattern replaces large, card-style "Add New" buttons with a more compact an
 This is the consistent reference pattern for allowing a user to change both an icon and its color.
 
 - **Trigger:** A single, interactive unit composed of a primary icon button and a smaller color swatch badge overlaid on its corner.
-- **Icon Sizing**: The trigger button's icon should be large and prominent, specifically using `text-5xl` with `weight={100}` inside a `h-14 w-14` button.
+- **Icon Sizing**: The trigger button's icon should be large and prominent, specifically using a `h-10 w-12` button. The `GoogleSymbol` inside should have its `style={{fontSize: '36px'}}`, `opticalSize={20}`, and `grade={-25}` to create a "large but thin" aesthetic.
 - **Interaction:**
-  - Clicking the main part of the button opens an icon picker popover. This popover uses the **Compact Search Input** pattern for filtering. The icons inside this picker are rendered at `text-4xl` with `weight={100}` inside `h-8 w-8` buttons for clarity and ease of selection.
-  - Clicking the color swatch badge opens a color picker popover.
-- **Application:** Used for editing team icons/colors, and page icons/colors.
+  - **Icon Picker**: Clicking the main part of the button opens an icon picker popover. This popover uses the **Compact Search Input** pattern for filtering. The icons inside this picker are rendered at `text-4xl` with `weight={100}` inside `h-8 w-8` buttons for clarity and ease of selection.
+  - **Color Picker**: Clicking the color swatch badge opens the standard color picker popover.
+- **Color Picker UI**: The popover must contain three elements for a comprehensive user experience:
+    1.  A color wheel and saturation box using the `react-colorful` library's `<HexColorPicker />`.
+    2.  A text input for the HEX color code using `<HexColorInput />`.
+    3.  A grid of predefined color swatches for quick selection.
+    A final "Set Color" button applies the chosen color.
+- **Application:** This is the required pattern for editing the icon and color of any major entity, such as Pages, Calendars, Teams, and Badge Collections.
 
 ---
 
@@ -122,7 +125,7 @@ This is the application's perfected, gold-standard pattern for managing a collec
     -   **`@dnd-kit` is the required library.** The older `react-beautiful-dnd` library was found to be incompatible with this type of responsive layout.
     -   `flex-grow-0` and `flex-shrink-0` **must** be used on draggable items. This prevents the remaining items in a row from expanding or shrinking, which causes the grid to reflow unstably when an item is being dragged.
 -   **Initiating a Drag**: To provide a clean interface, the drag action is initiated by clicking and dragging any non-interactive part of the card. The drag listener from `dnd-kit`'s `useSortable` hook is applied to the main card container.
--   **Expand/Collapse**: Cards are collapsed by default. To expand a card and view its details, the user must click a dedicated `expand_more` icon button, typically in the bottom-right corner. This provides a clear, unambiguous affordance and avoids conflicts with other click actions on the card.
+-   **Expand/Collapse**: Cards are collapsed by default. To expand a card and view its details, the user must click a dedicated `expand_more` icon button, positioned at `absolute -bottom-1 right-0`. This provides a clear, unambiguous affordance and avoids conflicts with other click actions on the card.
 -   **Preventing Interaction Conflicts**:
     -   To allow buttons, popovers, and other controls *inside* the draggable card to function correctly, they must stop the `pointerdown` event from propagating up to the card's drag listener. **This is a critical implementation detail and must be done by adding `onPointerDown={(e) => e.stopPropagation()}` to every interactive element within the card.**
     -   To prevent conflicts with keyboard interactions inside a card (like an **Inline Editor**), the `useSortable` hook for the draggable card **must** be temporarily disabled while the internal component is in an editing state. This is done by passing a `disabled: isEditing` flag to the hook, preventing `@dnd-kit`'s keyboard listeners (e.g., spacebar to lift) from firing while the user is typing.
@@ -132,10 +135,10 @@ This is the application's perfected, gold-standard pattern for managing a collec
 -   **Unique Draggable IDs**: It is critical that every `Draggable` component has a globally unique `draggableId`. If the same item (e.g., a user) can appear in multiple lists, you must create a unique ID for each instance. A common pattern is to combine the list's ID with the item's ID (e.g., `draggableId={'${list.id}-${item.id}'}`). This prevents the drag-and-drop library from trying to move all instances of the item simultaneously.
 -   **Draggable & Pinned States**:
     -   **Draggable Cards**: Most cards can be freely reordered within the grid. The `useSortable` hook allows this.
-    -   **Pinned Cards**: Certain cards are designated as "pinned" and cannot be dragged. This is achieved by disabling the `useSortable` hook for those specific items (`disabled: true`). They act as fixed anchors in the layout.
+    -   **Pinned Cards**: Certain core system cards (e.g., "Admin", "Settings") are designated as "pinned" and cannot be dragged. This is achieved by disabling the `useSortable` hook for those specific items (`disabled: true`). They act as fixed anchors in the layout.
 -   **Reordering with Guardrails**:
     -   **Interaction**: Users can drag any non-pinned card and drop it between other non-pinned cards to change its order. The grid reflows smoothly to show the drop position.
-    -   **Guardrail Logic**: The `onDragEnd` handler must contain logic to prevent reordering pinned items. If a user attempts to drop an item into a position occupied by a pinned item, the operation should be cancelled or reverted.
+    -   **Guardrail Logic**: The `onDragEnd` handler must contain logic to prevent reordering pinned items. A non-pinned item cannot be dropped into a position occupied by or between pinned items. This ensures the core page order is always maintained.
 -   **Drop Zone Highlighting**: Drop zones provide visual feedback when an item is dragged over them. To maintain a clean UI, highlights primarily use rings without background fills.
     -   **Standard & Duplication Zones (Reordering, Moving, Duplicating):** The drop area is highlighted with a `1px` inset, **colorless** ring using the standard border color (`ring-1 ring-border ring-inset`). This is the universal style for all non-destructive drop actions.
     -   **Destructive Zones (Deleting):** The drop area is highlighted with a `1px` ring in the destructive theme color (`ring-1 ring-destructive`).
@@ -143,9 +146,10 @@ This is the application's perfected, gold-standard pattern for managing a collec
     - **Item-level**: To maintain a clean UI, action icons like "Remove User" or "Delete Badge" must appear only when hovering over their specific context. This is achieved by adding a `group` class to the *individual item's container*. The icon button inside is then styled with `opacity-0 group-hover:opacity-100`.
     - **Delete Icon**: The standard icon for deleting an item (like a Page or Calendar) is a circular `cancel` icon that appears on card hover. To create this affordance in the corner of a card, the button can be positioned absolutely (e.g., `-top-2 -right-2`).
     - **Card-level**: Deleting an entire card (like a Team or Collection) is a high-impact action. To prevent accidental clicks, this functionality should be placed within a `<DropdownMenu>` in the card's header, not triggered by a direct hover icon.
--   **Drag-to-Duplicate**:
+-   **Drag-to-Duplicate & Create**:
     -   **Interaction**: A designated "Add New" icon (`<Button>`) acts as a drop zone, implemented using the `useDroppable` hook from `dnd-kit`. While a card is being dragged, this zone becomes highlighted to indicate it can accept a drop.
-    -   **Behavior**: Dropping any card (pinned or not, from the main board or the shared panel) creates a deep, independent copy of the original. The new card is given a unique ID, a modified name (e.g., with `(Copy)`), and a unique URL path. It is placed immediately after the original in the list. Its ownership is assigned to the current user's context.
+    -   **Behavior (Duplicate)**: Dropping any card (pinned or not, from the main board or the shared panel) creates a deep, independent copy of the original. The new card is given a unique ID, a modified name (e.g., with `(Copy)`), and a unique URL path. It is placed immediately after the original in the list. Its ownership is assigned to the current user's context.
+    -   **Behavior (Create)**: Clicking the "Add New" button will create a fresh, default item. The item is intelligently placed *before* any pinned items, preserving the integrity of the core page structure.
     -   **Smart Unlinking**: If the duplicated card was a *linked* item (e.g., a shared calendar from another user), the original linked item is automatically removed from the user's board after the copy is created. This provides a clean "copy and replace" workflow.
 -   **Drag-to-Assign**: This pattern allows sub-items (like **Users** or **Badges**) to be moved between different parent cards.
     - **Interaction**: A user can drag an item (e.g., a User) from one card's list.
@@ -216,8 +220,8 @@ This pattern is a specialized, ultra-compact version of the standard `<Badge>` c
 - **Appearance**: A very thin, pill-shaped badge with minimal padding. It contains a small icon and a short text label.
 - **Sizing**:
     - The pill has a reduced height and horizontal padding (`py-0 px-1`).
-    - The icon inside is small (e.g., `text-[9px]`).
-    - The text label is also small (e.g., `text-[10px]`).
+    - The icon inside is small, with its size set via `style={{ fontSize: '28px' }}`.
+    - The text label is small (e.g., `text-[10px]`).
 - **Interaction**: A small, circular delete button appears on hover, allowing the user to remove the badge.
 - **Application**: Used in the "assorted" view of **Badge Collections** to display many badges in a compact, scannable format.
 
@@ -241,6 +245,7 @@ This pattern provides a dense, icon-driven interface for managing a series of us
     - **Tooltip on Hover**: Hovering over any icon button **must** display a `<Tooltip>` that clearly describes the setting and its current value (e.g., "Theme: Dark" or "Easy Booking: On"). This is critical for usability as the icons alone do not convey the current state.
     - **Popover on Click**: Clicking an icon button opens a compact `<Popover>` containing the options for that setting.
     - **Instant Application**: Selecting an option within the popover immediately applies the change and closes the popover. There is no separate "Save" button.
+    - **Custom Color Picker**: The palette icon opens the standard color picker popover, as defined in the **Icon & Color Editing Flow** pattern. Selecting a predefined swatch or clicking "Set Color" with a custom color applies the change and closes the popover.
 - **Application**: Used on the **Account Settings** page to manage the current user's theme, primary color, default calendar view, time format, and other boolean preferences.
 
 ## Visual & Theming Elements
@@ -253,8 +258,8 @@ This pattern provides a dense, icon-driven interface for managing a series of us
 ### Icons & Hover Effects
 - **Icon Set**: We exclusively use **Google Material Symbols** via the `<GoogleSymbol />` component. This ensures a consistent visual language. The font library is a variable font, which means we can adjust its properties.
 - **Icon Sizing & Weight**:
-  - A `weight={100}` is used for **all icons** to maintain a light, clean aesthetic.
-  - Icons inside pickers (like the icon picker) are `text-4xl` inside `h-8 w-8` buttons for clarity and ease of selection.
+  - A `weight={100}` and `grade={-25}` is used for **all icons** to maintain a light, clean aesthetic.
+  - Icons inside pickers (like the icon picker) are `text-4xl` with `weight={100}` inside `h-8 w-8` buttons for clarity and ease of selection.
   - Large, circular 'Add New' buttons use `text-4xl` for prominence.
 - **Filled Icons**: To use the filled style of an icon, pass the `filled` prop to the component: `<GoogleSymbol name="star" filled />`. This works with any of the three main styles.
 - **Hover Behavior**: The color of icons on hover is typically determined by their parent element. For example, an icon inside a `<Button variant="ghost">` will change to the primary theme color on hover because the button's text color changes, and the icon inherits that color. This creates a clean and predictable interaction.
@@ -274,7 +279,7 @@ The application supports two distinct color themes, `light` and `dark`, which ca
     -   **Primary Color**: A vibrant, energetic orange (`#D8620E` or `hsl(25 88% 45%)`) used for key actions.
     -   **Accent Color**: A warm, golden yellow (`hsl(43 55% 71%)`) used in button hover gradients.
 
-- **Custom Primary Color**: Users can select a custom primary color using a color picker popover, which is triggered by a ghost-style palette icon button. This custom color overrides the theme's default primary color.
+- **Custom Primary Color**: Users can select a custom primary color using a color picker popover, as defined in the **Icon & Color Editing Flow** pattern. This custom color overrides the theme's default primary color.
 - **Primary Button Gradient**: Primary buttons have a special gradient effect on hover, which is unique to each theme. This provides a subtle but polished visual feedback for key actions.
 - **Text-based Button Hover**: For text-based buttons (like those on the login page), the hover and focus state is indicated *only* by the text color changing to the primary theme color. No background color is applied.
 
@@ -300,8 +305,10 @@ This is the single source of truth for indicating user interaction state across 
 
 - **Lunch Break Pattern**: A subtle diagonal line pattern is used in calendar views to visually block out the typical lunch period (12:00 - 14:30). This serves as a non-intrusive reminder to avoid scheduling meetings during that time.
 - **Icon as Badge**: An icon displayed as a small, circular overlay on another element (e.g., an Avatar or another icon) to provide secondary information.
-    - **Appearance**: A circular badge with a `border-2` of the parent element's background color (e.g., `border-background`) to create a "punched out" effect. The icon inside should be sized proportionally.
-    - **Sizing**: The standard size for these badges (e.g., color-pickers, ownership status icons) is `h-4 w-4` (`16x16px`). The `GoogleSymbol` inside should be sized to fit, for example using `style={{fontSize: '10px'}}`.
-    - **Placement**: This is context-dependent. Color-pickers are typically placed on the bottom-right corner of their parent icon. Ownership status icons are typically placed on the top-left corner to create visual balance.
+    - **Appearance**: A circular badge with a `border-0`. It is used to trigger a color picker popover or display a status.
+    - **Sizing**: `h-4 w-4`.
+    - **Placement**:
+      - **Color Picker**: `absolute -bottom-0 -right-3`.
+      - **Ownership Status**: `absolute -top-0 -right-3`.
+    - **Icon Size (Ownership Status)**: The `GoogleSymbol` inside an ownership status badge should have its size set via `style={{fontSize: '16px'}}`.
 -   **Badges in Assorted View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
-
