@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -180,7 +181,7 @@ function SortableBadgeItem({ badge, ...props }: { badge: Badge, [key: string]: a
 }
 
 
-function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collectionId, teamId, isSharedPreview = false, isCollectionOwned = false, isViewer = false, isDragging }: { badge: Badge, viewMode: BadgeCollection['viewMode'], onUpdateBadge: (badgeData: Partial<Badge>) => void, onDelete: () => void, collectionId: string, teamId: string, isSharedPreview?: boolean, isCollectionOwned: boolean, isViewer?: boolean, isDragging?: boolean }) {
+function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collectionId, teamId, isSharedPreview = false, isViewer = false, isDragging }: { badge: Badge, viewMode: BadgeCollection['viewMode'], onUpdateBadge: (badgeData: Partial<Badge>) => void, onDelete: () => void, collectionId: string, teamId: string, isSharedPreview?: boolean, isViewer?: boolean, isDragging?: boolean }) {
     const { toast } = useUser();
     const { teams, users, viewAsUser, allBadges } = useUser();
     const [isEditingName, setIsEditingName] = useState(false);
@@ -672,7 +673,7 @@ function DroppableCollectionContent({ collection, children }: { collection: Badg
         <div 
             ref={setNodeRef}
             className={cn(
-                "min-h-[60px] rounded-md p-2 transition-all border-2 border-dashed border-transparent",
+                "min-h-[60px] rounded-md p-2 transition-all",
                 isOver && "ring-1 ring-border ring-inset",
                 collection.viewMode === 'assorted' && "flex flex-wrap gap-2 items-start",
                 collection.viewMode === 'list' && "flex flex-col gap-1",
@@ -964,7 +965,6 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                                     collectionId={collection.id}
                                     teamId={contextTeam?.id || ''}
                                     isSharedPreview={isSharedPreview}
-                                    isCollectionOwned={isOwned}
                                     isViewer={isViewer}
                                     collection={collection}
                                 />
@@ -1162,8 +1162,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     }, [allBadgeCollections, collectionsToDisplay, sharedSearchTerm]);
 
     const handleAddCollection = (sourceCollection?: BadgeCollection) => {
-      const owner = getOwnershipContext(viewAsUser);
-      addBadgeCollection(owner, sourceCollection);
+      addBadgeCollection(viewAsUser, sourceCollection);
     };
     
     const handleDeleteCollection = (collection: BadgeCollection) => {
@@ -1188,7 +1187,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
 
     const confirmDeleteCollection = () => {
         if (!collectionToDelete) return;
-        deleteBadgeCollection(collectionToDelete.id, contextTeam);
+        deleteBadgeCollection(collectionToDelete.id);
         toast({ title: 'Collection Deleted', description: `"${collectionToDelete.name}" and all its owned badges have been deleted.`});
         setCollectionToDelete(null);
     };

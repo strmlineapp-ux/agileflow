@@ -192,8 +192,8 @@ The `Team` entity is a functional unit that groups users together for collaborat
 | `teamAdmins?: string[]` | A subset of `members` who have administrative privileges for this team (e.g., can add/remove members). |
 | `teamAdminsLabel?: string` | A custom label for the Team Admins list on the Team Members tab. |
 | `membersLabel?: string` | A custom label for the Members list on the Team Members tab. |
-| `allBadges: Badge[]` | The single source of truth for all `Badge` objects **owned** by this team. |
-| `badgeCollections: BadgeCollection[]` | An array of `BadgeCollection` objects. This includes collections *owned* by the team, and *links* to collections owned by other teams. |
+| `allBadges: Badge[]` | A denormalized list of all badges *used by* this team, from both its owned and linked collections. |
+| `badgeCollections: BadgeCollection[]` | A list of `BadgeCollection` objects *used by* this team. This does not imply ownership. |
 | `userBadgesLabel?: string` | A custom label for the "Team Badges" section on the Team Members tab. |
 | `linkedCollectionIds?: string[]` | An array of `collectionId`s for shared Badge Collections that this team has chosen to use. |
 | `activeBadgeCollections?: string[]` | A subset of `badgeCollections` and `linkedCollectionIds` that are currently active for this team. |
@@ -206,7 +206,7 @@ The `Team` entity is a functional unit that groups users together for collaborat
 
 
 ### BadgeCollection Entity
-A sub-entity of `Team`, this groups related Badges together. It can be owned by the team or shared with others.
+A sub-entity of `Team`, this groups related Badges together. It is always owned by a `User`, but can be linked to and used by multiple teams.
 
 | Data Point | Description |
 | :--- | :--- |
@@ -216,14 +216,14 @@ A sub-entity of `Team`, this groups related Badges together. It can be owned by 
 | `name: string` | The name of the collection (e.g., "Skills"). |
 | `icon: string` | The Google Symbol name for the collection's icon. |
 | `color: string` | The hex color for the collection's icon. |
-| `badgeIds: string[]` | An array of `badgeId`s belonging to this collection. This can include badges owned by this team or linked from other shared collections. |
+| `badgeIds: string[]` | An array of `badgeId`s belonging to this collection. |
 | `applications?: BadgeApplication[]` | Defines where badges from this collection can be applied (e.g., 'Team Members', 'Events'). For linked collections, this is a local override; changing it does not affect the original shared collection. |
 | `viewMode: 'assorted' \| 'detailed' \| 'list'` | **Internal.** A UI preference for how to display the badges within this collection. |
 | `description?: string` | An optional description for the collection. |
 
 
 ### Badge Entity
-This represents a specific, functional role or skill. The single source of truth for a badge is stored in the `allBadges` array of its owner's `Team` object.
+This represents a specific, functional role or skill. The single source of truth for a badge is the instance owned by its parent `BadgeCollection`.
 
 | Data Point | Description |
 | :--- | :--- |
@@ -233,3 +233,4 @@ This represents a specific, functional role or skill. The single source of truth
 | `icon: string` | The Google Symbol name for the badge's icon. |
 | `color: string` | The hex color code for the badge's icon and outline. |
 | `description?: string` | An optional description shown in tooltips. |
+

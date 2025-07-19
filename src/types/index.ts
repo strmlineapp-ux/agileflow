@@ -112,8 +112,8 @@ export interface Team {
   teamAdminsLabel?: string;
   membersLabel?: string;
   locationCheckManagers: string[]; // array of userIds who can manage check locations
-  allBadges: Badge[];
-  badgeCollections: BadgeCollection[];
+  allBadges: Badge[]; // A denormalized list of all badges *used by* this team, from both its owned and linked collections.
+  badgeCollections: BadgeCollection[]; // A list of BadgeCollection objects *used by* this team. Does not imply ownership.
   userBadgesLabel?: string;
   pinnedLocations?: string[]; // array of location names
   checkLocations?: string[]; // subset of pinnedLocations designated for daily checks
