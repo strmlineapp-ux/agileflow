@@ -44,7 +44,7 @@ This pattern provides a clean, minimal interface for search functionality, espec
   - Clicking the button reveals the input field.
   - **Crucially, the input must have a transparent background and no borders or box-shadow**, ensuring it blends seamlessly into the UI.
 - **Behavior:**
-  - **Automatic Focus**: If configured with `autoFocus`, the input gains focus as soon as its parent tab becomes visible. This is a one-time action per tab load.
+  - **Automatic Focus**: To trigger focus when a parent element (like a side panel) becomes visible, pass an `autoFocus={isPanelOpen}` prop to the component. It will then automatically focus the search input once, when the panel opens.
   - **Manual Focus**: Clicking the search icon will always expand the input and focus it.
   - **Collapse on Blur**: The input always collapses back to its icon-only state when it loses focus (`onBlur`) and the field is empty.
 - **Application:** Used for filtering lists of icons, users, or other filterable content within popovers and management pages like the Admin screen.
@@ -254,7 +254,6 @@ This pattern provides a dense, icon-driven interface for managing a series of us
 - **Font**: The application exclusively uses the **Roboto** font family for a clean and consistent look.
 - **Headline Font**: All major titles (pages, tabs, prominent cards) use the `font-headline` utility class, which is configured to use a `font-thin` weight (`font-weight: 100`).
 - **Body Font**: All standard body text, labels, and buttons now use a `font-thin` weight.
-- **Dashed Underlines**: **Not Allowed.** The application's clean aesthetic avoids the use of dashed underlines on text. Elements that need to indicate interactivity should use other established patterns, such as a change in text color on hover.
 
 ### Icons & Hover Effects
 - **Icon Set**: We exclusively use **Google Material Symbols** via the `<GoogleSymbol />` component. This ensures a consistent visual language. The font library is a variable font, which means we can adjust its properties.

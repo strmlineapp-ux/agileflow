@@ -753,7 +753,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
 
     return (
         <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
-            <div className="flex gap-4">
+            <div className="flex gap-4 h-full">
                  <div className="flex-1 transition-all duration-300 flex flex-col gap-6">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
@@ -813,13 +813,13 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                          </SortableContext>
                     </TeamManagementDropZone>
                 </div>
-                 <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96 p-2" : "w-0")}>
-                    <TeamManagementDropZone id="shared-teams-panel" type="team-card" className="h-full rounded-lg">
+                 <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96" : "w-0")}>
+                    <TeamManagementDropZone id="shared-teams-panel" type="team-card" className={cn("h-full rounded-lg", isSharedPanelOpen && "p-2")}>
                         <Card className={cn("transition-opacity duration-300 h-full bg-transparent flex flex-col", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
                             <CardHeader>
                                 <div className="flex items-center justify-between">
                                     <CardTitle className="font-headline font-thin text-xl">Shared Teams</CardTitle>
-                                    <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." tooltipText="Search Shared Teams" autoFocus={isSharedPanelOpen} />
+                                    <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." autoFocus={isSharedPanelOpen} tooltipText="Search Shared Teams"/>
                                 </div>
                                 <CardDescription>Drag a team you own here to share it. Drag a team to your board to link it.</CardDescription>
                             </CardHeader>

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -1445,25 +1446,16 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                 {!isViewer && (
                      <div className={cn(
                         "transition-all duration-300",
-                        isSharedPanelOpen ? "w-96 p-2" : "w-0"
+                        isSharedPanelOpen ? "w-96" : "w-0"
                     )}>
                         <div 
-                            className={cn("h-full rounded-lg transition-all")}
+                            className={cn("h-full rounded-lg transition-all", isSharedPanelOpen && "p-2")}
                         >
                             <Card className={cn("transition-opacity duration-300 h-full bg-transparent flex flex-col", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
                                 <CardHeader>
                                     <div className="flex items-center justify-between">
                                         <CardTitle className="font-headline font-thin text-xl">Shared Collections</CardTitle>
-                                        <div className="flex items-center gap-1">
-                                            <GoogleSymbol name="search" className="text-muted-foreground text-lg" />
-                                            <input
-                                                ref={sharedSearchInputRef}
-                                                placeholder="Search shared..."
-                                                value={sharedSearchTerm}
-                                                onChange={(e) => setSharedSearchTerm(e.target.value)}
-                                                className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
-                                            />
-                                        </div>
+                                        <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." autoFocus={isSharedPanelOpen} tooltipText="Search Shared Collections" />
                                     </div>
                                     <CardDescription>Drag a collection to link it to your team.</CardDescription>
                                 </CardHeader>
@@ -1537,5 +1529,3 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         </DndContext>
     );
 }
-
-    

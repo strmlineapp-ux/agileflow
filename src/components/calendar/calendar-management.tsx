@@ -680,12 +680,12 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                 </div>
             </div>
             <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96" : "w-0")}>
-                <CalendarDropZone id="shared-calendars-panel" type="shared-calendar-panel" className="h-full rounded-lg p-2">
+                <CalendarDropZone id="shared-calendars-panel" type="shared-calendar-panel" className={cn("h-full rounded-lg", isSharedPanelOpen && "p-2")}>
                     <Card className={cn("transition-opacity duration-300 h-full bg-transparent flex flex-col", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
                         <CardHeader>
                             <div className="flex items-center justify-between">
                                 <CardTitle className="font-headline font-thin text-xl">Shared Calendars</CardTitle>
-                                <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." autoFocus={isSharedPanelOpen} />
+                                <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." autoFocus={isSharedPanelOpen} tooltipText="Search Shared Calendars" />
                             </div>
                             <UICardDescription>Drag a calendar to your board to link it.</UICardDescription>
                         </CardHeader>
