@@ -2,8 +2,8 @@
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
-import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type BadgeCollectionOwner, type BadgeCollection } from '@/types';
-import { mockUsers as initialUsers, mockCalendars as initialCalendars, mockEvents as initialEvents, mockLocations as initialLocations, mockTeams, mockAppSettings } from '@/lib/mock-data';
+import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type BadgeCollection, type BadgeCollectionOwner } from '@/types';
+import { mockUsers as initialUsers, mockCalendars as initialCalendars, mockEvents as initialEvents, mockLocations as initialLocations, mockTeams, mockAppSettings, videoProdBadges, liveEventsBadges } from '@/lib/mock-data';
 import { GoogleAuthProvider, getAuth } from 'firebase/auth';
 import { getFirestore } from "firebase/firestore";
 import { useToast } from '@/hooks/use-toast';
@@ -128,23 +128,20 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     return Array.from(collectionsMap.values());
   });
 
-  const [allBadges, setAllBadges] = useState<Badge[]>(() => {
-    const badgesMap = new Map<string, Badge>();
-    allBadgeCollections.forEach(collection => {
-        collection.badgeIds.forEach(badgeId => {
-            // This assumes a flat list of all possible badges exists somewhere to be looked up.
-            // For mock data, we are pre-populating it from team badge collections.
-            // In a real app, you might fetch all badges from a central 'badges' collection in Firestore.
+    const [allBadges, setAllBadges] = useState<Badge[]>(() => {
+        const badgesMap = new Map<string, Badge>();
+        const allBadgeSources = [globalBadges, videoProdBadges, liveEventsBadges];
+        
+        allBadgeSources.forEach(source => {
+            source.forEach(badge => {
+                if (!badgesMap.has(badge.id)) {
+                    badgesMap.set(badge.id, badge);
+                }
+            });
         });
+        
+        return Array.from(badgesMap.values());
     });
-    // For now, let's just combine all badges from all collections
-    const allBadgesFromCollections = allBadgeCollections.flatMap(c => {
-        // This part needs a source for badge objects. Let's assume allBadges are defined somewhere, maybe in mock data too.
-        // This is a simplification.
-        return [];
-    });
-    return allBadgesFromCollections;
-});
 
   const realUser = useMemo(() => users.find(u => u.userId === REAL_USER_ID)!, [users]);
   const viewAsUser = useMemo(() => users.find(u => u.userId === viewAsUserId) || realUser, [users, viewAsUserId, realUser]);
@@ -330,11 +327,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setAppSettings(current => ({ ...current, tabs: current.tabs.map(t => t.id === tabId ? { ...t, ...tabData } : t) }));
   }, []);
 
-  const addBadgeCollection = useCallback((owner: User, sourceCollection?: BadgeCollection) => {
+  const addBadgeCollection = useCallback((owner: User, sourceCollection?: BadgeCollection, contextTeam?: Team) => {
     const newCollectionId = crypto.randomUUID();
     let newBadges: Badge[] = [];
     let newCollection: BadgeCollection;
-    const ownerContext = { type: 'user' as const, id: owner.userId };
+    const ownerContext: BadgeCollectionOwner = { type: 'user', id: owner.userId };
 
     if (sourceCollection) {
         newBadges = sourceCollection.badgeIds.map(bId => {
@@ -359,8 +356,20 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 }, [allBadgeCollections.length, allBadges]);
 
 
-  const updateBadgeCollection = useCallback((collectionId: string, data: Partial<BadgeCollection>) => {
-      setAllBadgeCollections(current => current.map(c => (c.id === collectionId ? { ...c, ...data } : c)));
+  const updateBadgeCollection = useCallback((collectionId: string, data: Partial<BadgeCollection>, teamId?: string) => {
+    // Update the master list
+    setAllBadgeCollections(current => current.map(c => (c.id === collectionId ? { ...c, ...data } : c)));
+
+    // If a team context is provided, update the local instance within that team
+    if (teamId) {
+        setTeams(currentTeams => currentTeams.map(team => {
+            if (team.id === teamId) {
+                const newCollections = team.badgeCollections.map(c => c.id === collectionId ? { ...c, ...data } : c);
+                return { ...team, badgeCollections: newCollections };
+            }
+            return team;
+        }));
+    }
   }, []);
 
 
@@ -368,10 +377,27 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const collectionToDelete = allBadgeCollections.find(c => c.id === collectionId);
     if (!collectionToDelete) return;
 
-    const badgeIdsToDelete = new Set(allBadges.filter(b => b.ownerCollectionId === collectionId).map(b => b.id));
+    // Find all badges that are exclusively owned by this collection
+    const badgeIdsToDelete = allBadges
+      .filter(b => b.ownerCollectionId === collectionId)
+      .map(b => b.id);
 
+    // Remove the collection itself
     setAllBadgeCollections(current => current.filter(c => c.id !== collectionId));
-    setAllBadges(current => current.filter(b => !badgeIdsToDelete.has(b.id)));
+
+    // Remove the owned badges from the master badge list
+    if (badgeIdsToDelete.length > 0) {
+      setAllBadges(current => current.filter(b => !badgeIdsToDelete.includes(b.id)));
+    }
+
+    // Also remove the collection from any team that might be using it
+    setTeams(currentTeams => currentTeams.map(team => ({
+        ...team,
+        badgeCollections: team.badgeCollections.filter(c => c.id !== collectionId),
+        linkedCollectionIds: (team.linkedCollectionIds || []).filter(id => id !== collectionId),
+        activeBadgeCollections: (team.activeBadgeCollections || []).filter(id => id !== collectionId)
+    })));
+
   }, [allBadgeCollections, allBadges]);
 
   const addBadge = useCallback((collectionId: string, sourceBadge?: Badge) => {
