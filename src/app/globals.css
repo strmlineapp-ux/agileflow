@@ -60,6 +60,7 @@
   }
   body {
     @apply bg-background text-foreground font-body;
+    overflow-x: hidden;
   }
   .font-headline {
       font-family: var(--font-roboto);
