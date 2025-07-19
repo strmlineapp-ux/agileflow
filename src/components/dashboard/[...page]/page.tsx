@@ -91,7 +91,7 @@ export default function DynamicPage() {
       if (!hasAccess(viewAsUser, pageConfig, teams)) {
         router.push('/dashboard/notifications');
       }
-    }, [viewAsUser, teams, pageConfig, loading, router]);
+    }, [viewAsUser, teams, pageConfig, loading, router, currentPath]);
 
 
     useEffect(() => {
