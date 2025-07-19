@@ -684,7 +684,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
                     </p>
                 </CardContent>
             )}
-            <div className="absolute bottom-1 right-1">
+            <div className="absolute -bottom-1 -right-1">
                 <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
                     <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
                 </Button>
@@ -829,11 +829,11 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
             access: { users: [], teams: [] }
         };
         
-        const lastPinnedCorePage = corePages[corePages.length - 1];
-        const lastTopPinnedIndex = appSettings.pages.findIndex(p => p.id === lastPinnedCorePage.id);
-        
+        const insertBeforePageIndex = appSettings.pages.findIndex(p => p.id === 'page-notifications');
+        const insertIndex = insertBeforePageIndex !== -1 ? insertBeforePageIndex : appSettings.pages.length - 2;
+
         const newPages = [...appSettings.pages];
-        newPages.splice(lastTopPinnedIndex + 1, 0, newPage);
+        newPages.splice(insertIndex, 0, newPage);
         
         updateAppSettings({ pages: newPages });
     };
@@ -883,14 +883,8 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
             const overIsPinned = pinnedIds.has(over.id.toString());
             const overItem = appSettings.pages[newIndex];
 
-            // A non-pinned item cannot be dropped onto a pinned item.
+            // A non-pinned item cannot be dropped into a position occupied by a pinned item.
             if (!activeIsPinned && overIsPinned) {
-                return;
-            }
-
-            // A non-pinned item cannot be dropped into a position that would break up the pinned items.
-            // Check if the item at the new destination index is pinned. If it is, and we are not moving a pinned item, cancel.
-            if (!activeIsPinned && overItem && pinnedIds.has(overItem.id)) {
                  return;
             }
             
