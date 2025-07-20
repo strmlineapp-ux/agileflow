@@ -907,7 +907,7 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
                                             {isOwned && (
-                                                <Button variant="ghost" size="icon" onClick={() => onAddBadge(collection.id)} disabled={!isOwned || isViewer} className="h-8 w-8 text-muted-foreground"><GoogleSymbol name="add" weight={100} /><span className="sr-only">Add Badge</span></Button>
+                                                <Button variant="ghost" size="icon" onClick={() => onAddBadge(collection.id)} onPointerDown={(e) => e.stopPropagation()} disabled={!isOwned || isViewer} className="h-8 w-8 text-muted-foreground"><GoogleSymbol name="add" weight={100} /><span className="sr-only">Add Badge</span></Button>
                                             )}
                                         </div>
                                     </div>
@@ -1061,13 +1061,13 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     const isTeamContext = isTeamSpecificPage && !!contextTeam;
 
     const canCreateCollection = useMemo(() => {
-        if (!isTeamContext) return true; // User context can always create for self
+        if (!contextTeam) return true; // User context
         if (viewAsUser.isAdmin) return true;
-        if (contextTeam?.teamAdmins && contextTeam.teamAdmins.length > 0) {
+        if (contextTeam.teamAdmins && contextTeam.teamAdmins.length > 0) {
             return contextTeam.teamAdmins.includes(viewAsUser.userId);
         }
-        return (contextTeam?.members || []).includes(viewAsUser.userId);
-    }, [isTeamContext, contextTeam, viewAsUser]);
+        return contextTeam.members.includes(viewAsUser.userId);
+    }, [contextTeam, viewAsUser]);
     
     const isViewer = useMemo(() => {
         if (!isTeamContext || !contextTeam) return false;
@@ -1079,25 +1079,20 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     }, [isTeamContext, contextTeam, viewAsUser]);
 
     const collectionsToDisplay = useMemo(() => {
-      let collections: BadgeCollection[];
-      if (isTeamContext && contextTeam) {
-          const hasAdmins = contextTeam.teamAdmins && contextTeam.teamAdmins.length > 0;
-          const relevantUserIds = new Set(hasAdmins ? contextTeam.teamAdmins : contextTeam.members);
-          collections = allBadgeCollections.filter(c => relevantUserIds.has(c.owner.id));
+        let collections: BadgeCollection[];
+        if (isTeamContext && contextTeam) {
+            const hasAdmins = contextTeam.teamAdmins && contextTeam.teamAdmins.length > 0;
+            const relevantUserIds = new Set(hasAdmins ? contextTeam.teamAdmins : contextTeam.members);
+            collections = allBadgeCollections.filter(c => relevantUserIds.has(c.owner.id));
+        } else {
+            collections = allBadgeCollections.filter(c => c.owner.id === viewAsUser.userId);
+        }
 
-          if (contextTeam.linkedCollectionIds) {
-              const linked = contextTeam.linkedCollectionIds.map(id => allBadgeCollections.find(c => c.id === id)).filter((c): c is BadgeCollection => !!c);
-              collections = [...collections, ...linked];
-          }
-      } else {
-          collections = allBadgeCollections.filter(c => c.owner.id === viewAsUser.userId);
-      }
-
-      if (searchTerm) {
-          collections = collections.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
-      }
-      
-      return Array.from(new Map(collections.map(c => [c.id, c])).values());
+        if (searchTerm) {
+            collections = collections.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
+        }
+        
+        return Array.from(new Map(collections.map(c => [c.id, c])).values());
     }, [allBadgeCollections, isTeamContext, contextTeam, viewAsUser, searchTerm]);
     
     useEffect(() => {
@@ -1132,6 +1127,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     }, [allBadgeCollections, collectionsToDisplay, sharedSearchTerm]);
 
     const handleAddCollection = (sourceCollection?: BadgeCollection) => {
+        if (!canCreateCollection) return;
         addBadgeCollection(viewAsUser, sourceCollection, contextTeam);
     };
 
@@ -1487,3 +1483,4 @@ function TeamManagementDropZone({id, type, children, className}: {id: string, ty
         </div>
     )
 }
+
