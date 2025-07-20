@@ -353,17 +353,18 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     if (newBadges.length > 0) {
         setAllBadges(prev => [...prev, ...newBadges]);
     }
-
+    
     if (contextTeam) {
         setTeams(currentTeams => currentTeams.map(t => {
             if (t.id === contextTeam.id) {
-                return { ...t, badgeCollections: [...t.badgeCollections, newCollection] };
+                const updatedCollections = [...(t.badgeCollections || []), newCollection];
+                return { ...t, badgeCollections: updatedCollections };
             }
             return t;
         }));
     }
 
-}, [allBadgeCollections.length, allBadges]);
+}, [allBadgeCollections.length, allBadges, teams]);
 
 
   const updateBadgeCollection = useCallback((collectionId: string, data: Partial<BadgeCollection>, teamId?: string) => {
@@ -413,7 +414,17 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const newBadge: Badge = { id: newBadgeId, ownerCollectionId: collectionId, name: sourceBadge ? `${sourceBadge.name} (Copy)` : `New Badge`, icon: sourceBadge?.icon || googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)], color: predefinedColors[Math.floor(Math.random() * predefinedColors.length)] };
     
     setAllBadges(prev => [...prev, newBadge]);
-    setAllBadgeCollections(prev => prev.map(c => c.id === collectionId ? { ...c, badgeIds: [newBadgeId, ...c.badgeIds] } : c));
+    
+    // Correctly update the badge collection state without mutating it
+    setAllBadgeCollections(prevCollections =>
+      prevCollections.map(c => {
+        if (c.id === collectionId) {
+          // Return a new collection object with a new badgeIds array
+          return { ...c, badgeIds: [newBadgeId, ...c.badgeIds] };
+        }
+        return c;
+      })
+    );
   }, []);
 
   const updateBadge = useCallback((badgeData: Partial<Badge>) => {
