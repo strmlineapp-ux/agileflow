@@ -131,6 +131,8 @@ function CompactSearchIconPicker({
 }
 
 function SortableBadgeItem({ badge, ...props }: { badge: Badge, [key: string]: any }) {
+    const [isEditing, setIsEditing] = useState(false);
+    
     const {
         attributes,
         listeners,
@@ -141,7 +143,7 @@ function SortableBadgeItem({ badge, ...props }: { badge: Badge, [key: string]: a
     } = useSortable({
         id: `badge::${badge.id}::${props.collectionId}`,
         data: { type: 'badge', badge, collectionId: props.collectionId },
-        disabled: props.isEditing,
+        disabled: isEditing,
     });
     
     const style = {
@@ -153,13 +155,18 @@ function SortableBadgeItem({ badge, ...props }: { badge: Badge, [key: string]: a
     
     return (
         <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-            <BadgeDisplayItem badge={badge} {...props} />
+            <BadgeDisplayItem 
+                badge={badge} 
+                isEditing={isEditing}
+                setIsEditing={setIsEditing}
+                {...props} 
+            />
         </div>
     )
 }
 
 
-function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collectionId, teamId, isSharedPreview = false, isViewer = false, predefinedColors }: { 
+function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collectionId, teamId, isSharedPreview = false, isViewer = false, predefinedColors, isEditing, setIsEditing }: { 
     badge: Badge;
     viewMode: BadgeCollection['viewMode'];
     onUpdateBadge: (badgeData: Partial<Badge>) => void;
@@ -169,13 +176,14 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     isSharedPreview?: boolean;
     isViewer?: boolean;
     predefinedColors: string[];
+    isEditing: boolean;
+    setIsEditing: (isEditing: boolean) => void;
 }) {
     const { teams, users, viewAsUser, allBadgeCollections } = useUser();
     const nameInputRef = useRef<HTMLInputElement>(null);
     const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
     const [color, setColor] = useState(badge.color);
-    const [isEditing, setIsEditing] = useState(false);
     
     const badgeOwner = useMemo(() => {
         const ownerCollection = allBadgeCollections.find(c => c.id === badge.ownerCollectionId);
@@ -226,7 +234,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     }, [isEditing, handleSave, viewMode]);
     
     const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter' && !(e.target as HTMLElement).matches('textarea')) {
+        if (e.key === 'Enter' && !(e.target instanceof HTMLTextAreaElement)) {
             e.preventDefault();
             handleSave();
         }
@@ -644,7 +652,7 @@ type BadgeCollectionCardProps = {
 };
 
 function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDeleteCollection, onAddBadge, onUpdateBadge, onDeleteBadge, dragHandleProps, isSharedPreview = false, contextTeam, isViewer = false }: BadgeCollectionCardProps) {
-    const { viewAsUser, users, updateUser, updateTeam, predefinedColors } = useUser();
+    const { viewAsUser, users, updateTeam, predefinedColors } = useUser();
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
     const [color, setColor] = useState(collection.color);
@@ -1451,6 +1459,8 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                             isSharedPreview={false}
                             isViewer={false}
                             predefinedColors={[]}
+                            isEditing={false}
+                            setIsEditing={() => {}}
                         />
                         </div>
                     ) : null}
@@ -1461,3 +1471,4 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
 }
 
     
+
