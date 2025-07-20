@@ -64,7 +64,7 @@ interface UserDataContextType {
   updateAppTab: (tabId: string, tabData: Partial<AppTab>) => Promise<void>;
   allBadges: Badge[];
   allBadgeCollections: BadgeCollection[];
-  addBadgeCollection: (owner: User, sourceCollection?: BadgeCollection) => void;
+  addBadgeCollection: (owner: User, sourceCollection?: BadgeCollection, contextTeam?: Team) => void;
   updateBadgeCollection: (collectionId: string, data: Partial<BadgeCollection>) => void;
   deleteBadgeCollection: (collectionId: string) => void;
   addBadge: (collectionId: string, sourceBadge?: Badge) => void;
@@ -118,6 +118,16 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   });
   const { toast } = useToast();
 
+  const [allBadges, setAllBadges] = useState<Badge[]>(() => {
+    const badgesMap = new Map<string, Badge>();
+    [...globalBadges, ...videoProdBadges, ...liveEventsBadges].forEach(badge => {
+        if (!badgesMap.has(badge.id)) {
+            badgesMap.set(badge.id, badge);
+        }
+    });
+    return Array.from(badgesMap.values());
+  });
+
   const [allBadgeCollections, setAllBadgeCollections] = useState<BadgeCollection[]>(() => {
     const collectionsMap = new Map<string, BadgeCollection>();
     mockTeams.forEach(team => {
@@ -126,29 +136,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         });
     });
     return Array.from(collectionsMap.values());
-  });
-
-  const [allBadges, setAllBadges] = useState<Badge[]>(() => {
-    const badgesMap = new Map<string, Badge>();
-    const allBadgeSources = [globalBadges, videoProdBadges, liveEventsBadges];
-    
-    allBadgeSources.forEach(source => {
-        source.forEach(badge => {
-            if (!badgesMap.has(badge.id)) {
-                badgesMap.set(badge.id, badge);
-            }
-        });
-    });
-    
-    mockTeams.forEach(team => {
-        (team.allBadges || []).forEach(badge => {
-             if (!badgesMap.has(badge.id)) {
-                badgesMap.set(badge.id, badge);
-            }
-        })
-    });
-    
-    return Array.from(badgesMap.values());
   });
 
 
@@ -336,7 +323,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setAppSettings(current => ({ ...current, tabs: current.tabs.map(t => t.id === tabId ? { ...t, ...tabData } : t) }));
   }, []);
 
-  const addBadgeCollection = useCallback((owner: User, sourceCollection?: BadgeCollection) => {
+  const addBadgeCollection = useCallback((owner: User, sourceCollection?: BadgeCollection, contextTeam?: Team) => {
     const newCollectionId = crypto.randomUUID();
     let newBadges: Badge[] = [];
     let newCollection: BadgeCollection;
@@ -364,8 +351,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             id: newBadgeId, 
             ownerCollectionId: newCollectionId, 
             name: `New Badge`, 
-            icon: googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)], 
-            color: predefinedColors[Math.floor(Math.random() * predefinedColors.length)] 
+            icon: 'star',
+            color: '#64748B'
         };
         newBadges.push(newBadge);
         newCollection = { 
@@ -377,7 +364,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             viewMode: 'detailed', 
             badgeIds: [newBadgeId], 
             applications: [], 
-            description: 'Badge Collection description', 
+            description: '', 
             isShared: false 
         };
     }
@@ -386,13 +373,31 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     if (newBadges.length > 0) {
         setAllBadges(prev => [...prev, ...newBadges]);
     }
+    
+    if (contextTeam) {
+        setTeams(prevTeams => prevTeams.map(team => {
+            if (team.id === contextTeam.id) {
+                const updatedCollections = [...(team.badgeCollections || []), newCollection];
+                return { ...team, badgeCollections: updatedCollections, activeBadgeCollections: [...(team.activeBadgeCollections || []), newCollection.id] };
+            }
+            return team;
+        }));
+    }
     toast({ title: 'Collection Added', description: `"${newCollection.name}" has been created.` });
 
   }, [allBadges, toast]);
 
-
-  const updateBadgeCollection = useCallback((collectionId: string, data: Partial<BadgeCollection>) => {
+  const updateBadgeCollection = useCallback((collectionId: string, data: Partial<BadgeCollection>, teamId?: string) => {
     setAllBadgeCollections(current => current.map(c => (c.id === collectionId ? { ...c, ...data } : c)));
+    if (teamId) {
+        setTeams(currentTeams => currentTeams.map(team => {
+            if (team.id === teamId) {
+                const newCollections = (team.badgeCollections || []).map(c => c.id === collectionId ? {...c, ...data} : c);
+                return {...team, badgeCollections: newCollections};
+            }
+            return team;
+        }));
+    }
   }, []);
 
 
@@ -427,14 +432,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const newBadgeId = crypto.randomUUID();
     const newBadge: Badge = { id: newBadgeId, ownerCollectionId: collectionId, name: sourceBadge ? `${sourceBadge.name} (Copy)` : `New Badge`, icon: sourceBadge?.icon || googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)], color: predefinedColors[Math.floor(Math.random() * predefinedColors.length)] };
     
-    setAllBadges(prev => [...prev, newBadge]);
+    setAllBadges(prev => [newBadge, ...prev]);
     
     setAllBadgeCollections(prevCollections =>
       prevCollections.map(c => {
-        if (c.id === collectionId) {
-          return { ...c, badgeIds: [newBadgeId, ...c.badgeIds] };
-        }
-        return c;
+          if (c.id === collectionId) {
+              return { ...c, badgeIds: [newBadgeId, ...c.badgeIds] };
+          }
+          return c;
       })
     );
   }, []);
