@@ -140,15 +140,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         });
     });
     
-    // Also include badges from team-specific mock data
-    mockTeams.forEach(team => {
-        (team.allBadges || []).forEach(badge => {
-            if (!badgesMap.has(badge.id)) {
-                badgesMap.set(badge.id, badge);
-            }
-        });
-    });
-    
     return Array.from(badgesMap.values());
   });
 
@@ -501,5 +492,3 @@ export function useUser() {
     const data = useUserData();
     return { ...session, ...data };
 }
-
-    

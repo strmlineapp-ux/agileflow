@@ -718,7 +718,7 @@ function SortableCollectionCard({ collection, allBadges, onUpdateCollection, onD
 function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDeleteCollection, onAddBadge, onUpdateBadge, onDeleteBadge, dragHandleProps, isSharedPreview = false, contextTeam, isViewer = false }: {
     collection: BadgeCollection;
     allBadges: Badge[];
-    onUpdateCollection: (collectionId: string, newValues: Partial<Omit<BadgeCollection, 'id' | 'badgeIds'>>, teamId?: string) => void;
+    onUpdateCollection: (collectionId: string, newValues: Partial<Omit<BadgeCollection, 'id' | 'badgeIds'>>) => void;
     onDeleteCollection: (collection: BadgeCollection) => void;
     onAddBadge: (collectionId: string, sourceBadge?: Badge) => void;
     onUpdateBadge: (badgeData: Partial<Badge>) => void;
@@ -804,7 +804,7 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
         } else {
             currentApplications.add(application);
         }
-        onUpdateCollection(collection.id, { applications: Array.from(currentApplications) }, contextTeam?.id);
+        onUpdateCollection(collection.id, { applications: Array.from(currentApplications) });
     };
     
     const handleToggleCollectionActive = () => {
@@ -889,12 +889,12 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                                         ) : (
                                             <CardTitle onPointerDown={(e) => { e.stopPropagation(); if(isOwned) setIsEditingName(true);}} className={cn("text-2xl font-headline font-thin break-words", isOwned && "cursor-pointer")}>{collection.name}</CardTitle>
                                         )}
+                                         <Button variant="ghost" size="icon" onClick={() => onAddBadge(collection.id)} disabled={!isOwned || isViewer} className="h-8 w-8 text-muted-foreground"><GoogleSymbol name="add" weight={100} /><span className="sr-only">Add Badge</span></Button>
                                     </div>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-2 pt-2" onPointerDown={(e) => e.stopPropagation()}>
-                                <Button variant="ghost" size="icon" onClick={() => onAddBadge(collection.id)} disabled={!isOwned || isViewer} className="h-8 w-8 text-muted-foreground"><GoogleSymbol name="add" weight={100} /><span className="sr-only">Add Badge</span></Button>
-                                <DropdownMenu>
+                            <div className="flex items-center pt-2" onPointerDown={(e) => e.stopPropagation()}>
+                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
                                             <GoogleSymbol name={viewModeOptions.find(o => o.mode === collection.viewMode)?.icon || 'view_module'} weight={100} />
@@ -1043,7 +1043,6 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     const [collectionToDelete, setCollectionToDelete] = useState<BadgeCollection | null>(null);
     const [badgeToDelete, setBadgeToDelete] = useState<{ collectionId: string, badgeId: string } | null>(null);
     
-    const [isSearching, setIsSearching] = useState(false);
     const searchInputRef = useRef<HTMLInputElement>(null);
     const [searchTerm, setSearchTerm] = useState('');
     
@@ -1067,36 +1066,6 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         return !contextTeam?.members.includes(viewAsUser.userId);
     }, [isTeamContext, contextTeam, viewAsUser]);
 
-    useEffect(() => {
-        if (isEditingTitle) titleInputRef.current?.focus();
-    }, [isEditingTitle]);
-
-    useEffect(() => {
-        if (isSearching && searchInputRef.current) {
-            searchInputRef.current.focus();
-        }
-    }, [isSearching]);
-    
-    useEffect(() => {
-        if (isSharedPanelOpen) {
-            setTimeout(() => sharedSearchInputRef.current?.focus(), 100);
-        }
-    }, [isSharedPanelOpen]);
-
-
-    const handleSaveTitle = () => {
-        const newName = titleInputRef.current?.value.trim();
-        if (newName && newName !== tab.name) {
-            updateAppTab(tab.id, { name: newName });
-        }
-        setIsEditingTitle(false);
-    };
-
-    const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Enter') handleSaveTitle();
-        else if (e.key === 'Escape') setIsEditingTitle(false);
-    };
-    
     const collectionsToDisplay = useMemo(() => {
         let ownerIds: Set<string>;
     
@@ -1129,7 +1098,31 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
 
         return collections;
     }, [allBadgeCollections, isTeamContext, contextTeam, viewAsUser, searchTerm]);
+    
+    useEffect(() => {
+        if (isEditingTitle) titleInputRef.current?.focus();
+    }, [isEditingTitle]);
 
+    useEffect(() => {
+        if (isSharedPanelOpen) {
+            setTimeout(() => sharedSearchInputRef.current?.focus(), 100);
+        }
+    }, [isSharedPanelOpen]);
+
+
+    const handleSaveTitle = () => {
+        const newName = titleInputRef.current?.value.trim();
+        if (newName && newName !== tab.name) {
+            updateAppTab(tab.id, { name: newName });
+        }
+        setIsEditingTitle(false);
+    };
+
+    const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') handleSaveTitle();
+        else if (e.key === 'Escape') setIsEditingTitle(false);
+    };
+    
     const sharedCollections = useMemo(() => {
         const collectionsOnBoardIds = new Set(collectionsToDisplay.map(c => c.id));
         return allBadgeCollections
@@ -1494,6 +1487,3 @@ function TeamManagementDropZone({id, type, children, className}: {id: string, ty
         </div>
     )
 }
-    
-
-    
