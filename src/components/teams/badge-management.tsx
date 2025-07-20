@@ -221,17 +221,10 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
         };
 
         document.addEventListener('mousedown', handleOutsideClick);
-        if (viewMode === 'list' || viewMode === 'detailed') {
-          descriptionTextareaRef.current?.focus();
-        } else {
-          nameInputRef.current?.focus();
-          nameInputRef.current?.select();
-        }
-        
         return () => {
             document.removeEventListener("mousedown", handleOutsideClick);
         };
-    }, [isEditing, handleSave, viewMode]);
+    }, [isEditing, handleSave]);
     
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && !(e.target instanceof HTMLTextAreaElement)) {
@@ -457,13 +450,13 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                 </>
                             )}
                         </div>
-                        <div className="flex-1 min-w-0">
+                        <div className="flex-1 min-w-0" onClick={() => isEditable && !isEditing && setIsEditing(true)}>
                             {nameEditorElement}
                         </div>
                     </div>
                 </div>
             </CardHeader>
-            <CardContent className="space-y-4 pt-0 flex-grow" onPointerDown={(e) => e.stopPropagation()}>
+            <CardContent className="space-y-4 pt-0 flex-grow" onPointerDown={(e) => e.stopPropagation()} onClick={() => isEditable && !isEditing && setIsEditing(true)}>
                  {descriptionEditorElement}
             </CardContent>
             {canBeDeleted && deleteButton}
@@ -473,7 +466,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     
     if (viewMode === 'list') {
       return (
-        <div className="group relative flex w-full items-start gap-4 p-2 rounded-md hover:bg-muted/50">
+        <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="group relative flex w-full items-start gap-4 p-2 rounded-md hover:bg-muted/50">
             <div className="relative" onPointerDown={(e) => e.stopPropagation()}>
                 <TooltipProvider>
                     <Tooltip>
@@ -530,7 +523,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                     </>
                 )}
             </div>
-            <div className="flex-1 space-y-1">
+            <div className="flex-1 space-y-1" onClick={() => isEditable && !isEditing && setIsEditing(true)}>
                 {nameEditorElement}
                 {descriptionEditorElement}
             </div>
@@ -616,7 +609,6 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
         </div>
     );
 }
-
 
 function DroppableCollectionContent({ collection, children }: { collection: BadgeCollection, children: React.ReactNode }) {
     const { setNodeRef, isOver } = useDroppable({ id: collection.id, data: { type: 'collection', collection }});
@@ -810,11 +802,18 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                                     )}
                                     <div className="flex items-center" onPointerDown={(e) => e.stopPropagation()}>
                                         <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-                                                    <GoogleSymbol name={viewModeOptions.find(o => o.mode === collection.viewMode)?.icon || 'view_module'} weight={100} />
-                                                </Button>
-                                            </DropdownMenuTrigger>
+                                            <TooltipProvider>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+                                                                <GoogleSymbol name={viewModeOptions.find(o => o.mode === collection.viewMode)?.icon || 'view_module'} weight={100} />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent><p>Change View Mode</p></TooltipContent>
+                                                </Tooltip>
+                                            </TooltipProvider>
                                             <DropdownMenuContent>
                                                 {viewModeOptions.map(({mode, icon, label}) => (
                                                     <DropdownMenuItem key={mode} onClick={() => onUpdateCollection(collection.id, { viewMode: mode })}>
@@ -824,7 +823,14 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                                                 ))}
                                             </DropdownMenuContent>
                                         </DropdownMenu>
-                                        <Button variant="ghost" size="icon" onPointerDown={(e) => { e.stopPropagation(); onAddBadge(collection.id);}} disabled={!isOwned || isViewer} className="h-8 w-8 text-muted-foreground"><GoogleSymbol name="add" weight={100} /><span className="sr-only">Add Badge</span></Button>
+                                        <TooltipProvider>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Button variant="ghost" size="icon" onPointerDown={(e) => { e.stopPropagation(); onAddBadge(collection.id);}} disabled={!isOwned || isViewer} className="h-8 w-8 text-muted-foreground"><GoogleSymbol name="add" weight={100} /><span className="sr-only">Add Badge</span></Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent><p>Add New Badge</p></TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
                                     </div>
                                 </div>
                             </div>
@@ -995,6 +1001,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         reorderBadges,
         updateTeam,
         updateUser,
+        predefinedColors,
     } = useUser();
 
     const { toast } = useToast();
@@ -1340,6 +1347,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                                             onDeleteBadge={handleDeleteBadge}
                                                             contextTeam={team}
                                                             isViewer={isViewer}
+                                                            predefinedColors={predefinedColors}
                                                         />
                                                     </div>
                                                 </div>
@@ -1383,6 +1391,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                                                 isSharedPreview={true}
                                                                 contextTeam={team}
                                                                 isViewer={isViewer}
+                                                                predefinedColors={predefinedColors}
                                                             />
                                                         )
                                                     })}
@@ -1445,6 +1454,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                             isSharedPreview={activeDragItem.isSharedPreview}
                             contextTeam={contextTeam}
                             isViewer={isViewer}
+                            predefinedColors={predefinedColors}
                         />
                         </div>
                     ) : activeDragItem?.type === 'badge' ? (
@@ -1471,4 +1481,5 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
 }
 
     
+
 

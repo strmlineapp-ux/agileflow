@@ -31,7 +31,7 @@ This pattern allows for seamless, direct text editing within the main applicatio
     - Pressing 'Enter' saves the changes and reverts the input back to a standard text element.
     - Pressing 'Escape' cancels the edit without saving.
     - **A `useEffect` hook must be implemented to add a 'mousedown' event listener to the document. This listener should check if the click occurred outside the input field's ref and, if so, trigger the save function. This ensures that clicking anywhere else on the page correctly dismisses and saves the editor.**
-- **Conflict Prevention**: If the inline editor is inside a draggable component (like a `PageCard`), its container **must** have an `onPointerDown={(e) => e.stopPropagation()}` handler. This is critical to prevent `@dnd-kit`'s drag listener from activating when the input is clicked, which would otherwise interfere with typing.
+- **Conflict Prevention**: See the "Preventing Interaction Conflicts" section within the **Draggable Card Management blueprint** for the required implementation when using this pattern inside a draggable item.
 - **Application:** Used for editing entity names, labels, and other simple text fields directly in the UI.
 
 ---
@@ -120,7 +120,7 @@ This pattern describes how a single entity (like a **Team**, **Calendar**, or **
 ### 8. Draggable Card Management blueprint
 This is the application's perfected, gold-standard pattern for managing a collection of entities displayed as cards. It provides a fluid, intuitive, and grid-responsive way for users to reorder, duplicate, and assign items. It is the required pattern for managing Pages, Calendars, Teams, and Badge Collections. The core of this pattern is a successful migration to the **`@dnd-kit`** library, which proved more robust for responsive layouts.
 
--   **Layout**: Entities are presented in a responsive grid of cards. To ensure stability during drag operations, especially across multiple rows, the container must use a `flex flex-wrap` layout instead of CSS Grid. Each draggable card item is then given a responsive `basis` property (e.g., `basis-full sm:basis-1/2 md:basis-1/3...`) to create the columns. A negative margin (e.g., `-m-2`) on the container and a matching positive padding (e.g., `p-2`) on the items creates the gutter.
+-   **Layout**: Entities are presented in a responsive grid of cards. To ensure stability during drag operations, especially across multiple rows, the container must use a `flex flex-wrap` layout instead of CSS Grid. Each draggable card item is then given a responsive `basis` property (e.g., `basis-full sm:basis-[calc(50%-1rem)] md:basis-[calc(33.333%-1rem)] lg:basis-[calc(25%-1rem)] xl:basis-[calc(20%-1rem)] 2xl:basis-[calc(16.666%-1rem)]`) to create the columns. A negative margin (e.g., `-m-2`) on the container and a matching positive padding (e.g., `p-2`) on the items creates the gutter.
 -   **Critical Stability Properties**:
     -   **`@dnd-kit` is the required library.** The older `react-beautiful-dnd` library was found to be incompatible with this type of responsive layout.
     -   `flex-grow-0` and `flex-shrink-0` **must** be used on draggable items. This prevents the remaining items in a row from expanding or shrinking, which causes the grid to reflow unstably when an item is being dragged.
@@ -128,7 +128,11 @@ This is the application's perfected, gold-standard pattern for managing a collec
 -   **Expand/Collapse**: Cards are collapsed by default. To expand a card and view its details, the user must click a dedicated `expand_more` icon button, positioned at `absolute -bottom-1 right-0`. This provides a clear, unambiguous affordance and avoids conflicts with other click actions on the card.
 -   **Preventing Interaction Conflicts**:
     -   To allow buttons, popovers, and other controls *inside* the draggable card to function correctly, they must stop the `pointerdown` event from propagating up to the card's drag listener. **This is a critical implementation detail and must be done by adding `onPointerDown={(e) => e.stopPropagation()}` to every interactive element within the card.**
-    -   To prevent conflicts with keyboard interactions inside a card (like an **Inline Editor**), the `useSortable` hook for the draggable card **must** be temporarily disabled while the internal component is in an editing state. This is done by passing a `disabled: isEditing` flag to the hook, preventing `@dnd-kit`'s keyboard listeners (e.g., spacebar to lift) from firing while the user is typing.
+    -   To prevent conflicts between an **Inline Editor** and `@dnd-kit`'s keyboard and pointer listeners (e.g., spacebar to lift), the editing state must be managed correctly.
+        - **State Management**: The component that implements the `useSortable` hook (e.g., `SortablePageCard`, `SortableBadgeItem`) must own the `isEditing` state.
+        - **State Propagation**: This `isEditing` state and its setter must be passed down as props to the child component that contains the actual inline editor inputs.
+        - **Disabling Drag**: The `useSortable` hook must be configured with `disabled: isEditing`.
+        - **Effect**: When a user clicks to edit, the child component sets the parent's `isEditing` state to `true`. This immediately disables the `useSortable` hook, preventing `@dnd-kit` from capturing pointer or keyboard events, which allows the inline editor to function correctly.
 -   **Visual Feedback**: To provide feedback without disrupting layout, visual changes (like a `shadow` or `opacity`) should be applied directly to the inner component based on the `isDragging` prop provided by `dnd-kit`'s `useSortable` hook. The draggable wrapper itself should remain untouched.
 -   **Internal Card Layout**: Each card is structured for clarity. The header contains the primary entity identifier (icon and name) and contextual controls. To keep cards compact, headers and content areas should use minimal padding (e.g., `p-2`). Titles should be configured to wrap gracefully to handle longer text.
 -   **User Item Display**: When users are displayed as items within a management card (e.g., `TeamCard`), they are presented **without a border**. Each user item must display their avatar, full name, and professional title underneath the name for consistency.
@@ -315,5 +319,3 @@ This is the single source of truth for indicating user interaction state across 
       - **Ownership Status**: `absolute -top-0 -right-3`.
     - **Icon Size (Ownership Status)**: The `GoogleSymbol` inside an ownership status badge should have its size set via `style={{fontSize: '16px'}}`.
 -   **Badges in Assorted View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
-
-    
