@@ -883,34 +883,34 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                                     )}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center justify-between">
                                         {isEditingName && isOwned ? (
                                             <Input ref={nameInputRef} defaultValue={collection.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} onPointerDown={(e) => e.stopPropagation()} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"/>
                                         ) : (
                                             <CardTitle onPointerDown={(e) => { e.stopPropagation(); if(isOwned) setIsEditingName(true);}} className={cn("text-2xl font-headline font-thin break-words", isOwned && "cursor-pointer")}>{collection.name}</CardTitle>
                                         )}
-                                        {isOwned && (
-                                            <Button variant="ghost" size="icon" onClick={() => onAddBadge(collection.id)} disabled={!isOwned || isViewer} className="h-8 w-8 text-muted-foreground"><GoogleSymbol name="add" weight={100} /><span className="sr-only">Add Badge</span></Button>
-                                        )}
+                                        <div className="flex items-center" onPointerDown={(e) => e.stopPropagation()}>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+                                                        <GoogleSymbol name={viewModeOptions.find(o => o.mode === collection.viewMode)?.icon || 'view_module'} weight={100} />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent>
+                                                    {viewModeOptions.map(({mode, icon, label}) => (
+                                                        <DropdownMenuItem key={mode} onClick={() => onUpdateCollection(collection.id, { viewMode: mode })}>
+                                                            <GoogleSymbol name={icon} className="mr-2" />
+                                                            <span>{label}</span>
+                                                        </DropdownMenuItem>
+                                                    ))}
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                            {isOwned && (
+                                                <Button variant="ghost" size="icon" onClick={() => onAddBadge(collection.id)} disabled={!isOwned || isViewer} className="h-8 w-8 text-muted-foreground"><GoogleSymbol name="add" weight={100} /><span className="sr-only">Add Badge</span></Button>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div className="flex items-center pt-2" onPointerDown={(e) => e.stopPropagation()}>
-                                 <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-                                            <GoogleSymbol name={viewModeOptions.find(o => o.mode === collection.viewMode)?.icon || 'view_module'} weight={100} />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent>
-                                        {viewModeOptions.map(({mode, icon, label}) => (
-                                            <DropdownMenuItem key={mode} onClick={() => onUpdateCollection(collection.id, { viewMode: mode })}>
-                                                <GoogleSymbol name={icon} className="mr-2" />
-                                                <span>{label}</span>
-                                            </DropdownMenuItem>
-                                        ))}
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
                             </div>
                         </div>
                     </CardHeader>
@@ -993,8 +993,8 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
     );
 }
 
-function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
-  const { isOver, setNodeRef } = useDroppable({ id });
+function DuplicateZone({ onAdd }: { onAdd: () => void; }) {
+  const { isOver, setNodeRef } = useDroppable({ id: 'duplicate-collection-zone' });
   
   return (
     <div
@@ -1045,7 +1045,6 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     const [collectionToDelete, setCollectionToDelete] = useState<BadgeCollection | null>(null);
     const [badgeToDelete, setBadgeToDelete] = useState<{ collectionId: string, badgeId: string } | null>(null);
     
-    const searchInputRef = useRef<HTMLInputElement>(null);
     const [searchTerm, setSearchTerm] = useState('');
     
     const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -1059,17 +1058,27 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     
     const contextTeam = team;
     const isTeamContext = isTeamSpecificPage && !!contextTeam;
+
+    const canCreateCollection = useMemo(() => {
+        if (!isTeamContext) return true; // User context can always create for self
+        if (viewAsUser.isAdmin) return true;
+        if (contextTeam?.teamAdmins && contextTeam.teamAdmins.length > 0) {
+            return contextTeam.teamAdmins.includes(viewAsUser.userId);
+        }
+        return (contextTeam?.members || []).includes(viewAsUser.userId);
+    }, [isTeamContext, contextTeam, viewAsUser]);
     
     const isViewer = useMemo(() => {
-        if (!isTeamContext) return false; // Not a team context, so not a viewer of a team
-        if (viewAsUser.isAdmin) return false; // Admins can always manage
-        const admins = contextTeam?.teamAdmins || [];
-        if (admins.length > 0) return !admins.includes(viewAsUser.userId);
-        return !contextTeam?.members.includes(viewAsUser.userId);
+        if (!isTeamContext || !contextTeam) return false;
+        if (viewAsUser.isAdmin) return false;
+        if (contextTeam.teamAdmins && contextTeam.teamAdmins.length > 0) {
+            return !contextTeam.teamAdmins.includes(viewAsUser.userId);
+        }
+        return !contextTeam.members.includes(viewAsUser.userId);
     }, [isTeamContext, contextTeam, viewAsUser]);
 
     const collectionsToDisplay = useMemo(() => {
-        let collections;
+        let collections: BadgeCollection[];
         if (isTeamContext && contextTeam) {
             const ownerIds = new Set(
                 (contextTeam.teamAdmins && contextTeam.teamAdmins.length > 0)
@@ -1124,10 +1133,9 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
             .filter(c => c.name.toLowerCase().includes(sharedSearchTerm.toLowerCase()));
     }, [allBadgeCollections, collectionsToDisplay, sharedSearchTerm]);
 
-    const handleAddCollection = useCallback((sourceCollection?: BadgeCollection) => {
-        if (isViewer) return;
+    const handleAddCollection = (sourceCollection?: BadgeCollection) => {
         addBadgeCollection(viewAsUser, sourceCollection, contextTeam);
-    }, [isViewer, addBadgeCollection, viewAsUser, contextTeam]);
+    };
 
     const handleDuplicateCollection = (sourceCollection: BadgeCollection) => {
         if (isViewer) return;
@@ -1311,7 +1319,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                         </Tooltip>
                                     </TooltipProvider>
                                 )}
-                                {!isViewer && (
+                                {canCreateCollection && (
                                     <DuplicateZone id="duplicate-collection-zone" onAdd={() => handleAddCollection()} />
                                 )}
                             </div>

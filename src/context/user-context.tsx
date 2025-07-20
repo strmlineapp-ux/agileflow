@@ -64,7 +64,7 @@ interface UserDataContextType {
   updateAppTab: (tabId: string, tabData: Partial<AppTab>) => Promise<void>;
   allBadges: Badge[];
   allBadgeCollections: BadgeCollection[];
-  addBadgeCollection: (owner: User, sourceCollection?: BadgeCollection, contextTeam?: Team) => void;
+  addBadgeCollection: (owner: User, sourceCollection?: BadgeCollection) => void;
   updateBadgeCollection: (collectionId: string, data: Partial<BadgeCollection>) => void;
   deleteBadgeCollection: (collectionId: string) => void;
   addBadge: (collectionId: string, sourceBadge?: Badge) => void;
@@ -336,7 +336,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setAppSettings(current => ({ ...current, tabs: current.tabs.map(t => t.id === tabId ? { ...t, ...tabData } : t) }));
   }, []);
 
-  const addBadgeCollection = useCallback((owner: User, sourceCollection?: BadgeCollection, contextTeam?: Team) => {
+  const addBadgeCollection = useCallback((owner: User, sourceCollection?: BadgeCollection) => {
     const newCollectionId = crypto.randomUUID();
     let newBadges: Badge[] = [];
     let newCollection: BadgeCollection;
@@ -346,33 +346,49 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         newBadges = sourceCollection.badgeIds.map(bId => {
             const originalBadge = allBadges.find(b => b.id === bId);
             if (!originalBadge) return null;
-            return { ...originalBadge, id: crypto.randomUUID(), ownerCollectionId: newCollectionId, name: `${originalBadge.name} (Copy)` };
+            const newBadgeId = crypto.randomUUID();
+            return { ...originalBadge, id: newBadgeId, ownerCollectionId: newCollectionId, name: `${originalBadge.name} (Copy)` };
         }).filter((b): b is Badge => b !== null);
-        newCollection = { ...JSON.parse(JSON.stringify(sourceCollection)), id: newCollectionId, name: `${sourceCollection.name} (Copy)`, owner: ownerContext, isShared: false, badgeIds: newBadges.map(b => b.id) };
+        
+        newCollection = { 
+            ...JSON.parse(JSON.stringify(sourceCollection)), 
+            id: newCollectionId, 
+            name: `${sourceCollection.name} (Copy)`, 
+            owner: ownerContext, 
+            isShared: false, 
+            badgeIds: newBadges.map(b => b.id) 
+        };
     } else {
         const newBadgeId = crypto.randomUUID();
-        const newBadge: Badge = { id: newBadgeId, ownerCollectionId: newCollectionId, name: `New Badge`, icon: googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)], color: predefinedColors[Math.floor(Math.random() * predefinedColors.length)] };
+        const newBadge: Badge = { 
+            id: newBadgeId, 
+            ownerCollectionId: newCollectionId, 
+            name: `New Badge`, 
+            icon: googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)], 
+            color: predefinedColors[Math.floor(Math.random() * predefinedColors.length)] 
+        };
         newBadges.push(newBadge);
-        newCollection = { id: newCollectionId, name: `New Collection`, owner: ownerContext, icon: 'category', color: '#64748B', viewMode: 'detailed', badgeIds: [newBadgeId], applications: [], description: 'Badge Collection description', isShared: false };
+        newCollection = { 
+            id: newCollectionId, 
+            name: `New Collection`, 
+            owner: ownerContext, 
+            icon: 'category', 
+            color: '#64748B', 
+            viewMode: 'detailed', 
+            badgeIds: [newBadgeId], 
+            applications: [], 
+            description: 'Badge Collection description', 
+            isShared: false 
+        };
     }
     
     setAllBadgeCollections(prev => [...prev, newCollection]);
-    
     if (newBadges.length > 0) {
         setAllBadges(prev => [...prev, ...newBadges]);
     }
-    
-    if (contextTeam) {
-        setTeams(currentTeams => currentTeams.map(t => {
-            if (t.id === contextTeam.id) {
-                const updatedCollections = [...(t.badgeCollections || []), newCollection];
-                return { ...t, badgeCollections: updatedCollections };
-            }
-            return t;
-        }));
-    }
+    toast({ title: 'Collection Added', description: `"${newCollection.name}" has been created.` });
 
-}, [allBadges, teams]);
+  }, [allBadges, toast]);
 
 
   const updateBadgeCollection = useCallback((collectionId: string, data: Partial<BadgeCollection>) => {
@@ -413,11 +429,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     
     setAllBadges(prev => [...prev, newBadge]);
     
-    // Correctly update the badge collection state without mutating it
     setAllBadgeCollections(prevCollections =>
       prevCollections.map(c => {
         if (c.id === collectionId) {
-          // Return a new collection object with a new badgeIds array
           return { ...c, badgeIds: [newBadgeId, ...c.badgeIds] };
         }
         return c;
