@@ -409,13 +409,13 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                 </>
                             )}
                         </div>
-                        <div className="flex-1 min-w-0">
+                        <div className="flex-1 min-w-0" onClick={() => !isEditingName && isEditable && setIsEditingName(true)}>
                             {nameEditorElement}
                         </div>
                     </div>
                 </div>
             </CardHeader>
-            <CardContent className="space-y-4 pt-0 flex-grow" onPointerDown={(e) => e.stopPropagation()}>
+            <CardContent className="space-y-4 pt-0 flex-grow" onPointerDown={(e) => e.stopPropagation()} onClick={() => !isEditingDescription && isEditable && setIsEditingDescription(true)}>
                  {descriptionEditorElement}
             </CardContent>
             {canBeDeleted && deleteButton}
@@ -483,8 +483,8 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                 )}
             </div>
             <div className="flex-1 space-y-1">
-                {nameEditorElement}
-                {descriptionEditorElement}
+                <div onClick={() => !isEditingName && isEditable && setIsEditingName(true)}>{nameEditorElement}</div>
+                <div onClick={() => !isEditingDescription && isEditable && setIsEditingDescription(true)}>{descriptionEditorElement}</div>
             </div>
             {canBeDeleted && deleteButton}
         </div>
@@ -545,7 +545,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                         </>
                     )}
                 </div>
-                {nameEditorElement}
+                <div onClick={() => !isEditingName && isEditable && setIsEditingName(true)}>{nameEditorElement}</div>
             </UiBadge>
             
              {canBeDeleted && deleteButton}
@@ -784,40 +784,40 @@ function BadgeCollectionCard({ collection, allBadges, predefinedColors, onUpdate
                                     ) : (
                                         <CardTitle onClick={() => { if(isOwned) setIsEditingName(true);}} className={cn("text-2xl font-headline font-thin break-words", isOwned && "cursor-pointer")}>{collection.name}</CardTitle>
                                     )}
-                                    <div className="flex items-center" onPointerDown={(e) => e.stopPropagation()}>
-                                         <TooltipProvider>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <Button variant="ghost" size="icon" onPointerDown={(e) => { e.stopPropagation(); onAddBadge(collection.id);}} disabled={!isOwned || isViewer} className="h-8 w-8 text-muted-foreground"><GoogleSymbol name="add_circle" className="text-4xl" weight={100} /><span className="sr-only">Add Badge</span></Button>
-                                                </TooltipTrigger>
-                                                <TooltipContent><p>Add New Badge</p></TooltipContent>
-                                            </Tooltip>
-                                        </TooltipProvider>
-                                        <DropdownMenu>
-                                            <TooltipProvider>
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <DropdownMenuTrigger asChild>
-                                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-                                                                <GoogleSymbol name={viewModeOptions.find(o => o.mode === collection.viewMode)?.icon || 'view_module'} weight={100} />
-                                                            </Button>
-                                                        </DropdownMenuTrigger>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent><p>Change View Mode</p></TooltipContent>
-                                                </Tooltip>
-                                            </TooltipProvider>
-                                            <DropdownMenuContent>
-                                                {viewModeOptions.map(({mode, icon, label}) => (
-                                                    <DropdownMenuItem key={mode} onClick={() => onUpdateCollection(collection.id, { viewMode: mode })}>
-                                                        <GoogleSymbol name={icon} className="mr-2" />
-                                                        <span>{label}</span>
-                                                    </DropdownMenuItem>
-                                                ))}
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    </div>
                                 </div>
                             </div>
+                        </div>
+                        <div className="flex items-center" onPointerDown={(e) => e.stopPropagation()}>
+                            <DropdownMenu>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+                                                    <GoogleSymbol name={viewModeOptions.find(o => o.mode === collection.viewMode)?.icon || 'view_module'} weight={100} />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>Change View Mode</p></TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                                <DropdownMenuContent>
+                                    {viewModeOptions.map(({mode, icon, label}) => (
+                                        <DropdownMenuItem key={mode} onClick={() => onUpdateCollection(collection.id, { viewMode: mode })}>
+                                            <GoogleSymbol name={icon} className="mr-2" />
+                                            <span>{label}</span>
+                                        </DropdownMenuItem>
+                                    ))}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                             <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button variant="ghost" size="icon" onClick={() => onAddBadge(collection.id)} disabled={!isOwned || isViewer} className="h-8 w-8 text-muted-foreground"><GoogleSymbol name="add_circle" weight={100} /><span className="sr-only">Add Badge</span></Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent><p>Add New Badge</p></TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
                         </div>
                     </div>
                 </CardHeader>
@@ -998,6 +998,8 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     const sharedSearchInputRef = useRef<HTMLInputElement>(null);
 
     const [activeDragItem, setActiveDragItem] = useState<any>(null);
+
+    const [editingCollectionName, setEditingCollectionName] = useState(false);
 
     const contextTeam = team;
     const isTeamContext = isTeamSpecificPage && !!contextTeam;
@@ -1328,6 +1330,13 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                                             contextTeam={team}
                                                             isViewer={isViewer}
                                                             predefinedColors={predefinedColors}
+                                                            isEditingName={editingCollectionName && activeDragItem?.collection?.id === collection.id}
+                                                            setIsEditingName={(isEditing: boolean) => {
+                                                                if (isEditing) {
+                                                                    setActiveDragItem({type: 'collection', collection});
+                                                                }
+                                                                setEditingCollectionName(isEditing);
+                                                            }}
                                                         />
                                                     </div>
                                                 </div>
@@ -1372,6 +1381,13 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                                                 contextTeam={team}
                                                                 isViewer={isViewer}
                                                                 predefinedColors={predefinedColors}
+                                                                isEditingName={editingCollectionName && activeDragItem?.collection?.id === collection.id}
+                                                                setIsEditingName={(isEditing: boolean) => {
+                                                                    if (isEditing) {
+                                                                        setActiveDragItem({type: 'collection', collection});
+                                                                    }
+                                                                    setEditingCollectionName(isEditing);
+                                                                }}
                                                             />
                                                         )
                                                     })}
