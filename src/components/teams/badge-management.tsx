@@ -44,12 +44,6 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-const predefinedColors = [
-    '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
-    '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6',
-    '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
-];
-
 function CompactSearchIconPicker({
   icon,
   onUpdateIcon,
@@ -177,7 +171,7 @@ function SortableBadgeItem({ badge, ...props }: { badge: Badge, [key: string]: a
 
 function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collectionId, teamId, isSharedPreview = false, isViewer = false, isDragging }: { badge: Badge, viewMode: BadgeCollection['viewMode'], onUpdateBadge: (badgeData: Partial<Badge>) => void, onDelete: () => void, collectionId: string, teamId: string, isSharedPreview?: boolean, isViewer?: boolean, isDragging?: boolean }) {
     const { toast } = useUser();
-    const { teams, users, viewAsUser, allBadges, allBadgeCollections } = useUser();
+    const { teams, users, viewAsUser, allBadges, allBadgeCollections, predefinedColors } = useUser();
     const [isEditingName, setIsEditingName] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
@@ -729,7 +723,7 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
     contextTeam?: Team;
     isViewer?: boolean;
 }) {
-    const { viewAsUser, users, updateUser, updateTeam } = useUser();
+    const { viewAsUser, users, updateUser, updateTeam, predefinedColors } = useUser();
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isEditingName, setIsEditingName] = useState(false);
     
@@ -906,9 +900,7 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                                                     ))}
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
-                                            {isOwned && (
-                                                <Button variant="ghost" size="icon" onClick={() => onAddBadge(collection.id)} onPointerDown={(e) => e.stopPropagation()} disabled={!isOwned || isViewer} className="h-8 w-8 text-muted-foreground"><GoogleSymbol name="add" weight={100} /><span className="sr-only">Add Badge</span></Button>
-                                            )}
+                                            <Button variant="ghost" size="icon" onPointerDown={(e) => { e.stopPropagation(); onAddBadge(collection.id);}} disabled={!isOwned || isViewer} className="h-8 w-8 text-muted-foreground"><GoogleSymbol name="add" weight={100} /><span className="sr-only">Add Badge</span></Button>
                                         </div>
                                     </div>
                                 </div>
@@ -1484,3 +1476,6 @@ function TeamManagementDropZone({id, type, children, className}: {id: string, ty
     )
 }
 
+
+
+    
