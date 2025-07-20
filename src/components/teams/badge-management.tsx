@@ -130,22 +130,8 @@ function CompactSearchIconPicker({
   );
 }
 
-function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collectionId, teamId, isSharedPreview = false, isViewer = false }: { 
-    badge: Badge;
-    viewMode: BadgeCollection['viewMode'];
-    onUpdateBadge: (badgeData: Partial<Badge>) => void;
-    onDelete: () => void;
-    collectionId: string;
-    teamId: string;
-    isSharedPreview?: boolean;
-    isViewer?: boolean;
-}) {
-    const { toast, teams, users, viewAsUser, allBadgeCollections, predefinedColors } = useUser();
-    const [isEditingName, setIsEditingName] = useState(false);
-    const [isEditingDescription, setIsEditingDescription] = useState(false);
-    const nameInputRef = useRef<HTMLInputElement>(null);
-    const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
-    
+function SortableBadgeItem({ badge, ...props }: { badge: Badge, [key: string]: any }) {
+    const [isEditing, setIsEditing] = useState(false);
     const {
         attributes,
         listeners,
@@ -154,9 +140,9 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
         transition,
         isDragging,
     } = useSortable({
-        id: `badge::${badge.id}::${collectionId}`,
-        data: { type: 'badge', badge, collectionId: collectionId },
-        disabled: isEditingName || isEditingDescription,
+        id: `badge::${badge.id}::${props.collectionId}`,
+        data: { type: 'badge', badge, collectionId: props.collectionId },
+        disabled: isEditing,
     });
     
     const style = {
@@ -165,7 +151,30 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
         opacity: isDragging ? 0.5 : 1,
         zIndex: isDragging ? 10 : 'auto',
     };
+    
+    return (
+        <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+            <BadgeDisplayItem badge={badge} {...props} isEditing={isEditing} setIsEditing={setIsEditing} />
+        </div>
+    )
+}
 
+
+function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collectionId, teamId, isSharedPreview = false, isViewer = false, isEditing, setIsEditing }: { 
+    badge: Badge;
+    viewMode: BadgeCollection['viewMode'];
+    onUpdateBadge: (badgeData: Partial<Badge>) => void;
+    onDelete: () => void;
+    collectionId: string;
+    teamId: string;
+    isSharedPreview?: boolean;
+    isViewer?: boolean;
+    isEditing: boolean;
+    setIsEditing: (isEditing: boolean) => void;
+}) {
+    const { teams, users, viewAsUser, allBadgeCollections } = useUser();
+    const nameInputRef = useRef<HTMLInputElement>(null);
+    const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
     const [color, setColor] = useState(badge.color);
     
@@ -180,69 +189,50 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
         return badgeOwner?.userId === viewAsUser.userId;
     }, [isSharedPreview, isViewer, badgeOwner, viewAsUser]);
 
-    const handleSaveName = useCallback(() => {
+    const handleSave = useCallback(() => {
         const newName = nameInputRef.current?.value.trim() || '';
-        if (newName && newName !== badge.name) {
-            onUpdateBadge({ ...badge, name: newName });
+        const newDescription = descriptionTextareaRef.current?.value.trim() || '';
+        
+        const hasNameChanged = newName && newName !== badge.name;
+        const hasDescriptionChanged = newDescription !== badge.description;
+
+        if (hasNameChanged || hasDescriptionChanged) {
+            onUpdateBadge({ ...badge, name: newName || badge.name, description: newDescription });
         }
-        setIsEditingName(false);
-    }, [badge, onUpdateBadge]);
+        setIsEditing(false);
+    }, [badge, onUpdateBadge, setIsEditing]);
 
     useEffect(() => {
-        if (!isEditingName) return;
+        if (!isEditing) return;
 
         const handleOutsideClick = (event: MouseEvent) => {
-            if (nameInputRef.current && !nameInputRef.current.contains(event.target as Node)) {
-                handleSaveName();
+            const nameClicked = nameInputRef.current && nameInputRef.current.contains(event.target as Node);
+            const descClicked = descriptionTextareaRef.current && descriptionTextareaRef.current.contains(event.target as Node);
+            if (!nameClicked && !descClicked) {
+                handleSave();
             }
         };
 
         document.addEventListener('mousedown', handleOutsideClick);
-        nameInputRef.current?.focus();
-        nameInputRef.current?.select();
-        
-        return () => {
-            document.removeEventListener("mousedown", handleOutsideClick);
-        };
-    }, [isEditingName, handleSaveName]);
-    
-    const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Enter') handleSaveName();
-        else if (e.key === 'Escape') setIsEditingName(false);
-    };
-    
-    const handleSaveDescription = useCallback(() => {
-        const newDescription = descriptionTextareaRef.current?.value.trim();
-        if (newDescription !== badge.description) {
-            onUpdateBadge({ ...badge, description: newDescription });
+        if (viewMode === 'list' || viewMode === 'detailed') {
+          descriptionTextareaRef.current?.focus();
+        } else {
+          nameInputRef.current?.focus();
+          nameInputRef.current?.select();
         }
-        setIsEditingDescription(false);
-    }, [badge, onUpdateBadge]);
-
-    useEffect(() => {
-        if (!isEditingDescription) return;
-
-        const handleOutsideClick = (event: MouseEvent) => {
-            if (descriptionTextareaRef.current && !descriptionTextareaRef.current.contains(event.target as Node)) {
-                handleSaveDescription();
-            }
-        };
-
-        document.addEventListener('mousedown', handleOutsideClick);
-        descriptionTextareaRef.current?.focus();
-        descriptionTextareaRef.current?.select();
         
         return () => {
             document.removeEventListener("mousedown", handleOutsideClick);
         };
-    }, [isEditingDescription, handleSaveDescription]);
+    }, [isEditing, handleSave, viewMode]);
     
-    const handleDescriptionKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-          e.preventDefault();
-          handleSaveDescription();
-        } else if (e.key === 'Escape') {
-          setIsEditingDescription(false);
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' && !(e.target as HTMLElement).matches('textarea')) {
+            e.preventDefault();
+            handleSave();
+        }
+        else if (e.key === 'Escape') {
+            setIsEditing(false);
         }
     };
     
@@ -278,7 +268,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     }
     
     const canBeDeleted = !isViewer && !isSharedPreview;
-    
+
     const colorPickerContent = (
         <PopoverContent className="w-auto p-4" onPointerDown={(e) => e.stopPropagation()}>
             <div className="space-y-4">
@@ -326,12 +316,11 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     
     const nameEditorElement = isEditable ? (
          <div onPointerDown={(e) => e.stopPropagation()}>
-            {isEditingName ? (
+            {isEditing ? (
                 <Input
                     ref={nameInputRef}
                     defaultValue={badge.name}
-                    onBlur={handleSaveName}
-                    onKeyDown={handleNameKeyDown}
+                    onKeyDown={handleKeyDown}
                     className={cn(
                         "h-auto p-0 border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words",
                          viewMode === 'detailed' ? "text-base font-normal font-headline font-thin" : "text-sm font-thin"
@@ -341,7 +330,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                  <TooltipProvider>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                             <span onClick={() => setIsEditingName(true)} className={cn("break-words", viewMode === 'detailed' ? "text-base font-normal font-headline font-thin cursor-pointer" : "font-thin text-sm cursor-text")}>
+                             <span onClick={() => setIsEditing(true)} className={cn("break-words", viewMode === 'detailed' ? "text-base font-normal font-headline font-thin cursor-pointer" : "font-thin text-sm cursor-text")}>
                                 {badge.name}
                             </span>
                         </TooltipTrigger>
@@ -365,12 +354,11 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
 
      const descriptionEditorElement = isEditable ? (
          <div onPointerDown={(e) => e.stopPropagation()}>
-            {isEditingDescription ? (
+            {isEditing ? (
                 <Textarea 
                     ref={descriptionTextareaRef} 
                     defaultValue={badge.description} 
-                    onBlur={handleSaveDescription} 
-                    onKeyDown={handleDescriptionKeyDown} 
+                    onKeyDown={handleKeyDown} 
                     className="p-0 text-sm text-muted-foreground border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 resize-none" 
                     placeholder="Click to add a description."
                 />
@@ -378,7 +366,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                 <TooltipProvider>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <p className="text-sm text-muted-foreground min-h-[20px] break-words cursor-text" onClick={() => setIsEditingDescription(true)}>
+                            <p className="text-sm text-muted-foreground min-h-[20px] break-words cursor-text" onClick={() => setIsEditing(true)}>
                                 {badge.description || 'Click to add description.'}
                             </p>
                         </TooltipTrigger>
@@ -400,10 +388,9 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
         </TooltipProvider>
     )
 
-
     if (viewMode === 'detailed') {
       return (
-        <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="group relative h-full flex flex-col rounded-lg">
+        <div className="group relative h-full flex flex-col rounded-lg">
             <CardHeader onPointerDown={(e) => e.stopPropagation()}>
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -479,7 +466,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     
     if (viewMode === 'list') {
       return (
-        <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="group relative flex w-full items-start gap-4 p-2 rounded-md hover:bg-muted/50">
+        <div className="group relative flex w-full items-start gap-4 p-2 rounded-md hover:bg-muted/50">
             <div className="relative" onPointerDown={(e) => e.stopPropagation()}>
                 <TooltipProvider>
                     <Tooltip>
@@ -496,7 +483,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
                                 />
                             </span>
                         </TooltipTrigger>
-                        <TooltipContent><p>{isEditable ? "Change Icon" : "Properties are managed by the owner."}</pTooltipContent>
+                        <TooltipContent><p>{isEditable ? "Change Icon" : "Properties are managed by the owner."}</p></TooltipContent>
                     </Tooltip>
                 </TooltipProvider>
                 {!isViewer && (
@@ -547,7 +534,7 @@ function BadgeDisplayItem({ badge, viewMode, onUpdateBadge, onDelete, collection
     
     // Assorted View
     return (
-        <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="group relative p-1.5">
+        <div className="group relative p-1.5">
              <UiBadge
                 variant={'outline'}
                 style={{ color: badge.color, borderColor: badge.color }}
@@ -654,13 +641,13 @@ type BadgeCollectionCardProps = {
     isSharedPreview?: boolean;
     contextTeam?: Team;
     isViewer?: boolean;
+    isEditing: boolean;
+    setIsEditing: (isEditing: boolean) => void;
 };
 
-function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDeleteCollection, onAddBadge, onUpdateBadge, onDeleteBadge, dragHandleProps, isSharedPreview = false, contextTeam, isViewer = false }: BadgeCollectionCardProps) {
+function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDeleteCollection, onAddBadge, onUpdateBadge, onDeleteBadge, dragHandleProps, isSharedPreview = false, contextTeam, isViewer = false, isEditing, setIsEditing }: BadgeCollectionCardProps) {
     const { viewAsUser, users, updateUser, updateTeam, predefinedColors } = useUser();
     const nameInputRef = useRef<HTMLInputElement>(null);
-    const [isEditingName, setIsEditingName] = useState(false);
-    
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
     const [color, setColor] = useState(collection.color);
     
@@ -675,11 +662,11 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
         if (newName && newName !== collection.name) {
             onUpdateCollection(collection.id, { name: newName });
         }
-        setIsEditingName(false);
-    }, [collection.name, collection.id, onUpdateCollection]);
+        setIsEditing(false);
+    }, [collection.name, collection.id, onUpdateCollection, setIsEditing]);
     
     useEffect(() => {
-        if (!isEditingName) return;
+        if (!isEditing) return;
         const handleOutsideClick = (event: MouseEvent) => {
             if (nameInputRef.current && !nameInputRef.current.contains(event.target as Node)) {
                 handleSaveName();
@@ -691,11 +678,11 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
         return () => {
             document.removeEventListener("mousedown", handleOutsideClick);
         };
-    }, [isEditingName, handleSaveName]);
+    }, [isEditing, handleSaveName]);
 
     const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') handleSaveName();
-        else if (e.key === 'Escape') setIsEditingName(false);
+        else if (e.key === 'Escape') setIsEditing(false);
     };
     
     const collectionBadges = useMemo(() => {
@@ -809,10 +796,10 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                             </div>
                             <div className="flex-1 min-w-0" onPointerDown={(e) => { if(isOwned) e.stopPropagation(); }}>
                                 <div className="flex items-center justify-between">
-                                    {isEditingName && isOwned ? (
+                                    {isEditing && isOwned ? (
                                         <Input ref={nameInputRef} defaultValue={collection.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"/>
                                     ) : (
-                                        <CardTitle onClick={() => { if(isOwned) setIsEditingName(true);}} className={cn("text-2xl font-headline font-thin break-words", isOwned && "cursor-pointer")}>{collection.name}</CardTitle>
+                                        <CardTitle onClick={() => { if(isOwned) setIsEditing(true);}} className={cn("text-2xl font-headline font-thin break-words", isOwned && "cursor-pointer")}>{collection.name}</CardTitle>
                                     )}
                                     <div className="flex items-center" onPointerDown={(e) => e.stopPropagation()}>
                                         <DropdownMenu>
@@ -842,7 +829,7 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                 <SortableContext items={collection.badgeIds.map(id => `badge::${id}::${collection.id}`)} strategy={rectSortingStrategy}>
                     <DroppableCollectionContent collection={collection}>
                         {collectionBadges.map((badge) => (
-                            <BadgeDisplayItem
+                            <SortableBadgeItem
                                 key={`${badge.id}::${collection.id}`}
                                 badge={badge}
                                 viewMode={collection.viewMode}
@@ -905,7 +892,7 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
 type SortableCollectionCardProps = {
     collection: BadgeCollection;
     allBadges: Badge[];
-    onUpdateCollection: (collectionId: string, newValues: Partial<Omit<BadgeCollection, 'id' | 'badgeIds',>>) => void;
+    onUpdateCollection: (collectionId: string, newValues: Partial<Omit<BadgeCollection, 'id' | 'badgeIds'>>) => void;
     onDeleteCollection: (collection: BadgeCollection) => void;
     onAddBadge: (collectionId: string, sourceBadge?: Badge) => void;
     onUpdateBadge: (badgeData: Partial<Badge>) => void;
@@ -916,12 +903,12 @@ type SortableCollectionCardProps = {
 }
 
 function SortableCollectionCard({ collection, ...props }: SortableCollectionCardProps) {
-    const [isEditingName, setIsEditingName] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
 
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: `collection::${collection.id}`,
         data: { type: 'collection', collection, isSharedPreview: props.isSharedPreview },
-        disabled: isEditingName,
+        disabled: isEditing,
     });
 
     const style = {
@@ -937,6 +924,8 @@ function SortableCollectionCard({ collection, ...props }: SortableCollectionCard
                 {...props}
                 collection={collection} 
                 dragHandleProps={{...attributes, ...listeners}}
+                isEditing={isEditing}
+                setIsEditing={setIsEditing}
             />
         </div>
     );
@@ -994,7 +983,8 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         updateBadge,
         deleteBadge,
         reorderBadges,
-        updateTeam
+        updateTeam,
+        updateUser,
     } = useUser();
 
     const { toast } = useToast();
@@ -1028,13 +1018,9 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
             canCreateCollection = canManage;
             isViewer = !canManage;
             
-            const relevantOwnerIds = new Set(hasAdmins ? contextTeam.teamAdmins! : contextTeam.members);
-            
-            const ownedCollections = allBadgeCollections.filter(c => relevantOwnerIds.has(c.owner.id));
-            const linkedCollectionIds = new Set(contextTeam.linkedCollectionIds || []);
-            const linkedCollections = allBadgeCollections.filter(c => linkedCollectionIds.has(c.id));
-            
-            collections = [...ownedCollections, ...linkedCollections];
+            const owners = hasAdmins ? team.teamAdmins : team.members;
+            const ownerIds = new Set(owners);
+            collections = allBadgeCollections.filter(c => ownerIds.has(c.owner.id));
 
         } else { // User context
             canManage = true;
@@ -1450,6 +1436,8 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                             isSharedPreview={activeDragItem.isSharedPreview}
                             contextTeam={contextTeam}
                             isViewer={isViewer}
+                            isEditing={false}
+                            setIsEditing={() => {}}
                         />
                         </div>
                     ) : activeDragItem?.type === 'badge' ? (
@@ -1463,32 +1451,14 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                             teamId={contextTeam?.id || ''}
                             isSharedPreview={false}
                             isViewer={false}
+                            isEditing={false}
+                            setIsEditing={() => {}}
                         />
                         </div>
                     ) : null}
                 </DragOverlay>
             </div>
         </DndContext>
-    );
-}
-
-function SortableCollectionCard({ collection, ...props }: any) {
-    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-        id: `collection::${collection.id}`,
-        data: { type: 'collection', collection, isSharedPreview: props.isSharedPreview },
-    });
-
-    const style = {
-        transform: CSS.Transform.toString(transform),
-        transition,
-        opacity: isDragging ? 0.8 : 1,
-        zIndex: isDragging ? 20 : 'auto',
-    };
-    
-    return (
-        <div ref={setNodeRef} style={style}>
-            <BadgeCollectionCard {...props} collection={collection} dragHandleProps={{...attributes, ...listeners}} />
-        </div>
     );
 }
 
