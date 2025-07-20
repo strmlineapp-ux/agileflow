@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
@@ -350,7 +349,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             id: newCollectionId, 
             name: `${sourceCollection.name} (Copy)`, 
             owner: ownerContext, 
-            isShared: false, 
+            isShared: false,
+            description: sourceCollection.description || '',
             badgeIds: newBadges.map(b => b.id) 
         };
     } else {
@@ -386,7 +386,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         setTeams(prevTeams => prevTeams.map(team => {
             if (team.id === contextTeam.id) {
                 const updatedCollections = [...(team.badgeCollections || []), newCollection];
-                return { ...team, badgeCollections: updatedCollections };
+                const updatedActiveCollections = new Set(team.activeBadgeCollections || []);
+                if (!sourceCollection) { // Only auto-activate brand new collections
+                    updatedActiveCollections.add(newCollection.id);
+                }
+                return { ...team, badgeCollections: updatedCollections, activeBadgeCollections: Array.from(updatedActiveCollections) };
             }
             return team;
         }));

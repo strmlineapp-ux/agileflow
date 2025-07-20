@@ -342,7 +342,7 @@ function BadgeDisplayItem({
             <CardContent className="space-y-4 pt-0 flex-grow" onPointerDown={(e) => e.stopPropagation()}>
                  {descriptionEditorElement}
             </CardContent>
-            {deleteButton}
+            {isOwner && deleteButton}
         </div>
       );
     }
@@ -377,7 +377,7 @@ function BadgeDisplayItem({
                 {nameEditorElement}
                 {descriptionEditorElement}
             </div>
-            {deleteButton}
+            {isOwner && deleteButton}
         </div>
       );
     }
@@ -414,7 +414,7 @@ function BadgeDisplayItem({
                 </div>
                 {nameEditorElement}
             </UiBadge>
-            {deleteButton}
+            {isOwner && deleteButton}
         </div>
     );
 }
@@ -613,6 +613,25 @@ function BadgeCollectionCard({ collection, allBadges, predefinedColors, onUpdate
         { mode: 'detailed', icon: 'view_comfy_alt', label: 'Detailed View' },
         { mode: 'list', icon: 'view_list', label: 'List View' }
     ];
+    
+    const descriptionEditorElement = (
+        <div onPointerDown={(e) => {if(isOwned) e.stopPropagation();}} onClick={() => isOwned && setIsEditingDescription(true)}>
+           {isEditingDescription && isOwned ? (
+               <Textarea 
+                   ref={descriptionTextareaRef} 
+                   defaultValue={collection.description} 
+                   onBlur={handleSaveDescription} 
+                   onKeyDown={handleDescriptionKeyDown}
+                   className="p-0 text-sm text-muted-foreground border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 resize-none" 
+                   placeholder="Click to add a description." 
+               />
+            ) : (
+                <p className={cn("text-sm text-muted-foreground min-h-[20px] break-words", isOwned && "cursor-text")}>
+                   {collection.description || 'Click to add a description.'}
+               </p>
+            )}
+       </div>
+   );
 
     return (
         <Card className="h-full flex flex-col bg-transparent relative">
@@ -674,28 +693,34 @@ function BadgeCollectionCard({ collection, allBadges, predefinedColors, onUpdate
                                         <CardTitle onClick={() => { if(isOwned) setIsEditingName(true);}} className={cn("text-2xl font-headline font-thin break-words", isOwned && "cursor-pointer")}>{collection.name}</CardTitle>
                                     )}
                                 </div>
-                                 <div onClick={() => isOwned && setIsEditingDescription(true)}>
-                                    {isEditingDescription && isOwned ? (
-                                        <Textarea 
-                                            ref={descriptionTextareaRef} 
-                                            defaultValue={collection.description} 
-                                            onBlur={handleSaveDescription} 
-                                            onKeyDown={handleDescriptionKeyDown}
-                                            className="p-0 text-sm text-muted-foreground border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 resize-none" 
-                                            placeholder="Click to add a description." 
-                                        />
-                                    ) : (
-                                        <p className={cn("text-sm text-muted-foreground min-h-[20px] break-words", isOwned && "cursor-text")}>
-                                            {collection.description || 'Click to add a description.'}
-                                        </p>
-                                    )}
-                                </div>
                             </div>
                         </div>
                         <div className="flex items-center" onPointerDown={(e) => e.stopPropagation()}>
-                           {!isSharedPreview && <TooltipProvider><Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={() => onAddBadge(collection.id)} disabled={!isOwned || isViewer} className="h-8 w-8 text-muted-foreground"><GoogleSymbol name="add_circle" weight={100} /></Button></TooltipTrigger><TooltipContent><p>Add New Badge</p></TooltipContent></Tooltip></TooltipProvider>}
+                           {isOwned && !isSharedPreview && (
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button variant="ghost" size="icon" onClick={() => onAddBadge(collection.id)} disabled={!isOwned || isViewer} className="h-8 w-8 text-muted-foreground">
+                                                <GoogleSymbol name="add_circle" weight={100} />
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>Add New Badge</p></TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            )}
                            <DropdownMenu>
-                                <TooltipProvider><Tooltip><TooltipTrigger asChild><DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground"><GoogleSymbol name={viewModeOptions.find(o => o.mode === collection.viewMode)?.icon || 'view_module'} weight={100} /></Button></DropdownMenuTrigger></TooltipTrigger><TooltipContent><p>Change View Mode</p></TooltipContent></Tooltip></TooltipProvider>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+                                                    <GoogleSymbol name={viewModeOptions.find(o => o.mode === collection.viewMode)?.icon || 'view_module'} weight={100} />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>Change View Mode</p></TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
                                 <DropdownMenuContent>
                                     {viewModeOptions.map(({mode, icon, label}) => (
                                         <DropdownMenuItem key={mode} onClick={() => onUpdateCollection(collection.id, { viewMode: mode })}>
@@ -710,7 +735,8 @@ function BadgeCollectionCard({ collection, allBadges, predefinedColors, onUpdate
                 </CardHeader>
             </div>
              {isExpanded && (
-                 <CardContent className="flex-grow pt-0 flex flex-col min-h-0">
+                <CardContent className="flex-grow pt-0 flex flex-col min-h-0">
+                    {descriptionEditorElement}
                     <SortableContext items={collection.badgeIds.map(id => `badge::${id}::${collection.id}`)} strategy={rectSortingStrategy}>
                         <DroppableCollectionContent collection={collection}>
                             {collectionBadges.map((badge) => (
@@ -747,7 +773,7 @@ function BadgeCollectionCard({ collection, allBadges, predefinedColors, onUpdate
                                             <GoogleSymbol name={app.icon} weight={100} />
                                         </Button>
                                     </TooltipTrigger>
-                                    <TooltipContent><p>Associated with {app.label}</p></TooltipContent>
+                                    <TooltipContent>Associated with {app.label}</TooltipContent>
                                 </Tooltip>
                             </TooltipProvider>
                         ))}
