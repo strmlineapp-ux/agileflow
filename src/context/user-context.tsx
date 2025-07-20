@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
@@ -385,7 +386,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         setTeams(prevTeams => prevTeams.map(team => {
             if (team.id === contextTeam.id) {
                 const updatedCollections = [...(team.badgeCollections || []), newCollection];
-                return { ...team, badgeCollections: updatedCollections, activeBadgeCollections: [...(team.activeBadgeCollections || []), newCollection.id] };
+                const updatedActiveCollections = [...(team.activeBadgeCollections || []), newCollectionId];
+                return { ...team, badgeCollections: updatedCollections, activeBadgeCollections: updatedActiveCollections };
             }
             return team;
         }));
@@ -437,7 +439,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const addBadge = useCallback((collectionId: string, sourceBadge?: Badge) => {
     const newBadgeId = crypto.randomUUID();
-    const newBadge: Badge = { id: newBadgeId, ownerCollectionId: collectionId, name: sourceBadge ? `${sourceBadge.name} (Copy)` : `New Badge`, icon: sourceBadge?.icon || googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)], color: predefinedColors[Math.floor(Math.random() * predefinedColors.length)] };
+    const newBadge: Badge = { 
+      id: newBadgeId, 
+      ownerCollectionId: collectionId, 
+      name: sourceBadge ? `${sourceBadge.name} (Copy)` : `New Badge`, 
+      icon: sourceBadge?.icon || googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)], 
+      color: sourceBadge?.color || predefinedColors[Math.floor(Math.random() * predefinedColors.length)]
+    };
     
     setAllBadges(prev => [newBadge, ...prev]);
     
@@ -527,5 +535,3 @@ export function useUser() {
     const data = useUserData();
     return { ...session, ...data };
 }
-
-    
