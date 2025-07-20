@@ -889,7 +889,9 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                                         ) : (
                                             <CardTitle onPointerDown={(e) => { e.stopPropagation(); if(isOwned) setIsEditingName(true);}} className={cn("text-2xl font-headline font-thin break-words", isOwned && "cursor-pointer")}>{collection.name}</CardTitle>
                                         )}
-                                         <Button variant="ghost" size="icon" onClick={() => onAddBadge(collection.id)} disabled={!isOwned || isViewer} className="h-8 w-8 text-muted-foreground"><GoogleSymbol name="add" weight={100} /><span className="sr-only">Add Badge</span></Button>
+                                        {isOwned && (
+                                            <Button variant="ghost" size="icon" onClick={() => onAddBadge(collection.id)} disabled={!isOwned || isViewer} className="h-8 w-8 text-muted-foreground"><GoogleSymbol name="add" weight={100} /><span className="sr-only">Add Badge</span></Button>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -1067,36 +1069,28 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     }, [isTeamContext, contextTeam, viewAsUser]);
 
     const collectionsToDisplay = useMemo(() => {
-        let ownerIds: Set<string>;
-    
+        let collections;
         if (isTeamContext && contextTeam) {
-             const hasAdmins = contextTeam.teamAdmins && contextTeam.teamAdmins.length > 0;
-            if (hasAdmins) {
-                ownerIds = new Set(contextTeam.teamAdmins);
-            } else {
-                ownerIds = new Set(contextTeam.members);
+            const ownerIds = new Set(
+                (contextTeam.teamAdmins && contextTeam.teamAdmins.length > 0)
+                    ? contextTeam.teamAdmins
+                    : contextTeam.members
+            );
+            collections = allBadgeCollections.filter(c => ownerIds.has(c.owner.id));
+
+            if (contextTeam.linkedCollectionIds) {
+                const linked = contextTeam.linkedCollectionIds.map(id => allBadgeCollections.find(c => c.id === id)).filter((c): c is BadgeCollection => !!c);
+                collections = [...collections, ...linked];
             }
         } else {
-            ownerIds = new Set([viewAsUser.userId]);
-        }
-    
-        let collections = allBadgeCollections.filter(c => ownerIds.has(c.owner.id));
-        
-        if (isTeamContext && contextTeam?.linkedCollectionIds) {
-            const linkedCollections = contextTeam.linkedCollectionIds
-                .map(id => allBadgeCollections.find(c => c.id === id))
-                .filter((c): c is BadgeCollection => !!c);
-            collections = [...collections, ...linkedCollections];
+            collections = allBadgeCollections.filter(c => c.owner.id === viewAsUser.userId);
         }
 
         if (searchTerm) {
             collections = collections.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
         }
         
-        // Remove duplicates
-        collections = Array.from(new Map(collections.map(c => [c.id, c])).values());
-
-        return collections;
+        return Array.from(new Map(collections.map(c => [c.id, c])).values());
     }, [allBadgeCollections, isTeamContext, contextTeam, viewAsUser, searchTerm]);
     
     useEffect(() => {

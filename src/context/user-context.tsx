@@ -65,7 +65,7 @@ interface UserDataContextType {
   allBadges: Badge[];
   allBadgeCollections: BadgeCollection[];
   addBadgeCollection: (owner: User, sourceCollection?: BadgeCollection, contextTeam?: Team) => void;
-  updateBadgeCollection: (collectionId: string, data: Partial<BadgeCollection>, teamId?: string) => void;
+  updateBadgeCollection: (collectionId: string, data: Partial<BadgeCollection>) => void;
   deleteBadgeCollection: (collectionId: string) => void;
   addBadge: (collectionId: string, sourceBadge?: Badge) => void;
   updateBadge: (badgeData: Partial<Badge>) => void;
@@ -138,6 +138,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                 badgesMap.set(badge.id, badge);
             }
         });
+    });
+    
+    mockTeams.forEach(team => {
+        (team.allBadges || []).forEach(badge => {
+             if (!badgesMap.has(badge.id)) {
+                badgesMap.set(badge.id, badge);
+            }
+        })
     });
     
     return Array.from(badgesMap.values());
@@ -345,7 +353,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         const newBadgeId = crypto.randomUUID();
         const newBadge: Badge = { id: newBadgeId, ownerCollectionId: newCollectionId, name: `New Badge`, icon: googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)], color: predefinedColors[Math.floor(Math.random() * predefinedColors.length)] };
         newBadges.push(newBadge);
-        newCollection = { id: newCollectionId, name: `New Collection ${allBadgeCollections.length + 1}`, owner: ownerContext, icon: 'category', color: '#64748B', viewMode: 'detailed', badgeIds: [newBadgeId], applications: [], description: 'Badge Collection description', isShared: false };
+        newCollection = { id: newCollectionId, name: `New Collection`, owner: ownerContext, icon: 'category', color: '#64748B', viewMode: 'detailed', badgeIds: [newBadgeId], applications: [], description: 'Badge Collection description', isShared: false };
     }
     
     setAllBadgeCollections(prev => [...prev, newCollection]);
@@ -364,21 +372,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         }));
     }
 
-}, [allBadgeCollections.length, allBadges, teams]);
+}, [allBadges, teams]);
 
 
-  const updateBadgeCollection = useCallback((collectionId: string, data: Partial<BadgeCollection>, teamId?: string) => {
+  const updateBadgeCollection = useCallback((collectionId: string, data: Partial<BadgeCollection>) => {
     setAllBadgeCollections(current => current.map(c => (c.id === collectionId ? { ...c, ...data } : c)));
-
-    if (teamId) {
-        setTeams(currentTeams => currentTeams.map(team => {
-            if (team.id === teamId) {
-                const newCollections = team.badgeCollections.map(c => c.id === collectionId ? { ...c, ...data } : c);
-                return { ...team, badgeCollections: newCollections };
-            }
-            return team;
-        }));
-    }
   }, []);
 
 
@@ -402,7 +400,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     // Also remove the collection from any team that might be using it
     setTeams(currentTeams => currentTeams.map(team => ({
         ...team,
-        badgeCollections: team.badgeCollections.filter(c => c.id !== collectionId),
+        badgeCollections: (team.badgeCollections || []).filter(c => c.id !== collectionId),
         linkedCollectionIds: (team.linkedCollectionIds || []).filter(id => id !== collectionId),
         activeBadgeCollections: (team.activeBadgeCollections || []).filter(id => id !== collectionId)
     })));
