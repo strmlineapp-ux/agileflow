@@ -975,7 +975,7 @@ function BadgeCollectionCard({ collection, allBadges, onUpdateCollection, onDele
                 <Dialog open={!!editingBadge} onOpenChange={(isOpen) => !isOpen && setEditingBadge(null)}>
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle>Edit Badge</DialogTitle>
+                            <UIDialogTitle>Edit Badge</UIDialogTitle>
                         </DialogHeader>
                         {/* Placeholder for a more detailed badge editing form */}
                         <div className="p-4">Editing form for "{editingBadge.name}" would go here.</div>
@@ -1000,7 +1000,7 @@ function DuplicateZone({ onAdd }: { onAdd: () => void; }) {
       <TooltipProvider>
           <Tooltip>
               <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full p-0" onClick={onAdd} onPointerDown={(e) => e.stopPropagation()}>
+                  <Button variant="ghost" size="icon" className="rounded-full p-0" onPointerDown={(e) => e.stopPropagation()} onClick={onAdd}>
                     <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
                     <span className="sr-only">New Collection or Drop to Duplicate</span>
                   </Button>
@@ -1071,22 +1071,27 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     }, [isTeamContext, contextTeam, viewAsUser]);
 
     const collectionsToDisplay = useMemo(() => {
-        let collections: BadgeCollection[];
-        if (isTeamContext && contextTeam) {
-            const hasAdmins = contextTeam.teamAdmins && contextTeam.teamAdmins.length > 0;
-            const relevantUserIds = new Set(hasAdmins ? contextTeam.teamAdmins : contextTeam.members);
-            collections = allBadgeCollections.filter(c => relevantUserIds.has(c.owner.id));
-        } else {
-            collections = allBadgeCollections.filter(c => c.owner.id === viewAsUser.userId);
-        }
+      let collections: BadgeCollection[];
+      if (isTeamContext && contextTeam) {
+        const hasAdmins = contextTeam.teamAdmins && contextTeam.teamAdmins.length > 0;
+        const relevantUserIds = new Set(hasAdmins ? contextTeam.teamAdmins : contextTeam.members);
+        const ownedCollectionIds = new Set(allBadgeCollections.filter(c => relevantUserIds.has(c.owner.id)).map(c => c.id));
+        const linkedCollectionIds = new Set(contextTeam.linkedCollectionIds || []);
+        const allVisibleIds = new Set([...ownedCollectionIds, ...linkedCollectionIds]);
+        collections = allBadgeCollections.filter(c => allVisibleIds.has(c.id));
+      } else {
+        const ownedCollectionIds = new Set(allBadgeCollections.filter(c => c.owner.id === viewAsUser.userId).map(c => c.id));
+        const linkedCollectionIds = new Set(viewAsUser.linkedCollectionIds || []);
+        const allVisibleIds = new Set([...ownedCollectionIds, ...linkedCollectionIds]);
+        collections = allBadgeCollections.filter(c => allVisibleIds.has(c.id));
+      }
 
-        if (searchTerm) {
-            collections = collections.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
-        }
-        
-        return Array.from(new Map(collections.map(c => [c.id, c])).values());
+      if (searchTerm) {
+        return collections.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
+      }
+      return collections;
     }, [allBadgeCollections, isTeamContext, contextTeam, viewAsUser, searchTerm]);
-    
+
     useEffect(() => {
         if (isEditingTitle) titleInputRef.current?.focus();
     }, [isEditingTitle]);
@@ -1118,14 +1123,14 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
             .filter(c => c.name.toLowerCase().includes(sharedSearchTerm.toLowerCase()));
     }, [allBadgeCollections, collectionsToDisplay, sharedSearchTerm]);
 
-    const handleAddCollection = (sourceCollection?: BadgeCollection) => {
+    const handleAddCollection = () => {
         if (!canCreateCollection) return;
-        addBadgeCollection(viewAsUser, sourceCollection, contextTeam);
+        addBadgeCollection(viewAsUser, undefined, contextTeam);
     };
 
     const handleDuplicateCollection = (sourceCollection: BadgeCollection) => {
         if (isViewer) return;
-        handleAddCollection(sourceCollection);
+        addBadgeCollection(viewAsUser, sourceCollection, contextTeam);
     };
     
     const handleDeleteCollection = (collection: BadgeCollection) => {
@@ -1306,7 +1311,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                     </TooltipProvider>
                                 )}
                                 {canCreateCollection && (
-                                    <DuplicateZone id="duplicate-collection-zone" onAdd={() => handleAddCollection()} />
+                                    <DuplicateZone onAdd={handleAddCollection} />
                                 )}
                             </div>
                             <div className="flex items-center gap-1">
