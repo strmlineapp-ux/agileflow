@@ -204,14 +204,30 @@ The `Team` entity is a functional unit that groups users together for collaborat
 | `eventTemplates?: EventTemplate[]` | An array of reusable templates for common events. |
 
 
-### BadgeCollection Entity
-A sub-entity of `Team`, this groups related Badges together. It is always owned by a `User`, but can be linked to and used by multiple teams.
+## Badge & Badge Collection Entities
+
+These entities represent the skills, roles, and priorities that can be assigned within the application. Their ownership model is central to how they are managed and shared.
+
+### Core Principle: User Ownership
+
+-   **`BadgeCollection` is User-Owned**: A `BadgeCollection` is **always** owned by a single `User`. It is not a sub-entity of a `Team`. This means that when a user creates a collection, it belongs to them, regardless of whether they created it on their personal board or on a team's management page.
+-   **`Badge` is Collection-Owned**: A `Badge` is always owned by its parent `BadgeCollection`. Its properties (name, icon, color) are managed by the owner of that collection.
+
+### Contextual Display on Team Pages
+
+When viewing the "Badges" tab on a team's management page, the application does not show collections owned by the team. Instead, it **dynamically displays** a set of collections based on the team's membership:
+1.  If the team has designated `teamAdmins`, the tab will show **only** the badge collections owned by those admin users.
+2.  If the team has no designated `teamAdmins`, the tab will show a consolidated list of **all** badge collections owned by **any** member of the team.
+
+This ensures that team members can use and share their personal badge collections within a collaborative team environment without transferring ownership.
+
+### BadgeCollection Entity Data
 
 | Data Point | Description |
 | :--- | :--- |
 | `id: string` | A unique identifier for the collection. |
-| `owner: { type: 'user', id: string }` | An object that defines who owns the collection. Ownership dictates who can edit the collection's properties and the original badges within it. |
-| `isShared?: boolean` | **Internal.** If `true`, this collection and its badges will be visible to all other teams in the application for discovery and linking. |
+| `owner: { type: 'user', id: string }` | **Crucial.** An object that defines which `User` owns the collection. Ownership dictates who can edit the collection's properties and the original badges within it. |
+| `isShared?: boolean` | **Internal.** If `true`, this collection and its badges will be visible to all other users/teams in the application for discovery and linking. |
 | `name: string` | The name of the collection (e.g., "Skills"). |
 | `icon: string` | The Google Symbol name for the collection's icon. |
 | `color: string` | The hex color for the collection's icon. |
@@ -221,7 +237,8 @@ A sub-entity of `Team`, this groups related Badges together. It is always owned 
 | `description?: string` | An optional description for the collection. |
 
 
-### Badge Entity
+### Badge Entity Data
+
 This represents a specific, functional role or skill. The single source of truth for a badge is the instance owned by its parent `BadgeCollection`.
 
 | Data Point | Description |
