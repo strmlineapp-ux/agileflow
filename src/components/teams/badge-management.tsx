@@ -138,10 +138,7 @@ function BadgeDisplayItem({
     isSharedPreview = false, 
     isViewer = false, 
     predefinedColors,
-    isEditingName,
-    setIsEditingName,
-    isEditingDescription,
-    setIsEditingDescription
+    isOwner,
 }: { 
     badge: Badge;
     viewMode: BadgeCollection['viewMode'];
@@ -150,24 +147,16 @@ function BadgeDisplayItem({
     isSharedPreview?: boolean;
     isViewer?: boolean;
     predefinedColors: string[];
-    isEditingName: boolean;
-    setIsEditingName: (isEditing: boolean) => void;
-    isEditingDescription: boolean;
-    setIsEditingDescription: (isEditing: boolean) => void;
+    isOwner: boolean;
 }) {
-    const { viewAsUser, allBadgeCollections } = useUser();
     const nameInputRef = useRef<HTMLInputElement>(null);
     const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
     const [color, setColor] = useState(badge.color);
     
-    const isOwner = useMemo(() => {
-        if (isSharedPreview || isViewer) return false;
-        const ownerCollection = allBadgeCollections.find(c => c.id === badge.ownerCollectionId);
-        if (!ownerCollection) return false;
-        return ownerCollection.owner.id === viewAsUser.userId;
-    }, [isSharedPreview, isViewer, badge.ownerCollectionId, viewAsUser.userId, allBadgeCollections]);
-    
+    const [isEditingName, setIsEditingName] = useState(false);
+    const [isEditingDescription, setIsEditingDescription] = useState(false);
+
     const handleSaveName = useCallback(() => {
         const newName = nameInputRef.current?.value.trim() || '';
         if (newName && newName !== badge.name) {
@@ -420,21 +409,11 @@ function BadgeDisplayItem({
 }
 
 function SortableBadgeItem({ badge, ...props }: { badge: Badge, [key: string]: any }) {
-    const [isEditingName, setIsEditingName] = useState(false);
-    const [isEditingDescription, setIsEditingDescription] = useState(false);
-    const isEditing = isEditingName || isEditingDescription;
-
-    const {
-        attributes,
-        listeners,
-        setNodeRef,
-        transform,
-        transition,
-        isDragging,
-    } = useSortable({
+    const isOwner = props.isOwner;
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: `badge::${badge.id}::${props.collectionId}`,
         data: { type: 'badge', badge, collectionId: props.collectionId },
-        disabled: isEditing,
+        disabled: !isOwner
     });
     
     const style = {
@@ -448,10 +427,7 @@ function SortableBadgeItem({ badge, ...props }: { badge: Badge, [key: string]: a
         <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
             <BadgeDisplayItem 
                 badge={badge}
-                isEditingName={isEditingName}
-                setIsEditingName={setIsEditingName}
-                isEditingDescription={isEditingDescription}
-                setIsEditingDescription={setIsEditingDescription}
+                isOwner={isOwner}
                 {...props} 
             />
         </div>
@@ -502,7 +478,7 @@ function BadgeCollectionCard({ collection, allBadges, predefinedColors, onUpdate
     const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
     const [isExpanded, setIsExpanded] = useState(false);
     
-    const isOwned = useMemo(() => {
+    const isOwner = useMemo(() => {
         if (isSharedPreview || isViewer) return false;
         if (!viewAsUser) return false;
         return collection.owner.id === viewAsUser.userId;
@@ -576,10 +552,10 @@ function BadgeCollectionCard({ collection, allBadges, predefinedColors, onUpdate
     let shareIconTitle: string = '';
     let shareIconColor: string | undefined = ownerUser?.primaryColor || '#64748B';
 
-    if (isOwned && collection.isShared) {
+    if (isOwner && collection.isShared) {
         shareIcon = 'upload';
         shareIconTitle = 'Owned by you and shared with all teams';
-    } else if (!isOwned && !isSharedPreview) {
+    } else if (!isOwner && !isSharedPreview) {
         shareIcon = 'downloading';
         shareIconTitle = `Shared by ${ownerUser?.displayName || 'another user'}`;
     }
@@ -615,8 +591,8 @@ function BadgeCollectionCard({ collection, allBadges, predefinedColors, onUpdate
     ];
     
     const descriptionEditorElement = (
-        <div onPointerDown={(e) => {if(isOwned) e.stopPropagation();}} onClick={() => isOwned && setIsEditingDescription(true)}>
-           {isEditingDescription && isOwned ? (
+        <div onPointerDown={(e) => {if(isOwner) e.stopPropagation();}} onClick={() => isOwner && setIsEditingDescription(true)}>
+           {isEditingDescription && isOwner ? (
                <Textarea 
                    ref={descriptionTextareaRef} 
                    defaultValue={collection.description} 
@@ -626,8 +602,8 @@ function BadgeCollectionCard({ collection, allBadges, predefinedColors, onUpdate
                    placeholder="Click to add a description." 
                />
             ) : (
-                <p className={cn("text-sm text-muted-foreground min-h-[20px] break-words", isOwned && "cursor-text")}>
-                   {collection.description || 'Click to add a description.'}
+                <p className={cn("text-sm text-muted-foreground min-h-[20px] break-words", isOwner && "cursor-text")}>
+                   {collection.description || (isOwner ? 'Click to add a description.' : '')}
                </p>
             )}
        </div>
@@ -642,7 +618,7 @@ function BadgeCollectionCard({ collection, allBadges, predefinedColors, onUpdate
                             <GoogleSymbol name="cancel" className="text-lg" weight={100} />
                         </Button>
                     </TooltipTrigger>
-                    <TooltipContent><p>{isOwned ? "Delete Collection" : "Unlink Collection"}</p></TooltipContent>
+                    <TooltipContent><p>{isOwner ? "Delete Collection" : "Unlink Collection"}</p></TooltipContent>
                 </Tooltip>
             </TooltipProvider>
              <div {...dragHandleProps}>
@@ -653,7 +629,7 @@ function BadgeCollectionCard({ collection, allBadges, predefinedColors, onUpdate
                                 <CompactSearchIconPicker 
                                     icon={collection.icon} 
                                     onUpdateIcon={(icon) => onUpdateCollection(collection.id, { icon })}
-                                    disabled={!isOwned}
+                                    disabled={!isOwner}
                                     weight={100}
                                     grade={-25}
                                     style={{ fontSize: '36px' }}
@@ -662,7 +638,7 @@ function BadgeCollectionCard({ collection, allBadges, predefinedColors, onUpdate
                                 {!isViewer && (
                                     <>
                                         <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                                            <TooltipProvider><Tooltip><TooltipTrigger asChild><PopoverTrigger asChild disabled={!isOwned} onPointerDown={(e) => e.stopPropagation()}><button className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-0", !isOwned ? "cursor-not-allowed" : "cursor-pointer")} style={{ backgroundColor: collection.color }} /></PopoverTrigger></TooltipTrigger><TooltipContent><p>Change Color</p></TooltipContent></Tooltip></TooltipProvider>
+                                            <TooltipProvider><Tooltip><TooltipTrigger asChild><PopoverTrigger asChild disabled={!isOwner} onPointerDown={(e) => e.stopPropagation()}><button className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-0", !isOwner ? "cursor-not-allowed" : "cursor-pointer")} style={{ backgroundColor: collection.color }} /></PopoverTrigger></TooltipTrigger><TooltipContent><p>Change Color</p></TooltipContent></Tooltip></TooltipProvider>
                                             <PopoverContent className="w-auto p-4" onPointerDown={(e) => e.stopPropagation()}>
                                                 <div className="space-y-4">
                                                     <HexColorPicker color={color} onChange={setColor} className="!w-full" />
@@ -685,22 +661,22 @@ function BadgeCollectionCard({ collection, allBadges, predefinedColors, onUpdate
                                     </>
                                 )}
                             </div>
-                            <div className="flex-1 min-w-0" onPointerDown={(e) => { if(isOwned) e.stopPropagation(); }}>
+                            <div className="flex-1 min-w-0" onPointerDown={(e) => { if(isOwner) e.stopPropagation(); }}>
                                 <div className="flex items-center justify-between">
-                                    {isEditingName && isOwned ? (
+                                    {isEditingName && isOwner ? (
                                         <Input ref={nameInputRef} defaultValue={collection.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"/>
                                     ) : (
-                                        <CardTitle onClick={() => { if(isOwned) setIsEditingName(true);}} className={cn("text-2xl font-headline font-thin break-words", isOwned && "cursor-pointer")}>{collection.name}</CardTitle>
+                                        <CardTitle onClick={() => { if(isOwner) setIsEditingName(true);}} className={cn("text-2xl font-headline font-thin break-words", isOwner && "cursor-pointer")}>{collection.name}</CardTitle>
                                     )}
                                 </div>
                             </div>
                         </div>
                         <div className="flex items-center" onPointerDown={(e) => e.stopPropagation()}>
-                           {isOwned && !isSharedPreview && (
+                           {isOwner && !isSharedPreview && (
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <Button variant="ghost" size="icon" onClick={() => onAddBadge(collection.id)} disabled={!isOwned || isViewer} className="h-8 w-8 text-muted-foreground">
+                                            <Button variant="ghost" size="icon" onClick={() => onAddBadge(collection.id)} disabled={!isOwner || isViewer} className="h-8 w-8 text-muted-foreground">
                                                 <GoogleSymbol name="add_circle" weight={100} />
                                             </Button>
                                         </TooltipTrigger>
@@ -736,7 +712,7 @@ function BadgeCollectionCard({ collection, allBadges, predefinedColors, onUpdate
             </div>
              {isExpanded && (
                 <CardContent className="flex-grow pt-0 flex flex-col min-h-0">
-                    {descriptionEditorElement}
+                    <div className="mb-2">{descriptionEditorElement}</div>
                     <SortableContext items={collection.badgeIds.map(id => `badge::${id}::${collection.id}`)} strategy={rectSortingStrategy}>
                         <DroppableCollectionContent collection={collection}>
                             {collectionBadges.map((badge) => (
@@ -750,6 +726,7 @@ function BadgeCollectionCard({ collection, allBadges, predefinedColors, onUpdate
                                     isSharedPreview={isSharedPreview}
                                     isViewer={isViewer}
                                     predefinedColors={predefinedColors}
+                                    isOwner={isOwner}
                                 />
                             ))}
                         </DroppableCollectionContent>
@@ -759,24 +736,39 @@ function BadgeCollectionCard({ collection, allBadges, predefinedColors, onUpdate
             {!isSharedPreview && (
                 <CardFooter className="flex items-center justify-between gap-2 p-2 mt-auto">
                     <div className="flex items-center gap-2">
-                        {APPLICATIONS.map(app => (
+                      {isOwner ? (
+                          APPLICATIONS.map(app => (
+                              <TooltipProvider key={app.key}>
+                                  <Tooltip>
+                                      <TooltipTrigger asChild>
+                                          <Button
+                                              variant="ghost"
+                                              size="icon"
+                                              className={cn("h-8 w-8", collection.applications?.includes(app.key) ? 'text-primary' : 'text-muted-foreground')}
+                                              onClick={() => handleToggleApplication(app.key)}
+                                              disabled={!isOwner}
+                                          >
+                                              <GoogleSymbol name={app.icon} weight={100} />
+                                          </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>Associated with {app.label}</TooltipContent>
+                                  </Tooltip>
+                              </TooltipProvider>
+                          ))
+                      ) : (
+                          APPLICATIONS.filter(app => collection.applications?.includes(app.key)).map(app => (
                             <TooltipProvider key={app.key}>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className={cn("h-8 w-8", collection.applications?.includes(app.key) ? 'text-primary' : 'text-muted-foreground')}
-                                            onClick={() => handleToggleApplication(app.key)}
-                                            disabled={!isOwned}
-                                        >
+                                        <div className="h-8 w-8 flex items-center justify-center text-muted-foreground">
                                             <GoogleSymbol name={app.icon} weight={100} />
-                                        </Button>
+                                        </div>
                                     </TooltipTrigger>
                                     <TooltipContent>Associated with {app.label}</TooltipContent>
                                 </Tooltip>
                             </TooltipProvider>
-                        ))}
+                          ))
+                      )}
                     </div>
                     {contextTeam && !isViewer && (
                         <TooltipProvider>
@@ -807,7 +799,6 @@ function BadgeCollectionCard({ collection, allBadges, predefinedColors, onUpdate
 }
 
 function SortableCollectionCard({ collection, ...props }: { collection: BadgeCollection, [key: string]: any }) {
-    
     const {
         attributes,
         listeners,
@@ -1361,10 +1352,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                             isSharedPreview={false}
                             isViewer={false}
                             predefinedColors={predefinedColors}
-                            isEditingName={false}
-                            setIsEditingName={() => {}}
-                            isEditingDescription={false}
-                            setIsEditingDescription={() => {}}
+                            isOwner={false}
                         />
                         </div>
                     ) : null}
