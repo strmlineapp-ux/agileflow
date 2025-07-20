@@ -860,7 +860,7 @@ function BadgeCollectionCard({ collection, allBadges, predefinedColors, onUpdate
                                         <GoogleSymbol name={app.icon} weight={100} />
                                     </Button>
                                 </TooltipTrigger>
-                                <TooltipContent><p>Associated with {app.label}</p></TooltipContent>
+                                <TooltipContent><p>Associated with: {app.label}</p></TooltipContent>
                             </Tooltip>
                         </TooltipProvider>
                     ))}
@@ -895,6 +895,8 @@ function BadgeCollectionCard({ collection, allBadges, predefinedColors, onUpdate
 }
 
 function SortableCollectionCard({ collection, ...props }: { collection: BadgeCollection, [key: string]: any }) {
+    const [isEditingName, setIsEditingName] = useState(false);
+    
     const {
         attributes,
         listeners,
@@ -905,7 +907,7 @@ function SortableCollectionCard({ collection, ...props }: { collection: BadgeCol
     } = useSortable({
         id: `collection::${collection.id}`,
         data: { type: 'collection', collection, isSharedPreview: props.isSharedPreview },
-        disabled: props.isEditingName,
+        disabled: isEditingName,
     });
 
     const style = {
@@ -921,6 +923,8 @@ function SortableCollectionCard({ collection, ...props }: { collection: BadgeCol
                 {...props}
                 collection={collection} 
                 dragHandleProps={{...attributes, ...listeners}}
+                isEditingName={isEditingName}
+                setIsEditingName={setIsEditingName}
             />
         </div>
     );
@@ -999,8 +1003,6 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
 
     const [activeDragItem, setActiveDragItem] = useState<any>(null);
 
-    const [editingCollectionName, setEditingCollectionName] = useState(false);
-
     const contextTeam = team;
     const isTeamContext = isTeamSpecificPage && !!contextTeam;
 
@@ -1016,8 +1018,10 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
             canCreateCollection = canManage;
             isViewer = !canManage;
             
-            const memberIds = new Set(team.members);
-            collections = allBadgeCollections.filter(c => memberIds.has(c.owner.id));
+            const teamBadgeCollections = contextTeam.badgeCollections || [];
+            const linkedCollectionIds = new Set(contextTeam.linkedCollectionIds || []);
+            const linkedCollections = allBadgeCollections.filter(c => linkedCollectionIds.has(c.id));
+            collections = [...teamBadgeCollections, ...linkedCollections];
 
         } else { // User context
             canManage = true;
@@ -1330,13 +1334,6 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                                             contextTeam={team}
                                                             isViewer={isViewer}
                                                             predefinedColors={predefinedColors}
-                                                            isEditingName={editingCollectionName && activeDragItem?.collection?.id === collection.id}
-                                                            setIsEditingName={(isEditing: boolean) => {
-                                                                if (isEditing) {
-                                                                    setActiveDragItem({type: 'collection', collection});
-                                                                }
-                                                                setEditingCollectionName(isEditing);
-                                                            }}
                                                         />
                                                     </div>
                                                 </div>
@@ -1381,13 +1378,6 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                                                 contextTeam={team}
                                                                 isViewer={isViewer}
                                                                 predefinedColors={predefinedColors}
-                                                                isEditingName={editingCollectionName && activeDragItem?.collection?.id === collection.id}
-                                                                setIsEditingName={(isEditing: boolean) => {
-                                                                    if (isEditing) {
-                                                                        setActiveDragItem({type: 'collection', collection});
-                                                                    }
-                                                                    setEditingCollectionName(isEditing);
-                                                                }}
                                                             />
                                                         )
                                                     })}
