@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -672,7 +671,7 @@ function DroppableCollectionContent({ collection, children }: { collection: Badg
     );
 }
 
-function SortableCollectionCard({ collection, allBadges, onUpdateCollection, onDeleteCollection, onAddBadge, onUpdateBadge, onDeleteBadge, contextTeam, isViewer = false, isSharedPreview = false, isEditing, setIsEditing }: {
+function SortableCollectionCard({ collection, allBadges, onUpdateCollection, onDeleteCollection, onAddBadge, onUpdateBadge, onDeleteBadge, contextTeam, isViewer = false, isSharedPreview = false}: {
     collection: BadgeCollection;
     allBadges: Badge[];
     onUpdateCollection: (collectionId: string, newValues: Partial<Omit<BadgeCollection, 'id' | 'badgeIds'>>) => void;
@@ -683,9 +682,9 @@ function SortableCollectionCard({ collection, allBadges, onUpdateCollection, onD
     contextTeam?: Team;
     isViewer?: boolean;
     isSharedPreview?: boolean;
-    isEditing: boolean;
-    setIsEditing: (isEditing: boolean) => void;
 }) {
+    const [isEditing, setIsEditing] = useState(false);
+
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: `collection::${collection.id}`,
         data: { type: 'collection', collection, isSharedPreview },
@@ -1047,8 +1046,6 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     const sharedSearchInputRef = useRef<HTMLInputElement>(null);
 
     const [activeDragItem, setActiveDragItem] = useState<any>(null);
-    
-    const [isEditingCard, setIsEditingCard] = useState(false);
 
     const contextTeam = team;
     const isTeamContext = isTeamSpecificPage && !!contextTeam;
@@ -1082,9 +1079,10 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
       
             const relevantOwnerIds = hasAdmins ? adminIds : memberIds;
       
-            const ownedCollectionIds = new Set(allBadgeCollections.filter(c => relevantOwnerIds.has(c.owner.id)).map(c => c.id));
-            const linkedCollectionIds = new Set(contextTeam.linkedCollectionIds || []);
-            const allVisibleIds = new Set([...ownedCollectionIds, ...linkedCollectionIds]);
+            const ownedCollections = allBadgeCollections.filter(c => relevantOwnerIds.has(c.owner.id));
+            const linkedCollections = allBadgeCollections.filter(c => (contextTeam.linkedCollectionIds || []).includes(c.id));
+            
+            const allVisibleIds = new Set([...ownedCollections.map(c => c.id), ...linkedCollections.map(c => c.id)]);
             collections = allBadgeCollections.filter(c => allVisibleIds.has(c.id));
 
         } else { // User context
@@ -1367,8 +1365,6 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                                             onDeleteBadge={handleDeleteBadge}
                                                             contextTeam={team}
                                                             isViewer={isViewer}
-                                                            isEditing={isEditingCard}
-                                                            setIsEditing={setIsEditingCard}
                                                         />
                                                     </div>
                                                 </div>
@@ -1412,8 +1408,6 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                                                 isSharedPreview={true}
                                                                 contextTeam={team}
                                                                 isViewer={isViewer}
-                                                                isEditing={isEditingCard}
-                                                                setIsEditing={setIsEditingCard}
                                                             />
                                                         )
                                                     })}
@@ -1475,7 +1469,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                             isSharedPreview={activeDragItem.isSharedPreview}
                             contextTeam={contextTeam}
                             isViewer={isViewer}
-                            setIsEditing={setIsEditingCard}
+                            setIsEditing={() => {}}
                         />
                     ) : null}
                 </DragOverlay>
