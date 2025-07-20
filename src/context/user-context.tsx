@@ -369,7 +369,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             owner: ownerContext, 
             icon: 'category', 
             color: '#64748B', 
-            viewMode: 'detailed', 
+            viewMode: 'assorted', 
             badgeIds: [newBadgeId], 
             applications: [], 
             description: '', 
@@ -386,8 +386,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         setTeams(prevTeams => prevTeams.map(team => {
             if (team.id === contextTeam.id) {
                 const updatedCollections = [...(team.badgeCollections || []), newCollection];
-                const updatedActiveCollections = [...(team.activeBadgeCollections || []), newCollectionId];
-                return { ...team, badgeCollections: updatedCollections, activeBadgeCollections: updatedActiveCollections };
+                return { ...team, badgeCollections: updatedCollections };
             }
             return team;
         }));

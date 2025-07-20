@@ -498,6 +498,8 @@ function BadgeCollectionCard({ collection, allBadges, predefinedColors, onUpdate
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
     const [color, setColor] = useState(collection.color);
     const [isEditingName, setIsEditingName] = useState(false);
+    const [isEditingDescription, setIsEditingDescription] = useState(false);
+    const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
     const [isExpanded, setIsExpanded] = useState(false);
     
     const isOwned = useMemo(() => {
@@ -513,6 +515,14 @@ function BadgeCollectionCard({ collection, allBadges, predefinedColors, onUpdate
         }
         setIsEditingName(false);
     }, [collection.name, collection.id, onUpdateCollection]);
+
+    const handleSaveDescription = useCallback(() => {
+        const newDescription = descriptionTextareaRef.current?.value.trim();
+        if (newDescription !== (collection.description || '')) {
+            onUpdateCollection(collection.id, { description: newDescription });
+        }
+        setIsEditingDescription(false);
+    }, [collection, onUpdateCollection]);
     
     useEffect(() => {
         if (!isEditingName) return;
@@ -527,9 +537,26 @@ function BadgeCollectionCard({ collection, allBadges, predefinedColors, onUpdate
         return () => document.removeEventListener('mousedown', handleOutsideClick);
     }, [isEditingName, handleSaveName]);
 
+    useEffect(() => {
+        if (!isEditingDescription) return;
+        const handleOutsideClick = (event: MouseEvent) => {
+            if (descriptionTextareaRef.current && !descriptionTextareaRef.current.contains(event.target as Node)) {
+                handleSaveDescription();
+            }
+        };
+        document.addEventListener('mousedown', handleOutsideClick);
+        descriptionTextareaRef.current?.focus();
+        descriptionTextareaRef.current?.select();
+        return () => document.removeEventListener('mousedown', handleOutsideClick);
+    }, [isEditingDescription, handleSaveDescription]);
+
     const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') handleSaveName();
         else if (e.key === 'Escape') setIsEditingName(false);
+    };
+
+    const handleDescriptionKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Escape') handleSaveDescription();
     };
     
     const collectionBadges = useMemo(() => {
@@ -647,9 +674,26 @@ function BadgeCollectionCard({ collection, allBadges, predefinedColors, onUpdate
                                         <CardTitle onClick={() => { if(isOwned) setIsEditingName(true);}} className={cn("text-2xl font-headline font-thin break-words", isOwned && "cursor-pointer")}>{collection.name}</CardTitle>
                                     )}
                                 </div>
+                                 <div onClick={() => isOwned && setIsEditingDescription(true)}>
+                                    {isEditingDescription && isOwned ? (
+                                        <Textarea 
+                                            ref={descriptionTextareaRef} 
+                                            defaultValue={collection.description} 
+                                            onBlur={handleSaveDescription} 
+                                            onKeyDown={handleDescriptionKeyDown}
+                                            className="p-0 text-sm text-muted-foreground border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 resize-none" 
+                                            placeholder="Click to add a description." 
+                                        />
+                                    ) : (
+                                        <p className={cn("text-sm text-muted-foreground min-h-[20px] break-words", isOwned && "cursor-text")}>
+                                            {collection.description || 'Click to add a description.'}
+                                        </p>
+                                    )}
+                                </div>
                             </div>
                         </div>
                         <div className="flex items-center" onPointerDown={(e) => e.stopPropagation()}>
+                           {!isSharedPreview && <TooltipProvider><Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={() => onAddBadge(collection.id)} disabled={!isOwned || isViewer} className="h-8 w-8 text-muted-foreground"><GoogleSymbol name="add_circle" weight={100} /></Button></TooltipTrigger><TooltipContent><p>Add New Badge</p></TooltipContent></Tooltip></TooltipProvider>}
                            <DropdownMenu>
                                 <TooltipProvider><Tooltip><TooltipTrigger asChild><DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground"><GoogleSymbol name={viewModeOptions.find(o => o.mode === collection.viewMode)?.icon || 'view_module'} weight={100} /></Button></DropdownMenuTrigger></TooltipTrigger><TooltipContent><p>Change View Mode</p></TooltipContent></Tooltip></TooltipProvider>
                                 <DropdownMenuContent>
@@ -661,7 +705,6 @@ function BadgeCollectionCard({ collection, allBadges, predefinedColors, onUpdate
                                     ))}
                                 </DropdownMenuContent>
                             </DropdownMenu>
-                             <TooltipProvider><Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={() => onAddBadge(collection.id)} disabled={!isOwned || isViewer} className="h-8 w-8 text-muted-foreground"><GoogleSymbol name="add_circle" weight={100} /></Button></TooltipTrigger><TooltipContent><p>Add New Badge</p></TooltipContent></Tooltip></TooltipProvider>
                         </div>
                     </div>
                 </CardHeader>
@@ -687,28 +730,28 @@ function BadgeCollectionCard({ collection, allBadges, predefinedColors, onUpdate
                     </SortableContext>
                 </CardContent>
              )}
-            <CardFooter className="flex items-center justify-between gap-2 p-2 border-t mt-auto">
-                 <div className="flex items-center gap-2">
-                    {APPLICATIONS.map(app => (
-                        <TooltipProvider key={app.key}>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className={cn("h-8 w-8", collection.applications?.includes(app.key) ? 'text-primary' : 'text-muted-foreground')}
-                                        onClick={() => handleToggleApplication(app.key)}
-                                        disabled={!isOwned}
-                                    >
-                                        <GoogleSymbol name={app.icon} weight={100} />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent><p>Associated with {app.label}</p></TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    ))}
-                </div>
-                <div className="flex items-center gap-2">
+            {!isSharedPreview && (
+                <CardFooter className="flex items-center justify-between gap-2 p-2 mt-auto">
+                    <div className="flex items-center gap-2">
+                        {APPLICATIONS.map(app => (
+                            <TooltipProvider key={app.key}>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className={cn("h-8 w-8", collection.applications?.includes(app.key) ? 'text-primary' : 'text-muted-foreground')}
+                                            onClick={() => handleToggleApplication(app.key)}
+                                            disabled={!isOwned}
+                                        >
+                                            <GoogleSymbol name={app.icon} weight={100} />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent><p>Associated with {app.label}</p></TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        ))}
+                    </div>
                     {contextTeam && !isViewer && (
                         <TooltipProvider>
                             <Tooltip>
@@ -726,8 +769,8 @@ function BadgeCollectionCard({ collection, allBadges, predefinedColors, onUpdate
                             </Tooltip>
                         </TooltipProvider>
                     )}
-                </div>
-            </CardFooter>
+                </CardFooter>
+            )}
             <div className="absolute -bottom-1 right-0">
                 <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
                     <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
@@ -1000,7 +1043,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                     const newLinkedIds = (viewAsUser.linkedCollectionIds || []).filter(id => id !== sourceCollection.id);
                     updateUser(viewAsUser.userId, { linkedCollectionIds: newLinkedIds });
                 }
-                toast({ title: 'Collection Copied', description: 'The original linked collection has been removed.' });
+                toast({ title: 'Collection Copied', description: 'A new, independent team has been created.' });
             }
             return;
         }
