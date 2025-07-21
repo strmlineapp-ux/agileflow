@@ -146,10 +146,9 @@ This is the application's perfected, gold-standard pattern for managing a collec
 -   **Drop Zone Highlighting**: Drop zones provide visual feedback when an item is dragged over them. To maintain a clean UI, highlights must **only** use rings without background fills.
     -   **Standard & Duplication Zones (Reordering, Moving, Duplicating):** The drop area must be highlighted with a `1px` inset, colorless ring using the standard border color. The required class is `ring-1 ring-border ring-inset`. This is the universal style for all non-destructive drop actions, and colored backgrounds or borders **must not** be used.
     -   **Destructive Zones (Deleting):** The drop area must be highlighted with a `1px` ring in the destructive theme color (`ring-1 ring-destructive`).
--   **Contextual Hover Actions**:
-    - **Isolating Hover States (Critical):** To prevent unwanted cascading hover effects (e.g., hovering a parent card triggering actions on all child items), hover effects must be strictly scoped.
-    - **Card-level Actions**: If a card has its own hover action (like a "Delete" icon), the trigger area **must** be restricted. Place the action button and its `<TooltipProvider>` inside the `<CardHeader>` and apply the `group` class to the `<CardHeader>`. This ensures the action only appears when hovering the header, not the content.
-    - **Item-level Actions**: For items within a card (like individual Badges), apply the `group` class to the immediate container of *each individual item*. The action button inside (e.g., a `cancel` icon) uses `opacity-0 group-hover:opacity-100`. This correctly scopes the hover effect so that hovering one item reveals only its own actions.
+-   **Contextual Hover Actions (Critical Implementation)**: To prevent unwanted cascading hover effects (e.g., hovering a parent card triggering actions on all child items), hover effects must be strictly scoped.
+    - **Card-level Actions**: To show an action icon (like delete) for the entire card, place the action button (and its `<TooltipProvider>`) **inside the `<CardHeader>`**. Then, apply the `group` class to the `<CardHeader>` itself. This correctly scopes the `group-hover:opacity-100` effect to the header area, preventing it from activating when the user hovers over the card's content.
+    - **Item-level Actions**: For actions on individual items *within* a card (like Badges in a Collection or Users in a Team), apply the `group` class to the immediate container of **each individual item**. The action button inside that container uses `group-hover:opacity-100`. This ensures that hovering one item only reveals its own actions.
     - **High-Impact Actions**: Deleting an entire card (like a Team or Collection) is a high-impact action. To prevent accidental clicks, this functionality should be placed within a `<DropdownMenu>` in the card's header, not triggered by a direct hover icon.
 -   **Drag-to-Duplicate & Create**:
     -   **Interaction**: A designated "Add New" icon (`<Button>`) acts as a drop zone, implemented using the `useDroppable` hook from `dnd-kit`. While a card is being dragged, this zone becomes highlighted to indicate it can accept a drop.
@@ -320,5 +319,3 @@ This is the single source of truth for indicating user interaction state across 
       - **Ownership Status**: `absolute -top-0 -right-3`.
     - **Icon Size (Ownership Status)**: The `GoogleSymbol` inside an ownership status badge should have its size set via `style={{fontSize: '16px'}}`.
 -   **Badges in Compact View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
-
-    
