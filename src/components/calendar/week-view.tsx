@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useEffect, useState, useMemo, useRef, useCallback, useLayoutEffect } from 'react';
@@ -30,7 +31,7 @@ const isAllDayEvent = (event: Event) => {
 }
 
 export const WeekView = React.memo(({ date, containerRef, zoomLevel, onEasyBooking, onEventClick, triggerScroll }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', onEasyBooking: (data: { startTime: Date, location?: string }) => void, onEventClick: (event: Event) => void, triggerScroll: number }) => {
-    const { viewAsUser, events, calendars, users, teams } = useUser();
+    const { viewAsUser, events, calendars, users, allBadges } = useUser();
     const [now, setNow] = useState<Date | null>(null);
     const nowMarkerRef = useRef<HTMLDivElement>(null);
     const timelineScrollerRef = useRef<HTMLDivElement>(null);
@@ -247,8 +248,7 @@ export const WeekView = React.memo(({ date, containerRef, zoomLevel, onEasyBooki
                                                                     {Object.entries(event.roleAssignments).filter(([, userId]) => !!userId).map(([role, userId]) => {
                                                                         const user = users.find(u => u.userId === userId);
                                                                         if (!user) return null;
-                                                                        const teamForEvent = teams.find(t => t.id === event.calendarId);
-                                                                        const roleInfo = teamForEvent?.allBadges.find(b => b.name === role);
+                                                                        const roleInfo = allBadges.find(b => b?.name === role);
                                                                         const roleIcon = roleInfo?.icon;
                                                                         const roleColor = roleInfo?.color;
 

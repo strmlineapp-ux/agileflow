@@ -1,9 +1,10 @@
 
+
 'use client';
 
 import React, { useEffect, useMemo, useState, useRef, useCallback, useLayoutEffect } from 'react';
 import { format, addHours, startOfDay, isSaturday, isSunday, isSameDay, isToday, startOfWeek, eachDayOfInterval, addDays } from 'date-fns';
-import { type Event, type User, type UserStatus, type UserStatusAssignment, type Team } from '@/types';
+import { type Event, type User, type UserStatus, type UserStatusAssignment, type Team, type Badge } from '@/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { cn, getContrastColor } from '@/lib/utils';
 import { Button } from '../ui/button';
@@ -18,7 +19,7 @@ import { UserStatusBadge } from '@/components/user-status-badge';
 import { Separator } from '@/components/ui/separator';
 import { canCreateAnyEvent } from '@/lib/permissions';
 import { GoogleSymbol } from '../icons/google-symbol';
-import { Badge } from '../ui/badge';
+import { Badge as UiBadge } from '../ui/badge';
 import { PriorityBadge } from './priority-badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { Input } from '../ui/input';
@@ -164,7 +165,8 @@ const ProductionScheduleLocationRow = React.memo(({
     handleEasyBookingClick,
     onEventClick,
     users,
-    teams
+    teams,
+    allBadges
 }: {
     day: Date;
     location: string;
@@ -183,6 +185,7 @@ const ProductionScheduleLocationRow = React.memo(({
     onEventClick: (event: Event) => void;
     users: User[];
     teams: Team[];
+    allBadges: Badge[];
 }) => {
     const { viewAsUser } = useUser();
     
@@ -271,8 +274,7 @@ const ProductionScheduleLocationRow = React.memo(({
                                         {Object.entries(event.roleAssignments).filter(([, userId]) => !!userId).map(([role, userId]) => {
                                             const user = users.find(u => u.userId === userId);
                                             if (!user) return null;
-                                            const teamForEvent = teams.find(t => t.id === event.calendarId);
-                                            const roleInfo = teamForEvent?.allBadges.find(b => b?.name === role);
+                                            const roleInfo = allBadges.find(b => b?.name === role);
                                             const roleIcon = roleInfo?.icon;
                                             const roleColor = roleInfo?.color;
 
@@ -321,7 +323,7 @@ ProductionScheduleLocationRow.displayName = 'ProductionScheduleLocationRow';
 
 
 export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLevel, onEasyBooking, onEventClick, triggerScroll }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', onEasyBooking: (data: { startTime: Date, location?: string }) => void, onEventClick: (event: Event) => void, triggerScroll: number }) => {
-    const { users, teams, viewAsUser, events, calendars, userStatusAssignments, setUserStatusAssignments, appSettings } = useUser();
+    const { users, teams, viewAsUser, events, calendars, userStatusAssignments, setUserStatusAssignments, appSettings, allBadges } = useUser();
 
     const [now, setNow] = useState<Date | null>(null);
     const [hourWidth, setHourWidth] = useState(DEFAULT_HOUR_WIDTH_PX);
@@ -594,7 +596,7 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
                                     const dailyCheckUsers = users.filter(user => teams.some(t => (t.checkLocations || []).includes(location) && (t.locationCheckManagers || []).includes(viewAsUser.userId) && (t.members || []).includes(user.userId) ));
 
                                     const pill = canManageThisCheckLocation ? (
-                                        <Popover key={location}><PopoverTrigger asChild><Button variant={assignedUser ? "default" : "outline"} size="sm" className={cn("rounded-full h-8", isTempCheck && "border-dashed")}>{pillContent}</Button></PopoverTrigger>
+                                        <Popover key={location}><PopoverTrigger asChild><UiBadge variant={assignedUser ? "default" : "outline"} className={cn("rounded-full h-8 cursor-pointer", isTempCheck && "border-dashed")}>{pillContent}</UiBadge></PopoverTrigger>
                                             <PopoverContent className="w-56 p-0">
                                                 <div className="p-2 border-b"><p className="text-sm font-normal text-center">{locationAliasMap[location] || location}</p></div>
                                                 <div className="flex flex-col gap-1 max-h-48 overflow-y-auto p-1">
@@ -608,7 +610,7 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
                                                 {assignedUser && <div className="p-1 border-t"><Button variant="outline" size="sm" className="w-full text-destructive hover:text-destructive" onClick={() => handleAssignCheck(dayIso, location, null)}>Unassign</Button></div>}
                                             </PopoverContent>
                                         </Popover>
-                                    ) : (<Button key={location} variant={assignedUser ? "default" : "outline"} size="sm" className={cn("rounded-full h-8", isTempCheck && "border-dashed")} disabled>{pillContent}</Button>);
+                                    ) : (<UiBadge key={location} variant={assignedUser ? "default" : "outline"} className={cn("rounded-full h-8", isTempCheck && "border-dashed")}>{pillContent}</UiBadge>);
                                     
                                     return isTempCheck ? (
                                         <div key={location} className="group relative">
@@ -711,6 +713,7 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
                                                 onEventClick={onEventClick}
                                                 users={users}
                                                 teams={teams}
+                                                allBadges={allBadges}
                                             />
                                         ))}
                                         {isDayToday && now && <div ref={el => nowMarkerRefs.current.set(dayIso, el)} className="absolute top-0 bottom-0 z-20 pointer-events-none" style={{ left: `${LOCATION_LABEL_WIDTH_PX + calculateCurrentTimePosition()}px` }}><div className="relative w-px h-full bg-primary"></div></div>}

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -54,13 +55,13 @@ const attachmentIcons: Record<AttachmentType, React.ReactNode> = {
 
 // --- DISPLAY VIEW ---
 const EventDisplayView = ({ event }: { event: Event }) => {
-    const { users, calendars, teams } = useUser();
+    const { users, calendars, allBadges } = useUser();
     const calendar = calendars.find(c => c.id === event.calendarId);
     if (!calendar) return null;
 
     const timeFormat = format(event.startTime, 'eeee, MMM d, yyyy') + ' ⋅ ' + format(event.startTime, 'p') + ' - ' + format(event.endTime, 'p');
-    const teamForEvent = teams.find(t => t.id === event.calendarId);
-    const eventTemplate = teamForEvent?.eventTemplates?.find(t => t.id === event.templateId);
+    const teamForEvent = allBadges.find(t => t.id === event.calendarId);
+    const eventTemplate = allBadges.find(t => t.id === event.templateId);
     const roleAssignmentsLabel = calendar?.roleAssignmentsLabel || 'Role Assignments';
     
     const assignedUserIds = new Set(Object.values(event.roleAssignments || {}).filter(Boolean) as string[]);
@@ -96,7 +97,7 @@ const EventDisplayView = ({ event }: { event: Event }) => {
                         </div>
                     )}
                     
-                    {teamForEvent && event.roleAssignments && Object.keys(event.roleAssignments).length > 0 && (
+                    {event.roleAssignments && Object.keys(event.roleAssignments).length > 0 && (
                          <>
                             <Separator />
                             <div className="flex items-start gap-4">

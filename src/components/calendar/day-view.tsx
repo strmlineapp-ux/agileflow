@@ -32,7 +32,7 @@ const DayViewLocationRow = React.memo(({
     day,
     onEventClick,
     users,
-    teams,
+    allBadges
 }: {
     location: string;
     isLast: boolean;
@@ -47,7 +47,7 @@ const DayViewLocationRow = React.memo(({
     day: Date;
     onEventClick: (event: Event) => void;
     users: User[];
-    teams: Team[];
+    allBadges: Badge[];
 }) => {
     const eventsInRow = groupedEvents[location] || [];
     const isCollapsed = collapsedLocations.has(location);
@@ -95,8 +95,7 @@ const DayViewLocationRow = React.memo(({
                                         {Object.entries(event.roleAssignments).filter(([, userId]) => !!userId).map(([role, userId]) => {
                                             const user = users.find(u => u.userId === userId);
                                             if (!user) return null;
-                                            const teamForEvent = teams.find(t => t.id === event.calendarId);
-                                            const roleInfo = teamForEvent?.allBadges.find(b => b.name === role);
+                                            const roleInfo = allBadges.find(b => b?.name === role);
                                             const roleIcon = roleInfo?.icon;
                                             const roleColor = roleInfo?.color;
 
@@ -144,7 +143,7 @@ const DayViewLocationRow = React.memo(({
 DayViewLocationRow.displayName = 'DayViewLocationRow';
 
 export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, onEasyBooking, onEventClick, triggerScroll }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', axisView: 'standard' | 'reversed', onEasyBooking: (data: { startTime: Date, location?: string }) => void, onEventClick: (event: Event) => void, triggerScroll: number }) => {
-    const { viewAsUser, events, calendars, users, teams } = useUser();
+    const { viewAsUser, events, calendars, users, allBadges } = useUser();
     const [now, setNow] = useState<Date | null>(null);
     const nowMarkerRef = useRef<HTMLDivElement>(null);
     const timelineScrollerRef = useRef<HTMLDivElement>(null);
@@ -370,7 +369,7 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
                                     day={date}
                                     onEventClick={onEventClick}
                                     users={users}
-                                    teams={teams}
+                                    allBadges={allBadges}
                                />
                             ))}
                             
@@ -443,8 +442,7 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
                                                             {Object.entries(event.roleAssignments).filter(([, userId]) => !!userId).map(([role, userId]) => {
                                                                 const user = users.find(u => u.userId === userId);
                                                                 if (!user) return null;
-                                                                const teamForEvent = teams.find(t => t.id === event.calendarId);
-                                                                const roleInfo = teamForEvent?.allBadges.find(b => b.name === role);
+                                                                const roleInfo = allBadges.find(b => b?.name === role);
                                                                 const roleIcon = roleInfo?.icon;
                                                                 const roleColor = roleInfo?.color;
 
