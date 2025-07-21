@@ -219,14 +219,14 @@ function BadgeDisplayItem({
         <TooltipProvider>
             <Tooltip>
                 <TooltipTrigger asChild>
-                    <button
-                        type="button"
-                        className="absolute top-0 right-0 z-10 flex items-center justify-center text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                     <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute -top-1 -right-1 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10"
                         onPointerDown={(e) => { e.stopPropagation(); onDelete(badge.id); }}
-                        aria-label={`Delete ${badge.name}`}
                     >
-                        <GoogleSymbol name="cancel" className="text-lg" />
-                    </button>
+                        <GoogleSymbol name="cancel" className="text-lg" weight={100} />
+                    </Button>
                 </TooltipTrigger>
                 <TooltipContent><p>{isOwner ? "Delete Badge" : "Unlink Badge"}</p></TooltipContent>
             </Tooltip>
@@ -643,7 +643,7 @@ function BadgeCollectionCard({
             <TooltipProvider>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity z-10" onPointerDown={(e) => { e.stopPropagation(); onDeleteCollection(collection); }}>
+                        <Button variant="ghost" size="icon" className="absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10" onPointerDown={(e) => { e.stopPropagation(); onDeleteCollection(collection); }}>
                             <GoogleSymbol name="cancel" className="text-lg" weight={100} />
                         </Button>
                     </TooltipTrigger>
@@ -1277,7 +1277,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                 <Dialog open={!!collectionToDelete} onOpenChange={() => setCollectionToDelete(null)}>
                     <DialogContent className="max-w-md">
                         <div className="absolute top-4 right-4">
-                            <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10 p-0" onClick={confirmDeleteCollection}>
+                            <Button variant="ghost" size="icon" className="hover:text-destructive hover:bg-transparent p-0" onClick={confirmDeleteCollection}>
                                 <GoogleSymbol name="delete" className="text-4xl" weight={100} />
                                 <span className="sr-only">Delete Collection</span>
                             </Button>
@@ -1353,3 +1353,5 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         </DndContext>
     );
 }
+
+    
