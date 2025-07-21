@@ -109,7 +109,8 @@ This pattern describes how a single entity (like a **Team**, **Calendar**, or **
   - **Linked (from another user) / Internally Linked (badges)**: An item created elsewhere and being used in the current context is marked with a `link` icon overlay. **The color of this icon badge matches the source's color.**
   - **Owned and Not Shared/Linked**: An item that is owned and exists only in its original location does not get an icon.
 - **Behavior**:
-  - Editing a shared item (e.g., changing a team's name) modifies the original "source of truth" item, and the changes are instantly reflected in all other places where it is used.
+  - **Full Context**: When an item is linked, it should display all of its original properties (name, icon, color, description, etc.) to give the linking user full context.
+  - **Editing Source of Truth**: Editing a shared item (e.g., changing a team's name) modifies the original "source of truth" item, and the changes are instantly reflected in all other places where it is used.
   - **Local Overrides**: For linked Badge Collections, the `applications` (e.g., "Team Members", "Events") can be modified locally without affecting the original, allowing teams to customize how they use a shared resource.
   - **Smart Deletion & Unlinking**: Clicking the "delete" icon on a *linked* item (like a Team or Calendar) simply unlinks it from the user's view, and the original item is unaffected. This is a low-risk action. Deleting an item *owned* by the user is confirmed via a `Compact Action Dialog`.
 - **Application**: This is the required pattern for sharing **Teams**, **Calendars**, and **Badge Collections**.
@@ -119,7 +120,7 @@ This pattern describes how a single entity (like a **Team**, **Calendar**, or **
 ### 8. Draggable Card Management blueprint
 This is the application's perfected, gold-standard pattern for managing a collection of entities displayed as cards. It provides a fluid, intuitive, and grid-responsive way for users to reorder, duplicate, and assign items. It is the required pattern for managing Pages, Calendars, Teams, and Badge Collections. The core of this pattern is a successful migration to the **`@dnd-kit`** library, which proved more robust for responsive layouts.
 
--   **Layout**: Entities are presented in a responsive grid of cards. To ensure stability during drag operations, especially across multiple rows, the container must use a `flex flex-wrap` layout instead of CSS Grid. Each draggable card item is then given a responsive `basis` property (e.g., `basis-full sm:basis-[calc(50%-1rem)] md:basis-[calc(33.333%-1rem)] lg:basis-[calc(25%-1rem)] xl:basis-[calc(20%-1rem)] 2xl:basis-[calc(16.666%-1rem)]`) to create the columns. A negative margin (e.g., `-m-2`) on the container and a matching positive padding (e.g., `p-2`) on the items creates the gutter.
+-   **Layout**: Entities are presented in a responsive grid of cards. To ensure stability during drag operations, especially across multiple rows, the container must use a `flex flex-wrap` layout instead of CSS Grid. Each draggable card item is then given a responsive `basis` property (e.g., `basis-full sm:basis-[calc(50%-1rem)] md:basis-[calc(33.333%-1rem)] lg:basis-[calc(25%-1rem)] xl:basis-[calc(20%-1rem)] 2xl:basis-[calc(16.666%-1rem)]`) to create the columns. A negative margin (e.g., `-m-2`) on the container and a matching positive padding (e.g., `p-2`) on the items creates the gutter. This pattern also applies *within* cards, such as for the `detailed` view of a `BadgeCollectionCard`, to organize their contents into a responsive grid.
 -   **Critical Stability Properties**:
     -   **`@dnd-kit` is the required library.** The older `react-beautiful-dnd` library was found to be incompatible with this type of responsive layout.
     -   `flex-grow-0` and `flex-shrink-0` **must** be used on draggable items. This prevents the remaining items in a row from expanding or shrinking, which causes the grid to reflow unstably when an item is being dragged.
@@ -319,4 +320,4 @@ This is the single source of truth for indicating user interaction state across 
     - **Icon Size (Ownership Status)**: The `GoogleSymbol` inside an ownership status badge should have its size set via `style={{fontSize: '16px'}}`.
 -   **Badges in Compact View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
 
-    
+```
