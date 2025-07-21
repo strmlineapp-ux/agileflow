@@ -223,7 +223,6 @@ function BadgeDisplayItem({
                         size="icon"
                         className="absolute -top-1 -right-1 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10"
                         onClick={() => onDelete(badge.id)}
-                        onPointerDown={(e) => e.stopPropagation()}
                     >
                         <GoogleSymbol name="cancel" className="text-lg" weight={100} />
                     </Button>
