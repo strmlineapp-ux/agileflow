@@ -52,6 +52,9 @@ function BadgeDisplayItem({
     isOwner,
     isLinked,
     allCollections,
+    editingBadgeState,
+    setEditingBadgeState,
+    isCollectionEditing,
 }: { 
     badge: Badge;
     viewMode: BadgeCollection['viewMode'];
@@ -62,19 +65,21 @@ function BadgeDisplayItem({
     isOwner: boolean;
     isLinked: boolean;
     allCollections: BadgeCollection[];
+    editingBadgeState: any;
+    setEditingBadgeState: (state: any) => void;
+    isCollectionEditing: boolean;
 }) {
     const { users } = useUser();
-    const [isEditingName, setIsEditingName] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
-    const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
-    const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
-    
     const [iconSearch, setIconSearch] = useState('');
     const iconSearchInputRef = useRef<HTMLInputElement>(null);
-
     const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
-    const [isEditingDescription, setIsEditingDescription] = useState(false);
     const [color, setColor] = useState(badge.color);
+
+    const isEditingName = editingBadgeState.badgeId === badge.id && editingBadgeState.field === 'name';
+    const isEditingDescription = editingBadgeState.badgeId === badge.id && editingBadgeState.field === 'description';
+    const isIconPopoverOpen = editingBadgeState.badgeId === badge.id && editingBadgeState.field === 'icon';
+    const isColorPopoverOpen = editingBadgeState.badgeId === badge.id && editingBadgeState.field === 'color';
 
     const handleUpdate = useCallback((data: Partial<Badge>) => {
         onUpdateBadge(badge.id, data);
@@ -85,16 +90,16 @@ function BadgeDisplayItem({
         if (newName && newName !== badge.name) {
             handleUpdate({ name: newName });
         }
-        setIsEditingName(false);
-    }, [badge.name, handleUpdate]);
+        setEditingBadgeState({ badgeId: null, field: null });
+    }, [badge.name, handleUpdate, setEditingBadgeState]);
     
     const handleSaveDescription = useCallback(() => {
         const newDescription = descriptionTextareaRef.current?.value.trim();
         if (newDescription !== (badge.description || '')) {
             handleUpdate({ description: newDescription });
         }
-        setIsEditingDescription(false);
-    }, [badge.description, handleUpdate]);
+        setEditingBadgeState({ badgeId: null, field: null });
+    }, [badge.description, handleUpdate, setEditingBadgeState]);
 
     useEffect(() => {
         if (!isEditingName) return;
@@ -132,7 +137,7 @@ function BadgeDisplayItem({
     
     const handleNameKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter') { e.preventDefault(); handleSaveName(); }
-        else if (e.key === 'Escape') { e.preventDefault(); setIsEditingName(false); }
+        else if (e.key === 'Escape') { e.preventDefault(); setEditingBadgeState({ badgeId: null, field: null }); }
     };
     
     const handleDescriptionKeyDown = (e: React.KeyboardEvent) => {
@@ -165,12 +170,12 @@ function BadgeDisplayItem({
                             onClick={() => {
                                 handleUpdate({ color: c });
                                 setColor(c);
-                                setIsColorPopoverOpen(false);
+                                setEditingBadgeState({ badgeId: null, field: null });
                             }}
                         />
                     ))}
                 </div>
-                <Button onClick={() => { handleUpdate({ color }); setIsColorPopoverOpen(false); }} className="w-full">Set Color</Button>
+                <Button onClick={() => { handleUpdate({ color }); setEditingBadgeState({ badgeId: null, field: null }); }} className="w-full">Set Color</Button>
             </div>
         </PopoverContent>
     );
@@ -195,7 +200,7 @@ function BadgeDisplayItem({
                     size="icon"
                     onClick={() => {
                         handleUpdate({ icon: iconName });
-                        setIsIconPopoverOpen(false);
+                        setEditingBadgeState({ badgeId: null, field: null });
                     }}
                     className="h-8 w-8 p-0"
                     >
@@ -217,8 +222,10 @@ function BadgeDisplayItem({
                         variant="ghost"
                         size="icon"
                         className="absolute -top-1 -right-1 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                        onPointerDown={(e) => e.stopPropagation()}
-                        onClick={() => onDelete(badge.id)}
+                        onPointerDown={(e) => {
+                            e.stopPropagation();
+                            onDelete(badge.id)
+                        }}
                     >
                         <GoogleSymbol name="cancel" className="text-lg" weight={100} />
                     </Button>
@@ -229,7 +236,7 @@ function BadgeDisplayItem({
     );
     
     const nameEditorElement = (
-         <div onPointerDown={(e) => e.stopPropagation()} onClick={() => isOwner && setIsEditingName(true)}>
+         <div onPointerDown={(e) => {e.stopPropagation()}} onClick={() => { if(isOwner) setEditingBadgeState({ badgeId: badge.id, field: 'name' })}}>
             {isEditingName && isOwner ? (
                 <Input
                     ref={nameInputRef}
@@ -250,7 +257,7 @@ function BadgeDisplayItem({
     );
 
      const descriptionEditorElement = (
-         <div onPointerDown={(e) => e.stopPropagation()} onClick={() => isOwner && setIsEditingDescription(true)}>
+         <div onPointerDown={(e) => {if(isOwner) e.stopPropagation();}} onClick={() => {if(isOwner) setEditingBadgeState({ badgeId: badge.id, field: 'description' })}}>
             {isEditingDescription && isOwner ? (
                 <Textarea 
                     ref={descriptionTextareaRef} 
@@ -272,7 +279,7 @@ function BadgeDisplayItem({
       return (
         <div className="group relative h-full flex items-start gap-4 rounded-lg p-2 hover:bg-muted/50">
             <div className="relative" onPointerDown={(e) => e.stopPropagation()}>
-                <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
+                <Popover open={isIconPopoverOpen} onOpenChange={(isOpen) => setEditingBadgeState({ badgeId: isOpen ? badge.id : null, field: isOpen ? 'icon' : null })}>
                     <TooltipProvider>
                     <Tooltip>
                         <TooltipTrigger asChild>
@@ -288,7 +295,7 @@ function BadgeDisplayItem({
                     {iconPickerContent}
                 </Popover>
                 {!isViewer && (
-                    <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                    <Popover open={isColorPopoverOpen} onOpenChange={(isOpen) => setEditingBadgeState({ badgeId: isOpen ? badge.id : null, field: isOpen ? 'color' : null })}>
                         <TooltipProvider><Tooltip><TooltipTrigger asChild><PopoverTrigger asChild disabled={!isOwner}><button className={cn("absolute -bottom-1 -right-3 h-4 w-4 rounded-full border-0", isOwner && "cursor-pointer")} style={{ backgroundColor: badge.color }} aria-label="Change badge color" /></PopoverTrigger></TooltipTrigger><TooltipContent><p>Change Color</p></TooltipContent></Tooltip></TooltipProvider>
                         {colorPickerContent}
                     </Popover>
@@ -324,7 +331,7 @@ function BadgeDisplayItem({
                 className="flex items-center gap-1.5 p-1 pl-2 rounded-full text-sm h-8 font-thin"
             >
                 <div className="relative">
-                    <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
+                    <Popover open={isIconPopoverOpen} onOpenChange={(isOpen) => setEditingBadgeState({ badgeId: isOpen ? badge.id : null, field: isOpen ? 'icon' : null })}>
                         <PopoverTrigger asChild disabled={!isOwner}>
                              <Button
                                 variant="ghost"
@@ -337,7 +344,7 @@ function BadgeDisplayItem({
                         {iconPickerContent}
                     </Popover>
                      {!isViewer && (
-                        <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                        <Popover open={isColorPopoverOpen} onOpenChange={(isOpen) => setEditingBadgeState({ badgeId: isOpen ? badge.id : null, field: isOpen ? 'color' : null })}>
                             <PopoverTrigger asChild disabled={!isOwner}>
                                 <button
                                     className={cn("absolute -bottom-1 -right-3 h-4 w-4 rounded-full border-0", isOwner && "cursor-pointer")}
@@ -373,7 +380,7 @@ function SortableBadgeItem({ badge, collectionId, ...props }: { badge: Badge, co
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: `badge::${badge.id}::${collectionId}`,
         data: { type: 'badge', badge, collectionId, isSharedPreview: props.isSharedPreview },
-        disabled: !isOwner
+        disabled: !isOwner || props.isCollectionEditing || (props.editingBadgeState?.badgeId === badge.id)
     });
     
     const style = {
@@ -390,11 +397,11 @@ function SortableBadgeItem({ badge, collectionId, ...props }: { badge: Badge, co
             <div 
                 ref={setNodeRef}
                 style={style}
-                {...attributes}
-                {...listeners}
                 className="p-1 basis-full md:basis-1/2 flex-grow-0 flex-shrink-0"
             >
-                {itemContent}
+                <div {...attributes} {...listeners}>
+                    {itemContent}
+                </div>
             </div>
         )
     }
@@ -454,6 +461,10 @@ type BadgeCollectionCardProps = {
     isSharedPreview?: boolean;
     contextTeam?: Team;
     isViewer?: boolean;
+    isCollectionEditing: boolean;
+    setIsCollectionEditing: (state: { field: 'name' | 'description' | null}) => void;
+    editingBadgeState: any;
+    setEditingBadgeState: (state: any) => void;
 };
 
 function BadgeCollectionCard({ 
@@ -469,9 +480,12 @@ function BadgeCollectionCard({
     isSharedPreview = false, 
     contextTeam, 
     isViewer = false, 
+    isCollectionEditing,
+    setIsCollectionEditing,
+    editingBadgeState,
+    setEditingBadgeState
 }: BadgeCollectionCardProps) {
     const { viewAsUser, users, updateTeam, allBadgeCollections } = useUser();
-    const [isEditingName, setIsEditingName] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
@@ -479,9 +493,10 @@ function BadgeCollectionCard({
     const [iconSearch, setIconSearch] = useState('');
     const iconSearchInputRef = useRef<HTMLInputElement>(null);
     const [color, setColor] = useState(collection.color);
-    const [isEditingDescription, setIsEditingDescription] = useState(false);
     const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
     const [isExpanded, setIsExpanded] = useState(true);
+
+    const isEditingName = isCollectionEditing;
 
     const isOwner = useMemo(() => collection.owner.id === viewAsUser.userId, [collection.owner.id, viewAsUser.userId]);
 
@@ -490,16 +505,16 @@ function BadgeCollectionCard({
         if (newName && newName !== collection.name) {
             onUpdateCollection(collection.id, { name: newName });
         }
-        setIsEditingName(false);
-    }, [collection.name, collection.id, onUpdateCollection]);
+        setIsCollectionEditing({ field: null });
+    }, [collection.name, collection.id, onUpdateCollection, setIsCollectionEditing]);
 
     const handleSaveDescription = useCallback(() => {
         const newDescription = descriptionTextareaRef.current?.value.trim();
         if (newDescription !== (collection.description || '')) {
             onUpdateCollection(collection.id, { description: newDescription });
         }
-        setIsEditingDescription(false);
-    }, [collection, onUpdateCollection]);
+        setIsCollectionEditing({ field: null });
+    }, [collection, onUpdateCollection, setIsCollectionEditing]);
     
     useEffect(() => {
         if (!isEditingName) return;
@@ -515,7 +530,7 @@ function BadgeCollectionCard({
     }, [isEditingName, handleSaveName]);
 
     useEffect(() => {
-        if (!isEditingDescription) return;
+        if (!isCollectionEditing) return;
         const handleOutsideClick = (event: MouseEvent) => {
             if (descriptionTextareaRef.current && !descriptionTextareaRef.current.contains(event.target as Node)) {
                 handleSaveDescription();
@@ -525,7 +540,7 @@ function BadgeCollectionCard({
         descriptionTextareaRef.current?.focus();
         descriptionTextareaRef.current?.select();
         return () => document.removeEventListener('mousedown', handleOutsideClick);
-    }, [isEditingDescription, handleSaveDescription]);
+    }, [isCollectionEditing, handleSaveDescription]);
 
     useEffect(() => {
         if (isIconPopoverOpen) {
@@ -542,7 +557,7 @@ function BadgeCollectionCard({
 
     const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') { e.preventDefault(); handleSaveName(); }
-        else if (e.key === 'Escape') { e.preventDefault(); setIsEditingName(false); }
+        else if (e.key === 'Escape') { e.preventDefault(); setIsCollectionEditing({ field: null }); }
     };
 
     const handleDescriptionKeyDown = (e: React.KeyboardEvent) => {
@@ -609,8 +624,8 @@ function BadgeCollectionCard({
     ];
     
     const descriptionEditorElement = (
-        <div onPointerDown={(e) => {if(isOwner) e.stopPropagation();}} onClick={() => isOwner && setIsEditingDescription(true)}>
-           {isEditingDescription && isOwner ? (
+        <div onPointerDown={(e) => {if(isOwner) e.stopPropagation();}} onClick={() => {if(isOwner) setIsCollectionEditing({ field: 'description' })}}>
+           {isCollectionEditing ? (
                <Textarea 
                    ref={descriptionTextareaRef} 
                    defaultValue={collection.description} 
@@ -728,7 +743,7 @@ function BadgeCollectionCard({
                                     {isEditingName && isOwner ? (
                                         <Input ref={nameInputRef} defaultValue={collection.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"/>
                                     ) : (
-                                        <CardTitle onClick={() => { if(isOwner) setIsEditingName(true);}} className={cn("text-2xl font-headline font-thin break-words", isOwner && "cursor-pointer")}>{collection.name}</CardTitle>
+                                        <CardTitle onClick={() => { if(isOwner) setIsCollectionEditing({ field: 'name' });}} className={cn("text-2xl font-headline font-thin break-words", isOwner && "cursor-pointer")}>{collection.name}</CardTitle>
                                     )}
                                 </div>
                             </div>
@@ -801,6 +816,9 @@ function BadgeCollectionCard({
                                 isOwner={badgeIsOwned}
                                 isLinked={!badgeIsOwned}
                                 allCollections={allBadgeCollections}
+                                isCollectionEditing={isCollectionEditing}
+                                editingBadgeState={editingBadgeState}
+                                setEditingBadgeState={setEditingBadgeState}
                             />
                             )
                         })}
@@ -858,9 +876,12 @@ function BadgeCollectionCard({
 }
 
 function SortableCollectionCard({ collection, ...props }: { collection: BadgeCollection, [key: string]: any }) {
+    const [isCollectionEditing, setIsCollectionEditing] = useState<{ field: 'name' | 'description' | null }>({ field: null });
+    
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: `collection::${collection.id}`,
         data: { type: 'collection', collection, isSharedPreview: props.isSharedPreview },
+        disabled: !!isCollectionEditing.field,
     });
 
     const style = {
@@ -876,6 +897,8 @@ function SortableCollectionCard({ collection, ...props }: { collection: BadgeCol
                 {...props}
                 collection={collection} 
                 dragHandleProps={{...attributes, ...listeners}}
+                isCollectionEditing={!!isCollectionEditing.field}
+                setIsCollectionEditing={setIsCollectionEditing}
             />
         </div>
     );
@@ -952,6 +975,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     const sharedSearchInputRef = useRef<HTMLInputElement>(null);
 
     const [activeDragItem, setActiveDragItem] = useState<any>(null);
+    const [editingBadgeState, setEditingBadgeState] = useState<{ badgeId: string | null; field: 'name' | 'description' | 'icon' | 'color' | null }>({ badgeId: null, field: null });
 
     const contextTeam = team;
     const isTeamContext = isTeamSpecificPage && !!contextTeam;
@@ -1211,6 +1235,8 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                                                 isViewer={isViewer}
                                                                 predefinedColors={predefinedColors}
                                                                 allCollections={allBadgeCollections}
+                                                                editingBadgeState={editingBadgeState}
+                                                                setEditingBadgeState={setEditingBadgeState}
                                                             />
                                                         </div>
                                                     </div>
@@ -1255,6 +1281,8 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                                                 isViewer={isViewer}
                                                                 predefinedColors={predefinedColors}
                                                                 allCollections={allBadgeCollections}
+                                                                editingBadgeState={editingBadgeState}
+                                                                setEditingBadgeState={setEditingBadgeState}
                                                             />
                                                         ))}
                                                         {sharedCollections.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">No collections are being shared by other users.</p>}
@@ -1284,6 +1312,10 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                 isViewer={isViewer}
                                 predefinedColors={predefinedColors}
                                 allCollections={allBadgeCollections}
+                                isCollectionEditing={false}
+                                setIsCollectionEditing={() => {}}
+                                editingBadgeState={editingBadgeState}
+                                setEditingBadgeState={setEditingBadgeState}
                             />
                         </div>
                     ) : activeDragItem?.type === 'badge' ? (
@@ -1298,6 +1330,9 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                 isOwner={false}
                                 isLinked={false}
                                 allCollections={allBadgeCollections}
+                                isCollectionEditing={false}
+                                editingBadgeState={editingBadgeState}
+                                setEditingBadgeState={setEditingBadgeState}
                             />
                         </div>
                     ) : null}
