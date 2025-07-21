@@ -147,8 +147,8 @@ This is the application's perfected, gold-standard pattern for managing a collec
     -   **Standard & Duplication Zones (Reordering, Moving, Duplicating):** The drop area must be highlighted with a `1px` inset, colorless ring using the standard border color. The required class is `ring-1 ring-border ring-inset`. This is the universal style for all non-destructive drop actions, and colored backgrounds or borders **must not** be used.
     -   **Destructive Zones (Deleting):** The drop area must be highlighted with a `1px` ring in the destructive theme color (`ring-1 ring-destructive`).
 -   **Contextual Hover Actions**:
-    - **Item-level**: To maintain a clean UI, action icons like "Remove User" or "Delete Badge" must appear only when hovering over their specific context. This is achieved by adding a `group` class to the *individual item's container*. The icon button inside is then styled with `opacity-0 group-hover:opacity-100`.
-    - **Delete Icon**: The standard icon for deleting an item (like a Page or Calendar) is a circular `cancel` icon that appears on card hover. To create this affordance in the corner of a card, the button can be positioned absolutely (e.g., `-top-2 -right-2`).
+    - **Item-level**: To maintain a clean UI, action icons like "Remove User" or "Delete Badge" must appear only when hovering over their specific context. This is achieved by adding a `group` class to the *individual item's container*. The action button inside (which should be the standard circular `cancel` icon) is then styled with `opacity-0 group-hover:opacity-100`.
+    - **Delete Icon**: The standard icon for deleting an item (like a Page or a Badge) is a circular `cancel` icon that appears on card or item hover. To create this affordance in the corner of a card, the button can be positioned absolutely (e.g., `-top-2 -right-2`).
     - **Card-level**: Deleting an entire card (like a Team or Collection) is a high-impact action. To prevent accidental clicks, this functionality should be placed within a `<DropdownMenu>` in the card's header, not triggered by a direct hover icon.
 -   **Drag-to-Duplicate & Create**:
     -   **Interaction**: A designated "Add New" icon (`<Button>`) acts as a drop zone, implemented using the `useDroppable` hook from `dnd-kit`. While a card is being dragged, this zone becomes highlighted to indicate it can accept a drop.
@@ -228,8 +228,8 @@ This pattern is a specialized, ultra-compact version of the standard `<Badge>` c
 - **Sizing**:
     - The pill has a reduced height and horizontal padding (`py-0 px-1`).
     - The icon inside is small, with its size set via `style={{ fontSize: '28px' }}`.
-    - The text label is small (e.g., `text-[10px]`).
-- **Interaction**: A small, circular delete button appears on hover, allowing the user to remove the badge.
+    - The text label is small (e.g., `text-sm`).
+- **Interaction**: A small, circular `cancel` icon appears on hover, allowing the user to remove the badge.
 - **Application**: Used in the "Compact" view of **Badge Collections** to display many badges in a compact, scannable format.
 
 ---
