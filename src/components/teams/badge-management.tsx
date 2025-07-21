@@ -417,7 +417,7 @@ function SortableBadgeItem({ badge, ...props }: { badge: Badge, [key: string]: a
                 style={style}
                 {...attributes}
                 {...listeners}
-                className="p-1 basis-full md:basis-1/2 flex-grow-0 flex-shrink-0"
+                className="basis-full md:basis-1/2 p-1 flex-grow-0 flex-shrink-0"
             >
                 {itemContent}
             </div>
@@ -713,7 +713,7 @@ function BadgeCollectionCard({
                                                     </div>
                                                     <div className="grid grid-cols-8 gap-1">
                                                         {predefinedColors.map(c => (
-                                                            <button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdateCollection(collection.id, { color: c }); setIsColorPopoverOpen(false);}}/>
+                                                            <button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdateCollection(collection.id, { color: c }); setIsColorPopoverOpen(false);}}></button>
                                                         ))}
                                                     </div>
                                                     <Button onClick={() => { onUpdateCollection(collection.id, { color }); setIsColorPopoverOpen(false); }} className="w-full">Set Color</Button>
@@ -1353,5 +1353,3 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         </DndContext>
     );
 }
-
-    
