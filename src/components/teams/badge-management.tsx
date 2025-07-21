@@ -18,7 +18,6 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle as 
 import { Badge as UiBadge } from '../ui/badge';
 import { HexColorPicker, HexColorInput } from 'react-colorful';
 import { CompactSearchInput } from '@/components/common/compact-search-input';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { googleSymbolNames } from '@/lib/google-symbols';
 
 import {
@@ -275,7 +274,7 @@ function BadgeDisplayItem({
     
     if (viewMode === 'detailed' || viewMode === 'list') {
       return (
-        <div className="group h-full flex items-start gap-4 rounded-lg p-2 hover:bg-muted/50" onPointerDown={(e) => e.stopPropagation()}>
+        <div className="group relative h-full flex items-start gap-4 rounded-lg p-2 hover:bg-muted/50" onPointerDown={(e) => e.stopPropagation()}>
             <div className="relative">
                 <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                     <TooltipProvider>
@@ -636,21 +635,21 @@ function BadgeCollectionCard({
              <div {...dragHandleProps}>
                 <CardHeader className="group">
                     {!isSharedPreview && (
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                                        onPointerDown={(e) => { e.stopPropagation(); onDeleteCollection(collection); }}
-                                    >
-                                        <GoogleSymbol name="cancel" className="text-lg" weight={100} />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent><p>{isOwner ? "Delete Collection" : "Unlink Collection"}</p></TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
+                      <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                                    onPointerDown={(e) => { e.stopPropagation(); onDeleteCollection(collection); }}
+                                >
+                                    <GoogleSymbol name="cancel" className="text-lg" weight={100} />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent><p>{isOwner ? "Delete Collection" : "Unlink Collection"}</p></TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     )}
                     <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -749,28 +748,33 @@ function BadgeCollectionCard({
                                     </Tooltip>
                                 </TooltipProvider>
                             )}
-                           <DropdownMenu>
+                            <Popover>
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <DropdownMenuTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
+                                            <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
                                                 <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
                                                     <GoogleSymbol name={viewModeOptions.find(o => o.mode === collection.viewMode)?.icon || 'view_module'} weight={100} />
                                                 </Button>
-                                            </DropdownMenuTrigger>
+                                            </PopoverTrigger>
                                         </TooltipTrigger>
                                         <TooltipContent><p>Change View Mode</p></TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
-                                <DropdownMenuContent onPointerDown={(e) => e.stopPropagation()}>
+                                <PopoverContent className="w-auto p-1" onPointerDown={(e) => e.stopPropagation()}>
                                     {viewModeOptions.map(({mode, icon, label}) => (
-                                        <DropdownMenuItem key={mode} onClick={() => onUpdateCollection(collection.id, { viewMode: mode })}>
+                                        <Button
+                                            key={mode}
+                                            variant={collection.viewMode === mode ? 'secondary' : 'ghost'}
+                                            onClick={() => onUpdateCollection(collection.id, { viewMode: mode })}
+                                            className="w-full justify-start"
+                                        >
                                             <GoogleSymbol name={icon} className="mr-2" />
                                             <span>{label}</span>
-                                        </DropdownMenuItem>
+                                        </Button>
                                     ))}
-                                </DropdownMenuContent>
-                            </DropdownMenu>
+                                </PopoverContent>
+                            </Popover>
                         </div>
                     </div>
                 </CardHeader>
