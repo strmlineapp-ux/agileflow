@@ -275,8 +275,8 @@ function BadgeDisplayItem({
     
     if (viewMode === 'detailed' || viewMode === 'list') {
       return (
-        <div className="group relative h-full flex items-start gap-4 rounded-lg p-2 hover:bg-muted/50">
-            <div className="relative" onPointerDown={(e) => e.stopPropagation()}>
+        <div className="group relative h-full flex items-start gap-4 rounded-lg p-2 hover:bg-muted/50" onPointerDown={(e) => e.stopPropagation()}>
+            <div className="relative">
                 <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                     <TooltipProvider>
                     <Tooltip>
@@ -294,13 +294,7 @@ function BadgeDisplayItem({
                 </Popover>
                 {!isViewer && (
                     <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                        <PopoverTrigger asChild disabled={!isOwner} onPointerDown={(e) => e.stopPropagation()}>
-                            <button
-                                className={cn("absolute -bottom-1 -right-3 h-4 w-4 rounded-full border-0", isOwner && "cursor-pointer")}
-                                style={{ backgroundColor: badge.color }}
-                                aria-label="Change badge color"
-                            />
-                        </PopoverTrigger>
+                        <TooltipProvider><Tooltip><TooltipTrigger asChild><PopoverTrigger asChild disabled={!isOwner} onPointerDown={(e) => e.stopPropagation()}><button className={cn("absolute -bottom-1 -right-3 h-4 w-4 rounded-full border-0", isOwner && "cursor-pointer")} style={{ backgroundColor: badge.color }} aria-label="Change badge color" /></PopoverTrigger></TooltipTrigger><TooltipContent><p>Change Color</p></TooltipContent></Tooltip></TooltipProvider>
                         {colorPickerContent}
                     </Popover>
                 )}
@@ -328,20 +322,19 @@ function BadgeDisplayItem({
     
     // Compact View
     return (
-        <div className="group relative p-1.5">
+        <div className="group relative p-1.5" onPointerDown={(e) => e.stopPropagation()}>
              <UiBadge
                 variant={'outline'}
                 style={{ color: badge.color, borderColor: badge.color }}
                 className="flex items-center gap-1.5 p-1 pl-2 rounded-full text-sm h-8 font-thin"
             >
-                <div className="relative" onPointerDown={(e) => e.stopPropagation()}>
+                <div className="relative">
                     <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                         <PopoverTrigger asChild disabled={!isOwner}>
                              <Button
                                 variant="ghost"
                                 className="h-auto p-0 hover:bg-transparent"
                                 style={{ color: badge.color }}
-                                onPointerDown={(e) => e.stopPropagation()}
                             >
                                 <GoogleSymbol name={badge.icon} style={{ fontSize: '28px' }} weight={100} />
                             </Button>
@@ -350,7 +343,7 @@ function BadgeDisplayItem({
                     </Popover>
                      {!isViewer && (
                         <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                            <PopoverTrigger asChild disabled={!isOwner} onPointerDown={(e) => e.stopPropagation()}>
+                            <PopoverTrigger asChild disabled={!isOwner}>
                                 <button
                                     className={cn("absolute -bottom-1 -right-3 h-4 w-4 rounded-full border-0", isOwner && "cursor-pointer")}
                                     style={{ backgroundColor: badge.color }}
@@ -654,12 +647,12 @@ function BadgeCollectionCard({
                 <CardHeader>
                     <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3 flex-1 min-w-0">
-                            <div className="relative" onPointerDown={(e) => e.stopPropagation()}>
+                            <div className="relative">
                                 <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                                     <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                        <PopoverTrigger asChild disabled={!isOwner}>
+                                        <PopoverTrigger asChild disabled={!isOwner} onPointerDown={(e) => e.stopPropagation()}>
                                             <Button variant="ghost" className="h-10 w-12 flex items-center justify-center p-0">
                                             <GoogleSymbol name={collection.icon} weight={100} grade={-25} opticalSize={20} style={{ fontSize: '36px' }} />
                                             </Button>
@@ -776,7 +769,7 @@ function BadgeCollectionCard({
                 </CardHeader>
             </div>
              {isExpanded && (
-                <CardContent className="flex-grow pt-0 flex flex-col min-h-0">
+                <CardContent className="flex-grow pt-0 flex flex-col min-h-0" onPointerDown={(e) => e.stopPropagation()}>
                     <div className="mb-2">{descriptionEditorElement}</div>
                     <SortableContext items={collection.badgeIds.map(id => `badge::${id}::${collection.id}`)} strategy={rectSortingStrategy}>
                         <DroppableCollectionContent collection={collection} onAddBadge={() => onAddBadge(collection.id)}>
@@ -1277,7 +1270,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                 <Dialog open={!!collectionToDelete} onOpenChange={() => setCollectionToDelete(null)}>
                     <DialogContent className="max-w-md">
                         <div className="absolute top-4 right-4">
-                            <Button variant="ghost" size="icon" className="text-destructive hover:bg-transparent p-0" onClick={confirmDeleteCollection}>
+                            <Button variant="ghost" size="icon" className="hover:text-destructive hover:bg-transparent p-0" onClick={confirmDeleteCollection}>
                                 <GoogleSymbol name="delete" className="text-4xl" weight={100} />
                                 <span className="sr-only">Delete Collection</span>
                             </Button>
@@ -1353,3 +1346,5 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         </DndContext>
     );
 }
+
+    
