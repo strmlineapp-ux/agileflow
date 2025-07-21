@@ -281,7 +281,7 @@ function BadgeDisplayItem({
                     <TooltipProvider>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                        <PopoverTrigger asChild disabled={!isOwner}>
+                        <PopoverTrigger asChild disabled={!isOwner} onPointerDown={(e) => e.stopPropagation()}>
                             <Button variant="ghost" className="h-10 w-12 flex items-center justify-center p-0">
                                 <GoogleSymbol name={badge.icon} weight={100} grade={-25} opticalSize={20} style={{ fontSize: '36px', color: badge.color }} />
                             </Button>
