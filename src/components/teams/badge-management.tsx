@@ -366,15 +366,15 @@ function SortableBadgeItem({ badge, collection, onDelete, ...props }: { badge: B
         zIndex: isDragging ? 10 : 'auto',
     };
     
-    const itemContent = <BadgeDisplayItem badge={badge} onDelete={onDelete} {...props} />;
-    
     // Check if the user can manage the collection this badge is in.
     const canManage = !props.isViewer;
 
     return (
         <div ref={setNodeRef} style={style} className={cn(props.viewMode === 'detailed' && "p-1 basis-full md:basis-1/2 flex-grow-0 flex-shrink-0")}>
-            <div className="relative group w-full">
-                {/* Delete button is a sibling to the draggable handle to isolate it */}
+            <div className="group relative flex w-full">
+                <div {...attributes} {...listeners} className="flex-grow">
+                    <BadgeDisplayItem badge={badge} onDelete={onDelete} {...props} />
+                </div>
                 {!props.isSharedPreview && canManage && (
                     <div className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                         <TooltipProvider>
@@ -394,10 +394,6 @@ function SortableBadgeItem({ badge, collection, onDelete, ...props }: { badge: B
                         </TooltipProvider>
                     </div>
                 )}
-                {/* Draggable handle is on the content */}
-                <div {...attributes} {...listeners} className="w-full h-full">
-                    {itemContent}
-                </div>
             </div>
         </div>
     );
@@ -613,7 +609,7 @@ function BadgeCollectionCard({
         <Card className="h-full flex flex-col bg-transparent relative">
             <div {...dragHandleProps}>
                 <CardHeader className="group">
-                     {!isSharedPreview && (
+                     {!isSharedPreview && !isCollapsed && (
                       <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
@@ -622,6 +618,7 @@ function BadgeCollectionCard({
                                     size="icon"
                                     className="absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10"
                                     onClick={() => onDeleteCollection(collection)}
+                                    onPointerDown={(e) => e.stopPropagation()}
                                 >
                                     <GoogleSymbol name="cancel" className="text-lg" weight={100} />
                                 </Button>
@@ -722,7 +719,7 @@ function BadgeCollectionCard({
                             </div>
                         </div>
                         <div className="flex items-center">
-                           {isOwner && !isSharedPreview && (
+                           {!isCollapsed && isOwner && !isSharedPreview && (
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
@@ -734,38 +731,40 @@ function BadgeCollectionCard({
                                     </Tooltip>
                                 </TooltipProvider>
                             )}
-                            <Popover open={isViewModePopoverOpen} onOpenChange={setIsViewModePopoverOpen}>
-                                <PopoverTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-                                        <GoogleSymbol name={viewModeOptions.find(o => o.mode === collection.viewMode)?.icon || 'view_module'} weight={100} />
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-1 flex items-center gap-1">
-                                    {viewModeOptions.map(({mode, icon, label}) => (
-                                        <TooltipProvider key={mode}>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        onClick={() => {
-                                                            onUpdateCollection(collection.id, { viewMode: mode });
-                                                            setIsViewModePopoverOpen(false);
-                                                        }}
-                                                        className={cn(
-                                                            "h-8 w-8",
-                                                            collection.viewMode === mode && "text-primary"
-                                                        )}
-                                                    >
-                                                        <GoogleSymbol name={icon} weight={100} />
-                                                    </Button>
-                                                </TooltipTrigger>
-                                                <TooltipContent><p>{label}</p></TooltipContent>
-                                            </Tooltip>
-                                        </TooltipProvider>
-                                    ))}
-                                </PopoverContent>
-                            </Popover>
+                            {!isCollapsed && (
+                                <Popover open={isViewModePopoverOpen} onOpenChange={setIsViewModePopoverOpen}>
+                                    <PopoverTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+                                            <GoogleSymbol name={viewModeOptions.find(o => o.mode === collection.viewMode)?.icon || 'view_module'} weight={100} />
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-1 flex items-center gap-1">
+                                        {viewModeOptions.map(({mode, icon, label}) => (
+                                            <TooltipProvider key={mode}>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            onClick={() => {
+                                                                onUpdateCollection(collection.id, { viewMode: mode });
+                                                                setIsViewModePopoverOpen(false);
+                                                            }}
+                                                            className={cn(
+                                                                "h-8 w-8",
+                                                                collection.viewMode === mode && "text-primary"
+                                                            )}
+                                                        >
+                                                            <GoogleSymbol name={icon} weight={100} />
+                                                        </Button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent><p>{label}</p></TooltipContent>
+                                                </Tooltip>
+                                            </TooltipProvider>
+                                        ))}
+                                    </PopoverContent>
+                                </Popover>
+                            )}
                         </div>
                     </div>
                 </CardHeader>
@@ -774,7 +773,7 @@ function BadgeCollectionCard({
                 <>
                     <CardContent className="flex-grow pt-0 flex flex-col min-h-0">
                         <div className="mb-2">
-                            {isEditing ? (
+                            {isEditing && isOwner ? (
                             <Textarea 
                                 ref={descriptionTextareaRef} 
                                 defaultValue={collection.description} 
@@ -857,11 +856,13 @@ function BadgeCollectionCard({
                     )}
                 </>
              )}
-            <div className="absolute -bottom-1 right-0">
-                <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} className="text-muted-foreground h-6 w-6">
-                    <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
-                </Button>
-            </div>
+            {!isCollapsed && (
+                 <div className="absolute -bottom-1 right-0">
+                    <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
+                        <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
+                    </Button>
+                </div>
+            )}
         </Card>
     );
 }
