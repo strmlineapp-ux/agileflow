@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -12,7 +11,6 @@ import { type Team, type Badge, type BadgeCollection, type User, type BadgeAppli
 import { GoogleSymbol } from '../icons/google-symbol';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { ScrollArea } from '../ui/scroll-area';
-import { googleSymbolNames } from '@/lib/google-symbols';
 import { cn } from '@/lib/utils';
 import { Textarea } from '../ui/textarea';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -61,7 +59,7 @@ function BadgeDisplayItem({
 }: { 
     badge: Badge;
     viewMode: BadgeCollection['viewMode'];
-    onUpdateBadge: (badgeId: string, badgeData: Partial<Badge>) => void;
+    onUpdateBadge: (badgeData: Partial<Badge>) => void;
     onDelete: () => void;
     isViewer?: boolean;
     predefinedColors: string[];
@@ -73,7 +71,7 @@ function BadgeDisplayItem({
     isEditingDescription: boolean;
     setIsEditingDescription: (isEditing: boolean) => void;
 }) {
-    const { users } = useUser();
+    const { users, teams } = useUser();
     const nameInputRef = useRef<HTMLInputElement>(null);
     const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
@@ -82,18 +80,18 @@ function BadgeDisplayItem({
     const handleSaveName = useCallback(() => {
         const newName = nameInputRef.current?.value.trim() || '';
         if (newName && newName !== badge.name) {
-            onUpdateBadge(badge.id, { name: newName });
+            onUpdateBadge({ name: newName });
         }
         setIsEditingName(false);
-    }, [badge.id, badge.name, onUpdateBadge, setIsEditingName]);
+    }, [badge.name, onUpdateBadge, setIsEditingName]);
     
     const handleSaveDescription = useCallback(() => {
         const newDescription = descriptionTextareaRef.current?.value.trim();
         if (newDescription !== (badge.description || '')) {
-            onUpdateBadge(badge.id, { description: newDescription });
+            onUpdateBadge({ description: newDescription });
         }
         setIsEditingDescription(false);
-    }, [badge.id, badge.description, onUpdateBadge, setIsEditingDescription]);
+    }, [badge.description, onUpdateBadge, setIsEditingDescription]);
 
     useEffect(() => {
         if (!isEditingName) return;
@@ -131,6 +129,7 @@ function BadgeDisplayItem({
     };
     
     const originalCollection = allCollections.find(c => c.id === badge.ownerCollectionId);
+    
     const owner = users.find(u => u.userId === originalCollection?.owner.id);
     
     const colorPickerContent = (
@@ -148,14 +147,14 @@ function BadgeDisplayItem({
                             className="h-6 w-6 rounded-full border"
                             style={{ backgroundColor: c }}
                             onClick={() => {
-                                onUpdateBadge(badge.id, { color: c });
+                                onUpdateBadge({ color: c });
                                 setColor(c);
                                 setIsColorPopoverOpen(false);
                             }}
                         />
                     ))}
                 </div>
-                <Button onClick={() => { onUpdateBadge(badge.id, { color }); setIsColorPopoverOpen(false); }} className="w-full">Set Color</Button>
+                <Button onClick={() => { onUpdateBadge({ color }); setIsColorPopoverOpen(false); }} className="w-full">Set Color</Button>
             </div>
         </PopoverContent>
     );
@@ -227,7 +226,7 @@ function BadgeDisplayItem({
                          <div className="relative">
                             <CompactSearchIconPicker 
                                 icon={badge.icon} 
-                                onUpdateIcon={(icon) => onUpdateBadge(badge.id, { icon })}
+                                onUpdateIcon={(icon) => onUpdateBadge({ icon })}
                                 disabled={!isOwner}
                                 weight={100}
                                 grade={-25}
@@ -279,7 +278,7 @@ function BadgeDisplayItem({
             <div className="relative" onPointerDown={(e) => e.stopPropagation()}>
                 <CompactSearchIconPicker 
                     icon={badge.icon} 
-                    onUpdateIcon={(icon) => onUpdateBadge(badge.id, { icon })}
+                    onUpdateIcon={(icon) => onUpdateBadge({ icon })}
                     disabled={!isOwner}
                     weight={100}
                     grade={-25}
@@ -331,7 +330,7 @@ function BadgeDisplayItem({
                 <div className="relative" onPointerDown={(e) => e.stopPropagation()}>
                      <CompactSearchIconPicker
                         icon={badge.icon}
-                        onUpdateIcon={(icon) => onUpdateBadge(badge.id, { icon })}
+                        onUpdateIcon={(icon) => onUpdateBadge({ icon })}
                         iconClassName="text-base"
                         disabled={!isOwner}
                         weight={100}
@@ -691,7 +690,7 @@ function BadgeCollectionCard({ collection, allBadges, predefinedColors, onUpdate
                                     badge={badge}
                                     collectionId={collection.id}
                                     viewMode={collection.viewMode}
-                                    onUpdateBadge={onUpdateBadge}
+                                    onUpdateBadge={(badgeData) => onUpdateBadge(badge.id, badgeData)}
                                     onDelete={() => onDeleteBadge(collection.id, badge.id)}
                                     isViewer={isViewer}
                                     predefinedColors={predefinedColors}
@@ -835,7 +834,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         updateBadgeCollection,
         deleteBadgeCollection,
         addBadge,
-        updateBadge,
+        updateBadge: contextUpdateBadge,
         deleteBadge,
         reorderBadges,
         updateTeam,
@@ -876,13 +875,19 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
             isViewer = !canManage;
             
             // Show collections owned by relevant users
-            collections = allBadgeCollections.filter(c => relevantUserIds.has(c.owner.id));
+            const collectionsForTeam = allBadgeCollections.filter(c => relevantUserIds.has(c.owner.id));
+            const linkedCollectionIds = new Set(contextTeam.linkedCollectionIds || []);
+            const linkedCollections = allBadgeCollections.filter(c => linkedCollectionIds.has(c.id));
+            collections = [...collectionsForTeam, ...linkedCollections];
 
         } else { // User context (e.g., a non-dynamic page for managing one's own collections)
             canManage = true;
             canCreateCollection = true;
             isViewer = false;
-            collections = allBadgeCollections.filter(c => c.owner.id === viewAsUser.userId);
+            const myCollections = allBadgeCollections.filter(c => c.owner.id === viewAsUser.userId);
+            const linkedCollectionIds = new Set(viewAsUser.linkedCollectionIds || []);
+            const linkedCollections = allBadgeCollections.filter(c => linkedCollectionIds.has(c.id));
+            collections = [...myCollections, ...linkedCollections];
         }
   
         if (searchTerm) {
@@ -904,6 +909,12 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
             setTimeout(() => sharedSearchInputRef.current?.focus(), 100);
         }
     }, [isSharedPanelOpen]);
+
+    const handleUpdateBadge = useCallback((badgeId: string, badgeData: Partial<Badge>) => {
+        const badgeToUpdate = allBadges.find(b => b.id === badgeId);
+        if (!badgeToUpdate) return;
+        contextUpdateBadge({ ...badgeToUpdate, ...badgeData });
+    }, [allBadges, contextUpdateBadge]);
 
 
     const handleSaveTitle = () => {
@@ -1102,7 +1113,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                                             onUpdateCollection={updateBadgeCollection}
                                                             onDeleteCollection={handleDeleteCollection}
                                                             onAddBadge={addBadge}
-                                                            onUpdateBadge={updateBadge}
+                                                            onUpdateBadge={handleUpdateBadge}
                                                             onDeleteBadge={handleDeleteBadge}
                                                             contextTeam={team}
                                                             isViewer={isViewer}
@@ -1145,7 +1156,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                                             onUpdateCollection={updateBadgeCollection}
                                                             onDeleteCollection={handleDeleteCollection}
                                                             onAddBadge={addBadge}
-                                                            onUpdateBadge={updateBadge}
+                                                            onUpdateBadge={handleUpdateBadge}
                                                             onDeleteBadge={handleDeleteBadge}
                                                             isSharedPreview={true}
                                                             contextTeam={team}
