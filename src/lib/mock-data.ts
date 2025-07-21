@@ -97,6 +97,49 @@ export const liveEventsBadges: Badge[] = [
     { id: 'badge-eventeditor', ownerCollectionId: liveEventsCollectionId, name: 'Events Editor', icon: 'local_movies', color: '#60A5FA' },
 ];
 
+export const allMockBadgeCollections: BadgeCollection[] = [
+    {
+        id: videoProdCollectionId,
+        owner: { type: 'user', id: '1' }, // Bernardo
+        name: 'Video Production Roles',
+        icon: 'movie',
+        color: '#FBBF24',
+        viewMode: 'detailed',
+        badgeIds: [
+            ...videoProdBadges.map(b => b.id),
+            // These are now correctly LINKED by ID, not owned.
+            'badge-cameraop',
+            'badge-audioeng',
+            'badge-audiomix',
+            'badge-eventeditor',
+        ],
+        applications: ['team members', 'events'],
+        isShared: true,
+    },
+    {
+        id: liveEventsCollectionId,
+        owner: { type: 'user', id: '3' }, // May-Kate
+        name: 'Event Roles',
+        icon: 'podcasts',
+        color: '#3B82F6',
+        viewMode: 'assorted',
+        badgeIds: liveEventsBadges.map(b => b.id),
+        applications: ['team members', 'events'],
+        isShared: true,
+    },
+    {
+        id: 'effort-collection',
+        owner: { type: 'user', id: '2' }, // Daniel
+        name: 'Effort',
+        icon: 'fitness_center',
+        color: '#A855F7',
+        viewMode: 'list',
+        badgeIds: ['p0', 'p1', 'p2', 'p3', 'p4'],
+        applications: ['events'],
+        isShared: false,
+    }
+];
+
 
 export const mockTeams: Team[] = [
     {

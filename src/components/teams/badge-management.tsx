@@ -857,12 +857,13 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
 
         if (isTeamContext && contextTeam) {
             const hasAdmins = contextTeam.teamAdmins && contextTeam.teamAdmins.length > 0;
-            const relevantUserIds = hasAdmins ? new Set(contextTeam.teamAdmins) : new Set(contextTeam.members);
+            const relevantUserIds = new Set(hasAdmins ? contextTeam.teamAdmins : contextTeam.members);
             
             canManage = viewAsUser.isAdmin || relevantUserIds.has(viewAsUser.userId);
             canCreateCollection = canManage;
             isViewer = !canManage;
             
+            // Show collections owned by relevant users
             collections = allBadgeCollections.filter(c => relevantUserIds.has(c.owner.id));
 
         } else { // User context (e.g., a non-dynamic page for managing one's own collections)
