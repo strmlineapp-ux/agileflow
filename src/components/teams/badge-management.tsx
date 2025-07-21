@@ -380,13 +380,13 @@ function BadgeDisplayItem({
 }
 
 function SortableBadgeItem({ badge, collectionId, ...props }: { badge: Badge, collectionId: string, [key: string]: any }) {
-    const isOwner = props.isOwner;
     const {
         isCollectionEditing,
         editingBadgeState,
         setEditingBadgeState,
     } = props;
     
+    const isOwner = props.isOwner;
     const isThisBadgeBeingEdited = editingBadgeState.badgeId === badge.id;
 
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -478,7 +478,6 @@ type BadgeCollectionCardProps = {
     isSharedPreview?: boolean;
     contextTeam?: Team;
     isViewer?: boolean;
-    isCollectionEditing: boolean;
     editingBadgeState: { badgeId: string | null; field: string | null };
     setEditingBadgeState: (state: { badgeId: string | null; field: string | null }) => void;
 };
@@ -496,7 +495,6 @@ function BadgeCollectionCard({
     isSharedPreview = false, 
     contextTeam, 
     isViewer = false,
-    isCollectionEditing,
     editingBadgeState,
     setEditingBadgeState,
 }: BadgeCollectionCardProps) {
@@ -892,15 +890,9 @@ function BadgeCollectionCard({
 }
 
 function SortableCollectionCard({ collection, ...props }: { collection: BadgeCollection, [key: string]: any }) {
-    const [isEditingName, setIsEditingName] = useState(false);
-    const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
-    const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
-    const [isViewModePopoverOpen, setIsViewModePopoverOpen] = useState(false);
-    
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: `collection::${collection.id}`,
         data: { type: 'collection', collection, isSharedPreview: props.isSharedPreview },
-        disabled: isEditingName || isIconPopoverOpen || isColorPopoverOpen || isViewModePopoverOpen,
     });
 
     const style = {
@@ -1371,7 +1363,6 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                             isViewer={isViewer}
                             predefinedColors={predefinedColors}
                             allCollections={allBadgeCollections}
-                            isCollectionEditing={false}
                             editingBadgeState={editingBadgeState}
                             setEditingBadgeState={setEditingBadgeState}
                         />
