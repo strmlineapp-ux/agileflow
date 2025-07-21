@@ -97,9 +97,10 @@ export const hasAccess = (user: User, page: AppPage, teams: Team[]): boolean => 
 /**
  * Determines the ownership context for a new item.
  * In this simplified model, ownership is ALWAYS assigned to the current user.
+ * @param page The current page (not used in this simplified model, but available for future extension).
  * @param user The current user object.
  * @returns A BadgeCollectionOwner object pointing to the user.
  */
-export const getOwnershipContext = (user: User): BadgeCollectionOwner => {
+export const getOwnershipContext = (page: AppPage, user: User): BadgeCollectionOwner => {
     return { type: 'user', id: user.userId };
 };

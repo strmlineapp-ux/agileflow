@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -47,7 +48,6 @@ function BadgeDisplayItem({
     viewMode, 
     onUpdateBadge, 
     onDelete, 
-    isSharedPreview = false, 
     isViewer = false, 
     predefinedColors,
     isOwner,
@@ -58,7 +58,6 @@ function BadgeDisplayItem({
     viewMode: BadgeCollection['viewMode'];
     onUpdateBadge: (badgeId: string, badgeData: Partial<Badge>) => void;
     onDelete: () => void;
-    isSharedPreview?: boolean;
     isViewer?: boolean;
     predefinedColors: string[];
     isOwner: boolean;
@@ -432,14 +431,8 @@ function BadgeCollectionCard({ collection, allBadges, predefinedColors, onUpdate
     const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
     const [isExpanded, setIsExpanded] = useState(true);
     
-    const isOwner = useMemo(() => {
-        if (isSharedPreview || isViewer) return false;
-        if (!viewAsUser) return false;
-        if(collection.owner.type === 'user') return collection.owner.id === viewAsUser.userId;
-        if(collection.owner.type === 'team') return (teams.find(t => t.id === collection.owner.id)?.teamAdmins || []).includes(viewAsUser.userId);
-        return false;
-    }, [collection.owner, viewAsUser, teams, isSharedPreview, isViewer]);
-    
+    const isOwner = useMemo(() => collection.owner.id === viewAsUser.userId, [collection.owner.id, viewAsUser.userId]);
+
     const handleSaveName = useCallback(() => {
         const newName = nameInputRef.current?.value.trim() || '';
         if (newName && newName !== collection.name) {
@@ -502,24 +495,20 @@ function BadgeCollectionCard({ collection, allBadges, predefinedColors, onUpdate
         { key: 'badges', icon: 'style', label: 'Badges' },
     ];
 
-    const ownerEntity = useMemo(() => {
-        if (collection.owner.type === 'user') return users.find(u => u.userId === collection.owner.id);
-        if (collection.owner.type === 'team') return teams.find(t => t.id === collection.owner.id);
-        return null;
-    }, [collection.owner, users, teams]);
+    const owner = useMemo(() => {
+        return users.find(u => u.userId === collection.owner.id);
+    }, [collection.owner.id, users]);
     
-    const ownerName = ownerEntity?.name || (ownerEntity as User)?.displayName || 'System';
-    const ownerColor = ownerEntity?.color || (ownerEntity as User)?.primaryColor || '#64748B';
+    const ownerName = owner?.displayName || 'System';
+    const ownerColor = owner?.primaryColor || '#64748B';
 
     let shareIcon: string | null = null;
     let shareIconTitle: string = '';
     
-    const isOwnedByCurrentUser = collection.owner.type === 'user' && collection.owner.id === viewAsUser.userId;
-
-    if (isOwnedByCurrentUser && collection.isShared) {
+    if (isOwner && collection.isShared) {
         shareIcon = 'change_circle';
         shareIconTitle = `Owned & Shared by You`;
-    } else if (!isOwnedByCurrentUser && !isSharedPreview) { // Is a linked team on main board
+    } else if (!isOwner && !isSharedPreview) { // Is a linked collection on main board
         shareIcon = 'link';
         shareIconTitle = `Owned by ${ownerName}`;
     }
@@ -680,8 +669,7 @@ function BadgeCollectionCard({ collection, allBadges, predefinedColors, onUpdate
                     <SortableContext items={collection.badgeIds.map(id => `badge::${id}::${collection.id}`)} strategy={rectSortingStrategy}>
                         <DroppableCollectionContent collection={collection}>
                             {collectionBadges.map((badge) => {
-                                const isBadgeOwner = originalCollectionOwner?.userId === viewAsUser?.userId;
-                                const originalCollectionOwner = users.find(u => u.userId === allCollections.find(c => c.id === badge.ownerCollectionId)?.owner.id);
+                                const badgeIsOwned = badge.ownerCollectionId === collection.id;
                                 return (
                                 <SortableBadgeItem
                                     key={badge.id}
@@ -690,12 +678,11 @@ function BadgeCollectionCard({ collection, allBadges, predefinedColors, onUpdate
                                     viewMode={collection.viewMode}
                                     onUpdateBadge={onUpdateBadge}
                                     onDelete={() => onDeleteBadge(collection.id, badge.id)}
-                                    isSharedPreview={isSharedPreview}
                                     isViewer={isViewer}
                                     predefinedColors={predefinedColors}
-                                    isOwner={isBadgeOwner}
-                                    isLinked={badge.ownerCollectionId !== collection.id}
-                                    allCollections={allCollections}
+                                    isOwner={badgeIsOwned}
+                                    isLinked={!badgeIsOwned}
+                                    allCollections={allBadgeCollections}
                                 />
                                 )
                             })}
@@ -826,7 +813,6 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     const { 
         viewAsUser, 
         users,
-        teams,
         updateAppTab, 
         allBadgeCollections,
         allBadges,
@@ -838,7 +824,6 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         deleteBadge,
         reorderBadges,
         updateTeam,
-        updateUser,
         predefinedColors,
     } = useUser();
 
@@ -866,28 +851,22 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         let canCreateCollection = false;
         let isViewer = false;
         let collections: BadgeCollection[] = [];
-        
+
         if (isTeamContext && contextTeam) {
             const hasAdmins = contextTeam.teamAdmins && contextTeam.teamAdmins.length > 0;
-            canManage = viewAsUser.isAdmin || (hasAdmins ? contextTeam.teamAdmins!.includes(viewAsUser.userId) : contextTeam.members.includes(viewAsUser.userId));
+            const relevantUserIds = hasAdmins ? new Set(contextTeam.teamAdmins) : new Set(contextTeam.members);
+            
+            canManage = viewAsUser.isAdmin || relevantUserIds.has(viewAsUser.userId);
             canCreateCollection = canManage;
             isViewer = !canManage;
             
-            const teamBadgeCollections = contextTeam.badgeCollections || [];
-            const linkedCollectionIds = new Set(contextTeam.linkedCollectionIds || []);
-            const linkedCollections = allBadgeCollections.filter(c => linkedCollectionIds.has(c.id));
-            collections = [...teamBadgeCollections, ...linkedCollections];
+            collections = allBadgeCollections.filter(c => relevantUserIds.has(c.owner.id));
 
-        } else { // User context
+        } else { // User context (e.g., a non-dynamic page for managing one's own collections)
             canManage = true;
             canCreateCollection = true;
             isViewer = false;
-            
-            const ownedCollections = allBadgeCollections.filter(c => c.owner.id === viewAsUser.userId);
-            const linkedCollectionIds = new Set(viewAsUser.linkedCollectionIds || []);
-            const linkedCollections = allBadgeCollections.filter(c => linkedCollectionIds.has(c.id));
-            
-            collections = [...ownedCollections, ...linkedCollections];
+            collections = allBadgeCollections.filter(c => c.owner.id === viewAsUser.userId);
         }
   
         if (searchTerm) {
@@ -938,21 +917,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     
     const handleDeleteCollection = (collection: BadgeCollection) => {
         if (isViewer) return;
-        
-        const isOwned = collection.owner.id === viewAsUser.userId;
-
-        if (!isOwned) {
-            if (contextTeam) {
-                const updatedIds = (contextTeam.linkedCollectionIds || []).filter(id => id !== collection.id);
-                updateTeam(contextTeam.id, { linkedCollectionIds: updatedIds });
-            } else {
-                const updatedIds = (viewAsUser.linkedCollectionIds || []).filter(id => id !== collection.id);
-                updateUser(viewAsUser.userId, { linkedCollectionIds: updatedIds });
-            }
-            toast({ title: 'Collection Unlinked' });
-        } else {
-            setCollectionToDelete(collection);
-        }
+        setCollectionToDelete(collection);
     };
 
     const confirmDeleteCollection = () => {
@@ -1002,52 +967,13 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         if (over.id === 'duplicate-collection-zone' && activeType === 'collection') {
             const sourceCollection = active.data.current?.collection as BadgeCollection;
             handleAddCollection(sourceCollection);
-            const isLinked = active.data.current?.isSharedPreview;
-            if (isLinked) {
-                if (contextTeam) {
-                    const newLinkedIds = (contextTeam.linkedCollectionIds || []).filter(id => id !== sourceCollection.id);
-                    updateTeam(contextTeam.id, { linkedCollectionIds: newLinkedIds });
-                } else {
-                    const newLinkedIds = (viewAsUser.linkedCollectionIds || []).filter(id => id !== sourceCollection.id);
-                    updateUser(viewAsUser.userId, { linkedCollectionIds: newLinkedIds });
-                }
-                toast({ title: 'Collection Copied', description: 'A new, independent team has been created.' });
-            }
             return;
         }
 
         if (activeType === 'collection') {
-            handleCollectionDragEnd(event);
+            // handleCollectionDragEnd(event);
         } else if (activeType === 'badge') {
             handleBadgeDragEnd(event);
-        }
-    };
-    
-    const handleCollectionDragEnd = (event: DragEndEvent) => {
-        const { active, over } = event;
-        if (!over) return;
-    
-        const activeCollection = active.data.current?.collection as BadgeCollection;
-        if (!activeCollection) return;
-        
-        if (over.id === 'shared-collections-panel') {
-            const isOwner = activeCollection.owner.id === viewAsUser.userId;
-            if (isOwner) {
-                updateBadgeCollection(activeCollection.id, { isShared: !activeCollection.isShared });
-                toast({ title: activeCollection.isShared ? 'Collection Unshared' : 'Collection Shared' });
-            }
-            return;
-        }
-    
-        if (active.data.current?.isSharedPreview && over.id === 'main-collections-grid') {
-             if (isTeamContext && contextTeam) {
-                const newLinkedIds = [...(contextTeam.linkedCollectionIds || []), activeCollection.id];
-                updateTeam(contextTeam.id, { linkedCollectionIds: Array.from(new Set(newLinkedIds)) });
-            } else {
-                const newLinkedIds = [...(viewAsUser.linkedCollectionIds || []), activeCollection.id];
-                updateUser(viewAsUser.userId, { linkedCollectionIds: Array.from(new Set(newLinkedIds)) });
-            }
-            toast({ title: 'Collection Linked' });
         }
     };
     
@@ -1056,26 +982,25 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         if (!over) return;
     
         const activeCollectionId = active.data.current?.collectionId;
-        const overCollectionData = over.data.current?.type === 'badge'
-          ? { id: over.data.current.collectionId, type: over.data.current.type }
-          : { id: over.id, type: over.data.current?.type };
+        const overData = over.data.current;
+        const overCollectionId = overData?.type === 'badge' ? overData.collectionId : (overData?.type === 'collection' ? over.id : null);
           
         const activeBadge = active.data.current?.badge as Badge;
     
-        if (!activeBadge) return;
+        if (!activeBadge || !overCollectionId) return;
     
-        if (overCollectionData.type === 'collection' && activeCollectionId !== overCollectionData.id) {
-            const toCollection = allBadgeCollections.find(c => c.id === overCollectionData.id);
+        if (activeCollectionId !== overCollectionId) {
+            const toCollection = allBadgeCollections.find(c => c.id === overCollectionId);
             if(toCollection && !toCollection.badgeIds.includes(activeBadge.id)) {
                 const newToBadgeIds = [...toCollection.badgeIds, activeBadge.id];
                 updateBadgeCollection(toCollection.id, { badgeIds: newToBadgeIds });
                 toast({ title: "Badge Linked" });
             }
-        } else if (overCollectionData.type === 'badge' && activeCollectionId === overCollectionData.id) {
+        } else {
             const collection = allBadgeCollections.find(c => c.id === activeCollectionId);
             if (collection && collection.owner.id === viewAsUser.userId) {
                 const oldIndex = collection.badgeIds.indexOf(active.id.toString().split('::')[2]);
-                const newIndex = collection.badgeIds.indexOf(over.id.toString().split('::')[2]);
+                const newIndex = overData.type === 'badge' ? collection.badgeIds.indexOf(over.id.toString().split('::')[2]) : collection.badgeIds.length;
                 if (oldIndex > -1 && newIndex > -1) {
                     const reordered = arrayMove(collection.badgeIds, oldIndex, newIndex);
                     reorderBadges(collection.id, reordered);
@@ -1146,11 +1071,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                 <TeamManagementDropZone id="main-collections-grid" type="collection-grid" className="h-full">
                                 <SortableContext items={collectionsToDisplay.map(c => `collection::${c.id}`)} strategy={rectSortingStrategy}>
                                     <div className={cn("flex flex-wrap -m-2 transition-all duration-300")}>
-                                        {collectionsToDisplay.map((collection) => {
-                                            const isActive = isTeamContext && contextTeam?.activeBadgeCollections?.includes(collection.id);
-                                            const canToggle = isTeamContext && !isViewer;
-                                            
-                                            return (
+                                        {collectionsToDisplay.map((collection) => (
                                                 <div
                                                     key={collection.id}
                                                     className={cn(
@@ -1158,7 +1079,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                                         isSharedPanelOpen ? "lg:w-1/2" : "lg:w-1/3",
                                                     )}
                                                 >
-                                                    <div className={cn("h-full", (canToggle && !isActive) && "opacity-40 hover:opacity-100")}>
+                                                    <div className="h-full">
                                                         <SortableCollectionCard
                                                             collection={collection}
                                                             allBadges={allBadges}
@@ -1175,7 +1096,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                                     </div>
                                                 </div>
                                             )
-                                        })}
+                                        )}
                                     </div>
                                 </SortableContext>
                                 </TeamManagementDropZone>
@@ -1217,7 +1138,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                                             allCollections={allBadgeCollections}
                                                         />
                                                     ))}
-                                                    {sharedCollections.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">No collections are being shared by other teams.</p>}
+                                                    {sharedCollections.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">No collections are being shared by other users.</p>}
                                                 </div>
                                             </SortableContext>
                                         </ScrollArea>

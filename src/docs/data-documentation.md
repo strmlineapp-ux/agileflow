@@ -192,10 +192,9 @@ The `Team` entity is a functional unit that groups users together for collaborat
 | `teamAdmins?: string[]` | A subset of `members` who have administrative privileges for this team (e.g., can add/remove members). |
 | `teamAdminsLabel?: string` | A custom label for the Team Admins list on the Team Members tab. |
 | `membersLabel?: string` | A custom label for the Members list on the Team Members tab. |
-| `badgeCollections: BadgeCollection[]` | A list of `BadgeCollection` objects *used by* this team. This does not imply ownership. It includes collections created by a user and linked to this team, as well as collections linked from other users. |
 | `userBadgesLabel?: string` | A custom label for the "Team Badges" section on the Team Members tab. |
-| `linkedCollectionIds?: string[]` | An array of `collectionId`s for shared Badge Collections that this team has chosen to use. |
-| `activeBadgeCollections?: string[]` | A subset of `badgeCollections` and `linkedCollectionIds` that are currently active for this team. This determines if the collection's badges are available for assignment within this team. |
+| `activeBadgeCollections?: string[]` | An array of `collectionId`s. Badges from these collections become available for assignment to members of this team. This is a local setting for the team. |
+| `collectionViewModes?: { [key:string]: 'assorted' \| 'detailed' \| 'list' }` | A map of `collectionId`s to a locally-preferred view mode, overriding the collection's default. |
 | `pinnedLocations?: string[]` | An array of location names pinned to this team's schedule. |
 | `checkLocations?: string[]` | A subset of pinnedLocations designated for daily checks. |
 | `locationAliases?: { [key:string]: string }` | A map of canonical location names to custom display aliases. |
@@ -206,20 +205,25 @@ The `Team` entity is a functional unit that groups users together for collaborat
 
 ## Badge & Badge Collection Entities
 
-These entities represent the skills, roles, and priorities that can be assigned within the application. Their ownership model is central to how they are managed and shared.
+These entities represent the skills, roles, and priorities that can be assigned within the application. Their ownership and display model is central to how they are managed and shared.
 
 ### Core Principle: User Ownership
 
--   **`BadgeCollection` is User-Owned**: A `BadgeCollection` is **always** owned by a single `User`. It is not a sub-entity of a `Team`. This means that when a user creates a collection, it belongs to them, regardless of whether they created it on their personal board or on a team's management page.
+-   **`BadgeCollection` is User-Owned**: A `BadgeCollection` is **always** owned by a single `User`. It is not a sub-entity of a `Team`. This means that when a user creates a collection, it belongs to them, regardless of where in the UI they created it.
 -   **`Badge` is Collection-Owned**: A `Badge` is always owned by its parent `BadgeCollection`. Its properties (name, icon, color) are managed by the owner of that collection.
 
-### Contextual Display on Team Pages
+### Dynamic Contextual Display on Team Pages
 
-When viewing the "Badges" tab on a team's management page, the application does not show collections owned by the team. Instead, it **dynamically displays** a set of collections based on the team's membership:
-1.  If the team has designated `teamAdmins`, the tab will show **only** the badge collections owned by those admin users.
-2.  If the team has no designated `teamAdmins`, the tab will show a consolidated list of **all** badge collections owned by **any** member of the team.
+Unlike other entities that are explicitly linked (like `linkedTeamIds`), Badge Collections are displayed dynamically on a team's "Badges" tab based on the team's structure. This provides flexibility and control without transferring ownership.
 
-This ensures that team members can use and share their personal badge collections within a collaborative team environment without transferring ownership.
+-   **If a team has `teamAdmins`**: The Badges tab will **only** show the Badge Collections owned by those specific admin users. This allows team leads to define the set of available badges for their team.
+-   **If a team has no `teamAdmins`**: The Badges tab will show a consolidated list of **all** Badge Collections owned by **every member** of the team. This allows for a more collaborative, "flat" structure.
+
+### Activating Collections for a Team
+
+Once a collection is visible on a team's Badges tab, a team admin (or any member if there are no admins) can **activate** it for the team.
+- **Mechanism**: This is done by toggling the `check_circle` icon on the collection's card.
+- **Effect**: Activating a collection adds its ID to the `Team.activeBadgeCollections` array. This makes all the badges within that collection available for assignment to team members on the "Members" tab.
 
 ### BadgeCollection Entity Data
 
@@ -249,3 +253,4 @@ This represents a specific, functional role or skill. The single source of truth
 | `icon: string` | The Google Symbol name for the badge's icon. |
 | `color: string` | The hex color code for the badge's icon and outline. |
 | `description?: string` | An optional description shown in tooltips. |
+

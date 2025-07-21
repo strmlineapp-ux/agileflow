@@ -112,17 +112,12 @@ export interface Team {
   teamAdminsLabel?: string;
   membersLabel?: string;
   locationCheckManagers: string[]; // array of userIds who can manage check locations
-  // An array of BadgeCollection objects *used by* this team. This does not imply ownership.
-  // It includes both collections owned by the user (and shared with this team context) and collections linked from other users.
-  // The `applications` property on these objects can be a local override for this team.
-  badgeCollections: BadgeCollection[];
   userBadgesLabel?: string;
   pinnedLocations?: string[]; // array of location names
   checkLocations?: string[]; // subset of pinnedLocations designated for daily checks
   locationAliases?: { [key:string]: string };
   workstations?: string[];
   eventTemplates?: EventTemplate[];
-  linkedCollectionIds?: string[];
   // A simple list of collection IDs that are "turned on" for this team.
   // Badges from these collections will be available for assignment to team members.
   activeBadgeCollections?: string[];

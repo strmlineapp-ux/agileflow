@@ -111,21 +111,6 @@ export const mockTeams: Team[] = [
         teamAdminsLabel: 'Prod Team Leads',
         membersLabel: 'Prod Team Members',
         locationCheckManagers: ['1'],
-        badgeCollections: [{
-            id: videoProdCollectionId,
-            owner: { type: 'user', id: '1'},
-            name: 'Video Production Roles',
-            icon: 'video_settings',
-            color: '#FBBF24',
-            viewMode: 'assorted',
-            applications: ['team members'],
-            description: 'Core roles for studio and field video production.',
-            badgeIds: [
-              ...videoProdBadges.map(b => b.id),
-              'badge-cameraop', 'badge-audioeng', 'badge-audiomix', 'badge-esop'
-            ],
-            isShared: true,
-        }],
         pinnedLocations: ['Studio', 'ACR'],
         checkLocations: ['Studio'],
         workstations: ['EDIT 1', 'EDIT 2', 'Pro Tools Machine'],
@@ -133,7 +118,6 @@ export const mockTeams: Team[] = [
             { id: 'template-1', name: 'Basic Studio Shoot', icon: 'theaters', requestedRoles: ['Video Director', 'Camera Op.', 'Audio Engineer'] },
             { id: 'template-2', name: 'Voice Over Record', icon: 'record_voice_over', requestedRoles: ['Editor', 'Audio Mix'] }
         ],
-        linkedCollectionIds: [],
         activeBadgeCollections: [videoProdCollectionId]
     },
     {
@@ -146,28 +130,12 @@ export const mockTeams: Team[] = [
         members: ['3', '8', '9', '10', '11', '12', '13', '14'],
         teamAdmins: [],
         locationCheckManagers: ['3'],
-        badgeCollections: [{
-            id: liveEventsCollectionId,
-            owner: { type: 'user', id: '3'},
-            name: 'Event Roles',
-            icon: 'palette',
-            color: '#3B82F6',
-            viewMode: 'assorted',
-            applications: ['team members'],
-            description: 'Specialized roles for executing live events and broadcasts.',
-            badgeIds: [
-                ...liveEventsBadges.map(b => b.id),
-                'badge-dop', 'badge-editor'
-            ],
-            isShared: true,
-        }],
         pinnedLocations: ['Auditorium', 'ACR', 'Event Space 1 (S2)', 'Event Space 2 (S2)'],
         checkLocations: ['Auditorium'],
         eventTemplates: [
             { id: 'template-3', name: 'Standard Live Event', icon: 'podcasts', requestedRoles: ['TD', 'ES Operator', 'Camera Op.', 'Audio Engineer'] },
             { id: 'template-4', name: 'Auditorium Presentation', icon: 'slideshow', requestedRoles: ['TD', 'Content Op'] }
         ],
-        linkedCollectionIds: [],
     },
     {
         id: 'production',
@@ -179,8 +147,6 @@ export const mockTeams: Team[] = [
         members: ['4', '15'],
         teamAdmins: [],
         locationCheckManagers: ['4'],
-        badgeCollections: [],
-        linkedCollectionIds: [],
     },
     {
         id: 'service-delivery',
@@ -192,8 +158,6 @@ export const mockTeams: Team[] = [
         members: ['2'],
         teamAdmins: ['2'],
         locationCheckManagers: [],
-        badgeCollections: [],
-        linkedCollectionIds: [],
     }
 ];
 
