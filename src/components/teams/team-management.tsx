@@ -191,11 +191,11 @@ function TeamCard({
     let shareIconTitle: string = '';
     
     if (team.owner.id === viewAsUser.userId && team.isShared) {
-        shareIcon = 'upload';
+        shareIcon = 'change_circle';
         shareIconTitle = `Owned & Shared by You`;
     } else if (team.owner.id !== viewAsUser.userId && !isSharedPreview) { // Is a linked team on main board
-        shareIcon = 'downloading';
-        shareIconTitle = `Shared by ${ownerName}`;
+        shareIcon = 'link';
+        shareIconTitle = `Owned by ${ownerName}`;
     }
 
     useEffect(() => {
