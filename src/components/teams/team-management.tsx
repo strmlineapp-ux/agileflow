@@ -248,26 +248,26 @@ function TeamCard({
     };
 
     return (
-        <Card className="group flex flex-col h-full bg-transparent relative" {...props}>
-             {!isSharedPreview && (
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                                onPointerDown={(e) => { e.stopPropagation(); onDelete(team); }}
-                            >
-                                <GoogleSymbol name="cancel" className="text-lg" weight={100} />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent><p>{canManageTeam ? "Delete Team" : "Unlink Team"}</p></TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
-            )}
+        <Card className="flex flex-col h-full bg-transparent relative" {...props}>
             <div {...props.dragHandleProps}>
-                <CardHeader>
+                <CardHeader className="group">
+                     {!isSharedPreview && (
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                                        onPointerDown={(e) => { e.stopPropagation(); onDelete(team); }}
+                                    >
+                                        <GoogleSymbol name="cancel" className="text-lg" weight={100} />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent><p>{canManageTeam ? "Delete Team" : "Unlink Team"}</p></TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    )}
                     <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3 flex-1 min-w-0">
                             <div className="relative">
