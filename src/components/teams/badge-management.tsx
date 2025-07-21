@@ -18,8 +18,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle as 
 import { Badge as UiBadge } from '../ui/badge';
 import { HexColorPicker, HexColorInput } from 'react-colorful';
 import { CompactSearchInput } from '@/components/common/compact-search-input';
-import { CompactSearchIconPicker } from '@/components/common/compact-search-icon-picker';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { CompactSearchIconPicker } from '@/components/common/compact-search-icon-picker';
 
 import {
   DndContext,
@@ -31,6 +31,7 @@ import {
   type DragEndEvent,
   useDroppable,
   DragOverlay,
+  type DragStartEvent,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -59,8 +60,8 @@ function BadgeDisplayItem({
 }: { 
     badge: Badge;
     viewMode: BadgeCollection['viewMode'];
-    onUpdateBadge: (badgeData: Partial<Badge>) => void;
-    onDelete: () => void;
+    onUpdateBadge: (badgeId: string, badgeData: Partial<Badge>) => void;
+    onDelete: (badgeId: string) => void;
     isViewer?: boolean;
     predefinedColors: string[];
     isOwner: boolean;
@@ -80,18 +81,18 @@ function BadgeDisplayItem({
     const handleSaveName = useCallback(() => {
         const newName = nameInputRef.current?.value.trim() || '';
         if (newName && newName !== badge.name) {
-            onUpdateBadge({ name: newName });
+            onUpdateBadge(badge.id, { name: newName });
         }
         setIsEditingName(false);
-    }, [badge.name, onUpdateBadge, setIsEditingName]);
+    }, [badge.id, badge.name, onUpdateBadge, setIsEditingName]);
     
     const handleSaveDescription = useCallback(() => {
         const newDescription = descriptionTextareaRef.current?.value.trim();
         if (newDescription !== (badge.description || '')) {
-            onUpdateBadge({ description: newDescription });
+            onUpdateBadge(badge.id, { description: newDescription });
         }
         setIsEditingDescription(false);
-    }, [badge.description, onUpdateBadge, setIsEditingDescription]);
+    }, [badge.id, badge.description, onUpdateBadge, setIsEditingDescription]);
 
     useEffect(() => {
         if (!isEditingName) return;
@@ -147,14 +148,14 @@ function BadgeDisplayItem({
                             className="h-6 w-6 rounded-full border"
                             style={{ backgroundColor: c }}
                             onClick={() => {
-                                onUpdateBadge({ color: c });
+                                onUpdateBadge(badge.id, { color: c });
                                 setColor(c);
                                 setIsColorPopoverOpen(false);
                             }}
                         />
                     ))}
                 </div>
-                <Button onClick={() => { onUpdateBadge({ color }); setIsColorPopoverOpen(false); }} className="w-full">Set Color</Button>
+                <Button onClick={() => { onUpdateBadge(badge.id, { color }); setIsColorPopoverOpen(false); }} className="w-full">Set Color</Button>
             </div>
         </PopoverContent>
     );
@@ -166,7 +167,7 @@ function BadgeDisplayItem({
                     <button
                         type="button"
                         className="absolute top-0 right-0 z-10 flex items-center justify-center text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                        onPointerDown={(e) => { e.stopPropagation(); onDelete(); }}
+                        onPointerDown={(e) => { e.stopPropagation(); onDelete(badge.id); }}
                         aria-label={`Delete ${badge.name}`}
                     >
                         <GoogleSymbol name="cancel" className="text-lg" />
@@ -226,7 +227,7 @@ function BadgeDisplayItem({
                          <div className="relative">
                             <CompactSearchIconPicker 
                                 icon={badge.icon} 
-                                onUpdateIcon={(icon) => onUpdateBadge({ icon })}
+                                onUpdateIcon={(icon) => onUpdateBadge(badge.id, { icon })}
                                 disabled={!isOwner}
                                 weight={100}
                                 grade={-25}
@@ -278,7 +279,7 @@ function BadgeDisplayItem({
             <div className="relative" onPointerDown={(e) => e.stopPropagation()}>
                 <CompactSearchIconPicker 
                     icon={badge.icon} 
-                    onUpdateIcon={(icon) => onUpdateBadge({ icon })}
+                    onUpdateIcon={(icon) => onUpdateBadge(badge.id, { icon })}
                     disabled={!isOwner}
                     weight={100}
                     grade={-25}
@@ -330,7 +331,7 @@ function BadgeDisplayItem({
                 <div className="relative" onPointerDown={(e) => e.stopPropagation()}>
                      <CompactSearchIconPicker
                         icon={badge.icon}
-                        onUpdateIcon={(icon) => onUpdateBadge({ icon })}
+                        onUpdateIcon={(icon) => onUpdateBadge(badge.id, { icon })}
                         iconClassName="text-base"
                         disabled={!isOwner}
                         weight={100}
@@ -433,14 +434,30 @@ type BadgeCollectionCardProps = {
     isSharedPreview?: boolean;
     contextTeam?: Team;
     isViewer?: boolean;
+    isEditingName: boolean;
+    setIsEditingName: (isEditing: boolean) => void;
 };
 
-function BadgeCollectionCard({ collection, allBadges, predefinedColors, onUpdateCollection, onDeleteCollection, onAddBadge, onUpdateBadge, onDeleteBadge, dragHandleProps, isSharedPreview = false, contextTeam, isViewer = false }: BadgeCollectionCardProps) {
+function BadgeCollectionCard({ 
+    collection, 
+    allBadges, 
+    predefinedColors, 
+    onUpdateCollection, 
+    onDeleteCollection, 
+    onAddBadge, 
+    onUpdateBadge, 
+    onDeleteBadge, 
+    dragHandleProps, 
+    isSharedPreview = false, 
+    contextTeam, 
+    isViewer = false,
+    isEditingName,
+    setIsEditingName
+}: BadgeCollectionCardProps) {
     const { viewAsUser, users, teams, updateTeam, allBadgeCollections } = useUser();
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
     const [color, setColor] = useState(collection.color);
-    const [isEditingName, setIsEditingName] = useState(false);
     const [isEditingDescription, setIsEditingDescription] = useState(false);
     const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
     const [isExpanded, setIsExpanded] = useState(true);
@@ -453,7 +470,7 @@ function BadgeCollectionCard({ collection, allBadges, predefinedColors, onUpdate
             onUpdateCollection(collection.id, { name: newName });
         }
         setIsEditingName(false);
-    }, [collection.name, collection.id, onUpdateCollection]);
+    }, [collection.name, collection.id, onUpdateCollection, setIsEditingName]);
 
     const handleSaveDescription = useCallback(() => {
         const newDescription = descriptionTextareaRef.current?.value.trim();
@@ -490,12 +507,12 @@ function BadgeCollectionCard({ collection, allBadges, predefinedColors, onUpdate
     }, [isEditingDescription, handleSaveDescription]);
 
     const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Enter') handleSaveName();
-        else if (e.key === 'Escape') setIsEditingName(false);
+        if (e.key === 'Enter') { e.preventDefault(); handleSaveName(); }
+        else if (e.key === 'Escape') { e.preventDefault(); setIsEditingName(false); }
     };
 
     const handleDescriptionKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'Escape') handleSaveDescription();
+        if (e.key === 'Escape') { e.preventDefault(); handleSaveDescription(); }
     };
     
     const collectionBadges = useMemo(() => {
@@ -690,8 +707,8 @@ function BadgeCollectionCard({ collection, allBadges, predefinedColors, onUpdate
                                     badge={badge}
                                     collectionId={collection.id}
                                     viewMode={collection.viewMode}
-                                    onUpdateBadge={(badgeData) => onUpdateBadge(badge.id, badgeData)}
-                                    onDelete={() => onDeleteBadge(collection.id, badge.id)}
+                                    onUpdateBadge={onUpdateBadge}
+                                    onDelete={onDeleteBadge}
                                     isViewer={isViewer}
                                     predefinedColors={predefinedColors}
                                     isOwner={badgeIsOwned}
@@ -755,6 +772,8 @@ function BadgeCollectionCard({ collection, allBadges, predefinedColors, onUpdate
 }
 
 function SortableCollectionCard({ collection, ...props }: { collection: BadgeCollection, [key: string]: any }) {
+    const [isEditingName, setIsEditingName] = useState(false);
+    
     const {
         attributes,
         listeners,
@@ -765,6 +784,7 @@ function SortableCollectionCard({ collection, ...props }: { collection: BadgeCol
     } = useSortable({
         id: `collection::${collection.id}`,
         data: { type: 'collection', collection, isSharedPreview: props.isSharedPreview },
+        disabled: isEditingName,
     });
 
     const style = {
@@ -780,6 +800,8 @@ function SortableCollectionCard({ collection, ...props }: { collection: BadgeCol
                 {...props}
                 collection={collection} 
                 dragHandleProps={{...attributes, ...listeners}}
+                isEditingName={isEditingName}
+                setIsEditingName={setIsEditingName}
             />
         </div>
     );
@@ -876,7 +898,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
             
             // Show collections owned by relevant users
             const collectionsForTeam = allBadgeCollections.filter(c => relevantUserIds.has(c.owner.id));
-            const linkedCollectionIds = new Set(contextTeam.linkedCollectionIds || []);
+            const linkedCollectionIds = new Set(contextTeam.activeBadgeCollections || []);
             const linkedCollections = allBadgeCollections.filter(c => linkedCollectionIds.has(c.id));
             collections = [...collectionsForTeam, ...linkedCollections];
 
@@ -1226,6 +1248,8 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                             isViewer={isViewer}
                             predefinedColors={predefinedColors}
                             allCollections={allBadgeCollections}
+                            isEditingName={false}
+                            setIsEditingName={() => {}}
                         />
                         </div>
                     ) : activeDragItem?.type === 'badge' ? (
@@ -1235,7 +1259,6 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                             viewMode={'assorted'}
                             onUpdateBadge={() => {}}
                             onDelete={() => {}}
-                            isSharedPreview={false}
                             isViewer={false}
                             predefinedColors={predefinedColors}
                             isOwner={false}
