@@ -768,7 +768,7 @@ function BadgeCollectionCard({
                                                             collection.viewMode === mode ? "text-primary" : ""
                                                         )}
                                                     >
-                                                        <GoogleSymbol name={icon} />
+                                                        <GoogleSymbol name={icon} weight={100} />
                                                     </Button>
                                                 </TooltipTrigger>
                                                 <TooltipContent><p>{label}</p></TooltipContent>
