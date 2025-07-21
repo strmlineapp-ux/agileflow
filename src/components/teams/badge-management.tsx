@@ -222,7 +222,8 @@ function BadgeDisplayItem({
                         variant="ghost"
                         size="icon"
                         className="absolute -top-1 -right-1 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                        onPointerDown={(e) => { e.stopPropagation(); onDelete(badge.id); }}
+                        onPointerDown={(e) => { e.stopPropagation(); }}
+                        onClick={(e) => { e.stopPropagation(); onDelete(badge.id); }}
                     >
                         <GoogleSymbol name="cancel" className="text-lg" weight={100} />
                     </Button>
@@ -634,7 +635,7 @@ function BadgeCollectionCard({
         <Card className="h-full flex flex-col bg-transparent relative">
              <div {...dragHandleProps}>
                 <CardHeader className="group">
-                    {!isSharedPreview && (
+                     {!isSharedPreview && (
                       <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
@@ -642,7 +643,8 @@ function BadgeCollectionCard({
                                     variant="ghost"
                                     size="icon"
                                     className="absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                                    onPointerDown={(e) => { e.stopPropagation(); onDeleteCollection(collection); }}
+                                    onPointerDown={(e) => { e.stopPropagation(); }}
+                                    onClick={(e) => { e.stopPropagation(); onDeleteCollection(collection); }}
                                 >
                                     <GoogleSymbol name="cancel" className="text-lg" weight={100} />
                                 </Button>
