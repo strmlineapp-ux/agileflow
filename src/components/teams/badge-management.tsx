@@ -897,14 +897,7 @@ function SortableCollectionCard({ collection, ...props }: { collection: BadgeCol
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
     const [isViewModePopoverOpen, setIsViewModePopoverOpen] = useState(false);
     
-    const {
-        attributes,
-        listeners,
-        setNodeRef,
-        transform,
-        transition,
-        isDragging,
-    } = useSortable({
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: `collection::${collection.id}`,
         data: { type: 'collection', collection, isSharedPreview: props.isSharedPreview },
         disabled: isEditingName || isIconPopoverOpen || isColorPopoverOpen || isViewModePopoverOpen,
@@ -1326,89 +1319,87 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                          </div>
                     </div>
                 )}
-                <Dialog open={!!collectionToDelete} onOpenChange={()={() => setCollectionToDelete(null)}}>
-                    <DialogContent className="max-w-md">
-                        <div className="absolute top-4 right-4">
-                            <Button variant="ghost" size="icon" className="hover:text-destructive hover:bg-transparent p-0" onClick={confirmDeleteCollection}>
-                                <GoogleSymbol name="delete" className="text-4xl" weight={100} />
-                                <span className="sr-only">Delete Collection</span>
-                            </Button>
-                        </div>
-                        <DialogHeader>
-                            <UIDialogTitle>Delete "{collectionToDelete?.name}"?</UIDialogTitle>
-                            <DialogDescription>
-                                {collectionToDelete?.isShared 
-                                    ? "This collection is shared. Deleting it will remove it and its badges from all teams that use it. This action cannot be undone."
-                                    : `This will permanently delete the collection "${collectionToDelete?.name}" and all badges it owns from this team.`
-                                }
-                            </DialogDescription>
-                        </DialogHeader>
-                    </DialogContent>
-                </Dialog>
-                <Dialog open={!!badgeToDelete} onOpenChange={(isOpen) => !isOpen && setBadgeToDelete(null)}>
-                    <DialogContent>
-                        <div className="absolute top-4 right-4">
-                            <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={() => { if (badgeToDelete) confirmPermanentDelete(badgeToDelete.badgeId); }}>
-                                <GoogleSymbol name="delete" />
-                                <span className="sr-only">Delete Badge Permanently</span>
-                            </Button>
-                        </div>
-                        <DialogHeader>
-                            <UIDialogTitle>Delete Shared Badge?</UIDialogTitle>
-                            <DialogDescription>
-                                This badge is shared. Deleting it will remove it from all collections and teams. This action cannot be undone.
-                            </DialogDescription>
-                        </DialogHeader>
-                    </DialogContent>
-                </Dialog>
-                <DragOverlay>
-                    {activeDragItem?.type === 'collection' ? (
-                        <div className='w-96'>
+            </div>
+            <Dialog open={!!collectionToDelete} onOpenChange={() => setCollectionToDelete(null)}>
+                <DialogContent className="max-w-md">
+                    <div className="absolute top-4 right-4">
+                        <Button variant="ghost" size="icon" className="hover:text-destructive hover:bg-transparent p-0" onClick={confirmDeleteCollection}>
+                            <GoogleSymbol name="delete" className="text-4xl" weight={100} />
+                            <span className="sr-only">Delete Collection</span>
+                        </Button>
+                    </div>
+                    <DialogHeader>
+                        <UIDialogTitle>Delete "{collectionToDelete?.name}"?</UIDialogTitle>
+                        <DialogDescription>
+                            {collectionToDelete?.isShared
+                                ? "This collection is shared. Deleting it will remove it and its badges from all teams that use it. This action cannot be undone."
+                                : `This will permanently delete the collection "${collectionToDelete?.name}" and all badges it owns from this team.`
+                            }
+                        </DialogDescription>
+                    </DialogHeader>
+                </DialogContent>
+            </Dialog>
+            <Dialog open={!!badgeToDelete} onOpenChange={(isOpen) => !isOpen && setBadgeToDelete(null)}>
+                <DialogContent>
+                    <div className="absolute top-4 right-4">
+                        <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={() => { if (badgeToDelete) confirmPermanentDelete(badgeToDelete.badgeId); }}>
+                            <GoogleSymbol name="delete" />
+                            <span className="sr-only">Delete Badge Permanently</span>
+                        </Button>
+                    </div>
+                    <DialogHeader>
+                        <UIDialogTitle>Delete Shared Badge?</UIDialogTitle>
+                        <DialogDescription>
+                            This badge is shared. Deleting it will remove it from all collections and teams. This action cannot be undone.
+                        </DialogDescription>
+                    </DialogHeader>
+                </DialogContent>
+            </Dialog>
+            <DragOverlay>
+                {activeDragItem?.type === 'collection' ? (
+                    <div className='w-96'>
                         <BadgeCollectionCard 
                             collection={activeDragItem.collection}
                             allBadges={allBadges}
-                            onUpdateCollection={()={() => {}}
-                            onDeleteCollection={()={() => {}}
-                            onAddBadge={()={() => {}}
-                            onUpdateBadge={()={() => {}}
-                            onDeleteBadge={()={() => {}}
+                            onUpdateCollection={() => {}}
+                            onDeleteCollection={() => {}}
+                            onAddBadge={() => {}}
+                            onUpdateBadge={() => {}}
+                            onDeleteBadge={() => {}}
                             isSharedPreview={activeDragItem.isSharedPreview}
                             contextTeam={contextTeam}
                             isViewer={isViewer}
                             predefinedColors={predefinedColors}
                             allCollections={allBadgeCollections}
                             isCollectionEditing={false}
-                            editingBadgeState={{badgeId: null, field: null}}
-                            setEditingBadgeState={()={() => {}}
+                            editingBadgeState={editingBadgeState}
+                            setEditingBadgeState={setEditingBadgeState}
                         />
-                        </div>
-                    ) : activeDragItem?.type === 'badge' ? (
-                        <div className='bg-background rounded-full'>
-                         <BadgeDisplayItem
+                    </div>
+                ) : activeDragItem?.type === 'badge' ? (
+                    <div className='bg-background rounded-full'>
+                        <BadgeDisplayItem
                             badge={activeDragItem.badge}
                             viewMode={'compact'}
-                            onUpdateBadge={()={() => {}}
-                            onDelete={()={() => {}}
+                            onUpdateBadge={() => {}}
+                            onDelete={() => {}}
                             isViewer={false}
                             predefinedColors={predefinedColors}
                             isOwner={false}
                             isLinked={false}
                             allCollections={allBadgeCollections}
                             isEditingName={false}
-                            setIsEditingName={()={() => {}}
+                            setIsEditingName={() => {}}
                             isEditingDescription={false}
-                            setIsEditingDescription={()={() => {}}
+                            setIsEditingDescription={() => {}}
                             isColorPopoverOpen={false}
-                            setIsColorPopoverOpen={()={() => {}}
+                            setIsColorPopoverOpen={() => {}}
                             isIconPopoverOpen={false}
-                            setIsIconPopoverOpen={()={() => {}}
+                            setIsIconPopoverOpen={() => {}}
                         />
-                        </div>
-                    ) : null}
-                </DragOverlay>
-            </div>
+                    </div>
+                ) : null}
+            </DragOverlay>
         </DndContext>
     );
 }
-
-    
