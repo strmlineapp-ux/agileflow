@@ -105,9 +105,8 @@ This pattern describes how a single entity (like a **Team**, **Calendar**, or **
         - **Contextual Management (e.g., Badge Collections within a Team)**: A user can link a shared item to their own context by dragging it from the "Shared Items" panel and dropping it onto their management board. This creates a *link* to the original item, not a copy.
         - **Global Management (e.g., Teams, Calendars)**: For top-level entities, "linking" is an explicit action. Dragging a shared item from the panel to the main board adds the item's ID to the current user's corresponding `linked...Ids` array, bringing it into their management scope without making them a member or owner.
 - **Visual Cues**:
-  - **Owned & Shared Externally (`upload`)**: An item created by the current user/team that has been explicitly shared with others is marked with an `upload` icon overlay. This indicates it is the "source of truth." **The color of this icon badge matches the owner's color.**
-  - **Internally Linked (`change_circle`)**: An item that is used in multiple places within the *same* context (e.g., a badge appearing in two collections on one team's board) is marked with a `change_circle` icon overlay on its linked instances. **The color of this icon badge matches the owner's color.**
-  - **Shared-to-You (`downloading`)**: An item created elsewhere and being used in the current context is marked with a `downloading` icon overlay. **The color of this icon badge matches the source's color.**
+  - **Owned & Shared Externally (`change_circle`)**: An item created by the current user/team that has been explicitly shared with others is marked with a `change_circle` icon overlay. This indicates it is the "source of truth." **The color of this icon badge matches the owner's color.**
+  - **Internally Linked / Shared-to-You (`link`)**: An item created elsewhere and being used in the current context is marked with a `link` icon overlay. This applies both to badges linked between collections on the same board, and to top-level entities (Teams, Calendars) linked from another user. **The color of this icon badge matches the source's color.**
   - **Owned and Not Shared/Linked**: An item that is owned and exists only in its original location does not get an icon.
 - **Behavior**:
   - Editing a shared item (e.g., changing a team's name) modifies the original "source of truth" item, and the changes are instantly reflected in all other places where it is used.
@@ -319,5 +318,3 @@ This is the single source of truth for indicating user interaction state across 
       - **Ownership Status**: `absolute -top-0 -right-3`.
     - **Icon Size (Ownership Status)**: The `GoogleSymbol` inside an ownership status badge should have its size set via `style={{fontSize: '16px'}}`.
 -   **Badges in Assorted View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
-
-    
