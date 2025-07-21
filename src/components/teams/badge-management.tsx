@@ -352,10 +352,10 @@ function BadgeDisplayItem({
     );
 }
 
-function SortableBadgeItem({ badge, collectionId, onDelete, ...props }: { badge: Badge, collectionId: string, onDelete: (badgeId: string) => void, [key: string]: any }) {
+function SortableBadgeItem({ badge, collection, onDelete, ...props }: { badge: Badge, collection: BadgeCollection, onDelete: (badgeId: string) => void, [key: string]: any }) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-        id: `badge::${badge.id}::${collectionId}`,
-        data: { type: 'badge', badge, collectionId, isSharedPreview: props.isSharedPreview },
+        id: `badge::${badge.id}::${collection.id}`,
+        data: { type: 'badge', badge, collectionId: collection.id, isSharedPreview: props.isSharedPreview },
         disabled: props.isCollectionEditing || (props.editingBadgeState?.badgeId === badge.id)
     });
     
@@ -368,13 +368,14 @@ function SortableBadgeItem({ badge, collectionId, onDelete, ...props }: { badge:
     
     const itemContent = <BadgeDisplayItem badge={badge} onDelete={onDelete} {...props} />;
     
+    // Check if the current user can manage the collection this badge is in.
+    const canManage = !props.isViewer;
+
     return (
         <div ref={setNodeRef} style={style} className={cn(props.viewMode === 'detailed' && "p-1 basis-full md:basis-1/2 flex-grow-0 flex-shrink-0")}>
             <div className="relative group w-full">
-                <div {...attributes} {...listeners} className="w-full h-full">
-                    {itemContent}
-                </div>
-                 {props.isOwner && (
+                {/* Delete button is a sibling to the draggable handle to isolate it */}
+                {canManage && !props.isSharedPreview && (
                     <div className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                         <TooltipProvider>
                             <Tooltip>
@@ -394,6 +395,10 @@ function SortableBadgeItem({ badge, collectionId, onDelete, ...props }: { badge:
                         </TooltipProvider>
                     </div>
                 )}
+                {/* Draggable handle is on the content */}
+                <div {...attributes} {...listeners} className="w-full h-full">
+                    {itemContent}
+                </div>
             </div>
         </div>
     );
@@ -503,25 +508,17 @@ function BadgeCollectionCard({
     useEffect(() => {
         if (!isEditing) return;
 
-        const isNameField = nameInputRef.current && document.activeElement === nameInputRef.current;
-        const isDescriptionField = descriptionTextareaRef.current && document.activeElement === descriptionTextareaRef.current;
-
         const handleOutsideClick = (event: MouseEvent) => {
-            if (isNameField && nameInputRef.current && !nameInputRef.current.contains(event.target as Node)) {
+            const isEditingName = nameInputRef.current && document.activeElement === nameInputRef.current;
+            const isEditingDescription = descriptionTextareaRef.current && document.activeElement === descriptionTextareaRef.current;
+            
+            if (isEditingName && nameInputRef.current && !nameInputRef.current.contains(event.target as Node)) {
                 handleSaveName();
             }
-            if (isDescriptionField && descriptionTextareaRef.current && !descriptionTextareaRef.current.contains(event.target as Node)) {
+            if (isEditingDescription && descriptionTextareaRef.current && !descriptionTextareaRef.current.contains(event.target as Node)) {
                 handleSaveDescription();
             }
         };
-
-        if (isNameField) {
-            nameInputRef.current?.focus();
-            nameInputRef.current?.select();
-        } else if (isDescriptionField) {
-            descriptionTextareaRef.current?.focus();
-            descriptionTextareaRef.current?.select();
-        }
 
         document.addEventListener('mousedown', handleOutsideClick);
         return () => document.removeEventListener('mousedown', handleOutsideClick);
@@ -708,7 +705,14 @@ function BadgeCollectionCard({
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between">
                                     {isEditing && isOwner ? (
-                                        <Input ref={nameInputRef} defaultValue={collection.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"/>
+                                        <Input
+                                            ref={nameInputRef}
+                                            defaultValue={collection.name}
+                                            onBlur={handleSaveName}
+                                            onKeyDown={handleNameKeyDown}
+                                            className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
+                                            onClick={(e) => e.stopPropagation()}
+                                        />
                                     ) : (
                                         <CardTitle onClick={() => { if(isOwner) setIsEditing(true);}} className={cn("text-2xl font-headline font-thin break-words", isOwner && "cursor-pointer")}>{collection.name}</CardTitle>
                                     )}
@@ -775,6 +779,7 @@ function BadgeCollectionCard({
                                onKeyDown={handleDescriptionKeyDown}
                                className="p-0 text-sm text-muted-foreground border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 resize-none" 
                                placeholder="Click to add a description." 
+                               onClick={(e) => e.stopPropagation()}
                            />
                         ) : (
                             <p className={cn("text-sm text-muted-foreground min-h-[20px] break-words", isOwner && "cursor-text")} onClick={() => { if(isOwner) setIsEditing(true);}}>
@@ -789,7 +794,7 @@ function BadgeCollectionCard({
                             <SortableBadgeItem
                                 key={badge.id}
                                 badge={badge}
-                                collectionId={collection.id}
+                                collection={collection}
                                 viewMode={collection.viewMode}
                                 onUpdateBadge={onUpdateBadge}
                                 onDelete={() => onDeleteBadge(badge.id)}
@@ -863,7 +868,7 @@ function SortableCollectionCard({ collection, ...props }: { collection: BadgeCol
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: `collection::${collection.id}`,
         data: { type: 'collection', collection, isSharedPreview: props.isSharedPreview },
-        disabled: isEditing,
+        disabled: isEditing || props.editingBadgeState.badgeId !== null,
     });
 
     const style = {
@@ -1070,7 +1075,8 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
       const isOwner = badgeOwnerCollection.owner.id === viewAsUser.userId;
 
       if (!isOwner) {
-          const currentCollectionContext = allBadgeCollections.find(c => c.badgeIds.includes(badgeId)); // This is an assumption
+          // It's a linked badge, find which collection it's in in the current context
+          const currentCollectionContext = collectionsToDisplay.find(c => c.badgeIds.includes(badgeId));
           if (currentCollectionContext) {
             const newBadgeIds = currentCollectionContext.badgeIds.filter(id => id !== badgeId);
             updateBadgeCollection(currentCollectionContext.id, { badgeIds: newBadgeIds });
@@ -1086,7 +1092,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
       } else {
           confirmPermanentDelete(badgeId);
       }
-    }, [allBadgeCollections, allBadges, confirmPermanentDelete, viewAsUser, updateBadgeCollection, toast]);
+    }, [allBadgeCollections, allBadges, confirmPermanentDelete, viewAsUser, updateBadgeCollection, toast, collectionsToDisplay]);
     
     const onDragEnd = (event: DragEndEvent) => {
         setActiveDragItem(null);
@@ -1372,5 +1378,3 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
       </>
     );
 }
-
-    
