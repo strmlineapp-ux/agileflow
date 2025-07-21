@@ -82,21 +82,25 @@ function BadgeDisplayItem({
 
     const [color, setColor] = useState(badge.color);
 
+    const handleUpdate = useCallback((data: Partial<Badge>) => {
+        onUpdateBadge(badge.id, data);
+    }, [badge.id, onUpdateBadge]);
+
     const handleSaveName = useCallback(() => {
         const newName = nameInputRef.current?.value.trim() || '';
         if (newName && newName !== badge.name) {
-            onUpdateBadge(badge.id, { name: newName });
+            handleUpdate({ name: newName });
         }
         setIsEditingName(false);
-    }, [badge.id, badge.name, onUpdateBadge, setIsEditingName]);
+    }, [badge.name, handleUpdate, setIsEditingName]);
     
     const handleSaveDescription = useCallback(() => {
         const newDescription = descriptionTextareaRef.current?.value.trim();
         if (newDescription !== (badge.description || '')) {
-            onUpdateBadge(badge.id, { description: newDescription });
+            handleUpdate({ description: newDescription });
         }
         setIsEditingDescription(false);
-    }, [badge.id, badge.description, onUpdateBadge, setIsEditingDescription]);
+    }, [badge.description, handleUpdate, setIsEditingDescription]);
 
     useEffect(() => {
         if (!isEditingName) return;
@@ -165,14 +169,14 @@ function BadgeDisplayItem({
                             className="h-6 w-6 rounded-full border"
                             style={{ backgroundColor: c }}
                             onClick={() => {
-                                onUpdateBadge(badge.id, { color: c });
+                                handleUpdate({ color: c });
                                 setColor(c);
                                 setIsColorPopoverOpen(false);
                             }}
                         />
                     ))}
                 </div>
-                <Button onClick={() => { onUpdateBadge(badge.id, { color }); setIsColorPopoverOpen(false); }} className="w-full">Set Color</Button>
+                <Button onClick={() => { handleUpdate({ color }); setIsColorPopoverOpen(false); }} className="w-full">Set Color</Button>
             </div>
         </PopoverContent>
     );
@@ -196,7 +200,7 @@ function BadgeDisplayItem({
                     variant={badge.icon === iconName ? "default" : "ghost"}
                     size="icon"
                     onClick={() => {
-                        onUpdateBadge(badge.id, { icon: iconName });
+                        handleUpdate({ icon: iconName });
                         setIsIconPopoverOpen(false);
                     }}
                     className="h-8 w-8 p-0"
@@ -259,11 +263,11 @@ function BadgeDisplayItem({
                     onBlur={handleSaveDescription}
                     onKeyDown={handleDescriptionKeyDown} 
                     className="p-0 text-sm text-muted-foreground border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 resize-none" 
-                    placeholder="Click to add a description."
+                    placeholder="Click to add a description." 
                 />
              ) : (
                  <p className={cn("text-sm text-muted-foreground min-h-[20px] break-words", isOwner && "cursor-text")}>
-                    {badge.description || (isOwner ? 'Click to add description.' : '')}
+                    {badge.description || (isOwner ? 'Click to add description.' : <span className="italic text-muted-foreground/50">No description</span>)}
                 </p>
              )}
         </div>
@@ -271,7 +275,7 @@ function BadgeDisplayItem({
     
     if (viewMode === 'detailed' || viewMode === 'list') {
       return (
-        <div className={cn("group relative h-full flex items-start gap-4 rounded-lg", viewMode === 'detailed' ? "flex-col" : "w-full p-2 hover:bg-muted/50")}>
+        <div className={cn("group relative h-full flex items-start gap-4 rounded-lg", viewMode === 'detailed' ? "flex-col p-2 bg-muted/20" : "w-full p-2 hover:bg-muted/50")}>
             <div className="relative" onPointerDown={(e) => e.stopPropagation()}>
                 <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                     <TooltipProvider>
@@ -394,22 +398,40 @@ function SortableBadgeItem({ badge, ...props }: { badge: Badge, [key: string]: a
         zIndex: isDragging ? 10 : 'auto',
     };
     
+    const itemContent = (
+        <BadgeDisplayItem 
+            badge={badge}
+            isOwner={isOwner}
+            isEditingName={isEditingName}
+            setIsEditingName={setIsEditingName}
+            isEditingDescription={isEditingDescription}
+            setIsEditingDescription={setIsEditingDescription}
+            {...props} 
+        />
+    );
+    
+    if (props.viewMode === 'detailed') {
+        return (
+            <div 
+                ref={setNodeRef}
+                style={style}
+                {...attributes}
+                {...listeners}
+                className="p-1 basis-full md:basis-1/2 flex-grow-0 flex-shrink-0"
+            >
+                {itemContent}
+            </div>
+        )
+    }
+
     return (
         <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-            <BadgeDisplayItem 
-                badge={badge}
-                isOwner={isOwner}
-                isEditingName={isEditingName}
-                setIsEditingName={setIsEditingName}
-                isEditingDescription={isEditingDescription}
-                setIsEditingDescription={setIsEditingDescription}
-                {...props} 
-            />
+            {itemContent}
         </div>
     )
 }
 
-function DroppableCollectionContent({ collection, children }: { collection: BadgeCollection, children: React.ReactNode }) {
+function DroppableCollectionContent({ collection, children, onAddBadge }: { collection: BadgeCollection, children: React.ReactNode, onAddBadge: () => void }) {
     const { setNodeRef, isOver } = useDroppable({ id: collection.id, data: { type: 'collection', collection }});
     
     return (
@@ -420,7 +442,7 @@ function DroppableCollectionContent({ collection, children }: { collection: Badg
                 isOver && "ring-1 ring-border ring-inset",
                 collection.viewMode === 'compact' && "flex flex-wrap gap-2 items-start",
                 collection.viewMode === 'list' && "flex flex-col gap-1",
-                collection.viewMode === 'detailed' && "flex flex-wrap -m-2"
+                collection.viewMode === 'detailed' && "flex flex-wrap -m-1"
             )}
         >
             {children}
@@ -656,9 +678,7 @@ function BadgeCollectionCard({
                                         autoFocus={true}
                                         />
                                     </div>
-                                    <ScrollArea className="h-64">
-                                        <div className="grid grid-cols-6 gap-1 p-2">
-                                        {filteredIcons.slice(0, 300).map((iconName) => (
+                                    <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (
                                             <TooltipProvider key={iconName}>
                                             <Tooltip>
                                                 <TooltipTrigger asChild>
@@ -677,9 +697,7 @@ function BadgeCollectionCard({
                                                 <TooltipContent><p>{iconName}</p></TooltipContent>
                                             </Tooltip>
                                             </TooltipProvider>
-                                        ))}
-                                        </div>
-                                    </ScrollArea>
+                                        ))}</div></ScrollArea>
                                     </PopoverContent>
                                 </Popover>
                                 {!isViewer && (
@@ -761,7 +779,7 @@ function BadgeCollectionCard({
                 <CardContent className="flex-grow pt-0 flex flex-col min-h-0">
                     <div className="mb-2">{descriptionEditorElement}</div>
                     <SortableContext items={collection.badgeIds.map(id => `badge::${id}::${collection.id}`)} strategy={rectSortingStrategy}>
-                        <DroppableCollectionContent collection={collection}>
+                        <DroppableCollectionContent collection={collection} onAddBadge={() => onAddBadge(collection.id)}>
                             {collectionBadges.map((badge) => {
                                 const badgeIsOwned = badge.ownerCollectionId === collection.id;
                                 return (
