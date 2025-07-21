@@ -184,7 +184,7 @@ const ProductionScheduleLocationRow = React.memo(({
     users: User[];
     teams: Team[];
 }) => {
-    const { viewAsUser, allBadges } = useUser();
+    const { viewAsUser } = useUser();
     
     const dayIso = day.toISOString();
     const isLocationCollapsed = collapsedLocations[dayIso]?.has(location);
@@ -272,7 +272,7 @@ const ProductionScheduleLocationRow = React.memo(({
                                             const user = users.find(u => u.userId === userId);
                                             if (!user) return null;
                                             const teamForEvent = teams.find(t => t.id === event.calendarId);
-                                            const roleInfo = teamForEvent?.badgeCollections.flatMap(c => c.badgeIds).map(id => allBadges.find(b => b.id === id)).find(b => b?.name === role);
+                                            const roleInfo = teamForEvent?.allBadges.find(b => b?.name === role);
                                             const roleIcon = roleInfo?.icon;
                                             const roleColor = roleInfo?.color;
 
