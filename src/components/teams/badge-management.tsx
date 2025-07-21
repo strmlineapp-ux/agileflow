@@ -275,7 +275,7 @@ function BadgeDisplayItem({
     
     if (viewMode === 'detailed' || viewMode === 'list') {
       return (
-        <div className={cn("group relative h-full flex items-start gap-4 rounded-lg", viewMode === 'detailed' ? "flex-col p-2 bg-muted/20" : "w-full p-2 hover:bg-muted/50")}>
+        <div className="group relative h-full flex items-start gap-4 rounded-lg p-2 hover:bg-muted/50">
             <div className="relative" onPointerDown={(e) => e.stopPropagation()}>
                 <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                     <TooltipProvider>
@@ -1277,7 +1277,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                 <Dialog open={!!collectionToDelete} onOpenChange={() => setCollectionToDelete(null)}>
                     <DialogContent className="max-w-md">
                         <div className="absolute top-4 right-4">
-                            <Button variant="ghost" size="icon" className="hover:text-destructive hover:bg-transparent p-0" onClick={confirmDeleteCollection}>
+                            <Button variant="ghost" size="icon" className="text-destructive hover:bg-transparent p-0" onClick={confirmDeleteCollection}>
                                 <GoogleSymbol name="delete" className="text-4xl" weight={100} />
                                 <span className="sr-only">Delete Collection</span>
                             </Button>
