@@ -154,7 +154,7 @@ function BadgeDisplayItem({
     }, [iconSearch]);
     
     const colorPickerContent = (
-        <PopoverContent className="w-auto p-4" onPointerDown={(e) => e.stopPropagation()}>
+        <PopoverContent className="w-auto p-4">
             <div className="space-y-4">
                 <HexColorPicker color={color} onChange={setColor} className="!w-full" />
                 <div className="flex items-center gap-2">
@@ -181,7 +181,7 @@ function BadgeDisplayItem({
     );
 
     const iconPickerContent = (
-         <PopoverContent className="w-80 p-0" onPointerDown={(e) => e.stopPropagation()}>
+         <PopoverContent className="w-80 p-0">
             <div className="flex items-center gap-1 p-2 border-b">
                 <CompactSearchInput
                     searchTerm={iconSearch}
@@ -222,10 +222,7 @@ function BadgeDisplayItem({
                         variant="ghost"
                         size="icon"
                         className="absolute -top-1 -right-1 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                        onPointerDown={(e) => {
-                            e.stopPropagation();
-                            onDelete(badge.id)
-                        }}
+                        onClick={() => onDelete(badge.id)}
                     >
                         <GoogleSymbol name="cancel" className="text-lg" weight={100} />
                     </Button>
@@ -236,7 +233,7 @@ function BadgeDisplayItem({
     );
     
     const nameEditorElement = (
-         <div onPointerDown={(e) => {e.stopPropagation()}} onClick={() => { if(isOwner) setEditingBadgeState({ badgeId: badge.id, field: 'name' })}}>
+         <div onClick={() => { if(isOwner) setEditingBadgeState({ badgeId: badge.id, field: 'name' })}}>
             {isEditingName && isOwner ? (
                 <Input
                     ref={nameInputRef}
@@ -257,7 +254,7 @@ function BadgeDisplayItem({
     );
 
      const descriptionEditorElement = (
-         <div onPointerDown={(e) => {if(isOwner) e.stopPropagation();}} onClick={() => {if(isOwner) setEditingBadgeState({ badgeId: badge.id, field: 'description' })}}>
+         <div onClick={() => {if(isOwner) setEditingBadgeState({ badgeId: badge.id, field: 'description' })}}>
             {isEditingDescription && isOwner ? (
                 <Textarea 
                     ref={descriptionTextareaRef} 
@@ -278,7 +275,7 @@ function BadgeDisplayItem({
     if (viewMode === 'detailed' || viewMode === 'list') {
       return (
         <div className="group relative h-full flex items-start gap-4 rounded-lg p-2 hover:bg-muted/50">
-            <div className="relative" onPointerDown={(e) => e.stopPropagation()}>
+            <div className="relative">
                 <Popover open={isIconPopoverOpen} onOpenChange={(isOpen) => setEditingBadgeState({ badgeId: isOpen ? badge.id : null, field: isOpen ? 'icon' : null })}>
                     <TooltipProvider>
                     <Tooltip>
@@ -324,7 +321,7 @@ function BadgeDisplayItem({
     
     // Compact View
     return (
-        <div className="group relative p-1.5" onPointerDown={(e) => e.stopPropagation()}>
+        <div className="group relative p-1.5">
              <UiBadge
                 variant={'outline'}
                 style={{ color: badge.color, borderColor: badge.color }}
@@ -392,6 +389,12 @@ function SortableBadgeItem({ badge, collectionId, ...props }: { badge: Badge, co
     
     const itemContent = <BadgeDisplayItem badge={badge} isOwner={isOwner} {...props} />;
     
+    const WrapperElement = (
+        <div {...attributes} {...listeners} className="w-full h-full">
+            {itemContent}
+        </div>
+    );
+
     if (props.viewMode === 'detailed') {
         return (
             <div 
@@ -399,16 +402,14 @@ function SortableBadgeItem({ badge, collectionId, ...props }: { badge: Badge, co
                 style={style}
                 className="p-1 basis-full md:basis-1/2 flex-grow-0 flex-shrink-0"
             >
-                <div {...attributes} {...listeners}>
-                    {itemContent}
-                </div>
+               {WrapperElement}
             </div>
         )
     }
 
     return (
-        <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-            {itemContent}
+        <div ref={setNodeRef} style={style}>
+            {WrapperElement}
         </div>
     )
 }
@@ -624,7 +625,7 @@ function BadgeCollectionCard({
     ];
     
     const descriptionEditorElement = (
-        <div onPointerDown={(e) => {if(isOwner) e.stopPropagation();}} onClick={() => {if(isOwner) setIsCollectionEditing({ field: 'description' })}}>
+        <div onClick={() => {if(isOwner) setIsCollectionEditing({ field: 'description' })}}>
            {isCollectionEditing ? (
                <Textarea 
                    ref={descriptionTextareaRef} 
@@ -655,7 +656,6 @@ function BadgeCollectionCard({
                                     size="icon"
                                     className="absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10"
                                     onClick={() => onDeleteCollection(collection)}
-                                    onPointerDown={(e) => e.stopPropagation()}
                                 >
                                     <GoogleSymbol name="cancel" className="text-lg" weight={100} />
                                 </Button>
@@ -666,7 +666,7 @@ function BadgeCollectionCard({
                     )}
                     <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3 flex-1 min-w-0">
-                            <div className="relative" onPointerDown={(e) => e.stopPropagation()}>
+                            <div className="relative">
                                 <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                                     <TooltipProvider>
                                     <Tooltip>
@@ -680,7 +680,7 @@ function BadgeCollectionCard({
                                         <TooltipContent><p>Change Icon</p></TooltipContent>
                                     </Tooltip>
                                     </TooltipProvider>
-                                    <PopoverContent className="w-80 p-0" onPointerDown={(e) => e.stopPropagation()}>
+                                    <PopoverContent className="w-80 p-0">
                                     <div className="flex items-center gap-1 p-2 border-b">
                                         <CompactSearchInput
                                         searchTerm={iconSearch}
@@ -716,7 +716,7 @@ function BadgeCollectionCard({
                                     <>
                                         <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
                                             <TooltipProvider><Tooltip><TooltipTrigger asChild><PopoverTrigger asChild disabled={!isOwner}><button className={cn("absolute -bottom-1 -right-3 h-4 w-4 rounded-full border-0", !isOwner ? "cursor-not-allowed" : "cursor-pointer")} style={{ backgroundColor: collection.color }} /></PopoverTrigger></TooltipTrigger><TooltipContent><p>Change Color</p></TooltipContent></Tooltip></TooltipProvider>
-                                            <PopoverContent className="w-auto p-4" onPointerDown={(e) => e.stopPropagation()}>
+                                            <PopoverContent className="w-auto p-4">
                                                 <div className="space-y-4">
                                                     <HexColorPicker color={color} onChange={setColor} className="!w-full" />
                                                     <div className="flex items-center gap-2">
@@ -738,7 +738,7 @@ function BadgeCollectionCard({
                                     </>
                                 )}
                             </div>
-                            <div className="flex-1 min-w-0" onPointerDown={(e) => { if (isOwner) e.stopPropagation(); }}>
+                            <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between">
                                     {isEditingName && isOwner ? (
                                         <Input ref={nameInputRef} defaultValue={collection.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"/>
@@ -748,7 +748,7 @@ function BadgeCollectionCard({
                                 </div>
                             </div>
                         </div>
-                        <div className="flex items-center" onPointerDown={(e) => e.stopPropagation()}>
+                        <div className="flex items-center">
                            {isOwner && !isSharedPreview && (
                                 <TooltipProvider>
                                     <Tooltip>
@@ -767,7 +767,7 @@ function BadgeCollectionCard({
                                         <GoogleSymbol name={viewModeOptions.find(o => o.mode === collection.viewMode)?.icon || 'view_module'} weight={100} />
                                     </Button>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-auto p-1 flex items-center gap-1" onPointerDown={(e) => e.stopPropagation()}>
+                                <PopoverContent className="w-auto p-1 flex items-center gap-1">
                                     {viewModeOptions.map(({mode, icon, label}) => (
                                         <TooltipProvider key={mode}>
                                             <Tooltip>
@@ -826,7 +826,7 @@ function BadgeCollectionCard({
                 </CardContent>
              )}
             {!isSharedPreview && (
-                <CardFooter className="flex items-center justify-between gap-2 p-2 mt-auto" onPointerDown={(e) => e.stopPropagation()}>
+                <CardFooter className="flex items-center justify-between gap-2 p-2 mt-auto">
                     <div className="flex items-center gap-2">
                         {APPLICATIONS.map(app => (
                             <TooltipProvider key={app.key}>
@@ -867,7 +867,7 @@ function BadgeCollectionCard({
                 </CardFooter>
             )}
             <div className="absolute -bottom-1 right-0">
-                <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
+                <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} className="text-muted-foreground h-6 w-6">
                     <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
                 </Button>
             </div>
@@ -1161,218 +1161,218 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     );
 
     return (
-        <>
-            <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
-                <div className="flex gap-4 h-full">
-                    <div className="flex-1 overflow-hidden">
-                    <div className="flex flex-col gap-6 h-full">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    {isEditingTitle ? (
-                                        <Input
-                                            ref={titleInputRef}
-                                            defaultValue={tab.name}
-                                            onBlur={handleSaveTitle}
-                                            onKeyDown={handleTitleKeyDown}
-                                            className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                                        />
-                                    ) : (
-                                        <TooltipProvider>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
-                                                </TooltipTrigger>
-                                                {tab.description && (
-                                                <TooltipContent>
-                                                    <p className="max-w-xs">{tab.description}</p>
-                                                </TooltipContent>
-                                                )}
-                                            </Tooltip>
-                                        </TooltipProvider>
-                                    )}
-                                    <DuplicateZone onAdd={() => handleAddCollection()} disabled={!canCreateCollection} />
-                                </div>
-                                <div className="flex items-center gap-1">
-                                    <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search collections..." autoFocus={false} />
-                                    {!isViewer && (
-                                        <TooltipProvider>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <Button variant="ghost" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)}>
-                                                        <GoogleSymbol name="dynamic_feed" weight={100} />
-                                                    </Button>
-                                                </TooltipTrigger>
-                                                <TooltipContent><p>Show Shared Collections</p></TooltipContent>
-                                            </Tooltip>
-                                        </TooltipProvider>
-                                    )}
-                                </div>
-                            </div>
-                            
-                            <div className="flex-1 min-h-0">
-                                <ScrollArea className="h-full">
-                                    <TeamManagementDropZone id="main-collections-grid" type="collection-grid" className="h-full">
-                                    <SortableContext items={collectionsToDisplay.map(c => `collection::${c.id}`)} strategy={rectSortingStrategy}>
-                                        <div className={cn("flex flex-wrap -m-2 transition-all duration-300")}>
-                                            {collectionsToDisplay.map((collection) => (
-                                                    <div
-                                                        key={collection.id}
-                                                        className={cn(
-                                                            "p-2 w-full transition-all duration-300",
-                                                            isSharedPanelOpen ? "lg:w-1/2" : "lg:w-1/3",
-                                                        )}
-                                                    >
-                                                        <div className="h-full">
-                                                            <SortableCollectionCard
-                                                                collection={collection}
-                                                                allBadges={allBadges}
-                                                                onUpdateCollection={updateBadgeCollection}
-                                                                onDeleteCollection={handleDeleteCollection}
-                                                                onAddBadge={addBadge}
-                                                                onUpdateBadge={handleUpdateBadge}
-                                                                onDeleteBadge={handleDeleteBadge}
-                                                                contextTeam={team}
-                                                                isViewer={isViewer}
-                                                                predefinedColors={predefinedColors}
-                                                                allCollections={allBadgeCollections}
-                                                                editingBadgeState={editingBadgeState}
-                                                                setEditingBadgeState={setEditingBadgeState}
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                )
+      <>
+        <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
+            <div className="flex gap-4 h-full">
+                <div className="flex-1 overflow-hidden">
+                <div className="flex flex-col gap-6 h-full">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                {isEditingTitle ? (
+                                    <Input
+                                        ref={titleInputRef}
+                                        defaultValue={tab.name}
+                                        onBlur={handleSaveTitle}
+                                        onKeyDown={handleTitleKeyDown}
+                                        className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                                    />
+                                ) : (
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
+                                            </TooltipTrigger>
+                                            {tab.description && (
+                                            <TooltipContent>
+                                                <p className="max-w-xs">{tab.description}</p>
+                                            </TooltipContent>
                                             )}
-                                        </div>
-                                    </SortableContext>
-                                    </TeamManagementDropZone>
-                                </ScrollArea>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                )}
+                                <DuplicateZone onAdd={() => handleAddCollection()} disabled={!canCreateCollection} />
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search collections..." autoFocus={false} />
+                                {!isViewer && (
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Button variant="ghost" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)}>
+                                                    <GoogleSymbol name="dynamic_feed" weight={100} />
+                                                </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent><p>Show Shared Collections</p></TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                )}
                             </div>
                         </div>
-                    </div>
-                    
-                    {!isViewer && (
-                        <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96" : "w-0")}>
-                            <div className={cn("h-full rounded-lg transition-all", isSharedPanelOpen ? "p-2" : "p-0")}>
-                                <TeamManagementDropZone id="shared-collections-panel" type="collection-panel" className="h-full">
-                                    <Card className={cn("transition-opacity duration-300 h-full bg-transparent flex flex-col", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
-                                        <CardHeader>
-                                            <div className="flex items-center justify-between">
-                                                <CardTitle className="font-headline font-thin text-xl">Shared Collections</CardTitle>
-                                                <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." inputRef={sharedSearchInputRef} autoFocus={isSharedPanelOpen} tooltipText="Search Shared Collections" />
-                                            </div>
-                                            <CardDescription>Drag a collection to your board to link it.</CardDescription>
-                                        </CardHeader>
-                                        <CardContent className="flex-1 p-2 overflow-hidden">
-                                            <ScrollArea className="h-full">
-                                                <SortableContext items={sharedCollections.map(c => `collection::${c.id}`)} strategy={verticalListSortingStrategy}>
-                                                    <div className="space-y-2">
-                                                        {sharedCollections.map((collection) => (
-                                                            <SortableCollectionCard
-                                                                key={collection.id}
-                                                                collection={collection}
-                                                                allBadges={allBadges}
-                                                                onUpdateCollection={updateBadgeCollection}
-                                                                onDeleteCollection={handleDeleteCollection}
-                                                                onAddBadge={addBadge}
-                                                                onUpdateBadge={handleUpdateBadge}
-                                                                onDeleteBadge={handleDeleteBadge}
-                                                                isSharedPreview={true}
-                                                                contextTeam={team}
-                                                                isViewer={isViewer}
-                                                                predefinedColors={predefinedColors}
-                                                                allCollections={allBadgeCollections}
-                                                                editingBadgeState={editingBadgeState}
-                                                                setEditingBadgeState={setEditingBadgeState}
-                                                            />
-                                                        ))}
-                                                        {sharedCollections.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">No collections are being shared by other users.</p>}
+                        
+                        <div className="flex-1 min-h-0">
+                            <ScrollArea className="h-full">
+                                <TeamManagementDropZone id="main-collections-grid" type="collection-grid" className="h-full">
+                                <SortableContext items={collectionsToDisplay.map(c => `collection::${c.id}`)} strategy={rectSortingStrategy}>
+                                    <div className={cn("flex flex-wrap -m-2 transition-all duration-300")}>
+                                        {collectionsToDisplay.map((collection) => (
+                                                <div
+                                                    key={collection.id}
+                                                    className={cn(
+                                                        "p-2 w-full transition-all duration-300",
+                                                        isSharedPanelOpen ? "lg:w-1/2" : "lg:w-1/3",
+                                                    )}
+                                                >
+                                                    <div className="h-full">
+                                                        <SortableCollectionCard
+                                                            collection={collection}
+                                                            allBadges={allBadges}
+                                                            onUpdateCollection={updateBadgeCollection}
+                                                            onDeleteCollection={handleDeleteCollection}
+                                                            onAddBadge={addBadge}
+                                                            onUpdateBadge={handleUpdateBadge}
+                                                            onDeleteBadge={handleDeleteBadge}
+                                                            contextTeam={team}
+                                                            isViewer={isViewer}
+                                                            predefinedColors={predefinedColors}
+                                                            allCollections={allBadgeCollections}
+                                                            editingBadgeState={editingBadgeState}
+                                                            setEditingBadgeState={setEditingBadgeState}
+                                                        />
                                                     </div>
-                                                </SortableContext>
-                                            </ScrollArea>
-                                        </CardContent>
-                                    </Card>
+                                                </div>
+                                            )
+                                        )}
+                                    </div>
+                                </SortableContext>
                                 </TeamManagementDropZone>
-                            </div>
+                            </ScrollArea>
                         </div>
-                    )}
+                    </div>
                 </div>
-                <DragOverlay>
-                    {activeDragItem?.type === 'collection' ? (
-                        <div className='w-96'>
-                            <BadgeCollectionCard 
-                                collection={activeDragItem.collection}
-                                allBadges={allBadges}
-                                onUpdateCollection={() => {}}
-                                onDeleteCollection={() => {}}
-                                onAddBadge={() => {}}
-                                onUpdateBadge={() => {}}
-                                onDeleteBadge={() => {}}
-                                isSharedPreview={activeDragItem.isSharedPreview}
-                                contextTeam={contextTeam}
-                                isViewer={isViewer}
-                                predefinedColors={predefinedColors}
-                                allCollections={allBadgeCollections}
-                                isCollectionEditing={false}
-                                setIsCollectionEditing={() => {}}
-                                editingBadgeState={editingBadgeState}
-                                setEditingBadgeState={setEditingBadgeState}
-                            />
+                
+                {!isViewer && (
+                    <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96" : "w-0")}>
+                        <div className={cn("h-full rounded-lg transition-all", isSharedPanelOpen ? "p-2" : "p-0")}>
+                            <TeamManagementDropZone id="shared-collections-panel" type="collection-panel" className="h-full">
+                                <Card className={cn("transition-opacity duration-300 h-full bg-transparent flex flex-col", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
+                                    <CardHeader>
+                                        <div className="flex items-center justify-between">
+                                            <CardTitle className="font-headline font-thin text-xl">Shared Collections</CardTitle>
+                                            <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." inputRef={sharedSearchInputRef} autoFocus={isSharedPanelOpen} tooltipText="Search Shared Collections" />
+                                        </div>
+                                        <CardDescription>Drag a collection to your board to link it.</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="flex-1 p-2 overflow-hidden">
+                                        <ScrollArea className="h-full">
+                                            <SortableContext items={sharedCollections.map(c => `collection::${c.id}`)} strategy={verticalListSortingStrategy}>
+                                                <div className="space-y-2">
+                                                    {sharedCollections.map((collection) => (
+                                                        <SortableCollectionCard
+                                                            key={collection.id}
+                                                            collection={collection}
+                                                            allBadges={allBadges}
+                                                            onUpdateCollection={updateBadgeCollection}
+                                                            onDeleteCollection={handleDeleteCollection}
+                                                            onAddBadge={addBadge}
+                                                            onUpdateBadge={handleUpdateBadge}
+                                                            onDeleteBadge={handleDeleteBadge}
+                                                            isSharedPreview={true}
+                                                            contextTeam={team}
+                                                            isViewer={isViewer}
+                                                            predefinedColors={predefinedColors}
+                                                            allCollections={allBadgeCollections}
+                                                            editingBadgeState={editingBadgeState}
+                                                            setEditingBadgeState={setEditingBadgeState}
+                                                        />
+                                                    ))}
+                                                    {sharedCollections.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">No collections are being shared by other users.</p>}
+                                                </div>
+                                            </SortableContext>
+                                        </ScrollArea>
+                                    </CardContent>
+                                </Card>
+                            </TeamManagementDropZone>
                         </div>
-                    ) : activeDragItem?.type === 'badge' ? (
-                        <div className='bg-background rounded-full'>
-                            <BadgeDisplayItem
-                                badge={activeDragItem.badge}
-                                viewMode={'compact'}
-                                onUpdateBadge={() => {}}
-                                onDelete={() => {}}
-                                isViewer={false}
-                                predefinedColors={predefinedColors}
-                                isOwner={false}
-                                isLinked={false}
-                                allCollections={allBadgeCollections}
-                                isCollectionEditing={false}
-                                editingBadgeState={editingBadgeState}
-                                setEditingBadgeState={setEditingBadgeState}
-                            />
-                        </div>
-                    ) : null}
-                </DragOverlay>
-            </DndContext>
-            <Dialog open={!!collectionToDelete} onOpenChange={() => setCollectionToDelete(null)}>
-                <DialogContent className="max-w-md">
-                    <div className="absolute top-4 right-4">
-                        <Button variant="ghost" size="icon" className="hover:text-destructive hover:bg-transparent p-0" onClick={confirmDeleteCollection}>
-                            <GoogleSymbol name="delete" className="text-4xl" weight={100} />
-                            <span className="sr-only">Delete Collection</span>
-                        </Button>
                     </div>
-                    <DialogHeader>
-                        <UIDialogTitle>Delete "{collectionToDelete?.name}"?</UIDialogTitle>
-                        <DialogDescription>
-                            {collectionToDelete?.isShared
-                                ? "This collection is shared. Deleting it will remove it and its badges from all teams that use it. This action cannot be undone."
-                                : `This will permanently delete the collection "${collectionToDelete?.name}" and all badges it owns from this team.`
-                            }
-                        </DialogDescription>
-                    </DialogHeader>
-                </DialogContent>
-            </Dialog>
-            <Dialog open={!!badgeToDelete} onOpenChange={(isOpen) => !isOpen && setBadgeToDelete(null)}>
-                <DialogContent>
-                    <div className="absolute top-4 right-4">
-                        <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={() => { if (badgeToDelete) confirmPermanentDelete(badgeToDelete.badgeId); }}>
-                            <GoogleSymbol name="delete" />
-                            <span className="sr-only">Delete Badge Permanently</span>
-                        </Button>
+                )}
+            </div>
+            <DragOverlay>
+                {activeDragItem?.type === 'collection' ? (
+                    <div className='w-96'>
+                        <BadgeCollectionCard 
+                            collection={activeDragItem.collection}
+                            allBadges={allBadges}
+                            onUpdateCollection={() => {}}
+                            onDeleteCollection={() => {}}
+                            onAddBadge={() => {}}
+                            onUpdateBadge={() => {}}
+                            onDeleteBadge={() => {}}
+                            isSharedPreview={activeDragItem.isSharedPreview}
+                            contextTeam={contextTeam}
+                            isViewer={isViewer}
+                            predefinedColors={predefinedColors}
+                            allCollections={allBadgeCollections}
+                            isCollectionEditing={false}
+                            setIsCollectionEditing={() => {}}
+                            editingBadgeState={editingBadgeState}
+                            setEditingBadgeState={setEditingBadgeState}
+                        />
                     </div>
-                    <DialogHeader>
-                        <UIDialogTitle>Delete Shared Badge?</UIDialogTitle>
-                        <DialogDescription>
-                            This badge is shared. Deleting it will remove it from all collections and teams. This action cannot be undone.
-                        </DialogDescription>
-                    </DialogHeader>
-                </DialogContent>
-            </Dialog>
-        </>
+                ) : activeDragItem?.type === 'badge' ? (
+                    <div className='bg-background rounded-full'>
+                        <BadgeDisplayItem
+                            badge={activeDragItem.badge}
+                            viewMode={'compact'}
+                            onUpdateBadge={() => {}}
+                            onDelete={() => {}}
+                            isViewer={false}
+                            predefinedColors={predefinedColors}
+                            isOwner={false}
+                            isLinked={false}
+                            allCollections={allBadgeCollections}
+                            isCollectionEditing={false}
+                            editingBadgeState={editingBadgeState}
+                            setEditingBadgeState={setEditingBadgeState}
+                        />
+                    </div>
+                ) : null}
+            </DragOverlay>
+        </DndContext>
+        <Dialog open={!!collectionToDelete} onOpenChange={() => setCollectionToDelete(null)}>
+            <DialogContent className="max-w-md">
+                <div className="absolute top-4 right-4">
+                    <Button variant="ghost" size="icon" className="hover:text-destructive hover:bg-transparent p-0" onClick={confirmDeleteCollection}>
+                        <GoogleSymbol name="delete" className="text-4xl" weight={100} />
+                        <span className="sr-only">Delete Collection</span>
+                    </Button>
+                </div>
+                <DialogHeader>
+                    <UIDialogTitle>Delete "{collectionToDelete?.name}"?</UIDialogTitle>
+                    <DialogDescription>
+                        {collectionToDelete?.isShared
+                            ? "This collection is shared. Deleting it will remove it and its badges from all teams that use it. This action cannot be undone."
+                            : `This will permanently delete the collection "${collectionToDelete?.name}" and all badges it owns from this team.`
+                        }
+                    </DialogDescription>
+                </DialogHeader>
+            </DialogContent>
+        </Dialog>
+        <Dialog open={!!badgeToDelete} onOpenChange={(isOpen) => !isOpen && setBadgeToDelete(null)}>
+            <DialogContent>
+                <div className="absolute top-4 right-4">
+                    <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={() => { if (badgeToDelete) confirmPermanentDelete(badgeToDelete.badgeId); }}>
+                        <GoogleSymbol name="delete" />
+                        <span className="sr-only">Delete Badge Permanently</span>
+                    </Button>
+                </div>
+                <DialogHeader>
+                    <UIDialogTitle>Delete Shared Badge?</UIDialogTitle>
+                    <DialogDescription>
+                        This badge is shared. Deleting it will remove it from all collections and teams. This action cannot be undone.
+                    </DialogDescription>
+                </DialogHeader>
+            </DialogContent>
+        </Dialog>
+      </>
     );
 }
