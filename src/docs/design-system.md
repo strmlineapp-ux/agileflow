@@ -112,7 +112,7 @@ This pattern describes how a single entity (like a **Team**, **Calendar**, or **
   - **Full Context**: When an item is linked, it should display all of its original properties (name, icon, color, description, etc.) to give the linking user full context.
   - **Editing Source of Truth**: Editing a shared item (e.g., changing a team's name) modifies the original "source of truth" item, and the changes are instantly reflected in all other places where it is used.
   - **Local Overrides**: For linked Badge Collections, the `applications` (e.g., "Team Members", "Events") can be modified locally without affecting the original, allowing teams to customize how they use a shared resource.
-  - **Smart Deletion & Unlinking**: Clicking the "delete" icon on a *linked* item (like a Team or Calendar) simply unlinks it from the user's view, and the original item is unaffected. This is a low-risk action. Deleting an item *owned* by the user is confirmed via a `Compact Action Dialog`.
+  - **Smart Deletion & Unlinking**: Clicking the "delete" icon on a *linked* item (like a Team, Calendar, or Badge) simply unlinks it from the current context, and the original item is unaffected. This is a low-risk action. Deleting an item *owned* by the user is confirmed via a `Compact Action Dialog`.
 - **Application**: This is the required pattern for sharing **Teams**, **Calendars**, and **Badge Collections**.
 
 ---
@@ -319,5 +319,3 @@ This is the single source of truth for indicating user interaction state across 
       - **Ownership Status**: `absolute -top-0 -right-3`.
     - **Icon Size (Ownership Status)**: The `GoogleSymbol` inside an ownership status badge should have its size set via `style={{fontSize: '16px'}}`.
 -   **Badges in Compact View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
-
-
