@@ -248,7 +248,7 @@ function TeamCard({
     };
 
     return (
-        <Card className="flex flex-col h-full bg-transparent relative" {...props}>
+        <Card className="group flex flex-col h-full bg-transparent relative" {...props}>
              {!isSharedPreview && (
                 <TooltipProvider>
                     <Tooltip>
