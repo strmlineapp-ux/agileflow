@@ -126,6 +126,8 @@ export interface Team {
   // A simple list of collection IDs that are "turned on" for this team.
   // Badges from these collections will be available for assignment to team members.
   activeBadgeCollections?: string[];
+  // Local overrides for view modes of linked collections.
+  collectionViewModes?: Record<string, 'assorted' | 'detailed' | 'list'>;
 }
 
 export interface Task {

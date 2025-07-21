@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
@@ -188,13 +189,19 @@ function CalendarCard({
   let shareIconTitle: string = '';
   let shareIconColor = ownerUser?.primaryColor || '#64748B';
 
-  if (canManage && calendar.isShared) {
-      shareIcon = 'upload';
-      shareIconTitle = 'Owned by you and shared';
-  } else if (!canManage && !isSharedPreview) { // It's a linked calendar on the main board
-      shareIcon = 'downloading';
-      shareIconTitle = `Shared by ${ownerUser?.displayName || 'another user'}`;
+  const isOwned = ownerUser?.userId === viewAsUser.userId;
+
+  if (isOwned && calendar.isShared) {
+      shareIcon = 'change_circle';
+      shareIconTitle = 'Owned & Shared by you';
+  } else if (!isOwned && !isSharedPreview) { // It's a linked calendar on the main board
+      shareIcon = 'link';
+      shareIconTitle = `Owned by ${ownerUser?.displayName || 'another user'}`;
+  } else if (isSharedPreview) { // In the shared panel
+      shareIcon = 'change_circle';
+      shareIconTitle = `Owned by ${ownerUser?.displayName || 'another user'}`;
   }
+
 
   return (
     <>
