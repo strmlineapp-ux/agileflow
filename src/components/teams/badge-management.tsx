@@ -54,6 +54,10 @@ function BadgeDisplayItem({
     isOwner,
     isLinked,
     allCollections,
+    isEditingName,
+    setIsEditingName,
+    isEditingDescription,
+    setIsEditingDescription,
 }: { 
     badge: Badge;
     viewMode: BadgeCollection['viewMode'];
@@ -64,15 +68,16 @@ function BadgeDisplayItem({
     isOwner: boolean;
     isLinked: boolean;
     allCollections: BadgeCollection[];
+    isEditingName: boolean;
+    setIsEditingName: (isEditing: boolean) => void;
+    isEditingDescription: boolean;
+    setIsEditingDescription: (isEditing: boolean) => void;
 }) {
     const { users } = useUser();
     const nameInputRef = useRef<HTMLInputElement>(null);
     const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
     const [color, setColor] = useState(badge.color);
-    
-    const [isEditingName, setIsEditingName] = useState(false);
-    const [isEditingDescription, setIsEditingDescription] = useState(false);
 
     const handleSaveName = useCallback(() => {
         const newName = nameInputRef.current?.value.trim() || '';
@@ -80,7 +85,7 @@ function BadgeDisplayItem({
             onUpdateBadge(badge.id, { name: newName });
         }
         setIsEditingName(false);
-    }, [badge.id, badge.name, onUpdateBadge]);
+    }, [badge.id, badge.name, onUpdateBadge, setIsEditingName]);
     
     const handleSaveDescription = useCallback(() => {
         const newDescription = descriptionTextareaRef.current?.value.trim();
@@ -88,7 +93,7 @@ function BadgeDisplayItem({
             onUpdateBadge(badge.id, { description: newDescription });
         }
         setIsEditingDescription(false);
-    }, [badge.id, badge.description, onUpdateBadge]);
+    }, [badge.id, badge.description, onUpdateBadge, setIsEditingDescription]);
 
     useEffect(() => {
         if (!isEditingName) return;
@@ -118,7 +123,7 @@ function BadgeDisplayItem({
     
     const handleNameKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter') { e.preventDefault(); handleSaveName(); }
-        else if (e.key === 'Escape') setIsEditingName(false);
+        else if (e.key === 'Escape') { e.preventDefault(); setIsEditingName(false); }
     };
     
     const handleDescriptionKeyDown = (e: React.KeyboardEvent) => {
@@ -366,10 +371,13 @@ function BadgeDisplayItem({
 
 function SortableBadgeItem({ badge, ...props }: { badge: Badge, [key: string]: any }) {
     const isOwner = props.isOwner;
+    const [isEditingName, setIsEditingName] = useState(false);
+    const [isEditingDescription, setIsEditingDescription] = useState(false);
+
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: `badge::${badge.id}::${props.collectionId}`,
         data: { type: 'badge', badge, collectionId: props.collectionId, isSharedPreview: props.isSharedPreview },
-        disabled: !isOwner
+        disabled: !isOwner || isEditingName || isEditingDescription
     });
     
     const style = {
@@ -384,6 +392,10 @@ function SortableBadgeItem({ badge, ...props }: { badge: Badge, [key: string]: a
             <BadgeDisplayItem 
                 badge={badge}
                 isOwner={isOwner}
+                isEditingName={isEditingName}
+                setIsEditingName={setIsEditingName}
+                isEditingDescription={isEditingDescription}
+                setIsEditingDescription={setIsEditingDescription}
                 {...props} 
             />
         </div>
@@ -643,8 +655,8 @@ function BadgeCollectionCard({ collection, allBadges, predefinedColors, onUpdate
                            <DropdownMenu>
                                 <TooltipProvider>
                                     <Tooltip>
-                                        <TooltipTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
-                                            <DropdownMenuTrigger asChild>
+                                        <TooltipTrigger asChild>
+                                            <DropdownMenuTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
                                                 <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
                                                     <GoogleSymbol name={viewModeOptions.find(o => o.mode === collection.viewMode)?.icon || 'view_module'} weight={100} />
                                                 </Button>
@@ -1218,6 +1230,10 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                             isOwner={false}
                             isLinked={false}
                             allCollections={allBadgeCollections}
+                            isEditingName={false}
+                            setIsEditingName={() => {}}
+                            isEditingDescription={false}
+                            setIsEditingDescription={() => {}}
                         />
                         </div>
                     ) : null}
