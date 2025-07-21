@@ -46,7 +46,6 @@ function BadgeDisplayItem({
     badge, 
     viewMode, 
     onUpdateBadge, 
-    onDelete, 
     isViewer = false, 
     predefinedColors,
     isOwner,
@@ -59,7 +58,6 @@ function BadgeDisplayItem({
     badge: Badge;
     viewMode: BadgeCollection['viewMode'];
     onUpdateBadge: (badgeId: string, badgeData: Partial<Badge>) => void;
-    onDelete: (badgeId: string) => void;
     isViewer?: boolean;
     predefinedColors: string[];
     isOwner: boolean;
@@ -213,26 +211,7 @@ function BadgeDisplayItem({
             ))}</div></ScrollArea>
         </PopoverContent>
     );
-    
-    const deleteButton = (
-        <TooltipProvider>
-            <Tooltip>
-                <TooltipTrigger asChild>
-                     <Button
-                        variant="ghost"
-                        size="icon"
-                        className="absolute -top-1 -right-1 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                        onClick={() => onDelete(badge.id)}
-                        onPointerDown={(e) => e.stopPropagation()}
-                    >
-                        <GoogleSymbol name="cancel" className="text-lg" weight={100} />
-                    </Button>
-                </TooltipTrigger>
-                <TooltipContent><p>{isOwner ? "Delete Badge" : "Unlink Badge"}</p></TooltipContent>
-            </Tooltip>
-        </TooltipProvider>
-    );
-    
+        
     const nameEditorElement = (
          <div onClick={() => { if(isOwner) setEditingBadgeState({ badgeId: badge.id, field: 'name' })}}>
             {isEditingName && isOwner ? (
@@ -255,7 +234,7 @@ function BadgeDisplayItem({
     );
 
      const descriptionEditorElement = (
-         <div onClick={() => {if(isOwner) setEditingBadgeState({ badgeId: badge.id, field: 'description' })}}>
+         <div onClick={() => {if(isOwner) setIsCollectionEditing({ field: 'description' })}}>
             {isEditingDescription && isOwner ? (
                 <Textarea 
                     ref={descriptionTextareaRef} 
@@ -275,7 +254,7 @@ function BadgeDisplayItem({
     
     if (viewMode === 'detailed' || viewMode === 'list') {
       return (
-        <div className="group relative h-full flex items-start gap-4 rounded-lg p-2 hover:bg-muted/50">
+        <div className="flex items-start gap-4 p-2">
             <div className="relative">
                 <Popover open={isIconPopoverOpen} onOpenChange={(isOpen) => setEditingBadgeState({ badgeId: isOpen ? badge.id : null, field: isOpen ? 'icon' : null })}>
                     <TooltipProvider>
@@ -315,14 +294,13 @@ function BadgeDisplayItem({
                 {nameEditorElement}
                 {descriptionEditorElement}
             </div>
-            {deleteButton}
         </div>
       );
     }
     
     // Compact View
     return (
-        <div className="group relative p-1.5">
+        <div className="p-1.5">
              <UiBadge
                 variant={'outline'}
                 style={{ color: badge.color, borderColor: badge.color }}
@@ -368,12 +346,11 @@ function BadgeDisplayItem({
                 </div>
                 {nameEditorElement}
             </UiBadge>
-            {deleteButton}
         </div>
     );
 }
 
-function SortableBadgeItem({ badge, collectionId, ...props }: { badge: Badge, collectionId: string, [key: string]: any }) {
+function SortableBadgeItem({ badge, collectionId, onDelete, ...props }: { badge: Badge, collectionId: string, onDelete: (badgeId: string) => void, [key: string]: any }) {
     const isOwner = props.isOwner;
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: `badge::${badge.id}::${collectionId}`,
@@ -388,11 +365,30 @@ function SortableBadgeItem({ badge, collectionId, ...props }: { badge: Badge, co
         zIndex: isDragging ? 10 : 'auto',
     };
     
-    const itemContent = <BadgeDisplayItem badge={badge} isOwner={isOwner} {...props} />;
+    const itemContent = <BadgeDisplayItem badge={badge} isOwner={isOwner} onDelete={onDelete} {...props} />;
     
     const WrapperElement = (
-        <div {...attributes} {...listeners} className="w-full h-full">
-            {itemContent}
+        <div className="relative group">
+            <div {...attributes} {...listeners} className="w-full h-full">
+                {itemContent}
+            </div>
+            {isOwner && (
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="absolute -top-1 -right-1 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                                onPointerDown={(e) => { e.stopPropagation(); onDelete(badge.id); }}
+                            >
+                                <GoogleSymbol name="cancel" className="text-lg" weight={100} />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent><p>{isOwner ? "Delete Badge" : "Unlink Badge"}</p></TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+            )}
         </div>
     );
 
@@ -1079,19 +1075,36 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         if (badgeToDelete) setBadgeToDelete(null);
     }, [allBadges, deleteBadge, toast]);
 
-    const handleDeleteBadge = useCallback((collectionId: string, badgeId: string) => {
+    const handleDeleteBadge = useCallback((badgeId: string) => {
       const badge = allBadges.find(b => b.id === badgeId);
       if (!badge) return;
 
-      const isOriginalInstance = badge.ownerCollectionId === collectionId;
+      const badgeOwnerCollection = allBadgeCollections.find(c => c.id === badge.ownerCollectionId);
+      if (!badgeOwnerCollection) return;
+
+      const isOwner = badgeOwnerCollection.owner.id === viewAsUser.userId;
+
+      if (!isOwner) {
+          // If not the owner, just unlink from the current collection (this logic needs to be tied to a specific collection context)
+          // For now, this assumes the delete action is coming from within a collection card, so we find it.
+          // This logic might need refinement based on where onDeleteBadge is called from.
+          const currentCollectionContext = allBadgeCollections.find(c => c.badgeIds.includes(badgeId)); // This is an assumption
+          if (currentCollectionContext) {
+            const newBadgeIds = currentCollectionContext.badgeIds.filter(id => id !== badgeId);
+            updateBadgeCollection(currentCollectionContext.id, { badgeIds: newBadgeIds });
+            toast({ title: 'Badge Unlinked' });
+          }
+          return;
+      }
+      
       const linkCount = allBadgeCollections.reduce((acc, c) => acc + (c.badgeIds.includes(badgeId) ? 1 : 0), 0);
 
-      if (isOriginalInstance && linkCount > 1) {
-          setBadgeToDelete({ collectionId, badgeId });
+      if (linkCount > 1) {
+          setBadgeToDelete({ collectionId: badge.ownerCollectionId, badgeId });
       } else {
           confirmPermanentDelete(badgeId);
       }
-    }, [allBadgeCollections, allBadges, confirmPermanentDelete]);
+    }, [allBadgeCollections, allBadges, confirmPermanentDelete, viewAsUser, updateBadgeCollection, toast]);
     
     const onDragEnd = (event: DragEndEvent) => {
         setActiveDragItem(null);
@@ -1325,7 +1338,6 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                             badge={activeDragItem.badge}
                             viewMode={'compact'}
                             onUpdateBadge={() => {}}
-                            onDelete={() => {}}
                             isViewer={false}
                             predefinedColors={predefinedColors}
                             isOwner={false}
