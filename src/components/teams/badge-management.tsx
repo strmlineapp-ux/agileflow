@@ -214,7 +214,7 @@ function BadgeDisplayItem({
             ))}</div></ScrollArea>
         </PopoverContent>
     );
-
+    
     const deleteButton = (
         <TooltipProvider>
             <Tooltip>
@@ -275,7 +275,7 @@ function BadgeDisplayItem({
     
     if (viewMode === 'detailed' || viewMode === 'list') {
       return (
-        <div className="group relative h-full flex items-start gap-4 rounded-lg p-2 hover:bg-muted/50" onPointerDown={(e) => e.stopPropagation()}>
+        <div className="group h-full flex items-start gap-4 rounded-lg p-2 hover:bg-muted/50" onPointerDown={(e) => e.stopPropagation()}>
             <div className="relative">
                 <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                     <TooltipProvider>
@@ -403,14 +403,14 @@ function SortableBadgeItem({ badge, ...props }: { badge: Badge, [key: string]: a
         />
     );
     
-    if (viewMode === 'detailed') {
+    if (props.viewMode === 'detailed') {
         return (
             <div 
                 ref={setNodeRef}
                 style={style}
                 {...attributes}
                 {...listeners}
-                className="basis-full md:basis-1/2 p-1 flex-grow-0 flex-shrink-0"
+                className="p-1 basis-full md:basis-1/2 flex-grow-0 flex-shrink-0"
             >
                 {itemContent}
             </div>
@@ -635,16 +635,18 @@ function BadgeCollectionCard({
         <Card className="h-full flex flex-col bg-transparent relative">
              <div {...dragHandleProps}>
                 <CardHeader className="group">
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" className="absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10" onPointerDown={(e) => { e.stopPropagation(); onDeleteCollection(collection); }}>
-                                    <GoogleSymbol name="cancel" className="text-lg" weight={100} />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent><p>{isOwner ? "Delete Collection" : "Unlink Collection"}</p></TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
+                    <div className="absolute top-2 right-2 z-10">
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onPointerDown={(e) => { e.stopPropagation(); onDeleteCollection(collection); }}>
+                                        <GoogleSymbol name="cancel" className="text-lg" weight={100} />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent><p>{isOwner ? "Delete Collection" : "Unlink Collection"}</p></TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    </div>
                     <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3 flex-1 min-w-0">
                             <div className="relative">
@@ -1346,5 +1348,3 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         </DndContext>
     );
 }
-
-    
