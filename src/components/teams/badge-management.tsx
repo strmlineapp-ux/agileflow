@@ -379,17 +379,20 @@ function BadgeDisplayItem({
     );
 }
 
-function SortableBadgeItem({ badge, ...props }: { badge: Badge, [key: string]: any }) {
+function SortableBadgeItem({ badge, collectionId, ...props }: { badge: Badge, collectionId: string, [key: string]: any }) {
     const isOwner = props.isOwner;
-    const [isEditingName, setIsEditingName] = useState(false);
-    const [isEditingDescription, setIsEditingDescription] = useState(false);
-    const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
-    const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
+    const {
+        isCollectionEditing,
+        editingBadgeState,
+        setEditingBadgeState,
+    } = props;
+    
+    const isThisBadgeBeingEdited = editingBadgeState.badgeId === badge.id;
 
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-        id: `badge::${badge.id}::${props.collectionId}`,
-        data: { type: 'badge', badge, collectionId: props.collectionId, isSharedPreview: props.isSharedPreview },
-        disabled: !isOwner || isEditingName || isEditingDescription || isColorPopoverOpen || isIconPopoverOpen
+        id: `badge::${badge.id}::${collectionId}`,
+        data: { type: 'badge', badge, collectionId, isSharedPreview: props.isSharedPreview },
+        disabled: !isOwner || isCollectionEditing || isThisBadgeBeingEdited,
     });
     
     const style = {
@@ -403,14 +406,14 @@ function SortableBadgeItem({ badge, ...props }: { badge: Badge, [key: string]: a
         <BadgeDisplayItem 
             badge={badge}
             isOwner={isOwner}
-            isEditingName={isEditingName}
-            setIsEditingName={setIsEditingName}
-            isEditingDescription={isEditingDescription}
-            setIsEditingDescription={setIsEditingDescription}
-            isColorPopoverOpen={isColorPopoverOpen}
-            setIsColorPopoverOpen={setIsColorPopoverOpen}
-            isIconPopoverOpen={isIconPopoverOpen}
-            setIsIconPopoverOpen={setIsIconPopoverOpen}
+            isEditingName={isThisBadgeBeingEdited && editingBadgeState.field === 'name'}
+            setIsEditingName={(isEditing: boolean) => setEditingBadgeState(isEditing ? { badgeId: badge.id, field: 'name'} : {badgeId: null, field: null})}
+            isEditingDescription={isThisBadgeBeingEdited && editingBadgeState.field === 'description'}
+            setIsEditingDescription={(isEditing: boolean) => setEditingBadgeState(isEditing ? { badgeId: badge.id, field: 'description'} : {badgeId: null, field: null})}
+            isColorPopoverOpen={isThisBadgeBeingEdited && editingBadgeState.field === 'color'}
+            setIsColorPopoverOpen={(isOpen: boolean) => setEditingBadgeState(isOpen ? { badgeId: badge.id, field: 'color'} : {badgeId: null, field: null})}
+            isIconPopoverOpen={isThisBadgeBeingEdited && editingBadgeState.field === 'icon'}
+            setIsIconPopoverOpen={(isOpen: boolean) => setEditingBadgeState(isOpen ? { badgeId: badge.id, field: 'icon'} : {badgeId: null, field: null})}
             {...props} 
         />
     );
@@ -439,6 +442,11 @@ function SortableBadgeItem({ badge, ...props }: { badge: Badge, [key: string]: a
 function DroppableCollectionContent({ collection, children }: { collection: BadgeCollection, children: React.ReactNode }) {
     const { setNodeRef, isOver } = useDroppable({ id: collection.id, data: { type: 'collection', collection }});
     
+    let strategy = rectSortingStrategy;
+    if (collection.viewMode === 'list') {
+        strategy = verticalListSortingStrategy;
+    }
+    
     return (
         <div 
             ref={setNodeRef}
@@ -450,7 +458,9 @@ function DroppableCollectionContent({ collection, children }: { collection: Badg
                 collection.viewMode === 'detailed' && "flex flex-wrap -m-1"
             )}
         >
-            {children}
+            <SortableContext items={collection.badgeIds.map(id => `badge::${id}::${collection.id}`)} strategy={strategy}>
+                {children}
+            </SortableContext>
         </div>
     );
 }
@@ -468,14 +478,9 @@ type BadgeCollectionCardProps = {
     isSharedPreview?: boolean;
     contextTeam?: Team;
     isViewer?: boolean;
-    isEditingName: boolean;
-    setIsEditingName: (isEditing: boolean) => void;
-    isIconPopoverOpen: boolean;
-    setIsIconPopoverOpen: (isOpen: boolean) => void;
-    isColorPopoverOpen: boolean;
-    setIsColorPopoverOpen: (isOpen: boolean) => void;
-    isViewModePopoverOpen: boolean;
-    setIsViewModePopoverOpen: (isOpen: boolean) => void;
+    isCollectionEditing: boolean;
+    editingBadgeState: { badgeId: string | null; field: string | null };
+    setEditingBadgeState: (state: { badgeId: string | null; field: string | null }) => void;
 };
 
 function BadgeCollectionCard({ 
@@ -491,24 +496,24 @@ function BadgeCollectionCard({
     isSharedPreview = false, 
     contextTeam, 
     isViewer = false,
-    isEditingName,
-    setIsEditingName,
-    isIconPopoverOpen,
-    setIsIconPopoverOpen,
-    isColorPopoverOpen,
-    setIsColorPopoverOpen,
-    isViewModePopoverOpen,
-    setIsViewModePopoverOpen,
+    isCollectionEditing,
+    editingBadgeState,
+    setEditingBadgeState,
 }: BadgeCollectionCardProps) {
     const { viewAsUser, users, updateTeam, allBadgeCollections } = useUser();
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [iconSearch, setIconSearch] = useState('');
     const iconSearchInputRef = useRef<HTMLInputElement>(null);
     const [color, setColor] = useState(collection.color);
-    const [isEditingDescription, setIsEditingDescription] = useState(false);
     const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
     const [isExpanded, setIsExpanded] = useState(true);
     
+    const [isEditingName, setIsEditingName] = useState(false);
+    const [isEditingDescription, setIsEditingDescription] = useState(false);
+    const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
+    const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
+    const [isViewModePopoverOpen, setIsViewModePopoverOpen] = useState(false);
+
     const isOwner = useMemo(() => collection.owner.id === viewAsUser.userId, [collection.owner.id, viewAsUser.userId]);
 
     const handleSaveName = useCallback(() => {
@@ -811,28 +816,29 @@ function BadgeCollectionCard({
              {isExpanded && (
                 <CardContent className="flex-grow pt-0 flex flex-col min-h-0">
                     <div className="mb-2">{descriptionEditorElement}</div>
-                    <SortableContext items={collection.badgeIds.map(id => `badge::${id}::${collection.id}`)} strategy={rectSortingStrategy}>
-                        <DroppableCollectionContent collection={collection}>
-                            {collectionBadges.map((badge) => {
-                                const badgeIsOwned = badge.ownerCollectionId === collection.id;
-                                return (
-                                <SortableBadgeItem
-                                    key={badge.id}
-                                    badge={badge}
-                                    collectionId={collection.id}
-                                    viewMode={collection.viewMode}
-                                    onUpdateBadge={onUpdateBadge}
-                                    onDelete={onDeleteBadge}
-                                    isViewer={isViewer}
-                                    predefinedColors={predefinedColors}
-                                    isOwner={badgeIsOwned}
-                                    isLinked={!badgeIsOwned}
-                                    allCollections={allBadgeCollections}
-                                />
-                                )
-                            })}
-                        </DroppableCollectionContent>
-                    </SortableContext>
+                    <DroppableCollectionContent collection={collection}>
+                        {collectionBadges.map((badge) => {
+                            const badgeIsOwned = badge.ownerCollectionId === collection.id;
+                            return (
+                            <SortableBadgeItem
+                                key={badge.id}
+                                badge={badge}
+                                collectionId={collection.id}
+                                viewMode={collection.viewMode}
+                                onUpdateBadge={onUpdateBadge}
+                                onDelete={onDeleteBadge}
+                                isViewer={isViewer}
+                                predefinedColors={predefinedColors}
+                                isOwner={badgeIsOwned}
+                                isLinked={!badgeIsOwned}
+                                allCollections={allBadgeCollections}
+                                isCollectionEditing={isEditingName || isEditingDescription}
+                                editingBadgeState={editingBadgeState}
+                                setEditingBadgeState={setEditingBadgeState}
+                            />
+                            )
+                        })}
+                    </DroppableCollectionContent>
                 </CardContent>
              )}
             {!isSharedPreview && (
@@ -917,14 +923,6 @@ function SortableCollectionCard({ collection, ...props }: { collection: BadgeCol
                 {...props}
                 collection={collection} 
                 dragHandleProps={{...attributes, ...listeners}}
-                isEditingName={isEditingName}
-                setIsEditingName={setIsEditingName}
-                isIconPopoverOpen={isIconPopoverOpen}
-                setIsIconPopoverOpen={setIsIconPopoverOpen}
-                isColorPopoverOpen={isColorPopoverOpen}
-                setIsColorPopoverOpen={setIsColorPopoverOpen}
-                isViewModePopoverOpen={isViewModePopoverOpen}
-                setIsViewModePopoverOpen={setIsViewModePopoverOpen}
             />
         </div>
     );
@@ -1001,6 +999,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     const sharedSearchInputRef = useRef<HTMLInputElement>(null);
 
     const [activeDragItem, setActiveDragItem] = useState<any>(null);
+    const [editingBadgeState, setEditingBadgeState] = useState<{badgeId: string | null; field: string | null;}>({badgeId: null, field: null});
 
     const contextTeam = team;
     const isTeamContext = isTeamSpecificPage && !!contextTeam;
@@ -1182,8 +1181,15 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     }
     
     const sensors = useSensors(
-        useSensor(PointerSensor),
-        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                delay: 250,
+                tolerance: 5,
+            },
+        }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
     );
 
     return (
@@ -1205,7 +1211,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                     <TooltipProvider>
                                         <Tooltip>
                                             <TooltipTrigger asChild>
-                                                <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
+                                                <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text" onClick={()={() => setIsEditingTitle(true)}}>{tab.name}</h2>
                                             </TooltipTrigger>
                                             {tab.description && (
                                             <TooltipContent>
@@ -1260,6 +1266,8 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                                             isViewer={isViewer}
                                                             predefinedColors={predefinedColors}
                                                             allCollections={allBadgeCollections}
+                                                            editingBadgeState={editingBadgeState}
+                                                            setEditingBadgeState={setEditingBadgeState}
                                                         />
                                                     </div>
                                                 </div>
@@ -1304,6 +1312,8 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                                             isViewer={isViewer}
                                                             predefinedColors={predefinedColors}
                                                             allCollections={allBadgeCollections}
+                                                            editingBadgeState={editingBadgeState}
+                                                            setEditingBadgeState={setEditingBadgeState}
                                                         />
                                                     ))}
                                                     {sharedCollections.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">No collections are being shared by other users.</p>}
@@ -1316,7 +1326,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                          </div>
                     </div>
                 )}
-                <Dialog open={!!collectionToDelete} onOpenChange={() => setCollectionToDelete(null)}>
+                <Dialog open={!!collectionToDelete} onOpenChange={()={() => setCollectionToDelete(null)}}>
                     <DialogContent className="max-w-md">
                         <div className="absolute top-4 right-4">
                             <Button variant="ghost" size="icon" className="hover:text-destructive hover:bg-transparent p-0" onClick={confirmDeleteCollection}>
@@ -1357,24 +1367,19 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                         <BadgeCollectionCard 
                             collection={activeDragItem.collection}
                             allBadges={allBadges}
-                            onUpdateCollection={() => {}}
-                            onDeleteCollection={() => {}}
-                            onAddBadge={() => {}}
-                            onUpdateBadge={() => {}}
-                            onDeleteBadge={() => {}}
+                            onUpdateCollection={()={() => {}}
+                            onDeleteCollection={()={() => {}}
+                            onAddBadge={()={() => {}}
+                            onUpdateBadge={()={() => {}}
+                            onDeleteBadge={()={() => {}}
                             isSharedPreview={activeDragItem.isSharedPreview}
                             contextTeam={contextTeam}
                             isViewer={isViewer}
                             predefinedColors={predefinedColors}
                             allCollections={allBadgeCollections}
-                            isEditingName={false}
-                            setIsEditingName={() => {}}
-                            isIconPopoverOpen={false}
-                            setIsIconPopoverOpen={() => {}}
-                            isColorPopoverOpen={false}
-                            setIsColorPopoverOpen={() => {}}
-                            isViewModePopoverOpen={false}
-                            setIsViewModePopoverOpen={() => {}}
+                            isCollectionEditing={false}
+                            editingBadgeState={{badgeId: null, field: null}}
+                            setEditingBadgeState={()={() => {}}
                         />
                         </div>
                     ) : activeDragItem?.type === 'badge' ? (
@@ -1382,21 +1387,21 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                          <BadgeDisplayItem
                             badge={activeDragItem.badge}
                             viewMode={'compact'}
-                            onUpdateBadge={() => {}}
-                            onDelete={() => {}}
+                            onUpdateBadge={()={() => {}}
+                            onDelete={()={() => {}}
                             isViewer={false}
                             predefinedColors={predefinedColors}
                             isOwner={false}
                             isLinked={false}
                             allCollections={allBadgeCollections}
                             isEditingName={false}
-                            setIsEditingName={() => {}}
+                            setIsEditingName={()={() => {}}
                             isEditingDescription={false}
-                            setIsEditingDescription={() => {}}
+                            setIsEditingDescription={()={() => {}}
                             isColorPopoverOpen={false}
-                            setIsColorPopoverOpen={() => {}}
+                            setIsColorPopoverOpen={()={() => {}}
                             isIconPopoverOpen={false}
-                            setIsIconPopoverOpen={() => {}}
+                            setIsIconPopoverOpen={()={() => {}}
                         />
                         </div>
                     ) : null}
