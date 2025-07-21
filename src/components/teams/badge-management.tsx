@@ -749,28 +749,24 @@ function BadgeCollectionCard({
                                 </TooltipProvider>
                             )}
                             <Popover>
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
-                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-                                                    <GoogleSymbol name={viewModeOptions.find(o => o.mode === collection.viewMode)?.icon || 'view_module'} weight={100} />
-                                                </Button>
-                                            </PopoverTrigger>
-                                        </TooltipTrigger>
-                                        <TooltipContent><p>Change View Mode</p></TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
+                                <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+                                        <GoogleSymbol name={viewModeOptions.find(o => o.mode === collection.viewMode)?.icon || 'view_module'} weight={100} />
+                                    </Button>
+                                </PopoverTrigger>
                                 <PopoverContent className="w-auto p-1 flex items-center gap-1" onPointerDown={(e) => e.stopPropagation()}>
                                     {viewModeOptions.map(({mode, icon, label}) => (
                                         <TooltipProvider key={mode}>
                                             <Tooltip>
                                                 <TooltipTrigger asChild>
                                                     <Button
-                                                        variant={collection.viewMode === mode ? 'secondary' : 'ghost'}
+                                                        variant="ghost"
                                                         size="icon"
                                                         onClick={() => onUpdateCollection(collection.id, { viewMode: mode })}
-                                                        className="h-8 w-8"
+                                                        className={cn(
+                                                            "h-8 w-8",
+                                                            collection.viewMode === mode ? "text-primary" : ""
+                                                        )}
                                                     >
                                                         <GoogleSymbol name={icon} />
                                                     </Button>
