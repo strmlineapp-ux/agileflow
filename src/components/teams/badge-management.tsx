@@ -247,7 +247,7 @@ function BadgeDisplayItem({
                                                 <GoogleSymbol name="link" style={{fontSize: '16px'}}/>
                                             </div>
                                         </TooltipTrigger>
-                                        <TooltipContent><p>Linked from "{originalCollection?.name}"</p></TooltipContent>
+                                        <TooltipContent><p>Owned by {originalCollection?.owner.id}</p></TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
                             )}
@@ -299,7 +299,7 @@ function BadgeDisplayItem({
                                     <GoogleSymbol name="link" style={{fontSize: '16px'}}/>
                                 </div>
                             </TooltipTrigger>
-                            <TooltipContent><p>Linked from "{originalCollection?.name}"</p></TooltipContent>
+                            <TooltipContent><p>Owned by {originalCollection?.owner.id}</p></TooltipContent>
                         </Tooltip>
                     </TooltipProvider>
                 )}
@@ -350,7 +350,7 @@ function BadgeDisplayItem({
                                         <GoogleSymbol name="link" style={{fontSize: '16px'}}/>
                                     </div>
                                 </TooltipTrigger>
-                                <TooltipContent><p>Linked from "{originalCollection?.name}"</p></TooltipContent>
+                                <TooltipContent><p>Owned by {originalCollection?.owner.id}</p></TooltipContent>
                             </Tooltip>
                         </TooltipProvider>
                     )}
@@ -423,20 +423,22 @@ type BadgeCollectionCardProps = {
 };
 
 function BadgeCollectionCard({ collection, allBadges, predefinedColors, onUpdateCollection, onDeleteCollection, onAddBadge, onUpdateBadge, onDeleteBadge, dragHandleProps, isSharedPreview = false, contextTeam, isViewer = false }: BadgeCollectionCardProps) {
-    const { viewAsUser, users, updateTeam } = useUser();
+    const { viewAsUser, users, teams, updateTeam } = useUser();
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
     const [color, setColor] = useState(collection.color);
     const [isEditingName, setIsEditingName] = useState(false);
     const [isEditingDescription, setIsEditingDescription] = useState(false);
     const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
-    const [isExpanded, setIsExpanded] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(true);
     
     const isOwner = useMemo(() => {
         if (isSharedPreview || isViewer) return false;
         if (!viewAsUser) return false;
-        return collection.owner.id === viewAsUser.userId;
-    }, [collection.owner.id, viewAsUser, isSharedPreview, isViewer]);
+        if(collection.owner.type === 'user') return collection.owner.id === viewAsUser.userId;
+        if(collection.owner.type === 'team') return (teams.find(t => t.id === collection.owner.id)?.teamAdmins || []).includes(viewAsUser.userId);
+        return false;
+    }, [collection.owner, viewAsUser, teams, isSharedPreview, isViewer]);
     
     const handleSaveName = useCallback(() => {
         const newName = nameInputRef.current?.value.trim() || '';
@@ -500,21 +502,26 @@ function BadgeCollectionCard({ collection, allBadges, predefinedColors, onUpdate
         { key: 'badges', icon: 'style', label: 'Badges' },
     ];
 
-    const ownerUser = users.find(u => u.userId === collection.owner.id);
+    const ownerEntity = useMemo(() => {
+        if (collection.owner.type === 'user') return users.find(u => u.userId === collection.owner.id);
+        if (collection.owner.type === 'team') return teams.find(t => t.id === collection.owner.id);
+        return null;
+    }, [collection.owner, users, teams]);
     
+    const ownerName = ownerEntity?.name || (ownerEntity as User)?.displayName || 'System';
+    const ownerColor = ownerEntity?.color || (ownerEntity as User)?.primaryColor || '#64748B';
+
     let shareIcon: string | null = null;
     let shareIconTitle: string = '';
-    let shareIconColor: string | undefined = ownerUser?.primaryColor || '#64748B';
+    
+    const isOwnedByCurrentUser = collection.owner.type === 'user' && collection.owner.id === viewAsUser.userId;
 
-    if (isOwner && collection.isShared) {
+    if (isOwnedByCurrentUser && collection.isShared) {
         shareIcon = 'change_circle';
-        shareIconTitle = 'Owned by you and shared';
-    } else if (!isOwner && !isSharedPreview) {
+        shareIconTitle = `Owned & Shared by You`;
+    } else if (!isOwnedByCurrentUser && !isSharedPreview) { // Is a linked team on main board
         shareIcon = 'link';
-        shareIconTitle = `Owned by ${ownerUser?.displayName || 'another user'}`;
-    } else if (isSharedPreview) {
-        shareIcon = 'change_circle';
-        shareIconTitle = `Owned by ${ownerUser?.displayName || 'another user'}`;
+        shareIconTitle = `Owned by ${ownerName}`;
     }
 
     const handleToggleApplication = (application: BadgeApplication) => {
@@ -613,7 +620,7 @@ function BadgeCollectionCard({ collection, allBadges, predefinedColors, onUpdate
                                             </PopoverContent>
                                         </Popover>
                                         {shareIcon && (
-                                            <TooltipProvider><Tooltip><TooltipTrigger asChild><div className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white" style={{ backgroundColor: shareIconColor }}><GoogleSymbol name={shareIcon} style={{fontSize: '16px'}}/></div></TooltipTrigger><TooltipContent><p>{shareIconTitle}</p></TooltipContent></Tooltip></TooltipProvider>
+                                            <TooltipProvider><Tooltip><TooltipTrigger asChild><div className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white" style={{ backgroundColor: ownerColor }}><GoogleSymbol name={shareIcon} style={{fontSize: '16px'}}/></div></TooltipTrigger><TooltipContent><p>{shareIconTitle}</p></TooltipContent></Tooltip></TooltipProvider>
                                         )}
                                     </>
                                 )}
@@ -688,7 +695,7 @@ function BadgeCollectionCard({ collection, allBadges, predefinedColors, onUpdate
                                     predefinedColors={predefinedColors}
                                     isOwner={isBadgeOwner}
                                     isLinked={badge.ownerCollectionId !== collection.id}
-                                    allCollections={allBadgeCollections}
+                                    allCollections={allCollections}
                                 />
                                 )
                             })}
@@ -818,6 +825,7 @@ function DuplicateZone({ onAdd, disabled }: { onAdd: () => void; disabled?: bool
 export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }: { team?: Team, tab: AppTab, page: AppPage, isTeamSpecificPage?: boolean }) {
     const { 
         viewAsUser, 
+        users,
         teams,
         updateAppTab, 
         allBadgeCollections,
