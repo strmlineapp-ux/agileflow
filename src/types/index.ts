@@ -93,7 +93,7 @@ export interface BadgeCollection {
   name: string;
   icon: string;
   color: string;
-  viewMode: 'assorted' | 'detailed' | 'list';
+  viewMode: 'compact' | 'detailed' | 'list';
   badgeIds: string[];
   description?: string;
   applications?: BadgeApplication[];
@@ -122,7 +122,7 @@ export interface Team {
   // Badges from these collections will be available for assignment to team members.
   activeBadgeCollections?: string[];
   // Local overrides for view modes of linked collections.
-  collectionViewModes?: Record<string, 'assorted' | 'detailed' | 'list'>;
+  collectionViewModes?: Record<string, 'compact' | 'detailed' | 'list'>;
 }
 
 export interface Task {

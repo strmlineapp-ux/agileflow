@@ -221,7 +221,7 @@ This pattern describes how to create a two-column layout where one column (a sid
 ---
 
 ### 14. Compact Badge Pills
-This pattern is a specialized, ultra-compact version of the standard `<Badge>` component, used for displaying multiple badges in a dense layout, such as the "assorted" view mode in Badge Collections.
+This pattern is a specialized, ultra-compact version of the standard `<Badge>` component, used for displaying multiple badges in a dense layout, such as the "Compact" view mode in Badge Collections.
 
 - **Appearance**: A very thin, pill-shaped badge with minimal padding. It contains a small icon and a short text label.
 - **Sizing**:
@@ -229,7 +229,7 @@ This pattern is a specialized, ultra-compact version of the standard `<Badge>` c
     - The icon inside is small, with its size set via `style={{ fontSize: '28px' }}`.
     - The text label is small (e.g., `text-[10px]`).
 - **Interaction**: A small, circular delete button appears on hover, allowing the user to remove the badge.
-- **Application**: Used in the "assorted" view of **Badge Collections** to display many badges in a compact, scannable format.
+- **Application**: Used in the "Compact" view of **Badge Collections** to display many badges in a compact, scannable format.
 
 ---
 ### 15. Team Member Badge Assignment
@@ -317,6 +317,4 @@ This is the single source of truth for indicating user interaction state across 
       - **Color Picker**: `absolute -bottom-1 -right-3`.
       - **Ownership Status**: `absolute -top-0 -right-3`.
     - **Icon Size (Ownership Status)**: The `GoogleSymbol` inside an ownership status badge should have its size set via `style={{fontSize: '16px'}}`.
--   **Badges in Assorted View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
-
-    
+-   **Badges in Compact View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.

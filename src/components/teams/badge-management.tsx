@@ -72,7 +72,7 @@ function BadgeDisplayItem({
     isEditingDescription: boolean;
     setIsEditingDescription: (isEditing: boolean) => void;
 }) {
-    const { users, teams } = useUser();
+    const { users } = useUser();
     const nameInputRef = useRef<HTMLInputElement>(null);
     const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
@@ -131,7 +131,7 @@ function BadgeDisplayItem({
     
     const originalCollection = allCollections.find(c => c.id === badge.ownerCollectionId);
     
-    const owner = users.find(u => u.userId === originalCollection?.owner.id);
+    const ownerUser = users.find(u => u.userId === originalCollection?.owner.id);
     
     const colorPickerContent = (
         <PopoverContent className="w-auto p-4" onPointerDown={(e) => e.stopPropagation()}>
@@ -250,11 +250,11 @@ function BadgeDisplayItem({
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <div className="absolute -top-0 -right-3 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white" style={{ backgroundColor: owner?.primaryColor }}>
+                                            <div className="absolute -top-0 -right-3 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white" style={{ backgroundColor: ownerUser?.primaryColor }}>
                                                 <GoogleSymbol name="link" style={{fontSize: '16px'}}/>
                                             </div>
                                         </TooltipTrigger>
-                                        <TooltipContent><p>Owned by {owner?.displayName}</p></TooltipContent>
+                                        <TooltipContent><p>Owned by {ownerUser?.displayName}</p></TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
                             )}
@@ -302,11 +302,11 @@ function BadgeDisplayItem({
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <div className="absolute -top-0 -right-3 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white" style={{ backgroundColor: owner?.primaryColor }}>
+                                <div className="absolute -top-0 -right-3 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white" style={{ backgroundColor: ownerUser?.primaryColor }}>
                                     <GoogleSymbol name="link" style={{fontSize: '16px'}}/>
                                 </div>
                             </TooltipTrigger>
-                            <TooltipContent><p>Owned by {owner?.displayName}</p></TooltipContent>
+                            <TooltipContent><p>Owned by {ownerUser?.displayName}</p></TooltipContent>
                         </Tooltip>
                     </TooltipProvider>
                 )}
@@ -320,7 +320,7 @@ function BadgeDisplayItem({
       );
     }
     
-    // Assorted View
+    // Compact View
     return (
         <div className="group relative p-1.5">
              <UiBadge
@@ -353,11 +353,11 @@ function BadgeDisplayItem({
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <div className="absolute -top-0 -right-3 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white" style={{ backgroundColor: owner?.primaryColor }}>
+                                    <div className="absolute -top-0 -right-3 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white" style={{ backgroundColor: ownerUser?.primaryColor }}>
                                         <GoogleSymbol name="link" style={{fontSize: '16px'}}/>
                                     </div>
                                 </TooltipTrigger>
-                                <TooltipContent><p>Owned by {owner?.displayName}</p></TooltipContent>
+                                <TooltipContent><p>Owned by {ownerUser?.displayName}</p></TooltipContent>
                             </Tooltip>
                         </TooltipProvider>
                     )}
@@ -411,7 +411,7 @@ function DroppableCollectionContent({ collection, children }: { collection: Badg
             className={cn(
                 "min-h-[60px] rounded-md p-2 transition-all",
                 isOver && "ring-1 ring-border ring-inset",
-                collection.viewMode === 'assorted' && "flex flex-wrap gap-2 items-start",
+                collection.viewMode === 'compact' && "flex flex-wrap gap-2 items-start",
                 collection.viewMode === 'list' && "flex flex-col gap-1",
                 collection.viewMode === 'detailed' && "flex flex-wrap -m-2"
             )}
@@ -454,7 +454,7 @@ function BadgeCollectionCard({
     isEditingName,
     setIsEditingName
 }: BadgeCollectionCardProps) {
-    const { viewAsUser, users, teams, updateTeam, allBadgeCollections } = useUser();
+    const { viewAsUser, users, updateTeam, allBadgeCollections } = useUser();
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
     const [color, setColor] = useState(collection.color);
@@ -526,12 +526,12 @@ function BadgeCollectionCard({
         { key: 'badges', icon: 'style', label: 'Badges' },
     ];
 
-    const owner = useMemo(() => {
+    const ownerUser = useMemo(() => {
         return users.find(u => u.userId === collection.owner.id);
     }, [collection.owner.id, users]);
     
-    const ownerName = owner?.displayName || 'System';
-    const ownerColor = owner?.primaryColor || '#64748B';
+    const ownerName = ownerUser?.displayName || 'System';
+    const ownerColor = ownerUser?.primaryColor || '#64748B';
 
     let shareIcon: string | null = null;
     let shareIconTitle: string = '';
@@ -569,7 +569,7 @@ function BadgeCollectionCard({
     const isActive = contextTeam && contextTeam.activeBadgeCollections?.includes(collection.id);
 
     const viewModeOptions: {mode: BadgeCollection['viewMode'], icon: string, label: string}[] = [
-        { mode: 'assorted', icon: 'view_module', label: 'Assorted View' },
+        { mode: 'compact', icon: 'view_module', label: 'Compact View' },
         { mode: 'detailed', icon: 'view_comfy_alt', label: 'Detailed View' },
         { mode: 'list', icon: 'view_list', label: 'List View' }
     ];
@@ -1256,7 +1256,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                         <div className='bg-background rounded-full'>
                          <BadgeDisplayItem
                             badge={activeDragItem.badge}
-                            viewMode={'assorted'}
+                            viewMode={'compact'}
                             onUpdateBadge={() => {}}
                             onDelete={() => {}}
                             isViewer={false}
