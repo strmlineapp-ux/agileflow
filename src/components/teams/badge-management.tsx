@@ -228,7 +228,8 @@ function BadgeDisplayItem({
                         variant="ghost"
                         size="icon"
                         className="absolute -top-1 -right-1 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                        onClick={(e) => { e.stopPropagation(); onDelete(badge.id); }}
+                        onPointerDown={(e) => e.stopPropagation()}
+                        onClick={() => onDelete(badge.id)}
                     >
                         <GoogleSymbol name="cancel" className="text-lg" weight={100} />
                     </Button>
@@ -239,7 +240,7 @@ function BadgeDisplayItem({
     );
     
     const nameEditorElement = (
-         <div onClick={() => isOwner && setIsEditingName(true)}>
+         <div onPointerDown={(e) => e.stopPropagation()} onClick={() => isOwner && setIsEditingName(true)}>
             {isEditingName && isOwner ? (
                 <Input
                     ref={nameInputRef}
@@ -260,7 +261,7 @@ function BadgeDisplayItem({
     );
 
      const descriptionEditorElement = (
-         <div onClick={() => isOwner && setIsEditingDescription(true)}>
+         <div onPointerDown={(e) => e.stopPropagation()} onClick={() => isOwner && setIsEditingDescription(true)}>
             {isEditingDescription && isOwner ? (
                 <Textarea 
                     ref={descriptionTextareaRef} 
@@ -281,7 +282,7 @@ function BadgeDisplayItem({
     if (viewMode === 'detailed' || viewMode === 'list') {
       return (
         <div className="group relative h-full flex items-start gap-4 rounded-lg p-2 hover:bg-muted/50">
-            <div className="relative">
+            <div className="relative" onPointerDown={(e) => e.stopPropagation()}>
                 <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                     <TooltipProvider>
                     <Tooltip>
@@ -327,7 +328,7 @@ function BadgeDisplayItem({
     
     // Compact View
     return (
-        <div className="group relative p-1.5">
+        <div className="group relative p-1.5" onPointerDown={(e) => e.stopPropagation()}>
              <UiBadge
                 variant={'outline'}
                 style={{ color: badge.color, borderColor: badge.color }}
@@ -435,7 +436,7 @@ function SortableBadgeItem({ badge, ...props }: { badge: Badge, [key: string]: a
     )
 }
 
-function DroppableCollectionContent({ collection, children, onAddBadge }: { collection: BadgeCollection, children: React.ReactNode, onAddBadge: () => void }) {
+function DroppableCollectionContent({ collection, children }: { collection: BadgeCollection, children: React.ReactNode }) {
     const { setNodeRef, isOver } = useDroppable({ id: collection.id, data: { type: 'collection', collection }});
     
     return (
@@ -469,6 +470,12 @@ type BadgeCollectionCardProps = {
     isViewer?: boolean;
     isEditingName: boolean;
     setIsEditingName: (isEditing: boolean) => void;
+    isIconPopoverOpen: boolean;
+    setIsIconPopoverOpen: (isOpen: boolean) => void;
+    isColorPopoverOpen: boolean;
+    setIsColorPopoverOpen: (isOpen: boolean) => void;
+    isViewModePopoverOpen: boolean;
+    setIsViewModePopoverOpen: (isOpen: boolean) => void;
 };
 
 function BadgeCollectionCard({ 
@@ -485,12 +492,16 @@ function BadgeCollectionCard({
     contextTeam, 
     isViewer = false,
     isEditingName,
-    setIsEditingName
+    setIsEditingName,
+    isIconPopoverOpen,
+    setIsIconPopoverOpen,
+    isColorPopoverOpen,
+    setIsColorPopoverOpen,
+    isViewModePopoverOpen,
+    setIsViewModePopoverOpen,
 }: BadgeCollectionCardProps) {
     const { viewAsUser, users, updateTeam, allBadgeCollections } = useUser();
     const nameInputRef = useRef<HTMLInputElement>(null);
-    const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
-    const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
     const [iconSearch, setIconSearch] = useState('');
     const iconSearchInputRef = useRef<HTMLInputElement>(null);
     const [color, setColor] = useState(collection.color);
@@ -654,7 +665,7 @@ function BadgeCollectionCard({
                                     variant="ghost"
                                     size="icon"
                                     className="absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                                    onClick={(e) => { e.stopPropagation(); onDeleteCollection(collection); }}
+                                    onClick={() => onDeleteCollection(collection)}
                                     onPointerDown={(e) => e.stopPropagation()}
                                 >
                                     <GoogleSymbol name="cancel" className="text-lg" weight={100} />
@@ -666,12 +677,12 @@ function BadgeCollectionCard({
                     )}
                     <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3 flex-1 min-w-0">
-                            <div className="relative">
+                            <div className="relative" onPointerDown={(e) => e.stopPropagation()}>
                                 <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                                     <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                        <PopoverTrigger asChild disabled={!isOwner} onPointerDown={(e) => e.stopPropagation()}>
+                                        <PopoverTrigger asChild disabled={!isOwner}>
                                             <Button variant="ghost" className="h-10 w-12 flex items-center justify-center p-0">
                                             <GoogleSymbol name={collection.icon} weight={100} grade={-25} opticalSize={20} style={{ fontSize: '36px' }} />
                                             </Button>
@@ -698,8 +709,8 @@ function BadgeCollectionCard({
                                                     variant={collection.icon === iconName ? "default" : "ghost"}
                                                     size="icon"
                                                     onClick={() => {
-                                                    onUpdateCollection(collection.id, { icon: iconName });
-                                                    setIsIconPopoverOpen(false);
+                                                        onUpdateCollection(collection.id, { icon: iconName });
+                                                        setIsIconPopoverOpen(false);
                                                     }}
                                                     className="h-8 w-8 p-0"
                                                 >
@@ -715,7 +726,7 @@ function BadgeCollectionCard({
                                 {!isViewer && (
                                     <>
                                         <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                                            <TooltipProvider><Tooltip><TooltipTrigger asChild><PopoverTrigger asChild disabled={!isOwner} onPointerDown={(e) => e.stopPropagation()}><button className={cn("absolute -bottom-1 -right-3 h-4 w-4 rounded-full border-0", !isOwner ? "cursor-not-allowed" : "cursor-pointer")} style={{ backgroundColor: collection.color }} /></PopoverTrigger></TooltipTrigger><TooltipContent><p>Change Color</p></TooltipContent></Tooltip></TooltipProvider>
+                                            <TooltipProvider><Tooltip><TooltipTrigger asChild><PopoverTrigger asChild disabled={!isOwner}><button className={cn("absolute -bottom-1 -right-3 h-4 w-4 rounded-full border-0", !isOwner ? "cursor-not-allowed" : "cursor-pointer")} style={{ backgroundColor: collection.color }} /></PopoverTrigger></TooltipTrigger><TooltipContent><p>Change Color</p></TooltipContent></Tooltip></TooltipProvider>
                                             <PopoverContent className="w-auto p-4" onPointerDown={(e) => e.stopPropagation()}>
                                                 <div className="space-y-4">
                                                     <HexColorPicker color={color} onChange={setColor} className="!w-full" />
@@ -738,7 +749,7 @@ function BadgeCollectionCard({
                                     </>
                                 )}
                             </div>
-                            <div className="flex-1 min-w-0">
+                            <div className="flex-1 min-w-0" onPointerDown={(e) => { if (isOwner) e.stopPropagation(); }}>
                                 <div className="flex items-center justify-between">
                                     {isEditingName && isOwner ? (
                                         <Input ref={nameInputRef} defaultValue={collection.name} onBlur={handleSaveName} onKeyDown={handleNameKeyDown} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"/>
@@ -748,7 +759,7 @@ function BadgeCollectionCard({
                                 </div>
                             </div>
                         </div>
-                        <div className="flex items-center">
+                        <div className="flex items-center" onPointerDown={(e) => e.stopPropagation()}>
                            {isOwner && !isSharedPreview && (
                                 <TooltipProvider>
                                     <Tooltip>
@@ -761,13 +772,13 @@ function BadgeCollectionCard({
                                     </Tooltip>
                                 </TooltipProvider>
                             )}
-                            <Popover>
+                            <Popover open={isViewModePopoverOpen} onOpenChange={setIsViewModePopoverOpen}>
                                 <PopoverTrigger asChild>
                                     <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
                                         <GoogleSymbol name={viewModeOptions.find(o => o.mode === collection.viewMode)?.icon || 'view_module'} weight={100} />
                                     </Button>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-auto p-1 flex items-center gap-1">
+                                <PopoverContent className="w-auto p-1 flex items-center gap-1" onPointerDown={(e) => e.stopPropagation()}>
                                     {viewModeOptions.map(({mode, icon, label}) => (
                                         <TooltipProvider key={mode}>
                                             <Tooltip>
@@ -775,10 +786,13 @@ function BadgeCollectionCard({
                                                     <Button
                                                         variant="ghost"
                                                         size="icon"
-                                                        onClick={() => onUpdateCollection(collection.id, { viewMode: mode })}
+                                                        onClick={() => {
+                                                            onUpdateCollection(collection.id, { viewMode: mode });
+                                                            setIsViewModePopoverOpen(false);
+                                                        }}
                                                         className={cn(
                                                             "h-8 w-8",
-                                                            collection.viewMode === mode ? "text-primary" : ""
+                                                            collection.viewMode === mode && "text-primary"
                                                         )}
                                                     >
                                                         <GoogleSymbol name={icon} weight={100} />
@@ -798,7 +812,7 @@ function BadgeCollectionCard({
                 <CardContent className="flex-grow pt-0 flex flex-col min-h-0">
                     <div className="mb-2">{descriptionEditorElement}</div>
                     <SortableContext items={collection.badgeIds.map(id => `badge::${id}::${collection.id}`)} strategy={rectSortingStrategy}>
-                        <DroppableCollectionContent collection={collection} onAddBadge={() => onAddBadge(collection.id)}>
+                        <DroppableCollectionContent collection={collection}>
                             {collectionBadges.map((badge) => {
                                 const badgeIsOwned = badge.ownerCollectionId === collection.id;
                                 return (
@@ -822,7 +836,7 @@ function BadgeCollectionCard({
                 </CardContent>
              )}
             {!isSharedPreview && (
-                <CardFooter className="flex items-center justify-between gap-2 p-2 mt-auto">
+                <CardFooter className="flex items-center justify-between gap-2 p-2 mt-auto" onPointerDown={(e) => e.stopPropagation()}>
                     <div className="flex items-center gap-2">
                         {APPLICATIONS.map(app => (
                             <TooltipProvider key={app.key}>
@@ -863,7 +877,7 @@ function BadgeCollectionCard({
                 </CardFooter>
             )}
             <div className="absolute -bottom-1 right-0">
-                <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} className="text-muted-foreground h-6 w-6">
+                <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
                     <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
                 </Button>
             </div>
@@ -873,6 +887,9 @@ function BadgeCollectionCard({
 
 function SortableCollectionCard({ collection, ...props }: { collection: BadgeCollection, [key: string]: any }) {
     const [isEditingName, setIsEditingName] = useState(false);
+    const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
+    const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
+    const [isViewModePopoverOpen, setIsViewModePopoverOpen] = useState(false);
     
     const {
         attributes,
@@ -884,7 +901,7 @@ function SortableCollectionCard({ collection, ...props }: { collection: BadgeCol
     } = useSortable({
         id: `collection::${collection.id}`,
         data: { type: 'collection', collection, isSharedPreview: props.isSharedPreview },
-        disabled: isEditingName,
+        disabled: isEditingName || isIconPopoverOpen || isColorPopoverOpen || isViewModePopoverOpen,
     });
 
     const style = {
@@ -902,6 +919,12 @@ function SortableCollectionCard({ collection, ...props }: { collection: BadgeCol
                 dragHandleProps={{...attributes, ...listeners}}
                 isEditingName={isEditingName}
                 setIsEditingName={setIsEditingName}
+                isIconPopoverOpen={isIconPopoverOpen}
+                setIsIconPopoverOpen={setIsIconPopoverOpen}
+                isColorPopoverOpen={isColorPopoverOpen}
+                setIsColorPopoverOpen={setIsColorPopoverOpen}
+                isViewModePopoverOpen={isViewModePopoverOpen}
+                setIsViewModePopoverOpen={setIsViewModePopoverOpen}
             />
         </div>
     );
@@ -1346,6 +1369,12 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                             allCollections={allBadgeCollections}
                             isEditingName={false}
                             setIsEditingName={() => {}}
+                            isIconPopoverOpen={false}
+                            setIsIconPopoverOpen={() => {}}
+                            isColorPopoverOpen={false}
+                            setIsColorPopoverOpen={() => {}}
+                            isViewModePopoverOpen={false}
+                            setIsViewModePopoverOpen={() => {}}
                         />
                         </div>
                     ) : activeDragItem?.type === 'badge' ? (
@@ -1376,3 +1405,5 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         </DndContext>
     );
 }
+
+    
