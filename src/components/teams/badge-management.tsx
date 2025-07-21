@@ -192,7 +192,7 @@ function BadgeDisplayItem({
                     autoFocus={true}
                 />
             </div>
-            <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (
+            <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{googleSymbolNames.slice(0, 300).map((iconName) => (
             <TooltipProvider key={iconName}>
                 <Tooltip>
                 <TooltipTrigger asChild>
@@ -403,7 +403,7 @@ function SortableBadgeItem({ badge, ...props }: { badge: Badge, [key: string]: a
         />
     );
     
-    if (props.viewMode === 'detailed') {
+    if (viewMode === 'detailed') {
         return (
             <div 
                 ref={setNodeRef}
@@ -632,19 +632,19 @@ function BadgeCollectionCard({
    );
 
     return (
-        <Card className="h-full flex flex-col bg-transparent relative group">
-            <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10" onPointerDown={(e) => { e.stopPropagation(); onDeleteCollection(collection); }}>
-                            <GoogleSymbol name="cancel" className="text-lg" weight={100} />
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent><p>{isOwner ? "Delete Collection" : "Unlink Collection"}</p></TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
+        <Card className="h-full flex flex-col bg-transparent relative">
              <div {...dragHandleProps}>
-                <CardHeader>
+                <CardHeader className="group">
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" className="absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10" onPointerDown={(e) => { e.stopPropagation(); onDeleteCollection(collection); }}>
+                                    <GoogleSymbol name="cancel" className="text-lg" weight={100} />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent><p>{isOwner ? "Delete Collection" : "Unlink Collection"}</p></TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
                     <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3 flex-1 min-w-0">
                             <div className="relative">
