@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { type Team, type Badge, type BadgeCollection, type User, type BadgeApplication, type AppTab, type AppPage, type BadgeCollectionOwner } from '@/types';
+import { type Team, type Badge, type BadgeCollection, type User, type BadgeApplication, type AppPage, type BadgeCollectionOwner } from '@/types';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { ScrollArea } from '../ui/scroll-area';
@@ -267,10 +267,10 @@ function BadgeDisplayItem({
                 />
              ) : (
                  <p className={cn("text-sm text-muted-foreground min-h-[20px] break-words", isOwner && "cursor-text")}>
-                    {badge.description || (isOwner ? 'Click to add description.' : <span className="italic text-muted-foreground/50">No description</span>)}
+                    {badge.description || (isLinked ? <span className="italic text-muted-foreground/50">No description</span> : isOwner ? 'Click to add description.' : '')}
                 </p>
              )}
-        </div>
+       </div>
     );
     
     if (viewMode === 'detailed' || viewMode === 'list') {
@@ -308,7 +308,7 @@ function BadgeDisplayItem({
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <div className="absolute -top-0 -right-3 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white" style={{ backgroundColor: ownerUser?.primaryColor }}>
+                                <div className="absolute -top-0 -right-3 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white" style={{ backgroundColor: ownerUser?.primaryColor || '#64748B' }}>
                                     <GoogleSymbol name="link" style={{fontSize: '16px'}}/>
                                 </div>
                             </TooltipTrigger>
@@ -364,7 +364,7 @@ function BadgeDisplayItem({
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <div className="absolute -top-0 -right-3 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white" style={{ backgroundColor: ownerUser?.primaryColor }}>
+                                    <div className="absolute -top-0 -right-3 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white" style={{ backgroundColor: ownerUser?.primaryColor || '#64748B' }}>
                                         <GoogleSymbol name="link" style={{fontSize: '16px'}}/>
                                     </div>
                                 </TooltipTrigger>
