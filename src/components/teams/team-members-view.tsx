@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useUser } from '@/context/user-context';
@@ -70,9 +71,10 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
     
     const sensors = useSensors(
         useSensor(PointerSensor, {
-          activationConstraint: {
-            distance: 8,
-          },
+            activationConstraint: {
+                delay: 250,
+                tolerance: 5,
+            },
         }),
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates,

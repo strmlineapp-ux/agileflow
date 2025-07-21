@@ -201,9 +201,10 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive, activeTab, pa
   
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
+        activationConstraint: {
+            delay: 250,
+            tolerance: 5,
+        },
     }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
@@ -484,12 +485,13 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
   );
 }
 
-function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingName, setIsEditingName, dragHandleProps }: { 
+function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isCollapsed, isEditingName, setIsEditingName, dragHandleProps }: { 
     page: AppPage; 
     onUpdate: (id: string, data: Partial<AppPage>) => void; 
     onDelete: (id: string) => void; 
     isPinned?: boolean; 
     isDragging?: boolean;
+    isCollapsed?: boolean;
     isEditingName: boolean;
     setIsEditingName: (isEditing: boolean) => void;
     dragHandleProps?: any;
@@ -548,6 +550,8 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
     const filteredIcons = useMemo(() => googleSymbolNames.filter(icon => icon.toLowerCase().includes(iconSearch.toLowerCase())), [iconSearch]);
     
     const displayPath = page.isDynamic ? `${page.path}/[...]` : page.path;
+    const showDetails = isCollapsed ? false : isExpanded;
+
 
     return (
         <Card className="group relative">
@@ -677,18 +681,20 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isEditingNam
                     </div>
                 </div>
             </div>
-            {isExpanded && (
+            {showDetails && (
                 <CardContent className="p-2 pt-0">
                     <p className={cn("text-xs text-muted-foreground truncate font-thin", !isPinned && "cursor-pointer")} onClick={handlePathClick}>
                       {displayPath}
                     </p>
                 </CardContent>
             )}
-            <div className="absolute -bottom-1 right-0">
-                <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
-                    <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
-                </Button>
-            </div>
+            {!isCollapsed && (
+                 <div className="absolute -bottom-1 right-0">
+                    <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
+                        <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
+                    </Button>
+                </div>
+            )}
             <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                 <DialogContent className="max-w-md" onPointerDownCapture={(e) => e.stopPropagation()}>
                     <div className="absolute top-4 right-4">
@@ -848,9 +854,10 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
     
     const sensors = useSensors(
         useSensor(PointerSensor, {
-          activationConstraint: {
-            distance: 8,
-          },
+            activationConstraint: {
+                delay: 250,
+                tolerance: 5,
+            },
         }),
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates,
@@ -928,7 +935,7 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
                     </div>
                 </SortableContext>
                 <DragOverlay>
-                    {activePage ? <PageCard page={activePage} onUpdate={() => {}} onDelete={() => {}} isPinned={pinnedIds.has(activePage.id)} isEditingName={false} setIsEditingName={() => {}} /> : null}
+                    {activePage ? <PageCard page={activePage} onUpdate={() => {}} onDelete={() => {}} isPinned={pinnedIds.has(activePage.id)} isEditingName={false} setIsEditingName={() => {}} isCollapsed={true} /> : null}
                 </DragOverlay>
             </div>
         </DndContext>
@@ -1177,9 +1184,10 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
     
     const sensors = useSensors(
         useSensor(PointerSensor, {
-          activationConstraint: {
-            distance: 8,
-          },
+            activationConstraint: {
+                delay: 250,
+                tolerance: 5,
+            },
         }),
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates,
