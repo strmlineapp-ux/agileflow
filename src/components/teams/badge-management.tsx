@@ -446,8 +446,10 @@ function DroppableCollectionContent({ collection, children }: { collection: Badg
       case 'list':
         strategy = verticalListSortingStrategy;
         break;
-      case 'compact':
       case 'detailed':
+      case 'compact':
+        strategy = rectSortingStrategy;
+        break;
       default:
         strategy = rectSortingStrategy;
         break;
@@ -896,9 +898,15 @@ function BadgeCollectionCard({
 }
 
 function SortableCollectionCard({ collection, ...props }: { collection: BadgeCollection, [key: string]: any }) {
+    const {
+      isEditingName,
+      setIsEditingName,
+    } = props;
+  
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: `collection::${collection.id}`,
         data: { type: 'collection', collection, isSharedPreview: props.isSharedPreview },
+        disabled: isEditingName
     });
 
     const style = {
@@ -1094,26 +1102,18 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     }, [allBadges, deleteBadge, toast]);
 
     const handleDeleteBadge = useCallback((collectionId: string, badgeId: string) => {
-        const badge = allBadges.find(b => b.id === badgeId);
-        if (!badge) return;
-    
-        const isOriginalInstance = badge.ownerCollectionId === collectionId;
-    
-        let linkCount = allBadgeCollections.reduce((acc, c) => acc + (c.badgeIds.includes(badgeId) ? 1 : 0), 0);
-    
-        if (isOriginalInstance && linkCount > 1) {
-            setBadgeToDelete({ collectionId, badgeId });
-        } else if (isOriginalInstance && linkCount <= 1) {
-            confirmPermanentDelete(badgeId);
-        } else if (!isOriginalInstance) {
-            const collection = allBadgeCollections.find(c => c.id === collectionId);
-            if(collection) {
-                const updatedBadgeIds = collection.badgeIds.filter(id => id !== badgeId);
-                updateBadgeCollection(collectionId, { badgeIds: updatedBadgeIds });
-                toast({ title: 'Badge Unlinked' });
-            }
-        }
-    }, [allBadgeCollections, allBadges, updateBadgeCollection, toast, confirmPermanentDelete]);
+      const badge = allBadges.find(b => b.id === badgeId);
+      if (!badge) return;
+
+      const isOriginalInstance = badge.ownerCollectionId === collectionId;
+      const linkCount = allBadgeCollections.reduce((acc, c) => acc + (c.badgeIds.includes(badgeId) ? 1 : 0), 0);
+
+      if (isOriginalInstance && linkCount > 1) {
+          setBadgeToDelete({ collectionId, badgeId });
+      } else {
+          confirmPermanentDelete(badgeId);
+      }
+    }, [allBadgeCollections, allBadges, confirmPermanentDelete]);
     
     const onDragEnd = (event: DragEndEvent) => {
         setActiveDragItem(null);
@@ -1203,7 +1203,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                         <TooltipProvider>
                                             <Tooltip>
                                                 <TooltipTrigger asChild>
-                                                    <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text" onClick={()={() => setIsEditingTitle(true)}}>{tab.name}</h2>
+                                                    <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
                                                 </TooltipTrigger>
                                                 {tab.description && (
                                                 <TooltipContent>
@@ -1402,5 +1402,3 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         </>
     );
 }
-
-    
