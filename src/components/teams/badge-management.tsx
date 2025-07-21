@@ -19,7 +19,7 @@ import { Badge as UiBadge } from '../ui/badge';
 import { HexColorPicker, HexColorInput } from 'react-colorful';
 import { CompactSearchInput } from '@/components/common/compact-search-input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { CompactSearchIconPicker } from '@/components/common/compact-search-icon-picker';
+import { googleSymbolNames } from '@/lib/google-symbols';
 
 import {
   DndContext,
@@ -188,30 +188,26 @@ function BadgeDisplayItem({
                     autoFocus={true}
                 />
             </div>
-            <ScrollArea className="h-64">
-                <div className="grid grid-cols-6 gap-1 p-2">
-                    {filteredIcons.slice(0, 300).map((iconName) => (
-                    <TooltipProvider key={iconName}>
-                        <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button
-                            variant={badge.icon === iconName ? "default" : "ghost"}
-                            size="icon"
-                            onClick={() => {
-                                onUpdateBadge(badge.id, { icon: iconName });
-                                setIsIconPopoverOpen(false);
-                            }}
-                            className="h-8 w-8 p-0"
-                            >
-                            <GoogleSymbol name={iconName} className="text-4xl" weight={100} />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent><p>{iconName}</p></TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                    ))}
-                </div>
-            </ScrollArea>
+            <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (
+            <TooltipProvider key={iconName}>
+                <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button
+                    variant={badge.icon === iconName ? "default" : "ghost"}
+                    size="icon"
+                    onClick={() => {
+                        onUpdateBadge(badge.id, { icon: iconName });
+                        setIsIconPopoverOpen(false);
+                    }}
+                    className="h-8 w-8 p-0"
+                    >
+                    <GoogleSymbol name={iconName} className="text-4xl" weight={100} />
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent><p>{iconName}</p></TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+            ))}</div></ScrollArea>
         </PopoverContent>
     );
 
@@ -273,70 +269,9 @@ function BadgeDisplayItem({
         </div>
     );
     
-    if (viewMode === 'detailed') {
+    if (viewMode === 'detailed' || viewMode === 'list') {
       return (
-        <div className="group relative h-full flex flex-col rounded-lg">
-            <CardHeader onPointerDown={(e) => e.stopPropagation()}>
-                <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                         <div className="relative">
-                            <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
-                                <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                    <PopoverTrigger asChild disabled={!isOwner}>
-                                        <Button variant="ghost" className="h-10 w-12 flex items-center justify-center p-0">
-                                            <GoogleSymbol name={badge.icon} weight={100} grade={-25} opticalSize={20} style={{ fontSize: '36px', color: badge.color }} />
-                                        </Button>
-                                    </PopoverTrigger>
-                                    </TooltipTrigger>
-                                    <TooltipContent><p>Change Icon</p></TooltipContent>
-                                </Tooltip>
-                                </TooltipProvider>
-                                {iconPickerContent}
-                            </Popover>
-                            {!isViewer && (
-                                <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                                    <PopoverTrigger asChild disabled={!isOwner} onPointerDown={(e) => e.stopPropagation()}>
-                                        <button
-                                            className={cn("absolute -bottom-1 -right-3 h-4 w-4 rounded-full border-0", isOwner && "cursor-pointer")}
-                                            style={{ backgroundColor: badge.color }}
-                                            aria-label="Change badge color"
-                                        />
-                                    </PopoverTrigger>
-                                    {colorPickerContent}
-                                </Popover>
-                            )}
-                             {isLinked && (
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <div className="absolute -top-0 -right-3 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white" style={{ backgroundColor: ownerUser?.primaryColor }}>
-                                                <GoogleSymbol name="link" style={{fontSize: '16px'}}/>
-                                            </div>
-                                        </TooltipTrigger>
-                                        <TooltipContent><p>Owned by {ownerUser?.displayName}</p></TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                            )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            {nameEditorElement}
-                        </div>
-                    </div>
-                </div>
-            </CardHeader>
-            <CardContent className="space-y-4 pt-0 flex-grow" onPointerDown={(e) => e.stopPropagation()}>
-                 {descriptionEditorElement}
-            </CardContent>
-            {deleteButton}
-        </div>
-      );
-    }
-    
-    if (viewMode === 'list') {
-      return (
-        <div className="group relative flex w-full items-start gap-4 p-2 rounded-md hover:bg-muted/50">
+        <div className={cn("group relative h-full flex items-start gap-4 rounded-lg", viewMode === 'detailed' ? "flex-col" : "w-full p-2 hover:bg-muted/50")}>
             <div className="relative" onPointerDown={(e) => e.stopPropagation()}>
                 <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                     <TooltipProvider>
@@ -396,14 +331,19 @@ function BadgeDisplayItem({
                 className="flex items-center gap-1.5 p-1 pl-2 rounded-full text-sm h-8 font-thin"
             >
                 <div className="relative" onPointerDown={(e) => e.stopPropagation()}>
-                     <CompactSearchIconPicker
-                        icon={badge.icon}
-                        onUpdateIcon={(icon) => onUpdateBadge(badge.id, { icon })}
-                        iconClassName="text-base"
-                        disabled={!isOwner}
-                        weight={100}
-                        style={{ color: badge.color, fontSize: '28px' }}
-                    />
+                    <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
+                        <PopoverTrigger asChild disabled={!isOwner}>
+                             <Button
+                                variant="ghost"
+                                className="h-auto p-0 hover:bg-transparent"
+                                style={{ color: badge.color }}
+                                onPointerDown={(e) => e.stopPropagation()}
+                            >
+                                <GoogleSymbol name={badge.icon} style={{ fontSize: '28px' }} weight={100} />
+                            </Button>
+                        </PopoverTrigger>
+                        {iconPickerContent}
+                    </Popover>
                      {!isViewer && (
                         <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
                             <PopoverTrigger asChild disabled={!isOwner} onPointerDown={(e) => e.stopPropagation()}>
@@ -1019,10 +959,9 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
             canCreateCollection = canManage;
             isViewer = !canManage;
             
-            // Show collections owned by relevant users
             collections = allBadgeCollections.filter(c => relevantUserIds.has(c.owner.id));
             
-        } else { // User context (e.g., a non-dynamic page for managing one's own collections)
+        } else {
             canManage = true;
             canCreateCollection = true;
             isViewer = false;
