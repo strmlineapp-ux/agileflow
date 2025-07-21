@@ -72,7 +72,7 @@ export const mockLocations: BookableLocation[] = [
 
 // --- Badge Definitions ---
 
-// Video Production Owned Badges
+// Bernardo Resende (userId: '1') owns these
 const videoProdCollectionId = 'video-prod-collection';
 export const videoProdBadges: Badge[] = [
     { id: 'badge-director', ownerCollectionId: videoProdCollectionId, name: 'Video Director', icon: 'videocam', color: '#FCD34D', description: 'Oversees the creative and technical aspects of a video shoot.' },
@@ -81,10 +81,9 @@ export const videoProdBadges: Badge[] = [
     { id: 'badge-motion', ownerCollectionId: videoProdCollectionId, name: 'Motion Graphics', icon: 'animation', color: '#D97706' },
     { id: 'badge-creative-producer', ownerCollectionId: videoProdCollectionId, name: 'Creative Producer', icon: 'person', color: '#FEF08A' },
     { id: 'badge-script', ownerCollectionId: videoProdCollectionId, name: 'Script', icon: 'description', color: '#FDE68A' },
-    { id: 'badge-gaffer', ownerCollectionId: videoProdCollectionId, name: 'Gaffer', icon: 'lightbulb', color: '#B45309' },
 ];
 
-// Live Events Owned Badges
+// May-Kate Woods (userId: '3') owns these
 const liveEventsCollectionId = 'event-roles-collection';
 export const liveEventsBadges: Badge[] = [
     { id: 'badge-td', ownerCollectionId: liveEventsCollectionId, name: 'TD', icon: 'engineering', color: '#60A5FA', description: 'Technical Director for live events.' },
@@ -97,6 +96,32 @@ export const liveEventsBadges: Badge[] = [
     { id: 'badge-eventeditor', ownerCollectionId: liveEventsCollectionId, name: 'Events Editor', icon: 'local_movies', color: '#60A5FA' },
 ];
 
+// Daniel Lazard (userId: '2') owns these
+const pScaleCollectionId = 'p-scale-collection';
+const starRatingCollectionId = 'star-rating-collection';
+const effortCollectionId = 'effort-collection';
+
+export const pScaleBadges: Badge[] = [
+    { id: 'p0', ownerCollectionId: pScaleCollectionId, name: 'P0', icon: 'priority_high', color: '#EF4444', description: 'Highest priority' },
+    { id: 'p1', ownerCollectionId: pScaleCollectionId, name: 'P1', icon: 'keyboard_arrow_up', color: '#F97316', description: 'High priority' },
+    { id: 'p2', ownerCollectionId: pScaleCollectionId, name: 'P2', icon: 'remove', color: '#FBBF24', description: 'Medium priority' },
+    { id: 'p3', ownerCollectionId: pScaleCollectionId, name: 'P3', icon: 'keyboard_arrow_down', color: '#22C55E', description: 'Low priority' },
+    { id: 'p4', ownerCollectionId: pScaleCollectionId, name: 'P4', icon: 'remove', color: '#64748B', description: 'Lowest priority' },
+];
+export const starRatingBadges: Badge[] = [
+    { id: 'star1', ownerCollectionId: starRatingCollectionId, name: '1 Star', icon: 'star', color: '#64748B' },
+    { id: 'star2', ownerCollectionId: starRatingCollectionId, name: '2 Stars', icon: 'star', color: '#64748B' },
+    { id: 'star3', ownerCollectionId: starRatingCollectionId, name: '3 Stars', icon: 'star', color: '#64748B' },
+    { id: 'star4', ownerCollectionId: starRatingCollectionId, name: '4 Stars', icon: 'star', color: '#64748B' },
+    { id: 'star5', ownerCollectionId: starRatingCollectionId, name: '5 Stars', icon: 'star', color: '#64748B' },
+];
+export const effortBadges: Badge[] = [
+    { id: 'task-high', ownerCollectionId: effortCollectionId, name: 'High', icon: 'keyboard_double_arrow_up', color: '#EF4444' },
+    { id: 'task-medium', ownerCollectionId: effortCollectionId, name: 'Medium', icon: 'drag_handle', color: '#FBBF24' },
+    { id: 'task-low', ownerCollectionId: effortCollectionId, name: 'Low', icon: 'keyboard_double_arrow_down', color: '#22C55E' },
+];
+
+
 export const allMockBadgeCollections: BadgeCollection[] = [
     {
         id: videoProdCollectionId,
@@ -107,7 +132,6 @@ export const allMockBadgeCollections: BadgeCollection[] = [
         viewMode: 'detailed',
         badgeIds: [
             ...videoProdBadges.map(b => b.id),
-            // These are now correctly LINKED by ID, not owned.
             'badge-cameraop',
             'badge-audioeng',
             'badge-audiomix',
@@ -128,14 +152,36 @@ export const allMockBadgeCollections: BadgeCollection[] = [
         isShared: true,
     },
     {
-        id: 'effort-collection',
+        id: pScaleCollectionId,
+        owner: { type: 'user', id: '2' }, // Daniel
+        name: 'P# Scale',
+        icon: 'numbers',
+        color: '#A855F7',
+        viewMode: 'list',
+        badgeIds: pScaleBadges.map(b => b.id),
+        applications: ['events'],
+        isShared: true,
+    },
+    {
+        id: starRatingCollectionId,
+        owner: { type: 'user', id: '2' }, // Daniel
+        name: 'Star Rating',
+        icon: 'stars',
+        color: '#F59E0B',
+        viewMode: 'assorted',
+        badgeIds: starRatingBadges.map(b => b.id),
+        applications: ['tasks'],
+        isShared: false,
+    },
+    {
+        id: effortCollectionId,
         owner: { type: 'user', id: '2' }, // Daniel
         name: 'Effort',
         icon: 'fitness_center',
-        color: '#A855F7',
-        viewMode: 'list',
-        badgeIds: ['p0', 'p1', 'p2', 'p3', 'p4'],
-        applications: ['events'],
+        color: '#10B981',
+        viewMode: 'assorted',
+        badgeIds: effortBadges.map(b => b.id),
+        applications: ['tasks'],
         isShared: false,
     }
 ];

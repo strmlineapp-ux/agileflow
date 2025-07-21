@@ -3,7 +3,7 @@
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
 import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type BadgeCollection, type BadgeCollectionOwner } from '@/types';
-import { mockUsers as initialUsers, mockCalendars as initialCalendars, mockEvents as initialEvents, mockLocations as initialLocations, mockTeams, mockAppSettings, videoProdBadges, liveEventsBadges } from '@/lib/mock-data';
+import { mockUsers as initialUsers, mockCalendars as initialCalendars, mockEvents as initialEvents, mockLocations as initialLocations, mockTeams, mockAppSettings, allMockBadgeCollections, videoProdBadges, liveEventsBadges, pScaleBadges, starRatingBadges, effortBadges } from '@/lib/mock-data';
 import { GoogleAuthProvider, getAuth } from 'firebase/auth';
 import { getFirestore } from "firebase/firestore";
 import { useToast } from '@/hooks/use-toast';
@@ -127,7 +127,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const [allBadges, setAllBadges] = useState<Badge[]>(() => {
     const badgesMap = new Map<string, Badge>();
-    [...globalBadges, ...videoProdBadges, ...liveEventsBadges].forEach(badge => {
+    [...globalBadges, ...videoProdBadges, ...liveEventsBadges, ...pScaleBadges, ...starRatingBadges, ...effortBadges].forEach(badge => {
         if (!badgesMap.has(badge.id)) {
             badgesMap.set(badge.id, badge);
         }
@@ -135,15 +135,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     return Array.from(badgesMap.values());
   });
 
-  const [allBadgeCollections, setAllBadgeCollections] = useState<BadgeCollection[]>(() => {
-    const collectionsMap = new Map<string, BadgeCollection>();
-    mockTeams.forEach(team => {
-        (team.badgeCollections || []).forEach(collection => {
-            if (!collectionsMap.has(collection.id)) collectionsMap.set(collection.id, collection);
-        });
-    });
-    return Array.from(collectionsMap.values());
-  });
+  const [allBadgeCollections, setAllBadgeCollections] = useState<BadgeCollection[]>(allMockBadgeCollections);
 
 
   const realUser = useMemo(() => users.find(u => u.userId === REAL_USER_ID)!, [users]);
@@ -382,19 +374,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         setAllBadges(prev => [...prev, ...newBadges]);
     }
     
-    if (contextTeam) {
-        setTeams(prevTeams => prevTeams.map(team => {
-            if (team.id === contextTeam.id) {
-                const updatedCollections = [...(team.badgeCollections || []), newCollection];
-                const updatedActiveCollections = new Set(team.activeBadgeCollections || []);
-                if (!sourceCollection) { // Only auto-activate brand new collections
-                    updatedActiveCollections.add(newCollection.id);
-                }
-                return { ...team, badgeCollections: updatedCollections, activeBadgeCollections: Array.from(updatedActiveCollections) };
-            }
-            return team;
-        }));
-    }
     toast({ title: 'Collection Added', description: `"${newCollection.name}" has been created.` });
 
   }, [allBadges, toast]);
@@ -404,8 +383,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     if (teamId) {
         setTeams(currentTeams => currentTeams.map(team => {
             if (team.id === teamId) {
-                const newCollections = (team.badgeCollections || []).map(c => c.id === collectionId ? {...c, ...data} : c);
-                return {...team, badgeCollections: newCollections};
+                return {...team, collectionViewModes: { ...team.collectionViewModes, [collectionId]: data.viewMode! }};
             }
             return team;
         }));
@@ -433,8 +411,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     // Also remove the collection from any team that might be using it
     setTeams(currentTeams => currentTeams.map(team => ({
         ...team,
-        badgeCollections: (team.badgeCollections || []).filter(c => c.id !== collectionId),
-        linkedCollectionIds: (team.linkedCollectionIds || []).filter(id => id !== collectionId),
         activeBadgeCollections: (team.activeBadgeCollections || []).filter(id => id !== collectionId)
     })));
 
