@@ -106,7 +106,7 @@ This pattern describes how a single entity (like a **Team**, **Calendar**, or **
         - **Global Management (e.g., Teams, Calendars)**: For top-level entities, "linking" is an explicit action. Dragging a shared item from the panel to the main board adds the item's ID to the current user's corresponding `linked...Ids` array, bringing it into their management scope without making them a member or owner.
 - **Visual Cues**:
   - **Owned by you & Shared**: An item created by the current user/team that has been explicitly shared with others is marked with a `change_circle` icon overlay. This indicates it is the "source of truth." **The color of this icon badge matches the owner's primary color.**
-  - **Linked (from another user) / Internally Linked (badges)**: An item created elsewhere and being used in the current context is marked with a `link` icon overlay. **The color of this icon badge matches the source's color.**
+  - **Linked (from another user)**: An item created elsewhere and being used in the current context is marked with a `link` icon overlay. **The color of this icon badge matches the original owner's primary color.**
   - **Owned and Not Shared/Linked**: An item that is owned and exists only in its original location does not get an icon.
 - **Behavior**:
   - **Full Context**: When an item is linked, it should display all of its original properties (name, icon, color, description, etc.) to give the linking user full context.
@@ -319,5 +319,3 @@ This is the single source of truth for indicating user interaction state across 
       - **Ownership Status**: `absolute -top-0 -right-3`.
     - **Icon Size (Ownership Status)**: The `GoogleSymbol` inside an ownership status badge should have its size set via `style={{fontSize: '16px'}}`.
 -   **Badges in Compact View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
-
-```
