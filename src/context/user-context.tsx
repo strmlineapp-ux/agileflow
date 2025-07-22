@@ -3,7 +3,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
-import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type BadgeCollection, type BadgeCollectionOwner } from '@/types';
+import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type BadgeCollection, type BadgeOwner } from '@/types';
 import { mockUsers as initialUsers, mockCalendars as initialCalendars, mockEvents as initialEvents, mockLocations as initialLocations, mockTeams, mockAppSettings, allMockBadgeCollections, videoProdBadges, liveEventsBadges, pScaleBadges, starRatingBadges, effortBadges } from '@/lib/mock-data';
 import { GoogleAuthProvider, getAuth } from 'firebase/auth';
 import { getFirestore } from "firebase/firestore";
@@ -75,7 +75,7 @@ interface UserDataContextType {
   updateBadgeCollection: (collectionId: string, data: Partial<BadgeCollection>) => void;
   deleteBadgeCollection: (collectionId: string) => void;
   addBadge: (collectionId: string, sourceBadge?: Badge) => void;
-  updateBadge: (badgeData: Partial<Badge>) => void;
+  updateBadge: (badgeId: string, badgeData: Partial<Badge>) => Promise<void>;
   deleteBadge: (badgeId: string) => void;
   reorderBadges: (collectionId: string, badgeIds: string[]) => void;
   predefinedColors: string[];
@@ -133,7 +133,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             badgesMap.set(badge.id, badge);
         }
     });
-    return Array.from(badgesMap.values());
+    return Array.from(badgesMap.values()).filter(Boolean); // Ensure no undefined values
   });
 
   const [allBadgeCollections, setAllBadgeCollections] = useState<BadgeCollection[]>(allMockBadgeCollections);
@@ -327,7 +327,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const newCollectionId = crypto.randomUUID();
     let newBadges: Badge[] = [];
     let newCollection: BadgeCollection;
-    const ownerContext: BadgeCollectionOwner = { type: 'user', id: owner.userId };
+    const ownerContext: BadgeOwner = { type: 'user', id: owner.userId };
 
     if (sourceCollection) {
         newBadges = sourceCollection.badgeIds.map(bId => {
@@ -363,7 +363,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             owner: ownerContext, 
             icon: 'category', 
             color: '#64748B', 
-            viewMode: 'assorted', 
+            viewMode: 'compact', 
             badgeIds: [newBadgeId], 
             applications: [], 
             description: '', 
@@ -444,8 +444,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     );
   }, [allBadgeCollections]);
 
-  const updateBadge = useCallback((badgeData: Partial<Badge>) => {
-    setAllBadges(current => current.map(b => b.id === badgeData.id ? { ...b, ...badgeData } : b));
+  const updateBadge = useCallback(async (badgeId: string, badgeData: Partial<Badge>) => {
+    await simulateApi();
+    setAllBadges(current => current.map(b => b.id === badgeId ? { ...b, ...badgeData } : b));
   }, []);
 
   const deleteBadge = useCallback((badgeId: string) => {
