@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -152,7 +153,7 @@ function BadgeDisplayItem({
     }, [iconSearch]);
     
     const colorPickerContent = (
-        <PopoverContent className="w-auto p-4">
+        <PopoverContent className="w-auto p-4" onPointerDown={(e) => e.stopPropagation()}>
             <div className="space-y-4">
                 <HexColorPicker color={color} onChange={setColor} className="!w-full" />
                 <div className="flex items-center gap-2">
@@ -179,7 +180,7 @@ function BadgeDisplayItem({
     );
 
     const iconPickerContent = (
-         <PopoverContent className="w-80 p-0">
+         <PopoverContent className="w-80 p-0" onPointerDown={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-1 p-2 border-b">
                 <CompactSearchInput
                     searchTerm={iconSearch}
@@ -213,7 +214,7 @@ function BadgeDisplayItem({
     );
         
     const nameEditorElement = (
-         <div onClick={() => { if(isOwner) setEditingBadgeState({ badgeId: badge.id, field: 'name' })}}>
+         <div onClick={() => { if(isOwner) setEditingBadgeState({ badgeId: badge.id, field: 'name' })}} onPointerDown={(e) => e.stopPropagation()}>
             {isEditingName && isOwner ? (
                 <Input
                     ref={nameInputRef}
@@ -234,7 +235,7 @@ function BadgeDisplayItem({
     );
 
      const descriptionEditorElement = (
-         <div onClick={() => { if(isOwner) setEditingBadgeState({ badgeId: badge.id, field: 'description' })}}>
+         <div onClick={() => { if(isOwner) setEditingBadgeState({ badgeId: badge.id, field: 'description' })}} onPointerDown={(e) => e.stopPropagation()}>
             {isEditingDescription && isOwner ? (
                 <Textarea 
                     ref={descriptionTextareaRef} 
@@ -260,7 +261,7 @@ function BadgeDisplayItem({
                     <TooltipProvider>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                        <PopoverTrigger asChild disabled={!isOwner}>
+                        <PopoverTrigger asChild disabled={!isOwner} onPointerDown={(e) => e.stopPropagation()}>
                             <Button variant="ghost" className="h-10 w-12 flex items-center justify-center p-0">
                                 <GoogleSymbol name={badge.icon} weight={100} grade={-25} opticalSize={20} style={{ fontSize: '36px', color: badge.color }} />
                             </Button>
@@ -273,7 +274,7 @@ function BadgeDisplayItem({
                 </Popover>
                 {!isViewer && (
                     <Popover open={isColorPopoverOpen} onOpenChange={(isOpen) => setEditingBadgeState({ badgeId: isOpen ? badge.id : null, field: isOpen ? 'color' : null })}>
-                        <TooltipProvider><Tooltip><TooltipTrigger asChild><PopoverTrigger asChild disabled={!isOwner}><button className={cn("absolute -bottom-1 -right-3 h-4 w-4 rounded-full border-0", isOwner && "cursor-pointer")} style={{ backgroundColor: badge.color }} aria-label="Change badge color" /></PopoverTrigger></TooltipTrigger><TooltipContent><p>Change Color</p></TooltipContent></Tooltip></TooltipProvider>
+                        <TooltipProvider><Tooltip><TooltipTrigger asChild><PopoverTrigger asChild disabled={!isOwner} onPointerDown={(e) => e.stopPropagation()}><button className={cn("absolute -bottom-1 -right-3 h-4 w-4 rounded-full border-0", isOwner && "cursor-pointer")} style={{ backgroundColor: badge.color }} aria-label="Change badge color" /></PopoverTrigger></TooltipTrigger><TooltipContent><p>Change Color</p></TooltipContent></Tooltip></TooltipProvider>
                         {colorPickerContent}
                     </Popover>
                 )}
@@ -308,7 +309,7 @@ function BadgeDisplayItem({
             >
                 <div className="relative">
                     <Popover open={isIconPopoverOpen} onOpenChange={(isOpen) => setEditingBadgeState({ badgeId: isOpen ? badge.id : null, field: isOpen ? 'icon' : null })}>
-                        <PopoverTrigger asChild disabled={!isOwner}>
+                        <PopoverTrigger asChild disabled={!isOwner} onPointerDown={(e) => e.stopPropagation()}>
                              <Button
                                 variant="ghost"
                                 className="h-auto p-0 hover:bg-transparent"
@@ -321,7 +322,7 @@ function BadgeDisplayItem({
                     </Popover>
                      {!isViewer && (
                         <Popover open={isColorPopoverOpen} onOpenChange={(isOpen) => setEditingBadgeState({ badgeId: isOpen ? badge.id : null, field: isOpen ? 'color' : null })}>
-                            <PopoverTrigger asChild disabled={!isOwner}>
+                            <PopoverTrigger asChild disabled={!isOwner} onPointerDown={(e) => e.stopPropagation()}>
                                 <button
                                     className={cn("absolute -bottom-1 -right-3 h-4 w-4 rounded-full border-0", isOwner && "cursor-pointer")}
                                     style={{ backgroundColor: badge.color }}
@@ -633,7 +634,7 @@ function BadgeCollectionCard({
                                     <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                        <PopoverTrigger asChild disabled={!isOwner}>
+                                        <PopoverTrigger asChild disabled={!isOwner} onPointerDown={(e) => e.stopPropagation()}>
                                             <Button variant="ghost" className="h-10 w-12 flex items-center justify-center p-0">
                                             <GoogleSymbol name={collection.icon} weight={100} grade={-25} opticalSize={20} style={{ fontSize: '36px' }} />
                                             </Button>
@@ -642,7 +643,7 @@ function BadgeCollectionCard({
                                         <TooltipContent><p>Change Icon</p></TooltipContent>
                                     </Tooltip>
                                     </TooltipProvider>
-                                    <PopoverContent className="w-80 p-0">
+                                    <PopoverContent className="w-80 p-0" onPointerDown={(e) => e.stopPropagation()}>
                                     <div className="flex items-center gap-1 p-2 border-b">
                                         <CompactSearchInput
                                         searchTerm={iconSearch}
@@ -677,8 +678,8 @@ function BadgeCollectionCard({
                                 {!isViewer && (
                                     <>
                                         <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                                            <TooltipProvider><Tooltip><TooltipTrigger asChild><PopoverTrigger asChild disabled={!isOwner}><button className={cn("absolute -bottom-1 -right-3 h-4 w-4 rounded-full border-0", !isOwner ? "cursor-not-allowed" : "cursor-pointer")} style={{ backgroundColor: collection.color }} /></PopoverTrigger></TooltipTrigger><TooltipContent><p>Change Color</p></TooltipContent></Tooltip></TooltipProvider>
-                                            <PopoverContent className="w-auto p-4">
+                                            <TooltipProvider><Tooltip><TooltipTrigger asChild><PopoverTrigger asChild disabled={!isOwner} onPointerDown={(e) => e.stopPropagation()}><button className={cn("absolute -bottom-1 -right-3 h-4 w-4 rounded-full border-0", !isOwner ? "cursor-not-allowed" : "cursor-pointer")} style={{ backgroundColor: collection.color }} /></PopoverTrigger></TooltipTrigger><TooltipContent><p>Change Color</p></TooltipContent></Tooltip></TooltipProvider>
+                                            <PopoverContent className="w-auto p-4" onPointerDown={(e) => e.stopPropagation()}>
                                                 <div className="space-y-4">
                                                     <HexColorPicker color={color} onChange={setColor} className="!w-full" />
                                                     <div className="flex items-center gap-2">
@@ -700,7 +701,7 @@ function BadgeCollectionCard({
                                     </>
                                 )}
                             </div>
-                            <div className="flex-1 min-w-0">
+                            <div className="flex-1 min-w-0" onPointerDown={(e) => { if(isOwner) e.stopPropagation(); }}>
                                 <div className="flex items-center justify-between">
                                     {isEditing && isOwner ? (
                                         <Input
@@ -735,7 +736,7 @@ function BadgeCollectionCard({
                                     <TooltipProvider>
                                         <Tooltip>
                                             <TooltipTrigger asChild>
-                                                <PopoverTrigger asChild>
+                                                <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
                                                     <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
                                                         <GoogleSymbol name={viewModeOptions.find(o => o.mode === collection.viewMode)?.icon || 'view_module'} weight={100} />
                                                     </Button>
@@ -744,7 +745,7 @@ function BadgeCollectionCard({
                                             <TooltipContent>Change View Mode</TooltipContent>
                                         </Tooltip>
                                     </TooltipProvider>
-                                    <PopoverContent className="w-auto p-1 flex items-center gap-1">
+                                    <PopoverContent className="w-auto p-1 flex items-center gap-1" onPointerDown={(e) => e.stopPropagation()}>
                                         {viewModeOptions.map(({mode, icon, label}) => (
                                             <TooltipProvider key={mode}>
                                                 <Tooltip>
@@ -778,7 +779,7 @@ function BadgeCollectionCard({
              {showDetails && (
                 <>
                     <CardContent className="flex-grow pt-0 flex flex-col min-h-0">
-                        <div className="mb-2">
+                        <div className="mb-2" onPointerDown={(e) => { if(isOwner) e.stopPropagation(); }}>
                             {isEditing && isOwner ? (
                             <Textarea 
                                 ref={descriptionTextareaRef} 
