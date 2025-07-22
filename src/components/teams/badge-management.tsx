@@ -58,6 +58,7 @@ function BadgeDisplayItem({
     isEditingDescription,
     setIsEditingDescription,
     isCollectionEditing,
+    dragHandleProps,
 }: { 
     badge: Badge;
     viewMode: BadgeCollection['viewMode'];
@@ -73,6 +74,7 @@ function BadgeDisplayItem({
     isEditingDescription: boolean;
     setIsEditingDescription: (isEditing: boolean) => void;
     isCollectionEditing: boolean;
+    dragHandleProps?: any;
 }) {
     const { users } = useUser();
     const nameInputRef = useRef<HTMLInputElement>(null);
@@ -256,7 +258,7 @@ function BadgeDisplayItem({
     
     if (viewMode === 'detailed' || viewMode === 'list') {
       return (
-        <div className="flex items-start gap-4 p-2">
+        <div className="flex items-start gap-4 p-2" {...dragHandleProps}>
             <div className="relative">
                 <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                     <TooltipProvider>
@@ -302,7 +304,7 @@ function BadgeDisplayItem({
     
     // Compact View
     return (
-        <div className="p-1.5">
+        <div className="p-1.5" {...dragHandleProps}>
              <UiBadge
                 variant={'outline'}
                 style={{ color: badge.color, borderColor: badge.color }}
@@ -374,7 +376,7 @@ function SortableBadgeItem({ badge, collection, onDelete, ...props }: { badge: B
     return (
         <div ref={setNodeRef} style={style} className={cn(props.viewMode === 'detailed' && "p-1 basis-full md:basis-1/2 flex-grow-0 flex-shrink-0")}>
             <div className="group relative flex w-full">
-                <div {...attributes} {...listeners} className="flex-grow">
+                <div className="flex-grow">
                     <BadgeDisplayItem 
                         badge={badge} 
                         isEditingName={isEditingName} 
@@ -382,6 +384,7 @@ function SortableBadgeItem({ badge, collection, onDelete, ...props }: { badge: B
                         isEditingDescription={isEditingDescription}
                         setIsEditingDescription={setIsEditingDescription}
                         onDelete={onDelete}
+                        dragHandleProps={{...attributes, ...listeners}}
                         {...props} 
                     />
                 </div>
@@ -721,7 +724,7 @@ function BadgeCollectionCard({
                                     </>
                                 )}
                             </div>
-                             <div onPointerDown={(e) => { e.stopPropagation(); }}>
+                             <div className="flex-1 min-w-0" onPointerDown={(e) => { if(isOwner) e.stopPropagation(); }}>
                                 {isEditingName ? (
                                     <Input
                                         ref={nameInputRef}
@@ -796,7 +799,7 @@ function BadgeCollectionCard({
              {showDetails && (
                 <>
                     <CardContent className="flex-grow pt-0 flex flex-col min-h-0">
-                         <div onPointerDown={(e) => { e.stopPropagation(); }}>
+                         <div className="min-h-[20px]" onPointerDown={(e) => { if(isOwner) e.stopPropagation(); }}>
                             {isEditingDescription ? (
                             <Textarea 
                                 ref={descriptionTextareaRef} 
@@ -904,7 +907,7 @@ function SortableCollectionCard({ collection, ...props }: { collection: BadgeCol
     };
     
     return (
-        <div ref={setNodeRef} style={style}>
+        <div ref={setNodeRef} style={style} {...props.dragHandleProps}>
             <BadgeCollectionCard 
                 {...props}
                 collection={collection} 
@@ -1187,7 +1190,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                                 <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
                                              </Button>
                                         </TooltipTrigger>
-                                        <TooltipContent>Add New Badge Collection</TooltipContent>
+                                        <TooltipContent><p>Add New Badge Collection</p></TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
                             </div>
