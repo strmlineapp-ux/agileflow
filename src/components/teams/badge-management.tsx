@@ -375,7 +375,7 @@ function SortableBadgeItem({ badge, collection, onDelete, ...props }: { badge: B
 
     return (
         <div ref={setNodeRef} style={style} className={cn(props.viewMode === 'detailed' && "p-1 basis-full md:basis-1/2 flex-grow-0 flex-shrink-0")}>
-            <div className="group relative flex w-full">
+            <div className="group relative flex w-full" {...listeners} {...attributes}>
                 <div className="flex-grow">
                     <BadgeDisplayItem 
                         badge={badge} 
@@ -384,7 +384,6 @@ function SortableBadgeItem({ badge, collection, onDelete, ...props }: { badge: B
                         isEditingDescription={isEditingDescription}
                         setIsEditingDescription={setIsEditingDescription}
                         onDelete={onDelete}
-                        dragHandleProps={{...attributes, ...listeners}}
                         {...props} 
                     />
                 </div>
@@ -517,31 +516,29 @@ function BadgeCollectionCard({
     }, [collection, onUpdateCollection, setIsEditingDescription]);
     
     useEffect(() => {
-        if (isEditingName) {
-            const handleOutsideClick = (event: MouseEvent) => {
-                if (nameInputRef.current && !nameInputRef.current.contains(event.target as Node)) {
-                    handleSaveName();
-                }
-            };
-            document.addEventListener('mousedown', handleOutsideClick);
-            nameInputRef.current?.focus();
-            nameInputRef.current?.select();
-            return () => document.removeEventListener('mousedown', handleOutsideClick);
-        }
+        if (!isEditingName) return;
+        const handleOutsideClick = (event: MouseEvent) => {
+            if (nameInputRef.current && !nameInputRef.current.contains(event.target as Node)) {
+                handleSaveName();
+            }
+        };
+        document.addEventListener('mousedown', handleOutsideClick);
+        nameInputRef.current?.focus();
+        nameInputRef.current?.select();
+        return () => document.removeEventListener('mousedown', handleOutsideClick);
     }, [isEditingName, handleSaveName]);
 
     useEffect(() => {
-        if (isEditingDescription) {
-            const handleOutsideClick = (event: MouseEvent) => {
-                if (descriptionTextareaRef.current && !descriptionTextareaRef.current.contains(event.target as Node)) {
-                    handleSaveDescription();
-                }
-            };
-            document.addEventListener('mousedown', handleOutsideClick);
-            descriptionTextareaRef.current?.focus();
-            descriptionTextareaRef.current?.select();
-            return () => document.removeEventListener('mousedown', handleOutsideClick);
-        }
+        if (!isEditingDescription) return;
+        const handleOutsideClick = (event: MouseEvent) => {
+            if (descriptionTextareaRef.current && !descriptionTextareaRef.current.contains(event.target as Node)) {
+                handleSaveDescription();
+            }
+        };
+        document.addEventListener('mousedown', handleOutsideClick);
+        descriptionTextareaRef.current?.focus();
+        descriptionTextareaRef.current?.select();
+        return () => document.removeEventListener('mousedown', handleOutsideClick);
     }, [isEditingDescription, handleSaveDescription]);
 
     useEffect(() => {
@@ -762,7 +759,7 @@ function BadgeCollectionCard({
                                                     </Button>
                                                 </PopoverTrigger>
                                             </TooltipTrigger>
-                                            <TooltipContent>Change View Mode</TooltipContent>
+                                            <TooltipContent><p>Change View Mode</p></TooltipContent>
                                         </Tooltip>
                                     </TooltipProvider>
                                     <PopoverContent className="w-auto p-1 flex items-center gap-1" onPointerDown={(e) => e.stopPropagation()}>
@@ -892,13 +889,17 @@ function BadgeCollectionCard({
 }
 
 function SortableCollectionCard({ collection, ...props }: { collection: BadgeCollection, [key: string]: any }) {
-    const [isEditingName, setIsEditingName] = useState(false);
-    const [isEditingDescription, setIsEditingDescription] = useState(false);
-    
-    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({
         id: `collection::${collection.id}`,
         data: { type: 'collection', collection, isSharedPreview: props.isSharedPreview },
-        disabled: isEditingName || isEditingDescription,
+        disabled: props.isEditingName || props.isEditingDescription,
     });
 
     const style = {
@@ -907,15 +908,11 @@ function SortableCollectionCard({ collection, ...props }: { collection: BadgeCol
     };
     
     return (
-        <div ref={setNodeRef} style={style} {...props.dragHandleProps}>
+        <div ref={setNodeRef} style={style} {...listeners}>
             <BadgeCollectionCard 
                 {...props}
                 collection={collection} 
-                dragHandleProps={{...attributes, ...listeners}}
-                isEditingName={isEditingName}
-                setIsEditingName={setIsEditingName}
-                isEditingDescription={isEditingDescription}
-                setIsEditingDescription={setIsEditingDescription}
+                dragHandleProps={{}}
             />
         </div>
     );
@@ -978,6 +975,8 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
     const sharedSearchInputRef = useRef<HTMLInputElement>(null);
 
     const [activeDragItem, setActiveDragItem] = useState<any>(null);
+    const [editingCollectionName, setEditingCollectionName] = useState(false);
+    const [editingCollectionDescription, setEditingCollectionDescription] = useState(false);
 
     const contextTeam = team;
     const isTeamContext = isTeamSpecificPage && !!contextTeam;
@@ -1237,6 +1236,20 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                                             isViewer={isViewer}
                                                             predefinedColors={predefinedColors}
                                                             allCollections={allBadgeCollections}
+                                                            isEditingName={editingCollectionName && activeDragItem?.collection?.id === collection.id}
+                                                            setIsEditingName={(isEditing: boolean) => {
+                                                                if (isEditing) {
+                                                                    setActiveDragItem({type: 'collection', collection});
+                                                                }
+                                                                setEditingCollectionName(isEditing);
+                                                            }}
+                                                            isEditingDescription={editingCollectionDescription && activeDragItem?.collection?.id === collection.id}
+                                                            setIsEditingDescription={(isEditing: boolean) => {
+                                                                if (isEditing) {
+                                                                    setActiveDragItem({type: 'collection', collection});
+                                                                }
+                                                                setEditingCollectionDescription(isEditing);
+                                                            }}
                                                         />
                                                     </div>
                                                 </div>
@@ -1281,6 +1294,20 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                                             isViewer={isViewer}
                                                             predefinedColors={predefinedColors}
                                                             allCollections={allBadgeCollections}
+                                                            isEditingName={editingCollectionName && activeDragItem?.collection?.id === collection.id}
+                                                            setIsEditingName={(isEditing: boolean) => {
+                                                                if (isEditing) {
+                                                                    setActiveDragItem({type: 'collection', collection});
+                                                                }
+                                                                setEditingCollectionName(isEditing);
+                                                            }}
+                                                             isEditingDescription={editingCollectionDescription && activeDragItem?.collection?.id === collection.id}
+                                                            setIsEditingDescription={(isEditing: boolean) => {
+                                                                if (isEditing) {
+                                                                    setActiveDragItem({type: 'collection', collection});
+                                                                }
+                                                                setEditingCollectionDescription(isEditing);
+                                                            }}
                                                         />
                                                     ))}
                                                     {sharedCollections.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">No collections are being shared by other users.</p>}
