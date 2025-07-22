@@ -75,7 +75,6 @@ export type BadgeOwner = { type: 'user'; id: string };
 export interface Badge {
   id: string;
   owner: BadgeOwner;
-  ownerCollectionId: string;
   name: string;
   icon: string;
   color: string;
@@ -88,11 +87,9 @@ export interface Badge {
 
 export type BadgeApplication = 'team members' | 'events' | 'tasks' | 'badges';
 
-export type BadgeCollectionOwner = { type: 'user'; id: string };
-
 export interface BadgeCollection {
   id: string;
-  owner: BadgeCollectionOwner;
+  owner: BadgeOwner;
   name: string;
   icon: string;
   color: string;
@@ -198,6 +195,7 @@ export interface Notification {
   user: Pick<User, 'userId' | 'displayName' | 'avatarUrl'>; // The user who *caused* the notification
   content: string;
   time: Date;
+  read: boolean;
   data?: { // payload for access_requests
     email: string;
     displayName: string;

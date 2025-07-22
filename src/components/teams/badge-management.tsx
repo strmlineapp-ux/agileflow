@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -8,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { type Team, type Badge, type BadgeCollection, type User, type BadgeApplication, type AppPage, type BadgeCollectionOwner } from '@/types';
+import { type Team, type Badge, type BadgeCollection, type User, type BadgeApplication, type AppPage, type BadgeOwner } from '@/types';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { ScrollArea } from '../ui/scroll-area';
@@ -145,9 +144,7 @@ function BadgeDisplayItem({
         if (e.key === 'Escape') { e.preventDefault(); handleSaveDescription(); }
     };
     
-    const originalCollection = allCollections.find(c => c.id === badge.ownerCollectionId);
-    
-    const ownerUser = badge.owner ? users.find(u => u.userId === badge.owner.id) : null;
+    const ownerUser = users.find(u => u.userId === badge.owner.id);
 
     const filteredIcons = useMemo(() => {
         if (!iconSearch) return googleSymbolNames;
@@ -353,7 +350,7 @@ function BadgeDisplayItem({
     );
 }
 
-function SortableBadgeItem({ badge, collection, onDelete, ...props }: { badge: Badge, collection: BadgeCollection, onDelete: (badgeId: string) => void, [key: string]: any }) {
+function SortableBadgeItem({ badge, collection, onDelete, ...props }: { badge: Badge, collection: BadgeCollection, onDelete: (badgeId: string, collectionId: string) => void, [key: string]: any }) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: `badge::${badge.id}::${collection.id}`,
         data: { type: 'badge', badge, collectionId: collection.id, isSharedPreview: props.isSharedPreview },
@@ -367,14 +364,13 @@ function SortableBadgeItem({ badge, collection, onDelete, ...props }: { badge: B
         zIndex: isDragging ? 10 : 'auto',
     };
     
-    // Check if the user can manage the collection this badge is in.
     const canManage = !props.isViewer;
 
     return (
         <div ref={setNodeRef} style={style} className={cn(props.viewMode === 'detailed' && "p-1 basis-full md:basis-1/2 flex-grow-0 flex-shrink-0")}>
             <div className="group relative flex w-full">
                 <div {...attributes} {...listeners} className="flex-grow">
-                    <BadgeDisplayItem badge={badge} onDelete={onDelete} {...props} />
+                    <BadgeDisplayItem badge={badge} {...props} />
                 </div>
                 {!props.isSharedPreview && canManage && (
                     <div className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
@@ -385,7 +381,7 @@ function SortableBadgeItem({ badge, collection, onDelete, ...props }: { badge: B
                                         variant="ghost"
                                         size="icon"
                                         className="h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent"
-                                        onPointerDown={(e) => { e.stopPropagation(); onDelete(badge.id); }}
+                                        onPointerDown={(e) => { e.stopPropagation(); onDelete(badge.id, collection.id); }}
                                     >
                                         <GoogleSymbol name="cancel" className="text-lg" weight={100} />
                                     </Button>
@@ -443,7 +439,7 @@ type BadgeCollectionCardProps = {
     onDeleteCollection: (collection: BadgeCollection) => void;
     onAddBadge: (collectionId: string, sourceBadge?: Badge) => void;
     onUpdateBadge: (badgeId: string, badgeData: Partial<Badge>) => void;
-    onDeleteBadge: (badgeId: string) => void;
+    onDeleteBadge: (badgeId: string, collectionId: string) => void;
     dragHandleProps?: any;
     isSharedPreview?: boolean;
     contextTeam?: Team;
@@ -549,7 +545,7 @@ function BadgeCollectionCard({
     
     const collectionBadges = useMemo(() => {
         return collection.badgeIds
-            .map(id => allBadges.find(b => b && b.id === id))
+            .map(id => allBadges.find(b => b.id === id))
             .filter((b): b is Badge => !!b);
     }, [collection.badgeIds, allBadges]);
     
@@ -794,7 +790,6 @@ function BadgeCollectionCard({
                         </div>
                         <DroppableCollectionContent collection={collection}>
                             {collectionBadges.map((badge) => {
-                                if (!badge) return null; // Safeguard against undefined badges
                                 const badgeIsOwned = badge.owner.id === viewAsUser.userId;
                                 return (
                                 <SortableBadgeItem
@@ -803,7 +798,7 @@ function BadgeCollectionCard({
                                     collection={collection}
                                     viewMode={collection.viewMode}
                                     onUpdateBadge={onUpdateBadge}
-                                    onDelete={() => onDeleteBadge(badge.id)}
+                                    onDelete={onDeleteBadge}
                                     isViewer={isViewer}
                                     predefinedColors={predefinedColors}
                                     isOwner={badgeIsOwned}
@@ -908,33 +903,19 @@ function TeamManagementDropZone({id, type, children, className}: {id: string, ty
     )
 }
 
-function DuplicateZone({ onAdd, disabled }: { onAdd: () => void; disabled?: boolean }) {
-  const { isOver, setNodeRef } = useDroppable({ id: 'duplicate-collection-zone' });
+function AddBadgeZone({ onDrop }: { onDrop: (sourceBadge: Badge) => void; }) {
+  const { setNodeRef, isOver } = useDroppable({ id: 'add-badge-zone' });
   
   return (
     <div
       ref={setNodeRef}
-      className={cn(
-        "rounded-full transition-all p-0.5",
-        isOver && "ring-1 ring-border ring-inset"
-      )}
+      className={cn("flex-1 p-4 border-2 border-dashed rounded-lg text-center text-muted-foreground", isOver && "ring-2 ring-primary border-solid bg-primary/10")}
     >
-      <TooltipProvider>
-          <Tooltip>
-              <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full p-0" onClick={onAdd} disabled={disabled}>
-                    <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
-                    <span className="sr-only">New Collection or Drop to Duplicate</span>
-                  </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                  <p>{isOver ? 'Drop to Duplicate' : 'Add New Collection'}</p>
-              </TooltipContent>
-          </Tooltip>
-      </TooltipProvider>
+        {isOver ? 'Drop badge to add' : 'Drop a badge here to add it to this collection'}
     </div>
   );
 }
+
 
 export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }: { team?: Team, tab: AppTab, page: AppPage, isTeamSpecificPage?: boolean }) {
     const { 
@@ -947,7 +928,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         updateBadgeCollection,
         deleteBadgeCollection,
         addBadge,
-        updateBadge: contextUpdateBadge,
+        updateBadge,
         deleteBadge,
         reorderBadges,
         updateTeam,
@@ -1020,12 +1001,6 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         }
     }, [isSharedPanelOpen]);
 
-    const handleUpdateBadge = useCallback((badgeId: string, badgeData: Partial<Badge>) => {
-        const badgeToUpdate = allBadges.find(b => b.id === badgeId);
-        if (!badgeToUpdate) return;
-        contextUpdateBadge({ ...badgeToUpdate, ...badgeData });
-    }, [allBadges, contextUpdateBadge]);
-
 
     const handleSaveTitle = () => {
         const newName = titleInputRef.current?.value.trim();
@@ -1049,8 +1024,8 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
 
     const handleAddCollection = useCallback((sourceCollection?: BadgeCollection) => {
         if (!canCreateCollection) return;
-        addBadgeCollection(viewAsUser, sourceCollection, contextTeam);
-    }, [addBadgeCollection, viewAsUser, contextTeam, canCreateCollection]);
+        addBadgeCollection(viewAsUser, sourceCollection);
+    }, [addBadgeCollection, viewAsUser, canCreateCollection]);
     
     const handleDeleteCollection = (collection: BadgeCollection) => {
         if (isViewer) return;
@@ -1072,31 +1047,25 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         if (badgeToDelete) setBadgeToDelete(null);
     }, [allBadges, deleteBadge, toast]);
 
-    const handleDeleteBadge = useCallback((badgeId: string) => {
+    const handleDeleteBadge = useCallback((badgeId: string, collectionId: string) => {
       const badge = allBadges.find(b => b.id === badgeId);
       if (!badge) return;
-
       const isOwner = badge.owner.id === viewAsUser.userId;
 
       if (!isOwner) {
-          // It's a linked badge, find which collection it's in in the current context
-          const currentCollectionContext = collectionsToDisplay.find(c => c.badgeIds.includes(badgeId));
-          if (currentCollectionContext) {
-            const newBadgeIds = currentCollectionContext.badgeIds.filter(id => id !== badgeId);
-            updateBadgeCollection(currentCollectionContext.id, { badgeIds: newBadgeIds });
-            toast({ title: 'Badge Unlinked' });
-          }
+          // Unlink from this collection
+          updateBadgeCollection(collectionId, { badgeIds: allBadgeCollections.find(c => c.id === collectionId)!.badgeIds.filter(id => id !== badgeId) });
+          toast({ title: 'Badge Unlinked' });
           return;
       }
       
       const linkCount = allBadgeCollections.reduce((acc, c) => acc + (c.badgeIds.includes(badgeId) ? 1 : 0), 0);
-
       if (linkCount > 1) {
-          setBadgeToDelete({ collectionId: badge.ownerCollectionId, badgeId });
+          setBadgeToDelete({ collectionId: collectionId, badgeId });
       } else {
           confirmPermanentDelete(badgeId);
       }
-    }, [allBadgeCollections, allBadges, confirmPermanentDelete, viewAsUser, updateBadgeCollection, toast, collectionsToDisplay]);
+    }, [allBadges, viewAsUser.userId, allBadgeCollections, updateBadgeCollection, confirmPermanentDelete, toast]);
     
     const onDragEnd = (event: DragEndEvent) => {
         setActiveDragItem(null);
@@ -1104,48 +1073,39 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
         if (!over) return;
 
         const activeType = active.data.current?.type;
-        
-        if (over.id === 'duplicate-collection-zone' && activeType === 'collection') {
-            const sourceCollection = active.data.current?.collection as BadgeCollection;
-            handleAddCollection(sourceCollection);
-            return;
-        }
-
-        if (activeType === 'collection') {
-            // handleCollectionDragEnd(event);
-        } else if (activeType === 'badge') {
-            handleBadgeDragEnd(event);
-        }
-    };
-    
-    const handleBadgeDragEnd = (event: DragEndEvent) => {
-        const { active, over } = event;
-        if (!over) return;
-    
-        const activeCollectionId = active.data.current?.collectionId;
+        const overType = over.data.current?.type;
+        const activeData = active.data.current;
         const overData = over.data.current;
-        const overCollectionId = overData?.type === 'badge' ? overData.collectionId : (overData?.type === 'collection' ? over.id : null);
-          
-        const activeBadge = active.data.current?.badge as Badge;
-    
-        if (!activeBadge || !overCollectionId) return;
-    
-        if (activeCollectionId !== overCollectionId) {
-            const toCollection = allBadgeCollections.find(c => c.id === overCollectionId);
-            if(toCollection && !toCollection.badgeIds.includes(activeBadge.id)) {
-                const newToBadgeIds = [...toCollection.badgeIds, activeBadge.id];
-                updateBadgeCollection(toCollection.id, { badgeIds: newToBadgeIds });
-                toast({ title: "Badge Linked" });
+        
+        // Handle dragging a user card
+        if (activeType === 'collection') {
+            const sourceCollection = activeData?.collection;
+            if (over.id === 'duplicate-collection-zone') {
+                handleAddCollection(sourceCollection);
+                return;
             }
-        } else {
-            const collection = allBadgeCollections.find(c => c.id === activeCollectionId);
-            if (collection && collection.owner.id === viewAsUser.userId) {
-                const oldIndex = collection.badgeIds.indexOf(active.id.toString().split('::')[2]);
-                const newIndex = overData.type === 'badge' ? collection.badgeIds.indexOf(over.id.toString().split('::')[2]) : collection.badgeIds.length;
-                if (oldIndex > -1 && newIndex > -1) {
-                    const reordered = arrayMove(collection.badgeIds, oldIndex, newIndex);
-                    reorderBadges(collection.id, reordered);
+        } else if (activeType === 'badge') {
+            const activeBadge = activeData?.badge as Badge;
+            const overCollection = overData?.collection as BadgeCollection;
+            const sourceCollectionId = activeData?.collectionId;
+            const overCollectionId = overCollection?.id;
+            
+            if (overCollectionId && sourceCollectionId !== overCollectionId) {
+                // Moving badge to a different collection
+                updateBadgeCollection(sourceCollectionId, { badgeIds: allBadgeCollections.find(c => c.id === sourceCollectionId)!.badgeIds.filter(id => id !== activeBadge.id) });
+                updateBadgeCollection(overCollectionId, { badgeIds: [...overCollection.badgeIds, activeBadge.id] });
+            } else if (overCollectionId && sourceCollectionId === overCollectionId) {
+                // Reordering within the same collection
+                const oldIndex = overCollection.badgeIds.indexOf(activeBadge.id);
+                const newIndex = overData.type === 'badge' ? overCollection.badgeIds.indexOf(overData.badge.id) : overCollection.badgeIds.length;
+                if (oldIndex !== newIndex) {
+                    reorderBadges(overCollectionId, arrayMove(overCollection.badgeIds, oldIndex, newIndex));
                 }
+            } else if(over.id === `add-badge-zone::${sourceCollectionId}`){
+                 // Duplicating badge
+                const sourceBadge = activeData?.badge as Badge;
+                addBadge(sourceCollectionId, sourceBadge);
+                toast({title: "Badge Duplicated"});
             }
         }
     };
@@ -1196,7 +1156,10 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                         </Tooltip>
                                     </TooltipProvider>
                                 )}
-                                <DuplicateZone onAdd={() => handleAddCollection()} disabled={!canCreateCollection} />
+                                <Button variant="ghost" size="icon" className="rounded-full p-0" onClick={() => handleAddCollection()} disabled={!canCreateCollection}>
+                                    <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
+                                    <span className="sr-only">New Collection</span>
+                                </Button>
                             </div>
                             <div className="flex items-center gap-1">
                                 <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search collections..." autoFocus={false} />
@@ -1235,7 +1198,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                                             onUpdateCollection={updateBadgeCollection}
                                                             onDeleteCollection={handleDeleteCollection}
                                                             onAddBadge={addBadge}
-                                                            onUpdateBadge={handleUpdateBadge}
+                                                            onUpdateBadge={updateBadge}
                                                             onDeleteBadge={handleDeleteBadge}
                                                             contextTeam={team}
                                                             isViewer={isViewer}
@@ -1280,7 +1243,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                                             onUpdateCollection={updateBadgeCollection}
                                                             onDeleteCollection={handleDeleteCollection}
                                                             onAddBadge={addBadge}
-                                                            onUpdateBadge={handleUpdateBadge}
+                                                            onUpdateBadge={updateBadge}
                                                             onDeleteBadge={handleDeleteBadge}
                                                             isSharedPreview={true}
                                                             contextTeam={team}
