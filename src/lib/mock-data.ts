@@ -75,25 +75,25 @@ export const mockLocations: BookableLocation[] = [
 // Bernardo Resende (userId: '1') owns these
 const videoProdCollectionId = 'video-prod-collection';
 export const videoProdBadges: Badge[] = [
-    { id: 'badge-director', ownerCollectionId: videoProdCollectionId, name: 'Video Director', icon: 'videocam', color: '#FCD34D', description: 'Oversees the creative and technical aspects of a video shoot.' },
-    { id: 'badge-dop', ownerCollectionId: videoProdCollectionId, name: 'D.o.P.', icon: 'camera', color: '#FBBF24', description: 'Director of Photography' },
-    { id: 'badge-editor', ownerCollectionId: videoProdCollectionId, name: 'Editor', icon: 'edit_note', color: '#F59E0B' },
-    { id: 'badge-motion', ownerCollectionId: videoProdCollectionId, name: 'Motion Graphics', icon: 'animation', color: '#D97706' },
-    { id: 'badge-creative-producer', ownerCollectionId: videoProdCollectionId, name: 'Creative Producer', icon: 'person', color: '#FEF08A' },
-    { id: 'badge-script', ownerCollectionId: videoProdCollectionId, name: 'Script', icon: 'description', color: '#FDE68A' },
+    { id: 'badge-director', owner: { type: 'user', id: '1' }, ownerCollectionId: videoProdCollectionId, name: 'Video Director', icon: 'videocam', color: '#FCD34D', description: 'Oversees the creative and technical aspects of a video shoot.' },
+    { id: 'badge-dop', owner: { type: 'user', id: '1' }, ownerCollectionId: videoProdCollectionId, name: 'D.o.P.', icon: 'camera', color: '#FBBF24', description: 'Director of Photography' },
+    { id: 'badge-editor', owner: { type: 'user', id: '1' }, ownerCollectionId: videoProdCollectionId, name: 'Editor', icon: 'edit_note', color: '#F59E0B' },
+    { id: 'badge-motion', owner: { type: 'user', id: '1' }, ownerCollectionId: videoProdCollectionId, name: 'Motion Graphics', icon: 'animation', color: '#D97706' },
+    { id: 'badge-creative-producer', owner: { type: 'user', id: '1' }, ownerCollectionId: videoProdCollectionId, name: 'Creative Producer', icon: 'person', color: '#FEF08A' },
+    { id: 'badge-script', owner: { type: 'user', id: '1' }, ownerCollectionId: videoProdCollectionId, name: 'Script', icon: 'description', color: '#FDE68A' },
 ];
 
 // May-Kate Woods (userId: '3') owns these
 const liveEventsCollectionId = 'event-roles-collection';
 export const liveEventsBadges: Badge[] = [
-    { id: 'badge-td', ownerCollectionId: liveEventsCollectionId, name: 'TD', icon: 'engineering', color: '#60A5FA', description: 'Technical Director for live events.' },
-    { id: 'badge-1stad', ownerCollectionId: liveEventsCollectionId, name: '1st AD', icon: 'group', color: '#3B82F6' },
-    { id: 'badge-cameraop', ownerCollectionId: liveEventsCollectionId, name: 'Camera Op.', icon: 'photo_camera', color: '#2563EB', description: 'Camera Operator' },
-    { id: 'badge-audioeng', ownerCollectionId: liveEventsCollectionId, name: 'Audio Engineer', icon: 'mic', color: '#93C5FD' },
-    { id: 'badge-audiomix', ownerCollectionId: liveEventsCollectionId, name: 'Audio Mix', icon: 'equalizer', color: '#BFDBFE' },
-    { id: 'badge-contentop', ownerCollectionId: liveEventsCollectionId, name: 'Content Op', icon: 'article', color: '#1D4ED8' },
-    { id: 'badge-esop', ownerCollectionId: liveEventsCollectionId, name: 'ES Operator', icon: 'slideshow', color: '#3B82F6' },
-    { id: 'badge-eventeditor', ownerCollectionId: liveEventsCollectionId, name: 'Events Editor', icon: 'local_movies', color: '#60A5FA' },
+    { id: 'badge-td', owner: { type: 'user', id: '3' }, ownerCollectionId: liveEventsCollectionId, name: 'TD', icon: 'engineering', color: '#60A5FA', description: 'Technical Director for live events.' },
+    { id: 'badge-1stad', owner: { type: 'user', id: '3' }, ownerCollectionId: liveEventsCollectionId, name: '1st AD', icon: 'group', color: '#3B82F6' },
+    { id: 'badge-cameraop', owner: { type: 'user', id: '3' }, ownerCollectionId: liveEventsCollectionId, name: 'Camera Op.', icon: 'photo_camera', color: '#2563EB', description: 'Camera Operator' },
+    { id: 'badge-audioeng', owner: { type: 'user', id: '3' }, ownerCollectionId: liveEventsCollectionId, name: 'Audio Engineer', icon: 'mic', color: '#93C5FD' },
+    { id: 'badge-audiomix', owner: { type: 'user', id: '3' }, ownerCollectionId: liveEventsCollectionId, name: 'Audio Mix', icon: 'equalizer', color: '#BFDBFE' },
+    { id: 'badge-contentop', owner: { type: 'user', id: '3' }, ownerCollectionId: liveEventsCollectionId, name: 'Content Op', icon: 'article', color: '#1D4ED8' },
+    { id: 'badge-esop', owner: { type: 'user', id: '3' }, ownerCollectionId: liveEventsCollectionId, name: 'ES Operator', icon: 'slideshow', color: '#3B82F6' },
+    { id: 'badge-eventeditor', owner: { type: 'user', id: '3' }, ownerCollectionId: liveEventsCollectionId, name: 'Events Editor', icon: 'local_movies', color: '#60A5FA' },
 ];
 
 // Daniel Lazard (userId: '2') owns these
@@ -102,23 +102,23 @@ const starRatingCollectionId = 'star-rating-collection';
 const effortCollectionId = 'effort-collection';
 
 export const pScaleBadges: Badge[] = [
-    { id: 'p0', ownerCollectionId: pScaleCollectionId, name: 'P0', icon: 'priority_high', color: '#EF4444', description: 'Highest priority' },
-    { id: 'p1', ownerCollectionId: pScaleCollectionId, name: 'P1', icon: 'keyboard_arrow_up', color: '#F97316', description: 'High priority' },
-    { id: 'p2', ownerCollectionId: pScaleCollectionId, name: 'P2', icon: 'remove', color: '#FBBF24', description: 'Medium priority' },
-    { id: 'p3', ownerCollectionId: pScaleCollectionId, name: 'P3', icon: 'keyboard_arrow_down', color: '#22C55E', description: 'Low priority' },
-    { id: 'p4', ownerCollectionId: pScaleCollectionId, name: 'P4', icon: 'remove', color: '#64748B', description: 'Lowest priority' },
+    { id: 'p0', owner: { type: 'user', id: '2' }, ownerCollectionId: pScaleCollectionId, name: 'P0', icon: 'priority_high', color: '#EF4444', description: 'Highest priority' },
+    { id: 'p1', owner: { type: 'user', id: '2' }, ownerCollectionId: pScaleCollectionId, name: 'P1', icon: 'keyboard_arrow_up', color: '#F97316', description: 'High priority' },
+    { id: 'p2', owner: { type: 'user', id: '2' }, ownerCollectionId: pScaleCollectionId, name: 'P2', icon: 'remove', color: '#FBBF24', description: 'Medium priority' },
+    { id: 'p3', owner: { type: 'user', id: '2' }, ownerCollectionId: pScaleCollectionId, name: 'P3', icon: 'keyboard_arrow_down', color: '#22C55E', description: 'Low priority' },
+    { id: 'p4', owner: { type: 'user', id: '2' }, ownerCollectionId: pScaleCollectionId, name: 'P4', icon: 'remove', color: '#64748B', description: 'Lowest priority' },
 ];
 export const starRatingBadges: Badge[] = [
-    { id: 'star1', ownerCollectionId: starRatingCollectionId, name: '1 Star', icon: 'star', color: '#64748B' },
-    { id: 'star2', ownerCollectionId: starRatingCollectionId, name: '2 Stars', icon: 'star', color: '#64748B' },
-    { id: 'star3', ownerCollectionId: starRatingCollectionId, name: '3 Stars', icon: 'star', color: '#64748B' },
-    { id: 'star4', ownerCollectionId: starRatingCollectionId, name: '4 Stars', icon: 'star', color: '#64748B' },
-    { id: 'star5', ownerCollectionId: starRatingCollectionId, name: '5 Stars', icon: 'star', color: '#64748B' },
+    { id: 'star1', owner: { type: 'user', id: '2' }, ownerCollectionId: starRatingCollectionId, name: '1 Star', icon: 'star', color: '#64748B' },
+    { id: 'star2', owner: { type: 'user', id: '2' }, ownerCollectionId: starRatingCollectionId, name: '2 Stars', icon: 'star', color: '#64748B' },
+    { id: 'star3', owner: { type: 'user', id: '2' }, ownerCollectionId: starRatingCollectionId, name: '3 Stars', icon: 'star', color: '#64748B' },
+    { id: 'star4', owner: { type: 'user', id: '2' }, ownerCollectionId: starRatingCollectionId, name: '4 Stars', icon: 'star', color: '#64748B' },
+    { id: 'star5', owner: { type: 'user', id: '2' }, ownerCollectionId: starRatingCollectionId, name: '5 Stars', icon: 'star', color: '#64748B' },
 ];
 export const effortBadges: Badge[] = [
-    { id: 'task-high', ownerCollectionId: effortCollectionId, name: 'High', icon: 'keyboard_double_arrow_up', color: '#EF4444' },
-    { id: 'task-medium', ownerCollectionId: effortCollectionId, name: 'Medium', icon: 'drag_handle', color: '#FBBF24' },
-    { id: 'task-low', ownerCollectionId: effortCollectionId, name: 'Low', icon: 'keyboard_double_arrow_down', color: '#22C55E' },
+    { id: 'task-high', owner: { type: 'user', id: '2' }, ownerCollectionId: effortCollectionId, name: 'High', icon: 'keyboard_double_arrow_up', color: '#EF4444' },
+    { id: 'task-medium', owner: { type: 'user', id: '2' }, ownerCollectionId: effortCollectionId, name: 'Medium', icon: 'drag_handle', color: '#FBBF24' },
+    { id: 'task-low', owner: { type: 'user', id: '2' }, ownerCollectionId: effortCollectionId, name: 'Low', icon: 'keyboard_double_arrow_down', color: '#22C55E' },
 ];
 
 

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
@@ -128,7 +129,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [allBadges, setAllBadges] = useState<Badge[]>(() => {
     const badgesMap = new Map<string, Badge>();
     [...globalBadges, ...videoProdBadges, ...liveEventsBadges, ...pScaleBadges, ...starRatingBadges, ...effortBadges].forEach(badge => {
-        if (!badgesMap.has(badge.id)) {
+        if (badge && !badgesMap.has(badge.id)) {
             badgesMap.set(badge.id, badge);
         }
     });
@@ -333,7 +334,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             const originalBadge = allBadges.find(b => b.id === bId);
             if (!originalBadge) return null;
             const newBadgeId = crypto.randomUUID();
-            return { ...originalBadge, id: newBadgeId, ownerCollectionId: newCollectionId, name: `${originalBadge.name} (Copy)` };
+            return { ...originalBadge, id: newBadgeId, owner: ownerContext, ownerCollectionId: newCollectionId, name: `${originalBadge.name} (Copy)` };
         }).filter((b): b is Badge => b !== null);
         
         newCollection = { 
@@ -349,6 +350,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         const newBadgeId = crypto.randomUUID();
         const newBadge: Badge = { 
             id: newBadgeId, 
+            owner: ownerContext,
             ownerCollectionId: newCollectionId, 
             name: `New Badge`, 
             icon: 'star',
@@ -417,9 +419,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, [allBadgeCollections, allBadges]);
 
   const addBadge = useCallback((collectionId: string, sourceBadge?: Badge) => {
+    const collection = allBadgeCollections.find(c => c.id === collectionId);
+    if (!collection) return;
+
     const newBadgeId = crypto.randomUUID();
     const newBadge: Badge = { 
       id: newBadgeId, 
+      owner: collection.owner,
       ownerCollectionId: collectionId, 
       name: sourceBadge ? `${sourceBadge.name} (Copy)` : `New Badge`, 
       icon: sourceBadge?.icon || googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)], 
@@ -436,7 +442,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           return c;
       })
     );
-  }, []);
+  }, [allBadgeCollections]);
 
   const updateBadge = useCallback((badgeData: Partial<Badge>) => {
     setAllBadges(current => current.map(b => b.id === badgeData.id ? { ...b, ...badgeData } : b));

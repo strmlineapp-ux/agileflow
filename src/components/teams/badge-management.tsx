@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -146,7 +147,7 @@ function BadgeDisplayItem({
     
     const originalCollection = allCollections.find(c => c.id === badge.ownerCollectionId);
     
-    const ownerUser = users.find(u => u.userId === originalCollection?.owner.id);
+    const ownerUser = users.find(u => u.userId === badge.owner.id);
 
     const filteredIcons = useMemo(() => {
         if (!iconSearch) return googleSymbolNames;
@@ -547,7 +548,9 @@ function BadgeCollectionCard({
     };
     
     const collectionBadges = useMemo(() => {
-        return collection.badgeIds.map(id => allBadges.find(b => b.id === id)).filter((b): b is Badge => !!b);
+        return collection.badgeIds
+            .map(id => allBadges.find(b => b.id === id))
+            .filter((b): b is Badge => !!b);
     }, [collection.badgeIds, allBadges]);
     
     const APPLICATIONS: { key: BadgeApplication, icon: string, label: string }[] = [
@@ -791,7 +794,7 @@ function BadgeCollectionCard({
                         </div>
                         <DroppableCollectionContent collection={collection}>
                             {collectionBadges.map((badge) => {
-                                const badgeIsOwned = badge.ownerCollectionId === collection.id;
+                                const badgeIsOwned = badge.owner.id === viewAsUser.userId;
                                 return (
                                 <SortableBadgeItem
                                     key={badge.id}
@@ -1072,10 +1075,7 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
       const badge = allBadges.find(b => b.id === badgeId);
       if (!badge) return;
 
-      const badgeOwnerCollection = allBadgeCollections.find(c => c.id === badge.ownerCollectionId);
-      if (!badgeOwnerCollection) return;
-
-      const isOwner = badgeOwnerCollection.owner.id === viewAsUser.userId;
+      const isOwner = badge.owner.id === viewAsUser.userId;
 
       if (!isOwner) {
           // It's a linked badge, find which collection it's in in the current context

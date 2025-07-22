@@ -70,8 +70,11 @@ export interface EventTemplate {
   requestedRoles: string[]; // array of Badge names
 }
 
+export type BadgeOwner = { type: 'user'; id: string };
+
 export interface Badge {
   id: string;
+  owner: BadgeOwner;
   ownerCollectionId: string;
   name: string;
   icon: string;
