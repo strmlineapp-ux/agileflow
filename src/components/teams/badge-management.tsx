@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { type Team, type Badge, type BadgeCollection, type User, type BadgeApplication, type AppPage, type BadgeOwner } from '@/types';
+import { type Team, type Badge, type BadgeCollection, type User, type BadgeApplication, type AppPage } from '@/types';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { ScrollArea } from '../ui/scroll-area';
@@ -545,7 +545,7 @@ function BadgeCollectionCard({
     
     const collectionBadges = useMemo(() => {
         return collection.badgeIds
-            .map(id => allBadges.find(b => b.id === id))
+            .map(id => allBadges.find(b => b?.id === id))
             .filter((b): b is Badge => !!b);
     }, [collection.badgeIds, allBadges]);
     
@@ -732,11 +732,18 @@ function BadgeCollectionCard({
                             )}
                             {!isCollapsed && (
                                 <Popover open={isViewModePopoverOpen} onOpenChange={setIsViewModePopoverOpen}>
-                                    <PopoverTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-                                            <GoogleSymbol name={viewModeOptions.find(o => o.mode === collection.viewMode)?.icon || 'view_module'} weight={100} />
-                                        </Button>
-                                    </PopoverTrigger>
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <PopoverTrigger asChild>
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+                                                        <GoogleSymbol name={viewModeOptions.find(o => o.mode === collection.viewMode)?.icon || 'view_module'} weight={100} />
+                                                    </Button>
+                                                </PopoverTrigger>
+                                            </TooltipTrigger>
+                                            <TooltipContent>Change View Mode</TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
                                     <PopoverContent className="w-auto p-1 flex items-center gap-1">
                                         {viewModeOptions.map(({mode, icon, label}) => (
                                             <TooltipProvider key={mode}>
@@ -1156,10 +1163,16 @@ export function BadgeManagement({ team, tab, page, isTeamSpecificPage = false }:
                                         </Tooltip>
                                     </TooltipProvider>
                                 )}
-                                <Button variant="ghost" size="icon" className="rounded-full p-0" onClick={() => handleAddCollection()} disabled={!canCreateCollection}>
-                                    <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
-                                    <span className="sr-only">New Collection</span>
-                                </Button>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                             <Button variant="ghost" size="icon" className="rounded-full p-0" onClick={() => handleAddCollection()} disabled={!canCreateCollection}>
+                                                <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
+                                             </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>Add New Badge Collection</TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
                             </div>
                             <div className="flex items-center gap-1">
                                 <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search collections..." autoFocus={false} />
