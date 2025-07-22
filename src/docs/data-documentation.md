@@ -205,52 +205,49 @@ The `Team` entity is a functional unit that groups users together for collaborat
 
 ## Badge & Badge Collection Entities
 
-These entities represent the skills, roles, and priorities that can be assigned within the application. Their ownership and display model is central to how they are managed and shared.
+This section outlines the simplified and robust ownership model for badges and their collections. This model ensures clarity and prevents data conflicts.
 
-### Core Principle: User Ownership
+### Core Principle: Direct User Ownership
 
--   **`BadgeCollection` is User-Owned**: A `BadgeCollection` is **always** owned by a single `User`. It is not a sub-entity of a `Team`. This means that when a user creates a collection, it belongs to them, regardless of where in the UI they created it.
--   **`Badge` is Collection-Owned**: A `Badge` is always owned by its parent `BadgeCollection`. Its properties (name, icon, color) are managed by the owner of that collection.
+The system is built on a simple principle: **the user who creates an item is its owner.** Both `Badge` and `BadgeCollection` entities have an explicit `owner` field that links them directly to a `User`.
 
-### Dynamic Contextual Display on Team Pages
+-   **Permissions**: Only the user designated in an item's `owner` field can edit or delete that item. This rule applies universally.
+-   **Creating Items**: When a user creates a new `Badge` or `BadgeCollection`, its `owner` field is automatically set to that user's ID.
 
-Unlike other entities that are explicitly linked (like `linkedTeamIds`), Badge Collections are displayed dynamically on a team's "Badges" tab based on the team's structure. This provides flexibility and control without transferring ownership.
+### Linking vs. Owning
 
--   **If a team has `teamAdmins`**: The Badges tab will **only** show the Badge Collections owned by those specific admin users. This allows team leads to define the set of available badges for their team.
--   **If a team has no `teamAdmins`**: The Badges tab will show a consolidated list of **all** Badge Collections owned by **every member** of the team. This allows for a more collaborative, "flat" structure.
+This clear ownership model simplifies how "linking" works:
 
-### Activating Collections for a Team
+-   **Linked Badges**: A user can add any badge to a collection they own. If a badge's `owner` is different from the collection's `owner`, that badge is considered "linked." The collection owner can **unlink** the badge (remove it from their `badgeIds` array), but they **cannot** edit or delete the original badge.
+-   **Linked Collections**: When a user adds a shared `BadgeCollection` to their management view, they are creating a link. If the collection's `owner` is another user, the current user can **unlink** the collection (remove it from their view), but they **cannot** edit or delete the original collection.
 
-Once a collection is visible on a team's Badges tab, a team admin (or any member if there are no admins) can **activate** it for the team.
-- **Mechanism**: This is done by toggling the `check_circle` icon on the collection's card.
-- **Effect**: Activating a collection adds its ID to the `Team.activeBadgeCollections` array. This makes all the badges within that collection available for assignment to team members on the "Members" tab.
+This approach eliminates ambiguity. An item's edit and delete permissions are always determined by a direct check of its `owner` property.
 
 ### BadgeCollection Entity Data
 
 | Data Point | Description |
 | :--- | :--- |
 | `id: string` | A unique identifier for the collection. |
-| `owner: { type: 'user', id: string }` | **Crucial.** An object that defines which `User` owns the collection. Ownership dictates who can edit the collection's properties and the original badges within it. |
-| `isShared?: boolean` | **Internal.** If `true`, this collection and its badges will be visible to all other users/teams in the application for discovery and linking. |
-| `name: string` | The name of the collection (e.g., "Skills"). |
+| `owner: { type: 'user', id: string }` | **Crucial.** An object that defines which `User` owns the collection. Ownership dictates who can edit the collection's properties. |
+| `isShared?: boolean` | **Internal.** If `true`, this collection and its badges will be visible to all other users in the application for discovery and linking. |
+| `name: string` | The name of the collection (e.g., "Video Production Roles"). |
 | `icon: string` | The Google Symbol name for the collection's icon. |
 | `color: string` | The hex color for the collection's icon. |
-| `badgeIds: string[]` | An array of `badgeId`s belonging to this collection. |
+| `badgeIds: string[]` | An array of `badgeId`s belonging to this collection. This can include a mix of owned and linked badges. |
 | `applications?: BadgeApplication[]` | Defines where badges from this collection can be applied (e.g., 'Team Members', 'Events'). For linked collections, this is a local override; changing it does not affect the original shared collection. |
-| `viewMode: 'assorted' \| 'detailed' \| 'list'` | **Internal.** A UI preference for how to display the badges within this collection. |
+| `viewMode: 'compact' \| 'detailed' \| 'list'` | **Internal.** A UI preference for how to display the badges within this collection. |
 | `description?: string` | An optional description for the collection. |
 
 
 ### Badge Entity Data
 
-This represents a specific, functional role or skill. The single source of truth for a badge is the instance owned by its parent `BadgeCollection`.
+This represents a specific, functional role or skill. The single source of truth for a badge is the instance owned by its creator.
 
 | Data Point | Description |
 | :--- | :--- |
 | `id: string` | A unique identifier for the badge. |
-| `ownerCollectionId: string` | The `collectionId` of the badge's original, "source-of-truth" collection. |
+| `owner: { type: 'user', id: string }` | **Crucial.** An object that defines which `User` owns the badge. Ownership dictates who can edit the badge's properties. |
 | `name: string` | The display name for the badge (e.g., "Camera", "Audio"). |
 | `icon: string` | The Google Symbol name for the badge's icon. |
 | `color: string` | The hex color code for the badge's icon and outline. |
 | `description?: string` | An optional description shown in tooltips. |
-

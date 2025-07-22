@@ -70,26 +70,20 @@ export interface EventTemplate {
   requestedRoles: string[]; // array of Badge names
 }
 
-export type BadgeOwner = { type: 'user'; id: string };
-
 export interface Badge {
   id: string;
-  owner: BadgeOwner;
   name: string;
   icon: string;
   color: string;
   description?: string;
-  schedule?: {
-    startDate?: Date;
-    endDate?: Date;
-  };
+  owner: { type: 'user', id: string };
 }
 
 export type BadgeApplication = 'team members' | 'events' | 'tasks' | 'badges';
 
 export interface BadgeCollection {
   id: string;
-  owner: BadgeOwner;
+  owner: { type: 'user', id: string };
   name: string;
   icon: string;
   color: string;
