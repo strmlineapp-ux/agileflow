@@ -100,12 +100,12 @@ export const corePages: AppPage[] = [
 ];
 
 export const globalBadges: Badge[] = [
-  { id: 'p0', ownerCollectionId: 'global-priority', name: 'P0', icon: 'priority_high', color: '#EF4444', description: 'Highest priority' },
-  { id: 'p1', ownerCollectionId: 'global-priority', name: 'P1', icon: 'keyboard_arrow_up', color: '#F97316', description: 'High priority' },
-  { id: 'p2', ownerCollectionId: 'global-priority', name: 'P2', icon: 'remove', color: '#FBBF24', description: 'Medium priority' },
-  { id: 'p3', ownerCollectionId: 'global-priority', name: 'P3', icon: 'keyboard_arrow_down', color: '#22C55E', description: 'Low priority' },
-  { id: 'p4', ownerCollectionId: 'global-priority', name: 'P4', icon: 'remove', color: '#64748B', description: 'Lowest priority' },
-  { id: 'task-high', ownerCollectionId: 'task-priority', name: 'High', icon: 'keyboard_double_arrow_up', color: '#EF4444' },
-  { id: 'task-medium', ownerCollectionId: 'task-priority', name: 'Medium', icon: 'drag_handle', color: '#FBBF24' },
-  { id: 'task-low', ownerCollectionId: 'task-priority', name: 'Low', icon: 'keyboard_double_arrow_down', color: '#22C55E' },
+  { id: 'p0', owner: { type: 'user', id: 'system' }, ownerCollectionId: 'global-priority', name: 'P0', icon: 'priority_high', color: '#EF4444', description: 'Highest priority' },
+  { id: 'p1', owner: { type: 'user', id: 'system' }, ownerCollectionId: 'global-priority', name: 'P1', icon: 'keyboard_arrow_up', color: '#F97316', description: 'High priority' },
+  { id: 'p2', owner: { type: 'user', id: 'system' }, ownerCollectionId: 'global-priority', name: 'P2', icon: 'remove', color: '#FBBF24', description: 'Medium priority' },
+  { id: 'p3', owner: { type: 'user', id: 'system' }, ownerCollectionId: 'global-priority', name: 'P3', icon: 'keyboard_arrow_down', color: '#22C55E', description: 'Low priority' },
+  { id: 'p4', owner: { type: 'user', id: 'system' }, ownerCollectionId: 'global-priority', name: 'P4', icon: 'remove', color: '#64748B', description: 'Lowest priority' },
+  { id: 'task-high', owner: { type: 'user', id: 'system' }, ownerCollectionId: 'task-priority', name: 'High', icon: 'keyboard_double_arrow_up', color: '#EF4444' },
+  { id: 'task-medium', owner: { type: 'user', id: 'system' }, ownerCollectionId: 'task-priority', name: 'Medium', icon: 'drag_handle', color: '#FBBF24' },
+  { id: 'task-low', owner: { type: 'user', id: 'system' }, ownerCollectionId: 'task-priority', name: 'Low', icon: 'keyboard_double_arrow_down', color: '#22C55E' },
 ];

@@ -147,7 +147,7 @@ function BadgeDisplayItem({
     
     const originalCollection = allCollections.find(c => c.id === badge.ownerCollectionId);
     
-    const ownerUser = users.find(u => u.userId === badge.owner.id);
+    const ownerUser = badge.owner ? users.find(u => u.userId === badge.owner.id) : null;
 
     const filteredIcons = useMemo(() => {
         if (!iconSearch) return googleSymbolNames;
@@ -549,7 +549,7 @@ function BadgeCollectionCard({
     
     const collectionBadges = useMemo(() => {
         return collection.badgeIds
-            .map(id => allBadges.find(b => b.id === id))
+            .map(id => allBadges.find(b => b && b.id === id))
             .filter((b): b is Badge => !!b);
     }, [collection.badgeIds, allBadges]);
     
@@ -794,6 +794,7 @@ function BadgeCollectionCard({
                         </div>
                         <DroppableCollectionContent collection={collection}>
                             {collectionBadges.map((badge) => {
+                                if (!badge) return null; // Safeguard against undefined badges
                                 const badgeIsOwned = badge.owner.id === viewAsUser.userId;
                                 return (
                                 <SortableBadgeItem
