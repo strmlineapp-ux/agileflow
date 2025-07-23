@@ -68,7 +68,6 @@ The **Tasks** page helps you stay on top of your work.
 The **Notifications** page keeps you informed. This page has no visible header; the list content itself acts as the page.
 - **Unread Count**: A badge on the sidebar shows the number of unread notifications.
 - **Access Requests**: Administrators can approve or reject new user access requests directly from the notification list.
-- **Automatic Redirects**: If an action you take (like leaving a team) removes your access to the page you are currently viewing, the app will automatically redirect you to the Notifications page to prevent errors.
 
 ## 7. Settings & Preferences
 
@@ -81,6 +80,7 @@ Your user preferences appear in a compact, icon-driven row on your user card. Ho
 - **Set Default Calendar View**: Click the calendar icon to open a compact popover menu and select which calendar view you want to see when you log in.
 - **Set Time Format**: Click the clock icon to choose between 12-hour and 24-hour time display from a popover menu.
 - **Enable Easy Booking**: Click the toggle icon to turn on or off the ability to quickly create events by clicking on empty calendar slots. The current status (**On** or **Off**) is shown in the tooltip.
+- **Set Drag Modifier Key**: Click the `smart_button` icon to set a custom modifier key (`Shift`, `Alt`, `Control`, `Meta`) that must be held down to initiate a drag-and-drop action on complex items like badges. The tooltip for this icon will show the currently selected key.
 - **Link Google Calendar**: To connect your Google Calendar, hover over the status dot on your avatar in the sidebar user menu. If disconnected, a tooltip will prompt you to click to connect. A simulated Google sign-in will appear and, once complete, will enable features like creating Google Meet links for your events.
 
 ## 8. Management Pages (Admin & Manager Roles)
@@ -95,7 +95,7 @@ This is the central control panel for configuring the application itself. It doe
 ### 8.2 Team Management (`/dashboard/teams/[teamId]`)
 This page is for managing the specifics of an individual team.
 - **Team Members**: View all members of the team. Team Admins are now listed in a dedicated column on the left for clarity, while all other members are in a responsive grid on the right. You have full flexibility to manage Team Admins, including removing the last one. You can also click on the "Team Admins" and "Members" titles to rename them for your team. You can re-arrange the order of members within the admin or member lists by dragging and dropping them.
-- **Badge Management**: Create and manage your team's badge collections. To share a collection, simply drag its card to the "Shared Collections" panel. To link a collection from another team, drag it from the shared panel onto your main board. You can also duplicate any collection by dragging it to the `(+)` icon. To edit a collection or badge's name and description, simply click on the text. To **activate** a collection for your team (making its badges available for assignment), click the `check_circle` icon in the card's footer.
+- **Badge Management**: Create and manage your team's badge collections. To share a collection, simply drag its card to the "Shared Collections" panel. To link a collection from another team, drag it from the shared panel onto your main board. To **activate** a collection for your team, click on its ghosted card; clicking an active card will deactivate it. To **delete** a collection you own, use the dropdown menu on its card.
 - **Pinned Locations**: Pin locations to the team's Production Schedule. You can also designate locations as "check locations."
 - **Workstations**: Manage a list of bookable workstations or machines for the team.
 - **Event Templates**: Create reusable templates for common events. You can edit a template's name by clicking on it directly. Click the edit icon on the template card to manage its requested roles.
@@ -108,4 +108,6 @@ Administrators can view the application from another user's perspective.
 3.  Choose a user from the list.
 4.  A banner will appear at the top of the screen indicating whose view you are using. To return to your own view, repeat the process and select "Return to your view".
 
+
+    
     
