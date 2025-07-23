@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { type Team, type Badge, type BadgeCollection, type User, type BadgeApplication, type AppPage } from '@/types';
+import { type Team, type Badge, type BadgeCollection, type User, type BadgeApplication, type AppPage, type AppTab } from '@/types';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { ScrollArea } from '../ui/scroll-area';
@@ -216,7 +216,7 @@ function BadgeDisplayItem({
     );
         
     const nameEditorElement = (
-         <div onClick={(e) => { if(isOwner) {e.stopPropagation(); setIsEditingName(true);}}}>
+         <div onPointerDown={(e) => e.stopPropagation()} onClick={(e) => { if(isOwner) {e.stopPropagation(); setIsEditingName(true);}}}>
             {isEditingName && isOwner ? (
                 <Input
                     ref={nameInputRef}
@@ -237,7 +237,7 @@ function BadgeDisplayItem({
     );
 
      const descriptionEditorElement = (
-         <div onClick={(e) => { if(isOwner) {e.stopPropagation(); setIsEditingDescription(true);}}}>
+         <div onPointerDown={(e) => e.stopPropagation()} onClick={(e) => { if(isOwner) {e.stopPropagation(); setIsEditingDescription(true);}}}>
             {isEditingDescription && isOwner ? (
                 <Textarea 
                     ref={descriptionTextareaRef} 
@@ -374,7 +374,7 @@ function SortableBadgeItem({ badge, collection, onDelete, ...props }: { badge: B
 
     return (
         <div ref={setNodeRef} style={style} className={cn(props.viewMode === 'detailed' && "p-1 basis-full md:basis-1/2 flex-grow-0 flex-shrink-0")}>
-            <div className="group relative flex w-full">
+            <div className="group relative flex w-full" {...listeners} {...attributes}>
                 <div className="flex-grow">
                     <BadgeDisplayItem 
                         badge={badge} 
@@ -383,7 +383,6 @@ function SortableBadgeItem({ badge, collection, onDelete, ...props }: { badge: B
                         isEditingDescription={isEditingDescription}
                         setIsEditingDescription={setIsEditingDescription}
                         onDelete={onDelete}
-                        dragHandleProps={{...attributes, ...listeners}}
                         {...props} 
                     />
                 </div>
@@ -463,6 +462,7 @@ type BadgeCollectionCardProps = {
     isEditingDescription: boolean;
     setIsEditingDescription: (isEditing: boolean) => void;
     isCollapsed?: boolean;
+    dragHandleProps?: any;
 };
 
 function BadgeCollectionCard({ 
@@ -482,6 +482,7 @@ function BadgeCollectionCard({
     isEditingDescription,
     setIsEditingDescription,
     isCollapsed = false,
+    dragHandleProps,
     ...props
 }: BadgeCollectionCardProps) {
     const { viewAsUser, users, updateTeam, allBadgeCollections } = useUser();
@@ -626,7 +627,7 @@ function BadgeCollectionCard({
 
     return (
         <Card className="h-full flex flex-col bg-transparent relative" {...props}>
-            <div {...props.dragHandleProps}>
+            <div {...dragHandleProps}>
                 <CardHeader className="group">
                      {!isSharedPreview && !isCollapsed && (
                       <TooltipProvider>
@@ -719,7 +720,7 @@ function BadgeCollectionCard({
                                     </>
                                 )}
                             </div>
-                             <div className="flex-1 min-w-0">
+                             <div className="flex-1 min-w-0" onPointerDown={(e) => { if(isOwner) e.stopPropagation(); }}>
                                 <div onClick={() => { if(isOwner) setIsEditingName(true);}} className={cn("font-headline text-2xl font-thin break-words", isOwner && "cursor-pointer")}>
                                 {isEditingName ? (
                                     <Input
@@ -727,7 +728,6 @@ function BadgeCollectionCard({
                                         defaultValue={collection.name}
                                         onBlur={handleSaveName}
                                         onKeyDown={handleNameKeyDown}
-                                        onPointerDown={(e) => e.stopPropagation()}
                                         className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
                                     />
                                 ) : (
@@ -797,14 +797,13 @@ function BadgeCollectionCard({
              {showDetails && (
                 <>
                     <CardContent className="flex-grow pt-0 flex flex-col min-h-0">
-                         <div className="min-h-[20px]" onClick={() => { if(isOwner) setIsEditingDescription(true);}}>
+                         <div className="min-h-[20px]" onPointerDown={(e) => { if(isOwner) e.stopPropagation(); }} onClick={() => { if(isOwner) setIsEditingDescription(true);}}>
                             {isEditingDescription ? (
                             <Textarea 
                                 ref={descriptionTextareaRef} 
                                 defaultValue={collection.description} 
                                 onBlur={handleSaveDescription} 
                                 onKeyDown={handleDescriptionKeyDown}
-                                onPointerDown={(e) => e.stopPropagation()}
                                 className="p-0 text-sm text-muted-foreground border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 resize-none" 
                                 placeholder="Click to add a description." 
                             />
@@ -923,7 +922,6 @@ function SortableCollectionCard({ collection, ...props }: { collection: BadgeCol
                 collection={collection} 
                 {...props} 
                 dragHandleProps={{...attributes, ...listeners}}
-                isDragging={isDragging}
                 isEditingName={isEditingName}
                 setIsEditingName={setIsEditingName}
                 isEditingDescription={isEditingDescription}
@@ -973,7 +971,7 @@ function CollectionDropZone({ id, type, children, className }: { id: string; typ
 }
 
 
-export function BadgeManagement({ team, tab: pageConfig, isSingleTabPage = false }: { team: Team; tab: AppTab; page: AppPage; isSingleTabPage?: boolean }) {
+export function BadgeManagement({ team, tab: pageConfig, page, isSingleTabPage = false }: { team: Team; tab: AppTab; page: AppPage; isSingleTabPage?: boolean }) {
     const { viewAsUser, users, appSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors, updateUser } = useUser();
     const { toast } = useToast();
     const sharedSearchInputRef = useRef<HTMLInputElement>(null);
@@ -992,7 +990,7 @@ export function BadgeManagement({ team, tab: pageConfig, isSingleTabPage = false
         }
     }, [isSharedPanelOpen]);
 
-    const title = appSettings.teamManagementLabel || tab.name;
+    const title = appSettings.teamManagementLabel || pageConfig.name;
 
     const displayedCollections = useMemo(() => {
         const owned = allBadgeCollections.filter(c => c.owner.id === viewAsUser.userId);
