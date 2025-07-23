@@ -73,7 +73,7 @@ function UserCard({ user, isDeletable, onDeleteRequest }: { user: User, isDeleta
                                 className="h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100"
                                 onClick={(e) => { e.stopPropagation(); onDeleteRequest(user); }}
                             >
-                                <GoogleSymbol name="delete" className="text-lg" />
+                                <GoogleSymbol name="cancel" className="text-lg" />
                             </Button>
                         </TooltipTrigger>
                         <TooltipContent><p>Delete User</p></TooltipContent>
