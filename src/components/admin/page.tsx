@@ -68,10 +68,12 @@ function UserCard({ user }: { user: User }) {
 }
 
 function SortableUserCard({ user, listId }: { user: User, listId: string }) {
+    const { viewAsUser } = useUser();
     const draggableId = `user-dnd-${user.userId}-${listId}`;
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: draggableId,
-        data: { type: 'user', user, fromListId: listId }
+        data: { type: 'user', user, fromListId: listId },
+        disabled: !viewAsUser.isAdmin,
     });
 
     const style = {
@@ -121,8 +123,8 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive, activeTab, pa
   
   const [activeDragUser, setActiveDragUser] = useState<User | null>(null);
 
-  const adminUsers = useMemo(() => users.filter(u => u.isAdmin && u.userId !== 'system'), [users]);
-  const nonAdminUsers = useMemo(() => users.filter(u => !u.isAdmin && u.userId !== 'system'), [users]);
+  const adminUsers = useMemo(() => users.filter(u => u.isAdmin), [users]);
+  const nonAdminUsers = useMemo(() => users.filter(u => !u.isAdmin), [users]);
 
   useEffect(() => {
     if (is2faDialogOpen) {
@@ -204,6 +206,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive, activeTab, pa
             activationConstraint: {
                 delay: 150,
                 tolerance: 5,
+                keyboard: viewAsUser.dragActivationKey ? {name: viewAsUser.dragActivationKey, A: true} as any : undefined
             },
         }),
         useSensor(KeyboardSensor, {
@@ -725,6 +728,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isCollapsed,
 }
 
 function SortablePageCard({ id, page, onUpdate, onDelete, isPinned }: { id: string, page: AppPage, onUpdate: (id: string, data: Partial<AppPage>) => void; onDelete: (id: string) => void; isPinned?: boolean }) {
+    const { viewAsUser } = useUser();
     const [isEditingName, setIsEditingName] = useState(false);
     const {
         attributes,
@@ -859,6 +863,7 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
             activationConstraint: {
                 delay: 150,
                 tolerance: 5,
+                keyboard: viewAsUser.dragActivationKey ? {name: viewAsUser.dragActivationKey, A: true} as any : undefined
             },
         }),
         useSensor(KeyboardSensor, {
@@ -948,6 +953,7 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
 // #region Tabs Management Tab
 
 function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: string, data: Partial<AppTab>) => void; isDragging?: boolean; }) {
+    const { viewAsUser } = useUser();
     const [isEditingName, setIsEditingName] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
@@ -1142,6 +1148,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
 }
 
 function SortableTabCard({ id, tab, onUpdate }: { id: string, tab: AppTab, onUpdate: (id: string, data: Partial<AppTab>) => void; }) {
+    const { viewAsUser } = useUser();
     const {
         attributes,
         listeners,
@@ -1149,7 +1156,7 @@ function SortableTabCard({ id, tab, onUpdate }: { id: string, tab: AppTab, onUpd
         transform,
         transition,
         isDragging,
-    } = useSortable({id});
+    } = useSortable({id, disabled: !viewAsUser.isAdmin});
 
     const style = {
         transform: CSS.Transform.toString(transform),
@@ -1165,7 +1172,7 @@ function SortableTabCard({ id, tab, onUpdate }: { id: string, tab: AppTab, onUpd
 
 
 export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab; isSingleTabPage?: boolean, isActive?: boolean }) => {
-    const { appSettings, updateAppSettings, updateAppTab } = useUser();
+    const { viewAsUser, appSettings, updateAppSettings, updateAppTab } = useUser();
     const [searchTerm, setSearchTerm] = useState('');
     const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -1189,6 +1196,7 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
             activationConstraint: {
                 delay: 150,
                 tolerance: 5,
+                keyboard: viewAsUser.dragActivationKey ? {name: viewAsUser.dragActivationKey, A: true} as any : undefined
             },
         }),
         useSensor(KeyboardSensor, {
