@@ -80,7 +80,7 @@ Your user preferences appear in a compact, icon-driven row on your user card. Ho
 - **Set Default Calendar View**: Click the calendar icon to open a compact popover menu and select which calendar view you want to see when you log in.
 - **Set Time Format**: Click the clock icon to choose between 12-hour and 24-hour time display from a popover menu.
 - **Enable Easy Booking**: Click the toggle icon to turn on or off the ability to quickly create events by clicking on empty calendar slots. The current status (**On** or **Off**) is shown in the tooltip.
-- **Set Drag Modifier Key**: Click the `smart_button` icon to set a custom modifier key (`Shift`, `Alt`, `Control`, `Meta`) that must be held down to initiate a drag-and-drop action on complex items like badges. The tooltip for this icon will show the currently selected key.
+- **Set Drag Modifier Key**: Click the `smart_button` icon to set a custom modifier key (`Shift`, `Alt`, `Control`, or `Meta`) that must be held down to initiate drag-and-drop actions. The tooltip for this icon will show the currently selected key.
 - **Link Google Calendar**: To connect your Google Calendar, hover over the status dot on your avatar in the sidebar user menu. If disconnected, a tooltip will prompt you to click to connect. A simulated Google sign-in will appear and, once complete, will enable features like creating Google Meet links for your events.
 
 ## 8. Management Pages (Admin & Manager Roles)

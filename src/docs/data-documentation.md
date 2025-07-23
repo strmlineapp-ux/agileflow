@@ -69,7 +69,7 @@ This table details the information stored directly within each `User` object.
 | `linkedTeamIds?: string[]` | **Internal.** An array of `teamId`s for shared teams that the user has chosen to display on their management board. |
 | `linkedCollectionIds?: string[]` | **Internal.** An array of `collectionId`s for shared Badge Collections that the user has chosen to display on their management board. |
 | `linkedCalendarIds?: string[]` | **Internal.** An array of `calendarId`s for shared calendars that the user has chosen to display on their management board. |
-
+| `dragActivationKey?: 'alt' \| 'ctrl' \| 'meta' \| 'shift'` | **Internal.** A user-selected modifier key that must be held down to initiate drag-and-drop operations on complex components. |
 
 ### Dynamic Access Control for Pages & Tabs
 
@@ -246,6 +246,7 @@ This represents a specific, functional role or skill. The single source of truth
 | :--- | :--- |
 | `id: string` | A unique identifier for the badge. |
 | `owner: { type: 'user', id: string }` | **Crucial.** An object that defines which `User` owns the badge. Ownership dictates who can edit the badge's properties. |
+| `ownerCollectionId: string` | The `collectionId` of the badge's original, "source-of-truth" collection where it was created. |
 | `name: string` | The display name for the badge (e.g., "Camera", "Audio"). |
 | `icon: string` | The Google Symbol name for the badge's icon. |
 | `color: string` | The hex color code for the badge's icon and outline. |

@@ -70,13 +70,15 @@ export interface EventTemplate {
   requestedRoles: string[]; // array of Badge names
 }
 
+export type BadgeOwner = { type: 'user', id: string };
+
 export interface Badge {
   id: string;
   name: string;
   icon: string;
   color: string;
   description?: string;
-  owner: { type: 'user', id: string };
+  owner: BadgeOwner;
   ownerCollectionId: string;
 }
 
@@ -84,7 +86,7 @@ export type BadgeApplication = 'team members' | 'events' | 'tasks' | 'badges';
 
 export interface BadgeCollection {
   id: string;
-  owner: { type: 'user', id: string };
+  owner: BadgeOwner;
   name: string;
   icon: string;
   color: string;
@@ -108,18 +110,13 @@ export interface Team {
   membersLabel?: string;
   locationCheckManagers: string[]; // array of userIds who can manage check locations
   userBadgesLabel?: string;
-  allBadges: Badge[];
-  badgeCollections: BadgeCollection[];
+  activeBadgeCollections?: string[];
+  collectionViewModes?: Record<string, 'compact' | 'detailed' | 'list'>;
   pinnedLocations?: string[]; // array of location names
   checkLocations?: string[]; // subset of pinnedLocations designated for daily checks
   locationAliases?: { [key:string]: string };
   workstations?: string[];
   eventTemplates?: EventTemplate[];
-  // A simple list of collection IDs that are "turned on" for this team.
-  // Badges from these collections will be available for assignment to team members.
-  activeBadgeCollections?: string[];
-  // Local overrides for view modes of linked collections.
-  collectionViewModes?: Record<string, 'compact' | 'detailed' | 'list'>;
 }
 
 export interface Task {
