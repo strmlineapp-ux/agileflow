@@ -971,7 +971,7 @@ function CollectionDropZone({ id, type, children, className }: { id: string; typ
 }
 
 
-export function BadgeManagement({ pageConfig, page, team }: { team: Team; pageConfig: AppTab; page: AppPage; }) {
+export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; page: AppPage; }) {
     const { viewAsUser, users, appSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors, updateUser } = useUser();
     const { toast } = useToast();
     const sharedSearchInputRef = useRef<HTMLInputElement>(null);
@@ -990,7 +990,7 @@ export function BadgeManagement({ pageConfig, page, team }: { team: Team; pageCo
         }
     }, [isSharedPanelOpen]);
 
-    const title = appSettings.teamManagementLabel || pageConfig.name;
+    const title = appSettings.teamManagementLabel || tab.name;
 
     const displayedCollections = useMemo(() => {
         const owned = allBadgeCollections.filter(c => c.owner.id === viewAsUser.userId);
