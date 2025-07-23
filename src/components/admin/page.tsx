@@ -50,7 +50,7 @@ import { HexColorPicker, HexColorInput } from 'react-colorful';
 
 // #region Admin Groups Management Tab
 
-function UserCard({ user, isDeletable, onDeleteRequest }: { user: User, isDeletable?: boolean, onDeleteRequest?: (user: User) => void }) {
+function UserCard({ user, isDeletable, onDelete }: { user: User, isDeletable?: boolean, onDelete?: (user: User) => void }) {
     return (
         <div className="group p-2 flex items-center justify-between rounded-md transition-colors bg-card">
             <div className="flex items-center gap-4">
@@ -63,7 +63,7 @@ function UserCard({ user, isDeletable, onDeleteRequest }: { user: User, isDeleta
                     <p className="text-sm text-muted-foreground font-thin">{user.title || 'No title provided'}</p>
                 </div>
             </div>
-            {isDeletable && onDeleteRequest && (
+            {isDeletable && onDelete && (
                 <TooltipProvider>
                     <Tooltip>
                         <TooltipTrigger asChild>
@@ -71,9 +71,9 @@ function UserCard({ user, isDeletable, onDeleteRequest }: { user: User, isDeleta
                                 variant="ghost"
                                 size="icon"
                                 className="h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100"
-                                onClick={(e) => { e.stopPropagation(); onDeleteRequest(user); }}
+                                onClick={(e) => { e.stopPropagation(); onDelete(user); }}
                             >
-                                <GoogleSymbol name="cancel" className="text-lg" />
+                                <GoogleSymbol name="cancel" className="text-lg" weight={100}/>
                             </Button>
                         </TooltipTrigger>
                         <TooltipContent><p>Delete User</p></TooltipContent>
@@ -101,7 +101,7 @@ function SortableUserCard({ user, listId, onDeleteRequest }: { user: User, listI
 
     return (
         <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-            <UserCard user={user} isDeletable={listId === 'user-list'} onDeleteRequest={onDeleteRequest} />
+            <UserCard user={user} isDeletable={listId === 'user-list'} onDelete={onDeleteRequest} />
         </div>
     );
 }
