@@ -110,10 +110,10 @@ const DragActivationKeySetting = ({ user, onUpdate }: { user: User, onUpdate: (k
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         e.preventDefault();
-        const key = e.key.toLowerCase();
-        if (['alt', 'control', 'meta', 'shift'].includes(key)) {
-            const newKey = key === 'control' ? 'ctrl' : key as User['dragActivationKey'];
-            setKeyInput(newKey || 'shift');
+        const key = e.key;
+        if (['Alt', 'Control', 'Meta', 'Shift'].includes(key)) {
+            const newKey = key === 'Control' ? 'ctrl' : key.toLowerCase() as 'alt' | 'meta' | 'shift';
+            setKeyInput(newKey);
             onUpdate(newKey);
             setIsOpen(false);
         }
@@ -334,3 +334,4 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
         </div>
     )
 }
+
