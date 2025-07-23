@@ -6,19 +6,18 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isToday, i
 import { Card, CardContent } from '@/components/ui/card';
 import { cn, getContrastColor } from '@/lib/utils';
 import { Badge } from '../ui/badge';
-import { mockHolidays } from '@/lib/mock-data';
 import { Button } from '../ui/button';
 import { useUser } from '@/context/user-context';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { type Event } from '@/types';
 
-const isHoliday = (day: Date) => {
-    return mockHolidays.some(holiday => isSameDay(day, holiday));
+const isHoliday = (day: Date, holidays: Date[]) => {
+    return holidays.some(holiday => isSameDay(day, holiday));
 }
 
 export const MonthView = React.memo(({ date, containerRef, onEventClick }: { date: Date; containerRef: React.RefObject<HTMLDivElement>; onEventClick: (event: Event) => void; }) => {
     const todayRef = useRef<HTMLDivElement>(null);
-    const { events, calendars, getPriorityDisplay } = useUser();
+    const { events, calendars, getPriorityDisplay, holidays } = useUser();
 
     const firstDayOfMonth = startOfMonth(date);
     const lastDayOfMonth = endOfMonth(date);
@@ -70,7 +69,7 @@ export const MonthView = React.memo(({ date, containerRef, onEventClick }: { dat
     const renderDayCell = useCallback((day: Date, key: React.Key, dayIndex: number) => {
         const dayEvents = getEventsForDay(day);
         const isWeekend = isSaturday(day) || isSunday(day);
-        const isDayHoliday = isHoliday(day);
+        const isDayHoliday = isHoliday(day, holidays);
         const isDayToday = isToday(day);
         const colIndex = (startingDayIndex + dayIndex) % 7;
 
@@ -119,7 +118,7 @@ export const MonthView = React.memo(({ date, containerRef, onEventClick }: { dat
                 </div>
             </div>
         )
-    }, [getEventsForDay, onEventClick, calendarColorMap, getPriorityDisplay, startingDayIndex, date]);
+    }, [getEventsForDay, onEventClick, calendarColorMap, getPriorityDisplay, startingDayIndex, date, holidays]);
 
     let dayCells: React.ReactNode[] = [];
     if (showWeekends) {

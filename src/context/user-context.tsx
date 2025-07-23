@@ -3,8 +3,8 @@
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
-import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type BadgeCollection, type BadgeOwner } from '@/types';
-import { mockUsers as initialUsers, mockCalendars as initialCalendars, mockEvents as initialEvents, mockLocations as initialLocations, mockTeams, mockAppSettings, allMockBadgeCollections, videoProdBadges, liveEventsBadges, pScaleBadges, starRatingBadges, effortBadges } from '@/lib/mock-data';
+import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type BadgeCollection, type BadgeOwner, type Task, type Holiday } from '@/types';
+import { mockUsers, mockCalendars, mockEvents, mockLocations, mockTeams, mockAppSettings, allMockBadgeCollections, videoProdBadges, liveEventsBadges, pScaleBadges, starRatingBadges, effortBadges, mockTasks, mockHolidays } from '@/lib/mock-data';
 import { GoogleAuthProvider, getAuth } from 'firebase/auth';
 import { getFirestore } from "firebase/firestore";
 import { useToast } from '@/hooks/use-toast';
@@ -29,8 +29,8 @@ const predefinedColors = [
 
 // Context for frequently updated, session-specific data (e.g., who the user is viewing as)
 interface UserSessionContextType {
-  realUser: User;
-  viewAsUser: User;
+  realUser: User | null;
+  viewAsUser: User | null;
   setViewAsUser: (userId: string) => void;
   users: User[]; // Keep users here as it's needed for the "View As" dropdown
 }
@@ -40,6 +40,8 @@ const UserSessionContext = createContext<UserSessionContextType | null>(null);
 // Context for heavier, less frequently updated application data
 interface UserDataContextType {
   loading: boolean;
+  tasks: Task[];
+  holidays: Holiday[];
   teams: Team[];
   addTeam: (teamData: Omit<Team, 'id'>) => Promise<void>;
   updateTeam: (teamId: string, teamData: Partial<Team>) => Promise<void>;
@@ -87,58 +89,74 @@ const REAL_USER_ID = '1'; // Bernardo is the default user
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [viewAsUserId, setViewAsUserId] = useState<string>(REAL_USER_ID);
-  const [users, setUsers] = useState<User[]>(initialUsers);
-  const [teams, setTeams] = useState<Team[]>(mockTeams);
+  
+  // Initialize states as empty, simulating a "no data yet" state
+  const [users, setUsers] = useState<User[]>([]);
+  const [teams, setTeams] = useState<Team[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [userStatusAssignments, setUserStatusAssignments] = useState<Record<string, UserStatusAssignment[]>>({});
-  const [calendars, setCalendars] = useState<SharedCalendar[]>(initialCalendars);
-  const [events, setEvents] = useState<Event[]>(initialEvents);
-  const [locations, setLocations] = useState<BookableLocation[]>(initialLocations);
+  const [calendars, setCalendars] = useState<SharedCalendar[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [locations, setLocations] = useState<BookableLocation[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [holidays, setHolidays] = useState<Holiday[]>([]);
+  const [appSettings, setAppSettings] = useState<AppSettings>({ pages: [], tabs: [] });
+  const [allBadges, setAllBadges] = useState<Badge[]>([]);
+  const [allBadgeCollections, setAllBadgeCollections] = useState<BadgeCollection[]>([]);
+
+  const { toast } = useToast();
   
   // --- Multi-Tenant Simulation ---
-  // In a real app, the `tenantId` would come from middleware based on the subdomain.
-  // Here, we hardcode it to 'default' to demonstrate the pattern.
   const tenantId = 'default'; 
   const app = getFirebaseAppForTenant(tenantId);
   const auth = getAuth(app);
   const db = getFirestore(app);
   // --- End Multi-Tenant Simulation ---
 
-  const [appSettings, setAppSettings] = useState<AppSettings>(() => {
-    // Correctly merge core and dynamic data at initialization
-    const corePageIds = new Set(corePages.map(p => p.id));
-    const dynamicPages = mockAppSettings.pages.filter(p => !corePageIds.has(p.id));
+  // Simulate fetching data from a backend on initial load
+  useEffect(() => {
+    const loadMockData = async () => {
+      await simulateApi(200); // Simulate network latency
 
-    // Place dynamic pages after Tasks and before Notifications
-    const tasksIndex = corePages.findIndex(p => p.id === 'page-tasks');
-    const finalPages = [...corePages];
-    if (tasksIndex !== -1) {
-        finalPages.splice(tasksIndex + 1, 0, ...dynamicPages);
-    } else {
-        finalPages.push(...dynamicPages);
-    }
-    
-    return {
-        pages: finalPages,
-        tabs: [...coreTabs],
+      // Set all the data from our mock files
+      setUsers(mockUsers);
+      setTeams(mockTeams);
+      setCalendars(mockCalendars);
+      setEvents(mockEvents);
+      setLocations(mockLocations);
+      setTasks(mockTasks);
+      setHolidays(mockHolidays);
+
+      const badgesMap = new Map<string, Badge>();
+      [...videoProdBadges, ...liveEventsBadges, ...pScaleBadges, ...starRatingBadges, ...effortBadges].forEach(badge => {
+          if (badge && !badgesMap.has(badge.id)) {
+              badgesMap.set(badge.id, badge);
+          }
+      });
+      setAllBadges(Array.from(badgesMap.values()).filter(Boolean));
+      setAllBadgeCollections(allMockBadgeCollections);
+
+      const corePageIds = new Set(corePages.map(p => p.id));
+      const dynamicPages = mockAppSettings.pages.filter(p => !corePageIds.has(p.id));
+      const tasksIndex = corePages.findIndex(p => p.id === 'page-tasks');
+      const finalPages = [...corePages];
+      if (tasksIndex !== -1) {
+          finalPages.splice(tasksIndex + 1, 0, ...dynamicPages);
+      } else {
+          finalPages.push(...dynamicPages);
+      }
+      setAppSettings({
+          pages: finalPages,
+          tabs: [...coreTabs],
+      });
+      
+      setLoading(false);
     };
-  });
-  const { toast } = useToast();
 
-  const [allBadges, setAllBadges] = useState<Badge[]>(() => {
-    const badgesMap = new Map<string, Badge>();
-    [...videoProdBadges, ...liveEventsBadges, ...pScaleBadges, ...starRatingBadges, ...effortBadges].forEach(badge => {
-        if (badge && !badgesMap.has(badge.id)) {
-            badgesMap.set(badge.id, badge);
-        }
-    });
-    return Array.from(badgesMap.values()).filter(Boolean); // Ensure no undefined values
-  });
+    loadMockData();
+  }, []);
 
-  const [allBadgeCollections, setAllBadgeCollections] = useState<BadgeCollection[]>(allMockBadgeCollections);
-
-
-  const realUser = useMemo(() => users.find(u => u.userId === REAL_USER_ID)!, [users]);
+  const realUser = useMemo(() => users.find(u => u.userId === REAL_USER_ID) || null, [users]);
   const viewAsUser = useMemo(() => users.find(u => u.userId === viewAsUserId) || realUser, [users, viewAsUserId, realUser]);
 
   const allBookableLocations = useMemo(() => {
@@ -158,13 +176,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     });
     return Array.from(uniqueNames.values()).sort((a,b) => a.name.localeCompare(b.name));
   }, [locations, teams]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-        setLoading(false);
-    }, 50); 
-    return () => clearTimeout(timer);
-  }, []);
 
   const updateUser = useCallback(async (userId: string, userData: Partial<User>) => {
     await simulateApi();
@@ -190,6 +201,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const deleteTeam = useCallback(async (teamId: string, router: AppRouterInstance, pathname: string) => {
+    if (!viewAsUser) return;
     const page = appSettings.pages.find(p => pathname.startsWith(p.path));
     const team = teams.find(t => t.id === teamId);
 
@@ -199,20 +211,16 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       const userWillLoseAccess = userHadAccess && !hasAccess(viewAsUser, page, teamsWithoutDeleted);
       
       if (userWillLoseAccess) {
-        // Preemptive navigation to prevent crash
         router.push('/dashboard/notifications');
-        // Now we can proceed to delete the team state after ensuring navigation is triggered.
-        // A small delay helps ensure the navigation starts before the re-render.
         setTimeout(async () => {
             await simulateApi();
             setTeams(current => current.filter(t => t.id !== teamId));
             toast({ title: 'Success', description: `Team "${team?.name}" has been deleted.` });
         }, 50);
-        return; // Stop further execution in this path
+        return;
       }
     }
     
-    // Default case: user access is not affected, or page is not found.
     await simulateApi();
     setTeams(current => current.filter(t => t.id !== teamId));
     toast({ title: 'Success', description: `Team "${team?.name}" has been deleted.` });
@@ -254,10 +262,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       try {
         console.log(`Auto-syncing calendar: ${calendarToSync.name}`);
         await syncCalendar({ googleCalendarId: calendarToSync.googleCalendarId });
-        // Optional: Add a subtle success log or notification if needed
       } catch (error) {
         console.error(`Auto-sync for calendar ${calendarToSync.name} failed:`, error);
-        // Optional: Add error handling, e.g., logging to a service
       }
     }
   }, [calendars]);
@@ -396,20 +402,16 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const collectionToDelete = allBadgeCollections.find(c => c.id === collectionId);
     if (!collectionToDelete) return;
 
-    // Find all badges that are exclusively owned by this collection
     const badgeIdsToDelete = allBadges
       .filter(b => b.ownerCollectionId === collectionId)
       .map(b => b.id);
 
-    // Remove the collection itself
     setAllBadgeCollections(current => current.filter(c => c.id !== collectionId));
 
-    // Remove the owned badges from the master badge list
     if (badgeIdsToDelete.length > 0) {
       setAllBadges(current => current.filter(b => !badgeIdsToDelete.includes(b.id)));
     }
 
-    // Also remove the collection from any team that might be using it
     setTeams(currentTeams => currentTeams.map(team => ({
         ...team,
         activeBadgeCollections: (team.activeBadgeCollections || []).filter(id => id !== collectionId)
@@ -464,21 +466,23 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, [updateUser, toast]);
 
   useEffect(() => {
-    const root = window.document.documentElement;
-    root.classList.remove('light', 'dark');
-    const currentTheme = viewAsUser.theme || 'light';
-    root.classList.add(currentTheme);
-    if (viewAsUser.primaryColor) {
-      const hslColor = hexToHsl(viewAsUser.primaryColor);
-      if (hslColor) {
-        root.style.setProperty('--primary', hslColor);
-        root.style.setProperty('--ring', hslColor);
+    if (viewAsUser) {
+      const root = window.document.documentElement;
+      root.classList.remove('light', 'dark');
+      const currentTheme = viewAsUser.theme || 'light';
+      root.classList.add(currentTheme);
+      if (viewAsUser.primaryColor) {
+        const hslColor = hexToHsl(viewAsUser.primaryColor);
+        if (hslColor) {
+          root.style.setProperty('--primary', hslColor);
+          root.style.setProperty('--ring', hslColor);
+        }
+      } else {
+        root.style.removeProperty('--primary');
+        root.style.removeProperty('--ring');
       }
-    } else {
-      root.style.removeProperty('--primary');
-      root.style.removeProperty('--ring');
     }
-  }, [viewAsUser.theme, viewAsUser.primaryColor]);
+  }, [viewAsUser]);
 
   const sessionValue = useMemo(() => ({
     realUser,
@@ -488,8 +492,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }), [realUser, viewAsUser, users]);
 
   const dataValue = useMemo(() => ({
-    loading, teams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, notifications, setNotifications, userStatusAssignments, setUserStatusAssignments, addUser, linkGoogleCalendar, calendars, reorderCalendars, addCalendar, updateCalendar, deleteCalendar, events, addEvent, updateEvent, deleteEvent, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors,
-  }), [loading, teams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, notifications, setNotifications, userStatusAssignments, setUserStatusAssignments, addUser, linkGoogleCalendar, calendars, reorderCalendars, addCalendar, updateCalendar, deleteCalendar, events, addEvent, updateEvent, deleteEvent, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges]);
+    loading, tasks, holidays, teams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, notifications, setNotifications, userStatusAssignments, setUserStatusAssignments, addUser, linkGoogleCalendar, calendars, reorderCalendars, addCalendar, updateCalendar, deleteCalendar, events, addEvent, updateEvent, deleteEvent, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors,
+  }), [loading, tasks, holidays, teams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, notifications, setNotifications, userStatusAssignments, setUserStatusAssignments, addUser, linkGoogleCalendar, calendars, reorderCalendars, addCalendar, updateCalendar, deleteCalendar, events, addEvent, updateEvent, deleteEvent, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges]);
+
+  if (!realUser || !viewAsUser) {
+    return null; // Or a loading spinner
+  }
 
   return (
     <UserSessionContext.Provider value={sessionValue}>

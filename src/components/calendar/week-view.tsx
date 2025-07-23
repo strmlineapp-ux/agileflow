@@ -7,7 +7,6 @@ import { format, startOfWeek, addDays, eachDayOfInterval, startOfDay, addHours, 
 import { type Event, type Team, type Badge } from '@/types';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { cn, getContrastColor } from '@/lib/utils';
-import { mockHolidays } from '@/lib/mock-data';
 import { Button } from '../ui/button';
 import { useUser } from '@/context/user-context';
 import { canCreateAnyEvent } from '@/lib/permissions';
@@ -16,8 +15,8 @@ import { PriorityBadge } from './priority-badge';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
-const isHoliday = (day: Date) => {
-    return mockHolidays.some(holiday => isSameDay(day, holiday));
+const isHoliday = (day: Date, holidays: Date[]) => {
+    return holidays.some(holiday => isSameDay(day, holiday));
 }
 
 const DEFAULT_HOUR_HEIGHT_PX = 60;
@@ -31,7 +30,7 @@ const isAllDayEvent = (event: Event) => {
 }
 
 export const WeekView = React.memo(({ date, containerRef, zoomLevel, onEasyBooking, onEventClick, triggerScroll }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', onEasyBooking: (data: { startTime: Date, location?: string }) => void, onEventClick: (event: Event) => void, triggerScroll: number }) => {
-    const { viewAsUser, events, calendars, users, allBadges } = useUser();
+    const { viewAsUser, events, calendars, users, allBadges, holidays } = useUser();
     const [now, setNow] = useState<Date | null>(null);
     const nowMarkerRef = useRef<HTMLDivElement>(null);
     const timelineScrollerRef = useRef<HTMLDivElement>(null);
@@ -152,7 +151,7 @@ export const WeekView = React.memo(({ date, containerRef, zoomLevel, onEasyBooki
                     <div className="w-20"></div> {/* Timeline spacer */}
                     {displayedDays.map((day, index) => {
                         const isWeekend = isSaturday(day) || isSunday(day);
-                        const isDayHoliday = isHoliday(day);
+                        const isDayHoliday = isHoliday(day, holidays);
                         return (
                             <div key={day.toString()} className={cn("text-center p-2 border-l relative", { "bg-muted/50": isWeekend || isDayHoliday })}>
                                 <p className={cn("text-sm font-normal", { "text-muted-foreground": isWeekend || isDayHoliday })}>{format(day, 'EEE')}</p>

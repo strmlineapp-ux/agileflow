@@ -203,3 +203,5 @@ export interface BookableLocation {
   id: string;
   name: string;
 }
+
+export type Holiday = Date;

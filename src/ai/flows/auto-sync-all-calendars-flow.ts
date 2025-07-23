@@ -9,7 +9,9 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import {syncCalendar, SyncCalendarInput} from './sync-calendar-flow';
-import {mockCalendars} from '@/lib/mock-data'; // In a real app, this would fetch from a database.
+// In a real app, you would have a service to fetch data from your database.
+// For this prototype, we will simulate this by importing the mock data here.
+import {mockCalendars} from '@/lib/mock-data'; 
 
 const AutoSyncOutputSchema = z.object({
   totalCalendarsToSync: z.number(),
@@ -38,7 +40,7 @@ const autoSyncAllCalendarsFlow = ai.defineFlow(
     console.log('Starting automatic synchronization for all calendars...');
 
     // 1. In a real app, you would fetch this data from your database (e.g., Firestore).
-    // For this prototype, we use the mock data.
+    // For this prototype, we simulate that by using the mock data.
     const allCalendars = mockCalendars; 
     
     // 2. Filter for calendars that are actually linked to a Google Calendar.

@@ -26,7 +26,6 @@ import { TaskStatusBadge } from './task-status-badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from '@/components/ui/badge';
 import { useUser } from '@/context/user-context';
-import { mockTasks } from '@/lib/mock-data';
 import { PriorityBadge } from '../calendar/priority-badge';
 import { GoogleSymbol } from '../icons/google-symbol';
 
@@ -42,7 +41,7 @@ const statusLabels: Record<Task['status'], string> = {
 };
 
 export function TaskList({ limit }: { limit?: number }) {
-  const { viewAsUser, allBadgeCollections, allBadges } = useUser();
+  const { viewAsUser, allBadgeCollections, allBadges, tasks } = useUser();
 
   const taskPriorities = React.useMemo(() => {
     const taskPriorityCollection = allBadgeCollections.find(c => c.applications?.includes('tasks'));
@@ -50,7 +49,7 @@ export function TaskList({ limit }: { limit?: number }) {
     return taskPriorityCollection.badgeIds.map(id => allBadges.find(b => b.id === id)).filter((b): b is Badge => !!b);
   }, [allBadgeCollections, allBadges]);
 
-  const renderTable = (tasks: Task[]) => (
+  const renderTable = (tasksToRender: Task[]) => (
     <Card>
       <CardContent className="p-0">
         <Table>
@@ -72,7 +71,7 @@ export function TaskList({ limit }: { limit?: number }) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {tasks.map((task) => (
+            {tasksToRender.map((task) => (
               <TableRow key={task.taskId}>
                 <TableCell className="font-normal">{task.title}</TableCell>
                 <TableCell>
@@ -116,8 +115,8 @@ export function TaskList({ limit }: { limit?: number }) {
     </Card>
   );
 
-  const renderGroupedTasks = (tasks: Task[]) => {
-    const groupedTasks = tasks.reduce((acc, task) => {
+  const renderGroupedTasks = (tasksToGroup: Task[]) => {
+    const groupedTasks = tasksToGroup.reduce((acc, task) => {
         const status = task.status;
         if (!acc[status]) {
             acc[status] = [];
@@ -156,7 +155,7 @@ export function TaskList({ limit }: { limit?: number }) {
   };
   
   if(limit) {
-    const sortedTasks = [...mockTasks].sort((a, b) => {
+    const sortedTasks = [...tasks].sort((a, b) => {
         const aIsToday = isToday(a.dueDate);
         const bIsToday = isToday(b.dueDate);
 
@@ -175,8 +174,8 @@ export function TaskList({ limit }: { limit?: number }) {
     return renderTable(sortedTasks.slice(0, limit));
   }
 
-  const allTasks = mockTasks;
-  const myTasks = mockTasks.filter(task => task.assignedTo.some(user => user.userId === viewAsUser.userId));
+  const allTasks = tasks;
+  const myTasks = tasks.filter(task => task.assignedTo.some(user => user.userId === viewAsUser.userId));
 
   return (
     <Tabs defaultValue="my-tasks">
