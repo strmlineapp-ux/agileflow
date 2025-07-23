@@ -216,7 +216,7 @@ function BadgeDisplayItem({
     );
         
     const nameEditorElement = (
-         <div onPointerDown={(e) => e.stopPropagation()} onClick={(e) => { if(isOwner) {e.stopPropagation(); setIsEditingName(true);}}}>
+         <div onClick={(e) => { if(isOwner) {e.stopPropagation(); setIsEditingName(true);}}}>
             {isEditingName && isOwner ? (
                 <Input
                     ref={nameInputRef}
@@ -237,7 +237,7 @@ function BadgeDisplayItem({
     );
 
      const descriptionEditorElement = (
-         <div onPointerDown={(e) => e.stopPropagation()} onClick={(e) => { if(isOwner) {e.stopPropagation(); setIsEditingDescription(true);}}}>
+         <div onClick={(e) => { if(isOwner) {e.stopPropagation(); setIsEditingDescription(true);}}}>
             {isEditingDescription && isOwner ? (
                 <Textarea 
                     ref={descriptionTextareaRef} 
@@ -360,7 +360,6 @@ function SortableBadgeItem({ badge, collection, onDelete, ...props }: { badge: B
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: `badge::${badge.id}::${collection.id}`,
         data: { type: 'badge', badge, collectionId: collection.id, isSharedPreview: props.isSharedPreview },
-        disabled: isEditingName || isEditingDescription || props.isCollectionEditing,
     });
     
     const style = {
@@ -720,8 +719,8 @@ function BadgeCollectionCard({
                                     </>
                                 )}
                             </div>
-                             <div className="flex-1 min-w-0" onPointerDown={(e) => { if(isOwner) e.stopPropagation(); }}>
-                                <div onClick={() => { if(isOwner) setIsEditingName(true);}} className={cn("font-headline text-2xl font-thin break-words", isOwner && "cursor-pointer")}>
+                             <div className="flex-1 min-w-0">
+                                <div onClick={() => { if(isOwner) setIsEditingName(true);}} onPointerDown={(e) => { if(isOwner) e.stopPropagation(); }} className={cn("font-headline text-2xl font-thin break-words", isOwner && "cursor-pointer")}>
                                 {isEditingName ? (
                                     <Input
                                         ref={nameInputRef}
@@ -797,7 +796,7 @@ function BadgeCollectionCard({
              {showDetails && (
                 <>
                     <CardContent className="flex-grow pt-0 flex flex-col min-h-0">
-                         <div className="min-h-[20px]" onPointerDown={(e) => { if(isOwner) e.stopPropagation(); }} onClick={() => { if(isOwner) setIsEditingDescription(true);}}>
+                         <div className="min-h-[20px]" onClick={() => { if(isOwner) setIsEditingDescription(true);}} onPointerDown={(e) => { if(isOwner) e.stopPropagation(); }}>
                             {isEditingDescription ? (
                             <Textarea 
                                 ref={descriptionTextareaRef} 
@@ -971,8 +970,8 @@ function CollectionDropZone({ id, type, children, className }: { id: string; typ
 }
 
 
-export function BadgeManagement({ team, tab: pageConfig, page, isSingleTabPage = false }: { team: Team; tab: AppTab; page: AppPage; isSingleTabPage?: boolean }) {
-    const { viewAsUser, users, appSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors, updateUser } = useUser();
+export function BadgeManagement({ tab: pageConfig, page, isSingleTabPage = false }: { team: Team; tab: AppTab; page: AppPage; isSingleTabPage?: boolean }) {
+    const { viewAsUser, users, appSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors, updateUser, teams } = useUser();
     const { toast } = useToast();
     const sharedSearchInputRef = useRef<HTMLInputElement>(null);
 
@@ -984,6 +983,15 @@ export function BadgeManagement({ team, tab: pageConfig, page, isSingleTabPage =
     const [sharedSearchTerm, setSharedSearchTerm] = useState('');
     const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
     
+    // Find the current team based on the page context if it's dynamic
+    const team = useMemo(() => {
+        if (page.isDynamic) {
+            const teamId = window.location.pathname.split('/').pop();
+            return teams.find(t => t.id === teamId);
+        }
+        return undefined;
+    }, [page, teams]);
+
     useEffect(() => {
         if (isSharedPanelOpen) {
             setTimeout(() => sharedSearchInputRef.current?.focus(), 100);
@@ -1067,12 +1075,16 @@ export function BadgeManagement({ team, tab: pageConfig, page, isSingleTabPage =
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
-            activationConstraint: {
-                delay: 250,
-                tolerance: 5,
+          activationConstraint: {
+            distance: 8,
+            keyboard: {
+              name: 'alt',
             },
+          },
         }),
-        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
     );
 
     return (
@@ -1193,4 +1205,3 @@ export function BadgeManagement({ team, tab: pageConfig, page, isSingleTabPage =
         </DndContext>
     );
 }
-
