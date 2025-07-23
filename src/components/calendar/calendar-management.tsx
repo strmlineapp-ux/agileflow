@@ -590,7 +590,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
         activationConstraint: {
-            delay: 250,
+            delay: 150,
             tolerance: 5,
         },
     }),

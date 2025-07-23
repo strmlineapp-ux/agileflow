@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
@@ -743,7 +744,8 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
     const sensors = useSensors(
         useSensor(PointerSensor, {
           activationConstraint: {
-            distance: 8,
+            delay: 150,
+            tolerance: 5,
           },
         }),
         useSensor(KeyboardSensor, {

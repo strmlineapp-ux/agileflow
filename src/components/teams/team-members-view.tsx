@@ -72,7 +72,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
     const sensors = useSensors(
         useSensor(PointerSensor, {
             activationConstraint: {
-                delay: 250,
+                delay: 150,
                 tolerance: 5,
             },
         }),

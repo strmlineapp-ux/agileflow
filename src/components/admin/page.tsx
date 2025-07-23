@@ -109,7 +109,7 @@ function UserDropZone({ id, users, children }: { id: string, users: User[], chil
 
 export const AdminsManagement = ({ tab, isSingleTabPage, isActive, activeTab, page }: { tab: AppTab; isSingleTabPage?: boolean, isActive?: boolean, activeTab?: string, page: AppPage }) => {
   const { toast } = useToast();
-  const { users, updateUser } = useUser();
+  const { viewAsUser, users, updateUser } = useUser();
   const [is2faDialogOpen, setIs2faDialogOpen] = useState(false);
   const [pendingUserMove, setPendingUserMove] = useState<{ user: User; fromListId: string; destListId: string } | null>(null);
   const [twoFactorCode, setTwoFactorCode] = useState('');
@@ -199,15 +199,17 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive, activeTab, pa
     setActiveDragUser(event.active.data.current?.user || null);
   };
   
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-        activationConstraint: {
-            delay: 250,
-            tolerance: 5,
-        },
-    }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-  );
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                delay: 150,
+                tolerance: 5,
+            },
+        }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
 
 
   return (
@@ -790,7 +792,7 @@ function DuplicateZone({ onAdd }: { onAdd: () => void; }) {
 }
 
 export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab; isSingleTabPage?: boolean, isActive?: boolean }) => {
-    const { appSettings, updateAppSettings } = useUser();
+    const { viewAsUser, appSettings, updateAppSettings } = useUser();
     const { toast } = useToast();
     const [searchTerm, setSearchTerm] = useState('');
     const [activePage, setActivePage] = useState<AppPage | null>(null);
@@ -855,7 +857,7 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
     const sensors = useSensors(
         useSensor(PointerSensor, {
             activationConstraint: {
-                delay: 250,
+                delay: 150,
                 tolerance: 5,
             },
         }),
@@ -1185,7 +1187,7 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
     const sensors = useSensors(
         useSensor(PointerSensor, {
             activationConstraint: {
-                delay: 250,
+                delay: 150,
                 tolerance: 5,
             },
         }),
