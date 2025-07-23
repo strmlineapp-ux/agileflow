@@ -50,9 +50,9 @@ import { HexColorPicker, HexColorInput } from 'react-colorful';
 
 // #region Admin Groups Management Tab
 
-function UserCard({ user }: { user: User }) {
+function UserCard({ user, isDeletable, onDeleteRequest }: { user: User, isDeletable?: boolean, onDeleteRequest?: (user: User) => void }) {
     return (
-        <div className="p-2 flex items-center justify-between rounded-md transition-colors bg-card">
+        <div className="group p-2 flex items-center justify-between rounded-md transition-colors bg-card">
             <div className="flex items-center gap-4">
                 <Avatar>
                   <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
@@ -63,11 +63,28 @@ function UserCard({ user }: { user: User }) {
                     <p className="text-sm text-muted-foreground font-thin">{user.title || 'No title provided'}</p>
                 </div>
             </div>
+            {isDeletable && onDeleteRequest && (
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100"
+                                onClick={(e) => { e.stopPropagation(); onDeleteRequest(user); }}
+                            >
+                                <GoogleSymbol name="delete" className="text-lg" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent><p>Delete User</p></TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+            )}
         </div>
     );
 }
 
-function SortableUserCard({ user, listId }: { user: User, listId: string }) {
+function SortableUserCard({ user, listId, onDeleteRequest }: { user: User, listId: string, onDeleteRequest?: (user: User) => void }) {
     const { viewAsUser } = useUser();
     const draggableId = `user-dnd-${user.userId}-${listId}`;
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -84,12 +101,12 @@ function SortableUserCard({ user, listId }: { user: User, listId: string }) {
 
     return (
         <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-            <UserCard user={user} />
+            <UserCard user={user} isDeletable={listId === 'user-list'} onDeleteRequest={onDeleteRequest} />
         </div>
     );
 }
 
-function UserDropZone({ id, users, children }: { id: string, users: User[], children: React.ReactNode }) {
+function UserDropZone({ id, users, children, onDeleteRequest }: { id: string, users: User[], children: React.ReactNode, onDeleteRequest?: (user: User) => void }) {
   const { setNodeRef, isOver } = useDroppable({ id, data: { type: 'user-list' }});
   
   const sortableUserIds = users.map(u => `user-dnd-${u.userId}-${id}`);
@@ -101,7 +118,7 @@ function UserDropZone({ id, users, children }: { id: string, users: User[], chil
     )}>
         <SortableContext items={sortableUserIds} strategy={verticalListSortingStrategy}>
             {users.map((user) => (
-                <SortableUserCard key={user.userId} user={user} listId={id} />
+                <SortableUserCard key={user.userId} user={user} listId={id} onDeleteRequest={onDeleteRequest} />
             ))}
         </SortableContext>
         {children}
@@ -111,9 +128,12 @@ function UserDropZone({ id, users, children }: { id: string, users: User[], chil
 
 export const AdminsManagement = ({ tab, isSingleTabPage, isActive, activeTab, page }: { tab: AppTab; isSingleTabPage?: boolean, isActive?: boolean, activeTab?: string, page: AppPage }) => {
   const { toast } = useToast();
-  const { viewAsUser, users, updateUser } = useUser();
+  const { viewAsUser, users, updateUser, deleteUser } = useUser();
   const [is2faDialogOpen, setIs2faDialogOpen] = useState(false);
   const [pendingUserMove, setPendingUserMove] = useState<{ user: User; fromListId: string; destListId: string } | null>(null);
+  const [pendingUserDelete, setPendingUserDelete] = useState<User | null>(null);
+  const [twoFactorActionType, setTwoFactorActionType] = useState<'toggleAdmin' | 'deleteUser' | null>(null);
+
   const [twoFactorCode, setTwoFactorCode] = useState('');
   const [isEditing2fa, setIsEditing2fa] = useState(false);
   const twoFactorCodeInputRef = useRef<HTMLInputElement>(null);
@@ -156,25 +176,40 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive, activeTab, pa
         return;
     }
     setPendingUserMove({ user: userToMove, fromListId, destListId });
+    setTwoFactorActionType('toggleAdmin');
+    setIs2faDialogOpen(true);
+  };
+  
+  const handleDeleteUserRequest = (userToDelete: User) => {
+    setPendingUserDelete(userToDelete);
+    setTwoFactorActionType('deleteUser');
     setIs2faDialogOpen(true);
   };
 
   const handleVerify2fa = () => {
-    if (twoFactorCode === '123456' && pendingUserMove) {
-      const { user } = pendingUserMove;
-      updateUser(user.userId, { isAdmin: !user.isAdmin });
-      toast({ title: 'Success', description: `${user.displayName}'s admin status has been updated.` });
-      close2faDialog();
-    } else {
-      toast({ variant: 'destructive', title: 'Verification Failed', description: 'The provided 2FA code is incorrect. Please try again.' });
-      setTwoFactorCode('');
+    if (twoFactorCode !== '123456') {
+        toast({ variant: 'destructive', title: 'Verification Failed', description: 'The provided 2FA code is incorrect. Please try again.' });
+        setTwoFactorCode('');
+        return;
     }
+
+    if (twoFactorActionType === 'toggleAdmin' && pendingUserMove) {
+        const { user } = pendingUserMove;
+        updateUser(user.userId, { isAdmin: !user.isAdmin });
+        toast({ title: 'Success', description: `${user.displayName}'s admin status has been updated.` });
+    } else if (twoFactorActionType === 'deleteUser' && pendingUserDelete) {
+        deleteUser(pendingUserDelete.userId);
+        toast({ title: 'User Deleted', description: `${pendingUserDelete.displayName} has been removed from the system.` });
+    }
+    close2faDialog();
   };
 
   const close2faDialog = () => {
     setIs2faDialogOpen(false);
     setTwoFactorCode('');
     setPendingUserMove(null);
+    setPendingUserDelete(null);
+    setTwoFactorActionType(null);
     setIsEditing2fa(false);
   };
 
@@ -204,8 +239,6 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive, activeTab, pa
     const sensors = useSensors(
         useSensor(PointerSensor, {
             activationConstraint: {
-                delay: 150,
-                tolerance: 5,
                 keyboard: viewAsUser.dragActivationKey ? {name: viewAsUser.dragActivationKey, A: true} as any : undefined
             },
         }),
@@ -242,7 +275,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive, activeTab, pa
                         </div>
                     </CardHeader>
                      <CardContent className="flex-grow">
-                         <UserDropZone id="user-list" users={filteredNonAdminUsers} />
+                         <UserDropZone id="user-list" users={filteredNonAdminUsers} onDeleteRequest={handleDeleteUserRequest} />
                     </CardContent>
                   </Card>
             </div>
@@ -861,8 +894,6 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
     const sensors = useSensors(
         useSensor(PointerSensor, {
             activationConstraint: {
-                delay: 150,
-                tolerance: 5,
                 keyboard: viewAsUser.dragActivationKey ? {name: viewAsUser.dragActivationKey, A: true} as any : undefined
             },
         }),
@@ -1194,8 +1225,6 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
     const sensors = useSensors(
         useSensor(PointerSensor, {
             activationConstraint: {
-                delay: 150,
-                tolerance: 5,
                 keyboard: viewAsUser.dragActivationKey ? {name: viewAsUser.dragActivationKey, A: true} as any : undefined
             },
         }),
