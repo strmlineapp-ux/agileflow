@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, Fragment, useRef, useEffect, useMemo } from 'react';
@@ -102,6 +103,52 @@ const SettingSelect = ({
     </Popover>
   );
 };
+
+const DragActivationKeySetting = ({ user, onUpdate }: { user: User, onUpdate: (key: User['dragActivationKey']) => void }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [keyInput, setKeyInput] = useState(user.dragActivationKey || 'Shift');
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        e.preventDefault();
+        const key = e.key.toLowerCase();
+        if (['alt', 'control', 'meta', 'shift'].includes(key)) {
+            const newKey = key === 'control' ? 'ctrl' : key as User['dragActivationKey'];
+            setKeyInput(newKey || 'shift');
+            onUpdate(newKey);
+            setIsOpen(false);
+        }
+    };
+
+    return (
+        <Popover open={isOpen} onOpenChange={setIsOpen}>
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <PopoverTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:bg-transparent hover:text-foreground">
+                                <GoogleSymbol name="smart_button" className="text-xl" grade={-25} weight={100} />
+                            </Button>
+                        </PopoverTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>Drag Modifier: <span className="font-semibold capitalize">{keyInput}</span>+Click. Click to change.</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+            <PopoverContent className="w-auto p-2" align="start">
+                <div className="flex flex-col items-center gap-2">
+                    <p className="text-sm text-muted-foreground">Press a modifier key...</p>
+                    <Input
+                        value={keyInput.charAt(0).toUpperCase() + keyInput.slice(1)}
+                        onKeyDown={handleKeyDown}
+                        className="text-center w-24"
+                        readOnly
+                    />
+                </div>
+            </PopoverContent>
+        </Popover>
+    )
+}
 
 function UserCard({ user, isCurrentUser, canEditPreferences, className }: { user: User, isCurrentUser: boolean, canEditPreferences: boolean, className?: string }) {
     const { updateUser, linkGoogleCalendar } = useUser();
@@ -230,6 +277,10 @@ function UserCard({ user, isCurrentUser, canEditPreferences, className }: { user
                                 </TooltipContent>
                                 </Tooltip>
                             </TooltipProvider>
+                            <DragActivationKeySetting
+                                user={user}
+                                onUpdate={(newKey) => updateUser(user.userId, { dragActivationKey: newKey })}
+                            />
                         </div>
                     )}
                 </div>

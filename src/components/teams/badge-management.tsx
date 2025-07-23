@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -13,7 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { ScrollArea } from '../ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { Textarea } from '../ui/textarea';
-import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle as UIDialogTitle } from '@/components/ui/dialog';
 import { Badge as UiBadge } from '../ui/badge';
 import { HexColorPicker, HexColorInput } from 'react-colorful';
@@ -970,8 +971,8 @@ function CollectionDropZone({ id, type, children, className }: { id: string; typ
 }
 
 
-export function BadgeManagement({ tab: pageConfig, page, isSingleTabPage = false }: { team: Team; tab: AppTab; page: AppPage; isSingleTabPage?: boolean }) {
-    const { viewAsUser, users, appSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors, updateUser, teams } = useUser();
+export function BadgeManagement({ pageConfig, page, team }: { team: Team; pageConfig: AppTab; page: AppPage; }) {
+    const { viewAsUser, users, appSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors, updateUser } = useUser();
     const { toast } = useToast();
     const sharedSearchInputRef = useRef<HTMLInputElement>(null);
 
@@ -983,15 +984,6 @@ export function BadgeManagement({ tab: pageConfig, page, isSingleTabPage = false
     const [sharedSearchTerm, setSharedSearchTerm] = useState('');
     const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
     
-    // Find the current team based on the page context if it's dynamic
-    const team = useMemo(() => {
-        if (page.isDynamic) {
-            const teamId = window.location.pathname.split('/').pop();
-            return teams.find(t => t.id === teamId);
-        }
-        return undefined;
-    }, [page, teams]);
-
     useEffect(() => {
         if (isSharedPanelOpen) {
             setTimeout(() => sharedSearchInputRef.current?.focus(), 100);
@@ -1075,12 +1067,11 @@ export function BadgeManagement({ tab: pageConfig, page, isSingleTabPage = false
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
-          activationConstraint: {
-            distance: 8,
-            keyboard: {
-              name: 'alt',
+            activationConstraint: {
+                delay: 250,
+                tolerance: 5,
+                keyboard: viewAsUser.dragActivationKey ? {name: viewAsUser.dragActivationKey, A: true} as any : undefined
             },
-          },
         }),
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates,

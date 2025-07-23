@@ -61,6 +61,7 @@ export interface User {
   linkedTeamIds?: string[];
   linkedCollectionIds?: string[];
   linkedCalendarIds?: string[];
+  dragActivationKey?: 'alt' | 'ctrl' | 'meta' | 'shift';
 }
 
 export interface EventTemplate {
@@ -77,6 +78,7 @@ export interface Badge {
   color: string;
   description?: string;
   owner: { type: 'user', id: string };
+  ownerCollectionId: string;
 }
 
 export type BadgeApplication = 'team members' | 'events' | 'tasks' | 'badges';
@@ -107,6 +109,8 @@ export interface Team {
   membersLabel?: string;
   locationCheckManagers: string[]; // array of userIds who can manage check locations
   userBadgesLabel?: string;
+  allBadges: Badge[];
+  badgeCollections: BadgeCollection[];
   pinnedLocations?: string[]; // array of location names
   checkLocations?: string[]; // subset of pinnedLocations designated for daily checks
   locationAliases?: { [key:string]: string };
