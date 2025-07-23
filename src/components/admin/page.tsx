@@ -121,8 +121,8 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive, activeTab, pa
   
   const [activeDragUser, setActiveDragUser] = useState<User | null>(null);
 
-  const adminUsers = useMemo(() => users.filter(u => u.isAdmin), [users]);
-  const nonAdminUsers = useMemo(() => users.filter(u => !u.isAdmin), [users]);
+  const adminUsers = useMemo(() => users.filter(u => u.isAdmin && u.userId !== 'system'), [users]);
+  const nonAdminUsers = useMemo(() => users.filter(u => !u.isAdmin && u.userId !== 'system'), [users]);
 
   useEffect(() => {
     if (is2faDialogOpen) {
