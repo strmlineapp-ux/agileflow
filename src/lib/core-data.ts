@@ -6,7 +6,7 @@
  * Separating them from mock-data.ts ensures a stable core navigation and structure.
  */
 
-import { type AppPage, type AppTab, type Badge } from '@/types';
+import { type AppPage, type AppTab } from '@/types';
 
 // Core tabs that are fundamental to the application's operation.
 // This order defines their default sequence in the "Manage Tabs" admin screen.
@@ -97,15 +97,4 @@ export const corePages: AppPage[] = [
         associatedTabs: ['tab-settings'],
         access: { users: [], teams: [] } // Public
     },
-];
-
-export const globalBadges: Badge[] = [
-  { id: 'p0', owner: { type: 'user', id: 'system' }, name: 'P0', icon: 'priority_high', color: '#EF4444', description: 'Highest priority' },
-  { id: 'p1', owner: { type: 'user', id: 'system' }, name: 'P1', icon: 'keyboard_arrow_up', color: '#F97316', description: 'High priority' },
-  { id: 'p2', owner: { type: 'user', id: 'system' }, name: 'P2', icon: 'remove', color: '#FBBF24', description: 'Medium priority' },
-  { id: 'p3', owner: { type: 'user', id: 'system' }, name: 'P3', icon: 'keyboard_arrow_down', color: '#22C55E', description: 'Low priority' },
-  { id: 'p4', owner: { type: 'user', id: 'system' }, name: 'P4', icon: 'remove', color: '#64748B', description: 'Lowest priority' },
-  { id: 'task-high', owner: { type: 'user', id: 'system' }, name: 'High', icon: 'keyboard_double_arrow_up', color: '#EF4444' },
-  { id: 'task-medium', owner: { type: 'user', id: 'system' }, name: 'Medium', icon: 'drag_handle', color: '#FBBF24' },
-  { id: 'task-low', owner: { type: 'user', id: 'system' }, name: 'Low', icon: 'keyboard_double_arrow_down', color: '#22C55E' },
 ];

@@ -28,7 +28,6 @@ export interface AppPage {
 export interface AppSettings {
   pages: AppPage[];
   tabs: AppTab[];
-  globalBadges: Badge[];
   calendarManagementLabel?: string;
   teamManagementLabel?: string;
 }

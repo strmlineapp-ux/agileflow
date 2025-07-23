@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { hexToHsl } from '@/lib/utils';
 import { hasAccess, getOwnershipContext } from '@/lib/permissions';
 import { googleSymbolNames } from '@/lib/google-symbols';
-import { corePages, coreTabs, globalBadges } from '@/lib/core-data';
+import { corePages, coreTabs } from '@/lib/core-data';
 import { syncCalendar } from '@/ai/flows/sync-calendar-flow';
 import { getFirebaseAppForTenant } from '@/lib/firebase';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
@@ -121,14 +121,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     return {
         pages: finalPages,
         tabs: [...coreTabs],
-        globalBadges: globalBadges,
     };
   });
   const { toast } = useToast();
 
   const [allBadges, setAllBadges] = useState<Badge[]>(() => {
     const badgesMap = new Map<string, Badge>();
-    [...globalBadges, ...videoProdBadges, ...liveEventsBadges, ...pScaleBadges, ...starRatingBadges, ...effortBadges].forEach(badge => {
+    [...videoProdBadges, ...liveEventsBadges, ...pScaleBadges, ...starRatingBadges, ...effortBadges].forEach(badge => {
         if (badge && !badgesMap.has(badge.id)) {
             badgesMap.set(badge.id, badge);
         }

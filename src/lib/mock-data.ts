@@ -1,7 +1,7 @@
 
 
 import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team, type AppSettings, type Badge, type BadgeCollection, type AppTab, type AppPage, type BadgeCollectionOwner } from '@/types';
-import { corePages, coreTabs, globalBadges } from './core-data';
+import { corePages, coreTabs } from './core-data';
 
 // This file now contains only the data that an administrator would dynamically
 // create and manage, such as new pages or teams. The core, stable application
@@ -27,7 +27,6 @@ const dynamicPages: AppPage[] = [
 export const mockAppSettings: AppSettings = {
   pages: [...dynamicPages],
   tabs: [], // Core tabs are now in core-data.ts
-  globalBadges: globalBadges,
 };
 
 export const mockUsers: User[] = [
