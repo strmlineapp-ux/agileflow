@@ -40,6 +40,7 @@ const UserSessionContext = createContext<UserSessionContextType | null>(null);
 // Context for heavier, less frequently updated application data
 interface UserDataContextType {
   loading: boolean;
+  isDragModifierPressed: boolean;
   tasks: Task[];
   holidays: Holiday[];
   teams: Team[];
@@ -90,6 +91,7 @@ const REAL_USER_ID = '1'; // Bernardo is the default user
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [viewAsUserId, setViewAsUserId] = useState<string>(REAL_USER_ID);
+  const [isDragModifierPressed, setIsDragModifierPressed] = useState(false);
   
   // Initialize states as empty, simulating a "no data yet" state
   const [users, setUsers] = useState<User[]>([]);
@@ -159,6 +161,38 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const realUser = useMemo(() => users.find(u => u.userId === REAL_USER_ID) || null, [users]);
   const viewAsUser = useMemo(() => users.find(u => u.userId === viewAsUserId) || realUser, [users, viewAsUserId, realUser]);
+  
+  useEffect(() => {
+    if (!viewAsUser) return;
+    const modifier = viewAsUser.dragActivationKey || 'shift';
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key.toLowerCase() === modifier) {
+            setIsDragModifierPressed(true);
+        }
+    };
+    
+    const handleKeyUp = (e: KeyboardEvent) => {
+        if (e.key.toLowerCase() === modifier) {
+            setIsDragModifierPressed(false);
+        }
+    };
+    
+    const handleWindowBlur = () => {
+        setIsDragModifierPressed(false);
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('blur', handleWindowBlur);
+    
+    return () => {
+        window.removeEventListener('keydown', handleKeyDown);
+        window.removeEventListener('keyup', handleKeyUp);
+        window.removeEventListener('blur', handleWindowBlur);
+    };
+  }, [viewAsUser]);
+
 
   const allBookableLocations = useMemo(() => {
     const globalLocations = locations.map(l => ({ id: l.id, name: l.name }));
@@ -500,8 +534,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }), [realUser, viewAsUser, users]);
 
   const dataValue = useMemo(() => ({
-    loading, tasks, holidays, teams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, deleteUser, notifications, setNotifications, userStatusAssignments, setUserStatusAssignments, addUser, linkGoogleCalendar, calendars, reorderCalendars, addCalendar, updateCalendar, deleteCalendar, events, addEvent, updateEvent, deleteEvent, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors,
-  }), [loading, tasks, holidays, teams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, deleteUser, notifications, setNotifications, userStatusAssignments, setUserStatusAssignments, addUser, linkGoogleCalendar, calendars, reorderCalendars, addCalendar, updateCalendar, deleteCalendar, events, addEvent, updateEvent, deleteEvent, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges]);
+    loading, isDragModifierPressed, tasks, holidays, teams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, deleteUser, notifications, setNotifications, userStatusAssignments, setUserStatusAssignments, addUser, linkGoogleCalendar, calendars, reorderCalendars, addCalendar, updateCalendar, deleteCalendar, events, addEvent, updateEvent, deleteEvent, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors,
+  }), [loading, isDragModifierPressed, tasks, holidays, teams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, deleteUser, notifications, setNotifications, userStatusAssignments, setUserStatusAssignments, addUser, linkGoogleCalendar, calendars, reorderCalendars, addCalendar, updateCalendar, deleteCalendar, events, addEvent, updateEvent, deleteEvent, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges]);
 
   if (!realUser || !viewAsUser) {
     return null; // Or a loading spinner
