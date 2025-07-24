@@ -112,7 +112,7 @@ This pattern describes how a single entity (like a **Team**, **Calendar**, or **
   - **Full Context**: When an item is linked, it should display all of its original properties (name, icon, color, description, etc.) to give the linking user full context.
   - **Editing Source of Truth**: Editing a shared item (e.g., changing a team's name) modifies the original "source of truth" item, and the changes are instantly reflected in all other places where it is used.
   - **Local Overrides**: For linked Badge Collections, the `applications` (e.g., "Team Members", "Events") can be modified locally without affecting the original, allowing teams to customize how they use a shared resource.
-  - **Smart Deletion & Unlinking**: Clicking the "delete" icon on a *linked* item (like a Team or Calendar) simply unlinks it from the user's view, and the original item is unaffected. This is a low-risk action. Deleting an item *owned* by the user is confirmed via a `Compact Action Dialog`.
+  - **Smart Deletion & Unlinking**: Clicking the "delete" icon on a *linked* item (like a Team, Calendar, or Badge) simply unlinks it from the current context, and the original item is unaffected. This is a low-risk action. Deleting an item *owned* by the user is confirmed via a `Compact Action Dialog`.
 - **Application**: This is the required pattern for sharing **Teams**, **Calendars**, and **Badge Collections**.
 
 ---
@@ -124,15 +124,11 @@ This is the application's perfected, gold-standard pattern for managing a collec
 -   **Critical Stability Properties**:
     -   **`@dnd-kit` is the required library.** The older `react-beautiful-dnd` library was found to be incompatible with this type of responsive layout.
     -   `flex-grow-0` and `flex-shrink-0` **must** be used on draggable items. This prevents the remaining items in a row from expanding or shrinking, which causes the grid to reflow unstably when an item is being dragged.
--   **Initiating a Drag**: To provide a clean interface, the drag action is initiated by clicking and dragging any non-interactive part of the card. The drag listener from `dnd-kit`'s `useSortable` hook is applied to the main card container.
+-   **Initiating a Drag**: To provide a clean interface without extra UI elements, the drag action is initiated by holding down a user-configurable modifier key (`Shift`, `Alt`, `Ctrl`, or `Meta`) while clicking and dragging any non-interactive part of a card. This modifier key is set in the user's Account Settings.
 -   **Expand/Collapse**: Cards are collapsed by default. To expand a card and view its details, the user must click a dedicated `expand_more` icon button, positioned at `absolute -bottom-1 right-0`. This provides a clear, unambiguous affordance and avoids conflicts with other click actions on the card.
 -   **Preventing Interaction Conflicts**:
-    -   To allow buttons, popovers, and other controls *inside* the draggable card to function correctly, they must stop the `pointerdown` event from propagating up to the card's drag listener. **This is a critical implementation detail and must be done by adding `onPointerDown={(e) => e.stopPropagation()}` to every interactive element within the card.**
-    -   To prevent conflicts between an **Inline Editor** and `@dnd-kit`'s keyboard and pointer listeners (e.g., spacebar to lift), the editing state must be managed correctly.
-        - **State Management**: The component that implements the `useSortable` hook (e.g., `SortablePageCard`, `SortableBadgeItem`, `SortableCollectionCard`) must own the `isEditing` state. For more complex components with multiple editable fields (like a Badge name and description), the parent `Sortable` component should manage a separate boolean state for each field (e.g., `isEditingName`, `isEditingDescription`).
-        - **State Propagation**: This state and its setter function must be passed down as props to the child component that contains the actual inline editor inputs.
-        - **Disabling Drag**: The `useSortable` hook must be configured with `disabled: isEditingName || isEditingDescription`. This is the key to resolving the "ghosting" effect when an editor is clicked.
-        - **Effect**: When a user clicks to edit a specific field, the child component sets the parent's corresponding state to `true`. This immediately disables the `useSortable` hook, preventing `@dnd-kit` from capturing pointer or keyboard events, which allows the inline editor to function correctly without triggering a drag.
+    -   The primary mechanism for preventing accidental drags is the **modifier key activation**. Since a drag action only begins when the modifier key is held, normal clicks on buttons, popovers, and other controls inside a draggable card function as expected without interference.
+    -   For components with internal keyboard interactions (like an **Inline Editor** where the spacebar is used for typing), the `useSortable` hook for the draggable card **must** be temporarily disabled while the internal component is in an editing state. This is done by passing a `disabled: isEditing` flag to the hook, preventing `@dnd-kit`'s keyboard listeners (e.g., spacebar to lift) from firing while the user is typing.
 -   **Visual Feedback**: To provide feedback without disrupting layout, visual changes (like a `shadow` or `opacity`) should be applied directly to the inner component based on the `isDragging` prop provided by `dnd-kit`'s `useSortable` hook. The draggable wrapper itself should remain untouched.
 -   **Internal Card Layout**: Each card is structured for clarity. The header contains the primary entity identifier (icon and name) and contextual controls. To keep cards compact, headers and content areas should use minimal padding (e.g., `p-2`). Titles should be configured to wrap gracefully to handle longer text. **All icon-only buttons inside a card MUST have a `<Tooltip>`**.
 -   **User Item Display**: When users are displayed as items within a management card (e.g., `TeamCard`), they are presented **without a border**. Each user item must display their avatar, full name, and professional title underneath the name for consistency.
@@ -318,5 +314,3 @@ This is the single source of truth for indicating user interaction state across 
       - **Ownership Status**: `absolute -top-0 -right-3`.
     - **Icon Size (Ownership Status)**: The `GoogleSymbol` inside an ownership status badge should have its size set via `style={{fontSize: '16px'}}`.
 -   **Badges in Compact View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
-
-```
