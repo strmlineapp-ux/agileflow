@@ -73,7 +73,7 @@ function UserCard({ user, isDeletable, onDelete }: { user: User, isDeletable?: b
                                 onClick={(e) => { e.stopPropagation(); onDelete(user); }}
                                 onPointerDown={(e) => e.stopPropagation()}
                             >
-                                <GoogleSymbol name="cancel" className="text-lg" weight={100}/>
+                                <GoogleSymbol name="cancel" className="text-lg" weight={100} opticalSize={20}/>
                             </Button>
                         </TooltipTrigger>
                         <TooltipContent><p>Delete User</p></TooltipContent>
@@ -299,7 +299,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive, activeTab, pa
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <Button variant="ghost" size="icon" onClick={handleVerify2fa}>
-                                    <GoogleSymbol name="check" className="text-xl" weight={100} />
+                                    <GoogleSymbol name="check" className="text-xl" weight={100} opticalSize={20} />
                                     <span className="sr-only">Verify Code</span>
                                 </Button>
                             </TooltipTrigger>
@@ -317,7 +317,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive, activeTab, pa
                     )}
                     onClick={() => {if (!isEditing2fa) setIsEditing2fa(true)}}
                     >
-                    <GoogleSymbol name="password" className="text-xl" weight={100} />
+                    <GoogleSymbol name="password" className="text-xl" weight={100} opticalSize={20} />
                     {isEditing2fa ? (
                         <Input
                             id="2fa-code"
@@ -387,7 +387,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
     const renderSearchControl = () => (
          <div className="p-2 border-b">
             <div className="flex items-center gap-1 w-full">
-              <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
+              <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} opticalSize={20} />
               <input
                   ref={searchInputRef}
                   placeholder="Search..."
@@ -405,7 +405,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <PopoverTrigger asChild>
-                            <Button variant="ghost" size="icon" onPointerDown={(e) => e.stopPropagation()} className={cn(isDragModifierPressed && "hidden")}><GoogleSymbol name="group_add" className="text-4xl" weight={100} /></Button>
+                            <Button variant="ghost" size="icon" onPointerDown={(e) => e.stopPropagation()} className={cn(isDragModifierPressed && "hidden")}><GoogleSymbol name="group_add" className="text-4xl" weight={100} opticalSize={20} /></Button>
                         </PopoverTrigger>
                     </TooltipTrigger>
                     <TooltipContent><p>Manage Page Access</p></TooltipContent>
@@ -436,7 +436,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                           const isSelected = access.teams.includes(team.id);
                           return (
                             <div key={team.id} className="flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer" style={{ color: isSelected ? team.color : undefined }} onClick={() => handleToggle('teams', team.id)}>
-                              <GoogleSymbol name={team.icon} className="text-xl" weight={100} />
+                              <GoogleSymbol name={team.icon} className="text-xl" weight={100} opticalSize={20} />
                               <span className="font-thin">{team.name}</span>
                             </div>
                           )
@@ -488,7 +488,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
           <Tooltip>
               <TooltipTrigger asChild>
                   <PopoverTrigger asChild>
-                      <Button variant="ghost" size="icon" onPointerDown={(e) => e.stopPropagation()} className={cn(isDragModifierPressed && "hidden")}><GoogleSymbol name="layers" className="text-4xl" weight={100} /></Button>
+                      <Button variant="ghost" size="icon" onPointerDown={(e) => e.stopPropagation()} className={cn(isDragModifierPressed && "hidden")}><GoogleSymbol name="layers" className="text-4xl" weight={100} opticalSize={20} /></Button>
                   </PopoverTrigger>
               </TooltipTrigger>
               <TooltipContent><p>Manage Associated Tabs</p></TooltipContent>
@@ -497,7 +497,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
       <PopoverContent className="w-80 p-0" onPointerDownCapture={(e) => { e.stopPropagation(); }}>
         <div className="p-2 border-b">
           <div className="flex items-center gap-1 w-full">
-            <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
+            <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} opticalSize={20} />
             <input
                 ref={searchInputRef}
                 placeholder="Search tabs..."
@@ -519,7 +519,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
                     style={{ color: isAssociated ? tab.color : undefined }}
                     onClick={() => handleToggle(tab.id)}
                 >
-                    <GoogleSymbol name={tab.icon} className="text-xl" weight={100} />
+                    <GoogleSymbol name={tab.icon} className="text-xl" weight={100} opticalSize={20} />
                     <span className="font-thin">{tab.name}</span>
                 </div>
               );
@@ -614,7 +614,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isCollapsed,
                                   setIsDeleteDialogOpen(true);
                               }}
                           >
-                              <GoogleSymbol name="cancel" className="text-lg" weight={100} />
+                              <GoogleSymbol name="cancel" className="text-lg" weight={100} opticalSize={20} />
                           </Button>
                       </TooltipTrigger>
                       <TooltipContent><p>Delete Page</p></TooltipContent>
@@ -640,7 +640,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isCollapsed,
                                 </TooltipProvider>
                                 <PopoverContent className="w-80 p-0" onPointerDown={(e) => e.stopPropagation()}>
                                     <div className="flex items-center gap-1 p-2 border-b">
-                                        <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
+                                        <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} opticalSize={20} />
                                         <input
                                             ref={iconSearchInputRef}
                                             placeholder="Search icons..."
@@ -659,7 +659,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isCollapsed,
                                             onClick={() => { onUpdate(page.id, { icon: iconName }); setIsIconPopoverOpen(false);}}
                                             className="h-8 w-8 p-0"
                                             >
-                                            <GoogleSymbol name={iconName} weight={100} className="text-4xl"/>
+                                            <GoogleSymbol name={iconName} weight={100} className="text-4xl" opticalSize={20} />
                                             </Button>
                                         </TooltipTrigger>
                                         <TooltipContent><p>{iconName}</p></TooltipContent>
@@ -737,7 +737,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isCollapsed,
             {!isCollapsed && (
                  <div className={cn("absolute -bottom-1 right-0", isDragModifierPressed && "hidden")}>
                     <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
-                        <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} weight={100} />
+                        <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} weight={100} opticalSize={20} />
                     </Button>
                 </div>
             )}
@@ -748,7 +748,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isCollapsed,
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button variant="ghost" size="icon" className="hover:text-destructive p-0 hover:bg-transparent" onClick={() => onDelete(page.id)}>
-                              <GoogleSymbol name="delete" className="text-4xl" weight={100} />
+                              <GoogleSymbol name="delete" className="text-4xl" weight={100} opticalSize={20} />
                               <span className="sr-only">Delete Page</span>
                             </Button>
                           </TooltipTrigger>
@@ -822,7 +822,7 @@ function DuplicateZone({ onAdd }: { onAdd: () => void; }) {
           <Tooltip>
               <TooltipTrigger asChild>
                   <Button variant="ghost" size="icon" className="rounded-full p-0" onClick={onAdd} onPointerDown={(e) => e.stopPropagation()}>
-                    <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
+                    <GoogleSymbol name="add_circle" className="text-4xl" weight={100} opticalSize={20} />
                     <span className="sr-only">New Page or Drop to Duplicate</span>
                   </Button>
               </TooltipTrigger>
@@ -1089,7 +1089,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                                 <TooltipTrigger asChild>
                                     <PopoverTrigger asChild disabled={isDragModifierPressed}>
                                         <button className={cn("h-10 w-12 flex items-center justify-center")}>
-                                            <GoogleSymbol name={tab.icon} className="text-4xl" weight={100} />
+                                            <GoogleSymbol name={tab.icon} className="text-4xl" weight={100} opticalSize={20} />
                                         </button>
                                     </PopoverTrigger>
                                 </TooltipTrigger>
@@ -1098,7 +1098,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                         </TooltipProvider>
                         <PopoverContent className="w-80 p-0">
                             <div className="flex items-center gap-1 p-2 border-b">
-                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" />
+                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" opticalSize={20} />
                                 <input
                                     ref={iconSearchInputRef}
                                     placeholder="Search icons..."
@@ -1117,7 +1117,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                                     onClick={() => { onUpdate(tab.id, { icon: iconName }); setIsIconPopoverOpen(false);}}
                                     className="h-8 w-8 p-0"
                                     >
-                                    <GoogleSymbol name={iconName} style={{fontSize: '24px'}} weight={100} />
+                                    <GoogleSymbol name={iconName} style={{fontSize: '24px'}} weight={100} opticalSize={20} />
                                     </Button>
                                 </TooltipTrigger>
                                 <TooltipContent><p>{iconName}</p></TooltipContent>

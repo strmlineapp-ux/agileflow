@@ -68,7 +68,7 @@ function EventTemplateForm({
     <>
       <div className="absolute top-4 right-4">
         <Button variant="ghost" size="icon" className="p-0" onClick={handleSaveClick}>
-            <GoogleSymbol name="check" className="text-4xl" weight={100} />
+            <GoogleSymbol name="check" className="text-4xl" weight={100} opticalSize={20} />
             <span className="sr-only">Save Template</span>
         </Button>
       </div>
@@ -84,7 +84,7 @@ function EventTemplateForm({
                 <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
                     <PopoverTrigger asChild>
                          <Button variant="ghost" className="h-14 w-14 flex items-center justify-center p-0">
-                            <GoogleSymbol name={icon} style={{ fontSize: '48px' }} weight={100} />
+                            <GoogleSymbol name={icon} style={{ fontSize: '48px' }} weight={100} opticalSize={20} />
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-80 p-0">
@@ -108,7 +108,7 @@ function EventTemplateForm({
                                         }}
                                         className="h-8 w-8 p-0"
                                     >
-                                        <GoogleSymbol name={iconName} style={{fontSize: '24px'}} weight={100} />
+                                        <GoogleSymbol name={iconName} style={{fontSize: '24px'}} weight={100} opticalSize={20} />
                                     </Button>
                                 ))}
                             </div>
@@ -135,7 +135,7 @@ function EventTemplateForm({
                         className="ml-1 h-4 w-4 hover:bg-destructive/20 rounded-full inline-flex items-center justify-center" 
                         onClick={() => handleRemoveRole(role)}
                     >
-                        <GoogleSymbol name="cancel" className="text-sm" />
+                        <GoogleSymbol name="cancel" className="text-sm" weight={100} opticalSize={20} />
                         <span className="sr-only">Remove {role}</span>
                     </button>
                 </Badge>
@@ -143,7 +143,7 @@ function EventTemplateForm({
               <Popover open={isAddRolePopoverOpen} onOpenChange={setIsAddRolePopoverOpen}>
                 <PopoverTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full">
-                        <GoogleSymbol name="add" className="text-lg" weight={100} />
+                        <GoogleSymbol name="add" className="text-lg" weight={100} opticalSize={20} />
                     </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-[250px] p-0" align="start">
@@ -303,7 +303,7 @@ export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab
                   <CardTitle className="flex items-center gap-2">
                       Event Templates
                        <Button variant="ghost" size="icon" className="p-0" onClick={openAddDialog}>
-                        <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
+                        <GoogleSymbol name="add_circle" className="text-4xl" weight={100} opticalSize={20} />
                         <span className="sr-only">New Template</span>
                       </Button>
                   </CardTitle>
@@ -322,7 +322,7 @@ export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab
                         <div className="flex items-start justify-between">
                              <CardTitle className="flex-1 min-w-0">
                                 <Badge className="text-base py-1 px-3 gap-2">
-                                    <GoogleSymbol name={template.icon} />
+                                    <GoogleSymbol name={template.icon} opticalSize={20} />
                                     {editingTemplateNameId === template.id ? (
                                         <Input
                                             ref={nameInputRef}
@@ -348,7 +348,7 @@ export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab
                                   className="text-muted-foreground p-0"
                                   onClick={() => openEditDialog(template)}
                                 >
-                                    <GoogleSymbol name="edit" className="text-4xl" weight={100} />
+                                    <GoogleSymbol name="edit" className="text-4xl" weight={100} opticalSize={20} />
                                     <span className="sr-only">Edit roles for {template.name}</span>
                                 </Button>
                                 <Button 
@@ -360,7 +360,7 @@ export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab
                                     setDeletingTemplate(template);
                                   }}
                                 >
-                                    <GoogleSymbol name="delete" className="text-4xl" weight={100} />
+                                    <GoogleSymbol name="delete" className="text-4xl" weight={100} opticalSize={20} />
                                     <span className="sr-only">Delete {template.name}</span>
                                 </Button>
                             </div>
@@ -402,7 +402,7 @@ export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab
         <DialogContent className="max-w-md">
             <div className="absolute top-4 right-4">
                 <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10 p-0" onClick={handleDeleteTemplate}>
-                    <GoogleSymbol name="delete" className="text-4xl" weight={100} />
+                    <GoogleSymbol name="delete" className="text-4xl" weight={100} opticalSize={20} />
                     <span className="sr-only">Delete Template</span>
                 </Button>
             </div>

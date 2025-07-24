@@ -34,7 +34,7 @@ const DropdownMenuSubTrigger = React.forwardRef<
     {...props}
   >
     {children}
-    <GoogleSymbol name="chevron_right" className="ml-auto" weight={100} />
+    <GoogleSymbol name="chevron_right" className="ml-auto" weight={100} opticalSize={20} />
   </DropdownMenuPrimitive.SubTrigger>
 ))
 DropdownMenuSubTrigger.displayName =
@@ -107,7 +107,7 @@ const DropdownMenuCheckboxItem = React.forwardRef<
   >
     <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
       <DropdownMenuPrimitive.ItemIndicator>
-        <GoogleSymbol name="check" className="text-base" weight={100} />
+        <GoogleSymbol name="check" className="text-base" weight={100} opticalSize={20} />
       </DropdownMenuPrimitive.ItemIndicator>
     </span>
     {children}
@@ -130,7 +130,7 @@ const DropdownMenuRadioItem = React.forwardRef<
   >
     <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
       <DropdownMenuPrimitive.ItemIndicator>
-        <GoogleSymbol name="circle" className="h-2 w-2 fill-current" weight={100} />
+        <GoogleSymbol name="circle" className="h-2 w-2 fill-current" weight={100} opticalSize={20} />
       </DropdownMenuPrimitive.ItemIndicator>
     </span>
     {children}
