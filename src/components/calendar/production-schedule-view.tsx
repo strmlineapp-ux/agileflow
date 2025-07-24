@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useMemo, useState, useRef, useCallback, useLayoutEffect } from 'react';
@@ -19,7 +20,7 @@ import { canCreateAnyEvent } from '@/lib/permissions';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { Badge as UiBadge } from '../ui/badge';
 import { PriorityBadge } from './priority-badge';
-import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { Input } from '../ui/input';
 import { ScrollArea } from '../ui/scroll-area';
 
@@ -586,14 +587,14 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
                                     const pillContent = (
                                         <>
                                             {locationAliasMap[location] || location}
-                                            {assignedUser && <span className="ml-2 font-normal text-muted-foreground">({`${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}`})</span>}
+                                            {assignedUser && <span className="ml-2 font-normal text-muted-foreground">({`${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}`})</span>}
                                             {!assignedUser && canManageThisCheckLocation && <GoogleSymbol name="person_add" weight={100} className="ml-2" />}
                                         </>
                                     );
                                     
                                     const dailyCheckUsers = users.filter(user => teams.some(t => (t.checkLocations || []).includes(location) && (t.locationCheckManagers || []).includes(viewAsUser.userId) && (t.members || []).includes(user.userId) ));
 
-                                    const pill = canManageThisLocation ? (
+                                    const pill = canManageThisCheckLocation ? (
                                         <Popover key={location}><PopoverTrigger asChild><UiBadge variant={assignedUser ? "default" : "outline"} className={cn("rounded-full h-8 cursor-pointer", isTempCheck && "border-dashed")}>{pillContent}</UiBadge></PopoverTrigger>
                                             <PopoverContent className="w-56 p-0">
                                                 <div className="p-2 border-b"><p className="text-sm font-normal text-center">{locationAliasMap[location] || location}</p></div>
