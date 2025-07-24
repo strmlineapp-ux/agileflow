@@ -22,7 +22,7 @@ const Checkbox = React.forwardRef<
     <CheckboxPrimitive.Indicator
       className={cn("flex items-center justify-center text-current")}
     >
-      <GoogleSymbol name="check" className="h-3.5 w-3.5" />
+      <GoogleSymbol name="check" className="h-3.5 w-3.5" opticalSize={20} />
     </CheckboxPrimitive.Indicator>
   </CheckboxPrimitive.Root>
 ))

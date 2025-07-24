@@ -36,7 +36,7 @@ const AccordionTrigger = React.forwardRef<
     >
       {children}
       <span className="shrink-0 transition-transform duration-200 data-[state=open]:rotate-180">
-        <GoogleSymbol name="expand_more" />
+        <GoogleSymbol name="expand_more" opticalSize={20} />
       </span>
     </AccordionPrimitive.Trigger>
   </AccordionPrimitive.Header>
