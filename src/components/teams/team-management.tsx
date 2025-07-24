@@ -361,7 +361,7 @@ function TeamCard({
                                         className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
                                     />
                                 ) : (
-                                    <CardTitle className={cn("font-headline text-xl font-thin truncate", canManageTeam && !isDragModifierPressed && "cursor-pointer")} onClick={() => { if (canManageTeam && !isDragModifierPressed) setIsEditingName(true); }}>
+                                    <CardTitle className={cn("font-headline text-xl font-thin truncate", canManageTeam && !isDragModifierPressed && "cursor-text")} onClick={() => { if (canManageTeam && !isDragModifierPressed) setIsEditingName(true); }}>
                                         {team.name}
                                     </CardTitle>
                                 )}
@@ -743,12 +743,12 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
     
     const sensors = useSensors(
         useSensor(PointerSensor, {
-          onActivation: ({ event }) => {
-            if (!isDragModifierPressed) {
-                return false;
-            }
-            return true;
-          },
+            onActivation: ({ event }) => {
+                if (!isDragModifierPressed) {
+                    return false;
+                }
+                return true;
+            },
         }),
         useSensor(KeyboardSensor, {
           coordinateGetter: sortableKeyboardCoordinates,

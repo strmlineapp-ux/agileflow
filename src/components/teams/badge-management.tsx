@@ -228,7 +228,7 @@ function BadgeDisplayItem({
                     )}
                 />
             ) : (
-                <span className={cn("break-words", viewMode === 'detailed' ? "text-base font-normal font-headline font-thin" : "font-thin text-sm", isOwner && !isDragModifierPressed && "cursor-pointer")}>
+                <span className={cn("break-words", viewMode === 'detailed' ? "text-base font-normal font-headline font-thin" : "font-thin text-sm", isOwner && !isDragModifierPressed && "cursor-text")}>
                     {badge.name}
                 </span>
             )}
@@ -696,7 +696,7 @@ function BadgeCollectionCard({
                                 {!isViewer && (
                                     <>
                                         <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                                            <TooltipProvider><Tooltip><TooltipTrigger asChild><PopoverTrigger asChild disabled={!isOwner || isDragModifierPressed} onPointerDown={(e) => e.stopPropagation()}><button className={cn("absolute -bottom-1 -right-3 h-4 w-4 rounded-full border-0", !isOwner ? "cursor-not-allowed" : "cursor-pointer", isDragModifierPressed && "hidden")} style={{ backgroundColor: collection.color }} /></PopoverTrigger></TooltipTrigger><TooltipContent><p>Change Color</p></TooltipContent></Tooltip></TooltipProvider>
+                                            <TooltipProvider><Tooltip><TooltipTrigger asChild><PopoverTrigger asChild disabled={!isOwner || isDragModifierPressed} onPointerDown={(e) => e.stopPropagation()}><button className={cn("absolute -bottom-1 -right-3 h-4 w-4 rounded-full border-0", !isOwner || isDragModifierPressed ? "cursor-not-allowed" : "cursor-pointer", isDragModifierPressed && "hidden")} style={{ backgroundColor: collection.color }} /></PopoverTrigger></TooltipTrigger><TooltipContent><p>Change Color</p></TooltipContent></Tooltip></TooltipProvider>
                                             <PopoverContent className="w-auto p-4" onPointerDown={(e) => e.stopPropagation()}>
                                                 <div className="space-y-4">
                                                     <HexColorPicker color={color} onChange={setColor} className="!w-full" />
@@ -714,7 +714,7 @@ function BadgeCollectionCard({
                                             </PopoverContent>
                                         </Popover>
                                         {shareIcon && (
-                                            <TooltipProvider><Tooltip><TooltipTrigger asChild><div className="absolute -top-0 -right-3 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white" style={{ backgroundColor: ownerColor }}><GoogleSymbol name={shareIcon} style={{fontSize: '16px'}} weight={100} opticalSize={20}/></div></TooltipTrigger><TooltipContent><p>{shareIconTitle}</p></TooltipContent></Tooltip></TooltipProvider>
+                                            <TooltipProvider><Tooltip><TooltipTrigger asChild><div className="absolute -top-0 -right-3 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white" style={{ backgroundColor: ownerColor }}><GoogleSymbol name={shareIcon} style={{fontSize: '16px'}} opticalSize={20} /></div></TooltipTrigger><TooltipContent><p>{shareIconTitle}</p></TooltipContent></Tooltip></TooltipProvider>
                                         )}
                                     </>
                                 )}
@@ -1066,14 +1066,17 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
-          activationConstraint: {
-            distance: 8,
-          },
+            onActivation: ({ event }) => {
+                if (!isDragModifierPressed) {
+                    return false;
+                }
+                return true;
+            },
         }),
         useSensor(KeyboardSensor, {
           coordinateGetter: sortableKeyboardCoordinates,
           onActivation: ({ event }) => {
-            if (isDragModifierPressed) {
+            if (!isDragModifierPressed) {
                 return false;
             }
             return true;

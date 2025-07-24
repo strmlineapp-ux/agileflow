@@ -285,7 +285,7 @@ The application supports two distinct color themes, `light` and `dark`, which ca
 
 - **Custom Primary Color**: Users can select a custom primary color using a color picker popover, as defined in the **Icon & Color Editing Flow** pattern. This custom color overrides the theme's default primary color.
 - **Primary Button Gradient**: Primary buttons have a special gradient effect on hover, which is unique to each theme. This provides a subtle but polished visual feedback for key actions.
-- **Text-based Button Hover**: For text-based buttons (like those on the login page), the hover and focus state is indicated *only* by the text color changing to the primary theme color. No background color is applied.
+- **Text-based Button Hover**: For text-based buttons (like those on the login page), the hover and focus state is indicated *only* by the text color changing to the primary theme color. No background highlight is applied.
 
 ### Global Focus & Highlight Style
 This is the single source of truth for indicating user interaction state across the entire application.
@@ -316,3 +316,4 @@ This is the single source of truth for indicating user interaction state across 
       - **Ownership Status**: `absolute -top-0 -right-3`.
     - **Icon Size (Ownership Status)**: The `GoogleSymbol` inside an ownership status badge should have its size set via `style={{fontSize: '16px'}}`.
 -   **Badges in Compact View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
+
