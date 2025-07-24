@@ -743,9 +743,19 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
     };
     
     const sensors = useSensors(
-        useSensor(PointerSensor),
+        useSensor(PointerSensor, {
+          activationConstraint: {
+            modifier: viewAsUser.dragActivationKey,
+          },
+        }),
         useSensor(KeyboardSensor, {
-            coordinateGetter: sortableKeyboardCoordinates,
+          coordinateGetter: sortableKeyboardCoordinates,
+          onActivation: ({ event }) => {
+            if ((event as KeyboardEvent).metaKey || (event as KeyboardEvent).altKey || (event as KeyboardEvent).ctrlKey || (event as KeyboardEvent).shiftKey) {
+                return false;
+            }
+            return true;
+          }
         })
     );
 
@@ -914,3 +924,4 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
         </DndContext>
     );
 }
+

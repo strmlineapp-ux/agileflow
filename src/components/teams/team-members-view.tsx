@@ -71,13 +71,18 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
     
     const sensors = useSensors(
         useSensor(PointerSensor, {
-            activationConstraint: {
-                delay: 150,
-                tolerance: 5,
-            },
+          activationConstraint: {
+            modifier: viewAsUser.dragActivationKey,
+          },
         }),
         useSensor(KeyboardSensor, {
-            coordinateGetter: sortableKeyboardCoordinates,
+          coordinateGetter: sortableKeyboardCoordinates,
+          onActivation: ({ event }) => {
+            if ((event as KeyboardEvent).metaKey || (event as KeyboardEvent).altKey || (event as KeyboardEvent).ctrlKey || (event as KeyboardEvent).shiftKey) {
+                return false;
+            }
+            return true;
+          }
         })
     );
 
@@ -236,3 +241,4 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
       </DndContext>
     );
 }
+

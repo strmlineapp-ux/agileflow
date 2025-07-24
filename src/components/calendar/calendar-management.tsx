@@ -588,8 +588,20 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
   };
   
   const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        modifier: viewAsUser.dragActivationKey,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+      onActivation: ({ event }) => {
+        if ((event as KeyboardEvent).metaKey || (event as KeyboardEvent).altKey || (event as KeyboardEvent).ctrlKey || (event as KeyboardEvent).shiftKey) {
+            return false;
+        }
+        return true;
+      }
+    })
   );
 
   const displayedCalendars = useMemo(() => {
@@ -750,3 +762,4 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
     </DndContext>
   );
 }
+
