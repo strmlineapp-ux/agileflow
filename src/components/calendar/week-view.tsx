@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useState, useMemo, useRef, useCallback, useLayoutEffect } from 'react';
@@ -234,7 +235,7 @@ export const WeekView = React.memo(({ date, containerRef, zoomLevel, onEasyBooki
                                                         data-event-id={event.eventId}
                                                         onClick={(e) => { e.stopPropagation(); onEventClick(event); }}
                                                         className={cn(
-                                                            "absolute left-1 right-1 p-1 rounded-md shadow-sm cursor-pointer flex flex-col overflow-hidden"
+                                                            "absolute left-1 right-1 p-1 rounded-md cursor-pointer flex flex-col overflow-hidden"
                                                         )}
                                                         style={{ top: `${top}px`, height: `${height}px`, backgroundColor: colors?.bg, color: textColor }}
                                                     >

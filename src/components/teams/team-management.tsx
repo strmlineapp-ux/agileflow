@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
@@ -323,7 +324,7 @@ function TeamCard({
                                         <div className="space-y-4">
                                             <HexColorPicker color={color} onChange={setColor} className="!w-full" />
                                             <div className="flex items-center gap-2">
-                                                <span className="p-2 border rounded-md shadow-sm" style={{ backgroundColor: color }} />
+                                                <span className="p-2 border rounded-md" style={{ backgroundColor: color }} />
                                                 <HexColorInput prefixed alpha color={color} onChange={setColor} className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50" />
                                             </div>
                                             <div className="grid grid-cols-8 gap-1">
@@ -358,7 +359,7 @@ function TeamCard({
                                         defaultValue={team.name}
                                         onBlur={handleSaveName}
                                         onKeyDown={handleNameKeyDown}
-                                        className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
+                                        className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
                                     />
                                 ) : (
                                     <CardTitle className={cn("font-headline text-xl font-thin truncate", canManageTeam && !isDragModifierPressed && "cursor-text")} onClick={() => { if (canManageTeam && !isDragModifierPressed) setIsEditingName(true); }}>
@@ -461,7 +462,7 @@ function SortableTeamCard({team, ...props}: {team: Team, [key: string]: any}) {
             props.isSharedPreview 
               ? "w-full"
               : "basis-full sm:basis-[calc(50%-1rem)] md:basis-[calc(33.333%-1rem)] lg:basis-[calc(25%-1rem)] xl:basis-[calc(20%-1rem)] 2xl:basis-[calc(16.666%-1rem)]",
-            isDragging && "opacity-80 shadow-2xl z-50"
+            isDragging && "opacity-80 z-50"
         )}>
             <TeamCard team={team} {...props} dragHandleProps={{...attributes, ...listeners}} isDragging={isDragging} />
         </div>
@@ -777,7 +778,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 {isEditingTitle ? (
-                                  <Input ref={titleInputRef} defaultValue={finalTitle} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
+                                  <Input ref={titleInputRef} defaultValue={finalTitle} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
                                 ) : (
                                   <TooltipProvider>
                                       <Tooltip>
@@ -889,7 +890,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                         />
                     </div>
                 ) : activeDragItem?.type === 'user' && activeDragItem?.data?.user ? (
-                    <div className="bg-card p-2 rounded-md shadow-lg">
+                    <div className="bg-card p-2 rounded-md">
                         <div className="flex items-center gap-2">
                             <Avatar className="h-8 w-8">
                                 <AvatarImage src={activeDragItem.data.user.avatarUrl} alt={activeDragItem.data.user.displayName} />

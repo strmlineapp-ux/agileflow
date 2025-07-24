@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useMemo, useState, useRef, useCallback, useLayoutEffect } from 'react';
@@ -83,7 +84,7 @@ const DayViewLocationRow = React.memo(({
                             key={event.eventId} 
                             data-event-id={event.eventId}
                             onClick={(e) => { e.stopPropagation(); onEventClick(event); }}
-                            className="absolute top-1 p-2 rounded-lg shadow-md cursor-pointer flex flex-col overflow-hidden h-[calc(100%-0.5rem)]"
+                            className="absolute top-1 p-2 rounded-lg cursor-pointer flex flex-col overflow-hidden h-[calc(100%-0.5rem)]"
                             style={{ left: `${left + 2}px`, width: `${width}px`, backgroundColor: colors?.bg, color: textColor }}
                         >
                              <div className="flex items-center gap-2 flex-wrap mb-1.5">
@@ -429,7 +430,7 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
                                                 data-event-id={event.eventId}
                                                 onClick={(e) => { e.stopPropagation(); onEventClick(event); }}
                                                 className={cn(
-                                                    "absolute left-1 right-1 p-1 rounded-md shadow-sm cursor-pointer flex flex-col overflow-hidden"
+                                                    "absolute left-1 right-1 p-1 rounded-md cursor-pointer flex flex-col overflow-hidden"
                                                 )}
                                                 style={{ top: `${top}px`, height: `${height}px`, backgroundColor: colors?.bg, color: textColor }}
                                             >
