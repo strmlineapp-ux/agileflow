@@ -6,49 +6,49 @@
 @layer base {
   :root,
   .light {
-    --background: 0 0% 98%;
+    --background: 210 20% 95%;
     --foreground: 0 0% 20%;
     --card: 0 0% 100%;
     --card-foreground: 0 0% 20%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 20%;
-    --primary: 210 40% 55%;
+    --primary: 210 70% 50%;
     --primary-foreground: 0 0% 100%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 0 0% 20%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 0 0% 45%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 0 0% 20%;
+    --accent: 180 60% 40%;
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
     --border: 0 0% 89.8%;
     --input: 0 0% 89.8%;
-    --ring: 210 40% 55%;
+    --ring: 210 70% 50%;
     --radius: 0.5rem;
     --lunch-break-opacity: 0.06;
   }
 
   .dark {
-    --background: 0 0% 8%;
-    --foreground: 0 0% 67%;
-    --card: 0 0% 12%;
-    --card-foreground: 0 0% 67%;
-    --popover: 0 0% 8%;
-    --popover-foreground: 0 0% 67%;
-    --primary: 25 88% 45%;
+    --background: 210 20% 95%;
+    --foreground: 0 0% 20%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 20%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 20%;
+    --primary: 210 70% 50%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 15%;
-    --secondary-foreground: 0 0% 67%;
-    --muted: 0 0% 15%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 0 0% 20%;
+    --muted: 210 40% 96.1%;
     --muted-foreground: 0 0% 45%;
-    --accent: 43 55% 71%;
-    --accent-foreground: 0 0% 8%;
-    --destructive: 0 62.8% 30.6%;
+    --accent: 180 60% 40%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 18%;
-    --input: 0 0% 18%;
-    --ring: 25 88% 45%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 210 70% 50%;
     --radius: 0.5rem;
     --lunch-break-opacity: 0.15;
   }
@@ -58,13 +58,15 @@
   * {
     @apply border-border;
   }
-  body {
-    @apply bg-background text-foreground font-body;
-    overflow-x: hidden;
+  *:focus-visible {
+    outline: none;
   }
-  .font-headline {
-      font-family: var(--font-roboto);
-      font-weight: 100;
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'PT Sans', sans-serif;
+  }
+  h1, h2, h3, h4, h5, h6, .font-headline {
+      font-family: 'Space Grotesk', sans-serif;
   }
 }
 
@@ -77,32 +79,5 @@
       hsl(var(--border) / var(--lunch-break-opacity, 0.06)) 5px,
       hsl(var(--border) / var(--lunch-break-opacity, 0.06)) 10px
     );
-  }
-}
-
-@layer components {
-  /* Common setup for buttons in all themes */
-  .light .bg-primary, 
-  .dark .bg-primary {
-    border-width: 1px;
-    border-style: solid;
-    border-color: hsl(var(--primary));
-    background-color: hsl(var(--primary));
-    background-clip: padding-box;
-    transition: all 0.2s ease-in-out;
-  }
-
-  /* Light Theme Gradient Effect */
-  .light .bg-primary:hover,
-  .light .bg-primary:focus-visible {
-    border-color: transparent;
-    background: linear-gradient(-113deg, hsl(var(--primary)), hsl(var(--accent))) border-box;
-  }
-
-  /* Dark Theme Gradient Effect */
-  .dark .bg-primary:hover,
-  .dark .bg-primary:focus-visible {
-    border-color: transparent;
-    background: linear-gradient(-113deg, hsl(var(--primary)), hsl(var(--accent))) border-box;
   }
 }
