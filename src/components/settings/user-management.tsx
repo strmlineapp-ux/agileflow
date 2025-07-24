@@ -34,7 +34,7 @@ const CustomColorPicker = ({ user, onUpdate, onClose }: { user: User, onUpdate: 
              <HexColorPicker color={color} onChange={setColor} className="!w-full" />
              <div className="flex items-center gap-2">
                 <span className="p-2 border rounded-md shadow-sm" style={{ backgroundColor: color }} />
-                <HexColorInput prefixed alpha color={color} onChange={setColor} className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50" />
+                <HexColorInput prefixed alpha color={color} onChange={setColor} className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
              </div>
              <div className="grid grid-cols-8 gap-1">
                 {predefinedColors.map(c => (
@@ -81,7 +81,8 @@ const SettingSelect = ({
                 <TooltipContent>
                   <p>{tooltip}: <span className="font-semibold">{currentLabel}</span></p>
                 </TooltipContent>
-            </TooltipProvider>
+            </Tooltip>
+        </TooltipProvider>
         <PopoverContent className="w-auto p-1" align="start">
             {options.map(option => (
             <Button
@@ -107,9 +108,9 @@ const DragActivationKeySetting = ({ user, onUpdate }: { user: User, onUpdate: (k
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         e.preventDefault();
-        const key = e.key;
-        if (['Alt', 'Control', 'Meta', 'Shift'].includes(key)) {
-            const newKey = key === 'Control' ? 'ctrl' : key.toLowerCase() as 'alt' | 'meta' | 'shift';
+        const key = e.key.toLowerCase();
+        if (['alt', 'control', 'meta', 'shift'].includes(key)) {
+            const newKey = key === 'control' ? 'ctrl' : key as 'alt' | 'meta' | 'shift';
             setKeyInput(newKey);
             onUpdate(newKey);
             setIsOpen(false);
