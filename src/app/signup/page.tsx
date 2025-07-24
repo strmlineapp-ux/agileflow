@@ -11,7 +11,7 @@ export default function SignUpPage() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
       <div className="w-full max-w-md">
-        <Card className="shadow-2xl">
+        <Card>
           <CardHeader className="items-center text-center">
             <Logo className="mb-4" />
             <CardTitle className="font-headline text-3xl">Request Access to Workspace</CardTitle>
@@ -24,7 +24,7 @@ export default function SignUpPage() {
              <Separator />
              <Button asChild variant="ghost" className="text-sm font-normal text-muted-foreground hover:text-primary hover:bg-transparent">
                 <Link href="/login">
-                    <GoogleSymbol name="login" />
+                    <GoogleSymbol name="login" opticalSize={20} />
                     Sign in
                 </Link>
               </Button>

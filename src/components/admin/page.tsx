@@ -687,7 +687,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isCollapsed,
                                      <div className="space-y-4">
                                         <HexColorPicker color={color} onChange={setColor} className="!w-full" />
                                         <div className="flex items-center gap-2">
-                                            <span className="p-2 border rounded-md shadow-sm" style={{ backgroundColor: color }} />
+                                            <span className="p-2 border rounded-md" style={{ backgroundColor: color }} />
                                             <HexColorInput prefixed alpha color={color} onChange={setColor} className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50" />
                                         </div>
                                         <div className="grid grid-cols-8 gap-1">
@@ -705,7 +705,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isCollapsed,
                                 <Input 
                                   ref={nameInputRef} 
                                   defaultValue={page.name} 
-                                  className="h-auto p-0 font-headline text-base font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
+                                  className="h-auto p-0 font-headline text-base font-thin border-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
                                   onKeyDown={(e) => {
                                     if (e.key === 'Enter') handleSaveName();
                                     else if (e.key === 'Escape') setIsEditingName(false);
@@ -1087,7 +1087,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
     }, [iconSearch]);
 
     return (
-        <Card className={cn("bg-transparent", isDragging && "shadow-xl")}>
+        <Card className={cn("bg-transparent", isDragging && "opacity-80")}>
             <CardContent className="p-2 flex items-center gap-4">
                 <div className="relative">
                      <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
@@ -1148,7 +1148,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                              <div className="space-y-4">
                                 <HexColorPicker color={color} onChange={setColor} className="!w-full" />
                                 <div className="flex items-center gap-2">
-                                    <span className="p-2 border rounded-md shadow-sm" style={{ backgroundColor: color }} />
+                                    <span className="p-2 border rounded-md" style={{ backgroundColor: color }} />
                                     <HexColorInput prefixed alpha color={color} onChange={setColor} className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50" />
                                 </div>
                                 <div className="grid grid-cols-8 gap-1">
@@ -1164,7 +1164,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                 <div className="flex-1 min-w-0 space-y-1">
                     <div className="flex items-center justify-between">
                          {isEditingName ? (
-                            <Input ref={nameInputRef} defaultValue={tab.name} onKeyDown={handleNameKeyDown} onBlur={handleSaveName} className="h-auto p-0 font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 font-headline" />
+                            <Input ref={nameInputRef} defaultValue={tab.name} onKeyDown={handleNameKeyDown} onBlur={handleSaveName} className="h-auto p-0 font-thin border-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 font-headline" />
                         ) : (
                             <h3 className={cn("font-headline cursor-text text-base font-thin", !isDragModifierPressed && "cursor-pointer")} onClick={() => !isDragModifierPressed && setIsEditingName(true)}>{tab.name}</h3>
                         )}
