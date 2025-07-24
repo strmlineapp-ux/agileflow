@@ -59,7 +59,7 @@ const MenubarTrigger = React.forwardRef<
   <MenubarPrimitive.Trigger
     ref={ref}
     className={cn(
-      "flex cursor-default select-none items-center rounded-sm px-3 py-1.5 text-sm font-normal ring-offset-background outline-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring data-[state=open]:text-accent-foreground",
+      "flex cursor-default select-none items-center rounded-sm px-3 py-1.5 text-sm font-normal outline-none focus-visible:ring-1 focus-visible:ring-ring/50 data-[state=open]:text-accent-foreground",
       className
     )}
     {...props}
@@ -83,7 +83,7 @@ const MenubarSubTrigger = React.forwardRef<
     {...props}
   >
     {children}
-    <GoogleSymbol name="chevron_right" className="ml-auto h-4 w-4" weight={100} />
+    <GoogleSymbol name="chevron_right" className="ml-auto h-4 w-4" weight={100} opticalSize={20} />
   </MenubarPrimitive.SubTrigger>
 ))
 MenubarSubTrigger.displayName = MenubarPrimitive.SubTrigger.displayName
@@ -137,7 +137,7 @@ const MenubarItem = React.forwardRef<
   <MenubarPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       inset && "pl-8",
       className
     )}
@@ -161,7 +161,7 @@ const MenubarCheckboxItem = React.forwardRef<
   >
     <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
       <MenubarPrimitive.ItemIndicator>
-        <GoogleSymbol name="check" className="h-4 w-4" weight={100} />
+        <GoogleSymbol name="check" className="h-4 w-4" weight={100} opticalSize={20} />
       </MenubarPrimitive.ItemIndicator>
     </span>
     {children}
@@ -183,7 +183,7 @@ const MenubarRadioItem = React.forwardRef<
   >
     <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
       <MenubarPrimitive.ItemIndicator>
-        <GoogleSymbol name="lens" className="h-2 w-2 text-current" weight={100} />
+        <GoogleSymbol name="lens" className="h-2 w-2 text-current" weight={100} opticalSize={20} />
       </MenubarPrimitive.ItemIndicator>
     </span>
     {children}

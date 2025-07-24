@@ -94,7 +94,7 @@ function DraggableUserCard({ user, onRemove, isTeamAdmin, onSetAdmin, canManage,
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card flex items-center justify-center bg-primary text-primary-foreground">
-                                    <GoogleSymbol name="key" style={{fontSize: '10px'}}/>
+                                    <GoogleSymbol name="key" style={{fontSize: '10px'}} opticalSize={20} />
                                 </div>
                             </TooltipTrigger>
                             <TooltipContent><p>Team Admin</p></TooltipContent>
@@ -117,7 +117,7 @@ function DraggableUserCard({ user, onRemove, isTeamAdmin, onSetAdmin, canManage,
                                 onClick={(e) => { e.stopPropagation(); onRemove();}}
                                 onPointerDown={(e) => e.stopPropagation()} // Prevent drag from starting
                             >
-                                <GoogleSymbol name="cancel" className="text-lg" weight={100} />
+                                <GoogleSymbol name="cancel" className="text-lg" weight={100} opticalSize={20} />
                             </Button>
                         </TooltipTrigger>
                         <TooltipContent><p>Remove User</p></TooltipContent>
@@ -263,7 +263,7 @@ function TeamCard({
                                         className={cn("absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity z-10", isDragModifierPressed && "hidden")}
                                         onPointerDown={(e) => { e.stopPropagation(); onDelete(team); }}
                                     >
-                                        <GoogleSymbol name="cancel" className="text-lg" weight={100} />
+                                        <GoogleSymbol name="cancel" className="text-lg" weight={100} opticalSize={20} />
                                     </Button>
                                 </TooltipTrigger>
                                 <TooltipContent><p>{canManageTeam ? "Delete Team" : "Unlink Team"}</p></TooltipContent>
@@ -288,7 +288,7 @@ function TeamCard({
                                     </TooltipProvider>
                                     <PopoverContent className="w-80 p-0" onPointerDown={(e) => e.stopPropagation()}>
                                         <div className="flex items-center gap-1 p-2 border-b">
-                                            <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
+                                            <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} opticalSize={20} />
                                             <input
                                                 ref={iconSearchInputRef}
                                                 placeholder="Search icons..."
@@ -301,7 +301,7 @@ function TeamCard({
                                             <TooltipProvider key={iconName}>
                                             <Tooltip>
                                                 <TooltipTrigger asChild>
-                                                <Button variant={team.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(team.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="h-8 w-8 p-0"><GoogleSymbol name={iconName} className="text-4xl" weight={100} /></Button>
+                                                <Button variant={team.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(team.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="h-8 w-8 p-0"><GoogleSymbol name={iconName} className="text-4xl" weight={100} opticalSize={20} /></Button>
                                                 </TooltipTrigger>
                                                 <TooltipContent><p>{iconName}</p></TooltipContent>
                                             </Tooltip>
@@ -344,7 +344,7 @@ function TeamCard({
                                                     className="absolute -top-0 -right-3 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white"
                                                     style={{ backgroundColor: ownerColor }}
                                                 >
-                                                    <GoogleSymbol name={shareIcon} style={{fontSize: '16px'}}/>
+                                                    <GoogleSymbol name={shareIcon} style={{fontSize: '16px'}} opticalSize={20} />
                                                 </div>
                                             </TooltipTrigger>
                                             <TooltipContent><p>{shareIconTitle}</p></TooltipContent>
@@ -375,7 +375,7 @@ function TeamCard({
                                         <Tooltip>
                                             <TooltipTrigger asChild>
                                                 <PopoverTrigger asChild disabled={!canManageTeam || isDragModifierPressed} onPointerDown={(e) => e.stopPropagation()}>
-                                                    <Button variant="ghost" size="icon" className={cn("h-8 w-8 text-muted-foreground hover:text-primary", isDragModifierPressed && "hidden")}><GoogleSymbol name="group_add" weight={100} /></Button>
+                                                    <Button variant="ghost" size="icon" className={cn("h-8 w-8 text-muted-foreground hover:text-primary", isDragModifierPressed && "hidden")}><GoogleSymbol name="group_add" weight={100} opticalSize={20} /></Button>
                                                 </PopoverTrigger>
                                             </TooltipTrigger>
                                             <TooltipContent><p>Add User</p></TooltipContent>
@@ -384,7 +384,7 @@ function TeamCard({
                                     <PopoverContent className="w-64 p-0" onPointerDown={(e) => e.stopPropagation()}>
                                         <div className="p-2 border-b">
                                             <div className="flex items-center gap-1 w-full">
-                                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
+                                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} opticalSize={20} />
                                                 <input
                                                     ref={addUserSearchInputRef}
                                                     placeholder="Search..."
@@ -436,7 +436,7 @@ function TeamCard({
             )}
              <div className={cn("absolute -bottom-1 right-0", isDragModifierPressed && "hidden")}>
                 <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
-                    <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
+                    <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} opticalSize={20} />
                 </Button>
             </div>
         </Card>
@@ -494,7 +494,7 @@ function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
           <Tooltip>
               <TooltipTrigger asChild>
                   <Button variant="ghost" size="icon" className="rounded-full p-0" onClick={onAdd} onPointerDown={(e) => e.stopPropagation()}>
-                    <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
+                    <GoogleSymbol name="add_circle" className="text-4xl" weight={100} opticalSize={20} />
                     <span className="sr-only">New Team or Drop to Duplicate</span>
                   </Button>
               </TooltipTrigger>
@@ -796,7 +796,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <Button variant="ghost" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)}>
-                                                <GoogleSymbol name="dynamic_feed" weight={100} />
+                                                <GoogleSymbol name="dynamic_feed" weight={100} opticalSize={20} />
                                             </Button>
                                         </TooltipTrigger>
                                         <TooltipContent><p>Show Shared Teams</p></TooltipContent>
@@ -907,7 +907,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Button variant="ghost" className="text-destructive p-0" onClick={confirmDelete}>
-                                        <GoogleSymbol name="delete" className="text-4xl" weight={100} />
+                                        <GoogleSymbol name="delete" className="text-4xl" weight={100} opticalSize={20} />
                                         <span className="sr-only">Delete Team</span>
                                     </Button>
                                 </TooltipTrigger>
@@ -924,5 +924,6 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
         </DndContext>
     );
 }
+
 
 

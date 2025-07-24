@@ -28,13 +28,15 @@ const RadioGroupItem = React.forwardRef<
     <RadioGroupPrimitive.Item
       ref={ref}
       className={cn(
-        "aspect-square h-4 w-4 rounded-full border border-input text-primary ring-offset-background focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring data-[state=checked]:bg-primary data-[state=checked]:border-primary data-[state=checked]:text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50",
+        "aspect-square h-4 w-4 rounded-full border border-primary text-primary ring-offset-background focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring data-[state=checked]:border-primary disabled:cursor-not-allowed disabled:opacity-50",
         className
       )}
       {...props}
     >
       {/* The background fill now acts as the indicator, so no inner symbol is needed. */}
-      <RadioGroupPrimitive.Indicator className="flex items-center justify-center text-current" />
+      <RadioGroupPrimitive.Indicator className="flex items-center justify-center text-current">
+        <div className="h-2.5 w-2.5 rounded-full bg-current" />
+      </RadioGroupPrimitive.Indicator>
     </RadioGroupPrimitive.Item>
   )
 })
