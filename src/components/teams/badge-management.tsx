@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -972,7 +971,7 @@ function CollectionDropZone({ id, type, children, className }: { id: string; typ
 
 
 export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; page: AppPage; }) {
-    const { viewAsUser, users, appSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors, updateUser } = useUser();
+    const { viewAsUser, users, appSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors, updateUser, isDragModifierPressed } = useUser();
     const { toast } = useToast();
     const sharedSearchInputRef = useRef<HTMLInputElement>(null);
 
@@ -1068,13 +1067,13 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
     const sensors = useSensors(
         useSensor(PointerSensor, {
           activationConstraint: {
-            modifier: viewAsUser.dragActivationKey,
+            distance: 8,
           },
         }),
         useSensor(KeyboardSensor, {
           coordinateGetter: sortableKeyboardCoordinates,
           onActivation: ({ event }) => {
-            if ((event as KeyboardEvent).metaKey || (event as KeyboardEvent).altKey || (event as KeyboardEvent).ctrlKey || (event as KeyboardEvent).shiftKey) {
+            if (isDragModifierPressed) {
                 return false;
             }
             return true;

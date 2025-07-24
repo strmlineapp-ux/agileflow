@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
@@ -508,7 +506,7 @@ function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
 }
 
 export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: AppTab; page: AppPage; isSingleTabPage?: boolean }) {
-    const { viewAsUser, users, teams, appSettings, addTeam, updateTeam, deleteTeam, reorderTeams, updateAppTab, updateUser } = useUser();
+    const { viewAsUser, users, teams, appSettings, addTeam, updateTeam, deleteTeam, reorderTeams, updateAppTab, updateUser, isDragModifierPressed } = useUser();
     const router = useRouter();
     const pathname = usePathname();
     const { toast } = useToast();
@@ -745,13 +743,13 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
     const sensors = useSensors(
         useSensor(PointerSensor, {
           activationConstraint: {
-            modifier: viewAsUser.dragActivationKey,
+            distance: 8,
           },
         }),
         useSensor(KeyboardSensor, {
           coordinateGetter: sortableKeyboardCoordinates,
           onActivation: ({ event }) => {
-            if ((event as KeyboardEvent).metaKey || (event as KeyboardEvent).altKey || (event as KeyboardEvent).ctrlKey || (event as KeyboardEvent).shiftKey) {
+            if (isDragModifierPressed) {
                 return false;
             }
             return true;
@@ -924,6 +922,3 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
         </DndContext>
     );
 }
-
-
-

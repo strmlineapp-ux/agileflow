@@ -212,7 +212,7 @@ function CalendarCard({
                         <Button
                             variant="ghost"
                             size="icon"
-                            className={cn("absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10", isDragModifierPressed && "hidden")}
+                            className={cn("absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity z-10", isDragModifierPressed && "hidden")}
                             onPointerDown={(e) => {
                                 e.stopPropagation();
                                 setIsDeleteDialogOpen(true);
@@ -588,7 +588,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        modifier: viewAsUser.dragActivationKey,
+        distance: 8,
       },
     }),
     useSensor(KeyboardSensor, {

@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { useUser } from '@/context/user-context';
@@ -33,7 +31,7 @@ function SortableTeamMember({ member, team, isViewer }: { member: User, team: Te
 
 
 export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
-    const { viewAsUser, users, updateAppTab, updateTeam } = useUser();
+    const { viewAsUser, users, updateAppTab, updateTeam, isDragModifierPressed } = useUser();
     
     // Safeguard to prevent rendering if team data is not available.
     if (!team) {
@@ -72,13 +70,13 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
     const sensors = useSensors(
         useSensor(PointerSensor, {
           activationConstraint: {
-            modifier: viewAsUser.dragActivationKey,
+            distance: 8,
           },
         }),
         useSensor(KeyboardSensor, {
           coordinateGetter: sortableKeyboardCoordinates,
           onActivation: ({ event }) => {
-            if ((event as KeyboardEvent).metaKey || (event as KeyboardEvent).altKey || (event as KeyboardEvent).ctrlKey || (event as KeyboardEvent).shiftKey) {
+            if (isDragModifierPressed) {
                 return false;
             }
             return true;
@@ -241,4 +239,3 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
       </DndContext>
     );
 }
-
