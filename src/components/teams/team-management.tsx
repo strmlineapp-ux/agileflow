@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
@@ -742,14 +743,17 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
     
     const sensors = useSensors(
         useSensor(PointerSensor, {
-          activationConstraint: {
-            distance: 8,
+          onActivation: ({ event }) => {
+            if (!isDragModifierPressed) {
+                return false;
+            }
+            return true;
           },
         }),
         useSensor(KeyboardSensor, {
           coordinateGetter: sortableKeyboardCoordinates,
           onActivation: ({ event }) => {
-            if (isDragModifierPressed) {
+            if (!isDragModifierPressed) {
                 return false;
             }
             return true;

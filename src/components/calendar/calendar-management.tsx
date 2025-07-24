@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
@@ -587,14 +588,17 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
   
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
+        onActivation: ({ event }) => {
+            if (!isDragModifierPressed) {
+                return false;
+            }
+            return true;
+        },
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
       onActivation: ({ event }) => {
-        if (isDragModifierPressed) {
+        if (!isDragModifierPressed) {
             return false;
         }
         return true;
