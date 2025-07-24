@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import React, { useEffect, useState, useMemo, useRef, useCallback, useLayoutEffect } from 'react';
@@ -164,12 +162,12 @@ export const WeekView = React.memo(({ date, containerRef, zoomLevel, onEasyBooki
                                 </p>
                                 {!showWeekends && format(day, 'EEE') === 'Fri' && (
                                     <Button variant="ghost" size="icon" className="absolute right-0 top-1/2 -translate-y-1/2 h-full rounded-none" onClick={() => setShowWeekends(true)}>
-                                        <GoogleSymbol name="keyboard_double_arrow_right" />
+                                        <GoogleSymbol name="keyboard_double_arrow_right" weight={100} />
                                     </Button>
                                 )}
                                 {showWeekends && format(day, 'EEE') === 'Sun' && (
                                     <Button variant="ghost" size="icon" className="absolute left-0 top-1/2 -translate-y-1/2 h-full rounded-none" onClick={() => setShowWeekends(false)}>
-                                        <GoogleSymbol name="keyboard_double_arrow_left" />
+                                        <GoogleSymbol name="keyboard_double_arrow_left" weight={100} />
                                     </Button>
                                 )}
                             </div>
@@ -238,7 +236,7 @@ export const WeekView = React.memo(({ date, containerRef, zoomLevel, onEasyBooki
                                                         className={cn(
                                                             "absolute left-1 right-1 p-1 rounded-md shadow-sm cursor-pointer flex flex-col overflow-hidden"
                                                         )}
-                                                        style={{ top: `${top}px`, height: `${height}px`, backgroundColor: colors?.bg, color: colors?.text }}
+                                                        style={{ top: `${top}px`, height: `${height}px`, backgroundColor: colors?.bg, color: textColor }}
                                                     >
                                                         <div className="flex items-center gap-2 flex-wrap mb-1">
                                                             <PriorityBadge priorityId={event.priority} />
@@ -265,14 +263,14 @@ export const WeekView = React.memo(({ date, containerRef, zoomLevel, onEasyBooki
                                                                                                 className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-background flex items-center justify-center"
                                                                                                 style={{ backgroundColor: roleColor, color: getContrastColor(roleColor || '#ffffff') }}
                                                                                             >
-                                                                                                <GoogleSymbol name={roleIcon} style={{fontSize: '10px'}} />
+                                                                                                <GoogleSymbol name={roleIcon} style={{fontSize: '10px'}} weight={100} />
                                                                                             </div>
                                                                                         )}
                                                                                     </div>
                                                                                 </TooltipTrigger>
                                                                                 <TooltipContent>
                                                                                     <p className="flex items-center gap-1">
-                                                                                    {roleIcon && <GoogleSymbol name={roleIcon} className="text-sm" />}
+                                                                                    {roleIcon && <GoogleSymbol name={roleIcon} className="text-sm" weight={100} />}
                                                                                     <span>{role}: {user.displayName}</span>
                                                                                     </p>
                                                                                 </TooltipContent>

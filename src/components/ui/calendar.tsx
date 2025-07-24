@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -55,8 +54,8 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        IconLeft: ({ ...props }) => <GoogleSymbol name="chevron_left" {...props} />,
-        IconRight: ({ ...props }) => <GoogleSymbol name="chevron_right" {...props} />,
+        IconLeft: ({ ...props }) => <GoogleSymbol name="chevron_left" {...props} weight={100} />,
+        IconRight: ({ ...props }) => <GoogleSymbol name="chevron_right" {...props} weight={100} />,
       }}
       {...props}
     />

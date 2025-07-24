@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -27,7 +26,7 @@ const SelectTrigger = React.forwardRef<
   >
     {children}
     <SelectPrimitive.Icon asChild>
-      <GoogleSymbol name="expand_more" className="opacity-50" />
+      <GoogleSymbol name="expand_more" className="opacity-50" weight={100} />
     </SelectPrimitive.Icon>
   </SelectPrimitive.Trigger>
 ))
@@ -45,7 +44,7 @@ const SelectScrollUpButton = React.forwardRef<
     )}
     {...props}
   >
-    <GoogleSymbol name="expand_less" />
+    <GoogleSymbol name="expand_less" weight={100} />
   </SelectPrimitive.ScrollUpButton>
 ))
 SelectScrollUpButton.displayName = SelectPrimitive.ScrollUpButton.displayName
@@ -62,7 +61,7 @@ const SelectScrollDownButton = React.forwardRef<
     )}
     {...props}
   >
-    <GoogleSymbol name="expand_more" />
+    <GoogleSymbol name="expand_more" weight={100} />
   </SelectPrimitive.ScrollDownButton>
 ))
 SelectScrollDownButton.displayName =
@@ -126,7 +125,7 @@ const SelectItem = React.forwardRef<
   >
     <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
       <SelectPrimitive.ItemIndicator>
-        <GoogleSymbol name="check" className="text-base" />
+        <GoogleSymbol name="check" className="text-base" weight={100} />
       </SelectPrimitive.ItemIndicator>
     </span>
 

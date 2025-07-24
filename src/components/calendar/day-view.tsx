@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import React, { useEffect, useMemo, useState, useRef, useCallback, useLayoutEffect } from 'react';
@@ -69,7 +67,7 @@ const DayViewLocationRow = React.memo(({
                 className="w-[160px] shrink-0 p-2 border-r flex items-start justify-start bg-muted sticky left-0 z-30 gap-1 cursor-pointer"
                 onClick={() => toggleLocationCollapse(location)}
             >
-                {isCollapsed ? <GoogleSymbol name="chevron_right" className="text-lg mt-1" /> : <GoogleSymbol name="expand_more" className="text-lg mt-1" />}
+                {isCollapsed ? <GoogleSymbol name="chevron_right" className="text-lg mt-1" weight={100} /> : <GoogleSymbol name="expand_more" className="text-lg mt-1" weight={100} />}
                 <p className="font-normal text-sm">{location}</p>
             </div>
             <div className={cn("relative flex-1", isCollapsed ? "h-10" : "min-h-[5rem] py-1")} onClick={(e) => handleEasyBookingClick(e, 'standard', day, location)}>
@@ -113,14 +111,14 @@ const DayViewLocationRow = React.memo(({
                                                                     className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-background flex items-center justify-center"
                                                                     style={{ backgroundColor: roleColor, color: getContrastColor(roleColor || '#ffffff') }}
                                                                 >
-                                                                    <GoogleSymbol name={roleIcon} style={{fontSize: '10px'}}/>
+                                                                    <GoogleSymbol name={roleIcon} style={{fontSize: '10px'}} weight={100} />
                                                                 </div>
                                                             )}
                                                         </div>
                                                     </TooltipTrigger>
                                                     <TooltipContent>
                                                         <p className="flex items-center gap-1">
-                                                        {roleIcon && <GoogleSymbol name={roleIcon} className="text-sm" />}
+                                                        {roleIcon && <GoogleSymbol name={roleIcon} className="text-sm" weight={100} />}
                                                         <span>{role}: {user.displayName}</span>
                                                         </p>
                                                     </TooltipContent>
@@ -460,14 +458,14 @@ export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, on
                                                                                         className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-background flex items-center justify-center"
                                                                                         style={{ backgroundColor: roleColor, color: getContrastColor(roleColor || '#ffffff') }}
                                                                                     >
-                                                                                        <GoogleSymbol name={roleIcon} style={{fontSize: '10px'}} />
+                                                                                        <GoogleSymbol name={roleIcon} style={{fontSize: '10px'}} weight={100} />
                                                                                     </div>
                                                                                 )}
                                                                             </div>
                                                                         </TooltipTrigger>
                                                                         <TooltipContent>
                                                                             <p className="flex items-center gap-1">
-                                                                            {roleIcon && <GoogleSymbol name={roleIcon} className="text-sm" />}
+                                                                            {roleIcon && <GoogleSymbol name={roleIcon} className="text-sm" weight={100} />}
                                                                             <span>{role}: {user.displayName}</span>
                                                                             </p>
                                                                         </TooltipContent>

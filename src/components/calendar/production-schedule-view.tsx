@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import React, { useEffect, useMemo, useState, useRef, useCallback, useLayoutEffect } from 'react';
@@ -21,7 +19,7 @@ import { canCreateAnyEvent } from '@/lib/permissions';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { Badge as UiBadge } from '../ui/badge';
 import { PriorityBadge } from './priority-badge';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { Input } from '../ui/input';
 import { ScrollArea } from '../ui/scroll-area';
 
@@ -72,7 +70,7 @@ const ManageStatusDialog = ({ isOpen, onOpenChange, day, initialAssignments, use
             <DialogContent className="max-w-xl">
                  <div className="absolute top-4 right-4">
                     <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSaveChanges}>
-                        <GoogleSymbol name="check" className="text-xl" />
+                        <GoogleSymbol name="check" className="text-xl" weight={100} />
                         <span className="sr-only">Save Changes</span>
                     </Button>
                 </div>
@@ -101,7 +99,7 @@ const ManageStatusDialog = ({ isOpen, onOpenChange, day, initialAssignments, use
                                                 <UserStatusBadge status={status}>{status}</UserStatusBadge>
                                             </div>
                                             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleRemoveStatusAssignment(userId)}>
-                                                <GoogleSymbol name="cancel" className="text-sm" />
+                                                <GoogleSymbol name="cancel" className="text-sm" weight={100} />
                                                 <span className="sr-only">Remove status</span>
                                             </Button>
                                         </div>
@@ -245,7 +243,7 @@ const ProductionScheduleLocationRow = React.memo(({
         <div className={cn("flex", { "border-b": !isLast }, {"bg-muted/10": index % 2 !== 0})}>
             <div className="w-[160px] shrink-0 p-2 border-r flex items-start justify-between bg-muted sticky left-0 z-30">
                 <div className="flex items-start gap-1 cursor-pointer flex-1 min-w-0" onClick={() => toggleLocationCollapse(dayIso, location)}>
-                    {isLocationCollapsed ? <GoogleSymbol name="chevron_right" className="mt-1" /> : <GoogleSymbol name="expand_more" className="mt-1" />}
+                    {isLocationCollapsed ? <GoogleSymbol name="chevron_right" className="mt-1" weight={100} /> : <GoogleSymbol name="expand_more" className="mt-1" weight={100} />}
                     <p className="font-normal text-sm" title={alias ? location : undefined}>{alias || location}</p>
                 </div>
                  {canManageThisLocation ? assignmentControl : assignedUser && <div className="h-6 text-xs px-1.5 flex items-center justify-center text-muted-foreground">{`${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}`}</div>}
@@ -292,14 +290,14 @@ const ProductionScheduleLocationRow = React.memo(({
                                                                     className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full flex items-center justify-center"
                                                                     style={{ backgroundColor: roleColor, color: getContrastColor(roleColor || '#ffffff') }}
                                                                 >
-                                                                    <GoogleSymbol name={roleIcon} style={{fontSize: '10px'}}/>
+                                                                    <GoogleSymbol name={roleIcon} style={{fontSize: '10px'}} weight={100} />
                                                                 </div>
                                                             )}
                                                         </div>
                                                     </TooltipTrigger>
                                                     <TooltipContent>
                                                         <p className="flex items-center gap-1">
-                                                        {roleIcon && <GoogleSymbol name={roleIcon} className="text-sm" />}
+                                                        {roleIcon && <GoogleSymbol name={roleIcon} className="text-sm" weight={100} />}
                                                         <span>{role}: {user.displayName}</span>
                                                         </p>
                                                     </TooltipContent>
@@ -588,14 +586,14 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
                                     const pillContent = (
                                         <>
                                             {locationAliasMap[location] || location}
-                                            {assignedUser && <span className="ml-2 font-normal text-muted-foreground">({`${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}`})</span>}
+                                            {assignedUser && <span className="ml-2 font-normal text-muted-foreground">({`${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}`})</span>}
                                             {!assignedUser && canManageThisCheckLocation && <GoogleSymbol name="person_add" weight={100} className="ml-2" />}
                                         </>
                                     );
                                     
                                     const dailyCheckUsers = users.filter(user => teams.some(t => (t.checkLocations || []).includes(location) && (t.locationCheckManagers || []).includes(viewAsUser.userId) && (t.members || []).includes(user.userId) ));
 
-                                    const pill = canManageThisCheckLocation ? (
+                                    const pill = canManageThisLocation ? (
                                         <Popover key={location}><PopoverTrigger asChild><UiBadge variant={assignedUser ? "default" : "outline"} className={cn("rounded-full h-8 cursor-pointer", isTempCheck && "border-dashed")}>{pillContent}</UiBadge></PopoverTrigger>
                                             <PopoverContent className="w-56 p-0">
                                                 <div className="p-2 border-b"><p className="text-sm font-normal text-center">{locationAliasMap[location] || location}</p></div>
@@ -616,7 +614,7 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
                                         <div key={location} className="group relative">
                                             {pill}
                                             <button onClick={() => handleRemoveTempCheck(dayIso, location)} className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <GoogleSymbol name="close" className="text-xs" />
+                                                <GoogleSymbol name="close" className="text-xs" weight={100} />
                                             </button>
                                         </div>
                                     ) : pill;
@@ -664,7 +662,7 @@ export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLeve
                             <div className="flex-1 flex justify-center items-center">
                                 <Button variant="ghost" className="h-8" onClick={() => toggleDayCollapse(dayIso)}>
                                     <span className={cn("font-normal text-sm", { "text-primary": isDayToday })}>{format(day, 'EEE, MMMM d, yyyy').toUpperCase()}</span>
-                                    {isDayCollapsed ? <GoogleSymbol name="chevron_right" /> : <GoogleSymbol name="expand_more" />}
+                                    {isDayCollapsed ? <GoogleSymbol name="chevron_right" weight={100} /> : <GoogleSymbol name="expand_more" weight={100} />}
                                 </Button>
                             </div>
                             <div className="flex flex-wrap items-center justify-end gap-2">

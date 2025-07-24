@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -83,7 +82,7 @@ const MenubarSubTrigger = React.forwardRef<
     {...props}
   >
     {children}
-    <GoogleSymbol name="chevron_right" className="ml-auto h-4 w-4" />
+    <GoogleSymbol name="chevron_right" className="ml-auto h-4 w-4" weight={100} />
   </MenubarPrimitive.SubTrigger>
 ))
 MenubarSubTrigger.displayName = MenubarPrimitive.SubTrigger.displayName
@@ -161,7 +160,7 @@ const MenubarCheckboxItem = React.forwardRef<
   >
     <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
       <MenubarPrimitive.ItemIndicator>
-        <GoogleSymbol name="check" className="h-4 w-4" />
+        <GoogleSymbol name="check" className="h-4 w-4" weight={100} />
       </MenubarPrimitive.ItemIndicator>
     </span>
     {children}
@@ -183,7 +182,7 @@ const MenubarRadioItem = React.forwardRef<
   >
     <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
       <MenubarPrimitive.ItemIndicator>
-        <GoogleSymbol name="lens" className="h-2 w-2 text-current" />
+        <GoogleSymbol name="lens" className="h-2 w-2 text-current" weight={100} />
       </MenubarPrimitive.ItemIndicator>
     </span>
     {children}

@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -59,7 +58,7 @@ export function Header() {
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-card px-4 sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 sm:py-4">
       {isViewingAsSomeoneElse && (
         <div className="flex items-center gap-2 text-sm font-normal text-orange-600 bg-orange-100 dark:bg-orange-900/50 p-2 rounded-md absolute left-1/2 -translate-x-1/2">
-          <GoogleSymbol name="compare_arrows" />
+          <GoogleSymbol name="compare_arrows" weight={100} />
           <span>Viewing as {viewAsUser.displayName}</span>
         </div>
       )}

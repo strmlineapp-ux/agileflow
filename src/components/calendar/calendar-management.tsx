@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
@@ -303,7 +301,7 @@ function CalendarCard({
                                               className="absolute -top-0 -right-3 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white"
                                               style={{ backgroundColor: shareIconColor }}
                                           >
-                                              <GoogleSymbol name={shareIcon} style={{fontSize: '16px'}}/>
+                                              <GoogleSymbol name={shareIcon} style={{fontSize: '16px'}} weight={100} />
                                           </div>
                                       </TooltipTrigger>
                                       <TooltipContent><p>{shareIconTitle}</p></TooltipContent>
@@ -396,7 +394,7 @@ function CalendarCard({
               
               <div className={cn("absolute -bottom-1 right-0", isDragModifierPressed && "hidden")}>
                   <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
-                      <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
+                      <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} weight={100} />
                   </Button>
               </div>
           </div>
@@ -405,7 +403,7 @@ function CalendarCard({
         <DialogContent className="max-w-md">
             <div className="absolute top-4 right-4">
               <Button variant="ghost" size="icon" onClick={handleSaveGoogleCalendarId}>
-                  <GoogleSymbol name="check" className="text-xl" />
+                  <GoogleSymbol name="check" className="text-xl" weight={100} />
                   <span className="sr-only">Link Calendar</span>
               </Button>
             </div>
@@ -527,7 +525,7 @@ function CalendarDropZone({ id, type, children, className }: { id: string; type:
 
 
 export function CalendarManagement({ tab }: { tab: AppTab }) {
-  const { viewAsUser, calendars, addCalendar, updateCalendar, deleteCalendar, updateAppTab, appSettings, updateUser } = useUser();
+  const { viewAsUser, calendars, addCalendar, updateCalendar, deleteCalendar, updateAppTab, appSettings, updateUser, isDragModifierPressed } = useUser();
   const { toast } = useToast();
   const sharedSearchInputRef = useRef<HTMLInputElement>(null);
 
@@ -596,7 +594,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
       onActivation: ({ event }) => {
-        if ((event as KeyboardEvent).metaKey || (event as KeyboardEvent).altKey || (event as KeyboardEvent).ctrlKey || (event as KeyboardEvent).shiftKey) {
+        if (isDragModifierPressed) {
             return false;
         }
         return true;
@@ -762,4 +760,3 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
     </DndContext>
   );
 }
-

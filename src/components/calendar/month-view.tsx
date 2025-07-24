@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -156,12 +155,12 @@ export const MonthView = React.memo(({ date, containerRef, onEventClick }: { dat
                         {day}
                          {!showWeekends && day === 'Fri' && (
                              <Button variant="ghost" size="icon" className="absolute right-0 top-1/2 -translate-y-1/2 h-full rounded-none" onClick={() => setShowWeekends(true)}>
-                                <GoogleSymbol name="keyboard_double_arrow_right" />
+                                <GoogleSymbol name="keyboard_double_arrow_right" weight={100} />
                             </Button>
                         )}
                         {showWeekends && day === 'Sun' && (
                             <Button variant="ghost" size="icon" className="absolute left-0 top-1/2 -translate-y-1/2 h-full rounded-none" onClick={() => setShowWeekends(false)}>
-                                <GoogleSymbol name="keyboard_double_arrow_left" />
+                                <GoogleSymbol name="keyboard_double_arrow_left" weight={100} />
                             </Button>
                         )}
                     </div>

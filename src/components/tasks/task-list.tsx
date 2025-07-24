@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -58,7 +57,7 @@ export function TaskList({ limit }: { limit?: number }) {
               <TableHead>
                 <Button variant="ghost" className="-ml-4">
                   Task
-                  <GoogleSymbol name="swap_vert" className="ml-2" />
+                  <GoogleSymbol name="swap_vert" className="ml-2" weight={100} />
                 </Button>
               </TableHead>
               <TableHead>Assigned To</TableHead>
@@ -94,7 +93,7 @@ export function TaskList({ limit }: { limit?: number }) {
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button aria-haspopup="true" size="icon" variant="ghost">
-                        <GoogleSymbol name="more_horiz" />
+                        <GoogleSymbol name="more_horiz" weight={100} />
                         <span className="sr-only">Toggle menu</span>
                       </Button>
                     </DropdownMenuTrigger>

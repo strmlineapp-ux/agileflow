@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { useState, Fragment, useRef, useEffect, useMemo } from 'react';
@@ -79,12 +77,11 @@ const SettingSelect = ({
                             <GoogleSymbol name={icon} className="text-xl" grade={-25} weight={100} />
                         </Button>
                     </PopoverTrigger>
-                </TooltipTrigger>
+                </Tooltip>
                 <TooltipContent>
                   <p>{tooltip}: <span className="font-semibold">{currentLabel}</span></p>
                 </TooltipContent>
-            </Tooltip>
-        </TooltipProvider>
+            </TooltipProvider>
         <PopoverContent className="w-auto p-1" align="start">
             {options.map(option => (
             <Button
@@ -129,7 +126,7 @@ const DragActivationKeySetting = ({ user, onUpdate }: { user: User, onUpdate: (k
                                 <GoogleSymbol name="smart_button" className="text-xl" grade={-25} weight={100} />
                             </Button>
                         </PopoverTrigger>
-                    </TooltipTrigger>
+                    </Tooltip>
                     <TooltipContent>
                         <p>Drag Modifier: <span className="font-semibold capitalize">{keyInput}</span>+Click. Click to change.</p>
                     </TooltipContent>

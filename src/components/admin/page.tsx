@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -71,7 +69,7 @@ function UserCard({ user, isDeletable, onDelete }: { user: User, isDeletable?: b
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className={cn("h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100", isDragModifierPressed && "hidden")}
+                                className={cn("h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100", isDragModifierPressed && "hidden")}
                                 onClick={(e) => { e.stopPropagation(); onDelete(user); }}
                                 onPointerDown={(e) => e.stopPropagation()}
                             >
@@ -249,7 +247,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive, activeTab, pa
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
       onActivation: ({ event }) => {
-        if ((event as KeyboardEvent).metaKey || (event as KeyboardEvent).altKey || (event as KeyboardEvent).ctrlKey || (event as KeyboardEvent).shiftKey) {
+        if (isDragModifierPressed) {
             return false;
         }
         return true;
@@ -739,7 +737,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isCollapsed,
             {!isCollapsed && (
                  <div className={cn("absolute -bottom-1 right-0", isDragModifierPressed && "hidden")}>
                     <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
-                        <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
+                        <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} weight={100} />
                     </Button>
                 </div>
             )}
@@ -838,7 +836,7 @@ function DuplicateZone({ onAdd }: { onAdd: () => void; }) {
 }
 
 export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab; isSingleTabPage?: boolean, isActive?: boolean }) => {
-    const { viewAsUser, appSettings, updateAppSettings } = useUser();
+    const { viewAsUser, appSettings, updateAppSettings, isDragModifierPressed } = useUser();
     const { toast } = useToast();
     const [searchTerm, setSearchTerm] = useState('');
     const [activePage, setActivePage] = useState<AppPage | null>(null);
@@ -909,7 +907,7 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
         useSensor(KeyboardSensor, {
           coordinateGetter: sortableKeyboardCoordinates,
           onActivation: ({ event }) => {
-            if ((event as KeyboardEvent).metaKey || (event as KeyboardEvent).altKey || (event as KeyboardEvent).ctrlKey || (event as KeyboardEvent).shiftKey) {
+            if (isDragModifierPressed) {
                 return false;
             }
             return true;
@@ -1058,14 +1056,6 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
         };
     }, [isEditingDescription, handleSaveDescription]);
 
-    useEffect(() => {
-        if (isIconPopoverOpen) {
-             setTimeout(() => iconSearchInputRef.current?.focus(), 100);
-        } else {
-            setIconSearch('');
-        }
-    }, [isIconPopoverOpen]);
-
     const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
           e.preventDefault();
@@ -1194,7 +1184,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
 }
 
 function SortableTabCard({ id, tab, onUpdate }: { id: string, tab: AppTab, onUpdate: (id: string, data: Partial<AppTab>) => void; }) {
-    const { viewAsUser } = useUser();
+    const { viewAsUser, isDragModifierPressed } = useUser();
     const {
         attributes,
         listeners,
@@ -1218,7 +1208,7 @@ function SortableTabCard({ id, tab, onUpdate }: { id: string, tab: AppTab, onUpd
 
 
 export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab; isSingleTabPage?: boolean, isActive?: boolean }) => {
-    const { viewAsUser, appSettings, updateAppSettings, updateAppTab } = useUser();
+    const { viewAsUser, appSettings, updateAppSettings, updateAppTab, isDragModifierPressed } = useUser();
     const [searchTerm, setSearchTerm] = useState('');
     const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -1246,7 +1236,7 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
         useSensor(KeyboardSensor, {
           coordinateGetter: sortableKeyboardCoordinates,
           onActivation: ({ event }) => {
-            if ((event as KeyboardEvent).metaKey || (event as KeyboardEvent).altKey || (event as KeyboardEvent).ctrlKey || (event as KeyboardEvent).shiftKey) {
+            if (isDragModifierPressed) {
                 return false;
             }
             return true;
@@ -1291,10 +1281,3 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
     );
 };
 // #endregion
-
-
-
-
-
-
-
