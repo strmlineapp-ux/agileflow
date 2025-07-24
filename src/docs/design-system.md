@@ -256,7 +256,7 @@ This pattern provides a dense, icon-driven interface for managing a series of us
 
 ### Typography
 - **Font**: The application exclusively uses the **Roboto** font family for a clean and consistent look.
-- **Headline Font**: All major titles (pages, tabs, prominent cards) use the `font-headline` utility class, which is configured to use a `font-thin` weight (`font-weight: 100`).
+- **Headline Font**: All major titles (pages, tabs, prominent cards) use the `font-headline` utility class, which is configured to use a `font-thin` weight (`font-weight: 100`) from the Roboto family.
 - **Body Font**: All standard body text, labels, and buttons now use a `font-thin` weight.
 
 ### Icons & Hover Effects
@@ -316,3 +316,4 @@ This is the single source of truth for indicating user interaction state across 
       - **Ownership Status**: `absolute -top-0 -right-3`.
     - **Icon Size (Ownership Status)**: The `GoogleSymbol` inside an ownership status badge should have its size set via `style={{fontSize: '16px'}}`.
 -   **Badges in Compact View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
+

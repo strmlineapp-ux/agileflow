@@ -31,7 +31,7 @@ This pattern allows for seamless, direct text editing within the main applicatio
     - Pressing 'Enter' saves the changes and reverts the input back to a standard text element.
     - Pressing 'Escape' cancels the edit without saving.
     - **A `useEffect` hook must be implemented to add a 'mousedown' event listener to the document. This listener should check if the click occurred outside the input field's ref and, if so, trigger the save function. This ensures that clicking anywhere else on the page correctly dismisses and saves the editor.**
-- **Conflict Prevention**: If the inline editor is inside a draggable component (like a `PageCard`), its container **must** have an `onPointerDown={(e) => e.stopPropagation()}` handler. This is critical to prevent `@dnd-kit`'s drag listener from activating when the input is clicked, which would otherwise interfere with typing.
+- **Conflict Prevention**: See the "Preventing Interaction Conflicts" section within the **Draggable Card Management blueprint** for the required implementation when using this pattern inside a draggable item.
 - **Application:** Used for editing entity names, labels, and other simple text fields directly in the UI.
 
 ---
@@ -44,7 +44,7 @@ This pattern provides a clean, minimal interface for search functionality, espec
   - Clicking the button reveals the input field.
   - **Crucially, the input must have a transparent background and no borders or box-shadow**, ensuring it blends seamlessly into the UI.
 - **Behavior:**
-  - **Automatic Focus**: If configured with `autoFocus`, the input gains focus as soon as its parent tab becomes visible. This is a one-time action per tab load.
+  - **Automatic Focus**: To trigger focus when a parent element (like a side panel) becomes visible, pass an `autoFocus={isPanelOpen}` prop to the component. The component's internal `useEffect` hook will then focus the input a single time when the panel opens.
   - **Manual Focus**: Clicking the search icon will always expand the input and focus it.
   - **Collapse on Blur**: The input always collapses back to its icon-only state when it loses focus (`onBlur`) and the field is empty.
 - **Application:** Used for filtering lists of icons, users, or other filterable content within popovers and management pages like the Admin screen.
@@ -52,20 +52,18 @@ This pattern provides a clean, minimal interface for search functionality, espec
 ---
 
 ### 4. Text-based Inputs
-This pattern transforms standard form inputs into minimalist, text-like elements, creating a cleaner and more compact interface. It is primarily used for authentication forms.
+This pattern transforms standard form inputs into minimalist, text-like elements, creating a cleaner and more compact interface. It is primarily used for authentication forms and simple dialogs.
 
 -   **Appearance**:
-    -   Initially, the input appears as plain text (a placeholder, like "Email" or "Password") next to an icon. It has no visible border or background.
-    -   It uses a muted color to indicate it's an interactive, but unfocused, element.
+    -   Initially, the input may appear as plain text (a placeholder, like "Email" or "Password") next to an icon. It has no visible border or background. It uses a muted color to indicate it's interactive but unfocused.
+    -   In other contexts (like a dialog), it can be a simple input field with **no border or box shadow**, using only a `focus-visible:ring-0` style to remain unobtrusive.
 -   **Interaction**:
-    -   Clicking on the text or icon transforms the element into a live input field.
-    -   The icon remains visible, and the placeholder text is replaced by the user's cursor.
+    -   Clicking on the text or icon transforms the element into a live input field with the user's cursor.
     -   The input field itself remains borderless and transparent to maintain the clean aesthetic.
 -   **Behavior**:
     -   Standard input behavior applies once focused.
-    -   Pressing 'Enter' or 'Tab' in one field (e.g., Email) should seamlessly transition focus to the next logical field (e.g., Password) without requiring an extra click.
-    -   Losing focus (`onBlur`) without entering any text will revert the element to its initial placeholder state.
--   **Application**: Used for the login and sign-up forms to create a more modern and less cluttered user experience.
+    -   Losing focus (`onBlur`) without entering any text may revert the element to its initial placeholder state.
+-   **Application**: Used for login/sign-up forms and for simple, single-field dialogs like linking a Google Calendar.
 
 ---
 
@@ -107,14 +105,14 @@ This pattern describes how a single entity (like a **Team**, **Calendar**, or **
         - **Contextual Management (e.g., Badge Collections within a Team)**: A user can link a shared item to their own context by dragging it from the "Shared Items" panel and dropping it onto their management board. This creates a *link* to the original item, not a copy.
         - **Global Management (e.g., Teams, Calendars)**: For top-level entities, "linking" is an explicit action. Dragging a shared item from the panel to the main board adds the item's ID to the current user's corresponding `linked...Ids` array, bringing it into their management scope without making them a member or owner.
 - **Visual Cues**:
-  - **Owned & Shared Externally (`upload`)**: An item created by the current user/team that has been explicitly shared with others is marked with an `upload` icon overlay. This indicates it is the "source of truth." **The color of this icon badge matches the owner's color.**
-  - **Internally Linked (`change_circle`)**: An item that is used in multiple places within the *same* context (e.g., a badge appearing in two collections on one team's board) is marked with a `change_circle` icon overlay on its linked instances. **The color of this icon badge matches the owner's color.**
-  - **Shared-to-You (`downloading`)**: An item created elsewhere and being used in the current context is marked with a `downloading` icon overlay. **The color of this icon badge matches the source's color.**
+  - **Owned by you & Shared**: An item created by the current user/team that has been explicitly shared with others is marked with a `change_circle` icon overlay. This indicates it is the "source of truth." **The color of this icon badge matches the owner's primary color.**
+  - **Linked (from another user)**: An item created elsewhere and being used in the current context is marked with a `link` icon overlay. **The color of this icon badge matches the original owner's primary color.**
   - **Owned and Not Shared/Linked**: An item that is owned and exists only in its original location does not get an icon.
 - **Behavior**:
-  - Editing a shared item (e.g., changing a team's name) modifies the original "source of truth" item, and the changes are instantly reflected in all other places where it is used.
+  - **Full Context**: When an item is linked, it should display all of its original properties (name, icon, color, description, etc.) to give the linking user full context.
+  - **Editing Source of Truth**: Editing a shared item (e.g., changing a team's name) modifies the original "source of truth" item, and the changes are instantly reflected in all other places where it is used.
   - **Local Overrides**: For linked Badge Collections, the `applications` (e.g., "Team Members", "Events") can be modified locally without affecting the original, allowing teams to customize how they use a shared resource.
-  - **Smart Deletion & Unlinking**: Clicking the "delete" icon on a *linked* item (like a Team or Calendar) simply unlinks it from the user's view, and the original item is unaffected. This is a low-risk action. Deleting an item *owned* by the user is confirmed via a `Compact Action Dialog`.
+  - **Smart Deletion & Unlinking**: Clicking the "delete" icon on a *linked* item (like a Team, Calendar, or Badge) simply unlinks it from the current context, and the original item is unaffected. This is a low-risk action. Deleting an item *owned* by the user is confirmed via a `Compact Action Dialog`.
 - **Application**: This is the required pattern for sharing **Teams**, **Calendars**, and **Badge Collections**.
 
 ---
@@ -122,35 +120,37 @@ This pattern describes how a single entity (like a **Team**, **Calendar**, or **
 ### 8. Draggable Card Management blueprint
 This is the application's perfected, gold-standard pattern for managing a collection of entities displayed as cards. It provides a fluid, intuitive, and grid-responsive way for users to reorder, duplicate, and assign items. It is the required pattern for managing Pages, Calendars, Teams, and Badge Collections. The core of this pattern is a successful migration to the **`@dnd-kit`** library, which proved more robust for responsive layouts.
 
--   **Layout**: Entities are presented in a responsive grid of cards. To ensure stability during drag operations, especially across multiple rows, the container must use a `flex flex-wrap` layout instead of CSS Grid. Each draggable card item is then given a responsive `basis` property (e.g., `basis-full sm:basis-[calc(50%-1rem)] md:basis-[calc(33.333%-1rem)] lg:basis-[calc(25%-1rem)] xl:basis-[calc(20%-1rem)] 2xl:basis-[calc(16.666%-1rem)]`) to create the columns. A negative margin (e.g., `-m-2`) on the container and a matching positive padding (e.g., `p-2`) on the items creates the gutter.
+-   **Layout**: Entities are presented in a responsive grid of cards. To ensure stability during drag operations, especially across multiple rows, the container must use a `flex flex-wrap` layout instead of CSS Grid. Each draggable card item is then given a responsive `basis` property (e.g., `basis-full sm:basis-[calc(50%-1rem)] md:basis-[calc(33.333%-1rem)] lg:basis-[calc(25%-1rem)] xl:basis-[calc(20%-1rem)] 2xl:basis-[calc(16.666%-1rem)]`) to create the columns. A negative margin (e.g., `-m-2`) on the container and a matching positive padding (e.g., `p-2`) on the items creates the gutter. This pattern also applies *within* cards, such as for the `detailed` view of a `BadgeCollectionCard`, to organize their contents into a responsive grid.
 -   **Critical Stability Properties**:
     -   **`@dnd-kit` is the required library.** The older `react-beautiful-dnd` library was found to be incompatible with this type of responsive layout.
     -   `flex-grow-0` and `flex-shrink-0` **must** be used on draggable items. This prevents the remaining items in a row from expanding or shrinking, which causes the grid to reflow unstably when an item is being dragged.
--   **Initiating a Drag**: To provide a clean interface, the drag action is initiated by clicking and dragging any non-interactive part of the card. The drag listener from `dnd-kit`'s `useSortable` hook is applied to the main card container.
--   **Expand/Collapse**: Cards are collapsed by default. To expand a card and view its details, the user must click a dedicated `expand_more` icon button, typically in the bottom-right corner. This provides a clear, unambiguous affordance and avoids conflicts with other click actions on the card.
--   **Preventing Interaction Conflicts**:
-    -   To allow buttons, popovers, and other controls *inside* the draggable card to function correctly, they must stop the `pointerdown` event from propagating up to the card's drag listener. **This is a critical implementation detail and must be done by adding `onPointerDown={(e) => e.stopPropagation()}` to every interactive element within the card.**
-    -   To prevent conflicts with keyboard interactions inside a card (like an **Inline Editor**), the `useSortable` hook for the draggable card **must** be temporarily disabled while the internal component is in an editing state. This is done by passing a `disabled: isEditing` flag to the hook, preventing `@dnd-kit`'s keyboard listeners (e.g., spacebar to lift) from firing while the user is typing.
+-   **Initiating a Drag**: The **sole method** for initiating a drag action is by holding down a user-configurable modifier key (`Shift`, `Alt`, `Ctrl`, or `Meta`) while clicking and dragging any non-interactive part of a card. This modifier key is set in the user's Account Settings.
+-   **Drag-Ready State**: When the drag modifier key is held down, the application enters a "drag-ready" state to provide clear visual feedback and prevent accidental actions.
+    - **Hide Interactive Elements**: All secondary interactive elements within draggable cards—such as delete buttons, color swatch badges, and expand/collapse icons—**must be hidden**. This is typically achieved by adding a `.hidden` class based on a global `isDragModifierPressed` state from the `UserContext`.
+    - **Disable Triggers**: The main entity icon's Popover trigger for changing the icon must be **disabled** (but the icon itself remains visible).
+    - **Disable Editing**: Inline editing functionality must be disabled to prevent text from being selected or edited during a drag attempt.
+-   **Expand/Collapse**: Cards are collapsed by default. To expand a card and view its details, the user must click a dedicated `expand_more` icon button, positioned at `absolute -bottom-1 right-0`. This button is hidden when the drag modifier key is pressed.
+-   **Preventing Interaction Conflicts**: The primary mechanism for preventing accidental drags is the **modifier key activation**. Since a drag action only begins when the modifier key is held, normal clicks on buttons, popovers, and other controls inside a draggable card function as expected without interference. For components with internal keyboard interactions (like an **Inline Editor**), the `useSortable` hook for the draggable card **must** be temporarily disabled while the internal component is in an editing state by passing `disabled: isEditing`.
 -   **Visual Feedback**: To provide feedback without disrupting layout, visual changes (like a `shadow` or `opacity`) should be applied directly to the inner component based on the `isDragging` prop provided by `dnd-kit`'s `useSortable` hook. The draggable wrapper itself should remain untouched.
--   **Internal Card Layout**: Each card is structured for clarity. The header contains the primary entity identifier (icon and name) and contextual controls. To keep cards compact, headers and content areas should use minimal padding (e.g., `p-2`). Titles should be configured to wrap gracefully to handle longer text.
+-   **Internal Card Layout**: Each card is structured for clarity. The header contains the primary entity identifier (icon and name) and contextual controls. To keep cards compact, headers and content areas should use minimal padding (e.g., `p-2`). Titles should be configured to wrap gracefully to handle longer text. **All icon-only buttons inside a card MUST have a `<Tooltip>`**.
 -   **User Item Display**: When users are displayed as items within a management card (e.g., `TeamCard`), they are presented **without a border**. Each user item must display their avatar, full name, and professional title underneath the name for consistency.
 -   **Unique Draggable IDs**: It is critical that every `Draggable` component has a globally unique `draggableId`. If the same item (e.g., a user) can appear in multiple lists, you must create a unique ID for each instance. A common pattern is to combine the list's ID with the item's ID (e.g., `draggableId={'${list.id}-${item.id}'}`). This prevents the drag-and-drop library from trying to move all instances of the item simultaneously.
 -   **Draggable & Pinned States**:
     -   **Draggable Cards**: Most cards can be freely reordered within the grid. The `useSortable` hook allows this.
-    -   **Pinned Cards**: Certain cards are designated as "pinned" and cannot be dragged. This is achieved by disabling the `useSortable` hook for those specific items (`disabled: true`). They act as fixed anchors in the layout.
+    -   **Pinned Cards**: Certain core system cards (e.g., "Admin", "Settings") are designated as "pinned" and cannot be dragged. This is achieved by disabling the `useSortable` hook for those specific items (`disabled: true`). They act as fixed anchors in the layout.
 -   **Reordering with Guardrails**:
     -   **Interaction**: Users can drag any non-pinned card and drop it between other non-pinned cards to change its order. The grid reflows smoothly to show the drop position.
-    -   **Guardrail Logic**: The `onDragEnd` handler must contain logic to prevent reordering pinned items. If a user attempts to drop an item into a position occupied by a pinned item, the operation should be cancelled or reverted.
--   **Drop Zone Highlighting**: Drop zones provide visual feedback when an item is dragged over them. To maintain a clean UI, highlights primarily use rings without background fills.
-    -   **Standard & Duplication Zones (Reordering, Moving, Duplicating):** The drop area is highlighted with a `1px` inset, **colorless** ring using the standard border color (`ring-1 ring-border ring-inset`). This is the universal style for all non-destructive drop actions.
-    -   **Destructive Zones (Deleting):** The drop area is highlighted with a `1px` ring in the destructive theme color (`ring-1 ring-destructive`).
--   **Contextual Hover Actions**:
-    - **Item-level**: To maintain a clean UI, action icons like "Remove User" or "Delete Badge" must appear only when hovering over their specific context. This is achieved by adding a `group` class to the *individual item's container*. The icon button inside is then styled with `opacity-0 group-hover:opacity-100`.
-    - **Delete Icon**: The standard icon for deleting an item (like a Page or Calendar) is a circular `cancel` icon that appears on card hover. To create this affordance in the corner of a card, the button can be positioned absolutely (e.g., `-top-2 -right-2`).
-    - **Card-level**: Deleting an entire card (like a Team or Collection) is a high-impact action. To prevent accidental clicks, this functionality should be placed within a `<DropdownMenu>` in the card's header, not triggered by a direct hover icon.
--   **Drag-to-Duplicate**:
+    -   **Guardrail Logic**: The `onDragEnd` handler must contain logic to prevent reordering pinned items. A non-pinned item cannot be dropped into a position occupied by or between pinned items. This ensures the core page order is always maintained.
+-   **Drop Zone Highlighting**: Drop zones provide visual feedback when an item is dragged over them. To maintain a clean UI, highlights must **only** use rings without background fills.
+    -   **Standard & Duplication Zones (Reordering, Moving, Duplicating):** The drop area must be highlighted with a `1px` inset, colorless ring using the standard border color. The required class is `ring-1 ring-border ring-inset`. This is the universal style for all non-destructive drop actions, and colored backgrounds or borders **must not** be used.
+    -   **Destructive Zones (Deleting):** The drop area must be highlighted with a `1px` ring in the destructive theme color (`ring-1 ring-destructive`).
+-   **Contextual Hover Actions (Critical Implementation)**: To prevent unwanted cascading hover effects (e.g., hovering a parent card triggering actions on all child items), hover effects must be strictly scoped.
+    - **Card-level Actions**: To show an action icon (like delete) for the entire card, place the action button (and its `<TooltipProvider>`) **inside the `<CardHeader>`**. Then, apply the `group` class to the `<CardHeader>` itself. This correctly scopes the `group-hover:opacity-100` effect to the header area, preventing it from activating when the user hovers over the card's content. The standard icon for deleting a card is a circular `cancel` icon that appears on hover, absolutely positioned to the corner of the card.
+    - **Item-level Actions**: For actions on individual items *within* a card (like Badges in a Collection or Users in a Team), apply the `group` class to the immediate container of **each individual item**. The action button inside that container uses `group-hover:opacity-100`. This ensures that hovering one item only reveals its own actions.
+-   **Drag-to-Duplicate & Create**:
     -   **Interaction**: A designated "Add New" icon (`<Button>`) acts as a drop zone, implemented using the `useDroppable` hook from `dnd-kit`. While a card is being dragged, this zone becomes highlighted to indicate it can accept a drop.
-    -   **Behavior**: Dropping any card (pinned or not, from the main board or the shared panel) creates a deep, independent copy of the original. The new card is given a unique ID, a modified name (e.g., with `(Copy)`), and a unique URL path. It is placed immediately after the original in the list. Its ownership is assigned to the current user's context.
+    -   **Behavior (Duplicate)**: Dropping any card (pinned or not, from the main board or the shared panel) creates a deep, independent copy of the original. The new card is given a unique ID, a modified name (e.g., with `(Copy)`), and a unique URL path. It is placed immediately after the original in the list. Its ownership is assigned to the current user's context.
+    -   **Behavior (Create)**: Clicking the "Add New" button will create a fresh, default item. The item is intelligently placed *before* any pinned items, preserving the integrity of the core page structure.
     -   **Smart Unlinking**: If the duplicated card was a *linked* item (e.g., a shared calendar from another user), the original linked item is automatically removed from the user's board after the copy is created. This provides a clean "copy and replace" workflow.
 -   **Drag-to-Assign**: This pattern allows sub-items (like **Users** or **Badges**) to be moved between different parent cards.
     - **Interaction**: A user can drag an item (e.g., a User) from one card's list.
@@ -204,27 +204,30 @@ This pattern is **deprecated**. All deletion confirmations now use the **Compact
 
 ---
 
-### 13. Responsive Header Controls
-This pattern describes how a group of controls in a page header can intelligently adapt to changes in the layout, such as the opening and closing of a side panel. It is the required header pattern for pages that use the **Draggable Card Management blueprint** and **Entity Sharing & Linking** patterns.
+### 13. Responsive Layout with Collapsible Panel
+This pattern describes how to create a two-column layout where one column (a side panel) can be expanded and collapsed without causing horizontal overflow or scrollbars on the main page. This is the required layout for pages that use the **Entity Sharing & Linking** pattern.
 
-- **Trigger**: Expanding or collapsing a panel that affects the main content area's width.
-- **Behavior**:
-  - **Grid Awareness**: The page's main content area (e.g., a card grid) dynamically adjusts the number of columns it displays to best fit the available space.
-  - **Control Repositioning**: Header controls are grouped together. This entire group intelligently repositions itself to stay aligned with the edge of the content grid it controls. For example, when a right-hand panel opens, the grid shrinks, and the control group moves left to remain aligned with the grid's new right edge.
-- **Application**: Used on the **Badge Management** and **Team Management** pages to keep the search and panel-toggle icons aligned with the content grid as the "Shared Items" panel is opened and closed.
+- **Structure**: The page should be contained within a main flex container (`<div className="flex h-full gap-4">`).
+- **Main Content Area**: The primary content area must be wrapped in a container that allows it to grow while managing its own overflow.
+  - The wrapper `div` should have `flex-1` (to grow) and `overflow-hidden` (to prevent its contents from causing a page-level scrollbar).
+  - The direct child of this wrapper should be a `div` with `h-full` and `overflow-y-auto` to allow the content inside to scroll vertically if needed.
+- **Collapsible Side Panel**:
+  - The panel `div` should have a fixed width when open (e.g., `w-96`) and `w-0` when closed.
+  - **Crucially, padding must also be conditional.** The panel should have padding (e.g., `p-2`) only when it is open. When closed, it must have `p-0` to ensure it occupies zero space.
+- **Application**: Used on the **Badge Management**, **Calendar Management**, and **Team Management** pages to ensure a smooth and clean layout when the "Shared Items" panel is toggled.
 
 ---
 
 ### 14. Compact Badge Pills
-This pattern is a specialized, ultra-compact version of the standard `<Badge>` component, used for displaying multiple badges in a dense layout, such as the "assorted" view mode in Badge Collections.
+This pattern is a specialized, ultra-compact version of the standard `<Badge>` component, used for displaying multiple badges in a dense layout, such as the "Compact" view mode in Badge Collections.
 
 - **Appearance**: A very thin, pill-shaped badge with minimal padding. It contains a small icon and a short text label.
 - **Sizing**:
     - The pill has a reduced height and horizontal padding (`py-0 px-1`).
     - The icon inside is small, with its size set via `style={{ fontSize: '28px' }}`.
-    - The text label is small (e.g., `text-[10px]`).
-- **Interaction**: A small, circular delete button appears on hover, allowing the user to remove the badge.
-- **Application**: Used in the "assorted" view of **Badge Collections** to display many badges in a compact, scannable format.
+    - The text label is small (e.g., `text-sm`).
+- **Interaction**: A small, circular `cancel` icon appears on hover, allowing the user to remove the badge.
+- **Application**: Used in the "Compact" view of **Badge Collections** to display many badges in a compact, scannable format.
 
 ---
 ### 15. Team Member Badge Assignment
@@ -253,7 +256,7 @@ This pattern provides a dense, icon-driven interface for managing a series of us
 
 ### Typography
 - **Font**: The application exclusively uses the **Roboto** font family for a clean and consistent look.
-- **Headline Font**: All major titles (pages, tabs, prominent cards) use the `font-headline` utility class, which is configured to use a `font-thin` weight (`font-weight: 100`).
+- **Headline Font**: All major titles (pages, tabs, prominent cards) use the `font-headline` utility class, which is configured to use a `font-thin` weight (`font-weight: 100`) from the Roboto family.
 - **Body Font**: All standard body text, labels, and buttons now use a `font-thin` weight.
 
 ### Icons & Hover Effects
@@ -309,7 +312,8 @@ This is the single source of truth for indicating user interaction state across 
     - **Appearance**: A circular badge with a `border-0`. It is used to trigger a color picker popover or display a status.
     - **Sizing**: `h-4 w-4`.
     - **Placement**:
-      - **Color Picker**: `absolute -bottom-1 -right-1`.
-      - **Ownership Status**: `absolute -top-1 -right-1`.
+      - **Color Picker**: `absolute -bottom-1 -right-3`.
+      - **Ownership Status**: `absolute -top-0 -right-3`.
     - **Icon Size (Ownership Status)**: The `GoogleSymbol` inside an ownership status badge should have its size set via `style={{fontSize: '16px'}}`.
--   **Badges in Assorted View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
+-   **Badges in Compact View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
+
