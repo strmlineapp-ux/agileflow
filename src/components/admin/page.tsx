@@ -50,11 +50,10 @@ import { HexColorPicker, HexColorInput } from 'react-colorful';
 
 // #region Admin Groups Management Tab
 
-function UserCard({ user, isDeletable, onDelete, dragHandle }: { user: User, isDeletable?: boolean, onDelete?: (user: User) => void, dragHandle?: React.ReactNode }) {
+function UserCard({ user, isDeletable, onDelete }: { user: User, isDeletable?: boolean, onDelete?: (user: User) => void }) {
     return (
         <div className="group p-2 flex items-center justify-between rounded-md transition-colors bg-card">
             <div className="flex items-center gap-2">
-                {dragHandle}
                 <Avatar>
                   <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
                   <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
@@ -73,6 +72,7 @@ function UserCard({ user, isDeletable, onDelete, dragHandle }: { user: User, isD
                                 size="icon"
                                 className="h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100"
                                 onClick={(e) => { e.stopPropagation(); onDelete(user); }}
+                                onPointerDown={(e) => e.stopPropagation()}
                             >
                                 <GoogleSymbol name="cancel" className="text-lg" weight={100}/>
                             </Button>
@@ -100,19 +100,12 @@ function SortableUserCard({ user, listId, onDeleteRequest }: { user: User, listI
         opacity: isDragging ? 0.5 : 1
     };
 
-    const dragHandle = (
-      <div {...attributes} {...listeners} className="cursor-grab text-muted-foreground">
-        <GoogleSymbol name="drag_indicator" weight={100} />
-      </div>
-    );
-
     return (
-        <div ref={setNodeRef} style={style}>
+        <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
             <UserCard 
               user={user} 
               isDeletable={listId === 'user-list'} 
               onDelete={onDeleteRequest} 
-              dragHandle={dragHandle}
             />
         </div>
     );
@@ -1282,4 +1275,5 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
     );
 };
 // #endregion
+
 
