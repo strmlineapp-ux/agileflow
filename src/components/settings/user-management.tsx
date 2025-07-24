@@ -106,7 +106,7 @@ const SettingSelect = ({
 
 const DragActivationKeySetting = ({ user, onUpdate }: { user: User, onUpdate: (key: User['dragActivationKey']) => void }) => {
     const [isOpen, setIsOpen] = useState(false);
-    const [keyInput, setKeyInput] = useState(user.dragActivationKey || 'Shift');
+    const [keyInput, setKeyInput] = useState(user.dragActivationKey || 'shift');
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         e.preventDefault();
@@ -334,4 +334,3 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
         </div>
     )
 }
-
