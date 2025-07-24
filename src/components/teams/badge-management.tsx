@@ -76,7 +76,7 @@ function BadgeDisplayItem({
     isCollectionEditing: boolean;
     dragHandleProps?: any;
 }) {
-    const { users } = useUser();
+    const { users, isDragModifierPressed } = useUser();
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
     const [iconSearch, setIconSearch] = useState('');
@@ -217,7 +217,7 @@ function BadgeDisplayItem({
     );
         
     const nameEditorElement = (
-         <div onClick={(e) => { if(isOwner) {e.stopPropagation(); setIsEditingName(true);}}}>
+         <div onClick={(e) => { if(isOwner && !isDragModifierPressed) {e.stopPropagation(); setIsEditingName(true);}}}>
             {isEditingName && isOwner ? (
                 <Input
                     ref={nameInputRef}
@@ -230,7 +230,7 @@ function BadgeDisplayItem({
                     )}
                 />
             ) : (
-                <span className={cn("break-words", viewMode === 'detailed' ? "text-base font-normal font-headline font-thin" : "font-thin text-sm", isOwner && "cursor-pointer")}>
+                <span className={cn("break-words", viewMode === 'detailed' ? "text-base font-normal font-headline font-thin" : "font-thin text-sm", isOwner && !isDragModifierPressed && "cursor-pointer")}>
                     {badge.name}
                 </span>
             )}
@@ -238,7 +238,7 @@ function BadgeDisplayItem({
     );
 
      const descriptionEditorElement = (
-         <div onClick={(e) => { if(isOwner) {e.stopPropagation(); setIsEditingDescription(true);}}}>
+         <div onClick={(e) => { if(isOwner && !isDragModifierPressed) {e.stopPropagation(); setIsEditingDescription(true);}}}>
             {isEditingDescription && isOwner ? (
                 <Textarea 
                     ref={descriptionTextareaRef} 
@@ -249,7 +249,7 @@ function BadgeDisplayItem({
                     placeholder="Click to add a description." 
                 />
              ) : (
-                 <p className={cn("text-sm text-muted-foreground min-h-[20px] break-words", isOwner && "cursor-text")}>
+                 <p className={cn("text-sm text-muted-foreground min-h-[20px] break-words", isOwner && !isDragModifierPressed && "cursor-text")}>
                     {badge.description || (isLinked ? <span className="italic text-muted-foreground/50">No description</span> : isOwner ? 'Click to add description.' : '')}
                 </p>
              )}
@@ -264,7 +264,7 @@ function BadgeDisplayItem({
                     <TooltipProvider>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                        <PopoverTrigger asChild disabled={!isOwner} onPointerDown={(e) => e.stopPropagation()}>
+                        <PopoverTrigger asChild disabled={!isOwner || isDragModifierPressed} onPointerDown={(e) => e.stopPropagation()}>
                             <Button variant="ghost" className="h-10 w-12 flex items-center justify-center p-0">
                                 <GoogleSymbol name={badge.icon} weight={100} grade={-25} opticalSize={20} style={{ fontSize: '36px', color: badge.color }} />
                             </Button>
@@ -277,7 +277,7 @@ function BadgeDisplayItem({
                 </Popover>
                 {!isViewer && (
                     <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                        <TooltipProvider><Tooltip><TooltipTrigger asChild><PopoverTrigger asChild disabled={!isOwner} onPointerDown={(e) => e.stopPropagation()}><button className={cn("absolute -bottom-1 -right-3 h-4 w-4 rounded-full border-0", isOwner && "cursor-pointer")} style={{ backgroundColor: badge.color }} aria-label="Change badge color" /></PopoverTrigger></TooltipTrigger><TooltipContent><p>Change Color</p></TooltipContent></Tooltip></TooltipProvider>
+                        <TooltipProvider><Tooltip><TooltipTrigger asChild><PopoverTrigger asChild disabled={!isOwner || isDragModifierPressed} onPointerDown={(e) => e.stopPropagation()}><button className={cn("absolute -bottom-1 -right-3 h-4 w-4 rounded-full border-0", !isOwner || isDragModifierPressed ? "cursor-not-allowed" : "cursor-pointer", isDragModifierPressed && "hidden")} style={{ backgroundColor: badge.color }} aria-label="Change badge color" /></PopoverTrigger></TooltipTrigger><TooltipContent><p>Change Color</p></TooltipContent></Tooltip></TooltipProvider>
                         {colorPickerContent}
                     </Popover>
                 )}
@@ -312,7 +312,7 @@ function BadgeDisplayItem({
             >
                 <div className="relative">
                     <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
-                        <PopoverTrigger asChild disabled={!isOwner} onPointerDown={(e) => e.stopPropagation()}>
+                        <PopoverTrigger asChild disabled={!isOwner || isDragModifierPressed} onPointerDown={(e) => e.stopPropagation()}>
                              <Button
                                 variant="ghost"
                                 className="h-auto p-0 hover:bg-transparent"
@@ -325,9 +325,9 @@ function BadgeDisplayItem({
                     </Popover>
                      {!isViewer && (
                         <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                            <PopoverTrigger asChild disabled={!isOwner} onPointerDown={(e) => e.stopPropagation()}>
+                            <PopoverTrigger asChild disabled={!isOwner || isDragModifierPressed} onPointerDown={(e) => e.stopPropagation()}>
                                 <button
-                                    className={cn("absolute -bottom-1 -right-3 h-4 w-4 rounded-full border-0", isOwner && "cursor-pointer")}
+                                    className={cn("absolute -bottom-1 -right-3 h-4 w-4 rounded-full border-0", !isOwner || isDragModifierPressed ? "cursor-not-allowed" : "cursor-pointer", isDragModifierPressed && "hidden")}
                                     style={{ backgroundColor: badge.color }}
                                     aria-label="Change badge color"
                                 />
@@ -361,6 +361,7 @@ function SortableBadgeItem({ badge, collection, onDelete, ...props }: { badge: B
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: `badge::${badge.id}::${collection.id}`,
         data: { type: 'badge', badge, collectionId: collection.id, isSharedPreview: props.isSharedPreview },
+        disabled: isEditingName || isEditingDescription,
     });
     
     const style = {
@@ -485,7 +486,7 @@ function BadgeCollectionCard({
     dragHandleProps,
     ...props
 }: BadgeCollectionCardProps) {
-    const { viewAsUser, users, updateTeam, allBadgeCollections } = useUser();
+    const { viewAsUser, users, updateTeam, allBadgeCollections, isDragModifierPressed } = useUser();
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
@@ -636,7 +637,7 @@ function BadgeCollectionCard({
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                                    className={cn("absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10", isDragModifierPressed && "hidden")}
                                     onPointerDown={(e) => { e.stopPropagation(); onDeleteCollection(collection); }}
                                 >
                                     <GoogleSymbol name="cancel" className="text-lg" weight={100} />
@@ -653,7 +654,7 @@ function BadgeCollectionCard({
                                     <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                        <PopoverTrigger asChild disabled={!isOwner} onPointerDown={(e) => e.stopPropagation()}>
+                                        <PopoverTrigger asChild disabled={!isOwner || isDragModifierPressed} onPointerDown={(e) => e.stopPropagation()}>
                                             <Button variant="ghost" className="h-10 w-12 flex items-center justify-center p-0">
                                             <GoogleSymbol name={collection.icon} weight={100} grade={-25} opticalSize={20} style={{ fontSize: '36px' }} />
                                             </Button>
@@ -697,7 +698,7 @@ function BadgeCollectionCard({
                                 {!isViewer && (
                                     <>
                                         <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                                            <TooltipProvider><Tooltip><TooltipTrigger asChild><PopoverTrigger asChild disabled={!isOwner} onPointerDown={(e) => e.stopPropagation()}><button className={cn("absolute -bottom-1 -right-3 h-4 w-4 rounded-full border-0", !isOwner ? "cursor-not-allowed" : "cursor-pointer")} style={{ backgroundColor: collection.color }} /></PopoverTrigger></TooltipTrigger><TooltipContent><p>Change Color</p></TooltipContent></Tooltip></TooltipProvider>
+                                            <TooltipProvider><Tooltip><TooltipTrigger asChild><PopoverTrigger asChild disabled={!isOwner || isDragModifierPressed} onPointerDown={(e) => e.stopPropagation()}><button className={cn("absolute -bottom-1 -right-3 h-4 w-4 rounded-full border-0", !isOwner ? "cursor-not-allowed" : "cursor-pointer", isDragModifierPressed && "hidden")} style={{ backgroundColor: collection.color }} /></PopoverTrigger></TooltipTrigger><TooltipContent><p>Change Color</p></TooltipContent></Tooltip></TooltipProvider>
                                             <PopoverContent className="w-auto p-4" onPointerDown={(e) => e.stopPropagation()}>
                                                 <div className="space-y-4">
                                                     <HexColorPicker color={color} onChange={setColor} className="!w-full" />
@@ -721,7 +722,7 @@ function BadgeCollectionCard({
                                 )}
                             </div>
                              <div className="flex-1 min-w-0">
-                                <div onClick={() => { if(isOwner) setIsEditingName(true);}} onPointerDown={(e) => { if(isOwner) e.stopPropagation(); }} className={cn("font-headline text-2xl font-thin break-words", isOwner && "cursor-pointer")}>
+                                <div onClick={() => { if(isOwner && !isDragModifierPressed) setIsEditingName(true);}} onPointerDown={(e) => { if(isOwner && !isDragModifierPressed) e.stopPropagation(); }} className={cn("font-headline text-2xl font-thin break-words", isOwner && !isDragModifierPressed && "cursor-pointer")}>
                                 {isEditingName ? (
                                     <Input
                                         ref={nameInputRef}
@@ -736,7 +737,7 @@ function BadgeCollectionCard({
                                 </div>
                             </div>
                         </div>
-                        <div className="flex items-center">
+                        <div className={cn("flex items-center", isDragModifierPressed && "hidden")}>
                            {!isCollapsed && isOwner && !isSharedPreview && (
                                 <TooltipProvider>
                                     <Tooltip>
@@ -797,7 +798,7 @@ function BadgeCollectionCard({
              {showDetails && (
                 <>
                     <CardContent className="flex-grow pt-0 flex flex-col min-h-0">
-                         <div className="min-h-[20px]" onClick={() => { if(isOwner) setIsEditingDescription(true);}} onPointerDown={(e) => { if(isOwner) e.stopPropagation(); }}>
+                         <div className={cn(isOwner && !isDragModifierPressed && "cursor-text")} onClick={() => { if(isOwner && !isDragModifierPressed) setIsEditingDescription(true);}} onPointerDown={(e) => { if(isOwner && !isDragModifierPressed) e.stopPropagation(); }}>
                             {isEditingDescription ? (
                             <Textarea 
                                 ref={descriptionTextareaRef} 
@@ -808,7 +809,7 @@ function BadgeCollectionCard({
                                 placeholder="Click to add a description." 
                             />
                             ) : (
-                                <p className={cn("text-sm text-muted-foreground min-h-[20px] break-words", isOwner && "cursor-text")}>
+                                <p className={cn("text-sm text-muted-foreground min-h-[20px] break-words")}>
                                 {collection.description || (isOwner ? 'Click to add a description.' : '')}
                             </p>
                             )}
@@ -836,7 +837,7 @@ function BadgeCollectionCard({
                         </DroppableCollectionContent>
                     </CardContent>
                     {!isSharedPreview && (
-                        <CardFooter className="flex items-center justify-between gap-2 p-2 mt-auto">
+                        <CardFooter className={cn("flex items-center justify-between gap-2 p-2 mt-auto", isDragModifierPressed && "hidden")}>
                             <div className="flex items-center gap-2">
                                 {APPLICATIONS.map(app => (
                                     <TooltipProvider key={app.key}>
@@ -881,7 +882,7 @@ function BadgeCollectionCard({
                 </>
              )}
             {!isCollapsed && (
-                 <div className="absolute -bottom-1 right-0">
+                 <div className={cn("absolute -bottom-1 right-0", isDragModifierPressed && "hidden")}>
                     <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
                         <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
                     </Button>
@@ -1067,11 +1068,13 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
-            activationConstraint: {
-                delay: 250,
-                tolerance: 5,
-                keyboard: viewAsUser.dragActivationKey ? {name: viewAsUser.dragActivationKey, A: true} as any : undefined
-            },
+          activationConstraint: viewAsUser.dragActivationKey
+                ? {
+                    distance: 8,
+                  }
+                : {
+                    distance: 8,
+                  },
         }),
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates,
