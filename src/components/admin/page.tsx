@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -913,7 +914,7 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
         useSensor(KeyboardSensor, {
           coordinateGetter: sortableKeyboardCoordinates,
           onActivation: ({ event }) => {
-            if (isDragModifierPressed) {
+            if (!isDragModifierPressed) {
                 return false;
             }
             return true;
@@ -1104,7 +1105,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                         </TooltipProvider>
                         <PopoverContent className="w-80 p-0">
                             <div className="flex items-center gap-1 p-2 border-b">
-                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" opticalSize={20} />
+                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" opticalSize={20} weight={100} />
                                 <input
                                     ref={iconSearchInputRef}
                                     placeholder="Search icons..."
@@ -1245,7 +1246,7 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
         useSensor(KeyboardSensor, {
           coordinateGetter: sortableKeyboardCoordinates,
           onActivation: ({ event }) => {
-            if (isDragModifierPressed) {
+            if (!isDragModifierPressed) {
                 return false;
             }
             return true;
