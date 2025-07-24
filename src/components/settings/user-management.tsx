@@ -34,7 +34,7 @@ const CustomColorPicker = ({ user, onUpdate, onClose }: { user: User, onUpdate: 
              <HexColorPicker color={color} onChange={setColor} className="!w-full" />
              <div className="flex items-center gap-2">
                 <span className="p-2 border rounded-md shadow-sm" style={{ backgroundColor: color }} />
-                <HexColorInput prefixed alpha color={color} onChange={setColor} className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+                <HexColorInput prefixed alpha color={color} onChange={setColor} className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50" />
              </div>
              <div className="grid grid-cols-8 gap-1">
                 {predefinedColors.map(c => (
@@ -77,7 +77,7 @@ const SettingSelect = ({
                             <GoogleSymbol name={icon} className="text-xl" grade={-25} weight={100} />
                         </Button>
                     </PopoverTrigger>
-                </Tooltip>
+                </TooltipTrigger>
                 <TooltipContent>
                   <p>{tooltip}: <span className="font-semibold">{currentLabel}</span></p>
                 </TooltipContent>
@@ -127,7 +127,7 @@ const DragActivationKeySetting = ({ user, onUpdate }: { user: User, onUpdate: (k
                                 <GoogleSymbol name="smart_button" className="text-xl" grade={-25} weight={100} />
                             </Button>
                         </PopoverTrigger>
-                    </Tooltip>
+                    </TooltipTrigger>
                     <TooltipContent>
                         <p>Drag Modifier: <span className="font-semibold capitalize">{keyInput}</span>+Click. Click to change.</p>
                     </TooltipContent>
