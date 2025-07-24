@@ -746,12 +746,10 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
         useSensor(PointerSensor, {
           activationConstraint: viewAsUser.dragActivationKey
                 ? {
-                    modifier: [[viewAsUser.dragActivationKey]],
-                    tolerance: 5,
+                    distance: 8,
                   }
                 : {
-                    delay: 250,
-                    tolerance: 5,
+                    distance: 8,
                   },
         }),
         useSensor(KeyboardSensor, {

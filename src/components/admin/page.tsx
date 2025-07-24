@@ -87,7 +87,6 @@ function UserCard({ user, isDeletable, onDelete }: { user: User, isDeletable?: b
 }
 
 function SortableUserCard({ user, listId, onDeleteRequest }: { user: User, listId: string, onDeleteRequest?: (user: User) => void }) {
-    const { viewAsUser } = useUser();
     const draggableId = `user-dnd-${user.userId}-${listId}`;
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: draggableId,
@@ -241,22 +240,16 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive, activeTab, pa
     setActiveDragUser(event.active.data.current?.user || null);
   };
   
-    const sensors = useSensors(
-        useSensor(PointerSensor, {
-            activationConstraint: viewAsUser.dragActivationKey
-                ? {
-                    modifier: [[viewAsUser.dragActivationKey]],
-                    tolerance: 5,
-                  }
-                : {
-                    delay: 250,
-                    tolerance: 5,
-                  },
-        }),
-        useSensor(KeyboardSensor, {
-            coordinateGetter: sortableKeyboardCoordinates,
-        })
-    );
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Require pointer to move 8px before initiating drag
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
 
   return (
@@ -591,7 +584,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isCollapsed,
 
     const handlePathClick = (e: React.MouseEvent) => {
       e.stopPropagation();
-      if (!isPinned && canManage) {
+      if (!isPinned && canManage && !isDragModifierPressed) {
         onUpdate(page.id, { isDynamic: !page.isDynamic });
       }
     };
@@ -676,7 +669,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isCollapsed,
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={isDragModifierPressed}>
-                                                <button className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-0 cursor-pointer", isDragModifierPressed && "hidden")} style={{ backgroundColor: page.color }} />
+                                                <button className={cn("absolute -bottom-1 -right-3 h-4 w-4 rounded-full border-0", !isDragModifierPressed && "cursor-pointer", isDragModifierPressed && "hidden")} style={{ backgroundColor: page.color }} />
                                             </PopoverTrigger>
                                         </TooltipTrigger>
                                         <TooltipContent><p>Change Color</p></TooltipContent>
@@ -772,7 +765,6 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isCollapsed,
 }
 
 function SortablePageCard({ id, page, onUpdate, onDelete, isPinned }: { id: string, page: AppPage, onUpdate: (id: string, data: Partial<AppPage>) => void; onDelete: (id: string) => void; isPinned?: boolean }) {
-    const { viewAsUser } = useUser();
     const [isEditingName, setIsEditingName] = useState(false);
     const {
         attributes,
@@ -904,14 +896,12 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
     
     const sensors = useSensors(
         useSensor(PointerSensor, {
-            activationConstraint: viewAsUser.dragActivationKey
+          activationConstraint: viewAsUser.dragActivationKey
                 ? {
-                    modifier: [[viewAsUser.dragActivationKey]],
-                    tolerance: 5,
+                    distance: 8,
                   }
                 : {
-                    delay: 250,
-                    tolerance: 5,
+                    distance: 8,
                   },
         }),
         useSensor(KeyboardSensor, {
@@ -1100,7 +1090,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <PopoverTrigger asChild disabled={isDragModifierPressed}>
-                                        <button className={cn("h-10 w-12 flex items-center justify-center", isDragModifierPressed && "hidden")}>
+                                        <button className={cn("h-10 w-12 flex items-center justify-center")}>
                                             <GoogleSymbol name={tab.icon} className="text-4xl" weight={100} />
                                         </button>
                                     </PopoverTrigger>
@@ -1143,7 +1133,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <PopoverTrigger asChild disabled={isDragModifierPressed}>
-                                        <button className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-0 cursor-pointer", isDragModifierPressed && "hidden")} style={{ backgroundColor: tab.color }} />
+                                        <button className={cn("absolute -bottom-1 -right-3 h-4 w-4 rounded-full border-0", !isDragModifierPressed && "cursor-pointer", isDragModifierPressed && "hidden")} style={{ backgroundColor: tab.color }} />
                                     </PopoverTrigger>
                                 </TooltipTrigger>
                                 <TooltipContent><p>Change Color</p></TooltipContent>
@@ -1241,14 +1231,12 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
     
     const sensors = useSensors(
         useSensor(PointerSensor, {
-            activationConstraint: viewAsUser.dragActivationKey
+          activationConstraint: viewAsUser.dragActivationKey
                 ? {
-                    modifier: [[viewAsUser.dragActivationKey]],
-                    tolerance: 5,
+                    distance: 8,
                   }
                 : {
-                    delay: 250,
-                    tolerance: 5,
+                    distance: 8,
                   },
         }),
         useSensor(KeyboardSensor, {
@@ -1293,6 +1281,7 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
     );
 };
 // #endregion
+
 
 
 

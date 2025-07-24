@@ -273,7 +273,7 @@ function CalendarCard({
                                   <Tooltip>
                                       <TooltipTrigger asChild>
                                           <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={!canManage || isDragModifierPressed}>
-                                              <button className={cn("absolute -bottom-0 -right-3 h-4 w-4 rounded-full border-0", canManage && "cursor-pointer", isDragModifierPressed && "hidden")} style={{ backgroundColor: calendar.color }} />
+                                              <button className={cn("absolute -bottom-0 -right-3 h-4 w-4 rounded-full border-0", canManage && !isDragModifierPressed && "cursor-pointer", isDragModifierPressed && "hidden")} style={{ backgroundColor: calendar.color }} />
                                           </PopoverTrigger>
                                       </TooltipTrigger>
                                       <TooltipContent><p>Change Color</p></TooltipContent>
@@ -589,15 +589,13 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
   
   const sensors = useSensors(
     useSensor(PointerSensor, {
-        activationConstraint: viewAsUser.dragActivationKey
-                ? {
-                    modifier: [[viewAsUser.dragActivationKey]],
-                    tolerance: 5,
-                  }
-                : {
-                    delay: 250,
-                    tolerance: 5,
-                  },
+      activationConstraint: viewAsUser.dragActivationKey
+            ? {
+                distance: 8,
+              }
+            : {
+                distance: 8,
+              },
     }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
