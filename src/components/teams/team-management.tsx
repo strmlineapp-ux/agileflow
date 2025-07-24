@@ -277,7 +277,7 @@ function TeamCard({
                                     <TooltipProvider>
                                         <Tooltip>
                                             <TooltipTrigger asChild>
-                                                <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={!canManageTeam}>
+                                                <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={!canManageTeam || isDragModifierPressed}>
                                                     <Button variant="ghost" className="h-10 w-12 flex items-center justify-center p-0">
                                                         <GoogleSymbol name={team.icon} opticalSize={20} grade={-25} style={{ fontSize: '36px' }} weight={100} />
                                                     </Button>
@@ -313,7 +313,7 @@ function TeamCard({
                                     <TooltipProvider>
                                         <Tooltip>
                                             <TooltipTrigger asChild>
-                                                <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={!canManageTeam}>
+                                                <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={!canManageTeam || isDragModifierPressed}>
                                                     <button className={cn("absolute -bottom-0 -right-3 h-4 w-4 rounded-full border-0", canManageTeam && !isDragModifierPressed && "cursor-pointer", isDragModifierPressed && "hidden")} style={{ backgroundColor: team.color }} />
                                                 </PopoverTrigger>
                                             </TooltipTrigger>
@@ -352,7 +352,7 @@ function TeamCard({
                                     </TooltipProvider>
                                 )}
                             </div>
-                            <div onPointerDown={(e) => { e.stopPropagation(); }} className="flex-1 min-w-0">
+                            <div onPointerDown={(e) => { if (!isDragModifierPressed) { e.stopPropagation() }; }} className="flex-1 min-w-0">
                                 {isEditingName && canManageTeam ? (
                                     <Input
                                         ref={nameInputRef}
@@ -362,19 +362,19 @@ function TeamCard({
                                         className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
                                     />
                                 ) : (
-                                    <CardTitle className={cn("font-headline text-xl font-thin truncate", canManageTeam && "cursor-pointer")} onClick={() => { if (canManageTeam) setIsEditingName(true); }}>
+                                    <CardTitle className={cn("font-headline text-xl font-thin truncate", canManageTeam && !isDragModifierPressed && "cursor-pointer")} onClick={() => { if (canManageTeam && !isDragModifierPressed) setIsEditingName(true); }}>
                                         {team.name}
                                     </CardTitle>
                                 )}
                             </div>
                         </div>
-                        <div className="flex items-center" onPointerDown={(e) => e.stopPropagation()}>
+                        <div className={cn("flex items-center", isDragModifierPressed && "hidden")} onPointerDown={(e) => e.stopPropagation()}>
                             {canManageTeam && !isSharedPreview && (
                                 <Popover open={isAddUserPopoverOpen} onOpenChange={setIsAddUserPopoverOpen}>
                                     <TooltipProvider>
                                         <Tooltip>
                                             <TooltipTrigger asChild>
-                                                <PopoverTrigger asChild disabled={!canManageTeam} onPointerDown={(e) => e.stopPropagation()}>
+                                                <PopoverTrigger asChild disabled={!canManageTeam || isDragModifierPressed} onPointerDown={(e) => e.stopPropagation()}>
                                                     <Button variant="ghost" size="icon" className={cn("h-8 w-8 text-muted-foreground hover:text-primary", isDragModifierPressed && "hidden")}><GoogleSymbol name="group_add" weight={100} /></Button>
                                                 </PopoverTrigger>
                                             </TooltipTrigger>
@@ -744,10 +744,15 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
     
     const sensors = useSensors(
         useSensor(PointerSensor, {
-          activationConstraint: {
-            delay: 150,
-            tolerance: 5,
-          },
+          activationConstraint: viewAsUser.dragActivationKey
+                ? {
+                    modifier: [[viewAsUser.dragActivationKey]],
+                    tolerance: 5,
+                  }
+                : {
+                    delay: 250,
+                    tolerance: 5,
+                  },
         }),
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates,

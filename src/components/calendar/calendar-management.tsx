@@ -67,7 +67,7 @@ function CalendarCard({
     setIsEditingName: (isEditing: boolean) => void;
     isSharedPreview?: boolean;
 }) {
-  const { viewAsUser, users } = useUser();
+  const { viewAsUser, users, isDragModifierPressed } = useUser();
   const [isExpanded, setIsExpanded] = useState(false);
   const nameInputRef = useRef<HTMLInputElement>(null);
   
@@ -214,7 +214,7 @@ function CalendarCard({
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                            className={cn("absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10", isDragModifierPressed && "hidden")}
                             onPointerDown={(e) => {
                                 e.stopPropagation();
                                 setIsDeleteDialogOpen(true);
@@ -236,7 +236,7 @@ function CalendarCard({
                               <TooltipProvider>
                                   <Tooltip>
                                       <TooltipTrigger asChild>
-                                          <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={!canManage}>
+                                          <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={!canManage || isDragModifierPressed}>
                                                <Button variant="ghost" className="h-10 w-12 flex items-center justify-center p-0">
                                                     <GoogleSymbol name={calendar.icon} opticalSize={20} grade={-25} style={{ fontSize: '36px' }} weight={100} />
                                                 </Button>
@@ -272,8 +272,8 @@ function CalendarCard({
                               <TooltipProvider>
                                   <Tooltip>
                                       <TooltipTrigger asChild>
-                                          <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={!canManage}>
-                                              <button className={cn("absolute -bottom-0 -right-3 h-4 w-4 rounded-full border-0", canManage && "cursor-pointer")} style={{ backgroundColor: calendar.color }} />
+                                          <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={!canManage || isDragModifierPressed}>
+                                              <button className={cn("absolute -bottom-0 -right-3 h-4 w-4 rounded-full border-0", canManage && "cursor-pointer", isDragModifierPressed && "hidden")} style={{ backgroundColor: calendar.color }} />
                                           </PopoverTrigger>
                                       </TooltipTrigger>
                                       <TooltipContent><p>Change Color</p></TooltipContent>
@@ -311,7 +311,7 @@ function CalendarCard({
                               </TooltipProvider>
                           )}
                       </div>
-                      <div className="flex-1 min-w-0" onPointerDown={(e) => { if(canManage) e.stopPropagation(); }}>
+                      <div className="flex-1 min-w-0" onPointerDown={(e) => { if(canManage && !isDragModifierPressed) e.stopPropagation(); }}>
                       {isEditingName && canManage ? (
                            <Input
                               ref={nameInputRef}
@@ -322,13 +322,13 @@ function CalendarCard({
                               className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
                             />
                       ) : (
-                          <CardTitle onClick={(e) => {e.stopPropagation(); if(canManage && !isDragging) { setIsEditingName(true)}}} className={cn("font-headline text-xl font-thin break-words", canManage && "cursor-pointer")}>
+                          <CardTitle onClick={(e) => {e.stopPropagation(); if(canManage && !isDragging && !isDragModifierPressed) { setIsEditingName(true)}}} className={cn("font-headline text-xl font-thin break-words", canManage && !isDragModifierPressed && "cursor-pointer")}>
                           {calendar.name}
                           </CardTitle>
                       )}
                       </div>
                   </div>
-                   <div className='flex items-center' onPointerDown={(e) => e.stopPropagation()}>
+                   <div className={cn('flex items-center', isDragModifierPressed && "hidden")} onPointerDown={(e) => e.stopPropagation()}>
                     {canManage && !calendar.googleCalendarId && (
                         <TooltipProvider>
                             <Tooltip>
@@ -381,10 +381,10 @@ function CalendarCard({
                           />
                         ) : (
                           <span 
-                              className={cn("italic text-xs text-muted-foreground", canManage && "cursor-pointer")} 
+                              className={cn("italic text-xs text-muted-foreground", canManage && !isDragModifierPressed && "cursor-pointer")} 
                               onClick={(e) => {
                                   e.stopPropagation();
-                                  if(canManage) setIsEditingDefaultTitle(true)
+                                  if(canManage && !isDragModifierPressed) setIsEditingDefaultTitle(true)
                               }}
                           >
                               {calendar.defaultEventTitle || 'No default title'}
@@ -394,7 +394,7 @@ function CalendarCard({
                   </CardContent>
               )}
               
-              <div className="absolute -bottom-1 right-0">
+              <div className={cn("absolute -bottom-1 right-0", isDragModifierPressed && "hidden")}>
                   <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
                       <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
                   </Button>
@@ -589,10 +589,15 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
   
   const sensors = useSensors(
     useSensor(PointerSensor, {
-        activationConstraint: {
-            delay: 150,
-            tolerance: 5,
-        },
+        activationConstraint: viewAsUser.dragActivationKey
+                ? {
+                    modifier: [[viewAsUser.dragActivationKey]],
+                    tolerance: 5,
+                  }
+                : {
+                    delay: 250,
+                    tolerance: 5,
+                  },
     }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );

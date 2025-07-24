@@ -133,7 +133,7 @@ function UserDropZone({ id, users, children, onDeleteRequest }: { id: string, us
 
 export const AdminsManagement = ({ tab, isSingleTabPage, isActive, activeTab, page }: { tab: AppTab; isSingleTabPage?: boolean, isActive?: boolean, activeTab?: string, page: AppPage }) => {
   const { toast } = useToast();
-  const { viewAsUser, users, updateUser, deleteUser } = useUser();
+  const { viewAsUser, users, updateUser, deleteUser, isDragModifierPressed } = useUser();
   const [is2faDialogOpen, setIs2faDialogOpen] = useState(false);
   const [pendingUserMove, setPendingUserMove] = useState<{ user: User; fromListId: string; destListId: string } | null>(null);
   const [pendingUserDelete, setPendingUserDelete] = useState<User | null>(null);
@@ -243,9 +243,15 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive, activeTab, pa
   
     const sensors = useSensors(
         useSensor(PointerSensor, {
-            activationConstraint: {
-                keyboard: viewAsUser.dragActivationKey ? {name: viewAsUser.dragActivationKey, A: true} as any : undefined
-            },
+            activationConstraint: viewAsUser.dragActivationKey
+                ? {
+                    modifier: [[viewAsUser.dragActivationKey]],
+                    tolerance: 5,
+                  }
+                : {
+                    delay: 250,
+                    tolerance: 5,
+                  },
         }),
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates,
@@ -626,7 +632,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isCollapsed,
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
+                                            <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={isDragModifierPressed}>
                                                 <Button variant="ghost" className="h-10 w-12 flex items-center justify-center p-0">
                                                     <GoogleSymbol name={page.icon} weight={100} grade={-25} opticalSize={20} style={{ fontSize: '36px' }}/>
                                                 </Button>
@@ -669,7 +675,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isCollapsed,
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
+                                            <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={isDragModifierPressed}>
                                                 <button className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-0 cursor-pointer", isDragModifierPressed && "hidden")} style={{ backgroundColor: page.color }} />
                                             </PopoverTrigger>
                                         </TooltipTrigger>
@@ -693,7 +699,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isCollapsed,
                                 </PopoverContent>
                             </Popover>
                         </div>
-                        <div onPointerDown={(e) => { e.stopPropagation(); }}>
+                        <div onPointerDown={(e) => { if(!isDragModifierPressed) e.stopPropagation(); }}>
                             {isEditingName ? (
                                 <Input 
                                   ref={nameInputRef} 
@@ -898,9 +904,15 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
     
     const sensors = useSensors(
         useSensor(PointerSensor, {
-            activationConstraint: {
-                keyboard: viewAsUser.dragActivationKey ? {name: viewAsUser.dragActivationKey, A: true} as any : undefined
-            },
+            activationConstraint: viewAsUser.dragActivationKey
+                ? {
+                    modifier: [[viewAsUser.dragActivationKey]],
+                    tolerance: 5,
+                  }
+                : {
+                    delay: 250,
+                    tolerance: 5,
+                  },
         }),
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates,
@@ -1087,7 +1099,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <PopoverTrigger asChild>
+                                    <PopoverTrigger asChild disabled={isDragModifierPressed}>
                                         <button className={cn("h-10 w-12 flex items-center justify-center", isDragModifierPressed && "hidden")}>
                                             <GoogleSymbol name={tab.icon} className="text-4xl" weight={100} />
                                         </button>
@@ -1130,7 +1142,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <PopoverTrigger asChild>
+                                    <PopoverTrigger asChild disabled={isDragModifierPressed}>
                                         <button className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-0 cursor-pointer", isDragModifierPressed && "hidden")} style={{ backgroundColor: tab.color }} />
                                     </PopoverTrigger>
                                 </TooltipTrigger>
@@ -1229,9 +1241,15 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
     
     const sensors = useSensors(
         useSensor(PointerSensor, {
-            activationConstraint: {
-                keyboard: viewAsUser.dragActivationKey ? {name: viewAsUser.dragActivationKey, A: true} as any : undefined
-            },
+            activationConstraint: viewAsUser.dragActivationKey
+                ? {
+                    modifier: [[viewAsUser.dragActivationKey]],
+                    tolerance: 5,
+                  }
+                : {
+                    delay: 250,
+                    tolerance: 5,
+                  },
         }),
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates,
@@ -1275,6 +1293,7 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
     );
 };
 // #endregion
+
 
 
 
