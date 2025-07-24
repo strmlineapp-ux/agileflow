@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -206,7 +204,7 @@ function BadgeDisplayItem({
                     }}
                     className="h-8 w-8 p-0"
                     >
-                    <GoogleSymbol name={iconName} className="text-4xl" weight={100} />
+                    <GoogleSymbol name={iconName} className="text-4xl" weight={100} opticalSize={20} />
                     </Button>
                 </TooltipTrigger>
                 <TooltipContent><p>{iconName}</p></TooltipContent>
@@ -286,7 +284,7 @@ function BadgeDisplayItem({
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <div className="absolute -top-0 -right-3 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white" style={{ backgroundColor: ownerUser?.primaryColor || '#64748B' }}>
-                                    <GoogleSymbol name="link" style={{fontSize: '16px'}}/>
+                                    <GoogleSymbol name="link" style={{fontSize: '16px'}} weight={100} opticalSize={20}/>
                                 </div>
                             </TooltipTrigger>
                             <TooltipContent><p>Owned by {ownerUser?.displayName}</p></TooltipContent>
@@ -318,7 +316,7 @@ function BadgeDisplayItem({
                                 className="h-auto p-0 hover:bg-transparent"
                                 style={{ color: badge.color }}
                             >
-                                <GoogleSymbol name={badge.icon} style={{ fontSize: '28px' }} weight={100} />
+                                <GoogleSymbol name={badge.icon} style={{ fontSize: '28px' }} weight={100} opticalSize={20} />
                             </Button>
                         </PopoverTrigger>
                         {iconPickerContent}
@@ -340,7 +338,7 @@ function BadgeDisplayItem({
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <div className="absolute -top-0 -right-3 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white" style={{ backgroundColor: ownerUser?.primaryColor || '#64748B' }}>
-                                        <GoogleSymbol name="link" style={{fontSize: '16px'}}/>
+                                        <GoogleSymbol name="link" style={{fontSize: '16px'}} weight={100} opticalSize={20} />
                                     </div>
                                 </TooltipTrigger>
                                 <TooltipContent><p>Owned by {ownerUser?.displayName}</p></TooltipContent>
@@ -398,7 +396,7 @@ function SortableBadgeItem({ badge, collection, onDelete, ...props }: { badge: B
                                         className="h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent"
                                         onPointerDown={(e) => { e.stopPropagation(); onDelete(badge.id, collection.id); }}
                                     >
-                                        <GoogleSymbol name="cancel" className="text-lg" weight={100} />
+                                        <GoogleSymbol name="cancel" className="text-lg" weight={100} opticalSize={20} />
                                     </Button>
                                 </TooltipTrigger>
                                 <TooltipContent><p>{props.isOwner ? "Delete Badge" : "Unlink Badge"}</p></TooltipContent>
@@ -640,7 +638,7 @@ function BadgeCollectionCard({
                                     className={cn("absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10", isDragModifierPressed && "hidden")}
                                     onPointerDown={(e) => { e.stopPropagation(); onDeleteCollection(collection); }}
                                 >
-                                    <GoogleSymbol name="cancel" className="text-lg" weight={100} />
+                                    <GoogleSymbol name="cancel" className="text-lg" weight={100} opticalSize={20} />
                                 </Button>
                             </TooltipTrigger>
                             <TooltipContent><p>{isOwner ? "Delete Collection" : "Unlink Collection"}</p></TooltipContent>
@@ -686,7 +684,7 @@ function BadgeCollectionCard({
                                                     }}
                                                     className="h-8 w-8 p-0"
                                                 >
-                                                    <GoogleSymbol name={iconName} className="text-4xl" weight={100} />
+                                                    <GoogleSymbol name={iconName} className="text-4xl" weight={100} opticalSize={20} />
                                                 </Button>
                                                 </TooltipTrigger>
                                                 <TooltipContent><p>{iconName}</p></TooltipContent>
@@ -716,7 +714,7 @@ function BadgeCollectionCard({
                                             </PopoverContent>
                                         </Popover>
                                         {shareIcon && (
-                                            <TooltipProvider><Tooltip><TooltipTrigger asChild><div className="absolute -top-0 -right-3 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white" style={{ backgroundColor: ownerColor }}><GoogleSymbol name={shareIcon} style={{fontSize: '16px'}}/></div></TooltipTrigger><TooltipContent><p>{shareIconTitle}</p></TooltipContent></Tooltip></TooltipProvider>
+                                            <TooltipProvider><Tooltip><TooltipTrigger asChild><div className="absolute -top-0 -right-3 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white" style={{ backgroundColor: ownerColor }}><GoogleSymbol name={shareIcon} style={{fontSize: '16px'}} weight={100} opticalSize={20}/></div></TooltipTrigger><TooltipContent><p>{shareIconTitle}</p></TooltipContent></Tooltip></TooltipProvider>
                                         )}
                                     </>
                                 )}
@@ -743,7 +741,7 @@ function BadgeCollectionCard({
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <Button variant="ghost" size="icon" onClick={() => onAddBadge(collection.id)} disabled={!isOwner || isViewer} onPointerDown={(e) => e.stopPropagation()} className="h-8 w-8 text-muted-foreground">
-                                                <GoogleSymbol name="add_circle" weight={100} />
+                                                <GoogleSymbol name="add_circle" weight={100} opticalSize={20} />
                                             </Button>
                                         </TooltipTrigger>
                                         <TooltipContent><p>Add New Badge</p></TooltipContent>
@@ -757,7 +755,7 @@ function BadgeCollectionCard({
                                             <TooltipTrigger asChild>
                                                 <PopoverTrigger onPointerDown={(e) => e.stopPropagation()}>
                                                     <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-                                                        <GoogleSymbol name={viewModeOptions.find(o => o.mode === collection.viewMode)?.icon || 'view_module'} weight={100} />
+                                                        <GoogleSymbol name={viewModeOptions.find(o => o.mode === collection.viewMode)?.icon || 'view_module'} weight={100} opticalSize={20} />
                                                     </Button>
                                                 </PopoverTrigger>
                                             </TooltipTrigger>
@@ -781,7 +779,7 @@ function BadgeCollectionCard({
                                                                 collection.viewMode === mode && "text-primary"
                                                             )}
                                                         >
-                                                            <GoogleSymbol name={icon} weight={100} />
+                                                            <GoogleSymbol name={icon} weight={100} opticalSize={20} />
                                                         </Button>
                                                     </TooltipTrigger>
                                                     <TooltipContent><p>{label}</p></TooltipContent>
@@ -851,7 +849,7 @@ function BadgeCollectionCard({
                                                     onPointerDown={(e) => e.stopPropagation()}
                                                     disabled={!isOwner}
                                                 >
-                                                    <GoogleSymbol name={app.icon} weight={100} />
+                                                    <GoogleSymbol name={app.icon} weight={100} opticalSize={20} />
                                                 </Button>
                                             </TooltipTrigger>
                                             <TooltipContent>Associated with {app.label}</TooltipContent>
@@ -870,7 +868,7 @@ function BadgeCollectionCard({
                                                 onClick={handleToggleCollectionActive}
                                                 onPointerDown={(e) => e.stopPropagation()}
                                             >
-                                                <GoogleSymbol name={isActive ? 'check_circle' : 'circle'} weight={100} filled={isActive}/>
+                                                <GoogleSymbol name={isActive ? 'check_circle' : 'circle'} weight={100} filled={isActive} opticalSize={20} />
                                             </Button>
                                         </TooltipTrigger>
                                         <TooltipContent><p>{isActive ? 'Deactivate' : 'Activate'} for Team</p></TooltipContent>
@@ -884,7 +882,7 @@ function BadgeCollectionCard({
             {!isCollapsed && (
                  <div className={cn("absolute -bottom-1 right-0", isDragModifierPressed && "hidden")}>
                     <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
-                        <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
+                        <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} opticalSize={20} />
                     </Button>
                 </div>
             )}
@@ -948,7 +946,7 @@ function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
           <Tooltip>
               <TooltipTrigger asChild>
                   <Button variant="ghost" size="icon" className="rounded-full p-0" onClick={onAdd} onPointerDown={(e) => e.stopPropagation()}>
-                    <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
+                    <GoogleSymbol name="add_circle" className="text-4xl" weight={100} opticalSize={20} />
                     <span className="sr-only">New Collection or Drop to Duplicate</span>
                   </Button>
               </TooltipTrigger>
@@ -1099,7 +1097,7 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <Button variant="ghost" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)}>
-                                                <GoogleSymbol name="dynamic_feed" weight={100} />
+                                                <GoogleSymbol name="dynamic_feed" weight={100} opticalSize={20} />
                                             </Button>
                                         </TooltipTrigger>
                                         <TooltipContent><p>Show Shared Collections</p></TooltipContent>
@@ -1201,4 +1199,3 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
         </DndContext>
     );
 }
-

@@ -218,7 +218,7 @@ function CalendarCard({
                                 setIsDeleteDialogOpen(true);
                             }}
                         >
-                            <GoogleSymbol name="cancel" className="text-lg" weight={100} />
+                            <GoogleSymbol name="cancel" className="text-lg" weight={100} opticalSize={20} />
                         </Button>
                     </TooltipTrigger>
                     <TooltipContent><p>{canManage ? "Delete Calendar" : "Unlink Calendar"}</p></TooltipContent>
@@ -245,7 +245,7 @@ function CalendarCard({
                               </TooltipProvider>
                               <PopoverContent className="w-80 p-0" onPointerDown={(e) => e.stopPropagation()}>
                                   <div className="flex items-center gap-1 p-2 border-b">
-                                      <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} />
+                                      <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} opticalSize={20} />
                                       <input
                                           ref={iconSearchInputRef}
                                           placeholder="Search icons..."
@@ -258,7 +258,7 @@ function CalendarCard({
                                   <TooltipProvider key={iconName}>
                                       <Tooltip>
                                       <TooltipTrigger asChild>
-                                          <Button variant={calendar.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(calendar.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="h-8 w-8 p-0"><GoogleSymbol name={iconName} className="text-4xl" weight={100} /></Button>
+                                          <Button variant={calendar.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(calendar.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="h-8 w-8 p-0"><GoogleSymbol name={iconName} className="text-4xl" weight={100} opticalSize={20} /></Button>
                                       </TooltipTrigger>
                                       <TooltipContent><p>{iconName}</p></TooltipContent>
                                       </Tooltip>
@@ -301,7 +301,7 @@ function CalendarCard({
                                               className="absolute -top-0 -right-3 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white"
                                               style={{ backgroundColor: shareIconColor }}
                                           >
-                                              <GoogleSymbol name={shareIcon} style={{fontSize: '16px'}} weight={100} />
+                                              <GoogleSymbol name={shareIcon} style={{fontSize: '16px'}} weight={100} opticalSize={20} />
                                           </div>
                                       </TooltipTrigger>
                                       <TooltipContent><p>{shareIconTitle}</p></TooltipContent>
@@ -332,7 +332,7 @@ function CalendarCard({
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => setIsLinkDialogOpen(true)}>
-                                        <GoogleSymbol name="add_link" weight={100} />
+                                        <GoogleSymbol name="add_link" weight={100} opticalSize={20} />
                                     </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>Link Google Calendar</TooltipContent>
@@ -350,7 +350,7 @@ function CalendarCard({
                                            className="h-8 w-8 text-muted-foreground"
                                            onClick={handleSync}
                                        >
-                                           <GoogleSymbol name="sync" weight={100} />
+                                           <GoogleSymbol name="sync" weight={100} opticalSize={20} />
                                        </Button>
                                    </span>
                                </TooltipTrigger>
@@ -394,7 +394,7 @@ function CalendarCard({
               
               <div className={cn("absolute -bottom-1 right-0", isDragModifierPressed && "hidden")}>
                   <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
-                      <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} weight={100} />
+                      <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} weight={100} opticalSize={20} />
                   </Button>
               </div>
           </div>
@@ -403,7 +403,7 @@ function CalendarCard({
         <DialogContent className="max-w-md">
             <div className="absolute top-4 right-4">
               <Button variant="ghost" size="icon" onClick={handleSaveGoogleCalendarId}>
-                  <GoogleSymbol name="check" className="text-xl" weight={100} />
+                  <GoogleSymbol name="check" className="text-xl" weight={100} opticalSize={20} />
                   <span className="sr-only">Link Calendar</span>
               </Button>
             </div>
@@ -430,7 +430,7 @@ function CalendarCard({
         <DialogContent className="max-w-md" onPointerDownCapture={(e) => e.stopPropagation()}>
             <div className="absolute top-4 right-4">
                 <Button variant="ghost" size="icon" className="hover:text-destructive p-0 hover:bg-transparent" onClick={() => { onDelete(calendar); setIsDeleteDialogOpen(false); }}>
-                    <GoogleSymbol name="delete" className="text-4xl" weight={100} />
+                    <GoogleSymbol name="delete" className="text-4xl" weight={100} opticalSize={20} />
                     <span className="sr-only">Delete Calendar</span>
                 </Button>
             </div>
@@ -500,7 +500,7 @@ function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
           <Tooltip>
               <TooltipTrigger asChild>
                   <Button variant="ghost" size="icon" className="rounded-full p-0" onClick={onAdd} onPointerDown={(e) => e.stopPropagation()}>
-                    <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
+                    <GoogleSymbol name="add_circle" className="text-4xl" weight={100} opticalSize={20} />
                     <span className="sr-only">New Calendar or Drop to Duplicate</span>
                   </Button>
               </TooltipTrigger>
@@ -681,7 +681,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button variant="ghost" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)}>
-                        <GoogleSymbol name="dynamic_feed" weight={100} />
+                        <GoogleSymbol name="dynamic_feed" weight={100} opticalSize={20} />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent><p>Show Shared Calendars</p></TooltipContent>

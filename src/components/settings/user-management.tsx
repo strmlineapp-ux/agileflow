@@ -74,7 +74,7 @@ const SettingSelect = ({
                 <TooltipTrigger asChild>
                     <PopoverTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:bg-transparent hover:text-foreground" disabled={disabled}>
-                            <GoogleSymbol name={icon} className="text-xl" grade={-25} weight={100} />
+                            <GoogleSymbol name={icon} className="text-xl" grade={-25} weight={100} opticalSize={20} />
                         </Button>
                     </PopoverTrigger>
                 </TooltipTrigger>
@@ -124,7 +124,7 @@ const DragActivationKeySetting = ({ user, onUpdate }: { user: User, onUpdate: (k
                     <TooltipTrigger asChild>
                         <PopoverTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:bg-transparent hover:text-foreground">
-                                <GoogleSymbol name="smart_button" className="text-xl" grade={-25} weight={100} />
+                                <GoogleSymbol name="smart_button" className="text-xl" grade={-25} weight={100} opticalSize={20} />
                             </Button>
                         </PopoverTrigger>
                     </TooltipTrigger>
@@ -208,7 +208,7 @@ function UserCard({ user, isCurrentUser, canEditPreferences, className }: { user
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild>
                                                 <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" style={{ color: 'hsl(var(--primary))' }}>
-                                                    <GoogleSymbol name="palette" grade={-25} weight={100} />
+                                                    <GoogleSymbol name="palette" grade={-25} weight={100} opticalSize={20} />
                                                 </Button>
                                             </PopoverTrigger>
                                         </TooltipTrigger>
@@ -232,7 +232,7 @@ function UserCard({ user, isCurrentUser, canEditPreferences, className }: { user
                                             onClick={handleThemeChange}
                                             className="h-9 w-9 text-muted-foreground hover:bg-transparent hover:text-foreground"
                                         >
-                                            <GoogleSymbol name={user.theme === 'dark' ? 'dark_mode' : 'light_mode'} className="text-lg" grade={-25} weight={100} />
+                                            <GoogleSymbol name={user.theme === 'dark' ? 'dark_mode' : 'light_mode'} className="text-lg" grade={-25} weight={100} opticalSize={20} />
                                         </Button>
                                     </TooltipTrigger>
                                     <TooltipContent><p>Switch to {user.theme === 'dark' ? 'Light' : 'Dark'} Theme</p></TooltipContent>
@@ -267,7 +267,7 @@ function UserCard({ user, isCurrentUser, canEditPreferences, className }: { user
                                 <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Button variant="ghost" size="icon" onClick={() => updateUser(user.userId, { easyBooking: !user.easyBooking })} className="h-9 w-9 text-muted-foreground hover:bg-transparent hover:text-foreground">
-                                        <GoogleSymbol name={user.easyBooking ? 'toggle_on' : 'toggle_off'} className="text-2xl" grade={-25} weight={100} />
+                                        <GoogleSymbol name={user.easyBooking ? 'toggle_on' : 'toggle_off'} className="text-2xl" grade={-25} weight={100} opticalSize={20} />
                                     </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>
