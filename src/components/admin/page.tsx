@@ -51,6 +51,7 @@ import { HexColorPicker, HexColorInput } from 'react-colorful';
 // #region Admin Groups Management Tab
 
 function UserCard({ user, isDeletable, onDelete }: { user: User, isDeletable?: boolean, onDelete?: (user: User) => void }) {
+    const { isDragModifierPressed } = useUser();
     return (
         <div className="group p-2 flex items-center justify-between rounded-md transition-colors bg-card">
             <div className="flex items-center gap-2">
@@ -70,7 +71,7 @@ function UserCard({ user, isDeletable, onDelete }: { user: User, isDeletable?: b
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100"
+                                className={cn("h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100", isDragModifierPressed && "hidden")}
                                 onClick={(e) => { e.stopPropagation(); onDelete(user); }}
                                 onPointerDown={(e) => e.stopPropagation()}
                             >
@@ -91,7 +92,6 @@ function SortableUserCard({ user, listId, onDeleteRequest }: { user: User, listI
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: draggableId,
         data: { type: 'user', user, fromListId: listId },
-        disabled: !viewAsUser.isAdmin,
     });
 
     const style = {
@@ -349,7 +349,7 @@ const PREDEFINED_COLORS = [
 ];
 
 function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: Partial<AppPage>) => void }) {
-    const { users, teams, appSettings } = useUser();
+    const { users, teams, appSettings, isDragModifierPressed } = useUser();
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const searchInputRef = useRef<HTMLInputElement>(null);
@@ -402,7 +402,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <PopoverTrigger asChild>
-                            <Button variant="ghost" size="icon" onPointerDown={(e) => e.stopPropagation()}><GoogleSymbol name="group_add" className="text-4xl" weight={100} /></Button>
+                            <Button variant="ghost" size="icon" onPointerDown={(e) => e.stopPropagation()} className={cn(isDragModifierPressed && "hidden")}><GoogleSymbol name="group_add" className="text-4xl" weight={100} /></Button>
                         </PopoverTrigger>
                     </TooltipTrigger>
                     <TooltipContent><p>Manage Page Access</p></TooltipContent>
@@ -446,7 +446,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
 }
 
 function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: Partial<AppPage>) => void }) {
-  const { appSettings } = useUser();
+  const { appSettings, isDragModifierPressed } = useUser();
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -485,7 +485,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
           <Tooltip>
               <TooltipTrigger asChild>
                   <PopoverTrigger asChild>
-                      <Button variant="ghost" size="icon" onPointerDown={(e) => e.stopPropagation()}><GoogleSymbol name="layers" className="text-4xl" weight={100} /></Button>
+                      <Button variant="ghost" size="icon" onPointerDown={(e) => e.stopPropagation()} className={cn(isDragModifierPressed && "hidden")}><GoogleSymbol name="layers" className="text-4xl" weight={100} /></Button>
                   </PopoverTrigger>
               </TooltipTrigger>
               <TooltipContent><p>Manage Associated Tabs</p></TooltipContent>
@@ -539,7 +539,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isCollapsed,
     setIsEditingName: (isEditing: boolean) => void;
     dragHandleProps?: any;
 }) {
-    const { viewAsUser } = useUser();
+    const { viewAsUser, isDragModifierPressed } = useUser();
     const canManage = viewAsUser.isAdmin;
     const [isExpanded, setIsExpanded] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
@@ -605,7 +605,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isCollapsed,
                           <Button
                               variant="ghost"
                               size="icon"
-                              className="absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                              className={cn("absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10", isDragModifierPressed && "hidden")}
                               onPointerDown={(e) => {
                                   e.stopPropagation();
                                   setIsDeleteDialogOpen(true);
@@ -670,7 +670,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isCollapsed,
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
-                                                <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-0 cursor-pointer" style={{ backgroundColor: page.color }} />
+                                                <button className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-0 cursor-pointer", isDragModifierPressed && "hidden")} style={{ backgroundColor: page.color }} />
                                             </PopoverTrigger>
                                         </TooltipTrigger>
                                         <TooltipContent><p>Change Color</p></TooltipContent>
@@ -706,8 +706,8 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isCollapsed,
                                 />
                             ) : (
                                 <CardTitle 
-                                  className={cn("font-headline text-base break-words font-thin", canManage && "cursor-pointer")}
-                                  onClick={() => {if(canManage && !isDragging) setIsEditingName(true)}}
+                                  className={cn("font-headline text-base break-words font-thin", canManage && !isDragModifierPressed && "cursor-pointer")}
+                                  onClick={() => {if(canManage && !isDragging && !isDragModifierPressed) setIsEditingName(true)}}
                                 >
                                     {page.name}
                                 </CardTitle>
@@ -726,13 +726,13 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isCollapsed,
             </div>
             {showDetails && (
                 <CardContent className="p-2 pt-0">
-                    <p className={cn("text-xs text-muted-foreground truncate font-thin", !isPinned && "cursor-pointer")} onClick={handlePathClick}>
+                    <p className={cn("text-xs text-muted-foreground truncate font-thin", !isPinned && !isDragModifierPressed && "cursor-pointer")} onClick={handlePathClick}>
                       {displayPath}
                     </p>
                 </CardContent>
             )}
             {!isCollapsed && (
-                 <div className="absolute -bottom-1 right-0">
+                 <div className={cn("absolute -bottom-1 right-0", isDragModifierPressed && "hidden")}>
                     <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
                         <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
                     </Button>
@@ -989,7 +989,7 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
 // #region Tabs Management Tab
 
 function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: string, data: Partial<AppTab>) => void; isDragging?: boolean; }) {
-    const { viewAsUser } = useUser();
+    const { viewAsUser, isDragModifierPressed } = useUser();
     const [isEditingName, setIsEditingName] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
@@ -1088,7 +1088,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <PopoverTrigger asChild>
-                                        <button className="h-10 w-12 flex items-center justify-center">
+                                        <button className={cn("h-10 w-12 flex items-center justify-center", isDragModifierPressed && "hidden")}>
                                             <GoogleSymbol name={tab.icon} className="text-4xl" weight={100} />
                                         </button>
                                     </PopoverTrigger>
@@ -1131,7 +1131,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <PopoverTrigger asChild>
-                                        <button className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-0 cursor-pointer" style={{ backgroundColor: tab.color }} />
+                                        <button className={cn("absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-0 cursor-pointer", isDragModifierPressed && "hidden")} style={{ backgroundColor: tab.color }} />
                                     </PopoverTrigger>
                                 </TooltipTrigger>
                                 <TooltipContent><p>Change Color</p></TooltipContent>
@@ -1159,7 +1159,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                          {isEditingName ? (
                             <Input ref={nameInputRef} defaultValue={tab.name} onKeyDown={handleNameKeyDown} onBlur={handleSaveName} className="h-auto p-0 font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 font-headline" />
                         ) : (
-                            <h3 className="font-headline cursor-text text-base font-thin" onClick={() => setIsEditingName(true)}>{tab.name}</h3>
+                            <h3 className={cn("font-headline cursor-text text-base font-thin", !isDragModifierPressed && "cursor-pointer")} onClick={() => !isDragModifierPressed && setIsEditingName(true)}>{tab.name}</h3>
                         )}
                         <Badge variant="outline">{tab.componentKey}</Badge>
                     </div>
@@ -1173,7 +1173,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                             placeholder="Click to add a description."
                         />
                     ) : (
-                        <p className="text-sm text-muted-foreground cursor-text min-h-[20px] font-thin" onClick={() => setIsEditingDescription(true)}>
+                        <p className={cn("text-sm text-muted-foreground min-h-[20px] font-thin", !isDragModifierPressed && "cursor-pointer")} onClick={() => !isDragModifierPressed && setIsEditingDescription(true)}>
                             {tab.description || 'Click to add a description.'}
                         </p>
                     )}
@@ -1275,5 +1275,6 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
     );
 };
 // #endregion
+
 
 

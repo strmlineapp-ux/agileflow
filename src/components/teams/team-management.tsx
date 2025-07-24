@@ -62,6 +62,7 @@ function DraggableUserCard({ user, onRemove, isTeamAdmin, onSetAdmin, canManage,
     memberCount: number;
     teamId: string;
 }) {
+  const { isDragModifierPressed } = useUser();
   const { attributes, listeners, setNodeRef, transform, isDragging } = useSortable({
     id: `user-sort:${teamId}:${user.userId}`,
     data: { type: 'user', user, teamId },
@@ -112,7 +113,7 @@ function DraggableUserCard({ user, onRemove, isTeamAdmin, onSetAdmin, canManage,
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="absolute top-0 right-0 h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                                className={cn("absolute top-0 right-0 h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity", isDragModifierPressed && "hidden")}
                                 onClick={(e) => { e.stopPropagation(); onRemove();}}
                                 onPointerDown={(e) => e.stopPropagation()} // Prevent drag from starting
                             >
@@ -153,7 +154,7 @@ function TeamCard({
     isDragging?: boolean;
     [key: string]: any;
 }) {
-    const { viewAsUser } = useUser();
+    const { viewAsUser, isDragModifierPressed } = useUser();
     const nameInputRef = useRef<HTMLInputElement>(null);
     const { isEditingName, setIsEditingName, isDragging } = props;
     
@@ -259,7 +260,7 @@ function TeamCard({
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        className="absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                                        className={cn("absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity z-10", isDragModifierPressed && "hidden")}
                                         onPointerDown={(e) => { e.stopPropagation(); onDelete(team); }}
                                     >
                                         <GoogleSymbol name="cancel" className="text-lg" weight={100} />
@@ -313,7 +314,7 @@ function TeamCard({
                                         <Tooltip>
                                             <TooltipTrigger asChild>
                                                 <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={!canManageTeam}>
-                                                    <button className={cn("absolute -bottom-0 -right-3 h-4 w-4 rounded-full border-0", canManageTeam && "cursor-pointer")} style={{ backgroundColor: team.color }} />
+                                                    <button className={cn("absolute -bottom-0 -right-3 h-4 w-4 rounded-full border-0", canManageTeam && !isDragModifierPressed && "cursor-pointer", isDragModifierPressed && "hidden")} style={{ backgroundColor: team.color }} />
                                                 </PopoverTrigger>
                                             </TooltipTrigger>
                                             <TooltipContent><p>Change Color</p></TooltipContent>
@@ -374,7 +375,7 @@ function TeamCard({
                                         <Tooltip>
                                             <TooltipTrigger asChild>
                                                 <PopoverTrigger asChild disabled={!canManageTeam} onPointerDown={(e) => e.stopPropagation()}>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary"><GoogleSymbol name="group_add" weight={100} /></Button>
+                                                    <Button variant="ghost" size="icon" className={cn("h-8 w-8 text-muted-foreground hover:text-primary", isDragModifierPressed && "hidden")}><GoogleSymbol name="group_add" weight={100} /></Button>
                                                 </PopoverTrigger>
                                             </TooltipTrigger>
                                             <TooltipContent><p>Add User</p></TooltipContent>
@@ -433,7 +434,7 @@ function TeamCard({
                     </ScrollArea>
                 </CardContent>
             )}
-             <div className="absolute -bottom-1 right-0">
+             <div className={cn("absolute -bottom-1 right-0", isDragModifierPressed && "hidden")}>
                 <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
                     <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
                 </Button>
