@@ -240,14 +240,17 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive, activeTab, pa
   
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
+        onActivation: ({ event }) => {
+            if (!isDragModifierPressed) {
+                return false;
+            }
+            return true;
+        },
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
       onActivation: ({ event }) => {
-        if (isDragModifierPressed) {
+        if (!isDragModifierPressed) {
             return false;
         }
         return true;
@@ -900,9 +903,12 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
     
     const sensors = useSensors(
         useSensor(PointerSensor, {
-          activationConstraint: {
-            distance: 8,
-          },
+            onActivation: ({ event }) => {
+                if (!isDragModifierPressed) {
+                    return false;
+                }
+                return true;
+            },
         }),
         useSensor(KeyboardSensor, {
           coordinateGetter: sortableKeyboardCoordinates,
@@ -1229,9 +1235,12 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
     
     const sensors = useSensors(
         useSensor(PointerSensor, {
-          activationConstraint: {
-            distance: 8,
-          },
+            onActivation: ({ event }) => {
+                if (!isDragModifierPressed) {
+                    return false;
+                }
+                return true;
+            },
         }),
         useSensor(KeyboardSensor, {
           coordinateGetter: sortableKeyboardCoordinates,
