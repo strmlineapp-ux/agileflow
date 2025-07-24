@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -428,7 +429,7 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                                     form.setValue('templateId', '');
                                     setIsCalendarPopoverOpen(false);
                                 }}
-                                className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer"
+                                className="flex items-center gap-2 p-2 rounded-md hover:text-primary cursor-pointer"
                             >
                                 <div className="h-3 w-3 rounded-full border" style={{ backgroundColor: cal.color }} />
                                 <span>{cal.name}</span>
@@ -458,7 +459,7 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                             {eventPriorities.map(p => (
                               <div key={p.id}
                                 onClick={() => { field.onChange(p.id); setIsPriorityPopoverOpen(false); }}
-                                className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer"
+                                className="flex items-center gap-2 p-2 rounded-md hover:text-primary cursor-pointer"
                               >
                                 <PriorityBadge priorityId={p.id} />
                               </div>
@@ -490,14 +491,14 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                                     <PopoverContent className="p-1 w-auto" align="start">
                                         <div
                                             onClick={() => handleTemplateChange('')}
-                                            className="p-2 rounded-md hover:bg-accent cursor-pointer"
+                                            className="p-2 rounded-md hover:text-primary cursor-pointer"
                                         >
                                             <span className="text-sm text-muted-foreground italic">No Template</span>
                                         </div>
                                         {eventTemplates.map(template => (
                                             <div key={template.id}
                                                 onClick={() => handleTemplateChange(template.id)}
-                                                className="p-2 rounded-md hover:bg-accent cursor-pointer flex items-center gap-2"
+                                                className="p-2 rounded-md hover:text-primary cursor-pointer flex items-center gap-2"
                                             >
                                                 <GoogleSymbol name={template.icon} className="text-muted-foreground" />
                                                 <UiBadge>{template.name}</UiBadge>
@@ -687,7 +688,7 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                                       <ScrollArea className="max-h-60">
                                           <div className="p-1">
                                           {availableUsers.map(u => (
-                                              <div key={u.userId} onClick={() => handleAssignUserToRole(badgeName, u)} className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer">
+                                              <div key={u.userId} onClick={() => handleAssignUserToRole(badgeName, u)} className="flex items-center gap-2 p-2 rounded-md hover:text-primary cursor-pointer">
                                                   <Avatar className="h-8 w-8"><AvatarImage src={u.avatarUrl} alt={u.displayName} data-ai-hint="user avatar" /><AvatarFallback>{u.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
                                                   <p className="font-medium text-sm">{u.displayName}</p>
                                               </div>
@@ -821,7 +822,7 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                             <ScrollArea className="h-48">
                             <div className="p-1">
                                 {availableBadgesToAdd.length > 0 ? availableBadgesToAdd.map(badge => (
-                                <div key={badge.id} onClick={() => handleAddRequestedRole(badge.name)} className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer">
+                                <div key={badge.id} onClick={() => handleAddRequestedRole(badge.name)} className="flex items-center gap-2 p-2 rounded-md hover:text-primary cursor-pointer">
                                     <GoogleSymbol name={badge.icon} className="text-lg" />
                                     <span>{badge.name}</span>
                                 </div>
@@ -858,7 +859,7 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                                     <ScrollArea className="max-h-60">
                                     <div className="p-1">
                                     {filteredGuests.filter(g => g.displayName.toLowerCase().includes(guestSearch.toLowerCase()) || g.email.toLowerCase().includes(guestSearch.toLowerCase())).map(guest => (
-                                        <div key={guest.userId} onClick={() => handleToggleGuest(guest)} className="flex items-center gap-2 p-2 rounded-md hover:bg-accent cursor-pointer">
+                                        <div key={guest.userId} onClick={() => handleToggleGuest(guest)} className="flex items-center gap-2 p-2 rounded-md hover:text-primary cursor-pointer">
                                             <Avatar className="h-8 w-8"><AvatarImage src={guest.avatarUrl} alt={guest.displayName} data-ai-hint="user avatar" /><AvatarFallback>{guest.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
                                             <div><p className="font-medium text-sm">{guest.displayName}</p><p className="text-xs text-muted-foreground">{guest.email}</p></div>
                                         </div>

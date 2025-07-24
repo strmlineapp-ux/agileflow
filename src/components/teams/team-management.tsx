@@ -78,7 +78,7 @@ function DraggableUserCard({ user, onRemove, isTeamAdmin, onSetAdmin, canManage,
         <div 
             className={cn(
                 "group relative flex items-center gap-2 p-1 rounded-md transition-colors",
-                canManage && "cursor-pointer hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
+                canManage && "cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
             )}
             onClick={(e) => { e.stopPropagation(); if (canManage) onSetAdmin(); }}
             onKeyDown={(e) => { if(canManage && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onSetAdmin();}}}
@@ -397,7 +397,7 @@ function TeamCard({
                                         <ScrollArea className="h-64">
                                             <div className="p-2 space-y-1">
                                                 {availableUsersToAdd.map(user => (
-                                                    <div key={user.userId} onPointerDown={() => {onAddUser(team.id, user.userId); setIsAddUserPopoverOpen(false);}} className="flex items-center gap-2 p-2 rounded-md hover:bg-muted cursor-pointer">
+                                                    <div key={user.userId} onPointerDown={() => {onAddUser(team.id, user.userId); setIsAddUserPopoverOpen(false);}} className="flex items-center gap-2 p-2 rounded-md hover:text-primary cursor-pointer">
                                                         <Avatar className="h-8 w-8"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0,2)}</AvatarFallback></Avatar>
                                                         <p className="font-normal text-sm">{user.displayName}</p>
                                                     </div>
@@ -906,7 +906,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                          <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <Button variant="ghost" className="text-destructive hover:bg-transparent p-0" onClick={confirmDelete}>
+                                    <Button variant="ghost" className="text-destructive p-0" onClick={confirmDelete}>
                                         <GoogleSymbol name="delete" className="text-4xl" weight={100} />
                                         <span className="sr-only">Delete Team</span>
                                     </Button>
@@ -924,4 +924,5 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
         </DndContext>
     );
 }
+
 

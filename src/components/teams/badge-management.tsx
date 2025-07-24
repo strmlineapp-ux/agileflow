@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -393,7 +394,7 @@ function SortableBadgeItem({ badge, collection, onDelete, ...props }: { badge: B
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        className="h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent"
+                                        className="h-6 w-6 text-muted-foreground hover:text-destructive"
                                         onPointerDown={(e) => { e.stopPropagation(); onDelete(badge.id, collection.id); }}
                                     >
                                         <GoogleSymbol name="cancel" className="text-lg" weight={100} opticalSize={20} />
@@ -635,7 +636,7 @@ function BadgeCollectionCard({
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    className={cn("absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10", isDragModifierPressed && "hidden")}
+                                    className={cn("absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity z-10", isDragModifierPressed && "hidden")}
                                     onPointerDown={(e) => { e.stopPropagation(); onDeleteCollection(collection); }}
                                 >
                                     <GoogleSymbol name="cancel" className="text-lg" weight={100} opticalSize={20} />
