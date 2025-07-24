@@ -242,14 +242,14 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive, activeTab, pa
   
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8, // Require pointer to move 8px before initiating drag
-      },
+        activationConstraint: {
+            distance: 8,
+        },
     }),
     useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
+        coordinateGetter: sortableKeyboardCoordinates,
     })
-  );
+);
 
 
   return (
@@ -895,15 +895,7 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
     };
     
     const sensors = useSensors(
-        useSensor(PointerSensor, {
-          activationConstraint: viewAsUser.dragActivationKey
-                ? {
-                    distance: 8,
-                  }
-                : {
-                    distance: 8,
-                  },
-        }),
+        useSensor(PointerSensor),
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates,
         })
@@ -1230,15 +1222,7 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
     const tabIds = useMemo(() => filteredTabs.map(t => t.id), [filteredTabs]);
     
     const sensors = useSensors(
-        useSensor(PointerSensor, {
-          activationConstraint: viewAsUser.dragActivationKey
-                ? {
-                    distance: 8,
-                  }
-                : {
-                    distance: 8,
-                  },
-        }),
+        useSensor(PointerSensor),
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates,
         })
@@ -1281,6 +1265,7 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
     );
 };
 // #endregion
+
 
 
 

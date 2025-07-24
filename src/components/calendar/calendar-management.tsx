@@ -588,15 +588,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
   };
   
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: viewAsUser.dragActivationKey
-            ? {
-                distance: 8,
-              }
-            : {
-                distance: 8,
-              },
-    }),
+    useSensor(PointerSensor),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
