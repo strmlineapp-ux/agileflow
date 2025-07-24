@@ -1,6 +1,5 @@
 
-
-import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team, type AppSettings, type Badge, type BadgeCollection, type AppTab, type AppPage, type BadgeCollectionOwner } from '@/types';
+import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team, type AppSettings, type Badge, type BadgeCollection, type AppTab, type AppPage, type BadgeCollectionOwner, type Holiday } from '@/types';
 import { corePages, coreTabs } from './core-data';
 
 // This file now contains only the data that an administrator would dynamically
@@ -361,8 +360,10 @@ export const mockEvents: Event[] = [
 
 const currentYear = new Date().getFullYear();
 
-export const mockHolidays: Date[] = [
+export const mockHolidays: Holiday[] = [
     new Date(currentYear, 0, 1), // New Year's Day
     new Date(currentYear, 6, 4), // Independence Day
     new Date(currentYear, 11, 25), // Christmas Day
 ];
+
+    
