@@ -50,10 +50,11 @@ import { HexColorPicker, HexColorInput } from 'react-colorful';
 
 // #region Admin Groups Management Tab
 
-function UserCard({ user, isDeletable, onDelete }: { user: User, isDeletable?: boolean, onDelete?: (user: User) => void }) {
+function UserCard({ user, isDeletable, onDelete, dragHandle }: { user: User, isDeletable?: boolean, onDelete?: (user: User) => void, dragHandle?: React.ReactNode }) {
     return (
         <div className="group p-2 flex items-center justify-between rounded-md transition-colors bg-card">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+                {dragHandle}
                 <Avatar>
                   <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
                   <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
@@ -99,9 +100,20 @@ function SortableUserCard({ user, listId, onDeleteRequest }: { user: User, listI
         opacity: isDragging ? 0.5 : 1
     };
 
+    const dragHandle = (
+      <div {...attributes} {...listeners} className="cursor-grab text-muted-foreground">
+        <GoogleSymbol name="drag_indicator" weight={100} />
+      </div>
+    );
+
     return (
-        <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-            <UserCard user={user} isDeletable={listId === 'user-list'} onDelete={onDeleteRequest} />
+        <div ref={setNodeRef} style={style}>
+            <UserCard 
+              user={user} 
+              isDeletable={listId === 'user-list'} 
+              onDelete={onDeleteRequest} 
+              dragHandle={dragHandle}
+            />
         </div>
     );
 }
@@ -1270,3 +1282,4 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
     );
 };
 // #endregion
+
