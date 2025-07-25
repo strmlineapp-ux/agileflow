@@ -1047,27 +1047,51 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
         
         const activeType = active.data.current?.type;
         const overType = over.data.current?.type;
-        const activeCollectionId = active.data.current?.collectionId;
-        const overCollectionId = over.data.current?.collectionId;
+        const activeData = active.data.current || {};
+        const overData = over.data.current || {};
+        
+        // Handle dragging a badge
+        if (activeType === 'badge') {
+            const badge = activeData.badge as Badge;
+            const sourceCollectionId = activeData.collectionId;
+            const targetCollectionId = overData.collection?.id || overData.collectionId;
 
-        if (activeType === 'badge' && overType === 'collection') {
-            const badge = active.data.current?.badge as Badge;
-            const targetCollection = over.data.current?.collection as BadgeCollection;
-
-            if (activeCollectionId !== targetCollection.id) {
+            if (targetCollectionId && sourceCollectionId !== targetCollectionId) {
                 // Remove from old collection
-                updateBadgeCollection(activeCollectionId, { badgeIds: allBadgeCollections.find(c => c.id === activeCollectionId)!.badgeIds.filter(id => id !== badge.id) });
+                updateBadgeCollection(sourceCollectionId, { badgeIds: allBadgeCollections.find(c => c.id === sourceCollectionId)!.badgeIds.filter(id => id !== badge.id) });
                 // Add to new collection
-                updateBadgeCollection(targetCollection.id, { badgeIds: [badge.id, ...targetCollection.badgeIds] });
-            } else {
+                const targetCollection = allBadgeCollections.find(c => c.id === targetCollectionId);
+                if (targetCollection) {
+                    updateBadgeCollection(targetCollectionId, { badgeIds: [badge.id, ...targetCollection.badgeIds] });
+                }
+            } else if (targetCollectionId && sourceCollectionId === targetCollectionId) {
                 // Reorder within the same collection
-                const oldIndex = allBadgeCollections.find(c => c.id === activeCollectionId)!.badgeIds.indexOf(badge.id);
-                const newIndex = allBadgeCollections.find(c => c.id === activeCollectionId)!.badgeIds.indexOf(over.id as string) === -1 ? allBadgeCollections.find(c => c.id === activeCollectionId)!.badgeIds.length : allBadgeCollections.find(c => c.id === activeCollectionId)!.badgeIds.indexOf(over.id as string);
-                reorderBadges(activeCollectionId, arrayMove(allBadgeCollections.find(c => c.id === activeCollectionId)!.badgeIds, oldIndex, newIndex));
+                const collection = allBadgeCollections.find(c => c.id === sourceCollectionId);
+                const oldIndex = collection!.badgeIds.indexOf(badge.id);
+                const overBadgeId = over.data.current?.badge.id;
+                const newIndex = collection!.badgeIds.indexOf(overBadgeId);
+                if (oldIndex !== -1 && newIndex !== -1) {
+                    reorderBadges(sourceCollectionId, arrayMove(collection!.badgeIds, oldIndex, newIndex));
+                }
+            }
+            return;
+        }
+
+        // Handle dragging a collection card
+        if (activeType === 'collection-card') {
+            const collection = activeData.collection as BadgeCollection;
+            if (over.id === 'shared-collections-panel') {
+                if (collection.owner.id === viewAsUser.userId) {
+                    updateBadgeCollection(collection.id, { isShared: !collection.isShared });
+                    toast({ title: collection.isShared ? 'Collection Unshared' : 'Collection Shared' });
+                }
+            } else if (activeData.isSharedPreview && over.id === 'collections-list') {
+                 const updatedLinkedIds = [...(viewAsUser.linkedCollectionIds || []), collection.id];
+                 updateUser(viewAsUser.userId, { linkedCollectionIds: Array.from(new Set(updatedLinkedIds)) });
+                 toast({ title: 'Collection Linked' });
             }
         }
-        // Simplified drag logic for collections
-    }, [updateBadgeCollection, allBadgeCollections, reorderBadges]);
+    }, [updateBadgeCollection, allBadgeCollections, reorderBadges, viewAsUser, toast, updateUser]);
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -1203,5 +1227,6 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
         </DndContext>
     );
 }
+
 
 
