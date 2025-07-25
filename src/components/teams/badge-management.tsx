@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -158,7 +159,7 @@ function BadgeDisplayItem({
             <div className="space-y-4">
                 <HexColorPicker color={color} onChange={setColor} className="!w-full" />
                 <div className="flex items-center gap-2">
-                    <span className="p-2 border rounded-md shadow-sm" style={{ backgroundColor: color }} />
+                    <span className="p-2 border rounded-md" style={{ backgroundColor: color }} />
                     <HexColorInput prefixed alpha color={color} onChange={setColor} className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50" />
                 </div>
                 <div className="grid grid-cols-8 gap-1">
@@ -353,13 +354,14 @@ function BadgeDisplayItem({
 }
 
 function SortableBadgeItem({ badge, collection, onDelete, ...props }: { badge: Badge, collection: BadgeCollection, onDelete: (badgeId: string, collectionId: string) => void, [key: string]: any }) {
+    const { isDragModifierPressed } = useUser();
     const [isEditingName, setIsEditingName] = useState(false);
     const [isEditingDescription, setIsEditingDescription] = useState(false);
     
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: `badge::${badge.id}::${collection.id}`,
         data: { type: 'badge', badge, collectionId: collection.id, isSharedPreview: props.isSharedPreview },
-        disabled: isEditingName || isEditingDescription,
+        disabled: !isDragModifierPressed || isEditingName || isEditingDescription,
     });
     
     const style = {
@@ -701,7 +703,7 @@ function BadgeCollectionCard({
                                                 <div className="space-y-4">
                                                     <HexColorPicker color={color} onChange={setColor} className="!w-full" />
                                                     <div className="flex items-center gap-2">
-                                                        <span className="p-2 border rounded-md shadow-sm" style={{ backgroundColor: color }} />
+                                                        <span className="p-2 border rounded-md" style={{ backgroundColor: color }} />
                                                         <HexColorInput prefixed alpha color={color} onChange={setColor} className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50" />
                                                     </div>
                                                     <div className="grid grid-cols-8 gap-1">
@@ -727,7 +729,7 @@ function BadgeCollectionCard({
                                         defaultValue={collection.name}
                                         onBlur={handleSaveName}
                                         onKeyDown={handleNameKeyDown}
-                                        className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
+                                        className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
                                     />
                                 ) : (
                                     <CardTitle>{collection.name}</CardTitle>
@@ -735,7 +737,7 @@ function BadgeCollectionCard({
                                 </div>
                             </div>
                         </div>
-                        <div className={cn("flex items-center", isDragModifierPressed && "hidden")}>
+                        <div className={cn("flex items-center", isDragModifierPressed && "hidden")} onPointerDown={(e) => e.stopPropagation()}>
                            {!isCollapsed && isOwner && !isSharedPreview && (
                                 <TooltipProvider>
                                     <Tooltip>
@@ -914,7 +916,7 @@ function SortableCollectionCard({ collection, ...props }: { collection: BadgeCol
                 props.isSharedPreview 
                     ? "w-full" 
                     : "basis-full sm:basis-1/2 md:basis-1/3",
-                isDragging && "opacity-80 shadow-2xl z-50"
+                isDragging && "opacity-80 z-50"
             )}
         >
             <BadgeCollectionCard 
