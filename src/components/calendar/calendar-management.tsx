@@ -39,6 +39,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { HexColorPicker, HexColorInput } from 'react-colorful';
+import { centerUnderCursor } from '@dnd-kit/modifiers';
 
 
 const PREDEFINED_COLORS = [
@@ -747,7 +748,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
         </div>
       </div>
 
-      <DragOverlay dropAnimation={null}>
+      <DragOverlay modifiers={[centerUnderCursor]}>
         {activeCalendar ? (
           <GoogleSymbol
               name={activeCalendar.icon}

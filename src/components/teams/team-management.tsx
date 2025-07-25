@@ -25,12 +25,12 @@ import {
   DragOverlay,
 } from '@dnd-kit/core';
 import {
+  arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   useSortable,
   rectSortingStrategy,
   verticalListSortingStrategy,
-  arrayMove,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -45,6 +45,7 @@ import { googleSymbolNames } from '@/lib/google-symbols';
 import { HexColorPicker, HexColorInput } from 'react-colorful';
 import { CompactSearchInput } from '@/components/common/compact-search-input';
 import { useRouter, usePathname } from 'next/navigation';
+import { centerUnderCursor } from '@dnd-kit/modifiers';
 
 const predefinedColors = [
     '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
@@ -884,7 +885,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                     </TeamManagementDropZone>
                 </div>
             </div>
-            <DragOverlay dropAnimation={null}>
+            <DragOverlay modifiers={[centerUnderCursor]}>
                 {activeDragItem?.type === 'team-card' && activeDragItem?.data?.team ? (
                     <GoogleSymbol
                         name={activeDragItem.data.team.icon}

@@ -46,6 +46,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { HexColorPicker, HexColorInput } from 'react-colorful';
+import { centerUnderCursor } from '@dnd-kit/modifiers';
 
 // #region Admin Groups Management Tab
 
@@ -291,7 +292,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive, activeTab, pa
                     </CardContent>
                   </Card>
             </div>
-            <DragOverlay dropAnimation={null}>
+            <DragOverlay modifiers={[centerUnderCursor]}>
                 {activeDragUser ? (
                     <Avatar className="h-12 w-12">
                         <AvatarImage src={activeDragUser.avatarUrl} alt={activeDragUser.displayName} data-ai-hint="user avatar" />
@@ -997,7 +998,7 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
                         ))}
                     </div>
                 </SortableContext>
-                <DragOverlay dropAnimation={null}>
+                <DragOverlay modifiers={[centerUnderCursor]}>
                     {activePage ? (
                         <GoogleSymbol
                             name={activePage.icon}

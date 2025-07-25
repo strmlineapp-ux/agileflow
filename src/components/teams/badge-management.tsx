@@ -41,6 +41,7 @@ import {
   arrayMove,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { centerUnderCursor } from '@dnd-kit/modifiers';
 
 function BadgeDisplayItem({ 
     badge, 
@@ -1090,7 +1091,7 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
     return (
         <DndContext sensors={sensors} onDragStart={(e) => setActiveDragItem({ type: e.active.data.current?.type, data: e.active.data.current || {} })} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
            <div className="flex gap-4 h-full">
-                 <div className="flex-1 overflow-hidden flex flex-col">
+                 <div className="flex-1 overflow-hidden">
                     <div className="flex flex-col gap-6 h-full">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
@@ -1173,7 +1174,7 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
                     </CollectionDropZone>
                 </div>
             </div>
-             <DragOverlay dropAnimation={null}>
+             <DragOverlay modifiers={[centerUnderCursor]}>
                 {activeDragItem?.type === 'collection-card' && activeDragItem?.data?.collection ? (
                      <GoogleSymbol
                         name={activeDragItem.data.collection.icon}
