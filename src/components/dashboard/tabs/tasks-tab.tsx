@@ -6,11 +6,20 @@ import { TaskList } from '@/components/tasks/task-list';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { type AppTab, type AppPage } from '@/types';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export function TasksContent({ tab: pageConfig, isSingleTabPage }: { tab: AppPage, isSingleTabPage?: boolean }) {
   return (
     <div className="flex flex-col gap-6">
        <div className="flex items-center justify-between">
+         <Tabs defaultValue="my-tasks" className="w-full">
+            <TabsList>
+                <TabsTrigger value="my-tasks">My Tasks</TabsTrigger>
+                <TabsTrigger value="all">All Tasks</TabsTrigger>
+            </TabsList>
+        </Tabs>
+      </div>
+      <div className="flex">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
