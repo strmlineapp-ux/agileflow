@@ -898,7 +898,7 @@ function SortableCollectionCard({ collection, ...props }: { collection: BadgeCol
     const [isEditingDescription, setIsEditingDescription] = useState(false);
 
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-        id: collection.id,
+        id: `collection-card::${collection.id}`,
         data: { type: 'collection-card', collection, isSharedPreview: props.isSharedPreview },
         disabled: isEditingName || isEditingDescription || !isDragModifierPressed,
     });
@@ -1111,9 +1111,9 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
                                 </TooltipProvider>
                             </div>
                         </div>
-                        <div className="flex-1 overflow-y-auto min-h-0">
+                        <div className="h-full overflow-y-auto">
                             <CollectionDropZone id="collections-list" type="collection-list" className="flex flex-wrap -m-2">
-                                <SortableContext items={displayedCollections.map(c => c.id)} strategy={rectSortingStrategy}>
+                                <SortableContext items={displayedCollections.map(c => `collection-card::${c.id}`)} strategy={rectSortingStrategy}>
                                     {displayedCollections.map(collection => (
                                         <SortableCollectionCard
                                             key={collection.id}
@@ -1145,7 +1145,7 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
                             </CardHeader>
                              <CardContent className="flex-1 p-2 overflow-hidden">
                                 <ScrollArea className="h-full">
-                                    <SortableContext items={sharedCollections.map(c => c.id)} strategy={verticalListSortingStrategy}>
+                                    <SortableContext items={sharedCollections.map(c => `collection-card::${c.id}`)} strategy={verticalListSortingStrategy}>
                                         <div className="space-y-2">
                                             {sharedCollections.map(collection => (
                                                 <SortableCollectionCard
