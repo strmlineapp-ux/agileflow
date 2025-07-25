@@ -237,7 +237,7 @@ export const WeekView = React.memo(({ date, containerRef, zoomLevel, onEasyBooki
                                                         className={cn(
                                                             "absolute left-1 right-1 p-1 rounded-md cursor-pointer flex flex-col overflow-hidden"
                                                         )}
-                                                        style={{ top: `${top}px`, height: `${height}px`, backgroundColor: colors?.bg, color: textColor }}
+                                                        style={{ top: `${top}px`, height: `${height}px`, backgroundColor: colors?.bg, color: getContrastColor(colors?.bg || '#000000') }}
                                                     >
                                                         <div className="flex items-center gap-2 flex-wrap mb-1">
                                                             <PriorityBadge priorityId={event.priority} />
