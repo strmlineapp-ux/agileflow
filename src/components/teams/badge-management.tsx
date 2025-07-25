@@ -32,6 +32,7 @@ import {
   useDroppable,
   DragOverlay,
   type DragStartEvent,
+  useDndContext,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -454,13 +455,11 @@ function DroppableCollectionContent({ collection, children }: { collection: Badg
     );
 }
 
-function DuplicateBadgeZone({ collectionId, onAdd }: { collectionId: string, onAdd: () => void }) {
-    const { active } = useDndContext();
-    const { isOver, setNodeRef } = useDroppable({
+function DuplicateBadgeZone({ collectionId, onAdd, isDragging, isOver }: { collectionId: string, onAdd: () => void, isDragging: boolean, isOver: boolean }) {
+    const { setNodeRef } = useDroppable({
         id: `duplicate-badge-zone-${collectionId}`,
         data: { type: 'duplicate-badge-zone', collectionId },
     });
-    const isDragging = !!active;
 
     return (
         <div
@@ -480,7 +479,7 @@ function DuplicateBadgeZone({ collectionId, onAdd }: { collectionId: string, onA
                             onPointerDown={(e) => e.stopPropagation()}
                             className={cn(
                                 "h-8 w-8 text-muted-foreground transition-opacity",
-                                isDragging ? "opacity-100" : "opacity-0 pointer-events-none"
+                                !isDragging ? "opacity-0 pointer-events-none" : "opacity-100"
                             )}
                         >
                             <GoogleSymbol name="add_circle" weight={100} opticalSize={20} />
@@ -493,6 +492,7 @@ function DuplicateBadgeZone({ collectionId, onAdd }: { collectionId: string, onA
         </div>
     );
 }
+
 
 type BadgeCollectionCardProps = {
     collection: BadgeCollection;
@@ -546,6 +546,13 @@ function BadgeCollectionCard({
     const [color, setColor] = useState(collection.color);
     const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
     const [isExpanded, setIsExpanded] = useState(true);
+
+    const { active } = useDndContext();
+    const isDragging = !!active;
+
+    const { isOver, setNodeRef: setDuplicateDroppableRef } = useDroppable({
+        id: `duplicate-badge-zone-${collection.id}`,
+    });
 
     const isOwner = useMemo(() => collection.owner.id === viewAsUser.userId, [collection.owner.id, viewAsUser.userId]);
     const showDetails = isCollapsed ? false : isExpanded;
@@ -789,9 +796,11 @@ function BadgeCollectionCard({
                         </div>
                         <div className={cn("flex items-center", isDragModifierPressed && "hidden")} onPointerDown={(e) => e.stopPropagation()}>
                            {!isCollapsed && isOwner && !isSharedPreview && (
-                               <DuplicateBadgeZone
+                                <DuplicateBadgeZone
                                    collectionId={collection.id}
                                    onAdd={() => onAddBadge(collection.id)}
+                                   isDragging={isDragging}
+                                   isOver={isOver}
                                />
                            )}
                             {!isCollapsed && (
