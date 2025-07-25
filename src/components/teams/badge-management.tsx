@@ -52,6 +52,7 @@ function BadgeDisplayItem({
     predefinedColors,
     isOwner,
     isLinked,
+    isSharedPreview,
     allCollections,
     isEditingName,
     setIsEditingName,
@@ -68,6 +69,7 @@ function BadgeDisplayItem({
     predefinedColors: string[];
     isOwner: boolean;
     isLinked: boolean;
+    isSharedPreview?: boolean;
     allCollections: BadgeCollection[];
     isEditingName: boolean;
     setIsEditingName: (isEditing: boolean) => void;
@@ -281,7 +283,7 @@ function BadgeDisplayItem({
                         {colorPickerContent}
                     </Popover>
                 )}
-                 {isLinked && (
+                 {isLinked && !isSharedPreview && (
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
@@ -335,7 +337,7 @@ function BadgeDisplayItem({
                             {colorPickerContent}
                         </Popover>
                      )}
-                     {isLinked && (
+                     {isLinked && !isSharedPreview && (
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
@@ -832,6 +834,7 @@ function BadgeCollectionCard({
                                     isLinked={!badgeIsOwned}
                                     allCollections={allBadgeCollections}
                                     isCollectionEditing={isEditingName || isEditingDescription}
+                                    isSharedPreview={isSharedPreview}
                                 />
                                 )
                             })}
@@ -1137,8 +1140,8 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
                             </TooltipProvider>
                         </div>
                     </div>
-                    <div className="h-full overflow-y-auto">
-                        <CollectionDropZone id="collections-list" type="collection-list" className="flex flex-wrap content-start -m-2 min-h-[200px]">
+                    <div className="flex-1 overflow-y-auto">
+                        <CollectionDropZone id="collections-list" type="collection-list" className="flex flex-wrap content-start -m-2 min-h-full">
                             <SortableContext items={displayedCollections.map(c => c.id)} strategy={rectSortingStrategy}>
                                 {displayedCollections.map(collection => (
                                     <SortableCollectionCard
