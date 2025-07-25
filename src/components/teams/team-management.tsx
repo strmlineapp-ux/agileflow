@@ -82,6 +82,7 @@ function DraggableUserCard({ user, onRemove, isTeamAdmin, onSetAdmin, canManage,
             )}
             onClick={(e) => { 
                 if (canManage && !isDragModifierPressed) {
+                    e.stopPropagation();
                     onSetAdmin(); 
                 }
             }}
@@ -883,16 +884,15 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                     </TeamManagementDropZone>
                 </div>
             </div>
-            <DragOverlay>
+            <DragOverlay dropAnimation={null}>
                 {activeDragItem?.type === 'team-card' && activeDragItem?.data?.team ? (
-                    <div className="p-2 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5 flex-grow-0 flex-shrink-0">
-                        <TeamCard
-                            team={activeDragItem.data.team}
-                            users={users}
-                            onUpdate={() => {}} onDelete={() => {}} onRemoveUser={() => {}} onAddUser={() => {}} onSetAdmin={() => {}}
-                            isEditingName={false} setIsEditingName={() => {}} isDragging={true}
-                        />
-                    </div>
+                    <GoogleSymbol
+                        name={activeDragItem.data.team.icon}
+                        style={{ color: activeDragItem.data.team.color, fontSize: '48px' }}
+                        weight={100}
+                        grade={-25}
+                        opticalSize={48}
+                    />
                 ) : activeDragItem?.type === 'user' && activeDragItem?.data?.user ? (
                     <div className="bg-card p-2 rounded-md">
                         <div className="flex items-center gap-2">

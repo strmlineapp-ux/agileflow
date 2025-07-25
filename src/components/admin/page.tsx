@@ -992,7 +992,7 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
                         ))}
                     </div>
                 </SortableContext>
-                <DragOverlay>
+                <DragOverlay dropAnimation={null}>
                     {activePage ? (
                         <GoogleSymbol
                             name={activePage.icon}

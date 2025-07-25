@@ -747,18 +747,15 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
         </div>
       </div>
 
-      <DragOverlay>
+      <DragOverlay dropAnimation={null}>
         {activeCalendar ? (
-          <div className="p-2 basis-full sm:basis-[calc(50%-1rem)] md:basis-[calc(33.333%-1rem)] lg:basis-[calc(25%-1rem)] xl:basis-[calc(20%-1rem)] 2xl:basis-[calc(16.666%-1rem)] flex-grow-0 flex-shrink-0">
-            <CalendarCard
-              calendar={activeCalendar}
-              onUpdate={() => {}}
-              onDelete={() => {}}
-              isSharedPreview={activeCalendar.owner.id !== viewAsUser.userId}
-              isEditingName={false}
-              setIsEditingName={() => {}}
-            />
-          </div>
+          <GoogleSymbol
+              name={activeCalendar.icon}
+              style={{ color: activeCalendar.color, fontSize: '48px' }}
+              weight={100}
+              grade={-25}
+              opticalSize={48}
+          />
         ) : null}
       </DragOverlay>
     </DndContext>

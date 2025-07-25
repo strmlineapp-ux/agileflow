@@ -1173,7 +1173,7 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
                     </div>
                 </div>
             </div>
-             <DragOverlay>
+             <DragOverlay dropAnimation={null}>
                 {activeDragItem?.type === 'collection-card' && activeDragItem?.data?.collection ? (
                      <GoogleSymbol
                         name={activeDragItem.data.collection.icon}
