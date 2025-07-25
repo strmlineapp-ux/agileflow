@@ -83,6 +83,7 @@ function DraggableUserCard({ user, onRemove, isTeamAdmin, onSetAdmin, canManage,
             onClick={(e) => { 
                 if (canManage && !isDragModifierPressed) {
                     e.preventDefault();
+                    e.stopPropagation();
                     onSetAdmin(); 
                 }
             }}
@@ -367,7 +368,7 @@ function TeamCard({
                                         className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
                                     />
                                 ) : (
-                                    <CardTitle className={cn("font-headline text-xl font-thin truncate", canManageTeam && !isDragModifierPressed && "cursor-text")} onClick={() => { if (canManageTeam && !isDragModifierPressed) setIsEditingName(true); }}>
+                                    <CardTitle className={cn("font-headline text-xl font-thin truncate", canManageTeam && !isDragModifierPressed && "cursor-pointer")} onClick={() => { if (canManageTeam && !isDragModifierPressed) setIsEditingName(true); }}>
                                         {team.name}
                                     </CardTitle>
                                 )}
