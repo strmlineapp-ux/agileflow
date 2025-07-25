@@ -899,8 +899,8 @@ function SortableCollectionCard({ collection, ...props }: { collection: BadgeCol
     const [isEditingDescription, setIsEditingDescription] = useState(false);
 
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-        id: `collection-card::${collection.id}`,
-        data: { type: 'collection-card', collection, isSharedPreview: props.isSharedPreview },
+        id: collection.id,
+        data: { type: 'collection', collection, isSharedPreview: props.isSharedPreview },
         disabled: !isDragModifierPressed,
     });
 
@@ -1083,7 +1083,7 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
             return;
         }
 
-        if (activeType === 'collection-card') {
+        if (activeType === 'collection') {
             const collection = activeData.collection as BadgeCollection;
             if (over.id === 'shared-collections-panel') {
                 if (collection.owner.id === viewAsUser.userId) {
@@ -1092,7 +1092,7 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
                 }
             }
         }
-    }, [updateBadgeCollection, allBadgeCollections, reorderBadges, viewAsUser, updateUser, toast]);
+    }, [updateBadgeCollection, allBadgeCollections, reorderBadges, viewAsUser, updateUser, toast, teams]);
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -1138,9 +1138,9 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
                                 </TooltipProvider>
                             </div>
                         </div>
-                        <div className="h-full overflow-y-auto">
-                            <CollectionDropZone id="collections-list" type="collection-list" className="flex flex-wrap content-start -m-2 min-h-[200px]">
-                                <SortableContext items={displayedCollections.map(c => `collection-card::${c.id}`)} strategy={rectSortingStrategy}>
+                        <div className="flex-1 min-h-0 overflow-y-auto">
+                            <CollectionDropZone id="collections-list" type="collection-list" className="flex flex-wrap content-start -m-2 min-h-full">
+                                <SortableContext items={displayedCollections.map(c => c.id)} strategy={rectSortingStrategy}>
                                     {displayedCollections.map(collection => (
                                         <SortableCollectionCard
                                             key={collection.id}
@@ -1173,7 +1173,7 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
                             </CardHeader>
                             <CardContent className="flex-1 p-2 overflow-hidden min-h-[150px]">
                                 <ScrollArea className="h-full">
-                                    <SortableContext items={sharedCollections.map(c => `collection-card::${c.id}`)} strategy={verticalListSortingStrategy}>
+                                    <SortableContext items={sharedCollections.map(c => c.id)} strategy={verticalListSortingStrategy}>
                                         <div className="space-y-2">
                                             {sharedCollections.map(collection => (
                                                 <SortableCollectionCard
@@ -1201,7 +1201,7 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
                 </div>
             </div>
              <DragOverlay modifiers={[snapCenterToCursor]}>
-                {activeDragItem?.type === 'collection-card' && activeDragItem?.data?.collection ? (
+                {activeDragItem?.type === 'collection' && activeDragItem?.data?.collection ? (
                      <GoogleSymbol
                         name={activeDragItem.data.collection.icon}
                         style={{ color: activeDragItem.data.collection.color, fontSize: '48px' }}
