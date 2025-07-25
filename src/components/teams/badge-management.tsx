@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -453,6 +454,28 @@ function DroppableCollectionContent({ collection, children }: { collection: Badg
     );
 }
 
+function DuplicateBadgeZone({ collectionId, onAdd }: { collectionId: string, onAdd: () => void }) {
+    const { isOver, setNodeRef } = useDroppable({
+        id: `duplicate-badge-zone-${collectionId}`,
+        data: { type: 'duplicate-badge-zone', collectionId },
+    });
+  
+    return (
+        <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <div ref={setNodeRef} className={cn("rounded-full", isOver && "ring-1 ring-border ring-inset")}>
+                        <Button variant="ghost" size="icon" onClick={onAdd} onPointerDown={(e) => e.stopPropagation()} className="h-8 w-8 text-muted-foreground">
+                            <GoogleSymbol name="add_circle" weight={100} opticalSize={20} />
+                        </Button>
+                    </div>
+                </TooltipTrigger>
+                <TooltipContent><p>{isOver ? 'Drop to Duplicate Badge' : 'Add New Badge'}</p></TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
+    );
+}
+
 type BadgeCollectionCardProps = {
     collection: BadgeCollection;
     allBadges: Badge[];
@@ -748,16 +771,10 @@ function BadgeCollectionCard({
                         </div>
                         <div className={cn("flex items-center", isDragModifierPressed && "hidden")} onPointerDown={(e) => e.stopPropagation()}>
                            {!isCollapsed && isOwner && !isSharedPreview && (
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Button variant="ghost" size="icon" onClick={() => onAddBadge(collection.id)} disabled={!isOwner || isViewer} onPointerDown={(e) => e.stopPropagation()} className="h-8 w-8 text-muted-foreground">
-                                                <GoogleSymbol name="add_circle" weight={100} opticalSize={20} />
-                                            </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent><p>Add New Badge</p></TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
+                                <DuplicateBadgeZone
+                                    collectionId={collection.id}
+                                    onAdd={() => onAddBadge(collection.id)}
+                                />
                             )}
                             {!isCollapsed && (
                                 <Popover open={isViewModePopoverOpen} onOpenChange={setIsViewModePopoverOpen}>
@@ -1067,6 +1084,16 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
         const activeType = active.data.current?.type;
         const overData = over.data.current || {};
 
+        if (over.id.toString().startsWith('duplicate-badge-zone')) {
+            const collectionId = overData.collectionId;
+            const sourceBadge = activeData.badge;
+            if (collectionId && sourceBadge) {
+                addBadge(collectionId, sourceBadge);
+                toast({title: "Badge Duplicated", description: `A copy of "${sourceBadge.name}" was created.`});
+            }
+            return;
+        }
+
         if (over.id === 'duplicate-collection-zone') {
             const collection = activeData.collection as BadgeCollection;
             if (collection) {
@@ -1134,7 +1161,7 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
                 }
             }
         }
-    }, [viewAsUser, teams, addBadgeCollection, updateUser, toast, updateBadgeCollection, allBadgeCollections, reorderBadges]);
+    }, [viewAsUser, teams, addBadgeCollection, updateUser, toast, updateBadgeCollection, allBadgeCollections, reorderBadges, addBadge]);
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
