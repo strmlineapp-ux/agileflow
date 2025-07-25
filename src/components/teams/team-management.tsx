@@ -895,7 +895,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                     />
                 ) : activeDragItem?.type === 'user' && activeDragItem?.data?.user ? (
                     <Avatar className="h-12 w-12">
-                        <AvatarImage src={activeDragItem.data.user.avatarUrl} alt={activeDragItem.data.user.displayName} />
+                        <AvatarImage src={activeDragItem.data.user.avatarUrl} alt={activeDragItem.data.user.displayName} data-ai-hint="user avatar" />
                         <AvatarFallback>{activeDragItem.data.user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
                     </Avatar>
                 ) : null}

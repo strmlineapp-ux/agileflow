@@ -294,7 +294,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive, activeTab, pa
             <DragOverlay dropAnimation={null} style={{ transform: undefined }}>
                 {activeDragUser ? (
                     <Avatar className="h-12 w-12">
-                        <AvatarImage src={activeDragUser.avatarUrl} alt={activeDragUser.displayName} />
+                        <AvatarImage src={activeDragUser.avatarUrl} alt={activeDragUser.displayName} data-ai-hint="user avatar" />
                         <AvatarFallback>{activeDragUser.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
                     </Avatar>
                 ) : null}
