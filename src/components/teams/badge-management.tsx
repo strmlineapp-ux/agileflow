@@ -1044,9 +1044,20 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
         const { active, over } = event;
         if (!over) return;
         
-        const activeType = active.data.current?.type;
-        const overType = over.data.current?.type;
         const activeData = active.data.current || {};
+        
+        // Linking a shared collection
+        if (activeData.isSharedPreview && over.id === 'collections-list') {
+            const collection = activeData.collection as BadgeCollection;
+            if (collection) {
+                const updatedLinkedIds = [...(viewAsUser.linkedCollectionIds || []), collection.id];
+                updateUser(viewAsUser.userId, { linkedCollectionIds: Array.from(new Set(updatedLinkedIds)) });
+                toast({ title: 'Collection Linked' });
+            }
+            return;
+        }
+
+        const activeType = active.data.current?.type;
         const overData = over.data.current || {};
         
         if (activeType === 'badge') {
@@ -1079,14 +1090,9 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
                     updateBadgeCollection(collection.id, { isShared: !collection.isShared });
                     toast({ title: collection.isShared ? 'Collection Unshared' : 'Collection Shared' });
                 }
-            } else if (activeData.isSharedPreview && over.id === 'collections-list') {
-                 const updatedLinkedIds = [...(viewAsUser.linkedCollectionIds || []), collection.id];
-                 updateUser(viewAsUser.userId, { linkedCollectionIds: Array.from(new Set(updatedLinkedIds)) });
-                 toast({ title: 'Collection Linked' });
-                return;
             }
         }
-    }, [updateBadgeCollection, allBadgeCollections, reorderBadges, viewAsUser, teams, toast, updateUser]);
+    }, [updateBadgeCollection, allBadgeCollections, reorderBadges, viewAsUser, updateUser, toast]);
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -1111,28 +1117,28 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
     return (
         <DndContext sensors={sensors} onDragStart={(e) => setActiveDragItem({ type: e.active.data.current?.type, data: e.active.data.current || {} })} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
            <div className="flex h-full gap-4">
-                <div className="flex-1 flex flex-col gap-6 overflow-hidden">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <h2 className="font-headline text-2xl font-thin tracking-tight">{title}</h2>
-                            <DuplicateZone id="duplicate-collection-zone" onAdd={() => addBadgeCollection(viewAsUser)} />
+                <div className="flex-1 overflow-hidden">
+                    <div className="flex flex-col gap-6 h-full">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <h2 className="font-headline text-2xl font-thin tracking-tight">{title}</h2>
+                                <DuplicateZone id="duplicate-collection-zone" onAdd={() => addBadgeCollection(viewAsUser)} />
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <CompactSearchInput searchTerm={mainSearchTerm} setSearchTerm={setMainSearchTerm} placeholder="Search collections..." />
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button variant="ghost" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)}>
+                                                <GoogleSymbol name="dynamic_feed" weight={100} opticalSize={20} />
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>Show Shared Collections</p></TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-1">
-                            <CompactSearchInput searchTerm={mainSearchTerm} setSearchTerm={setMainSearchTerm} placeholder="Search collections..." />
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button variant="ghost" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)}>
-                                            <GoogleSymbol name="dynamic_feed" weight={100} opticalSize={20} />
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent><p>Show Shared Collections</p></TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                        </div>
-                    </div>
-                    <div className="flex-1 flex flex-col min-h-0">
-                        <div className="flex-1 overflow-y-auto">
+                        <div className="h-full overflow-y-auto">
                             <CollectionDropZone id="collections-list" type="collection-list" className="flex flex-wrap content-start -m-2 min-h-[200px]">
                                 <SortableContext items={displayedCollections.map(c => `collection-card::${c.id}`)} strategy={rectSortingStrategy}>
                                     {displayedCollections.map(collection => (
