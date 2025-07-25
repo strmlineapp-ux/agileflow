@@ -162,9 +162,13 @@ This is the application's perfected, gold-standard pattern for managing a collec
     -   **Behavior (Duplicate)**: Dropping any card (pinned or not, from the main board or the shared panel) creates a deep, independent copy of the original. The new card is given a unique ID, a modified name (e.g., with `(Copy)`), and a unique URL path. It is placed immediately after the original in the list. Its ownership is assigned to the current user's context.
     -   **Behavior (Create)**: Clicking the "Add New" button will create a fresh, default item. The item is intelligently placed *before* any pinned items, preserving the integrity of the core page structure.
     -   **Smart Unlinking**: If the duplicated card was a *linked* item (e.g., a shared calendar from another user), the original linked item is automatically removed from the user's board after the copy is created. This provides a clean "copy and replace" workflow.
--   **Drag-to-Assign**: This pattern allows sub-items (like **Users** or **Badges**) to be moved between different parent cards.
-    - **Interaction**: A user can drag an item (e.g., a User) from one card's list.
-    - **Behavior**: As the item is dragged over another card, that card's drop zone (using `useDroppable`) becomes highlighted. Dropping the item assigns it to the new card's collection. The original item may be removed or remain, depending on the context. This is handled by the `onDragEnd` logic.
+-   **Drag-to-Assign & Drag-to-Link (Badges)**: This pattern allows badges to be moved between different `BadgeCollectionCard`s.
+    - **Interaction**: A user can drag a badge from one collection card. As it is dragged over another collection card, that card's content area (which is a drop zone) becomes highlighted.
+    - **Ownership Rules**: The drop behavior is governed by strict ownership rules. A user can **only** drop a badge into a `BadgeCollection` that they own.
+    - **Move vs. Link**:
+        - **Move**: If a badge is dragged from one owned collection to another owned collection, the badge is *moved*.
+        - **Link**: If a badge is dragged from a *shared* (unowned) collection into an *owned* collection, a *link* to the original badge is created. The original badge remains in the shared collection.
+    - **UI Feedback**: Drop zones on unowned collections will not be highlighted, providing clear visual feedback that the action is not permitted.
 -   **Layout Stability**: To prevent "janky" or shifting layouts during a drag operation (especially when dragging an item out of one card and over another), ensure that the container cards (e.g., `TeamCard`) maintain a consistent height. This is achieved by making the card a `flex flex-col` container and giving its main content area `flex-grow` to make it fill the available space, even when a draggable item is temporarily removed. A `ScrollArea` can be used within the content to manage overflow if the list is long.
 -   **Application**: This is the required pattern for managing Pages, Calendars, Teams, and Badge Collections.
 
@@ -310,7 +314,7 @@ This is the single source of truth for indicating user interaction state across 
 ### User Notifications
 
 - **Toaster Notifications**: Used for providing brief, non-blocking feedback for user actions (e.g., "Badge Deleted").
-    - **Appearance**: Simple, clean, and without a close button. They have a `cursor-pointer` style to indicate they can be dismissed.
+    - **Appearance**: Simple, clean, and without a close button. They have a `cursor-pointer` style to indicate they can be dismissed. The padding is compact (`p-4`).
     - **Behavior**:
         - Automatically dismisses after a short period (e.g., 2 seconds).
         - Can be dismissed instantly by clicking anywhere on the notification.
