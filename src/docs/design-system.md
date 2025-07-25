@@ -107,8 +107,8 @@ This pattern describes how a single entity (like a **Team**, **Calendar**, or **
 - **Visual Cues**:
   - **Owned by you & Shared**: An item created by the current user/team that has been explicitly shared with others is marked with a `change_circle` icon overlay. This indicates it is the "source of truth." **The color of this icon badge matches the owner's primary color.**
   - **Linked (from another user)**: An item created elsewhere and being used in the current context is marked with a `link` icon overlay. **The color of this icon badge matches the original owner's primary color.**
-  - **Owned and Not Shared/Linked**: An item that is owned and exists only in its original location does not get an icon.
   - **Inactive (Team Context Only)**: A Badge Collection that is available to a team but not currently "active" appears "ghosted" with 50% opacity. This state does not apply in a user's personal management view, where all owned collections are considered active.
+  - **Owned and Not Shared/Linked**: An item that is owned and exists only in its original location does not get an icon.
 - **Behavior**:
   - **Full Context**: When an item is linked, it should display all of its original properties (name, icon, color, description, etc.) to give the linking user full context.
   - **Editing Source of Truth**: Editing a shared item (e.g., changing a team's name) modifies the original "source of truth" item, and the changes are instantly reflected in all other places where it is used.
@@ -140,7 +140,9 @@ This is the application's perfected, gold-standard pattern for managing a collec
     -   **Badge Overlays**: The overlay is a direct render of the `<BadgeDisplayItem>` component. This ensures the overlay accurately reflects the badge's current name, icon, and color, providing full context during the drag operation.
 -   **Internal Card Layout**: Each card is structured for clarity. The header contains the primary entity identifier (icon and name) and contextual controls. To keep cards compact, headers and content areas should use minimal padding (e.g., `p-2`). Titles should be configured to wrap gracefully to handle longer text. **All icon-only buttons inside a card MUST have a `<Tooltip>`**.
 -   **User Item Display**: When users are displayed as items within a management card (e.g., `TeamCard`), they are presented **without a border**. Each user item must display their avatar, full name, and professional title underneath the name for consistency.
--   **Unique Draggable IDs**: It is critical that every `Draggable` component has a globally unique `draggableId`. If the same item (e.g., a user) can appear in multiple lists, you must create a unique ID for each instance. A common pattern is to combine the list's ID with the item's ID (e.g., `draggableId={'${list.id}-${item.id}'}`). This prevents the drag-and-drop library from trying to move all instances of the item simultaneously.
+-   **Unique Draggable & Droppable IDs (Critical)**:
+    - **Draggable Items**: It is critical that every `Draggable` component has a globally unique `id`. If the same logical item (e.g., a user) can appear in multiple lists, you must create a unique ID for each instance to prevent `@dnd-kit` from trying to move all instances simultaneously. A common pattern is to combine a prefix, the list's ID, and the item's ID (e.g., `draggableId={'user-sort:${team.id}-${item.id}'}`).
+    - **Droppable Containers**: It is equally critical that major container drop zones (like the main management area or a side panel) have a **static, predictable `id`**. Using a dynamic or index-based `id` for a top-level container can cause it to be re-rendered in a way that `@dnd-kit` can no longer identify it as a valid drop target, making it appear to be disabled. **Always use a hardcoded string literal for container-level drop zones** (e.g., `id="collections-list"` or `id="shared-collections-panel"`).
 -   **Draggable & Pinned States**:
     -   **Draggable Cards**: Most cards can be freely reordered within the grid. The `useSortable` hook allows this.
     -   **Pinned Cards**: Certain core system cards (e.g., "Admin", "Settings") are designated as "pinned" and cannot be dragged. This is achieved by disabling the `useSortable` hook for those specific items (`disabled: true`). They act as fixed anchors in the layout.
@@ -322,5 +324,6 @@ This is the single source of truth for indicating user interaction state across 
       - **Ownership Status**: `absolute -top-0 -right-3`.
     - **Icon Size (Ownership Status)**: The `GoogleSymbol` inside an ownership status badge should have its size set via `style={{fontSize: '16px'}}`.
 -   **Badges in Compact View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
+
 
 
