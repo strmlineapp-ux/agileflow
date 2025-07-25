@@ -130,7 +130,7 @@ This is the application's perfected, gold-standard pattern for managing a collec
     - **Disable Triggers**: The main entity icon's Popover trigger for changing the icon must be **disabled** (but the icon itself remains visible).
     - **Disable Editing**: Inline editing functionality must be disabled to prevent text from being selected or edited during a drag attempt.
 -   **Expand/Collapse**: Cards are collapsed by default. To expand a card and view its details, the user must click a dedicated `expand_more` icon button, positioned at `absolute -bottom-1 right-0`. This button is hidden when the drag modifier key is pressed.
--   **Preventing Interaction Conflicts**: The primary mechanism for preventing accidental drags is the **modifier key activation**. Since a drag action only begins when the modifier key is held, normal clicks on buttons, popovers, and other controls inside a draggable card function as expected without interference. For components with internal keyboard interactions (like an **Inline Editor**), the `useSortable` hook for the draggable card **must** be temporarily disabled while the internal component is in an editing state by passing `disabled: isEditing`.
+-   **Preventing Interaction Conflicts**: The primary mechanism for preventing accidental drags is the **modifier key activation**. However, the `useSortable` hook's listeners can still capture pointer events even when a drag isn't initiated, preventing `onClick` events on the same element. To solve this, the `useSortable` hook **must** be disabled when the modifier key is not pressed (e.g., `disabled: !isDragModifierPressed`). This completely deactivates the drag listeners, ensuring that standard clicks and other interactions function as expected.
 -   **Visual Feedback**: To provide feedback without disrupting layout, visual changes (like a `shadow` or `opacity`) should be applied directly to the inner component based on the `isDragging` prop provided by `dnd-kit`'s `useSortable` hook. The draggable wrapper itself should remain untouched.
 -   **Internal Card Layout**: Each card is structured for clarity. The header contains the primary entity identifier (icon and name) and contextual controls. To keep cards compact, headers and content areas should use minimal padding (e.g., `p-2`). Titles should be configured to wrap gracefully to handle longer text. **All icon-only buttons inside a card MUST have a `<Tooltip>`**.
 -   **User Item Display**: When users are displayed as items within a management card (e.g., `TeamCard`), they are presented **without a border**. Each user item must display their avatar, full name, and professional title underneath the name for consistency.
@@ -285,7 +285,7 @@ The application supports two distinct color themes, `light` and `dark`, which ca
 
 - **Custom Primary Color**: Users can select a custom primary color using a color picker popover, as defined in the **Icon & Color Editing Flow** pattern. This custom color overrides the theme's default primary color.
 - **Primary Button Gradient**: Primary buttons have a special gradient effect on hover, which is unique to each theme. This provides a subtle but polished visual feedback for key actions.
-- **Text-based Button Hover**: For text-based buttons (like those on the login page), the hover and focus state is indicated *only* by the text color changing to the primary theme color. No background highlight is applied.
+- **Text-based Button Hover**: For text-based buttons (like those on the login page), the hover and focus state is indicated *only* by the text color changing to the primary theme color. No background color is applied.
 
 ### Global Focus & Highlight Style
 This is the single source of truth for indicating user interaction state across the entire application.
@@ -316,4 +316,5 @@ This is the single source of truth for indicating user interaction state across 
       - **Ownership Status**: `absolute -top-0 -right-3`.
     - **Icon Size (Ownership Status)**: The `GoogleSymbol` inside an ownership status badge should have its size set via `style={{fontSize: '16px'}}`.
 -   **Badges in Compact View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
+
 
