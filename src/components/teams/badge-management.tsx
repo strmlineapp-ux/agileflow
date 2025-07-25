@@ -771,11 +771,11 @@ function BadgeCollectionCard({
                         </div>
                         <div className={cn("flex items-center", isDragModifierPressed && "hidden")} onPointerDown={(e) => e.stopPropagation()}>
                            {!isCollapsed && isOwner && !isSharedPreview && (
-                                <DuplicateBadgeZone
-                                    collectionId={collection.id}
-                                    onAdd={() => onAddBadge(collection.id)}
-                                />
-                            )}
+                               <DuplicateBadgeZone
+                                   collectionId={collection.id}
+                                   onAdd={() => onAddBadge(collection.id)}
+                               />
+                           )}
                             {!isCollapsed && (
                                 <Popover open={isViewModePopoverOpen} onOpenChange={setIsViewModePopoverOpen}>
                                     <TooltipProvider>
@@ -1089,7 +1089,6 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
             const sourceBadge = activeData.badge;
             if (collectionId && sourceBadge) {
                 addBadge(collectionId, sourceBadge);
-                toast({title: "Badge Duplicated", description: `A copy of "${sourceBadge.name}" was created.`});
             }
             return;
         }
