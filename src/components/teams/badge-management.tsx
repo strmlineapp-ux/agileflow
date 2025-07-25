@@ -248,7 +248,7 @@ function BadgeDisplayItem({
                     placeholder="Click to add a description." 
                 />
              ) : (
-                 <p className={cn("text-sm text-muted-foreground min-h-[20px] break-words", isOwner && !isDragModifierPressed && "cursor-text")}>
+                 <p className={cn("text-sm text-muted-foreground min-h-[20px] break-words")}>
                     {badge.description || (isLinked ? <span className="italic text-muted-foreground/50">No description</span> : isOwner ? 'Click to add description.' : '')}
                 </p>
              )}
@@ -361,7 +361,7 @@ function SortableBadgeItem({ badge, collection, onDelete, ...props }: { badge: B
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: `badge::${badge.id}::${collection.id}`,
         data: { type: 'badge', badge, collectionId: collection.id, isSharedPreview: props.isSharedPreview },
-        disabled: isEditingName || isEditingDescription || !isDragModifierPressed,
+        disabled: !isDragModifierPressed,
     });
     
     const style = {
@@ -388,7 +388,7 @@ function SortableBadgeItem({ badge, collection, onDelete, ...props }: { badge: B
                     />
                 </div>
                 {!props.isSharedPreview && canManage && (
-                    <div className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                    <div className={cn("absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 transition-opacity z-10", isDragModifierPressed && "hidden")}>
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
@@ -893,13 +893,14 @@ function BadgeCollectionCard({
 }
 
 function SortableCollectionCard({ collection, ...props }: { collection: BadgeCollection, [key: string]: any }) {
+    const { isDragModifierPressed } = useUser();
     const [isEditingName, setIsEditingName] = useState(false);
     const [isEditingDescription, setIsEditingDescription] = useState(false);
 
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: collection.id,
         data: { type: 'collection-card', collection, isSharedPreview: props.isSharedPreview },
-        disabled: isEditingName || isEditingDescription,
+        disabled: isEditingName || isEditingDescription || !isDragModifierPressed,
     });
 
     const style = {
@@ -1110,7 +1111,7 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
                                 </TooltipProvider>
                             </div>
                         </div>
-                        <div className="h-full overflow-y-auto">
+                        <div className="flex-1 overflow-y-auto min-h-0">
                             <CollectionDropZone id="collections-list" type="collection-list" className="flex flex-wrap -m-2">
                                 <SortableContext items={displayedCollections.map(c => c.id)} strategy={rectSortingStrategy}>
                                     {displayedCollections.map(collection => (
