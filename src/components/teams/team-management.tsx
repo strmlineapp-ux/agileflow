@@ -45,7 +45,7 @@ import { googleSymbolNames } from '@/lib/google-symbols';
 import { HexColorPicker, HexColorInput } from 'react-colorful';
 import { CompactSearchInput } from '@/components/common/compact-search-input';
 import { useRouter, usePathname } from 'next/navigation';
-import { centerUnderCursor } from '@dnd-kit/modifiers';
+import { snapCenterToCursor } from '@dnd-kit/modifiers';
 
 const predefinedColors = [
     '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
@@ -885,7 +885,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                     </TeamManagementDropZone>
                 </div>
             </div>
-            <DragOverlay modifiers={[centerUnderCursor]}>
+            <DragOverlay modifiers={[snapCenterToCursor]}>
                 {activeDragItem?.type === 'team-card' && activeDragItem?.data?.team ? (
                     <GoogleSymbol
                         name={activeDragItem.data.team.icon}

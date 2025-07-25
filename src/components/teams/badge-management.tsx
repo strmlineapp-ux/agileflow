@@ -41,7 +41,7 @@ import {
   arrayMove,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { centerUnderCursor } from '@dnd-kit/modifiers';
+import { snapCenterToCursor } from '@dnd-kit/modifiers';
 
 function BadgeDisplayItem({ 
     badge, 
@@ -1174,7 +1174,7 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
                     </CollectionDropZone>
                 </div>
             </div>
-             <DragOverlay modifiers={[centerUnderCursor]}>
+             <DragOverlay modifiers={[snapCenterToCursor]}>
                 {activeDragItem?.type === 'collection-card' && activeDragItem?.data?.collection ? (
                      <GoogleSymbol
                         name={activeDragItem.data.collection.icon}
