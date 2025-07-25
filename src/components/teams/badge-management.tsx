@@ -1233,7 +1233,7 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
                 </div>
             </div>
              <DragOverlay modifiers={[snapCenterToCursor]}>
-                {activeDragItem?.type === 'collection' && activeDragItem?.data?.collection ? (
+                {activeDragItem?.type === 'collection-card' && activeDragItem?.data?.collection ? (
                      <GoogleSymbol
                         name={activeDragItem.data.collection.icon}
                         style={{ color: activeDragItem.data.collection.color, fontSize: '48px' }}
