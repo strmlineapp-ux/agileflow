@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -32,7 +31,6 @@ import {
   useDroppable,
   DragOverlay,
   type DragStartEvent,
-  useDndContext,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -455,20 +453,18 @@ function DroppableCollectionContent({ collection, children }: { collection: Badg
     );
 }
 
-function DuplicateBadgeZone({ collectionId, onAdd, isDragging, isOver }: { collectionId: string, onAdd: () => void, isDragging: boolean, isOver: boolean }) {
+function DuplicateBadgeZone({ collectionId, onAdd }: { collectionId: string, onAdd: () => void }) {
+    const { active, over } = useDndContext();
+    const isOver = over?.id === `duplicate-badge-zone-${collectionId}`;
+    const isDraggingBadge = active?.data.current?.type === 'badge';
+
     const { setNodeRef } = useDroppable({
         id: `duplicate-badge-zone-${collectionId}`,
         data: { type: 'duplicate-badge-zone', collectionId },
     });
 
     return (
-        <div
-            ref={setNodeRef}
-            className={cn(
-                "rounded-full transition-all",
-                isOver && isDragging && "ring-1 ring-border ring-inset"
-            )}
-        >
+        <div ref={setNodeRef} className={cn("rounded-full transition-all", isOver && isDraggingBadge && "ring-1 ring-border ring-inset")}>
             <TooltipProvider>
                 <Tooltip>
                     <TooltipTrigger asChild>
@@ -477,16 +473,13 @@ function DuplicateBadgeZone({ collectionId, onAdd, isDragging, isOver }: { colle
                             size="icon"
                             onClick={onAdd}
                             onPointerDown={(e) => e.stopPropagation()}
-                            className={cn(
-                                "h-8 w-8 text-muted-foreground transition-opacity",
-                                !isDragging ? "opacity-0 pointer-events-none" : "opacity-100"
-                            )}
+                            className="h-8 w-8 text-muted-foreground"
                         >
                             <GoogleSymbol name="add_circle" weight={100} opticalSize={20} />
                             <span className="sr-only">New Badge or Drop to Duplicate</span>
                         </Button>
                     </TooltipTrigger>
-                    <TooltipContent><p>{isOver ? 'Drop to Duplicate Badge' : 'Add New Badge'}</p></TooltipContent>
+                    <TooltipContent><p>{isOver && isDraggingBadge ? 'Drop to Duplicate Badge' : 'Add New Badge'}</p></TooltipContent>
                 </Tooltip>
             </TooltipProvider>
         </div>
@@ -547,13 +540,6 @@ function BadgeCollectionCard({
     const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
     const [isExpanded, setIsExpanded] = useState(true);
 
-    const { active } = useDndContext();
-    const isDragging = !!active;
-
-    const { isOver, setNodeRef: setDuplicateDroppableRef } = useDroppable({
-        id: `duplicate-badge-zone-${collection.id}`,
-    });
-
     const isOwner = useMemo(() => collection.owner.id === viewAsUser.userId, [collection.owner.id, viewAsUser.userId]);
     const showDetails = isCollapsed ? false : isExpanded;
 
@@ -596,7 +582,7 @@ function BadgeCollectionCard({
         document.addEventListener('mousedown', handleOutsideClick);
         descriptionTextareaRef.current?.focus();
         descriptionTextareaRef.current?.select();
-        return () => document.removeEventListener('mousedown', handleOutsideClick);
+        return () => document.removeEventListener('mousedown', handleSaveDescription);
     }, [isEditingDescription, handleSaveDescription]);
 
     useEffect(() => {
@@ -794,14 +780,14 @@ function BadgeCollectionCard({
                                 </div>
                             </div>
                         </div>
-                        <div className={cn("flex items-center", isDragModifierPressed && "hidden")} onPointerDown={(e) => e.stopPropagation()}>
+                        <div className="flex items-center" onPointerDown={(e) => e.stopPropagation()}>
                            {!isCollapsed && isOwner && !isSharedPreview && (
-                                <DuplicateBadgeZone
-                                   collectionId={collection.id}
-                                   onAdd={() => onAddBadge(collection.id)}
-                                   isDragging={isDragging}
-                                   isOver={isOver}
-                               />
+                               <div className={cn(isDragModifierPressed && "hidden")}>
+                                 <DuplicateBadgeZone
+                                    collectionId={collection.id}
+                                    onAdd={() => onAddBadge(collection.id)}
+                                />
+                               </div>
                            )}
                             {!isCollapsed && (
                                 <Popover open={isViewModePopoverOpen} onOpenChange={setIsViewModePopoverOpen}>
@@ -809,7 +795,7 @@ function BadgeCollectionCard({
                                         <Tooltip>
                                             <TooltipTrigger asChild>
                                                 <PopoverTrigger onPointerDown={(e) => e.stopPropagation()}>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+                                                    <Button variant="ghost" size="icon" className={cn("h-8 w-8 text-muted-foreground", isDragModifierPressed && "hidden")}>
                                                         <GoogleSymbol name={viewModeOptions.find(o => o.mode === collection.viewMode)?.icon || 'view_module'} weight={100} opticalSize={20} />
                                                     </Button>
                                                 </PopoverTrigger>
@@ -1110,8 +1096,9 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
         const activeData = active.data.current || {};
         const activeType = active.data.current?.type;
         const overData = over.data.current || {};
+        const overType = over.data.current?.type;
 
-        if (activeType === 'badge' && over.id.toString().startsWith('duplicate-badge-zone')) {
+        if (activeType === 'badge' && overType === 'duplicate-badge-zone') {
             const collectionId = overData.collectionId;
             const sourceBadge = activeData.badge;
             if (collectionId && sourceBadge) {
