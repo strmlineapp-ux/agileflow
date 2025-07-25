@@ -78,11 +78,16 @@ function DraggableUserCard({ user, onRemove, isTeamAdmin, onSetAdmin, canManage,
         <div 
             className={cn(
                 "group relative flex items-center gap-2 p-1 rounded-md transition-colors",
-                canManage && "cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
+                canManage && !isDragModifierPressed && "cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
             )}
-            onClick={(e) => { e.stopPropagation(); if (canManage) onSetAdmin(); }}
-            onKeyDown={(e) => { if(canManage && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onSetAdmin();}}}
-            tabIndex={canManage ? 0 : -1}
+            onClick={(e) => { 
+                if (canManage && !isDragModifierPressed) {
+                    e.preventDefault();
+                    onSetAdmin(); 
+                }
+            }}
+            onKeyDown={(e) => { if(canManage && !isDragModifierPressed && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onSetAdmin();}}}
+            tabIndex={canManage && !isDragModifierPressed ? 0 : -1}
         >
             <div className="relative">
                 <Avatar className="h-8 w-8">
@@ -412,7 +417,7 @@ function TeamCard({
                     </div>
                 </CardHeader>
             </div>
-            {isExpanded && (
+            {!isDragging && isExpanded && (
                 <CardContent className="flex-grow pt-0 flex flex-col">
                     <ScrollArea className="max-h-48 pr-2 flex-grow">
                         <SortableContext items={teamMembers.map(m => `user-sort:${team.id}:${m.userId}`)} strategy={verticalListSortingStrategy}>
@@ -893,7 +898,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                     <div className="bg-card p-2 rounded-md">
                         <div className="flex items-center gap-2">
                             <Avatar className="h-8 w-8">
-                                <AvatarImage src={activeDragItem.data.user.avatarUrl} alt={activeDragItem.data.user.displayName} />
+                                <AvatarImage src={activeDragItem.data.user.avatarUrl} alt={activeDragItem.data.user.displayName} data-ai-hint="user avatar" />
                                 <AvatarFallback>{activeDragItem.data.user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
                             </Avatar>
                             <div>
