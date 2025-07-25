@@ -193,7 +193,7 @@ The `Team` entity is a functional unit that groups users together for collaborat
 | `membersLabel?: string` | A custom label for the Members list on the Team Members tab. |
 | `userBadgesLabel?: string` | A custom label for the "Team Badges" section on the Team Members tab. |
 | `activeBadgeCollections?: string[]` | An array of `collectionId`s. Badges from these collections become available for assignment to members of this team. This is a local setting for the team. |
-| `collectionViewModes?: { [key:string]: 'assorted' \| 'detailed' \| 'list' }` | A map of `collectionId`s to a locally-preferred view mode, overriding the collection's default. |
+| `collectionViewModes?: { [key:string]: 'compact' \| 'grid' \| 'list' }` | A map of `collectionId`s to a locally-preferred view mode, overriding the collection's default. |
 | `pinnedLocations?: string[]` | An array of location names pinned to this team's schedule. |
 | `checkLocations?: string[]` | A subset of pinnedLocations designated for daily checks. |
 | `locationAliases?: { [key:string]: string }` | A map of canonical location names to custom display aliases. |
@@ -234,7 +234,7 @@ This approach eliminates ambiguity. An item's edit and delete permissions are al
 | `color: string` | The hex color for the collection's icon. |
 | `badgeIds: string[]` | An array of `badgeId`s belonging to this collection. This can include a mix of owned and linked badges. |
 | `applications?: BadgeApplication[]` | Defines where badges from this collection can be applied (e.g., 'Team Members', 'Events'). For linked collections, this is a local override; changing it does not affect the original shared collection. |
-| `viewMode: 'compact' \| 'detailed' \| 'list'` | **Internal.** A UI preference for how to display the badges within this collection. |
+| `viewMode: 'compact' \| 'grid' \| 'list'` | **Internal.** A UI preference for how to display the badges within this collection. |
 | `description?: string` | An optional description for the collection. |
 
 

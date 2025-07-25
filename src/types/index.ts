@@ -90,7 +90,7 @@ export interface BadgeCollection {
   name: string;
   icon: string;
   color: string;
-  viewMode: 'compact' | 'detailed' | 'list';
+  viewMode: 'compact' | 'grid' | 'list';
   badgeIds: string[];
   description?: string;
   applications?: BadgeApplication[];
@@ -111,7 +111,7 @@ export interface Team {
   locationCheckManagers: string[]; // array of userIds who can manage check locations
   userBadgesLabel?: string;
   activeBadgeCollections?: string[];
-  collectionViewModes?: Record<string, 'compact' | 'detailed' | 'list'>;
+  collectionViewModes?: Record<string, 'compact' | 'grid' | 'list'>;
   pinnedLocations?: string[]; // array of location names
   checkLocations?: string[]; // subset of pinnedLocations designated for daily checks
   locationAliases?: { [key:string]: string };

@@ -365,5 +365,3 @@ export const mockHolidays: Holiday[] = [
     new Date(currentYear, 6, 4), // Independence Day
     new Date(currentYear, 11, 25), // Christmas Day
 ];
-
-    
