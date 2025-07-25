@@ -455,24 +455,42 @@ function DroppableCollectionContent({ collection, children }: { collection: Badg
 }
 
 function DuplicateBadgeZone({ collectionId, onAdd }: { collectionId: string, onAdd: () => void }) {
+    const { active } = useDndContext();
     const { isOver, setNodeRef } = useDroppable({
         id: `duplicate-badge-zone-${collectionId}`,
         data: { type: 'duplicate-badge-zone', collectionId },
     });
-  
+    const isDragging = !!active;
+
     return (
-        <TooltipProvider>
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <div ref={setNodeRef} className={cn("rounded-full", isOver && "ring-1 ring-border ring-inset")}>
-                        <Button variant="ghost" size="icon" onClick={onAdd} onPointerDown={(e) => e.stopPropagation()} className="h-8 w-8 text-muted-foreground">
+        <div
+            ref={setNodeRef}
+            className={cn(
+                "rounded-full transition-all",
+                isOver && isDragging && "ring-1 ring-border ring-inset"
+            )}
+        >
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={onAdd}
+                            onPointerDown={(e) => e.stopPropagation()}
+                            className={cn(
+                                "h-8 w-8 text-muted-foreground transition-opacity",
+                                isDragging ? "opacity-100" : "opacity-0 pointer-events-none"
+                            )}
+                        >
                             <GoogleSymbol name="add_circle" weight={100} opticalSize={20} />
+                            <span className="sr-only">New Badge or Drop to Duplicate</span>
                         </Button>
-                    </div>
-                </TooltipTrigger>
-                <TooltipContent><p>{isOver ? 'Drop to Duplicate Badge' : 'Add New Badge'}</p></TooltipContent>
-            </Tooltip>
-        </TooltipProvider>
+                    </TooltipTrigger>
+                    <TooltipContent><p>{isOver ? 'Drop to Duplicate Badge' : 'Add New Badge'}</p></TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+        </div>
     );
 }
 
