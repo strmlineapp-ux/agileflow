@@ -461,15 +461,15 @@ function DuplicateBadgeZone({ collectionId, onAdd, isOwner }: { collectionId: st
     data: { type: 'duplicate-badge-zone', collectionId },
     disabled: !isOwner,
   });
-  const { isDragging } = useDndContext();
+  const { active, isDragging } = useDndContext();
+  const isBadgeDrag = active?.data.current?.type === 'badge';
 
-  // The drop zone wrapper is always rendered so dnd-kit can find it.
   return (
     <div
       ref={setNodeRef}
       className={cn(
-        "rounded-full transition-all",
-        isOver && isDragging && isOwner && "ring-1 ring-border ring-inset"
+        "rounded-full transition-all h-8 w-8 flex items-center justify-center",
+        isOver && isBadgeDrag && isOwner && "ring-1 ring-border ring-inset"
       )}
     >
       <TooltipProvider>
@@ -487,7 +487,7 @@ function DuplicateBadgeZone({ collectionId, onAdd, isOwner }: { collectionId: st
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            <p>{isOver && isDragging && isOwner ? 'Drop to Duplicate Badge' : 'Add New Badge'}</p>
+            <p>{isOver && isBadgeDrag && isOwner ? 'Drop to Duplicate Badge' : 'Add New Badge'}</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -512,7 +512,8 @@ type BadgeCollectionCardProps = {
     setIsEditingName: (isEditing: boolean) => void;
     isEditingDescription: boolean;
     setIsEditingDescription: (isEditing: boolean) => void;
-    isCollapsed?: boolean;
+    isExpanded: boolean;
+    onToggleExpand: () => void;
     dragHandleProps?: any;
     currentUserBadgeIds?: Set<string>;
 };
@@ -533,7 +534,8 @@ function BadgeCollectionCard({
     setIsEditingName,
     isEditingDescription,
     setIsEditingDescription,
-    isCollapsed = false,
+    isExpanded,
+    onToggleExpand,
     dragHandleProps,
     currentUserBadgeIds,
     ...props
@@ -547,10 +549,9 @@ function BadgeCollectionCard({
     const iconSearchInputRef = useRef<HTMLInputElement>(null);
     const [color, setColor] = useState(collection.color);
     const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
-    const [isExpanded, setIsExpanded] = useState(!isSharedPreview);
-
+    
     const isOwner = useMemo(() => collection.owner.id === viewAsUser.userId, [collection.owner.id, viewAsUser.userId]);
-    const showDetails = isCollapsed ? false : isExpanded;
+    const showDetails = isExpanded;
 
     const handleSaveName = useCallback(() => {
         const newName = nameInputRef.current?.value.trim() || '';
@@ -682,7 +683,7 @@ function BadgeCollectionCard({
         <Card className={cn("h-full flex flex-col bg-transparent relative", !isActive && !!contextTeam && "opacity-50")} {...props}>
             <div {...dragHandleProps}>
                 <CardHeader className="group">
-                     {!isSharedPreview && !isCollapsed && (
+                     {!isSharedPreview && (
                       <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
@@ -790,7 +791,7 @@ function BadgeCollectionCard({
                             </div>
                         </div>
                         <div className="flex items-center" onPointerDown={(e) => e.stopPropagation()}>
-                           {!isCollapsed && !isSharedPreview && isOwner && (
+                           {!isSharedPreview && isOwner && (
                                 <div className={cn(isDragModifierPressed && "opacity-0 pointer-events-none")}>
                                     <DuplicateBadgeZone
                                         collectionId={collection.id}
@@ -799,47 +800,45 @@ function BadgeCollectionCard({
                                     />
                                 </div>
                            )}
-                            {!isCollapsed && (
-                                <Popover open={isViewModePopoverOpen} onOpenChange={setIsViewModePopoverOpen}>
-                                    <TooltipProvider>
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <PopoverTrigger onPointerDown={(e) => e.stopPropagation()}>
-                                                    <Button variant="ghost" size="icon" className={cn("h-8 w-8 text-muted-foreground", isDragModifierPressed && "hidden")}>
-                                                        <GoogleSymbol name={viewModeOptions.find(o => o.mode === collection.viewMode)?.icon || 'view_module'} weight={100} opticalSize={20} />
+                            <Popover open={isViewModePopoverOpen} onOpenChange={setIsViewModePopoverOpen}>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <PopoverTrigger onPointerDown={(e) => e.stopPropagation()}>
+                                                <Button variant="ghost" size="icon" className={cn("h-8 w-8 text-muted-foreground", isDragModifierPressed && "hidden")}>
+                                                    <GoogleSymbol name={viewModeOptions.find(o => o.mode === collection.viewMode)?.icon || 'view_module'} weight={100} opticalSize={20} />
+                                                </Button>
+                                            </PopoverTrigger>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>Change View Mode</p></TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                                <PopoverContent className="w-auto p-1 flex items-center gap-1" onPointerDown={(e) => e.stopPropagation()}>
+                                    {viewModeOptions.map(({mode, icon, label}) => (
+                                        <TooltipProvider key={mode}>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => {
+                                                            onUpdateCollection(collection.id, { viewMode: mode });
+                                                            setIsViewModePopoverOpen(false);
+                                                        }}
+                                                        className={cn(
+                                                            "h-8 w-8",
+                                                            collection.viewMode === mode && "text-primary"
+                                                        )}
+                                                    >
+                                                        <GoogleSymbol name={icon} weight={100} opticalSize={20} />
                                                     </Button>
-                                                </PopoverTrigger>
-                                            </TooltipTrigger>
-                                            <TooltipContent><p>Change View Mode</p></TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
-                                    <PopoverContent className="w-auto p-1 flex items-center gap-1" onPointerDown={(e) => e.stopPropagation()}>
-                                        {viewModeOptions.map(({mode, icon, label}) => (
-                                            <TooltipProvider key={mode}>
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            onClick={() => {
-                                                                onUpdateCollection(collection.id, { viewMode: mode });
-                                                                setIsViewModePopoverOpen(false);
-                                                            }}
-                                                            className={cn(
-                                                                "h-8 w-8",
-                                                                collection.viewMode === mode && "text-primary"
-                                                            )}
-                                                        >
-                                                            <GoogleSymbol name={icon} weight={100} opticalSize={20} />
-                                                        </Button>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent><p>{label}</p></TooltipContent>
-                                                </Tooltip>
-                                            </TooltipProvider>
-                                        ))}
-                                    </PopoverContent>
-                                </Popover>
-                            )}
+                                                </TooltipTrigger>
+                                                <TooltipContent><p>{label}</p></TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
+                                    ))}
+                                </PopoverContent>
+                            </Popover>
                         </div>
                     </div>
                 </CardHeader>
@@ -932,9 +931,9 @@ function BadgeCollectionCard({
                     )}
                 </>
              )}
-            {!isCollapsed && (
+            {!isSharedPreview && (
                  <div className={cn("absolute -bottom-1 right-0", isDragModifierPressed && "hidden")}>
-                    <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
+                    <Button variant="ghost" size="icon" onClick={onToggleExpand} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
                         <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} opticalSize={20} />
                     </Button>
                 </div>
@@ -1036,12 +1035,25 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
     const [mainSearchTerm, setMainSearchTerm] = useState('');
     const [sharedSearchTerm, setSharedSearchTerm] = useState('');
     const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
+    const [expandedCollections, setExpandedCollections] = useState<Set<string>>(new Set());
     
     useEffect(() => {
         if (isSharedPanelOpen) {
             setTimeout(() => sharedSearchInputRef.current?.focus(), 100);
         }
     }, [isSharedPanelOpen]);
+    
+    const onToggleExpand = useCallback((collectionId: string) => {
+        setExpandedCollections(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(collectionId)) {
+                newSet.delete(collectionId);
+            } else {
+                newSet.add(collectionId);
+            }
+            return newSet;
+        });
+    }, []);
 
     const title = appSettings.teamManagementLabel || tab.name;
 
@@ -1154,7 +1166,7 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
             const targetCollection = allBadgeCollections.find(c => c.id === targetCollectionId);
 
             if (targetCollection && targetCollection.owner.id !== viewAsUser.userId) {
-                toast({ title: 'Permission Denied', description: 'Cannot move badges to a collection you do not own.'});
+                toast({ variant: "destructive", title: 'Permission Denied', description: 'Cannot move badges to a collection you do not own.'});
                 return;
             }
 
@@ -1248,6 +1260,8 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
                                     onUpdateBadge={updateBadge}
                                     onDeleteBadge={handleDeleteBadge}
                                     contextTeam={team}
+                                    isExpanded={expandedCollections.has(collection.id)}
+                                    onToggleExpand={() => onToggleExpand(collection.id)}
                                 />
                             ))}
                         </SortableContext>
@@ -1283,6 +1297,8 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
                                                     isSharedPreview={true}
                                                     isViewer={true}
                                                     currentUserBadgeIds={currentUserBadgeIds}
+                                                    isExpanded={expandedCollections.has(collection.id)}
+                                                    onToggleExpand={() => onToggleExpand(collection.id)}
                                                 />
                                             ))}
                                             {sharedCollections.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">No other collections are currently shared.</p>}
