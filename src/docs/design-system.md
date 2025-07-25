@@ -106,8 +106,10 @@ This pattern describes how a single entity (like a **Team**, **Calendar**, or **
         - **Global Management (e.g., Teams, Calendars)**: For top-level entities, "linking" is an explicit action. Dragging a shared item from the panel to the main board adds the item's ID to the current user's corresponding `linked...Ids` array, bringing it into their management scope without making them a member or owner.
 - **Visual Cues**:
   - **Owned by you & Shared**: An item created by the current user/team that has been explicitly shared with others is marked with a `change_circle` icon overlay. This indicates it is the "source of truth." **The color of this icon badge matches the owner's primary color.**
-  - **Linked (from another user)**: An item created elsewhere and being used in the current context is marked with a `link` icon overlay. **The color of this icon badge matches the original owner's primary color.**
-  - **Inactive (Team Context Only)**: A Badge Collection that is available to a team but not currently "active" appears "ghosted" with 50% opacity. This state does not apply in a user's personal management view, where all owned collections are considered active.
+  - **Linked (from another user)**: An item created elsewhere is marked with a `link` icon overlay in two scenarios:
+    1.  When it is on the user's main management board, indicating it is actively being used.
+    2.  When it is in the "Shared Items" side panel, but that same item has *already* been linked by the user. This provides crucial feedback, preventing the user from attempting to link the same item multiple times.
+    **The color of this icon badge matches the original owner's primary color.**
   - **Owned and Not Shared/Linked**: An item that is owned and exists only in its original location does not get an icon.
 - **Behavior**:
   - **Full Context**: When an item is linked, it should display all of its original properties (name, icon, color, description, etc.) to give the linking user full context.
@@ -156,7 +158,7 @@ This is the application's perfected, gold-standard pattern for managing a collec
     - **Card-level Actions**: To show an action icon (like delete) for the entire card, place the action button (and its `<TooltipProvider>`) **inside the `<CardHeader>`**. Then, apply the `group` class to the `<CardHeader>` itself. This correctly scopes the `group-hover:opacity-100` effect to the header area, preventing it from activating when the user hovers over the card's content. The standard icon for deleting a card is a circular `cancel` icon that appears on hover, absolutely positioned to the corner of the card.
     - **Item-level Actions**: For actions on individual items *within* a card (like Badges in a Collection or Users in a Team), apply the `group` class to the immediate container of **each individual item**. The action button inside that container uses `group-hover:opacity-100`. This ensures that hovering one item only reveals its own actions.
 -   **Drag-to-Duplicate & Create**:
-    -   **Interaction**: A designated "Add New" icon (`<Button>`) acts as a drop zone, implemented using the `useDroppable` hook from `dnd-kit`. While a card is being dragged, this zone becomes highlighted to indicate it can accept a drop.
+    -   **Interaction & Implementation**: A designated "Add New" icon (`<Button>`) acts as a drop zone. To ensure this works reliably, the `useDroppable` hook from `@dnd-kit` must be applied to a **permanently rendered wrapper `div`** around the button. The button *inside* this wrapper can be visually hidden (e.g., with the `hidden` class based on the `isDragModifierPressed` state), but the wrapper `div` itself must always be present in the DOM. This ensures `@dnd-kit` can register it as a valid drop zone when the drag operation begins. While a card is being dragged, this zone becomes highlighted with a ring to indicate it can accept a drop.
     -   **Behavior (Duplicate)**: Dropping any card (pinned or not, from the main board or the shared panel) creates a deep, independent copy of the original. The new card is given a unique ID, a modified name (e.g., with `(Copy)`), and a unique URL path. It is placed immediately after the original in the list. Its ownership is assigned to the current user's context.
     -   **Behavior (Create)**: Clicking the "Add New" button will create a fresh, default item. The item is intelligently placed *before* any pinned items, preserving the integrity of the core page structure.
     -   **Smart Unlinking**: If the duplicated card was a *linked* item (e.g., a shared calendar from another user), the original linked item is automatically removed from the user's board after the copy is created. This provides a clean "copy and replace" workflow.
@@ -324,6 +326,5 @@ This is the single source of truth for indicating user interaction state across 
       - **Ownership Status**: `absolute -top-0 -right-3`.
     - **Icon Size (Ownership Status)**: The `GoogleSymbol` inside an ownership status badge should have its size set via `style={{fontSize: '16px'}}`.
 -   **Badges in Compact View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
-
 
 
