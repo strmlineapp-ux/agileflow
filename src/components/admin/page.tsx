@@ -291,8 +291,13 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive, activeTab, pa
                     </CardContent>
                   </Card>
             </div>
-            <DragOverlay>
-                {activeDragUser ? <UserCard user={activeDragUser} /> : null}
+            <DragOverlay dropAnimation={null} style={{ transform: undefined }}>
+                {activeDragUser ? (
+                    <Avatar className="h-12 w-12">
+                        <AvatarImage src={activeDragUser.avatarUrl} alt={activeDragUser.displayName} />
+                        <AvatarFallback>{activeDragUser.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                ) : null}
             </DragOverlay>
         </DndContext>
 
@@ -992,7 +997,7 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
                         ))}
                     </div>
                 </SortableContext>
-                <DragOverlay dropAnimation={null}>
+                <DragOverlay dropAnimation={null} style={{ transform: undefined }}>
                     {activePage ? (
                         <GoogleSymbol
                             name={activePage.icon}

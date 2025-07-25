@@ -884,7 +884,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                     </TeamManagementDropZone>
                 </div>
             </div>
-            <DragOverlay dropAnimation={null}>
+            <DragOverlay dropAnimation={null} style={{ transform: undefined }}>
                 {activeDragItem?.type === 'team-card' && activeDragItem?.data?.team ? (
                     <GoogleSymbol
                         name={activeDragItem.data.team.icon}
@@ -894,17 +894,10 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                         opticalSize={48}
                     />
                 ) : activeDragItem?.type === 'user' && activeDragItem?.data?.user ? (
-                    <div className="bg-card p-2 rounded-md">
-                        <div className="flex items-center gap-2">
-                            <Avatar className="h-8 w-8">
-                                <AvatarImage src={activeDragItem.data.user.avatarUrl} alt={activeDragItem.data.user.displayName} data-ai-hint="user avatar" />
-                                <AvatarFallback>{activeDragItem.data.user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                            </Avatar>
-                            <div>
-                                <p className="font-normal text-sm">{activeDragItem.data.user.displayName}</p>
-                            </div>
-                        </div>
-                    </div>
+                    <Avatar className="h-12 w-12">
+                        <AvatarImage src={activeDragItem.data.user.avatarUrl} alt={activeDragItem.data.user.displayName} />
+                        <AvatarFallback>{activeDragItem.data.user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
                 ) : null}
             </DragOverlay>
             <Dialog open={!!teamToDelete} onOpenChange={() => setTeamToDelete(null)}>
