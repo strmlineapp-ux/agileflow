@@ -276,7 +276,7 @@ function BadgeDisplayItem({
                     </TooltipProvider>
                     {iconPickerContent}
                 </Popover>
-                {!isViewer && (
+                {!isViewer && isOwner && (
                     <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
                         <TooltipProvider><Tooltip><TooltipTrigger asChild><PopoverTrigger asChild disabled={!isOwner || isDragModifierPressed} onPointerDown={(e) => e.stopPropagation()}><button className={cn("absolute -bottom-1 -right-3 h-4 w-4 rounded-full border-0", !isOwner || isDragModifierPressed ? "cursor-not-allowed" : "cursor-pointer", isDragModifierPressed && "hidden")} style={{ backgroundColor: badge.color }} aria-label="Change badge color" /></PopoverTrigger></TooltipTrigger><TooltipContent><p>Change Color</p></TooltipContent></Tooltip></TooltipProvider>
                         {colorPickerContent}
@@ -324,7 +324,7 @@ function BadgeDisplayItem({
                         </PopoverTrigger>
                         {iconPickerContent}
                     </Popover>
-                     {!isViewer && (
+                     {!isViewer && isOwner && (
                         <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
                             <PopoverTrigger asChild disabled={!isOwner || isDragModifierPressed} onPointerDown={(e) => e.stopPropagation()}>
                                 <button
@@ -629,7 +629,7 @@ function BadgeCollectionCard({
     ];
 
     return (
-        <Card className={cn("h-full flex flex-col bg-transparent relative", !isActive && "opacity-50")} {...props}>
+        <Card className={cn("h-full flex flex-col bg-transparent relative", !isActive && !!contextTeam && "opacity-50")} {...props}>
             <div {...dragHandleProps}>
                 <CardHeader className="group">
                      {!isSharedPreview && !isCollapsed && (
@@ -1203,4 +1203,5 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
         </DndContext>
     );
 }
+
 

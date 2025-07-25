@@ -108,6 +108,7 @@ This pattern describes how a single entity (like a **Team**, **Calendar**, or **
   - **Owned by you & Shared**: An item created by the current user/team that has been explicitly shared with others is marked with a `change_circle` icon overlay. This indicates it is the "source of truth." **The color of this icon badge matches the owner's primary color.**
   - **Linked (from another user)**: An item created elsewhere and being used in the current context is marked with a `link` icon overlay. **The color of this icon badge matches the original owner's primary color.**
   - **Owned and Not Shared/Linked**: An item that is owned and exists only in its original location does not get an icon.
+  - **Inactive (Team Context Only)**: A Badge Collection that is available to a team but not currently "active" appears "ghosted" with 50% opacity. This state does not apply in a user's personal management view, where all owned collections are considered active.
 - **Behavior**:
   - **Full Context**: When an item is linked, it should display all of its original properties (name, icon, color, description, etc.) to give the linking user full context.
   - **Editing Source of Truth**: Editing a shared item (e.g., changing a team's name) modifies the original "source of truth" item, and the changes are instantly reflected in all other places where it is used.
