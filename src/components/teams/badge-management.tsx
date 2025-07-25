@@ -224,7 +224,7 @@ function BadgeDisplayItem({
                     onKeyDown={handleNameKeyDown}
                     onBlur={handleSaveName}
                     className={cn(
-                        "h-auto p-0 border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words",
+                        "h-auto p-0 border-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words",
                          viewMode === 'detailed' ? "text-base font-normal font-headline font-thin" : "text-sm font-thin"
                     )}
                 />
@@ -361,7 +361,7 @@ function SortableBadgeItem({ badge, collection, onDelete, ...props }: { badge: B
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: `badge::${badge.id}::${collection.id}`,
         data: { type: 'badge', badge, collectionId: collection.id, isSharedPreview: props.isSharedPreview },
-        disabled: !isDragModifierPressed || isEditingName || isEditingDescription,
+        disabled: isEditingName || isEditingDescription || !isDragModifierPressed,
     });
     
     const style = {
@@ -1111,8 +1111,8 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
                             </div>
                         </div>
                         <div className="h-full overflow-y-auto">
-                            <CollectionDropZone id="collections-list" type="collection-list" className="space-y-4">
-                                <SortableContext items={displayedCollections.map(c => c.id)} strategy={verticalListSortingStrategy}>
+                            <CollectionDropZone id="collections-list" type="collection-list" className="flex flex-wrap -m-2">
+                                <SortableContext items={displayedCollections.map(c => c.id)} strategy={rectSortingStrategy}>
                                     {displayedCollections.map(collection => (
                                         <SortableCollectionCard
                                             key={collection.id}
