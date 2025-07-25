@@ -566,8 +566,8 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                 name: `${sourceTeam.name} (Copy)`,
                 owner,
                 isShared: false,
-                members: [],
-                teamAdmins: [],
+                members: sourceTeam.members,
+                teamAdmins: sourceTeam.teamAdmins,
             };
         } else {
              newTeamData = {
