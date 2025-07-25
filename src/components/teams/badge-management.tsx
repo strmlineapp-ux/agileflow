@@ -1117,47 +1117,45 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
     return (
         <DndContext sensors={sensors} onDragStart={(e) => setActiveDragItem({ type: e.active.data.current?.type, data: e.active.data.current || {} })} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
            <div className="flex h-full gap-4">
-                <div className="flex-1 overflow-hidden">
-                    <div className="flex flex-col gap-6 h-full">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <h2 className="font-headline text-2xl font-thin tracking-tight">{title}</h2>
-                                <DuplicateZone id="duplicate-collection-zone" onAdd={() => addBadgeCollection(viewAsUser)} />
-                            </div>
-                            <div className="flex items-center gap-1">
-                                <CompactSearchInput searchTerm={mainSearchTerm} setSearchTerm={setMainSearchTerm} placeholder="Search collections..." />
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Button variant="ghost" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)}>
-                                                <GoogleSymbol name="dynamic_feed" weight={100} opticalSize={20} />
-                                            </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent><p>Show Shared Collections</p></TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                            </div>
+                <div className="flex-1 flex flex-col overflow-hidden">
+                    <div className="flex items-center justify-between mb-6 shrink-0">
+                        <div className="flex items-center gap-2">
+                            <h2 className="font-headline text-2xl font-thin tracking-tight">{title}</h2>
+                            <DuplicateZone id="duplicate-collection-zone" onAdd={() => addBadgeCollection(viewAsUser)} />
                         </div>
-                        <div className="flex-1 min-h-0 overflow-y-auto">
-                            <CollectionDropZone id="collections-list" type="collection-list" className="flex flex-wrap content-start -m-2 min-h-full">
-                                <SortableContext items={displayedCollections.map(c => c.id)} strategy={rectSortingStrategy}>
-                                    {displayedCollections.map(collection => (
-                                        <SortableCollectionCard
-                                            key={collection.id}
-                                            collection={collection}
-                                            allBadges={allBadges}
-                                            predefinedColors={predefinedColors}
-                                            onUpdateCollection={updateBadgeCollection}
-                                            onDeleteCollection={handleDeleteCollection}
-                                            onAddBadge={addBadge}
-                                            onUpdateBadge={updateBadge}
-                                            onDeleteBadge={handleDeleteBadge}
-                                            contextTeam={team}
-                                        />
-                                    ))}
-                                </SortableContext>
-                            </CollectionDropZone>
+                        <div className="flex items-center gap-1">
+                            <CompactSearchInput searchTerm={mainSearchTerm} setSearchTerm={setMainSearchTerm} placeholder="Search collections..." />
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button variant="ghost" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)}>
+                                            <GoogleSymbol name="dynamic_feed" weight={100} opticalSize={20} />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent><p>Show Shared Collections</p></TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
                         </div>
+                    </div>
+                    <div className="h-full overflow-y-auto">
+                        <CollectionDropZone id="collections-list" type="collection-list" className="flex flex-wrap content-start -m-2 min-h-[200px]">
+                            <SortableContext items={displayedCollections.map(c => c.id)} strategy={rectSortingStrategy}>
+                                {displayedCollections.map(collection => (
+                                    <SortableCollectionCard
+                                        key={collection.id}
+                                        collection={collection}
+                                        allBadges={allBadges}
+                                        predefinedColors={predefinedColors}
+                                        onUpdateCollection={updateBadgeCollection}
+                                        onDeleteCollection={handleDeleteCollection}
+                                        onAddBadge={addBadge}
+                                        onUpdateBadge={updateBadge}
+                                        onDeleteBadge={handleDeleteBadge}
+                                        contextTeam={team}
+                                    />
+                                ))}
+                            </SortableContext>
+                        </CollectionDropZone>
                     </div>
                  </div>
                  <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96" : "w-0")}>
