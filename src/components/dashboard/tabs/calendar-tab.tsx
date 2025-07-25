@@ -138,21 +138,6 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
       <div className="flex flex-col h-full gap-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shrink-0">
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-3">
-              <GoogleSymbol name={pageConfig.icon} className="text-4xl" weight={100} />
-              <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                      <h1 className="font-headline text-3xl font-thin">{pageConfig.name}</h1>
-                    </TooltipTrigger>
-                    {pageConfig.description && (
-                      <TooltipContent>
-                        <p className="max-w-xs">{pageConfig.description}</p>
-                      </TooltipContent>
-                    )}
-                </Tooltip>
-              </TooltipProvider>
-            </div>
             {userCanCreateEvent && (
               <Dialog open={isNewEventOpen} onOpenChange={setIsNewEventOpen}>
                 <DialogTrigger asChild>
@@ -173,9 +158,7 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
                 </DialogContent>
               </Dialog>
             )}
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 border-r pr-2">
+             <div className="flex items-center gap-1 border-r pr-2">
                 <Button variant="ghost" size="icon" onClick={handlePrev}><GoogleSymbol name="chevron_left" weight={100} /></Button>
                 <Button variant="ghost" size="sm" onClick={goToToday}>Today</Button>
                 <Button variant="ghost" size="icon" onClick={handleNext}><GoogleSymbol name="chevron_right" weight={100} /></Button>

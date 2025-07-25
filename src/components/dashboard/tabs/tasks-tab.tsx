@@ -12,21 +12,7 @@ export function TasksContent({ tab: pageConfig, isSingleTabPage }: { tab: AppPag
   return (
     <div className="flex flex-col gap-6">
        <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <GoogleSymbol name={pageConfig.icon} className="text-4xl" weight={100}/>
-           <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <h1 className="font-headline text-3xl font-thin">{title}</h1>
-              </TooltipTrigger>
-              {pageConfig.description && (
-                <TooltipContent>
-                  <p className="max-w-xs">{pageConfig.description}</p>
-                </TooltipContent>
-              )}
-            </Tooltip>
-          </TooltipProvider>
-        </div>
+        <h2 className="font-headline text-2xl font-thin tracking-tight">Tasks</h2>
         <Button>
           <GoogleSymbol name="add_circle" className="mr-2" />
           New Task
