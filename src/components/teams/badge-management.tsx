@@ -696,7 +696,7 @@ function BadgeCollectionCard({
                                         ))}</div></ScrollArea>
                                     </PopoverContent>
                                 </Popover>
-                                {!isViewer && (
+                                {!isViewer && isOwner && (
                                     <>
                                         <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
                                             <TooltipProvider><Tooltip><TooltipTrigger asChild><PopoverTrigger asChild disabled={!isOwner || isDragModifierPressed} onPointerDown={(e) => e.stopPropagation()}><button className={cn("absolute -bottom-1 -right-3 h-4 w-4 rounded-full border-0", !isOwner || isDragModifierPressed ? "cursor-not-allowed" : "cursor-pointer", isDragModifierPressed && "hidden")} style={{ backgroundColor: collection.color }} /></PopoverTrigger></TooltipTrigger><TooltipContent><p>Change Color</p></TooltipContent></Tooltip></TooltipProvider>
@@ -975,7 +975,7 @@ function CollectionDropZone({ id, type, children, className }: { id: string; typ
 
 
 export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; page: AppPage; }) {
-    const { viewAsUser, users, appSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors, updateUser, isDragModifierPressed } = useUser();
+    const { viewAsUser, users, appSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors, updateUser, isDragModifierPressed, teams } = useUser();
     const { toast } = useToast();
     const sharedSearchInputRef = useRef<HTMLInputElement>(null);
 
@@ -1086,7 +1086,7 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
                 return;
             }
         }
-    }, [updateBadgeCollection, allBadgeCollections, reorderBadges, viewAsUser, toast, updateUser]);
+    }, [updateBadgeCollection, allBadgeCollections, reorderBadges, viewAsUser, teams, toast, updateUser]);
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -1131,8 +1131,8 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
                             </TooltipProvider>
                         </div>
                     </div>
-                    <div className="flex-1 min-h-0">
-                        <div className="h-full overflow-y-auto">
+                    <div className="flex-1 flex flex-col min-h-0">
+                        <div className="flex-1 overflow-y-auto">
                             <CollectionDropZone id="collections-list" type="collection-list" className="flex flex-wrap content-start -m-2 min-h-[200px]">
                                 <SortableContext items={displayedCollections.map(c => `collection-card::${c.id}`)} strategy={rectSortingStrategy}>
                                     {displayedCollections.map(collection => (
@@ -1154,9 +1154,10 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
                         </div>
                     </div>
                  </div>
-                 <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96 p-2" : "w-0 p-0")}>
-                    <CollectionDropZone id="shared-collections-panel" type="collection-panel" className="h-full">
-                        <Card className={cn("transition-opacity duration-300 h-full bg-transparent flex flex-col", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
+                 <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96" : "w-0")}>
+                    <div className={cn("h-full rounded-lg transition-all", isSharedPanelOpen ? "p-2" : "p-0")}>
+                        <CollectionDropZone id="shared-collections-panel" type="collection-panel" className="h-full">
+                            <Card className={cn("transition-opacity duration-300 h-full bg-transparent flex flex-col", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
                             <CardHeader>
                                 <div className="flex items-center justify-between">
                                     <CardTitle className="font-headline font-thin text-xl">Shared Collections</CardTitle>
@@ -1188,8 +1189,9 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
                                     </SortableContext>
                                 </ScrollArea>
                             </CardContent>
-                        </Card>
-                    </CollectionDropZone>
+                            </Card>
+                        </CollectionDropZone>
+                    </div>
                 </div>
             </div>
              <DragOverlay modifiers={[snapCenterToCursor]}>
