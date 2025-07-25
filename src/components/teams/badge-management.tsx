@@ -1090,7 +1090,7 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
     return (
         <DndContext sensors={sensors} onDragStart={(e) => setActiveDragItem({ type: e.active.data.current?.type, data: e.active.data.current || {} })} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
            <div className="flex gap-4 h-full">
-                 <div className="flex-1 flex flex-col overflow-hidden">
+                 <div className="flex-1 overflow-hidden flex flex-col">
                     <div className="flex flex-col gap-6 h-full">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
@@ -1111,7 +1111,8 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
                                 </TooltipProvider>
                             </div>
                         </div>
-                        <div className="h-full overflow-y-auto">
+                        <div className="flex-1 min-h-0">
+                          <ScrollArea className="h-full">
                             <CollectionDropZone id="collections-list" type="collection-list" className="flex flex-wrap content-start -m-2">
                                 <SortableContext items={displayedCollections.map(c => `collection-card::${c.id}`)} strategy={rectSortingStrategy}>
                                     {displayedCollections.map(collection => (
@@ -1130,47 +1131,46 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
                                     ))}
                                 </SortableContext>
                             </CollectionDropZone>
+                          </ScrollArea>
                         </div>
                     </div>
                  </div>
-                 <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96" : "w-0")}>
-                    <div className={cn("h-full rounded-lg transition-all", isSharedPanelOpen ? "p-2" : "p-0")}>
-                        <CollectionDropZone id="shared-collections-panel" type="collection-panel" className="h-full">
-                            <Card className={cn("transition-opacity duration-300 h-full bg-transparent flex flex-col", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
-                                <CardHeader>
-                                    <div className="flex items-center justify-between">
-                                        <CardTitle className="font-headline font-thin text-xl">Shared Collections</CardTitle>
-                                        <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." inputRef={sharedSearchInputRef} autoFocus={isSharedPanelOpen} tooltipText="Search Shared" />
-                                    </div>
-                                    <CardDescription>Drag a collection you own here to share it. Drag a collection to your board to link it.</CardDescription>
-                                </CardHeader>
-                                <CardContent className="flex-1 p-2 overflow-hidden">
-                                    <ScrollArea className="h-full">
-                                        <SortableContext items={sharedCollections.map(c => `collection-card::${c.id}`)} strategy={verticalListSortingStrategy}>
-                                            <div className="space-y-2">
-                                                {sharedCollections.map(collection => (
-                                                    <SortableCollectionCard
-                                                        key={collection.id}
-                                                        collection={collection}
-                                                        allBadges={allBadges}
-                                                        predefinedColors={predefinedColors}
-                                                        onUpdateCollection={updateBadgeCollection}
-                                                        onDeleteCollection={handleDeleteCollection}
-                                                        onAddBadge={addBadge}
-                                                        onUpdateBadge={updateBadge}
-                                                        onDeleteBadge={handleDeleteBadge}
-                                                        isSharedPreview={true}
-                                                        isViewer={true}
-                                                    />
-                                                ))}
-                                                {sharedCollections.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">No other collections are currently shared.</p>}
-                                            </div>
-                                        </SortableContext>
-                                    </ScrollArea>
-                                </CardContent>
-                            </Card>
-                        </CollectionDropZone>
-                    </div>
+                 <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96 p-2" : "w-0 p-0")}>
+                    <CollectionDropZone id="shared-collections-panel" type="collection-panel" className="h-full">
+                        <Card className={cn("transition-opacity duration-300 h-full bg-transparent flex flex-col", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
+                            <CardHeader>
+                                <div className="flex items-center justify-between">
+                                    <CardTitle className="font-headline font-thin text-xl">Shared Collections</CardTitle>
+                                    <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." inputRef={sharedSearchInputRef} autoFocus={isSharedPanelOpen} tooltipText="Search Shared" />
+                                </div>
+                                <CardDescription>Drag a collection you own here to share it. Drag a collection to your board to link it.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="flex-1 p-2 overflow-hidden">
+                                <ScrollArea className="h-full">
+                                    <SortableContext items={sharedCollections.map(c => `collection-card::${c.id}`)} strategy={verticalListSortingStrategy}>
+                                        <div className="space-y-2">
+                                            {sharedCollections.map(collection => (
+                                                <SortableCollectionCard
+                                                    key={collection.id}
+                                                    collection={collection}
+                                                    allBadges={allBadges}
+                                                    predefinedColors={predefinedColors}
+                                                    onUpdateCollection={updateBadgeCollection}
+                                                    onDeleteCollection={handleDeleteCollection}
+                                                    onAddBadge={addBadge}
+                                                    onUpdateBadge={updateBadge}
+                                                    onDeleteBadge={handleDeleteBadge}
+                                                    isSharedPreview={true}
+                                                    isViewer={true}
+                                                />
+                                            ))}
+                                            {sharedCollections.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">No other collections are currently shared.</p>}
+                                        </div>
+                                    </SortableContext>
+                                </ScrollArea>
+                            </CardContent>
+                        </Card>
+                    </CollectionDropZone>
                 </div>
             </div>
              <DragOverlay dropAnimation={null}>
