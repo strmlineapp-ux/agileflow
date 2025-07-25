@@ -465,27 +465,45 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const collection = allBadgeCollections.find(c => c.id === collectionId);
     if (!collection) return;
 
-    const newBadgeId = crypto.randomUUID();
-    const newBadge: Badge = { 
-      id: newBadgeId, 
-      owner: collection.owner,
-      ownerCollectionId: collectionId, 
-      name: sourceBadge ? `${sourceBadge.name} (Copy)` : `New Badge`, 
-      icon: sourceBadge?.icon || googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)], 
-      color: sourceBadge?.color || predefinedColors[Math.floor(Math.random() * predefinedColors.length)]
-    };
-    
-    setAllBadges(prev => [newBadge, ...prev]);
-    
-    setAllBadgeCollections(prevCollections =>
-      prevCollections.map(c => {
-          if (c.id === collectionId) {
-              return { ...c, badgeIds: [newBadgeId, ...c.badgeIds] };
-          }
-          return c;
-      })
-    );
-  }, [allBadgeCollections]);
+    if (sourceBadge) {
+        // If it's a duplication, create a new badge and add it.
+        const newBadge: Badge = {
+            id: crypto.randomUUID(),
+            owner: { type: 'user', id: viewAsUser!.userId },
+            ownerCollectionId: collectionId,
+            name: `${sourceBadge.name} (Copy)`,
+            icon: sourceBadge.icon,
+            color: sourceBadge.color,
+            description: sourceBadge.description,
+        };
+        setAllBadges(prev => [...prev, newBadge]);
+        setAllBadgeCollections(prevCollections =>
+            prevCollections.map(c =>
+                c.id === collectionId
+                    ? { ...c, badgeIds: [newBadge.id, ...c.badgeIds] }
+                    : c
+            )
+        );
+    } else {
+        // If it's a new badge from scratch
+        const newBadge: Badge = {
+            id: crypto.randomUUID(),
+            owner: collection.owner,
+            ownerCollectionId: collectionId,
+            name: `New Badge`,
+            icon: googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)],
+            color: predefinedColors[Math.floor(Math.random() * predefinedColors.length)]
+        };
+        setAllBadges(prev => [newBadge, ...prev]);
+        setAllBadgeCollections(prevCollections =>
+            prevCollections.map(c =>
+                c.id === collectionId
+                    ? { ...c, badgeIds: [newBadge.id, ...c.badgeIds] }
+                    : c
+            )
+        );
+    }
+}, [allBadgeCollections, viewAsUser]);
 
   const updateBadge = useCallback(async (badgeId: string, badgeData: Partial<Badge>) => {
     await simulateApi();

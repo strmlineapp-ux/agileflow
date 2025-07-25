@@ -1084,7 +1084,7 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
         const activeType = active.data.current?.type;
         const overData = over.data.current || {};
 
-        if (over.id.toString().startsWith('duplicate-badge-zone')) {
+        if (activeType === 'badge' && over.id.toString().startsWith('duplicate-badge-zone')) {
             const collectionId = overData.collectionId;
             const sourceBadge = activeData.badge;
             if (collectionId && sourceBadge) {
@@ -1108,8 +1108,7 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
             return;
         }
         
-        // Linking a shared collection
-        if (activeData.isSharedPreview && over.id === 'collections-list') {
+        if (activeType === 'collection' && activeData.isSharedPreview && over.id === 'collections-list') {
             const collection = activeData.collection as BadgeCollection;
             if (collection) {
                 const updatedLinkedIds = [...(viewAsUser.linkedCollectionIds || []), collection.id];
@@ -1126,14 +1125,13 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
             const targetCollectionId = overData.collection?.id || overData.collectionId;
 
             if (targetCollectionId && sourceCollectionId !== targetCollectionId) {
-                // If dragging from shared panel, LINK it (add to new, don't remove from old)
                 if (activeData.isSharedPreview) {
                      const targetCollection = allBadgeCollections.find(c => c.id === targetCollectionId);
                      if (targetCollection && !targetCollection.badgeIds.includes(badge.id)) {
                         updateBadgeCollection(targetCollectionId, { badgeIds: [badge.id, ...targetCollection.badgeIds] });
                         toast({title: "Badge Linked", description: `"${badge.name}" added to "${targetCollection.name}".`});
                      }
-                } else { // If dragging between user's own collections, MOVE it
+                } else {
                     updateBadgeCollection(sourceCollectionId, { badgeIds: allBadgeCollections.find(c => c.id === sourceCollectionId)!.badgeIds.filter(id => id !== badge.id) });
                     const targetCollection = allBadgeCollections.find(c => c.id === targetCollectionId);
                     if (targetCollection) {
@@ -1152,7 +1150,7 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
             return;
         }
 
-        if (activeType === 'collection') {
+        if (activeType === 'collection-card') {
             const collection = activeData.collection as BadgeCollection;
             if (over.id === 'shared-collections-panel') {
                 if (collection.owner.id === viewAsUser.userId) {
