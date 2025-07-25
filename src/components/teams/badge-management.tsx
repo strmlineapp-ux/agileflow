@@ -32,7 +32,6 @@ import {
   useDroppable,
   DragOverlay,
   type DragStartEvent,
-  useDndContext,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -461,15 +460,13 @@ function DuplicateBadgeZone({ collectionId, onAdd, isOwner }: { collectionId: st
     data: { type: 'duplicate-badge-zone', collectionId },
     disabled: !isOwner,
   });
-  const { active, isDragging } = useDndContext();
-  const isBadgeDrag = active?.data.current?.type === 'badge';
 
   return (
     <div
       ref={setNodeRef}
       className={cn(
         "rounded-full transition-all h-8 w-8 flex items-center justify-center",
-        isOver && isBadgeDrag && isOwner && "ring-1 ring-border ring-inset"
+        isOver && isOwner && "ring-1 ring-border ring-inset"
       )}
     >
       <TooltipProvider>
@@ -487,7 +484,7 @@ function DuplicateBadgeZone({ collectionId, onAdd, isOwner }: { collectionId: st
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            <p>{isOver && isBadgeDrag && isOwner ? 'Drop to Duplicate Badge' : 'Add New Badge'}</p>
+            <p>{isOver && isOwner ? 'Drop to Duplicate Badge' : 'Add New Badge'}</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -946,6 +943,7 @@ function SortableCollectionCard({ collection, ...props }: { collection: BadgeCol
     const { isDragModifierPressed } = useUser();
     const [isEditingName, setIsEditingName] = useState(false);
     const [isEditingDescription, setIsEditingDescription] = useState(false);
+    const { isExpanded, onToggleExpand } = props;
 
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: collection.id,
@@ -978,6 +976,8 @@ function SortableCollectionCard({ collection, ...props }: { collection: BadgeCol
                 setIsEditingName={setIsEditingName}
                 isEditingDescription={isEditingDescription}
                 setIsEditingDescription={setIsEditingDescription}
+                isExpanded={isExpanded}
+                onToggleExpand={onToggleExpand}
             />
         </div>
     );
@@ -1125,7 +1125,7 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
             const sourceBadge = activeData.badge;
             const targetCollection = allBadgeCollections.find(c => c.id === collectionId);
             if (!targetCollection || targetCollection.owner.id !== viewAsUser.userId) {
-                toast({ title: 'Permission Denied', description: 'You can only add badges to collections you own.' });
+                toast({ variant: 'default', title: 'Permission Denied', description: 'You can only add badges to collections you own.' });
                 return;
             }
             if (collectionId && sourceBadge) {
@@ -1148,16 +1148,16 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
             return;
         }
         
-        if (activeType === 'collection-card' && activeData.isSharedPreview && over.id === 'collections-list') {
-            const collection = activeData.collection as BadgeCollection;
-            if (collection) {
-                const updatedLinkedIds = [...(viewAsUser.linkedCollectionIds || []), collection.id];
-                updateUser(viewAsUser.userId, { linkedCollectionIds: Array.from(new Set(updatedLinkedIds)) });
-                toast({ title: 'Collection Linked' });
-            }
+        if (activeType === 'collection-card' && over.id === 'collections-list' && activeData.isSharedPreview) {
+             const collection = activeData.collection as BadgeCollection;
+             if (collection) {
+                 const updatedLinkedIds = [...(viewAsUser.linkedCollectionIds || []), collection.id];
+                 updateUser(viewAsUser.userId, { linkedCollectionIds: Array.from(new Set(updatedLinkedIds)) });
+                 setExpandedCollections(prev => new Set(prev).add(collection.id));
+                 toast({ title: 'Collection Linked' });
+             }
             return;
         }
-
         
         if (activeType === 'badge') {
             const badge = activeData.badge as Badge;
@@ -1191,13 +1191,17 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
             return;
         }
 
-        if (activeType === 'collection-card') {
+        if (activeType === 'collection-card' && over.id === 'shared-collections-panel') {
             const collection = activeData.collection as BadgeCollection;
-            if (over.id === 'shared-collections-panel') {
-                if (collection.owner.id === viewAsUser.userId) {
-                    updateBadgeCollection(collection.id, { isShared: !collection.isShared });
-                    toast({ title: collection.isShared ? 'Collection Unshared' : 'Collection Shared' });
-                }
+            const isOwner = collection.owner.id === viewAsUser.userId;
+            
+            if (isOwner) {
+                updateBadgeCollection(collection.id, { isShared: !collection.isShared });
+                toast({ title: collection.isShared ? 'Collection Unshared' : 'Collection Shared' });
+            } else { // Is a linked collection, so unlink it
+                const updatedLinkedIds = (viewAsUser.linkedCollectionIds || []).filter(id => id !== collection.id);
+                updateUser(viewAsUser.userId, { linkedCollectionIds: updatedLinkedIds });
+                toast({ title: 'Collection Unlinked' });
             }
         }
     }, [viewAsUser, teams, addBadgeCollection, updateUser, toast, updateBadgeCollection, allBadgeCollections, reorderBadges, addBadge]);

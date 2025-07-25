@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
@@ -595,11 +596,6 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
 
     const handleUpdate = (teamId: string, data: Partial<Team>) => updateTeam(teamId, data);
     
-    const handleToggleShare = (team: Team) => {
-        updateTeam(team.id, { isShared: !team.isShared });
-        toast({ title: team.isShared ? 'Team Unshared' : 'Team Shared' });
-    };
-    
     const handleDelete = (team: Team) => {
         if (canManageTeam(team)) {
             setTeamToDelete(team);
@@ -703,15 +699,18 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
 
         if (activeType === 'team-card') {
              if (over.id === 'shared-teams-panel') {
-                const teamToDrop = teams.find(t => t.id === active.id);
-                if (teamToDrop) {
-                    if (canManageTeam(teamToDrop)) {
-                        if (!teamToDrop.isShared) handleToggleShare(teamToDrop);
-                    } else {
-                        const updatedLinkedTeamIds = (viewAsUser.linkedTeamIds || []).filter(id => id !== teamToDrop.id);
-                        updateUser(viewAsUser.userId, { linkedTeamIds: updatedLinkedTeamIds });
-                        toast({ title: "Team Unlinked", description: `"${teamToDrop.name}" has been unlinked.`});
-                    }
+                const teamToDrop = teams.find(t => t.id === active.id) as Team;
+                if (!teamToDrop) return;
+
+                const isOwner = teamToDrop.owner.id === viewAsUser.userId;
+                if (isOwner) {
+                    // Unshare an owned team
+                    updateTeam(teamToDrop.id, { isShared: !teamToDrop.isShared });
+                    toast({ title: teamToDrop.isShared ? 'Team Unshared' : 'Team Shared' });
+                } else { // Unlink a linked team
+                    const updatedLinkedTeamIds = (viewAsUser.linkedTeamIds || []).filter(id => id !== teamToDrop.id);
+                    updateUser(viewAsUser.userId, { linkedTeamIds: updatedLinkedTeamIds });
+                    toast({ title: "Team Unlinked", description: `"${teamToDrop.name}" has been unlinked.`});
                 }
                 return;
             }
@@ -823,7 +822,6 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                                             users={users}
                                             onUpdate={handleUpdate} 
                                             onDelete={handleDelete}
-                                            onToggleShare={handleToggleShare}
                                             onRemoveUser={handleRemoveUserFromTeam}
                                             onAddUser={handleAddUserToTeam}
                                             onSetAdmin={handleSetAdmin}
@@ -862,7 +860,6 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                                                     users={users}
                                                     onUpdate={handleUpdate}
                                                     onDelete={handleDelete}
-                                                    onToggleShare={handleToggleShare}
                                                     onRemoveUser={handleRemoveUserFromTeam}
                                                     onAddUser={handleAddUserToTeam}
                                                     onSetAdmin={handleSetAdmin}
