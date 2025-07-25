@@ -15,7 +15,7 @@ const dynamicPages: AppPage[] = [
         color: '#EC4899',
         path: '/dashboard/teams',
         isDynamic: true,
-        associatedTabs: ['tab-team-members', 'tab-badges', 'tab-locations', 'tab-workstations', 'tab-templates'],
+        associatedTabs: ['tab-team-roles', 'tab-badges', 'tab-locations', 'tab-workstations', 'tab-templates'],
         access: {
             users: [],
             teams: ['video-production', 'live-events', 'production'], // This page is visible only to members of these teams.

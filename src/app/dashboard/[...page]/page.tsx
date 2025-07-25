@@ -11,7 +11,7 @@ import { type AppTab, type AppPage } from '@/types';
 
 // Import all possible tab components
 import { AdminsManagement, PagesManagement, TabsManagement } from '@/components/admin/page';
-import { TeamMembersView } from '@/components/teams/team-members-view';
+import { TeamRolesView } from '@/components/teams/team-roles-view';
 import { BadgeManagement } from '@/components/teams/badge-management';
 import { PinnedLocationManagement } from '@/components/settings/pinned-location-management';
 import { WorkstationManagement as TeamWorkstationManagement } from '@/components/teams/workstation-management';
@@ -30,7 +30,7 @@ const componentMap: Record<string, React.ComponentType<any>> = {
   pages: PagesManagement,
   tabs: TabsManagement,
   // Team Management Tabs
-  team_members: TeamMembersView,
+  team_roles: TeamRolesView,
   badges: BadgeManagement,
   locations: PinnedLocationManagement,
   workstations: TeamWorkstationManagement,
