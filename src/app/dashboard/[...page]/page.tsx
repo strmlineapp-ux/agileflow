@@ -8,6 +8,24 @@ import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { type AppTab, type AppPage } from '@/types';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  useSortable,
+  horizontalListSortingStrategy,
+  sortableKeyboardCoordinates,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { cn } from '@/lib/utils';
 
 // Import all possible tab components
 import { AdminsManagement, PagesManagement, TabsManagement } from '@/components/admin/page';
@@ -49,10 +67,24 @@ const componentMap: Record<string, React.ComponentType<any>> = {
 const ADMIN_PAGE_ID = 'page-admin-management';
 const ADMIN_TAB_ORDER = ['tab-admins', 'tab-admin-pages', 'tab-admin-tabs'];
 
+function SortableTabsTrigger({ id, children, className, ...props }: { id: string; children: React.ReactNode, className?: string } & React.ComponentProps<typeof TabsTrigger>) {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+    };
+
+    return (
+        <TabsTrigger ref={setNodeRef} style={style} {...attributes} {...listeners} className={cn(className, isDragging && "opacity-50")} {...props}>
+            {children}
+        </TabsTrigger>
+    );
+}
 
 export default function DynamicPage() {
     const params = useParams();
-    const { loading, appSettings, teams, viewAsUser } = useUser();
+    const { loading, appSettings, teams, viewAsUser, updateAppSettings, isDragModifierPressed } = useUser();
     const [activeTab, setActiveTab] = useState<string | undefined>(undefined);
     
     const slug = Array.isArray(params.page) ? params.page.join('/') : (params.page || '');
@@ -93,6 +125,58 @@ export default function DynamicPage() {
         }
     }, [pageConfig, appSettings.tabs, activeTab]);
 
+    const pageTabs = useMemo(() => {
+      if (!pageConfig) return [];
+      // If we are on the admin page, force a specific order.
+      if (pageConfig.id === ADMIN_PAGE_ID) {
+          const adminTabs = new Map(appSettings.tabs.filter(t => pageConfig.associatedTabs.includes(t.id)).map(t => [t.id, t]));
+          return ADMIN_TAB_ORDER.map(id => adminTabs.get(id)).filter((t): t is AppTab => !!t);
+      }
+      
+      // For other pages, respect the order in associatedTabs
+      const pageTabMap = new Map(appSettings.tabs.map(t => [t.id, t]));
+      return pageConfig.associatedTabs
+        .map(tabId => pageTabMap.get(tabId))
+        .filter((t): t is AppTab => !!t);
+    }, [pageConfig, appSettings.tabs]);
+    
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            onActivation: ({ event }) => {
+                if (!isDragModifierPressed) {
+                    return false;
+                }
+                return true;
+            },
+        }),
+        useSensor(KeyboardSensor, {
+          coordinateGetter: sortableKeyboardCoordinates,
+          onActivation: ({ event }) => {
+            if (!isDragModifierPressed) {
+                return false;
+            }
+            return true;
+          }
+        })
+    );
+    
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (over && active.id !== over.id) {
+            const oldIndex = pageTabs.findIndex((tab) => tab.id === active.id);
+            const newIndex = pageTabs.findIndex((tab) => tab.id === over.id);
+
+            if (oldIndex !== -1 && newIndex !== -1) {
+                const newOrderedTabIds = arrayMove(pageTabs, oldIndex, newIndex).map(t => t.id);
+                const newPages = appSettings.pages.map(p => 
+                    p.id === pageConfig!.id ? { ...p, associatedTabs: newOrderedTabIds } : p
+                );
+                updateAppSettings({ pages: newPages });
+            }
+        }
+    };
+
+
     if (loading) {
         return <Skeleton className="h-full w-full" />;
     }
@@ -101,16 +185,6 @@ export default function DynamicPage() {
         return <div className="p-4">404 - Page not found or team data is missing for path: {currentPath}</div>;
     }
     
-    const pageTabs = useMemo(() => {
-      // If we are on the admin page, force a specific order.
-      if (pageConfig.id === ADMIN_PAGE_ID) {
-          const adminTabs = new Map(appSettings.tabs.filter(t => pageConfig.associatedTabs.includes(t.id)).map(t => [t.id, t]));
-          return ADMIN_TAB_ORDER.map(id => adminTabs.get(id)).filter((t): t is AppTab => !!t);
-      }
-      // Otherwise, use the order from appSettings.
-      return appSettings.tabs.filter(t => pageConfig.associatedTabs.includes(t.id));
-    }, [pageConfig, appSettings.tabs]);
-
     const isSingleTabPage = pageTabs.length === 1;
 
     // Don't show header for seamless single-tab pages
@@ -149,14 +223,18 @@ export default function DynamicPage() {
                 </div>
             )}
             <Tabs defaultValue={pageTabs[0]?.id} value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="flex w-full">
-                {pageTabs.map(tab => (
-                    <TabsTrigger key={tab.id} value={tab.id} className="flex-1 gap-2">
-                    <GoogleSymbol name={tab.icon} className="text-4xl" weight={100} />
-                    <span>{tab.name}</span>
-                    </TabsTrigger>
-                ))}
-                </TabsList>
+                <DndContext sensors={sensors} onDragEnd={handleDragEnd} collisionDetection={closestCenter}>
+                    <SortableContext items={pageTabs.map(t => t.id)} strategy={horizontalListSortingStrategy}>
+                        <TabsList className="flex w-full">
+                        {pageTabs.map(tab => (
+                            <SortableTabsTrigger key={tab.id} id={tab.id} value={tab.id} className="flex-1 gap-2">
+                                <GoogleSymbol name={tab.icon} className="text-4xl" weight={100} />
+                                <span>{tab.name}</span>
+                            </SortableTabsTrigger>
+                        ))}
+                        </TabsList>
+                    </SortableContext>
+                </DndContext>
                 {pageTabs.map(tab => {
                     const ContentComponent = componentMap[tab.componentKey];
                     const contextTeam = tab.contextTeamId ? teams.find(t => t.id === tab.contextTeamId) : dynamicTeam;
