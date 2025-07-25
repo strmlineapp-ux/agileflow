@@ -31,6 +31,7 @@ import {
   useDroppable,
   DragOverlay,
   type DragStartEvent,
+  useDndContext,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -132,7 +133,7 @@ function BadgeDisplayItem({
         document.addEventListener('mousedown', handleOutsideClick);
         descriptionTextareaRef.current?.focus();
         descriptionTextareaRef.current?.select();
-        return () => document.removeEventListener('mousedown', handleOutsideClick);
+        return () => document.removeEventListener('mousedown', handleSaveDescription);
     }, [isEditingDescription, handleSaveDescription]);
 
     useEffect(() => {
@@ -457,34 +458,42 @@ function DuplicateBadgeZone({ collectionId, onAdd }: { collectionId: string, onA
     const { active, over } = useDndContext();
     const isOver = over?.id === `duplicate-badge-zone-${collectionId}`;
     const isDraggingBadge = active?.data.current?.type === 'badge';
-
+  
     const { setNodeRef } = useDroppable({
-        id: `duplicate-badge-zone-${collectionId}`,
-        data: { type: 'duplicate-badge-zone', collectionId },
+      id: `duplicate-badge-zone-${collectionId}`,
+      data: { type: 'duplicate-badge-zone', collectionId },
     });
-
+  
     return (
-        <div ref={setNodeRef} className={cn("rounded-full transition-all", isOver && isDraggingBadge && "ring-1 ring-border ring-inset")}>
-            <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={onAdd}
-                            onPointerDown={(e) => e.stopPropagation()}
-                            className="h-8 w-8 text-muted-foreground"
-                        >
-                            <GoogleSymbol name="add_circle" weight={100} opticalSize={20} />
-                            <span className="sr-only">New Badge or Drop to Duplicate</span>
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent><p>{isOver && isDraggingBadge ? 'Drop to Duplicate Badge' : 'Add New Badge'}</p></TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
-        </div>
+      <div
+        ref={setNodeRef}
+        className={cn(
+          "rounded-full transition-all",
+          isOver && isDraggingBadge && "ring-1 ring-border ring-inset p-0.5"
+        )}
+      >
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onAdd}
+                onPointerDown={(e) => e.stopPropagation()}
+                className="h-8 w-8 text-muted-foreground"
+              >
+                <GoogleSymbol name="add_circle" weight={100} opticalSize={20} />
+                <span className="sr-only">New Badge or Drop to Duplicate</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{isOver && isDraggingBadge ? 'Drop to Duplicate Badge' : 'Add New Badge'}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
     );
-}
+  }
 
 
 type BadgeCollectionCardProps = {
