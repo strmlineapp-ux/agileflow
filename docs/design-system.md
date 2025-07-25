@@ -106,7 +106,10 @@ This pattern describes how a single entity (like a **Team**, **Calendar**, or **
         - **Global Management (e.g., Teams, Calendars)**: For top-level entities, "linking" is an explicit action. Dragging a shared item from the panel to the main board adds the item's ID to the current user's corresponding `linked...Ids` array, bringing it into their management scope without making them a member or owner.
 - **Visual Cues**:
   - **Owned by you & Shared**: An item created by the current user/team that has been explicitly shared with others is marked with a `change_circle` icon overlay. This indicates it is the "source of truth." **The color of this icon badge matches the owner's primary color.**
-  - **Linked (from another user)**: An item created elsewhere and being used in the current context is marked with a `link` icon overlay. **The color of this icon badge matches the original owner's primary color.**
+  - **Linked (from another user)**: An item created elsewhere is marked with a `link` icon overlay in two scenarios:
+    1.  When it is on the user's main management board, indicating it is actively being used.
+    2.  When it is in the "Shared Items" side panel, but that same item has *already* been linked by the user. This provides crucial feedback, preventing the user from attempting to link the same item multiple times.
+    **The color of this icon badge matches the original owner's primary color.**
   - **Owned and Not Shared/Linked**: An item that is owned and exists only in its original location does not get an icon.
 - **Behavior**:
   - **Full Context**: When an item is linked, it should display all of its original properties (name, icon, color, description, etc.) to give the linking user full context.
@@ -120,19 +123,28 @@ This pattern describes how a single entity (like a **Team**, **Calendar**, or **
 ### 8. Draggable Card Management blueprint
 This is the application's perfected, gold-standard pattern for managing a collection of entities displayed as cards. It provides a fluid, intuitive, and grid-responsive way for users to reorder, duplicate, and assign items. It is the required pattern for managing Pages, Calendars, Teams, and Badge Collections. The core of this pattern is a successful migration to the **`@dnd-kit`** library, which proved more robust for responsive layouts.
 
--   **Layout**: Entities are presented in a responsive grid of cards. To ensure stability during drag operations, especially across multiple rows, the container must use a `flex flex-wrap` layout instead of CSS Grid. Each draggable card item is then given a responsive `basis` property (e.g., `basis-full sm:basis-[calc(50%-1rem)] md:basis-[calc(33.333%-1rem)] lg:basis-[calc(25%-1rem)] xl:basis-[calc(20%-1rem)] 2xl:basis-[calc(16.666%-1rem)]`) to create the columns. A negative margin (e.g., `-m-2`) on the container and a matching positive padding (e.g., `p-2`) on the items creates the gutter. This pattern also applies *within* cards, such as for the `detailed` view of a `BadgeCollectionCard`, to organize their contents into a responsive grid.
+-   **Layout**: Entities are presented in a responsive grid of cards. To ensure stability during drag operations, especially across multiple rows, the container must use a `flex flex-wrap` layout instead of CSS Grid. Each draggable card item is then given a responsive `basis` property (e.g., `basis-full sm:basis-[calc(50%-1rem)] md:basis-[calc(33.333%-1rem)] lg:basis-[calc(25%-1rem)] xl:basis-[calc(20%-1rem)] 2xl:basis-[calc(16.666%-1rem)]`) to create the columns. A negative margin (e.g., `-m-2`) on the container and a matching positive padding (e.g., `p-2`) on the items creates the gutter. This pattern also applies *within* cards, such as for the `grid` view of a `BadgeCollectionCard`, to organize their contents into a responsive grid.
 -   **Critical Stability Properties**:
     -   **`@dnd-kit` is the required library.** The older `react-beautiful-dnd` library was found to be incompatible with this type of responsive layout.
     -   `flex-grow-0` and `flex-shrink-0` **must** be used on draggable items. This prevents the remaining items in a row from expanding or shrinking, which causes the grid to reflow unstably when an item is being dragged.
--   **Initiating a Drag**: To provide a clean interface without extra UI elements, the drag action is initiated by holding down a user-configurable modifier key (`Shift`, `Alt`, `Ctrl`, or `Meta`) while clicking and dragging any non-interactive part of a card. This modifier key is set in the user's Account Settings.
--   **Expand/Collapse**: Cards are collapsed by default. To expand a card and view its details, the user must click a dedicated `expand_more` icon button, positioned at `absolute -bottom-1 right-0`. This provides a clear, unambiguous affordance and avoids conflicts with other click actions on the card.
--   **Preventing Interaction Conflicts**:
-    -   The primary mechanism for preventing accidental drags is the **modifier key activation**. Since a drag action only begins when the modifier key is held, normal clicks on buttons, popovers, and other controls inside a draggable card function as expected without interference.
-    -   For components with internal keyboard interactions (like an **Inline Editor** where the spacebar is used for typing), the `useSortable` hook for the draggable card **must** be temporarily disabled while the internal component is in an editing state. This is done by passing a `disabled: isEditing` flag to the hook, preventing `@dnd-kit`'s keyboard listeners (e.g., spacebar to lift) from firing while the user is typing.
+-   **Initiating a Drag**: The **sole method** for initiating a drag action is by holding down a user-configurable modifier key (`Shift`, `Alt`, `Ctrl`, or `Meta`) while clicking and dragging any non-interactive part of a card. This modifier key is set in the user's Account Settings.
+-   **Drag-Ready State**: When the drag modifier key is held down, the application enters a "drag-ready" state to provide clear visual feedback and prevent accidental actions.
+    - **Hide Interactive Elements**: All secondary interactive elements within draggable cards—such as delete buttons, color swatch badges, and expand/collapse icons—**must be hidden**. This is typically achieved by adding a `.hidden` class based on a global `isDragModifierPressed` state from the `UserContext`.
+    - **Disable Triggers**: The main entity icon's Popover trigger for changing the icon must be **disabled** (but the icon itself remains visible).
+    - **Disable Editing**: Inline editing functionality must be disabled to prevent text from being selected or edited during a drag attempt.
+-   **Expand/Collapse**: Cards are collapsed by default. To expand a card and view its details, the user must click a dedicated `expand_more` icon button, positioned at `absolute -bottom-1 right-0`. This button is hidden when the drag modifier key is pressed.
+-   **Preventing Interaction Conflicts**: The primary mechanism for preventing accidental drags is the **modifier key activation**. However, the `useSortable` hook's listeners can still capture pointer events even when a drag isn't initiated, preventing `onClick` events on the same element. To solve this, the `useSortable` hook **must** be disabled when the modifier key is not pressed (e.g., `disabled: !isDragModifierPressed`). This completely deactivates the drag listeners, ensuring that standard clicks and other interactions function as expected.
 -   **Visual Feedback**: To provide feedback without disrupting layout, visual changes (like a `shadow` or `opacity`) should be applied directly to the inner component based on the `isDragging` prop provided by `dnd-kit`'s `useSortable` hook. The draggable wrapper itself should remain untouched.
+-   **Drag Overlay Visuals & Positioning**: The drag overlay provides a clean, focused representation of the item being dragged.
+    -   **Positioning**: To ensure the overlay appears directly under the cursor and tracks it smoothly without an offset, the `<DragOverlay>` component **must** use the `snapCenterToCursor` modifier from the `@dnd-kit/modifiers` library. Example: `modifiers={[snapCenterToCursor]}`.
+    -   **Card Overlays (Pages, Calendars, Teams, Badge Collections)**: The overlay consists **only** of the entity's icon. It is rendered using the `<GoogleSymbol>` component, styled with the entity's specific color and an appropriate size (e.g., `fontSize: '48px'`) to make it a clear visual target.
+    -   **User Overlays**: The overlay consists **only** of the user's `<Avatar>` component, rendered at an appropriate size (e.g., `h-12 w-12`).
+    -   **Badge Overlays**: The overlay is a direct render of the `<BadgeDisplayItem>` component. This ensures the overlay accurately reflects the badge's current name, icon, and color, providing full context during the drag operation.
 -   **Internal Card Layout**: Each card is structured for clarity. The header contains the primary entity identifier (icon and name) and contextual controls. To keep cards compact, headers and content areas should use minimal padding (e.g., `p-2`). Titles should be configured to wrap gracefully to handle longer text. **All icon-only buttons inside a card MUST have a `<Tooltip>`**.
 -   **User Item Display**: When users are displayed as items within a management card (e.g., `TeamCard`), they are presented **without a border**. Each user item must display their avatar, full name, and professional title underneath the name for consistency.
--   **Unique Draggable IDs**: It is critical that every `Draggable` component has a globally unique `draggableId`. If the same item (e.g., a user) can appear in multiple lists, you must create a unique ID for each instance. A common pattern is to combine the list's ID with the item's ID (e.g., `draggableId={'${list.id}-${item.id}'}`). This prevents the drag-and-drop library from trying to move all instances of the item simultaneously.
+-   **Unique Draggable & Droppable IDs (Critical)**:
+    - **Draggable Items**: It is critical that every `Draggable` component has a globally unique `id`. If the same logical item (e.g., a user) can appear in multiple lists, you must create a unique ID for each instance to prevent `@dnd-kit` from trying to move all instances simultaneously. A common pattern is to combine a prefix, the list's ID, and the item's ID (e.g., `draggableId={'user-sort:${team.id}-${item.id}'}`).
+    - **Droppable Containers**: It is equally critical that major container drop zones (like the main management area or a side panel) have a **static, predictable `id`**. Using a dynamic or index-based `id` for a top-level container can cause it to be re-rendered in a way that `@dnd-kit` can no longer identify it as a valid drop target, making it appear to be disabled. **Always use a hardcoded string literal for container-level drop zones** (e.g., `id="collections-list"` or `id="shared-collections-panel"`).
 -   **Draggable & Pinned States**:
     -   **Draggable Cards**: Most cards can be freely reordered within the grid. The `useSortable` hook allows this.
     -   **Pinned Cards**: Certain core system cards (e.g., "Admin", "Settings") are designated as "pinned" and cannot be dragged. This is achieved by disabling the `useSortable` hook for those specific items (`disabled: true`). They act as fixed anchors in the layout.
@@ -207,7 +219,7 @@ This pattern describes how to create a two-column layout where one column (a sid
 
 - **Structure**: The page should be contained within a main flex container (`<div className="flex h-full gap-4">`).
 - **Main Content Area**: The primary content area must be wrapped in a container that allows it to grow while managing its own overflow.
-  - The wrapper `div` should have `flex-1` (to grow) and `overflow-hidden` (to prevent its contents from causing a page-level scrollbar).
+  - The wrapper `div` should have `flex-1` and `overflow-hidden` (to prevent its contents from causing a page-level scrollbar).
   - The direct child of this wrapper should be a `div` with `h-full` and `overflow-y-auto` to allow the content inside to scroll vertically if needed.
 - **Collapsible Side Panel**:
   - The panel `div` should have a fixed width when open (e.g., `w-96`) and `w-0` when closed.
@@ -254,7 +266,7 @@ This pattern provides a dense, icon-driven interface for managing a series of us
 
 ### Typography
 - **Font**: The application exclusively uses the **Roboto** font family for a clean and consistent look.
-- **Headline Font**: All major titles (pages, tabs, prominent cards) use the `font-headline` utility class, which is configured to use a `font-thin` weight (`font-weight: 100`).
+- **Headline Font**: All major titles (pages, tabs, prominent cards) use the `font-headline` utility class, which is configured to use a `font-thin` weight (`font-weight: 100`) from the Roboto family.
 - **Body Font**: All standard body text, labels, and buttons now use a `font-thin` weight.
 
 ### Icons & Hover Effects
