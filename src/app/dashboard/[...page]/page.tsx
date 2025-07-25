@@ -66,6 +66,7 @@ const componentMap: Record<string, React.ComponentType<any>> = {
 
 const ADMIN_PAGE_ID = 'page-admin-management';
 const ADMIN_TAB_ORDER = ['tab-admins', 'tab-admin-pages', 'tab-admin-tabs'];
+const SEAMLESS_PAGES = ['page-overview', 'page-notifications', 'page-settings', 'page-admin-management', 'page-calendar', 'page-tasks'];
 
 function SortableTabsTrigger({ id, children, className, ...props }: { id: string; children: React.ReactNode, className?: string } & React.ComponentProps<typeof TabsTrigger>) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
@@ -185,10 +186,7 @@ export default function DynamicPage() {
         return <div className="p-4">404 - Page not found or team data is missing for path: {currentPath}</div>;
     }
     
-    const isSingleTabPage = pageTabs.length === 1;
-
-    // Don't show header for seamless single-tab pages
-    const showHeader = !isSingleTabPage || !['tab-overview', 'tab-notifications', 'tab-settings'].includes(pageTabs[0]?.id);
+    const showHeader = !SEAMLESS_PAGES.includes(pageConfig.id);
       
     const pageTitle = pageConfig.isDynamic && dynamicTeam ? `${dynamicTeam.name} ${pageConfig.name}` : pageConfig.name;
 
@@ -207,7 +205,10 @@ export default function DynamicPage() {
         );
     }
     
-    if (isSingleTabPage) {
+    // For seamless pages, we let the component inside handle its own title if needed.
+    // For other multi-tab pages, we show a main header and then the tabs.
+    const isSingleTabPage = pageTabs.length === 1;
+    if (isSingleTabPage && !showHeader) {
         const tab = pageTabs[0];
         const contextTeam = tab.contextTeamId ? teams.find(t => t.id === tab.contextTeamId) : dynamicTeam;
         const ContentComponent = componentMap[tab.componentKey];
@@ -248,3 +249,5 @@ export default function DynamicPage() {
         </div>
     );
 }
+
+    
