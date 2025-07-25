@@ -910,7 +910,7 @@ function SortableCollectionCard({ collection, ...props }: { collection: BadgeCol
 
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: collection.id,
-        data: { type: 'collection', collection, isSharedPreview: props.isSharedPreview },
+        data: { type: 'collection-card', collection, isSharedPreview: props.isSharedPreview },
         disabled: !isDragModifierPressed,
     });
 
@@ -1064,6 +1064,22 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
         if (!over) return;
         
         const activeData = active.data.current || {};
+        const activeType = active.data.current?.type;
+        const overData = over.data.current || {};
+
+        if (over.id === 'duplicate-collection-zone') {
+            const collection = activeData.collection as BadgeCollection;
+            if (collection) {
+                addBadgeCollection(viewAsUser, collection);
+                const isLinked = (viewAsUser.linkedCollectionIds || []).includes(collection.id);
+                if (isLinked) {
+                    const updatedLinkedIds = (viewAsUser.linkedCollectionIds || []).filter(id => id !== collection.id);
+                    updateUser(viewAsUser.userId, { linkedCollectionIds: updatedLinkedIds });
+                    toast({ title: 'Collection Copied', description: 'A new, independent collection has been created.' });
+                }
+            }
+            return;
+        }
         
         // Linking a shared collection
         if (activeData.isSharedPreview && over.id === 'collections-list') {
@@ -1076,8 +1092,6 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
             return;
         }
 
-        const activeType = active.data.current?.type;
-        const overData = over.data.current || {};
         
         if (activeType === 'badge') {
             const badge = activeData.badge as Badge;
@@ -1111,7 +1125,7 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
                 }
             }
         }
-    }, [updateBadgeCollection, allBadgeCollections, reorderBadges, viewAsUser, updateUser, toast, teams]);
+    }, [viewAsUser, teams, addBadgeCollection, updateUser, toast, updateBadgeCollection, allBadgeCollections, reorderBadges]);
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -1156,28 +1170,26 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
                           </TooltipProvider>
                       </div>
                   </div>
-                  <div className="flex-1 min-h-0">
-                    <ScrollArea className="h-full">
-                      <CollectionDropZone id="collections-list" type="collection" className="flex flex-wrap content-start -m-2 min-h-full">
-                          <SortableContext items={displayedCollections.map(c => c.id)} strategy={rectSortingStrategy}>
-                              {displayedCollections.map(collection => (
-                                  <SortableCollectionCard
-                                      key={collection.id}
-                                      collection={collection}
-                                      allBadges={allBadges}
-                                      predefinedColors={predefinedColors}
-                                      onUpdateCollection={updateBadgeCollection}
-                                      onDeleteCollection={handleDeleteCollection}
-                                      onAddBadge={addBadge}
-                                      onUpdateBadge={updateBadge}
-                                      onDeleteBadge={handleDeleteBadge}
-                                      contextTeam={team}
-                                  />
-                              ))}
-                          </SortableContext>
-                      </CollectionDropZone>
-                    </ScrollArea>
-                  </div>
+                  <ScrollArea className="flex-1 min-h-0">
+                    <CollectionDropZone id="collections-list" type="collection" className="flex flex-wrap content-start -m-2 min-h-full">
+                        <SortableContext items={displayedCollections.map(c => c.id)} strategy={rectSortingStrategy}>
+                            {displayedCollections.map(collection => (
+                                <SortableCollectionCard
+                                    key={collection.id}
+                                    collection={collection}
+                                    allBadges={allBadges}
+                                    predefinedColors={predefinedColors}
+                                    onUpdateCollection={updateBadgeCollection}
+                                    onDeleteCollection={handleDeleteCollection}
+                                    onAddBadge={addBadge}
+                                    onUpdateBadge={updateBadge}
+                                    onDeleteBadge={handleDeleteBadge}
+                                    contextTeam={team}
+                                />
+                            ))}
+                        </SortableContext>
+                    </CollectionDropZone>
+                  </ScrollArea>
                 </div>
                  <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96" : "w-0")}>
                     <div className={cn("h-full rounded-lg transition-all", isSharedPanelOpen ? "p-2" : "p-0")}>
