@@ -884,7 +884,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                     </TeamManagementDropZone>
                 </div>
             </div>
-            <DragOverlay dropAnimation={null} style={{ transform: undefined }}>
+            <DragOverlay dropAnimation={null}>
                 {activeDragItem?.type === 'team-card' && activeDragItem?.data?.team ? (
                     <GoogleSymbol
                         name={activeDragItem.data.team.icon}

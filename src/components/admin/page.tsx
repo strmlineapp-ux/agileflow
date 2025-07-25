@@ -291,7 +291,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive, activeTab, pa
                     </CardContent>
                   </Card>
             </div>
-            <DragOverlay dropAnimation={null} style={{ transform: undefined }}>
+            <DragOverlay dropAnimation={null}>
                 {activeDragUser ? (
                     <Avatar className="h-12 w-12">
                         <AvatarImage src={activeDragUser.avatarUrl} alt={activeDragUser.displayName} data-ai-hint="user avatar" />
@@ -997,7 +997,7 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
                         ))}
                     </div>
                 </SortableContext>
-                <DragOverlay dropAnimation={null} style={{ transform: undefined }}>
+                <DragOverlay dropAnimation={null}>
                     {activePage ? (
                         <GoogleSymbol
                             name={activePage.icon}
