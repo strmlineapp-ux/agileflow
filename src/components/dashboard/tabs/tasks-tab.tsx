@@ -10,7 +10,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 export function TasksContent({ tab: pageConfig, isSingleTabPage }: { tab: AppPage, isSingleTabPage?: boolean }) {
   return (
     <div className="flex flex-col gap-6">
-       <div className="flex items-center justify-end">
+       <div className="flex items-center justify-between">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
