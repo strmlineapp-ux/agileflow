@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -628,7 +629,7 @@ function BadgeCollectionCard({
     ];
 
     return (
-        <Card className="h-full flex flex-col bg-transparent relative" {...props}>
+        <Card className={cn("h-full flex flex-col bg-transparent relative", !isActive && "opacity-50")} {...props}>
             <div {...dragHandleProps}>
                 <CardHeader className="group">
                      {!isSharedPreview && !isCollapsed && (
@@ -1202,3 +1203,4 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
         </DndContext>
     );
 }
+
