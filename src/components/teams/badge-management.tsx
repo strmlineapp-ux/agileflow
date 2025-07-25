@@ -1099,10 +1099,19 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
             const targetCollectionId = overData.collection?.id || overData.collectionId;
 
             if (targetCollectionId && sourceCollectionId !== targetCollectionId) {
-                updateBadgeCollection(sourceCollectionId, { badgeIds: allBadgeCollections.find(c => c.id === sourceCollectionId)!.badgeIds.filter(id => id !== badge.id) });
-                const targetCollection = allBadgeCollections.find(c => c.id === targetCollectionId);
-                if (targetCollection) {
-                    updateBadgeCollection(targetCollectionId, { badgeIds: [badge.id, ...targetCollection.badgeIds] });
+                // If dragging from shared panel, LINK it (add to new, don't remove from old)
+                if (activeData.isSharedPreview) {
+                     const targetCollection = allBadgeCollections.find(c => c.id === targetCollectionId);
+                     if (targetCollection && !targetCollection.badgeIds.includes(badge.id)) {
+                        updateBadgeCollection(targetCollectionId, { badgeIds: [badge.id, ...targetCollection.badgeIds] });
+                        toast({title: "Badge Linked", description: `"${badge.name}" added to "${targetCollection.name}".`});
+                     }
+                } else { // If dragging between user's own collections, MOVE it
+                    updateBadgeCollection(sourceCollectionId, { badgeIds: allBadgeCollections.find(c => c.id === sourceCollectionId)!.badgeIds.filter(id => id !== badge.id) });
+                    const targetCollection = allBadgeCollections.find(c => c.id === targetCollectionId);
+                    if (targetCollection) {
+                        updateBadgeCollection(targetCollectionId, { badgeIds: [badge.id, ...targetCollection.badgeIds] });
+                    }
                 }
             } else if (targetCollectionId && sourceCollectionId === targetCollectionId) {
                 const collection = allBadgeCollections.find(c => c.id === sourceCollectionId);
