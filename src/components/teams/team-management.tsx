@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
@@ -66,6 +65,7 @@ function DraggableUserCard({ user, onRemove, isTeamAdmin, onSetAdmin, canManage,
   const { attributes, listeners, setNodeRef, transform, isDragging } = useSortable({
     id: `user-sort:${teamId}:${user.userId}`,
     data: { type: 'user', user, teamId },
+    disabled: !isDragModifierPressed,
   });
   
   const style = {
@@ -82,8 +82,6 @@ function DraggableUserCard({ user, onRemove, isTeamAdmin, onSetAdmin, canManage,
             )}
             onClick={(e) => { 
                 if (canManage && !isDragModifierPressed) {
-                    e.preventDefault();
-                    e.stopPropagation();
                     onSetAdmin(); 
                 }
             }}
