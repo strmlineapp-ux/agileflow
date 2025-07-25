@@ -460,7 +460,7 @@ function DuplicateBadgeZone({ collectionId, onAdd, isOwner }: { collectionId: st
     data: { type: 'duplicate-badge-zone', collectionId },
     disabled: !isOwner,
   });
-
+  
   return (
     <div
       ref={setNodeRef}
@@ -1153,7 +1153,6 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
              if (collection) {
                  const updatedLinkedIds = [...(viewAsUser.linkedCollectionIds || []), collection.id];
                  updateUser(viewAsUser.userId, { linkedCollectionIds: Array.from(new Set(updatedLinkedIds)) });
-                 setExpandedCollections(prev => new Set(prev).add(collection.id));
                  toast({ title: 'Collection Linked' });
              }
             return;
@@ -1343,3 +1342,4 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
         </DndContext>
     );
 }
+

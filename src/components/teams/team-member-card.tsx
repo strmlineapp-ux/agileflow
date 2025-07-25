@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -14,7 +15,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/
 import { Input } from '../ui/input';
 
 export function TeamMemberCard({ member, team, isViewer }: { member: User, team: Team, isViewer: boolean }) {
-  const { viewAsUser, updateUser, updateTeam, allBadges } = useUser();
+  const { viewAsUser, updateUser, updateTeam, allBadges, allBadgeCollections } = useUser();
   const { toast } = useToast();
 
   const [isEditingLabel, setIsEditingLabel] = useState(false);
@@ -22,16 +23,39 @@ export function TeamMemberCard({ member, team, isViewer }: { member: User, team:
   
   const canManageRoles = !isViewer && (viewAsUser.isAdmin || team.teamAdmins?.includes(viewAsUser.userId));
   const teamBadgesLabel = team.userBadgesLabel || 'Team Badges';
+  
+  const getBadgePriority = (badge: Badge): number => {
+    const ownerId = badge.owner.id;
+    const teamAdmins = team.teamAdmins || [];
+    
+    if (teamAdmins.includes(ownerId)) return 1; // Highest priority: owned by a team admin
+    if (team.members.includes(ownerId)) return 2; // Next priority: owned by a team member
+    return 3; // Lowest priority: other (e.g., system or other users)
+  };
+
 
   const userAssignableBadges = useMemo(() => {
-    // A badge is assignable if its parent collection is active for the team
-    // AND that collection is configured to be applicable to team members.
-    const activeAndApplicableCollections = (team.badgeCollections || []).filter(
-      c => (team.activeBadgeCollections || []).includes(c.id) && c.applications?.includes('team members')
+    const activeAndApplicableCollectionIds = new Set(
+        (team.badgeCollections || [])
+            .filter(c => (team.activeBadgeCollections || []).includes(c.id) && c.applications?.includes('team members'))
+            .map(c => c.id)
     );
-    const assignableBadgeIds = new Set(activeAndApplicableCollections.flatMap(c => c.badgeIds));
-    return allBadges.filter(b => assignableBadgeIds.has(b.id));
-  }, [team.badgeCollections, team.activeBadgeCollections, allBadges]);
+
+    const assignableBadges = allBadges.filter(badge => 
+        (badge.ownerCollectionId && activeAndApplicableCollectionIds.has(badge.ownerCollectionId))
+    );
+    
+    const uniqueBadges = new Map<string, Badge>();
+    
+    assignableBadges.forEach(badge => {
+        const existing = uniqueBadges.get(badge.name);
+        if (!existing || getBadgePriority(badge) < getBadgePriority(existing)) {
+            uniqueBadges.set(badge.name, badge);
+        }
+    });
+
+    return Array.from(uniqueBadges.values());
+  }, [team.badgeCollections, team.activeBadgeCollections, allBadges, team.teamAdmins, team.members]);
   
   const teamBadgeNames = useMemo(() => new Set(userAssignableBadges.map(b => b.name)), [userAssignableBadges]);
 
@@ -39,23 +63,22 @@ export function TeamMemberCard({ member, team, isViewer }: { member: User, team:
     const assignedBadgeIds = new Set(member.roles || []);
     const groups: { [collectionId: string]: { collectionName: string; badges: Badge[] } } = {};
 
-    (team.badgeCollections || []).forEach(collection => {
-        if (!collection.applications?.includes('team members')) return;
-
-        const assignedInCollection = collection.badgeIds
-            .map(id => allBadges.find(b => b.id === id))
-            .filter((b): b is Badge => !!b && assignedBadgeIds.has(b.name));
-        
-        if (assignedInCollection.length > 0) {
-            groups[collection.id] = {
-                collectionName: collection.name,
-                badges: assignedInCollection,
-            };
-        }
-    });
+    userAssignableBadges
+        .filter(b => assignedBadgeIds.has(b.name))
+        .forEach(badge => {
+            const collectionId = badge.ownerCollectionId;
+            if (!groups[collectionId]) {
+                const collection = allBadgeCollections.find(c => c.id === collectionId);
+                groups[collectionId] = {
+                    collectionName: collection?.name || "Other Badges",
+                    badges: [],
+                };
+            }
+            groups[collectionId].badges.push(badge);
+        });
 
     return Object.values(groups);
-  }, [member.roles, team.badgeCollections, allBadges]);
+  }, [member.roles, userAssignableBadges, allBadgeCollections]);
   
   const unassignedBadges = useMemo(() => {
     const assigned = new Set(member.roles || []);
@@ -125,7 +148,7 @@ export function TeamMemberCard({ member, team, isViewer }: { member: User, team:
               style={isAssigned ? { color: badge.color, borderColor: badge.color } : {}}
               className={cn(
                   'gap-1.5 p-1 px-3 rounded-full text-sm',
-                  isAssigned ? 'border-2' : 'border-dashed opacity-50',
+                  isAssigned ? 'border-2' : 'border-solid border-border/50 opacity-60',
                   canManageRoles && 'cursor-pointer'
               )}
               onClick={() => canManageRoles && handleToggleRole(badge.name)}
