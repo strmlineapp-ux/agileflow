@@ -464,6 +464,15 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const addBadge = useCallback((collectionId: string, sourceBadge?: Badge) => {
     const collection = allBadgeCollections.find(c => c.id === collectionId);
     if (!collection) return;
+    
+    if (collection.owner.id !== viewAsUser?.userId) {
+        toast({
+            variant: 'destructive',
+            title: 'Permission Denied',
+            description: "You can only add badges to collections you own."
+        });
+        return;
+    }
 
     if (sourceBadge) {
         // If it's a duplication, create a new badge and add it.
@@ -503,7 +512,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             )
         );
     }
-}, [allBadgeCollections, viewAsUser]);
+}, [allBadgeCollections, viewAsUser, toast]);
 
   const updateBadge = useCallback(async (badgeId: string, badgeData: Partial<Badge>) => {
     await simulateApi();

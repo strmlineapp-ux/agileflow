@@ -456,8 +456,7 @@ function DroppableCollectionContent({ collection, children }: { collection: Badg
 }
 
 function DuplicateBadgeZone({ collectionId, onAdd }: { collectionId: string, onAdd: () => void }) {
-    const { isDragModifierPressed } = useUser();
-    const { setNodeRef, isOver } = useDroppable({
+    const { isOver, setNodeRef } = useDroppable({
         id: `duplicate-badge-zone-${collectionId}`,
         data: { type: 'duplicate-badge-zone', collectionId },
     });
@@ -465,13 +464,7 @@ function DuplicateBadgeZone({ collectionId, onAdd }: { collectionId: string, onA
     const isDraggingBadge = active?.data.current?.type === 'badge';
 
     return (
-        <div
-            ref={setNodeRef}
-            className={cn(
-                "rounded-full transition-all flex items-center justify-center h-8 w-8",
-                isOver && isDraggingBadge && "ring-1 ring-border ring-inset"
-            )}
-        >
+        <div ref={setNodeRef} className={cn("rounded-full transition-all", isOver && isDraggingBadge && "ring-1 ring-border ring-inset")}>
             <TooltipProvider>
                 <Tooltip>
                     <TooltipTrigger asChild>
@@ -480,10 +473,7 @@ function DuplicateBadgeZone({ collectionId, onAdd }: { collectionId: string, onA
                             size="icon"
                             onClick={onAdd}
                             onPointerDown={(e) => e.stopPropagation()}
-                            className={cn(
-                                "h-8 w-8 text-muted-foreground",
-                                isDragModifierPressed && "hidden"
-                            )}
+                            className="h-8 w-8 text-muted-foreground"
                         >
                             <GoogleSymbol name="add_circle" weight={100} opticalSize={20} />
                             <span className="sr-only">New Badge or Drop to Duplicate</span>
@@ -794,10 +784,12 @@ function BadgeCollectionCard({
                         </div>
                         <div className="flex items-center" onPointerDown={(e) => e.stopPropagation()}>
                            {!isCollapsed && isOwner && !isSharedPreview && (
-                               <DuplicateBadgeZone
-                                    collectionId={collection.id}
-                                    onAdd={() => onAddBadge(collection.id)}
-                                />
+                                <div className={cn(isDragModifierPressed && "opacity-0 pointer-events-none")}>
+                                    <DuplicateBadgeZone
+                                        collectionId={collection.id}
+                                        onAdd={() => onAddBadge(collection.id)}
+                                    />
+                                </div>
                            )}
                             {!isCollapsed && (
                                 <Popover open={isViewModePopoverOpen} onOpenChange={setIsViewModePopoverOpen}>
@@ -1148,19 +1140,15 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
             const targetCollectionId = overData.collection?.id || overData.collectionId;
 
             if (targetCollectionId && sourceCollectionId !== targetCollectionId) {
-                if (activeData.isSharedPreview) {
-                     const targetCollection = allBadgeCollections.find(c => c.id === targetCollectionId);
-                     if (targetCollection && !targetCollection.badgeIds.includes(badge.id)) {
-                        updateBadgeCollection(targetCollectionId, { badgeIds: [badge.id, ...targetCollection.badgeIds] });
-                        toast({title: "Badge Linked", description: `"${badge.name}" added to "${targetCollection.name}".`});
-                     }
-                } else {
-                    updateBadgeCollection(sourceCollectionId, { badgeIds: allBadgeCollections.find(c => c.id === sourceCollectionId)!.badgeIds.filter(id => id !== badge.id) });
-                    const targetCollection = allBadgeCollections.find(c => c.id === targetCollectionId);
-                    if (targetCollection) {
-                        updateBadgeCollection(targetCollectionId, { badgeIds: [badge.id, ...targetCollection.badgeIds] });
+                const targetCollection = allBadgeCollections.find(c => c.id === targetCollectionId);
+                 if (targetCollection && !targetCollection.badgeIds.includes(badge.id)) {
+                    // LINKING: Add badge to new collection, but DO NOT remove from source if it's a shared preview
+                    if (!activeData.isSharedPreview) {
+                        updateBadgeCollection(sourceCollectionId, { badgeIds: allBadgeCollections.find(c => c.id === sourceCollectionId)!.badgeIds.filter(id => id !== badge.id) });
                     }
-                }
+                    updateBadgeCollection(targetCollectionId, { badgeIds: [badge.id, ...targetCollection.badgeIds] });
+                    toast({title: "Badge Moved/Linked", description: `"${badge.name}" added to "${targetCollection.name}".`});
+                 }
             } else if (targetCollectionId && sourceCollectionId === targetCollectionId) {
                 const collection = allBadgeCollections.find(c => c.id === sourceCollectionId);
                 const oldIndex = collection!.badgeIds.indexOf(badge.id);
