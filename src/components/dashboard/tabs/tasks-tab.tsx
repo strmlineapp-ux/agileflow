@@ -11,8 +11,7 @@ export function TasksContent({ tab: pageConfig, isSingleTabPage }: { tab: AppPag
   const title = isSingleTabPage ? pageConfig.name : "Tasks";
   return (
     <div className="flex flex-col gap-6">
-       <div className="flex items-center justify-between">
-        <h2 className="font-headline text-2xl font-thin tracking-tight">Tasks</h2>
+       <div className="flex items-center justify-end">
         <Button>
           <GoogleSymbol name="add_circle" className="mr-2" />
           New Task
