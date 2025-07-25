@@ -34,7 +34,7 @@ The **Overview** page gives you a high-level summary of team activity, including
 
 ## 4. Calendar
 
-The calendar is a powerful tool for visualizing and managing your team's schedule.
+The calendar is a powerful tool for visualizing and managing your team's schedule. It has no visible page header, allowing the calendar content to fill the entire view.
 
 ### 4.1 Creating Events
 - Click the **(+)** icon in the header to open the new event form.
@@ -58,10 +58,10 @@ This is the most detailed view, designed for production planning.
 
 ## 5. Tasks
 
-The **Tasks** page helps you stay on top of your work.
+The **Tasks** page helps you stay on top of your work. It has no visible header, creating a focused view for task management.
 - **Tabs**: Switch between "My Tasks" (tasks assigned to you) and "All Tasks".
+- **New Task**: Click the `add_circle` button below the tabs to create a new task.
 - **Grouping**: Tasks are automatically grouped by their current status (e.g., In Progress, Awaiting Review).
-- **New Task**: Click the "New Task" button to create a new task.
 
 ## 6. Notifications
 
@@ -80,21 +80,23 @@ Your user preferences appear in a compact, icon-driven row on your user card. Ho
 - **Set Default Calendar View**: Click the calendar icon to open a compact popover menu and select which calendar view you want to see when you log in.
 - **Set Time Format**: Click the clock icon to choose between 12-hour and 24-hour time display from a popover menu.
 - **Enable Easy Booking**: Click the toggle icon to turn on or off the ability to quickly create events by clicking on empty calendar slots. The current status (**On** or **Off**) is shown in the tooltip.
-- **Set Drag Modifier Key**: Click the `smart_button` icon to set a custom modifier key (`Shift`, `Alt`, `Control`, or `Meta`) that must be held down to initiate drag-and-drop actions across the application. The tooltip for this icon will show the currently selected key.
+- **Set Drag Modifier Key**: Click the `smart_button` icon to set a custom modifier key (`Shift`, `Alt`, `Control`, or `Meta`) that must be held down to initiate drag-and-drop actions. The tooltip for this icon will show the currently selected key.
 - **Link Google Calendar**: To connect your Google Calendar, hover over the status dot on your avatar in the sidebar user menu. If disconnected, a tooltip will prompt you to click to connect. A simulated Google sign-in will appear and, once complete, will enable features like creating Google Meet links for your events.
 
 ## 8. Management Pages (Admin & Manager Roles)
 
 ### 8.1 Admin (`/dashboard/admin`)
 This is the central control panel for configuring the application itself. It does not have a page header.
-- **Admin Management**: Manage system administrators by dragging and dropping users between the "Admins" and "Users" lists. Granting or revoking admin status requires a 2-Factor Authentication code for security. For safety, the system prevents you from removing the last system administrator. The "Search users" input is automatically focused for convenience.
-- **Pages**: Configure the application's navigation. Create new pages, define their URL path, and control who has access to them (by user or team). You can intuitively reorder pages by dragging and dropping them in the grid. Key system pages are pinned and cannot be moved. You can also instantly duplicate any page by dragging it onto the "Add New Page" (+) button. A duplicated page is a completely independent copy with its own unique URL path. When new pages are created, they are intelligently inserted before the pinned "Notifications" and "Settings" pages.
-- **Tabs**: Manage the reusable content blocks (tabs) in a simple list view. The order of this list can be changed via drag-and-drop and affects the default order in which tabs appear in popovers, like the "Manage Tabs" control on the Pages screen. The default order is: `Calendars`, `Teams`, `Members`, `Badges`, `Locations`, `Workstations`, `Templates`, `Overview`, `Calendar`, `Tasks`, `Admin Management`, `Settings`, `Pages`, and `Tabs`.
+- **Admin Management**: Manage system administrators and users.
+    - **Assigning Admins**: Drag and drop a user from the "Users" list to the "Admins" list to grant them administrative privileges. This action is secured by a 2-Factor Authentication code. For safety, the system prevents you from removing the last system administrator.
+    - **Deleting Users**: Hover over a user in the "Users" list to reveal a `cancel` icon. Clicking this will trigger the 2FA dialog to confirm deletion.
+- **Pages**: Configure the application's navigation. You can intuitively reorder pages by holding down your chosen modifier key (e.g., `Shift`) and dragging them in the grid. Key system pages are pinned and cannot be moved. You can also instantly duplicate any page by dragging it onto the "Add New Page" (+) button.
+- **Tabs**: Manage the reusable content blocks (tabs) that appear on pages. The order of this list can be changed via drag-and-drop. You can also reorder tabs directly on a page by holding down your modifier key and dragging them.
 - **Calendar & Team Management**: Admins can create pages to manage global application settings, such as creating shared calendars or managing teams. When creating or editing a calendar, an administrator can choose to link it to an existing Google Calendar they manage or create a new one directly from the app. Once linked, events can be synced between both platforms.
 
 ### 8.2 Team Management (`/dashboard/teams/[teamId]`)
 This page is for managing the specifics of an individual team.
-- **Team Members**: View all members of the team. Team Admins are now listed in a dedicated column on the left for clarity, while all other members are in a responsive grid on the right. You have full flexibility to manage Team Admins, including removing the last one. You can also click on the "Team Admins" and "Members" titles to rename them for your team. You can re-arrange the order of members within the admin or member lists by dragging and dropping them.
+- **Roles**: View all members of the team, organized by their role. Team Admins are listed in a dedicated column on the left for clarity, while all other members are in a responsive grid on the right. You have full flexibility to manage Team Admins, including removing the last one. You can also click on the "Team Admins" and "Members" titles to rename them for your team. You can re-arrange the order of members within the admin or member lists by dragging and dropping them.
 - **Badge Management**: Create and manage your team's badge collections. To share a collection, simply drag its card to the "Shared Collections" panel. To link a collection from another team, drag it from the shared panel onto your main board. To **activate** a collection for your team, click on its ghosted card; clicking an active card will deactivate it. To **delete** a collection you own, use the dropdown menu on its card.
 - **Pinned Locations**: Pin locations to the team's Production Schedule. You can also designate locations as "check locations."
 - **Workstations**: Manage a list of bookable workstations or machines for the team.

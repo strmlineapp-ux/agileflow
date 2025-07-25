@@ -71,9 +71,9 @@ This pattern transforms standard form inputs into minimalist, text-like elements
 This pattern replaces large, card-style "Add New" buttons with a more compact and contextually relevant control.
 
 - **Appearance:** A circular button containing a plus (`+`) or `add_circle` icon. It uses `text-4xl` and `weight={100}` for a large but light appearance.
-- **Placement:** Positioned directly adjacent to the title of the section or list it pertains to.
+- **Placement:** The button's placement is contextual. It can be positioned directly adjacent to a section title (e.g., on the Admin Management pages) or in a dedicated action area, such as below the tab navigation on the Tasks page.
 - **Behavior:** Clicking the button initiates the process of adding a new item, typically by opening a dialog or form.
-- **Application:** Used for creating new items in a list or grid, such as adding a new team, priority strategy, or a badge to a collection.
+- **Application:** Used for creating new items in a list or grid, such as adding a new page, team, or task.
 
 ---
 
@@ -158,13 +158,17 @@ This is the application's perfected, gold-standard pattern for managing a collec
     - **Card-level Actions**: To show an action icon (like delete) for the entire card, place the action button (and its `<TooltipProvider>`) **inside the `<CardHeader>`**. Then, apply the `group` class to the `<CardHeader>` itself. This correctly scopes the `group-hover:opacity-100` effect to the header area, preventing it from activating when the user hovers over the card's content. The standard icon for deleting a card is a circular `cancel` icon that appears on hover, absolutely positioned to the corner of the card.
     - **Item-level Actions**: For actions on individual items *within* a card (like Badges in a Collection or Users in a Team), apply the `group` class to the immediate container of **each individual item**. The action button inside that container uses `group-hover:opacity-100`. This ensures that hovering one item only reveals its own actions.
 -   **Drag-to-Duplicate & Create**:
-    -   **Interaction**: A designated "Add New" icon (`<Button>`) acts as a drop zone, implemented using the `useDroppable` hook from `dnd-kit`. While a card is being dragged, this zone becomes highlighted to indicate it can accept a drop.
+    -   **Interaction & Implementation**: A designated "Add New" icon (`<Button>`) acts as a drop zone. To ensure this works reliably, the `useDroppable` hook from `@dnd-kit` must be applied to a **permanently rendered wrapper `div`** around the button. The button *inside* this wrapper can be visually hidden (e.g., with the `hidden` class based on the `isDragModifierPressed` state), but the wrapper `div` itself must always be present in the DOM. This ensures `@dnd-kit` can register it as a valid drop zone when the drag operation begins. While a card is being dragged, this zone becomes highlighted with a ring to indicate it can accept a drop.
     -   **Behavior (Duplicate)**: Dropping any card (pinned or not, from the main board or the shared panel) creates a deep, independent copy of the original. The new card is given a unique ID, a modified name (e.g., with `(Copy)`), and a unique URL path. It is placed immediately after the original in the list. Its ownership is assigned to the current user's context.
     -   **Behavior (Create)**: Clicking the "Add New" button will create a fresh, default item. The item is intelligently placed *before* any pinned items, preserving the integrity of the core page structure.
     -   **Smart Unlinking**: If the duplicated card was a *linked* item (e.g., a shared calendar from another user), the original linked item is automatically removed from the user's board after the copy is created. This provides a clean "copy and replace" workflow.
--   **Drag-to-Assign**: This pattern allows sub-items (like **Users** or **Badges**) to be moved between different parent cards.
-    - **Interaction**: A user can drag an item (e.g., a User) from one card's list.
-    - **Behavior**: As the item is dragged over another card, that card's drop zone (using `useDroppable`) becomes highlighted. Dropping the item assigns it to the new card's collection. The original item may be removed or remain, depending on the context. This is handled by the `onDragEnd` logic.
+-   **Drag-to-Assign & Drag-to-Link (Badges)**: This pattern allows badges to be moved between different `BadgeCollectionCard`s.
+    - **Interaction**: A user can drag a badge from one collection card. As it is dragged over another collection card, that card's content area (which is a drop zone) becomes highlighted.
+    - **Ownership Rules**: The drop behavior is governed by strict ownership rules. A user can **only** drop a badge into a `BadgeCollection` that they own.
+    - **Move vs. Link**:
+        - **Move**: If a badge is dragged from one owned collection to another owned collection, the badge is *moved*.
+        - **Link**: If a badge is dragged from a *shared* (unowned) collection into an *owned* collection, a *link* to the original badge is created. The original badge remains in the shared collection.
+    - **UI Feedback**: Drop zones on unowned collections will not be highlighted, providing clear visual feedback that the action is not permitted.
 -   **Layout Stability**: To prevent "janky" or shifting layouts during a drag operation (especially when dragging an item out of one card and over another), ensure that the container cards (e.g., `TeamCard`) maintain a consistent height. This is achieved by making the card a `flex flex-col` container and giving its main content area `flex-grow` to make it fill the available space, even when a draggable item is temporarily removed. A `ScrollArea` can be used within the content to manage overflow if the list is long.
 -   **Application**: This is the required pattern for managing Pages, Calendars, Teams, and Badge Collections.
 
@@ -199,18 +203,19 @@ This pattern is **deprecated**. All deletion confirmations now use the **Compact
   - The icon is `text-4xl` with a `weight={100}` for a large but light appearance.
   - The active tab is indicated by colored text (`text-primary`).
   - The entire tab list has a subtle divider underneath it, separating it from the content below.
+- **Reordering**: On pages where it is enabled (like the Admin page), users can reorder tabs by holding their drag modifier key and dragging a tab to a new position.
 - **Application**: Used for all main page-level tab navigation, such as on the Admin, Service Delivery, and Team Management pages.
 
 ---
 
 ### 12. Seamless Single-Tab Pages
 
-- **Description**: This pattern ensures a streamlined user experience for pages that contain only a single content tab. Instead of displaying a redundant page header, the tab's content becomes the page itself.
+- **Description**: This pattern ensures a streamlined, header-less user experience for pages that are designed as primary content views.
 - **Behavior**:
-  - When a page is configured with exactly one associated tab, the main page layout does not render its own title or icon.
-  - The single tab's component is rendered directly within the main content area.
-  - The tab's component is responsible for displaying the page's title and icon, effectively promoting its header to become the page's header. This is especially true for pages like "Overview," "Settings," and "Notifications" where the content *is* the page.
-- **Application**: Applied automatically to any page in the dynamic routing system (`/dashboard/[...page]`) that meets the single-tab condition. This creates a more integrated and less cluttered UI.
+  - The main page rendering component (`/src/app/dashboard/[...page]/page.tsx`) contains a predefined list of "seamless" page IDs (e.g., `page-overview`, `page-admin-management`, `page-calendar`).
+  - If the currently rendered page's ID is in this list, the component will **not** render a page header (title and icon).
+  - The content component for that page (e.g., `<OverviewContent />`) is then rendered directly, filling the entire content area and creating a more focused, app-like feel.
+- **Application**: Applied to the **Overview**, **Admin**, **Calendar**, **Tasks**, **Notifications**, and **Settings** pages.
 
 ---
 
@@ -219,7 +224,7 @@ This pattern describes how to create a two-column layout where one column (a sid
 
 - **Structure**: The page should be contained within a main flex container (`<div className="flex h-full gap-4">`).
 - **Main Content Area**: The primary content area must be wrapped in a container that allows it to grow while managing its own overflow.
-  - The wrapper `div` should have `flex-1` and `overflow-hidden` (to prevent its contents from causing a page-level scrollbar).
+  - The wrapper `div` should have `flex-1` (to grow) and `overflow-hidden` (to prevent its contents from causing a page-level scrollbar).
   - The direct child of this wrapper should be a `div` with `h-full` and `overflow-y-auto` to allow the content inside to scroll vertically if needed.
 - **Collapsible Side Panel**:
   - The panel `div` should have a fixed width when open (e.g., `w-96`) and `w-0` when closed.
@@ -247,7 +252,7 @@ This pattern describes the user interface for assigning and unassigning badges t
     - **Click to Toggle**: A user with the correct permissions can click on any badge pill—assigned or unassigned—to toggle its state for that team member.
     - **Visual States**:
         - **Assigned Badges**: Appear with a solid, colored border and a filled background, indicating a "selected" state.
-        - **Unassigned Badges**: Appear with a dashed border and a transparent background, indicating an "available" but unselected state.
+        - **Unassigned Badges**: Appear with a solid border with reduced opacity and a transparent background, indicating an "available" but unselected state.
 - **Application**: Used on the **Team Members** tab within each team's management page.
 
 ---
@@ -310,7 +315,7 @@ This is the single source of truth for indicating user interaction state across 
 ### User Notifications
 
 - **Toaster Notifications**: Used for providing brief, non-blocking feedback for user actions (e.g., "Badge Deleted").
-    - **Appearance**: Simple, clean, and without a close button. They have a `cursor-pointer` style to indicate they can be dismissed.
+    - **Appearance**: Simple, clean, and without a close button. They have a `cursor-pointer` style to indicate they can be dismissed. The padding is compact (`p-4`).
     - **Behavior**:
         - Automatically dismisses after a short period (e.g., 2 seconds).
         - Can be dismissed instantly by clicking anywhere on the notification.
@@ -326,3 +331,6 @@ This is the single source of truth for indicating user interaction state across 
       - **Ownership Status**: `absolute -top-0 -right-3`.
     - **Icon Size (Ownership Status)**: The `GoogleSymbol` inside an ownership status badge should have its size set via `style={{fontSize: '16px'}}`.
 -   **Badges in Compact View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
+
+
+
