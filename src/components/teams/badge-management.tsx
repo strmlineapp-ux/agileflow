@@ -456,19 +456,20 @@ function DroppableCollectionContent({ collection, children }: { collection: Badg
 }
 
 function DuplicateBadgeZone({ collectionId, onAdd }: { collectionId: string, onAdd: () => void }) {
+    const { isDragModifierPressed } = useUser();
     const { setNodeRef, isOver } = useDroppable({
         id: `duplicate-badge-zone-${collectionId}`,
         data: { type: 'duplicate-badge-zone', collectionId },
     });
-    const { active, isDragging } = useDndContext();
+    const { active } = useDndContext();
     const isDraggingBadge = active?.data.current?.type === 'badge';
 
     return (
         <div
             ref={setNodeRef}
             className={cn(
-                "rounded-full transition-all",
-                isOver && isDraggingBadge && "ring-1 ring-border ring-inset p-0.5"
+                "rounded-full transition-all flex items-center justify-center h-8 w-8",
+                isOver && isDraggingBadge && "ring-1 ring-border ring-inset"
             )}
         >
             <TooltipProvider>
@@ -479,7 +480,10 @@ function DuplicateBadgeZone({ collectionId, onAdd }: { collectionId: string, onA
                             size="icon"
                             onClick={onAdd}
                             onPointerDown={(e) => e.stopPropagation()}
-                            className="h-8 w-8 text-muted-foreground"
+                            className={cn(
+                                "h-8 w-8 text-muted-foreground",
+                                isDragModifierPressed && "hidden"
+                            )}
                         >
                             <GoogleSymbol name="add_circle" weight={100} opticalSize={20} />
                             <span className="sr-only">New Badge or Drop to Duplicate</span>
@@ -790,12 +794,10 @@ function BadgeCollectionCard({
                         </div>
                         <div className="flex items-center" onPointerDown={(e) => e.stopPropagation()}>
                            {!isCollapsed && isOwner && !isSharedPreview && (
-                               <div className={cn(isDragModifierPressed && "hidden")}>
-                                 <DuplicateBadgeZone
+                               <DuplicateBadgeZone
                                     collectionId={collection.id}
                                     onAdd={() => onAddBadge(collection.id)}
                                 />
-                               </div>
                            )}
                             {!isCollapsed && (
                                 <Popover open={isViewModePopoverOpen} onOpenChange={setIsViewModePopoverOpen}>
