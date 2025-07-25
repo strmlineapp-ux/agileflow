@@ -560,11 +560,11 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isCollapsed,
     const [color, setColor] = useState(page.color);
     
     const handleSaveName = useCallback(() => {
-        setIsEditingName(false);
         const newName = nameInputRef.current?.value;
         if (newName && newName.trim() && newName !== page.name) {
             onUpdate(page.id, { name: newName });
         }
+        setIsEditingName(false);
     }, [page.id, page.name, onUpdate, setIsEditingName]);
 
     useEffect(() => {
@@ -993,7 +993,15 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
                     </div>
                 </SortableContext>
                 <DragOverlay>
-                    {activePage ? <PageCard page={activePage} onUpdate={() => {}} onDelete={() => {}} isPinned={pinnedIds.has(activePage.id)} isEditingName={false} setIsEditingName={() => {}} isCollapsed={true} /> : null}
+                    {activePage ? (
+                        <GoogleSymbol
+                            name={activePage.icon}
+                            style={{ color: activePage.color, fontSize: '48px' }}
+                            weight={100}
+                            grade={-25}
+                            opticalSize={48}
+                        />
+                    ) : null}
                 </DragOverlay>
             </div>
         </DndContext>
