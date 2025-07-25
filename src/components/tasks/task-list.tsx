@@ -1,8 +1,9 @@
+
 'use client';
 
 import * as React from 'react';
 import { format, isToday } from 'date-fns';
-import { type Task } from '@/types';
+import { type Task, type Badge } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -23,7 +24,7 @@ import {
 } from '@/components/ui/table';
 import { TaskStatusBadge } from './task-status-badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Badge } from '@/components/ui/badge';
+import { Badge as UiBadge } from '@/components/ui/badge';
 import { useUser } from '@/context/user-context';
 import { PriorityBadge } from '../calendar/priority-badge';
 import { GoogleSymbol } from '../icons/google-symbol';
@@ -39,8 +40,8 @@ const statusLabels: Record<Task['status'], string> = {
   completed: 'Completed',
 };
 
-export function TaskList({ limit }: { limit?: number }) {
-  const { viewAsUser, allBadgeCollections, allBadges, tasks } = useUser();
+export function TaskList({ tasks, limit }: { tasks: Task[], limit?: number }) {
+  const { allBadgeCollections, allBadges } = useUser();
 
   const taskPriorities = React.useMemo(() => {
     const taskPriorityCollection = allBadgeCollections.find(c => c.applications?.includes('tasks'));
@@ -143,7 +144,7 @@ export function TaskList({ limit }: { limit?: number }) {
                     <div key={status}>
                         <h3 className="text-xl font-normal mb-4 flex items-center gap-2">
                            <span>{statusLabels[status]}</span>
-                           <Badge variant="secondary">{tasksInGroup.length}</Badge>
+                           <UiBadge variant="secondary">{tasksInGroup.length}</UiBadge>
                         </h3>
                         {renderTable(tasksInGroup)}
                     </div>
@@ -173,21 +174,5 @@ export function TaskList({ limit }: { limit?: number }) {
     return renderTable(sortedTasks.slice(0, limit));
   }
 
-  const allTasks = tasks;
-  const myTasks = tasks.filter(task => task.assignedTo.some(user => user.userId === viewAsUser.userId));
-
-  return (
-    <Tabs defaultValue="my-tasks">
-        <TabsList>
-            <TabsTrigger value="my-tasks">My Tasks</TabsTrigger>
-            <TabsTrigger value="all">All Tasks</TabsTrigger>
-        </TabsList>
-        <TabsContent value="my-tasks" className="mt-4">
-           {renderGroupedTasks(myTasks)}
-        </TabsContent>
-        <TabsContent value="all" className="mt-4">
-            {renderGroupedTasks(allTasks)}
-        </TabsContent>
-    </Tabs>
-  )
+  return renderGroupedTasks(tasks);
 }
