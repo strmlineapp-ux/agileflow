@@ -455,32 +455,40 @@ function DroppableCollectionContent({ collection, children }: { collection: Badg
     );
 }
 
-function DuplicateBadgeZone({ collectionId, onAdd }: { collectionId: string, onAdd: () => void }) {
+function DuplicateBadgeZone({ collectionId, onAdd, isOwner }: { collectionId: string, onAdd: () => void, isOwner: boolean }) {
     const { isOver, setNodeRef } = useDroppable({
         id: `duplicate-badge-zone-${collectionId}`,
         data: { type: 'duplicate-badge-zone', collectionId },
+        disabled: !isOwner,
     });
-    const { active } = useDndContext();
+    const { active, isDragging } = useDndContext();
     const isDraggingBadge = active?.data.current?.type === 'badge';
 
     return (
-        <div ref={setNodeRef} className={cn("rounded-full transition-all", isOver && isDraggingBadge && "ring-1 ring-border ring-inset")}>
+        <div
+            ref={setNodeRef}
+            className={cn(
+                "rounded-full transition-all",
+                isOver && isDraggingBadge && isOwner && "ring-1 ring-border ring-inset"
+            )}
+        >
             <TooltipProvider>
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <Button
                             variant="ghost"
                             size="icon"
-                            onClick={onAdd}
-                            onPointerDown={(e) => e.stopPropagation()}
+                            onClick={isOwner ? onAdd : undefined}
+                            onPointerDown={isOwner ? (e) => e.stopPropagation() : undefined}
                             className="h-8 w-8 text-muted-foreground"
+                            disabled={!isOwner}
                         >
                             <GoogleSymbol name="add_circle" weight={100} opticalSize={20} />
                             <span className="sr-only">New Badge or Drop to Duplicate</span>
                         </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                        <p>{isOver && isDraggingBadge ? 'Drop to Duplicate Badge' : 'Add New Badge'}</p>
+                        <p>{isOver && isDraggingBadge && isOwner ? 'Drop to Duplicate Badge' : 'Add New Badge'}</p>
                     </TooltipContent>
                 </Tooltip>
             </TooltipProvider>
@@ -783,11 +791,12 @@ function BadgeCollectionCard({
                             </div>
                         </div>
                         <div className="flex items-center" onPointerDown={(e) => e.stopPropagation()}>
-                           {!isCollapsed && isOwner && !isSharedPreview && (
+                           {!isCollapsed && (
                                 <div className={cn(isDragModifierPressed && "opacity-0 pointer-events-none")}>
                                     <DuplicateBadgeZone
                                         collectionId={collection.id}
                                         onAdd={() => onAddBadge(collection.id)}
+                                        isOwner={isOwner}
                                     />
                                 </div>
                            )}
@@ -1103,6 +1112,11 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
         if (activeType === 'badge' && overType === 'duplicate-badge-zone') {
             const collectionId = overData.collectionId;
             const sourceBadge = activeData.badge;
+            const targetCollection = allBadgeCollections.find(c => c.id === collectionId);
+            if (!targetCollection || targetCollection.owner.id !== viewAsUser.userId) {
+                toast({ variant: 'destructive', title: 'Permission Denied', description: 'You can only add badges to collections you own.' });
+                return;
+            }
             if (collectionId && sourceBadge) {
                 addBadge(collectionId, sourceBadge);
             }
@@ -1138,9 +1152,14 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
             const badge = activeData.badge as Badge;
             const sourceCollectionId = activeData.collectionId;
             const targetCollectionId = overData.collection?.id || overData.collectionId;
+            const targetCollection = allBadgeCollections.find(c => c.id === targetCollectionId);
+
+            if (targetCollection && targetCollection.owner.id !== viewAsUser.userId) {
+                toast({ variant: 'destructive', title: 'Permission Denied', description: 'Cannot move badges to a collection you do not own.'});
+                return;
+            }
 
             if (targetCollectionId && sourceCollectionId !== targetCollectionId) {
-                const targetCollection = allBadgeCollections.find(c => c.id === targetCollectionId);
                  if (targetCollection && !targetCollection.badgeIds.includes(badge.id)) {
                     // LINKING: Add badge to new collection, but DO NOT remove from source if it's a shared preview
                     if (!activeData.isSharedPreview) {
