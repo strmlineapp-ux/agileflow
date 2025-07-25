@@ -456,44 +456,43 @@ function DroppableCollectionContent({ collection, children }: { collection: Badg
 }
 
 function DuplicateBadgeZone({ collectionId, onAdd, isOwner }: { collectionId: string, onAdd: () => void, isOwner: boolean }) {
-    const { isOver, setNodeRef } = useDroppable({
-        id: `duplicate-badge-zone-${collectionId}`,
-        data: { type: 'duplicate-badge-zone', collectionId },
-        disabled: !isOwner,
-    });
-    const { active, isDragging } = useDndContext();
-    const isDraggingBadge = active?.data.current?.type === 'badge';
+  const { setNodeRef, isOver } = useDroppable({
+    id: `duplicate-badge-zone-${collectionId}`,
+    data: { type: 'duplicate-badge-zone', collectionId },
+    disabled: !isOwner,
+  });
+  const { isDragging } = useDndContext();
 
-    return (
-        <div
-            ref={setNodeRef}
-            className={cn(
-                "rounded-full transition-all",
-                isOver && isDraggingBadge && isOwner && "ring-1 ring-border ring-inset"
-            )}
-        >
-            <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={isOwner ? onAdd : undefined}
-                            onPointerDown={isOwner ? (e) => e.stopPropagation() : undefined}
-                            className="h-8 w-8 text-muted-foreground"
-                            disabled={!isOwner}
-                        >
-                            <GoogleSymbol name="add_circle" weight={100} opticalSize={20} />
-                            <span className="sr-only">New Badge or Drop to Duplicate</span>
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p>{isOver && isDraggingBadge && isOwner ? 'Drop to Duplicate Badge' : 'Add New Badge'}</p>
-                    </TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
-        </div>
-    );
+  // The drop zone wrapper is always rendered so dnd-kit can find it.
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "rounded-full transition-all",
+        isOver && isDragging && isOwner && "ring-1 ring-border ring-inset"
+      )}
+    >
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onAdd}
+              onPointerDown={(e) => e.stopPropagation()}
+              className="h-8 w-8 text-muted-foreground"
+            >
+              <GoogleSymbol name="add_circle" weight={100} opticalSize={20} />
+              <span className="sr-only">New Badge or Drop to Duplicate</span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{isOver && isDragging && isOwner ? 'Drop to Duplicate Badge' : 'Add New Badge'}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    </div>
+  );
 }
 
 
@@ -548,7 +547,7 @@ function BadgeCollectionCard({
     const iconSearchInputRef = useRef<HTMLInputElement>(null);
     const [color, setColor] = useState(collection.color);
     const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
-    const [isExpanded, setIsExpanded] = useState(true);
+    const [isExpanded, setIsExpanded] = useState(!isSharedPreview);
 
     const isOwner = useMemo(() => collection.owner.id === viewAsUser.userId, [collection.owner.id, viewAsUser.userId]);
     const showDetails = isCollapsed ? false : isExpanded;
@@ -791,7 +790,7 @@ function BadgeCollectionCard({
                             </div>
                         </div>
                         <div className="flex items-center" onPointerDown={(e) => e.stopPropagation()}>
-                           {!isCollapsed && (
+                           {!isCollapsed && !isSharedPreview && isOwner && (
                                 <div className={cn(isDragModifierPressed && "opacity-0 pointer-events-none")}>
                                     <DuplicateBadgeZone
                                         collectionId={collection.id}
@@ -1114,7 +1113,7 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
             const sourceBadge = activeData.badge;
             const targetCollection = allBadgeCollections.find(c => c.id === collectionId);
             if (!targetCollection || targetCollection.owner.id !== viewAsUser.userId) {
-                toast({ variant: 'destructive', title: 'Permission Denied', description: 'You can only add badges to collections you own.' });
+                toast({ title: 'Permission Denied', description: 'You can only add badges to collections you own.' });
                 return;
             }
             if (collectionId && sourceBadge) {
@@ -1155,7 +1154,7 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
             const targetCollection = allBadgeCollections.find(c => c.id === targetCollectionId);
 
             if (targetCollection && targetCollection.owner.id !== viewAsUser.userId) {
-                toast({ variant: 'destructive', title: 'Permission Denied', description: 'Cannot move badges to a collection you do not own.'});
+                toast({ title: 'Permission Denied', description: 'Cannot move badges to a collection you do not own.'});
                 return;
             }
 
