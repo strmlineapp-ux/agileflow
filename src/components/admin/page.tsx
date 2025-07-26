@@ -60,7 +60,7 @@ function UserCard({ user, isDeletable, onDelete }: { user: User, isDeletable?: b
                   <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div>
-                    <p className="font-thin">{user.displayName}</p>
+                    <p className="font-thin text-muted-foreground">{user.displayName}</p>
                     <p className="text-sm text-muted-foreground font-thin">{user.title || 'No title provided'}</p>
                 </div>
             </div>
@@ -638,7 +638,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, dragHandlePr
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={isDragModifierPressed}>
-                                                <Button variant="ghost" className="h-10 w-12 flex items-center justify-center p-0">
+                                                <Button variant="ghost" className="h-10 w-12 flex items-center justify-center p-0 text-muted-foreground hover:text-foreground">
                                                     <GoogleSymbol name={page.icon} weight={100} grade={-25} opticalSize={20} style={{ fontSize: '36px' }}/>
                                                 </Button>
                                             </PopoverTrigger>

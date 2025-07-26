@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import * as React from 'react';
@@ -73,9 +72,9 @@ export function TaskList({ tasks, limit, onEdit, onDelete }: { tasks: Task[], li
           <TableBody>
             {tasksToRender.map((task) => (
               <TableRow key={task.taskId}>
-                <TableCell className="font-normal">{task.title}</TableCell>
+                <TableCell className="font-normal text-muted-foreground">{task.title}</TableCell>
                 <TableCell>
-                  <div>
+                  <div className="text-muted-foreground">
                     {task.assignedTo.map((user) => {
                       const nameParts = user.displayName.split(' ');
                       const formattedName = nameParts.length > 1 ? `${nameParts[0]} ${nameParts[1].charAt(0)}.` : nameParts[0];
@@ -89,7 +88,7 @@ export function TaskList({ tasks, limit, onEdit, onDelete }: { tasks: Task[], li
                 <TableCell>
                   <PriorityBadge priorityId={task.priority} />
                 </TableCell>
-                <TableCell>{isToday(task.dueDate) ? 'Today' : format(task.dueDate, 'MMM dd, yyyy')}</TableCell>
+                <TableCell className="text-muted-foreground">{isToday(task.dueDate) ? 'Today' : format(task.dueDate, 'MMM dd, yyyy')}</TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>

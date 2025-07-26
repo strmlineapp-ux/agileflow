@@ -23,6 +23,7 @@ export default {
       },
       fontWeight: {
           light: '300',
+          extralight: '200',
       },
       colors: {
         border: "hsl(var(--border))",

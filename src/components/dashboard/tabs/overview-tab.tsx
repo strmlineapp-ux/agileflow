@@ -42,14 +42,14 @@ export function OverviewContent({ tab: pageConfig, isSingleTabPage }: { tab: App
               <GoogleSymbol name={stat.icon} className="text-2xl text-muted-foreground" weight={100} />
             </CardHeader>
             <CardContent className="p-4 pt-0">
-              <div className="text-2xl font-thin">{stat.value}</div>
+              <div className="text-2xl font-thin text-muted-foreground">{stat.value}</div>
               <p className="text-xs text-muted-foreground">this month</p>
             </CardContent>
           </Card>
         ))}
       </div>
       <div>
-        <h2 className="font-headline text-2xl font-thin mb-4">Recent Tasks</h2>
+        <h2 className="font-headline text-2xl font-thin mb-4 text-muted-foreground">Recent Tasks</h2>
         {loading ? (
             <Card><CardHeader className="h-64"><Skeleton className="h-full w-full" /></CardHeader></Card>
         ) : (

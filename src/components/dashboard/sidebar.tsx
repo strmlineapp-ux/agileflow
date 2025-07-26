@@ -115,7 +115,7 @@ export function Sidebar() {
       <nav className="mt-auto flex flex-col items-center gap-4 px-2 py-4">
          <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <button className="flex h-9 w-9 items-center justify-center rounded-full md:h-8 md:w-8">
+                <button className="flex h-9 w-9 items-center justify-center rounded-full md:h-8 md:w-8 focus-visible:outline-none focus-visible:ring-0">
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
