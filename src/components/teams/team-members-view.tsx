@@ -32,7 +32,7 @@ function SortableTeamMember({ member, team, isViewer }: { member: User, team: Te
 
 
 export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
-    const { viewAsUser, users, updateAppTab, updateTeam, isDragModifierPressed, allBadges } = useUser();
+    const { viewAsUser, users, updateAppTab, updateTeam, isDragModifierPressed, allBadges, updateUser } = useUser();
     const [activeDragItem, setActiveDragItem] = useState<{type: string, id: string} | null>(null);
     
     // Safeguard to prevent rendering if team data is not available.
@@ -302,7 +302,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         <DragOverlay>
             {activeBadge ? (
                 <div
-                    className='h-7 w-7 rounded-full border flex items-center justify-center bg-card'
+                    className='h-7 w-7 rounded-full border-2 flex items-center justify-center bg-card'
                     style={{ borderColor: activeBadge.color }}
                 >
                     <GoogleSymbol

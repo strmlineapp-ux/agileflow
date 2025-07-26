@@ -45,7 +45,7 @@ This pattern provides a clean, minimal interface for search functionality, espec
   - Clicking the button reveals the input field.
   - **Crucially, the input must have a transparent background and no borders or box-shadow**, ensuring it blends seamlessly into the UI.
 - **Behavior:**
-  - **Automatic Focus**: For specific single-view pages like **Account Settings**, an `autoFocus={true}` prop can be passed to focus the input on initial load.
+  - **Automatic Focus**: For specific single-view pages like **Account Settings**, an `autoFocus={true}` prop can be passed to focus the input on initial load. When a tab in a management interface becomes active, an `isActive={true}` prop should be passed to the component to reliably trigger focus.
   - **Manual Focus**: Clicking the search icon will always expand the input and focus it.
   - **Collapse on Blur**: The input always collapses back to its icon-only state when it loses focus (`onBlur`) and the field is empty.
 - **Application:** Used for filtering lists of icons, users, or other filterable content within popovers and management pages like the Admin screen.
@@ -140,7 +140,7 @@ This is the application's perfected, gold-standard pattern for managing a collec
     -   **Positioning**: To ensure the overlay appears directly under the cursor and tracks it smoothly without an offset, the `<DragOverlay>` component **must** use the `snapCenterToCursor` modifier from the `@dnd-kit/modifiers` library. Example: `modifiers={[snapCenterToCursor]}`.
     -   **Card Overlays (Pages, Calendars, Teams, Badge Collections)**: The overlay consists **only** of the entity's icon. It is rendered using the `<GoogleSymbol>` component, styled with the entity's specific color and an appropriate size (e.g., `fontSize: '48px'`) to make it a clear visual target.
     -   **User Overlays**: The overlay consists **only** of the user's `<Avatar>` component, rendered at an appropriate size (e.g., `h-12 w-12`).
-    -   **Badge Overlays**: The overlay is a direct render of the `<BadgeDisplayItem>` component (or a simplified icon-only version for assigned user badges). This ensures the overlay accurately reflects the badge's current name, icon, and color, providing full context during the drag operation.
+    -   **Badge Overlays**: The overlay is a larger, `28px` version of the assigned badge icon: a colored icon within a matching circular colored border.
 -   **Internal Card Layout**: Each card is structured for clarity. The header contains the primary entity identifier (icon and name) and contextual controls. To keep cards compact, headers and content areas should use minimal padding (e.g., `p-2`). Titles should be configured to wrap gracefully to handle longer text. **All icon-only buttons inside a card MUST have a `<Tooltip>`**.
 -   **User Item Display**: When users are displayed as items within a management card (e.g., `TeamCard`), they are presented **without a border**. Each user item must display their avatar, full name, and professional title underneath the name for consistency.
 -   **Unique Draggable & Droppable IDs (Critical)**:
@@ -253,8 +253,8 @@ This pattern describes the user interface for assigning and unassigning badges t
     - **Click to Toggle**: A user with the correct permissions can click on any badge to toggle its state for that team member.
     - **Reordering**: A user with permission can reorder a member's **assigned** badges by holding down their drag modifier key and dragging an icon-only badge to a new position within that member's assigned list.
 - **Visual States**:
-    - **Assigned Badges**: Appear as icon-only buttons with a solid, colored border. The icon inside matches the border color. The name of the badge is revealed in a tooltip on hover.
-    - **Unassigned Badges**: Appear as full pills with a dashed, muted border. The text and icon inside are also muted. This indicates an "available" but unselected state.
+    - **Assigned Badges**: Appear as icon-only buttons with a solid, colored border and a transparent background. The icon inside matches the border color. The name of the badge is revealed in a tooltip on hover.
+    - **Unassigned Badges**: Appear as full pills with a dashed, muted border. The text and icon inside are also muted, using the `--muted-foreground` color. This indicates an "available" but unselected state.
 - **Application**: Used on the **Team Members** tab within each team's management page.
 
 ---

@@ -1020,7 +1020,7 @@ function CollectionDropZone({ id, type, children, className }: { id: string; typ
   );
 }
 
-export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; page: AppPage }) {
+export function BadgeManagement({ tab, page, team, isActive }: { team: Team; tab: AppTab; page: AppPage; isActive: boolean }) {
     const { viewAsUser, users, appSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors, updateUser, isDragModifierPressed, teams } = useUser();
     const { toast } = useToast();
 
@@ -1225,7 +1225,7 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
                           <DuplicateZone id="duplicate-collection-zone" onAdd={() => addBadgeCollection(viewAsUser)} />
                       </div>
                       <div className="flex items-center gap-1">
-                          <CompactSearchInput searchTerm={mainSearchTerm} setSearchTerm={setMainSearchTerm} placeholder="Search collections..." />
+                          <CompactSearchInput searchTerm={mainSearchTerm} setSearchTerm={setMainSearchTerm} placeholder="Search collections..." isActive={isActive} />
                           <TooltipProvider>
                               <Tooltip>
                                   <TooltipTrigger asChild>
@@ -1314,19 +1314,13 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
                         opticalSize={48}
                     />
                 ) : activeDragItem?.type === 'badge' && activeDragItem?.data?.badge ? (
-                    <BadgeDisplayItem 
-                        badge={activeDragItem.data.badge}
-                        viewMode={allBadgeCollections.find(c => c.id === activeDragItem.data.collectionId)?.viewMode || 'list'}
-                        onUpdateBadge={() => {}}
-                        onDelete={() => {}}
-                        predefinedColors={predefinedColors}
-                        isOwner={activeDragItem.data.badge.owner.id === viewAsUser.userId}
-                        isLinked={activeDragItem.data.badge.owner.id !== viewAsUser.userId}
-                        allCollections={allBadgeCollections}
-                        isEditingName={false} setIsEditingName={() => {}}
-                        isEditingDescription={false} setIsEditingDescription={() => {}}
-                        isCollectionEditing={false}
-                    />
+                    <div className="h-7 w-7 rounded-full border-2 flex items-center justify-center bg-card" style={{ borderColor: activeDragItem.data.badge.color }}>
+                      <GoogleSymbol
+                          name={activeDragItem.data.badge.icon}
+                          style={{ fontSize: '20px', color: activeDragItem.data.badge.color }}
+                          weight={100}
+                      />
+                    </div>
                 ) : null}
             </DragOverlay>
         </DndContext>
