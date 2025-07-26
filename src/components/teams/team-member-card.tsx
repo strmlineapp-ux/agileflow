@@ -9,8 +9,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
-import { useDroppable, useSortable } from '@dnd-kit/sortable';
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { useDroppable } from '@dnd-kit/core';
+import { useSortable, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
 function AssignedBadge({ badge, canManage, contextId }: { badge: Badge, canManage: boolean, contextId: string }) {
@@ -68,7 +68,7 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin, isOver }: {
 
   const assignedBadges = useMemo(() => {
     return (member.roles || [])
-      .map(roleId => allBadges.find(b => b.id === roleId))
+      .map(roleId => allBadges.find(b => b && b.id === roleId))
       .filter((b): b is Badge => !!b);
   }, [member.roles, allBadges]);
   
