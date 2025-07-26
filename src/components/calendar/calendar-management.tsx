@@ -528,7 +528,7 @@ function CalendarDropZone({ id, type, children, className }: { id: string; type:
 }
 
 
-export function CalendarManagement({ tab, isActive }: { tab: AppTab, isActive?: boolean }) {
+export function CalendarManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
   const { viewAsUser, calendars, addCalendar, updateCalendar, deleteCalendar, updateAppTab, appSettings, updateUser, isDragModifierPressed } = useUser();
   const { toast } = useToast();
 
@@ -676,7 +676,7 @@ export function CalendarManagement({ tab, isActive }: { tab: AppTab, isActive?: 
                 <DuplicateZone id="duplicate-calendar-zone" onAdd={() => handleAddCalendar()} />
               </div>
               <div className="flex items-center gap-2">
-                <CompactSearchInput searchTerm={mainSearchTerm} setSearchTerm={setMainSearchTerm} placeholder="Search calendars..." isActive={isActive} tooltipText="Search Calendars" />
+                <CompactSearchInput searchTerm={mainSearchTerm} setSearchTerm={setMainSearchTerm} placeholder="Search calendars..." tooltipText="Search Calendars" />
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -716,7 +716,7 @@ export function CalendarManagement({ tab, isActive }: { tab: AppTab, isActive?: 
                 <CardHeader>
                     <div className="flex items-center justify-between">
                     <CardTitle className="font-headline font-thin text-xl">Shared Calendars</CardTitle>
-                    <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." isActive={isSharedPanelOpen} tooltipText="Search Shared Calendars" />
+                    <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." tooltipText="Search Shared Calendars" />
                     </div>
                     <UICardDescription>Drag a calendar to your board to link it.</UICardDescription>
                 </CardHeader>

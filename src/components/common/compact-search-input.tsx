@@ -13,7 +13,7 @@ interface CompactSearchInputProps {
   placeholder?: string;
   className?: string;
   inputRef?: React.RefObject<HTMLInputElement>;
-  isActive?: boolean;
+  autoFocus?: boolean;
   tooltipText?: string;
 }
 
@@ -23,27 +23,21 @@ export function CompactSearchInput({
   placeholder = "Search...", 
   className,
   inputRef: externalInputRef,
-  isActive = false,
+  autoFocus = false,
   tooltipText,
 }: CompactSearchInputProps) {
-  const [isSearching, setIsSearching] = useState(!!searchTerm);
+  const [isSearching, setIsSearching] = useState(!!searchTerm || autoFocus);
   const internalInputRef = useRef<HTMLInputElement>(null);
   const inputRef = externalInputRef || internalInputRef;
 
   useEffect(() => {
-    if (isActive) {
-      setIsSearching(true);
+    if (autoFocus && inputRef.current) {
+        const timer = setTimeout(() => {
+            inputRef.current?.focus();
+        }, 50);
+        return () => clearTimeout(timer);
     }
-  }, [isActive]);
-
-  useEffect(() => {
-    if (isSearching && isActive && inputRef.current) {
-      const timer = setTimeout(() => {
-        inputRef.current?.focus();
-      }, 50);
-      return () => clearTimeout(timer);
-    }
-  }, [isSearching, isActive, inputRef]);
+  }, [autoFocus, inputRef]);
 
   const handleIconClick = () => {
     if (isSearching) {
@@ -53,6 +47,12 @@ export function CompactSearchInput({
         setIsSearching(true);
     }
   };
+  
+  useEffect(() => {
+    if (isSearching && inputRef.current) {
+        inputRef.current.focus();
+    }
+  }, [isSearching, inputRef])
 
   if (isSearching) {
     return (

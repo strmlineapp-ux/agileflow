@@ -511,7 +511,7 @@ function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
   );
 }
 
-export function TeamManagement({ tab, page, isActive, isSingleTabPage = false }: { tab: AppTab; page: AppPage; isActive?: boolean, isSingleTabPage?: boolean }) {
+export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: AppTab; page: AppPage; isSingleTabPage?: boolean }) {
     const { viewAsUser, users, teams, appSettings, addTeam, updateTeam, deleteTeam, reorderTeams, updateAppTab, updateUser, isDragModifierPressed } = useUser();
     const router = useRouter();
     const pathname = usePathname();
@@ -788,7 +788,7 @@ export function TeamManagement({ tab, page, isActive, isSingleTabPage = false }:
                                 <DuplicateZone id="duplicate-team-zone" onAdd={() => handleAddTeam()} />
                             </div>
                             <div className="flex items-center gap-1">
-                                <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search teams..." isActive={isActive} />
+                                <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search teams..." />
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
@@ -834,7 +834,7 @@ export function TeamManagement({ tab, page, isActive, isSingleTabPage = false }:
                             <CardHeader>
                                 <div className="flex items-center justify-between">
                                     <CardTitle className="font-headline font-thin text-xl">Shared Teams</CardTitle>
-                                    <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." isActive={isSharedPanelOpen} tooltipText="Search Shared Teams" />
+                                    <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." tooltipText="Search Shared Teams" />
                                 </div>
                                 <CardDescription>Drag a team you own here to share it. Drag a team to your board to link it.</CardDescription>
                             </CardHeader>

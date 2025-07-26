@@ -130,7 +130,7 @@ function UserDropZone({ id, users, children, onDeleteRequest }: { id: string, us
   )
 }
 
-export const AdminsManagement = ({ isActive }: { isActive?: boolean }) => {
+export const AdminsManagement = () => {
   const { toast } = useToast();
   const { viewAsUser, users, updateUser, deleteUser, isDragModifierPressed } = useUser();
   const [is2faDialogOpen, setIs2faDialogOpen] = useState(false);
@@ -283,7 +283,7 @@ export const AdminsManagement = ({ isActive }: { isActive?: boolean }) => {
                         <div className="flex items-center justify-between gap-4">
                             <CardTitle className="font-thin text-base">Users ({filteredNonAdminUsers.length})</CardTitle>
                              <div className="flex items-center gap-1">
-                                <CompactSearchInput searchTerm={userSearch} setSearchTerm={setUserSearch} placeholder="Search users..." tooltipText="Search Users" isActive={isActive} />
+                                <CompactSearchInput searchTerm={userSearch} setSearchTerm={setUserSearch} placeholder="Search users..." tooltipText="Search Users" />
                             </div>
                         </div>
                     </CardHeader>
@@ -845,7 +845,7 @@ function DuplicateZone({ onAdd }: { onAdd: () => void; }) {
   );
 }
 
-export const PagesManagement = ({ isActive }: { isActive?: boolean }) => {
+export const PagesManagement = () => {
     const { viewAsUser, appSettings, updateAppSettings, isDragModifierPressed } = useUser();
     const { toast } = useToast();
     const [searchTerm, setSearchTerm] = useState('');
@@ -979,7 +979,7 @@ export const PagesManagement = ({ isActive }: { isActive?: boolean }) => {
                 <div className="flex items-center justify-between">
                     <DuplicateZone onAdd={handleAddPage} />
                     <div className="flex items-center">
-                        <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search pages..." isActive={isActive} />
+                        <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search pages..." />
                     </div>
                 </div>
                 
@@ -1227,7 +1227,7 @@ function SortableTabCard({ id, tab, onUpdate }: { id: string, tab: AppTab, onUpd
 }
 
 
-export const TabsManagement = ({ isActive }: { isActive?: boolean }) => {
+export const TabsManagement = () => {
     const { viewAsUser, appSettings, updateAppSettings, updateAppTab, isDragModifierPressed } = useUser();
     const [searchTerm, setSearchTerm] = useState('');
 
@@ -1281,7 +1281,7 @@ export const TabsManagement = ({ isActive }: { isActive?: boolean }) => {
             <div className="space-y-8">
                 <div className="flex items-center justify-end">
                      <div className="flex items-center">
-                        <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search by name or desc..." isActive={isActive} />
+                        <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search by name or desc..." />
                     </div>
                 </div>
                 <SortableContext items={tabIds} strategy={verticalListSortingStrategy}>

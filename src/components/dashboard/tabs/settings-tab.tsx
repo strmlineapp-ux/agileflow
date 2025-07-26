@@ -10,7 +10,7 @@ export function SettingsContent({ tab: pageConfig, isSingleTabPage }: { tab: App
 
   return (
     <div className="flex flex-col gap-6">
-      <UserManagement showSearch={isSingleTabPage} />
+      <UserManagement showSearch={true} />
     </div>
   );
 }

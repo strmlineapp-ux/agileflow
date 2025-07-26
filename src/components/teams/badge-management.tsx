@@ -194,7 +194,6 @@ function BadgeDisplayItem({
                     setSearchTerm={setIconSearch}
                     placeholder="Search icons..."
                     inputRef={iconSearchInputRef}
-                    isActive={isIconPopoverOpen}
                 />
             </div>
             <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{googleSymbolNames.slice(0, 300).map((iconName) => (
@@ -722,7 +721,6 @@ function BadgeCollectionCard({
                                     setSearchTerm={setIconSearch}
                                     placeholder="Search icons..."
                                     inputRef={iconSearchInputRef}
-                                    isActive={isIconPopoverOpen}
                                     />
                                 </div>
                                 <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (
@@ -1022,7 +1020,7 @@ function CollectionDropZone({ id, type, children, className }: { id: string; typ
   );
 }
 
-export function BadgeManagement({ tab, page, team, isActive }: { team: Team; tab: AppTab; page: AppPage; isActive?: boolean }) {
+export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; page: AppPage }) {
     const { viewAsUser, users, appSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors, updateUser, isDragModifierPressed, teams } = useUser();
     const { toast } = useToast();
 
@@ -1227,7 +1225,7 @@ export function BadgeManagement({ tab, page, team, isActive }: { team: Team; tab
                           <DuplicateZone id="duplicate-collection-zone" onAdd={() => addBadgeCollection(viewAsUser)} />
                       </div>
                       <div className="flex items-center gap-1">
-                          <CompactSearchInput searchTerm={mainSearchTerm} setSearchTerm={setMainSearchTerm} placeholder="Search collections..." isActive={isActive} />
+                          <CompactSearchInput searchTerm={mainSearchTerm} setSearchTerm={setMainSearchTerm} placeholder="Search collections..." />
                           <TooltipProvider>
                               <Tooltip>
                                   <TooltipTrigger asChild>
@@ -1270,7 +1268,7 @@ export function BadgeManagement({ tab, page, team, isActive }: { team: Team; tab
                             <CardHeader>
                                 <div className="flex items-center justify-between">
                                     <CardTitle className="font-headline font-thin text-xl">Shared Collections</CardTitle>
-                                    <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." isActive={isSharedPanelOpen} tooltipText="Search Shared" />
+                                    <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." tooltipText="Search Shared" />
                                 </div>
                                 <CardDescription>Drag a collection you own here to share it. Drag a collection to your board to link it.</CardDescription>
                             </CardHeader>
