@@ -16,7 +16,7 @@ import { useDraggable, useDroppable } from '@dnd-kit/core';
 
 
 function AssignedBadge({ badge, memberId, teamId, canManage }: { badge: Badge, memberId: string, teamId: string, canManage: boolean }) {
-    const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    const { attributes, listeners, setNodeRef, isDragging, transform } = useDraggable({
         id: `assigned-badge::${teamId}::${memberId}::${badge.id}`,
         data: {
             type: 'assigned-badge',
@@ -25,6 +25,8 @@ function AssignedBadge({ badge, memberId, teamId, canManage }: { badge: Badge, m
         },
         disabled: !canManage,
     });
+
+    const style = transform ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` } : {};
     
     return (
         <TooltipProvider>
@@ -32,6 +34,7 @@ function AssignedBadge({ badge, memberId, teamId, canManage }: { badge: Badge, m
                 <TooltipTrigger asChild>
                 <button
                     ref={setNodeRef}
+                    style={style}
                     {...listeners}
                     {...attributes}
                     className={cn(
@@ -56,11 +59,19 @@ function AssignedBadge({ badge, memberId, teamId, canManage }: { badge: Badge, m
     );
 }
 
-export function TeamMemberCard({ member, team, isViewer, onSetAdmin, isOver }: { member: User, team: Team, isViewer: boolean, onSetAdmin: () => void, isOver?: boolean }) {
+export function TeamMemberCard({ member, team, isViewer, onSetAdmin }: { member: User, team: Team, isViewer: boolean, onSetAdmin: () => void }) {
   const { viewAsUser, updateTeam, allBadges, allBadgeCollections, isDragModifierPressed } = useUser();
 
   const [isEditingLabel, setIsEditingLabel] = useState(false);
   const labelInputRef = useRef<HTMLInputElement>(null);
+
+  const { setNodeRef, isOver } = useDroppable({
+    id: `member-card-droppable:${member.userId}`,
+    data: {
+        type: 'member-card',
+        member: member
+    }
+  });
   
   const teamBadgesLabel = team.userBadgesLabel || 'Team Badges';
   const canManage = !isViewer;
@@ -114,7 +125,7 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin, isOver }: {
   const isTeamAdmin = (team.teamAdmins || []).includes(member.userId);
 
   return (
-      <Card className={cn(isOver && "ring-1 ring-inset ring-primary")}>
+      <Card>
         <CardHeader>
           <div className="flex items-center gap-4">
              <div 
@@ -150,7 +161,7 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin, isOver }: {
           </div>
         </CardHeader>
         {!isViewer && (
-            <CardContent>
+            <CardContent ref={setNodeRef} className={cn("transition-colors", isOver && "ring-1 ring-inset ring-primary rounded-md")}>
             <div className="mt-4 space-y-2">
                 <h4 className="text-sm font-normal">
                     {isEditingLabel && canManage ? (

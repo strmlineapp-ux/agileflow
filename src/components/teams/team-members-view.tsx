@@ -23,7 +23,7 @@ import { Badge as UiBadge } from '../ui/badge';
 import { useDroppable } from '@dnd-kit/core';
 
 function DraggableBadgeFromPool({ badge }: { badge: Badge }) {
-    const { attributes, listeners, setNodeRef, isDragging, transform, transition } = useSortable({
+    const { attributes, listeners, setNodeRef, isDragging, transform } = useSortable({
         id: `pool-badge-${badge.id}`,
         data: {
             type: 'pool-badge',
@@ -33,7 +33,6 @@ function DraggableBadgeFromPool({ badge }: { badge: Badge }) {
 
     const style = {
         transform: CSS.Transform.toString(transform),
-        transition,
         opacity: isDragging ? 0.5 : 1,
     };
     
@@ -54,7 +53,7 @@ function DraggableBadgeFromPool({ badge }: { badge: Badge }) {
 
 function SortableTeamMember({ member, team, isViewer, onSetAdmin, onRemoveUser }: { member: User, team: Team, isViewer: boolean, onSetAdmin: () => void, onRemoveUser: () => void }) {
   const { isDragModifierPressed } = useUser();
-  const { attributes, listeners, setNodeRef: sortableRef, transform, transition, isDragging } = useSortable({
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: member.userId,
     data: { 
         type: 'member-card',
@@ -62,19 +61,6 @@ function SortableTeamMember({ member, team, isViewer, onSetAdmin, onRemoveUser }
     },
     disabled: isViewer || !isDragModifierPressed
   });
-  
-  const { setNodeRef: droppableRef, isOver } = useDroppable({
-    id: member.userId,
-    data: {
-      type: 'member-card',
-      member: member
-    }
-  });
-
-  const setNodeRef = useCallback((node: HTMLElement | null) => {
-    sortableRef(node);
-    droppableRef(node);
-  }, [sortableRef, droppableRef]);
   
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -89,7 +75,7 @@ function SortableTeamMember({ member, team, isViewer, onSetAdmin, onRemoveUser }
     <div 
         ref={setNodeRef}
         style={style} 
-        className={cn("relative rounded-md", isDragging && "shadow-xl", isOver && "ring-1 ring-inset ring-primary")}
+        className={cn("relative rounded-md", isDragging && "shadow-xl")}
     >
       <div {...attributes} {...listeners} className="relative group">
         <TeamMemberCard member={member} team={team} isViewer={isViewer} onSetAdmin={onSetAdmin} />
@@ -340,10 +326,13 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         setActiveDragItem(null);
 
         if (!over) return;
-
+        
         const activeType = active.data.current?.type;
         const overType = over.data.current?.type;
         
+        // --- Badge Assignment/Unassignment/Reassignment ---
+        
+        // Case 1: Dragging a badge from the pool to a member card
         if (activeType === 'pool-badge' && overType === 'member-card') {
             const badge = active.data.current?.badge as Badge;
             const member = over.data.current?.member as User;
@@ -353,6 +342,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
             return;
         }
 
+        // Case 2: Dragging an assigned badge back to the pool
         if (activeType === 'assigned-badge' && overType === 'badge-pool') {
             const badge = active.data.current?.badge as Badge;
             const memberId = active.data.current?.memberId as string;
@@ -360,6 +350,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
             return;
         }
         
+        // Case 3: Dragging an assigned badge from one member to another
         if (activeType === 'assigned-badge' && overType === 'member-card') {
             const badge = active.data.current?.badge as Badge;
             const targetMember = over.data.current?.member as User;
@@ -370,6 +361,8 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
             }
             return;
         }
+
+        // --- Member Reordering ---
 
         if (activeType === 'member-card') {
             const user = active.data.current?.member as User;
