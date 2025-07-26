@@ -8,7 +8,7 @@ import { WeekView } from '@/components/calendar/week-view';
 import { DayView } from '@/components/calendar/day-view';
 import { ProductionScheduleView } from '@/components/calendar/production-schedule-view';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { format, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays, startOfWeek, getWeek, isToday, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
+import { format, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays, startOfWeek, getWeek, isToday, startOfDay, startOfMonth, endOfMonth } from 'date-fns';
 import { useUser } from '@/context/user-context';
 import { canCreateAnyEvent } from '@/lib/permissions';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
