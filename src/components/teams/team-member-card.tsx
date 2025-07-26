@@ -124,8 +124,7 @@ export function TeamMemberCard({ member, team, isViewer }: { member: User, team:
           <UiBadge
             variant={'outline'}
             style={{
-                borderColor: badge.color,
-                color: isAssigned ? badge.color : 'hsl(var(--muted-foreground))',
+                borderColor: isAssigned ? badge.color : 'hsl(var(--muted-foreground))',
                 backgroundColor: 'transparent',
                 borderStyle: isAssigned ? 'solid' : 'dashed',
             }}
@@ -139,7 +138,7 @@ export function TeamMemberCard({ member, team, isViewer }: { member: User, team:
                 name={badge.icon} 
                 style={{ fontSize: '20px', color: isAssigned ? badge.color : 'hsl(var(--muted-foreground))' }} 
                 weight={100} />
-            {badge.name}
+            <span style={{color: isAssigned ? badge.color : 'hsl(var(--muted-foreground))' }}>{badge.name}</span>
           </UiBadge>
         </TooltipTrigger>
         <TooltipContent>
