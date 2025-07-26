@@ -55,7 +55,6 @@ interface UserDataContextType {
   addUser: (newUser: User) => Promise<void>;
   linkGoogleCalendar: (userId: string) => Promise<void>;
   calendars: SharedCalendar[];
-  reorderCalendars: (reorderedCalendars: SharedCalendar[]) => Promise<void>;
   addCalendar: (newCalendar: Omit<SharedCalendar, 'id'>) => Promise<void>;
   updateCalendar: (calendarId: string, calendarData: Partial<SharedCalendar>) => Promise<void>;
   deleteCalendar: (calendarId: string) => Promise<void>;
@@ -98,38 +97,16 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [viewAsUserId, setViewAsUserId] = useState<string>(REAL_USER_ID);
   const [isDragModifierPressed, setIsDragModifierPressed] = useState(false);
   
-  const [users, setUsers] = useState<User[]>(mockUsers);
-  const [teams, setTeams] = useState<Team[]>(mockTeams);
+  const [users, setUsers] = useState<User[]>([]);
+  const [teams, setTeams] = useState<Team[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [userStatusAssignments, setUserStatusAssignments] = useState<Record<string, UserStatusAssignment[]>>({});
-  const [calendars, setCalendars] = useState<SharedCalendar[]>(mockCalendars);
-  const [locations, setLocations] = useState<BookableLocation[]>(mockLocations);
-  const [holidays, setHolidays] = useState<Holiday[]>(mockHolidays);
-  const [appSettings, setAppSettings] = useState<AppSettings>(() => {
-    const corePageIds = new Set(corePages.map(p => p.id));
-    const dynamicPages = mockAppSettings.pages.filter(p => !corePageIds.has(p.id));
-    const tasksIndex = corePages.findIndex(p => p.id === 'page-tasks');
-    const finalPages = [...corePages];
-    if (tasksIndex !== -1) {
-        finalPages.splice(tasksIndex + 1, 0, ...dynamicPages);
-    } else {
-        finalPages.push(...dynamicPages);
-    }
-    return {
-      pages: finalPages,
-      tabs: [...coreTabs],
-    };
-  });
-  const [allBadges, setAllBadges] = useState<Badge[]>(() => {
-    const badgesMap = new Map<string, Badge>();
-    [...videoProdBadges, ...liveEventsBadges, ...pScaleBadges, ...starRatingBadges, ...effortBadges].forEach(badge => {
-        if (badge && !badgesMap.has(badge.id)) {
-            badgesMap.set(badge.id, badge);
-        }
-    });
-    return Array.from(badgesMap.values()).filter(Boolean);
-  });
-  const [allBadgeCollections, setAllBadgeCollections] = useState<BadgeCollection[]>(allMockBadgeCollections);
+  const [calendars, setCalendars] = useState<SharedCalendar[]>([]);
+  const [locations, setLocations] = useState<BookableLocation[]>([]);
+  const [holidays, setHolidays] = useState<Holiday[]>([]);
+  const [appSettings, setAppSettings] = useState<AppSettings>({ pages: [], tabs: [] });
+  const [allBadges, setAllBadges] = useState<Badge[]>([]);
+  const [allBadgeCollections, setAllBadgeCollections] = useState<BadgeCollection[]>([]);
 
   const { toast } = useToast();
   
@@ -140,7 +117,43 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const loadData = async () => {
+      // Set loading to true initially
+      setLoading(true);
+
+      // Simulate API call
       await simulateApi(200);
+      
+      // Populate all state from mock data
+      setUsers(mockUsers);
+      setTeams(mockTeams);
+      setCalendars(mockCalendars);
+      setLocations(mockLocations);
+      setHolidays(mockHolidays);
+
+      const badgesMap = new Map<string, Badge>();
+      [...videoProdBadges, ...liveEventsBadges, ...pScaleBadges, ...starRatingBadges, ...effortBadges].forEach(badge => {
+          if (badge && !badgesMap.has(badge.id)) {
+              badgesMap.set(badge.id, badge);
+          }
+      });
+      setAllBadges(Array.from(badgesMap.values()).filter(Boolean));
+      setAllBadgeCollections(allMockBadgeCollections);
+
+      const corePageIds = new Set(corePages.map(p => p.id));
+      const dynamicPages = mockAppSettings.pages.filter(p => !corePageIds.has(p.id));
+      const finalPages = [...corePages];
+      const tasksIndex = corePages.findIndex(p => p.id === 'page-tasks');
+      if (tasksIndex !== -1) {
+          finalPages.splice(tasksIndex + 1, 0, ...dynamicPages);
+      } else {
+          finalPages.push(...dynamicPages);
+      }
+      setAppSettings({
+        pages: finalPages,
+        tabs: [...coreTabs],
+      });
+      
+      // Only set loading to false after all state is initialized
       setLoading(false);
     };
     loadData();
@@ -255,11 +268,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     toast({ title: 'Success', description: `Team "${team?.name}" has been deleted.` });
   }, [teams, appSettings, viewAsUser, toast]);
 
-  const reorderTeams = useCallback(async (reordered: Team[]) => {
-      await simulateApi();
-      setTeams(reordered);
-  }, []);
-
   const addCalendar = useCallback(async (newCalendarData: Omit<SharedCalendar, 'id'>) => {
     const newCalendar: SharedCalendar = { ...newCalendarData, id: crypto.randomUUID() };
     await simulateApi();
@@ -279,11 +287,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     await simulateApi();
     setCalendars(current => current.filter(c => c.id !== calendarId));
   }, [calendars.length, toast]);
-
-  const reorderCalendars = useCallback(async (reordered: SharedCalendar[]) => {
-      await simulateApi();
-      setCalendars(reordered);
-  }, []);
 
   const triggerGoogleCalendarSync = useCallback(async (calendarId: string) => {
     const calendarToSync = calendars.find(c => c.id === calendarId);
@@ -597,11 +600,15 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }), [realUser, viewAsUser, users]);
 
   const dataValue = useMemo(() => ({
-    loading, isDragModifierPressed, holidays, teams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, deleteUser, notifications, setNotifications, userStatusAssignments, setUserStatusAssignments, addUser, linkGoogleCalendar, calendars, reorderCalendars, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, fetchTasks, addTask, updateTask, deleteTask, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors, handleBadgeAssignment, handleBadgeUnassignment, searchSharedTeams
-  }), [loading, isDragModifierPressed, holidays, teams, addTeam, updateTeam, deleteTeam, updateUser, deleteUser, notifications, userStatusAssignments, addUser, linkGoogleCalendar, calendars, reorderCalendars, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, fetchTasks, addTask, updateTask, deleteTask, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, handleBadgeAssignment, handleBadgeUnassignment, searchSharedTeams]);
+    loading, isDragModifierPressed, holidays, teams, addTeam, updateTeam, deleteTeam, updateUser, deleteUser, notifications, setNotifications, userStatusAssignments, setUserStatusAssignments, addUser, linkGoogleCalendar, calendars, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, fetchTasks, addTask, updateTask, deleteTask, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors, handleBadgeAssignment, handleBadgeUnassignment, searchSharedTeams
+  }), [loading, isDragModifierPressed, holidays, teams, addTeam, updateTeam, deleteTeam, updateUser, deleteUser, notifications, userStatusAssignments, addUser, linkGoogleCalendar, calendars, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, fetchTasks, addTask, updateTask, deleteTask, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, handleBadgeAssignment, handleBadgeUnassignment, searchSharedTeams]);
 
-  if (!realUser || !viewAsUser) {
-    return null; // Or a loading spinner
+  if (loading || !realUser || !viewAsUser) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <div className="h-16 w-16 animate-spin rounded-full border-4 border-dashed border-primary"></div>
+      </div>
+    );
   }
 
   return (
@@ -633,3 +640,4 @@ export function useUser() {
     const data = useUserData();
     return { ...session, ...data };
 }
+
