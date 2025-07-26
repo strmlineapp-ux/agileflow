@@ -186,7 +186,6 @@ function TeamCard({
     }, [team.owner.id, users]);
 
     const ownerName = owner?.displayName || 'System';
-    const ownerColor = owner?.primaryColor || '#64748B';
 
     const canManageTeam = useMemo(() => {
         if (isSharedPreview) return false;
@@ -198,6 +197,7 @@ function TeamCard({
 
     let shareIcon: string | null = null;
     let shareIconTitle: string = '';
+    let shareIconColor = '#64748B'; // Consistent muted color
     
     if (team.owner.id === viewAsUser.userId && team.isShared) {
         shareIcon = 'change_circle';
@@ -348,7 +348,7 @@ function TeamCard({
                                         <TooltipTrigger asChild>
                                             <div 
                                                 className="absolute -top-0 -right-3 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white"
-                                                style={{ backgroundColor: ownerColor }}
+                                                style={{ backgroundColor: shareIconColor }}
                                             >
                                                 <GoogleSymbol name={shareIcon} style={{fontSize: '16px'}} opticalSize={20} />
                                             </div>

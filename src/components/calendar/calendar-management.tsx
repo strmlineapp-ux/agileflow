@@ -188,7 +188,7 @@ function CalendarCard({
 
   let shareIcon: string | null = null;
   let shareIconTitle: string = '';
-  let shareIconColor = ownerUser?.primaryColor || '#64748B';
+  let shareIconColor = '#64748B'; // Consistent muted color
 
   const isOwned = ownerUser?.userId === viewAsUser.userId;
 

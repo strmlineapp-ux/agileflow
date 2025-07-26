@@ -299,7 +299,7 @@ function BadgeDisplayItem({
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <div className="absolute -top-0 -right-3 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white" style={{ backgroundColor: ownerUser?.primaryColor || '#64748B' }}>
+                                <div className="absolute -top-0 -right-3 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white" style={{ backgroundColor: '#64748B' }}>
                                     <GoogleSymbol name="link" style={{fontSize: '16px'}} weight={100} opticalSize={20}/>
                                 </div>
                             </TooltipTrigger>
@@ -353,7 +353,7 @@ function BadgeDisplayItem({
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <div className="absolute -top-0 -right-3 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white" style={{ backgroundColor: ownerUser?.primaryColor || '#64748B' }}>
+                                    <div className="absolute -top-0 -right-3 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white" style={{ backgroundColor: '#64748B' }}>
                                         <GoogleSymbol name="link" style={{fontSize: '16px'}} weight={100} opticalSize={20} />
                                     </div>
                                 </TooltipTrigger>
@@ -635,22 +635,17 @@ function BadgeCollectionCard({
         { key: 'badges', icon: 'style', label: 'Badges' },
     ];
 
-    const ownerUser = useMemo(() => {
-        return users.find(u => u.userId === collection.owner.id);
-    }, [collection.owner.id, users]);
-    
-    const ownerName = ownerUser?.displayName || 'System';
-    const ownerColor = ownerUser?.primaryColor || '#64748B';
-
     let shareIcon: string | null = null;
     let shareIconTitle: string = '';
+    let shareIconColor = '#64748B'; // Consistent muted color
     
     if (isOwner && collection.isShared) {
         shareIcon = 'change_circle';
         shareIconTitle = `Owned & Shared by You`;
     } else if (!isOwner && !isSharedPreview) { // Is a linked collection on main board
+        const ownerUser = users.find(u => u.userId === collection.owner.id);
         shareIcon = 'link';
-        shareIconTitle = `Owned by ${ownerName}`;
+        shareIconTitle = `Owned by ${ownerUser?.displayName || 'System'}`;
     }
 
     const handleToggleApplication = (application: BadgeApplication) => {
@@ -770,7 +765,7 @@ function BadgeCollectionCard({
                                         </PopoverContent>
                                     </Popover>
                                     {shareIcon && (
-                                        <TooltipProvider><Tooltip><TooltipTrigger asChild><div className="absolute -top-0 -right-3 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white" style={{ backgroundColor: ownerColor }}><GoogleSymbol name={shareIcon} style={{fontSize: '16px'}} opticalSize={20} /></div></TooltipTrigger><TooltipContent><p>{shareIconTitle}</p></TooltipContent></Tooltip></TooltipProvider>
+                                        <TooltipProvider><Tooltip><TooltipTrigger asChild><div className="absolute -top-0 -right-3 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white" style={{ backgroundColor: shareIconColor }}><GoogleSymbol name={shareIcon} style={{fontSize: '16px'}} opticalSize={20} /></div></TooltipTrigger><TooltipContent><p>{shareIconTitle}</p></TooltipContent></Tooltip></TooltipProvider>
                                     )}
                                 </>
                             )}
