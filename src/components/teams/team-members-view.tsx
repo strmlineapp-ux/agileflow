@@ -2,7 +2,7 @@
 'use client';
 
 import { useUser } from '@/context/user-context';
-import { type Team, type AppTab, type User, type Badge } from '@/types';
+import { type Team, type AppTab, type User, type Badge, type BadgeCollection } from '@/types';
 import { TeamMemberCard } from './team-member-card';
 import React, { useRef, useState, useEffect, useMemo, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
@@ -21,32 +21,15 @@ import { ScrollArea } from '../ui/scroll-area';
 import { toast } from '@/hooks/use-toast';
 import { Badge as UiBadge } from '../ui/badge';
 import { useDroppable } from '@dnd-kit/core';
+import { BadgeCollectionCard } from './badge-management';
 
-function DraggableBadgeFromPool({ badge, canManage }: { badge: Badge; canManage: boolean }) {
-    const { attributes, listeners, setNodeRef, isDragging, transform, transition } = useSortable({
-        id: `badge-pool:${badge.id}`,
-        data: { type: 'badge', badge: badge, context: 'pool' },
-        disabled: !canManage,
-    });
-
-    const style = {
-        transform: CSS.Transform.toString(transform),
-        transition,
-        opacity: isDragging ? 0.5 : 1,
-    };
-
+function DraggableUserList({ id, children, className }: { id: string, children: React.ReactNode, className?: string }) {
+    const { setNodeRef, isOver } = useDroppable({ id, data: { type: 'user-list-container', id } });
     return (
-        <div ref={setNodeRef} style={style} {...listeners} {...attributes}>
-            <UiBadge
-                variant={'outline'}
-                style={{ color: badge.color, borderColor: badge.color }}
-                className={cn('flex items-center gap-1.5 p-1 pl-2 rounded-full text-sm h-8 font-thin', canManage && 'cursor-grab')}
-            >
-                <GoogleSymbol name={badge.icon} style={{ fontSize: '20px' }} weight={100} />
-                <span>{badge.name}</span>
-            </UiBadge>
+        <div ref={setNodeRef} className={cn(className, "transition-colors rounded-md", isOver && "bg-primary/5")}>
+            {children}
         </div>
-    );
+    )
 }
 
 function SortableTeamMember({ member, team, isViewer, onSetAdmin, onRemoveUser }: { member: User, team: Team, isViewer: boolean, onSetAdmin: () => void, onRemoveUser: () => void }) {
@@ -103,17 +86,9 @@ function SortableTeamMember({ member, team, isViewer, onSetAdmin, onRemoveUser }
   );
 }
 
-function DroppableUserList({ id, children, className }: { id: string, children: React.ReactNode, className?: string }) {
-    const { setNodeRef, isOver } = useDroppable({ id, data: { type: 'user-list-container' } });
-    return (
-        <div ref={setNodeRef} className={cn(className, "transition-colors rounded-md", isOver && "bg-primary/5")}>
-            {children}
-        </div>
-    )
-}
 
 export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
-    const { viewAsUser, users, updateAppTab, updateTeam, isDragModifierPressed, allBadges, handleBadgeAssignment, handleBadgeUnassignment, allBadgeCollections } = useUser();
+    const { viewAsUser, users, updateAppTab, updateTeam, isDragModifierPressed, allBadges, handleBadgeAssignment, handleBadgeUnassignment, allBadgeCollections, updateBadge, deleteBadge, addBadge, updateBadgeCollection, deleteBadgeCollection, predefinedColors } = useUser();
     const [activeDragItem, setActiveDragItem] = useState<{type: string, id: string, data: any} | null>(null);
 
     if (!team) return null;
@@ -128,6 +103,19 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
 
     const [isBadgePoolOpen, setIsBadgePoolOpen] = useState(false);
     const [badgePoolSearch, setBadgePoolSearch] = useState('');
+    const [expandedCollections, setExpandedCollections] = useState<Set<string>>(new Set());
+
+    const onToggleExpand = useCallback((collectionId: string) => {
+        setExpandedCollections(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(collectionId)) {
+                newSet.delete(collectionId);
+            } else {
+                newSet.add(collectionId);
+            }
+            return newSet;
+        });
+    }, []);
 
     const teamAdminsLabel = team.teamAdminsLabel || 'Team Admins';
     const membersLabel = team.membersLabel || 'Members';
@@ -152,14 +140,13 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
     const adminIds = useMemo(() => admins.map(a => `member:${a.userId}`), [admins]);
     const memberIds = useMemo(() => members.map(m => `member:${m.userId}`), [members]);
     
-    const groupedAssignableBadges = useMemo(() => {
+    const assignableCollections = useMemo(() => {
         return allBadgeCollections
             .filter(c => (team.activeBadgeCollections || []).includes(c.id) && c.applications?.includes('team members'))
             .map(collection => {
                 const badges = collection.badgeIds
                     .map(badgeId => allBadges.find(b => b.id === badgeId))
                     .filter((b): b is Badge => !!b && b.name.toLowerCase().includes(badgePoolSearch.toLowerCase()));
-
                 return { ...collection, badges };
             })
             .filter(collection => collection.badges.length > 0);
@@ -307,10 +294,10 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
     
         if (activeType === 'badge') {
             const badge = active.data.current?.badge as Badge;
+            if (!badge) return;
+
             const sourceContext = active.data.current?.context;
             const sourceMemberId = active.data.current?.memberId;
-
-            if (!badge) return;
     
             if (overType === 'member-card') {
                 const targetMemberId = over.data.current?.memberId;
@@ -417,13 +404,13 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                                         {teamAdminsLabel}
                                     </h3>
                                 )}
-                                <DroppableUserList id="admins" className="space-y-4">
+                                <DraggableUserList id="admins" className="space-y-4">
                                     <SortableContext items={adminIds} strategy={verticalListSortingStrategy}>
                                         {admins.map((member) => (
                                             <SortableTeamMember key={member.userId} member={member} team={team} isViewer={isViewer} onSetAdmin={() => handleSetAdmin(team.id, member.userId)} onRemoveUser={() => handleRemoveUser(member.userId)} />
                                         ))}
                                     </SortableContext>
-                                </DroppableUserList>
+                                </DraggableUserList>
                             </div>
                         )}
 
@@ -442,7 +429,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                                 </h3>
                             )}
                             {members.length > 0 && (
-                                <DroppableUserList id="members">
+                                <DraggableUserList id="members">
                                     <SortableContext items={memberIds} strategy={verticalListSortingStrategy}>
                                         <div className="flex flex-wrap -m-3">
                                         {members.map((member) => (
@@ -452,7 +439,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                                         ))}
                                         </div>
                                     </SortableContext>
-                                </DroppableUserList>
+                                </DraggableUserList>
                             )}
                         </div>
                     </div>
@@ -485,19 +472,19 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                     <CardContent className="flex-1 p-2 overflow-hidden min-h-0 rounded-md">
                         <ScrollArea className="h-full">
                             <div className="space-y-4">
-                                {groupedAssignableBadges.map(({ collectionName, badges }) => (
-                                    <div key={collectionName}>
-                                        <p className="text-xs tracking-wider mb-2">{collectionName}</p>
+                            <SortableContext items={assignableCollections.flatMap(c => c.badges.map(b => `badge-pool:${b.id}`))}>
+                                {assignableCollections.map((collection) => (
+                                    <div key={collection.id}>
+                                        <p className="text-xs tracking-wider mb-2">{collection.name}</p>
                                         <div className="flex flex-wrap gap-2">
-                                            <SortableContext items={badges.map(b => `badge-pool:${b.id}`)} strategy={verticalListSortingStrategy}>
-                                                {badges.map(badge => (
-                                                    <DraggableBadgeFromPool key={badge.id} badge={badge} canManage={canManage} />
-                                                ))}
-                                            </SortableContext>
+                                            {collection.badges.map(badge => (
+                                                <DraggableBadgeFromPool key={badge.id} badge={badge} canManage={canManage} />
+                                            ))}
                                         </div>
                                     </div>
                                 ))}
-                                {groupedAssignableBadges.length === 0 && <p className="text-xs text-muted-foreground text-center p-4 w-full">No badges available to assign. Activate badge collections in the "Badges" tab.</p>}
+                            </SortableContext>
+                            {assignableCollections.length === 0 && <p className="text-xs text-muted-foreground text-center p-4 w-full">No badges available to assign. Activate badge collections in the "Badges" tab.</p>}
                             </div>
                         </ScrollArea>
                     </CardContent>
