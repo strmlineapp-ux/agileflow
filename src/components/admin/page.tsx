@@ -1297,4 +1297,3 @@ export const TabsManagement = () => {
     );
 };
 // #endregion
-
