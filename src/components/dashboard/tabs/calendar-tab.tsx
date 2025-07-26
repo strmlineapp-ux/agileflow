@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
@@ -7,7 +8,7 @@ import { WeekView } from '@/components/calendar/week-view';
 import { DayView } from '@/components/calendar/day-view';
 import { ProductionScheduleView } from '@/components/calendar/production-schedule-view';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { format, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays, startOfWeek, getWeek, isToday, startOfMonth, endOfMonth, startOfDay } from 'date-fns';
+import { format, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays, startOfWeek, getWeek, isToday, startOfDay, startOfMonth, endOfMonth } from 'date-fns';
 import { useUser } from '@/context/user-context';
 import { canCreateAnyEvent } from '@/lib/permissions';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
@@ -24,7 +25,7 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
   const [zoomLevel, setZoomLevel] = useState<'normal' | 'fit'>('normal');
   const [dayViewAxis, setDayViewAxis] = useState<'standard' | 'reversed'>('standard');
   const [isNewEventOpen, setIsNewEventOpen] = useState(false);
-  const [initialEventData, setInitialEventData] = useState<any>(null);
+  const [initialEventData, setInitialEventData] = useState<Partial<Omit<Event, 'eventId'>> | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [triggerScroll, setTriggerScroll] = useState(0);
   const [viewEvents, setViewEvents] = useState<Event[]>([]);
@@ -34,7 +35,6 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
   
   const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars);
 
-  // This effect fetches events whenever the date or view changes.
   useEffect(() => {
     let start: Date;
     let end: Date;
@@ -98,7 +98,6 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
     if (!isToday(currentDate)) {
         setCurrentDate(today);
     }
-    // Incrementing triggerScroll will cause the useEffect in child components to run
     setTriggerScroll(prev => prev + 1);
   }, [currentDate]);
 
@@ -138,10 +137,26 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
     return `Week ${weekNumber} · ${range}`;
   }, [view, currentDate]);
 
-  const handleEventMutation = useCallback(async (mutationFn: () => Promise<Event[]>) => {
-    const updatedEvents = await mutationFn();
+  const handleEventMutation = useCallback(async (mutationType: 'add' | 'update' | 'delete', eventData: any) => {
+    let updatedEvents: Event[];
+
+    switch (mutationType) {
+      case 'add':
+        updatedEvents = await addEvent(viewEvents, eventData);
+        setInitialEventData(null); // Reset form for next new event
+        break;
+      case 'update':
+        const { eventId, ...updateData } = eventData;
+        updatedEvents = await updateEvent(viewEvents, eventId, updateData);
+        break;
+      case 'delete':
+        updatedEvents = await deleteEvent(viewEvents, eventData.eventId);
+        break;
+      default:
+        return;
+    }
     setViewEvents(updatedEvents);
-  }, []);
+  }, [addEvent, updateEvent, deleteEvent, viewEvents]);
 
   const closeDialogs = useCallback(() => {
     setIsNewEventOpen(false);
@@ -194,7 +209,7 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
                   <EventForm 
                     onFinished={closeDialogs} 
                     initialData={initialEventData} 
-                    onAdd={(newEventData) => handleEventMutation(() => addEvent(viewEvents, newEventData))}
+                    onAdd={(data) => handleEventMutation('add', data)}
                   />
                 </DialogContent>
               </Dialog>
@@ -249,8 +264,8 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
         event={selectedEvent}
         isOpen={!!selectedEvent}
         onOpenChange={(isOpen) => !isOpen && setSelectedEvent(null)}
-        onUpdate={(eventId, eventData) => handleEventMutation(() => updateEvent(viewEvents, eventId, eventData))}
-        onDelete={(eventId) => handleEventMutation(() => deleteEvent(viewEvents, eventId))}
+        onUpdate={(eventId, eventData) => handleEventMutation('update', { eventId, ...eventData })}
+        onDelete={(eventId) => handleEventMutation('delete', { eventId })}
       />
     </>
   );

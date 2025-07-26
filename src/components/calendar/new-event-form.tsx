@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -96,11 +97,11 @@ const formSchema = z.object({
 
 type EventFormProps = {
   event?: Event;
-  onFinished: (mutatedEvent?: Event) => void;
+  onFinished: () => void;
   onAdd?: (newEventData: Omit<Event, 'eventId'>) => void;
-  onUpdate?: (eventId: string, eventData: Partial<Omit<Event, 'eventId'>>) => void;
+  onUpdate?: (eventData: Partial<Omit<Event, 'eventId'>> & { eventId: string }) => void;
   onDelete?: (eventId: string) => void;
-  initialData?: Partial<z.infer<typeof formSchema>>;
+  initialData?: Partial<Omit<Event, 'eventId'>> | null;
 };
 
 const getDefaultCalendarId = (user: User, availableCalendars: SharedCalendar[]): string | undefined => {
@@ -365,7 +366,7 @@ export function EventForm({ event, onFinished, initialData, onAdd, onUpdate, onD
 
     try {
       if (isEditing) {
-        onUpdate?.(event.eventId, finalEventData);
+        onUpdate?.({ ...finalEventData, eventId: event.eventId });
         toast({ title: 'Event Updated', description: `"${values.title}" has been saved.` });
       } else {
         const newEvent = {
@@ -378,7 +379,7 @@ export function EventForm({ event, onFinished, initialData, onAdd, onUpdate, onD
         toast({ title: 'Event Created', description: `"${values.title}" has been added to the calendar.`});
         form.reset();
       }
-      onFinished?.();
+      onFinished();
     } catch (error) {
       toast({
         variant: 'destructive',
