@@ -77,7 +77,7 @@ This table details the information stored directly within each `User` object.
 | `avatarUrl?: string` | **Google Service.** A URL to the user's profile picture. This is part of the basic profile information obtained during a standard "Sign in with Google" action and **does not require separate permissions**. |
 | `location?: string` | **Google Service.** The user's primary work location. This is designed to be populated from the user's **Google Account profile** (from their address information) **after the user grants the necessary permissions**. |
 | `googleCalendarLinked: boolean` | **Google Service.** A flag that is set to `true` only after the user successfully completes an OAuth consent flow via **Firebase Authentication** to grant the app permission to access their Google Calendar. |
-| `roles?: string[]` | **Internal.** An array of strings that includes the names of any `Badge`s the user has been assigned. The application determines the name's meaning and properties by looking it up in the relevant `Team` object. |
+| `roles?: string[]` | **Internal.** An array of `badgeId`s assigned to the user. |
 | `directReports?: string[]` | **Internal.** An array of `userId`s for users who report directly to this user. This is currently informational. |
 | `memberOfTeamIds?: string[]` | **Internal.** An array of `teamId`s for all teams the user is a member of. This is a crucial de-normalization for efficient permission checking. |
 | `theme?: 'light' \| 'dark'` | **Internal.** A UI preference for the app's color scheme. |
@@ -143,7 +143,7 @@ This approach abstracts away the complexity of calendar IDs and provides a seaml
 | `name: string` | **Internal.** The display name for the calendar within the application. |
 | `icon: string` | **Internal.** The Google Symbol name for the calendar's icon. |
 | `color: string` | **Internal.** The hex color code used for this calendar's events in the UI. |
-| `owner: { type: 'user', id: string }` | An object that defines who owns the calendar. Ownership dictates who can edit the calendar's properties. |
+| `owner: { type: 'user', id: string }` | An object that defines which `User` owns the calendar. Ownership dictates who can edit the calendar's properties. |
 | `googleCalendarId?: string` | **External (Google Calendar).** The unique ID of the Google Calendar that this internal calendar is linked to. This is currently set manually but will be populated automatically by the future calendar linking flow. |
 | `isShared?: boolean` | **Internal.** If `true`, this calendar will be visible to other users in the application for discovery and linking. |
 | `defaultEventTitle?: string` | **Internal.** A placeholder string for the title of new events created on this calendar. |
@@ -204,7 +204,7 @@ The `Team` entity is a functional unit that groups users together for collaborat
 | `name: string` | The display name of the team. |
 | `icon: string` | The Google Symbol name for the team's icon. |
 | `color: string` | The hex color for the team's icon. |
-| `owner: { type: 'user', id: string }` | An object that defines who owns the team. Ownership dictates who can edit the team's properties. |
+| `owner: { type: 'user', id: string }` | An object that defines which `User` owns the team. Ownership dictates who can edit the team's properties. |
 | `isShared?: boolean` | **Internal.** If `true`, this team will be visible to other teams in the application for discovery and linking. |
 | `members: string[]` | An array of `userId`s for all members of the team. |
 | `teamAdmins?: string[]` | A subset of `members` who have administrative privileges for this team (e.g., can add/remove members). |
@@ -212,7 +212,6 @@ The `Team` entity is a functional unit that groups users together for collaborat
 | `membersLabel?: string` | A custom label for the Members list on the Team Members tab. |
 | `userBadgesLabel?: string` | A custom label for the "Team Badges" section on the Team Members tab. |
 | `activeBadgeCollections?: string[]` | An array of `collectionId`s. Badges from these collections become available for assignment to members of this team. This is a local setting for the team. |
-| `collectionViewModes?: { [key:string]: 'compact' \| 'grid' \| 'list' }` | A map of `collectionId`s to a locally-preferred view mode, overriding the collection's default. |
 | `pinnedLocations?: string[]` | An array of location names pinned to this team's schedule. |
 | `checkLocations?: string[]` | A subset of pinnedLocations designated for daily checks. |
 | `locationAliases?: { [key:string]: string }` | A map of canonical location names to custom display aliases. |

@@ -532,7 +532,6 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
     const titleInputRef = useRef<HTMLInputElement>(null);
     const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
     const [sharedSearchTerm, setSharedSearchTerm] = useState('');
-    const [sharedTeams, setSharedTeams] = useState<Team[]>([]);
     const [expandedTeams, setExpandedTeams] = useState<Set<string>>(new Set());
     
     const [searchTerm, setSearchTerm] = useState('');
@@ -643,8 +642,8 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
         updateTeam(teamId, { teamAdmins: Array.from(currentAdmins) });
     }, [teams, updateTeam, canManageTeam, toast]);
 
-    const handleRemoveUserFromTeam = useCallback((teamId: string, userId: string) => {
-        const team = teams.find(t => t.id === teamId);
+    const handleRemoveUserFromTeam = useCallback((userId: string) => {
+        const team = teams.find(t => t.id === page.path.split('/')[2]);
         if (!team) return;
 
         if (!canManageTeam(team)) {
@@ -654,13 +653,13 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
         
         const updatedMembers = team.members.filter(id => id !== userId);
         const newTeamAdmins = (team.teamAdmins || []).filter(id => id !== userId);
-        updateTeam(teamId, { members: updatedMembers, teamAdmins: newTeamAdmins });
+        updateTeam(team.id, { members: updatedMembers, teamAdmins: newTeamAdmins });
         toast({ title: 'User Removed' });
 
         if (viewAsUser.userId === userId) {
             // Check if user will lose access to the current page. The page path for dynamic team pages is like /dashboard/teams/[teamId]
             const currentPageId = page.path.split('/')[2];
-            if (teamId === currentPageId) {
+            if (team.id === currentPageId) {
                 router.push('/dashboard/notifications');
             }
         }
@@ -673,6 +672,10 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
     };
     
     const displayedTeams = useMemo(() => {
+        if (viewAsUser.isAdmin) {
+            return teams.filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase()));
+        }
+        
         return teams
             .filter(t => 
                 canManageTeam(t) || 
@@ -682,14 +685,13 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
             .filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase()));
     }, [teams, viewAsUser, searchTerm, canManageTeam]);
 
+    const sharedTeams = useMemo(() => {
+        const displayedIds = new Set(displayedTeams.map(c => c.id));
+        return teams
+            .filter(team => team.isShared && team.owner.id !== viewAsUser.userId && !displayedIds.has(team.id))
+            .filter(t => t.name.toLowerCase().includes(sharedSearchTerm.toLowerCase()));
+    }, [teams, displayedTeams, viewAsUser.userId, sharedSearchTerm]);
 
-    useEffect(() => {
-        if (isSharedPanelOpen) {
-            const filteredShared = teams.filter(team => team.isShared && team.owner.id !== viewAsUser.userId && team.name.toLowerCase().includes(sharedSearchTerm.toLowerCase()));
-            setSharedTeams(filteredShared);
-        }
-    }, [isSharedPanelOpen, sharedSearchTerm, teams, viewAsUser.userId]);
-    
     const onDragEnd = (result: DragEndEvent) => {
         setActiveDragItem(null);
         const { active, over } = result;

@@ -323,7 +323,6 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
                     searchTerm={searchTerm} 
                     setSearchTerm={setSearchTerm} 
                     placeholder="Search users..."
-                    autoFocus={true}
                   />
               </div>
           )}

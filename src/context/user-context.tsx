@@ -46,7 +46,6 @@ interface UserDataContextType {
   addTeam: (teamData: Omit<Team, 'id'>) => Promise<void>;
   updateTeam: (teamId: string, teamData: Partial<Team>) => Promise<void>;
   deleteTeam: (teamId: string, router: AppRouterInstance, pathname: string) => Promise<void>;
-  reorderTeams: (reorderedTeams: Team[]) => Promise<void>;
   updateUser: (userId: string, userData: Partial<User>) => Promise<void>;
   deleteUser: (userId: string) => Promise<void>;
   notifications: Notification[];
@@ -99,71 +98,53 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [viewAsUserId, setViewAsUserId] = useState<string>(REAL_USER_ID);
   const [isDragModifierPressed, setIsDragModifierPressed] = useState(false);
   
-  // Initialize states as empty, simulating a "no data yet" state
-  const [users, setUsers] = useState<User[]>([]);
-  const [teams, setTeams] = useState<Team[]>([]);
+  const [users, setUsers] = useState<User[]>(mockUsers);
+  const [teams, setTeams] = useState<Team[]>(mockTeams);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [userStatusAssignments, setUserStatusAssignments] = useState<Record<string, UserStatusAssignment[]>>({});
-  const [calendars, setCalendars] = useState<SharedCalendar[]>([]);
-  const [locations, setLocations] = useState<BookableLocation[]>([]);
-  const [holidays, setHolidays] = useState<Holiday[]>([]);
-  const [appSettings, setAppSettings] = useState<AppSettings>({ pages: [], tabs: [] });
-  const [allBadges, setAllBadges] = useState<Badge[]>([]);
-  const [allBadgeCollections, setAllBadgeCollections] = useState<BadgeCollection[]>([]);
+  const [calendars, setCalendars] = useState<SharedCalendar[]>(mockCalendars);
+  const [locations, setLocations] = useState<BookableLocation[]>(mockLocations);
+  const [holidays, setHolidays] = useState<Holiday[]>(mockHolidays);
+  const [appSettings, setAppSettings] = useState<AppSettings>(() => {
+    const corePageIds = new Set(corePages.map(p => p.id));
+    const dynamicPages = mockAppSettings.pages.filter(p => !corePageIds.has(p.id));
+    const tasksIndex = corePages.findIndex(p => p.id === 'page-tasks');
+    const finalPages = [...corePages];
+    if (tasksIndex !== -1) {
+        finalPages.splice(tasksIndex + 1, 0, ...dynamicPages);
+    } else {
+        finalPages.push(...dynamicPages);
+    }
+    return {
+      pages: finalPages,
+      tabs: [...coreTabs],
+    };
+  });
+  const [allBadges, setAllBadges] = useState<Badge[]>(() => {
+    const badgesMap = new Map<string, Badge>();
+    [...videoProdBadges, ...liveEventsBadges, ...pScaleBadges, ...starRatingBadges, ...effortBadges].forEach(badge => {
+        if (badge && !badgesMap.has(badge.id)) {
+            badgesMap.set(badge.id, badge);
+        }
+    });
+    return Array.from(badgesMap.values()).filter(Boolean);
+  });
+  const [allBadgeCollections, setAllBadgeCollections] = useState<BadgeCollection[]>(allMockBadgeCollections);
 
   const { toast } = useToast();
   
-  // --- Multi-Tenant Simulation ---
   const tenantId = 'default'; 
   const app = getFirebaseAppForTenant(tenantId);
   const auth = getAuth(app);
   const db = getFirestore(app);
-  // --- End Multi-Tenant Simulation ---
 
-  // Simulate fetching data from a backend on initial load
   useEffect(() => {
-    const loadMockData = async () => {
-      await simulateApi(200); // Simulate network latency
-
-      const currentUser = mockUsers.find(u => u.userId === viewAsUserId);
-      if (!currentUser) return;
-
-      // Set all the data from our mock files
-      setUsers(mockUsers);
-      const userTeams = mockTeams.filter(team => team.members.includes(currentUser.userId) || (team.teamAdmins || []).includes(currentUser.userId));
-      setTeams(userTeams);
-      setCalendars(mockCalendars);
-      setLocations(mockLocations);
-      setHolidays(mockHolidays);
-
-      const badgesMap = new Map<string, Badge>();
-      [...videoProdBadges, ...liveEventsBadges, ...pScaleBadges, ...starRatingBadges, ...effortBadges].forEach(badge => {
-          if (badge && !badgesMap.has(badge.id)) {
-              badgesMap.set(badge.id, badge);
-          }
-      });
-      setAllBadges(Array.from(badgesMap.values()).filter(Boolean));
-      setAllBadgeCollections(allMockBadgeCollections);
-
-      const corePageIds = new Set(corePages.map(p => p.id));
-      const dynamicPages = mockAppSettings.pages.filter(p => !corePageIds.has(p.id));
-      const tasksIndex = corePages.findIndex(p => p.id === 'page-tasks');
-      const finalPages = [...corePages];
-      if (tasksIndex !== -1) {
-          finalPages.splice(tasksIndex + 1, 0, ...dynamicPages);
-      } else {
-          finalPages.push(...dynamicPages);
-      }
-      setAppSettings({
-          pages: finalPages,
-          tabs: [...coreTabs],
-      });
-      
+    const loadData = async () => {
+      await simulateApi(200);
       setLoading(false);
     };
-
-    loadMockData();
-  }, [viewAsUserId]);
+    loadData();
+  }, []);
 
   const realUser = useMemo(() => users.find(u => u.userId === REAL_USER_ID) || null, [users]);
   const viewAsUser = useMemo(() => users.find(u => u.userId === viewAsUserId) || realUser, [users, viewAsUserId, realUser]);
@@ -466,14 +447,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const updateBadgeCollection = useCallback((collectionId: string, data: Partial<BadgeCollection>, teamId?: string) => {
     setAllBadgeCollections(current => current.map(c => (c.id === collectionId ? { ...c, ...data } : c)));
-    if (teamId) {
-        setTeams(currentTeams => currentTeams.map(team => {
-            if (team.id === teamId) {
-                return {...team, collectionViewModes: { ...team.collectionViewModes, [collectionId]: data.viewMode! }};
-            }
-            return team;
-        }));
-    }
   }, []);
 
 
@@ -625,7 +598,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const dataValue = useMemo(() => ({
     loading, isDragModifierPressed, holidays, teams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, deleteUser, notifications, setNotifications, userStatusAssignments, setUserStatusAssignments, addUser, linkGoogleCalendar, calendars, reorderCalendars, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, fetchTasks, addTask, updateTask, deleteTask, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors, handleBadgeAssignment, handleBadgeUnassignment, searchSharedTeams
-  }), [loading, isDragModifierPressed, holidays, teams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, deleteUser, notifications, userStatusAssignments, addUser, linkGoogleCalendar, calendars, reorderCalendars, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, fetchTasks, addTask, updateTask, deleteTask, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, handleBadgeAssignment, handleBadgeUnassignment, searchSharedTeams]);
+  }), [loading, isDragModifierPressed, holidays, teams, addTeam, updateTeam, deleteTeam, updateUser, deleteUser, notifications, userStatusAssignments, addUser, linkGoogleCalendar, calendars, reorderCalendars, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, fetchTasks, addTask, updateTask, deleteTask, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, handleBadgeAssignment, handleBadgeUnassignment, searchSharedTeams]);
 
   if (!realUser || !viewAsUser) {
     return null; // Or a loading spinner

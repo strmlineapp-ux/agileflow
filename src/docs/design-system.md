@@ -15,7 +15,7 @@ The application favors a compact, information-dense layout. Card components are 
 -   **Header Padding**: The `<CardHeader>` for these cards must use a compact `p-2` padding.
 -   **Content Padding**: The `<CardContent>` should use `p-2 pt-0` to keep vertical spacing tight and aligned with the header.
 -   **Card Backgrounds**: Cards use a `bg-transparent` background, relying on their `border` for definition. This creates a lighter, more modern UI.
--   **Text Wrapping**: Card titles and descriptions should gracefully handle long text by wrapping. The `break-words` utility should be used on titles to prevent layout issues from long, unbroken strings.
+-   **Text Wrapping**: Card titles should gracefully handle long text by wrapping. The `break-words` utility should be used on titles to prevent layout issues from long, unbroken strings.
 
 ---
 
@@ -45,7 +45,7 @@ This pattern provides a clean, minimal interface for search functionality, espec
   - Clicking the button reveals the input field.
   - **Crucially, the input must have a transparent background and no borders or box-shadow**, ensuring it blends seamlessly into the UI.
 - **Behavior:**
-  - **Automatic Focus**: For specific single-view pages like **Account Settings**, an `autoFocus={true}` prop can be passed to focus the input on initial load.
+  - **Automatic Focus**: The `CompactSearchInput` itself doesn't take an `autoFocus` prop, but this behavior can be achieved by passing a `ref` to its `inputRef` prop and managing focus from the parent component.
   - **Manual Focus**: Clicking the search icon will always expand the input and focus it.
   - **Collapse on Blur**: The input always collapses back to its icon-only state when it loses focus (`onBlur`) and the field is empty.
 - **Application:** Used for filtering lists of icons, users, or other filterable content within popovers and management pages like the Admin screen.
@@ -131,7 +131,7 @@ This is the application's perfected, gold-standard pattern for managing a collec
     - **Hide Interactive Elements**: All secondary interactive elements within draggable cards—such as delete buttons, color swatch badges, and expand/collapse icons—**must be hidden**. This is typically achieved by adding a `.hidden` class based on a global `isDragModifierPressed` state from the `UserContext`.
     - **Disable Triggers**: The main entity icon's Popover trigger for changing the icon must be **disabled** (but the icon itself remains visible).
     - **Disable Editing**: Inline editing functionality must be disabled to prevent text from being selected or edited during a drag attempt.
--   **Expand/Collapse**: Cards are collapsed by default. To expand a card and view its details, the user must click a dedicated `expand_more` icon button, positioned at `absolute -bottom-1 right-0`. This button is hidden when the drag modifier key is pressed.
+-   **Expand/Collapse**: Cards can be expanded and collapsed to show more detail. This action is triggered by a dedicated `expand_more` icon button, positioned at `absolute -bottom-1 right-0`. This button is hidden when the drag modifier key is pressed. The expanded state of each card is managed independently by its parent component.
 -   **Preventing Interaction Conflicts**: The primary mechanism for preventing accidental drags is the **modifier key activation**. However, the `useSortable` hook's listeners can still capture pointer events even when a drag isn't initiated, preventing `onClick` events on the same element. To solve this, the `useSortable` hook **must** be disabled when the modifier key is not pressed (e.g., `disabled: !isDragModifierPressed`). This completely deactivates the drag listeners, ensuring that standard clicks and other interactions function as expected.
 -   **Visual Feedback**: To provide feedback without disrupting layout, visual changes (like a `shadow` or `opacity`) should be applied directly to the inner component based on the `isDragging` prop provided by `dnd-kit`'s `useSortable` hook. The draggable wrapper itself should remain untouched.
 -   **Drag Overlay Visuals & Positioning**: The drag overlay provides a clean, focused representation of the item being dragged.
@@ -269,7 +269,7 @@ This pattern provides a dense, icon-driven interface for managing a series of us
 ## Visual & Theming Elements
 
 ### Typography
-- **Font**: The application exclusively uses the **Roboto** font family for a clean and consistent look.
+- **Font**: The application exclusively uses the **Roboto** font family for a clean and consistent look for both headlines and body text.
 - **Headline Font**: All major titles (pages, tabs, prominent cards) use the `font-headline` utility class, which is configured to use a `font-thin` weight (`font-weight: 100`) from the Roboto family.
 - **Body Font**: All standard body text, labels, and buttons now use a `font-thin` weight.
 
@@ -299,7 +299,7 @@ The application supports two distinct color themes, `light` and `dark`, which ca
 
 - **Custom Primary Color**: Users can select a custom primary color using a color picker popover, as defined in the **Icon & Color Editing Flow** pattern. This custom color overrides the theme's default primary color.
 - **Primary Button Gradient**: Primary buttons have a special gradient effect on hover, which is unique to each theme. This provides a subtle but polished visual feedback for key actions.
-- **Text-based Button Hover**: For text-based buttons (like those on the login page), the hover and focus state is indicated *only* by the text color changing to the primary theme color. No background color is applied.
+- **Button Hover**: For all non-primary button variants (`outline`, `secondary`, `ghost`, `link`), the hover state applies **no background change**. The hover and focus state for these buttons is indicated *only* by the text/icon color changing to the primary theme color.
 
 ### Global Focus & Highlight Style
 This is the single source of truth for indicating user interaction state across the entire application.
