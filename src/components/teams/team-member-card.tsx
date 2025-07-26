@@ -120,7 +120,7 @@ export function TeamMemberCard({ member, team, isViewer }: { member: User, team:
 
   const renderBadge = (badge: Badge, isAssigned: boolean) => {
     const badgeStyle = isAssigned
-      ? { color: badge.color, borderColor: badge.color, backgroundColor: 'transparent' }
+      ? { color: badge.color, borderColor: badge.color, backgroundColor: getContrastColor(badge.color) }
       : { borderColor: 'hsl(var(--border))', borderStyle: 'dashed' as const };
 
     return (
@@ -129,11 +129,14 @@ export function TeamMemberCard({ member, team, isViewer }: { member: User, team:
           <TooltipTrigger asChild>
             <UiBadge
               variant={'outline'}
-              style={badgeStyle}
+              style={{ 
+                color: isAssigned ? getContrastColor(badge.color) : 'hsl(var(--muted-foreground))', 
+                backgroundColor: isAssigned ? badge.color : 'transparent',
+                borderColor: badge.color,
+                borderStyle: isAssigned ? 'solid' : 'dashed'
+              }}
               className={cn(
                 'gap-1 p-1 pl-2 rounded-full h-7 text-sm font-thin',
-                !isAssigned && 'bg-transparent text-muted-foreground',
-                isAssigned && 'border-solid',
                 canManageRoles && 'cursor-pointer'
               )}
               onClick={() => canManageRoles && handleToggleRole(badge.name)}
@@ -217,3 +220,4 @@ export function TeamMemberCard({ member, team, isViewer }: { member: User, team:
     </>
   );
 }
+

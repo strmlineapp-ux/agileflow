@@ -1025,7 +1025,6 @@ function CollectionDropZone({ id, type, children, className }: { id: string; typ
   );
 }
 
-
 export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; page: AppPage; }) {
     const { viewAsUser, users, appSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors, updateUser, isDragModifierPressed, teams } = useUser();
     const { toast } = useToast();
@@ -1039,7 +1038,6 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
     const [sharedSearchTerm, setSharedSearchTerm] = useState('');
     const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
     const [expandedCollections, setExpandedCollections] = useState<Set<string>>(new Set());
-    const [expandedSharedCollections, setExpandedSharedCollections] = useState<Set<string>>(new Set());
     
     useEffect(() => {
         if (isSharedPanelOpen) {
@@ -1049,18 +1047,6 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
     
     const onToggleExpand = useCallback((collectionId: string) => {
         setExpandedCollections(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(collectionId)) {
-                newSet.delete(collectionId);
-            } else {
-                newSet.add(collectionId);
-            }
-            return newSet;
-        });
-    }, []);
-
-     const onToggleSharedExpand = useCallback((collectionId: string) => {
-        setExpandedSharedCollections(prev => {
             const newSet = new Set(prev);
             if (newSet.has(collectionId)) {
                 newSet.delete(collectionId);
@@ -1316,8 +1302,8 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
                                                     isSharedPreview={true}
                                                     isViewer={true}
                                                     currentUserBadgeIds={currentUserBadgeIds}
-                                                    isExpanded={expandedSharedCollections.has(collection.id)}
-                                                    onToggleExpand={() => onToggleSharedExpand(collection.id)}
+                                                    isExpanded={expandedCollections.has(collection.id)}
+                                                    onToggleExpand={() => onToggleExpand(collection.id)}
                                                 />
                                             ))}
                                             {sharedCollections.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">No other collections are currently shared.</p>}
@@ -1358,3 +1344,4 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
         </DndContext>
     );
 }
+
