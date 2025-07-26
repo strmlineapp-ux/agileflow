@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useUser } from '@/context/user-context';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -45,19 +45,6 @@ export function PinnedLocationManagement({ team, tab }: { team: Team, tab: AppTa
       aliasInputRef.current.select();
     }
   }, [editingAlias]);
-
-  const handleSaveTitle = () => {
-    const newName = titleInputRef.current?.value.trim();
-    if (newName && newName !== tab.name) {
-      updateAppTab(tab.id, { name: newName });
-    }
-    setIsEditingTitle(false);
-  };
-  
-  const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') handleSaveTitle();
-    else if (e.key === 'Escape') setIsEditingTitle(false);
-  };
 
   const availableToPin = useMemo(() => {
     return locations
@@ -140,12 +127,12 @@ export function PinnedLocationManagement({ team, tab }: { team: Team, tab: AppTa
               <Input
                   ref={titleInputRef}
                   defaultValue={tab.name}
-                  onBlur={handleSaveTitle}
-                  onKeyDown={handleTitleKeyDown}
+                  onBlur={() => {}}
+                  onKeyDown={() => {}}
                   className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
               />
           ) : (
-              <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>
+              <h2 className="font-headline text-2xl font-thin tracking-tight text-muted-foreground cursor-text" onClick={() => {}}>
                   {tab.name}
               </h2>
           )}
@@ -154,7 +141,7 @@ export function PinnedLocationManagement({ team, tab }: { team: Team, tab: AppTa
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-muted-foreground">
-              <GoogleSymbol name="push_pin" />
+              <GoogleSymbol name="push_pin" className="text-muted-foreground" />
               Pinned & Check Locations
                <Popover open={isAddPopoverOpen} onOpenChange={setIsAddPopoverOpen}>
                 <PopoverTrigger asChild>
