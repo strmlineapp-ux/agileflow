@@ -86,6 +86,46 @@ function SortableTeamMember({ member, team, isViewer, onSetAdmin, onRemoveUser }
   );
 }
 
+function DraggableBadgeFromPool({ badge, canManage }: { badge: Badge, canManage: boolean }) {
+    const { attributes, listeners, setNodeRef, isDragging, transform, transition } = useSortable({
+        id: `badge-pool:${badge.id}`,
+        data: {
+            type: 'badge',
+            badge: badge,
+            context: 'pool',
+        },
+        disabled: !canManage,
+    });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+    };
+
+    return (
+        <div ref={setNodeRef} style={style} {...listeners} {...attributes}>
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                    <UiBadge
+                        variant={'outline'}
+                        style={{ color: badge.color, borderColor: badge.color }}
+                        className="flex items-center gap-1.5 p-1 pl-2 rounded-full text-sm h-8 font-thin cursor-grab"
+                    >
+                        <GoogleSymbol name={badge.icon} style={{ fontSize: '20px' }} weight={100} opticalSize={20} />
+                        <span className="font-thin">{badge.name}</span>
+                    </UiBadge>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>{badge.description || badge.name}</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+        </div>
+    );
+}
+
 
 export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
     const { viewAsUser, users, updateAppTab, updateTeam, isDragModifierPressed, allBadges, handleBadgeAssignment, handleBadgeUnassignment, allBadgeCollections, updateBadge, deleteBadge, addBadge, updateBadgeCollection, deleteBadgeCollection, predefinedColors } = useUser();
@@ -254,7 +294,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         membersLabelInputRef.current?.select();
         document.addEventListener("mousedown", handleOutsideClick);
         return () => {
-            document.removeEventListener("mousedown", handleSaveMembersLabel);
+            document.removeEventListener("mousedown", handleOutsideClick);
         };
     }, [isEditingMembersLabel, handleSaveMembersLabel]);
 
