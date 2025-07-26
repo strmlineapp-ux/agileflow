@@ -26,24 +26,11 @@ export function OverviewContent({ tab: pageConfig, isSingleTabPage }: { tab: App
       setLoading(true);
       // Fetch all tasks and then slice, a real app might have a dedicated endpoint for recent tasks
       const fetchedTasks = await fetchTasks();
-      setTasks(fetchedTasks);
+      setTasks(fetchedTasks || []); // Ensure tasks is always an array
       setLoading(false);
     };
     loadTasks();
   }, [fetchTasks]);
-
-  if (loading) {
-    return (
-      <div className="flex flex-col gap-6">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {[...Array(4)].map((_, i) => (
-            <Card key={i}><CardHeader className="h-24"><Skeleton className="h-full w-full" /></CardHeader></Card>
-          ))}
-        </div>
-        <Card><CardHeader className="h-64"><Skeleton className="h-full w-full" /></CardHeader></Card>
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -63,7 +50,11 @@ export function OverviewContent({ tab: pageConfig, isSingleTabPage }: { tab: App
       </div>
       <div>
         <h2 className="font-headline text-2xl font-thin mb-4">Recent Tasks</h2>
-        <TaskList tasks={tasks} limit={5} />
+        {loading ? (
+            <Card><CardHeader className="h-64"><Skeleton className="h-full w-full" /></CardHeader></Card>
+        ) : (
+            <TaskList tasks={tasks} limit={5} />
+        )}
       </div>
     </div>
   );

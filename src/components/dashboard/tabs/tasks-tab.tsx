@@ -25,7 +25,7 @@ export function TasksContent({ tab: pageConfig, isSingleTabPage }: { tab: AppPag
   const loadTasks = useCallback(async () => {
     setLoading(true);
     const allTasks = await fetchTasks();
-    setTasks(allTasks);
+    setTasks(allTasks || []); // Ensure tasks is always an array
     setLoading(false);
   }, [fetchTasks]);
 
@@ -66,20 +66,6 @@ export function TasksContent({ tab: pageConfig, isSingleTabPage }: { tab: AppPag
     ? tasks.filter(task => task.assignedTo.some(user => user.userId === viewAsUser.userId))
     : tasks;
 
-  if (loading) {
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-10 w-1/3" />
-        <Skeleton className="h-8 w-24" />
-        <div className="space-y-2">
-            <Skeleton className="h-20 w-full" />
-            <Skeleton className="h-20 w-full" />
-            <Skeleton className="h-20 w-full" />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col gap-6">
        <div className="flex items-center justify-between">
@@ -112,11 +98,23 @@ export function TasksContent({ tab: pageConfig, isSingleTabPage }: { tab: AppPag
             </DialogContent>
         </Dialog>
       </div>
-      <TaskList 
-        tasks={filteredTasks} 
-        onEdit={openEditTaskForm}
-        onDelete={handleTaskDeleted}
-      />
+      {loading ? (
+        <div className="space-y-4">
+            <Skeleton className="h-10 w-1/3" />
+            <Skeleton className="h-8 w-24" />
+            <div className="space-y-2">
+                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-20 w-full" />
+            </div>
+        </div>
+      ) : (
+        <TaskList 
+            tasks={filteredTasks} 
+            onEdit={openEditTaskForm}
+            onDelete={handleTaskDeleted}
+        />
+      )}
     </div>
   );
 }
