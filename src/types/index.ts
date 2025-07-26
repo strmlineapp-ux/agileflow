@@ -8,6 +8,7 @@ export interface AppTab {
   color: string;
   description?: string;
   componentKey: 'team_members' | 'badges' | 'locations' | 'workstations' | 'templates' | 'admins' | 'pages' | 'tabs' | 'overview' | 'tasks' | 'notifications' | 'settings' | 'calendar' | 'calendars' | 'teams';
+  contextTeamId?: string;
 }
 
 export interface AppPage {
@@ -143,6 +144,7 @@ export interface SharedCalendar {
   isShared?: boolean;
   defaultEventTitle?: string;
   roleAssignmentsLabel?: string;
+  managers?: string[];
 }
 
 export type AttachmentType = 'drive' | 'docs' | 'sheets' | 'slides' | 'forms' | 'meet' | 'local' | 'link';
