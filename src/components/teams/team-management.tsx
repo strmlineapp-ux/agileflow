@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
@@ -159,11 +158,13 @@ function TeamCard({
     isEditingName: boolean;
     setIsEditingName: (isEditing: boolean) => void;
     isDragging?: boolean;
+    isExpanded: boolean;
+    onToggleExpand: () => void;
     [key: string]: any;
 }) {
     const { viewAsUser, isDragModifierPressed } = useUser();
     const nameInputRef = useRef<HTMLInputElement>(null);
-    const { isEditingName, setIsEditingName, isDragging } = props;
+    const { isEditingName, setIsEditingName, isDragging, isExpanded, onToggleExpand } = props;
     
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
     const [iconSearch, setIconSearch] = useState('');
@@ -174,7 +175,6 @@ function TeamCard({
     const [isAddUserPopoverOpen, setIsAddUserPopoverOpen] = useState(false);
     const [userSearch, setUserSearch] = useState('');
     const addUserSearchInputRef = useRef<HTMLInputElement>(null);
-    const [isExpanded, setIsExpanded] = useState(false);
     
     const { setNodeRef: setUsersDroppableRef, isOver: isUsersDroppableOver } = useDroppable({
         id: `team-users:${team.id}`,
@@ -440,7 +440,7 @@ function TeamCard({
                 </CardContent>
             )}
              <div className={cn("absolute -bottom-1 right-0", isDragModifierPressed && "hidden")}>
-                <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
+                <Button variant="ghost" size="icon" onClick={onToggleExpand} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
                     <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} opticalSize={20} />
                 </Button>
             </div>
@@ -451,6 +451,8 @@ function TeamCard({
 function SortableTeamCard({team, ...props}: {team: Team, [key: string]: any}) {
     const { isDragModifierPressed } = useUser();
     const [isEditingName, setIsEditingName] = useState(false);
+    const { isExpanded, onToggleExpand } = props;
+    
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: team.id,
         data: { type: 'team-card', team, isSharedPreview: props.isSharedPreview },
@@ -477,6 +479,8 @@ function SortableTeamCard({team, ...props}: {team: Team, [key: string]: any}) {
                 setIsEditingName={setIsEditingName} 
                 dragHandleProps={{...attributes, ...listeners}} 
                 isDragging={isDragging} 
+                isExpanded={isExpanded}
+                onToggleExpand={onToggleExpand}
             />
         </div>
     )
@@ -532,15 +536,27 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
     const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
     const [sharedSearchTerm, setSharedSearchTerm] = useState('');
     const [sharedTeams, setSharedTeams] = useState<Team[]>([]);
+    const [expandedTeams, setExpandedTeams] = useState<Set<string>>(new Set());
     
     const [searchTerm, setSearchTerm] = useState('');
     const [activeDragItem, setActiveDragItem] = useState<{type: string, data: any} | null>(null);
-    const [editingTeamName, setEditingTeamName] = useState(false);
     
     const pageTitle = page.isDynamic && teams.find(t => t.id === page.path.split('/')[2]) ? `${teams.find(t => t.id === page.path.split('/')[2])?.name} ${page.name}` : page.name;
     const tabTitle = appSettings.teamManagementLabel || tab.name;
     const finalTitle = isSingleTabPage ? pageTitle : tabTitle;
     
+    const onToggleExpand = useCallback((teamId: string) => {
+        setExpandedTeams(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(teamId)) {
+                newSet.delete(teamId);
+            } else {
+                newSet.add(teamId);
+            }
+            return newSet;
+        });
+    }, []);
+
     const canManageTeam = useCallback((team: Team) => {
         if (!viewAsUser) return false;
         return team.owner.id === viewAsUser.userId || (team.teamAdmins || []).includes(viewAsUser.userId);
@@ -822,13 +838,8 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                                             onRemoveUser={handleRemoveUserFromTeam}
                                             onAddUser={handleAddUserToTeam}
                                             onSetAdmin={handleSetAdmin}
-                                            isEditingName={editingTeamName && activeDragItem?.data?.team?.id === team.id}
-                                            setIsEditingName={(isEditing: boolean) => {
-                                                if (isEditing) {
-                                                    setActiveDragItem({type: 'team-card', data: { team }});
-                                                }
-                                                setEditingTeamName(isEditing);
-                                            }}
+                                            isExpanded={expandedTeams.has(team.id)}
+                                            onToggleExpand={() => onToggleExpand(team.id)}
                                         />
                                     ))}
                                 </SortableContext>
@@ -861,13 +872,8 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                                                     onAddUser={handleAddUserToTeam}
                                                     onSetAdmin={handleSetAdmin}
                                                     isSharedPreview={true}
-                                                    isEditingName={editingTeamName && activeDragItem?.data?.team?.id === team.id}
-                                                    setIsEditingName={(isEditing: boolean) => {
-                                                        if (isEditing) {
-                                                            setActiveDragItem({type: 'team-card', data: { team }});
-                                                        }
-                                                        setEditingTeamName(isEditing);
-                                                    }}
+                                                    isExpanded={expandedTeams.has(team.id)}
+                                                    onToggleExpand={() => onToggleExpand(team.id)}
                                                 />
                                             ))}
                                             {sharedTeams.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">No other teams are currently shared.</p>}

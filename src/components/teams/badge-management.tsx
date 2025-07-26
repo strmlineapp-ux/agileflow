@@ -181,7 +181,7 @@ function BadgeDisplayItem({
                         />
                     ))}
                 </div>
-                <Button onClick={() => { handleUpdate({ color }); setIsColorPopoverOpen(false); }} className="w-full">Set Color</Button>
+                <Button onClick={() => { handleUpdate({ color }); setIsColorPopoverOpen(false); }} className="w-full bg-primary">Set Color</Button>
             </div>
         </PopoverContent>
     );
@@ -503,7 +503,6 @@ function DuplicateBadgeZone({ collectionId, onAdd, isOwner }: { collectionId: st
 type BadgeCollectionCardProps = {
     collection: BadgeCollection;
     allBadges: Badge[];
-    allBadgeCollections: BadgeCollection[];
     predefinedColors: string[];
     onUpdateCollection: (collectionId: string, newValues: Partial<BadgeCollection>) => void;
     onDeleteCollection: (collection: BadgeCollection) => void;
@@ -525,7 +524,6 @@ type BadgeCollectionCardProps = {
 function BadgeCollectionCard({ 
     collection, 
     allBadges, 
-    allBadgeCollections,
     predefinedColors, 
     onUpdateCollection, 
     onDeleteCollection, 
@@ -765,7 +763,7 @@ function BadgeCollectionCard({
                                                         <button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdateCollection(collection.id, { color: c }); setIsColorPopoverOpen(false);}}></button>
                                                     ))}
                                                 </div>
-                                                <Button onClick={() => { onUpdateCollection(collection.id, { color }); setIsColorPopoverOpen(false); }} className="w-full">Set Color</Button>
+                                                <Button onClick={() => { onUpdateCollection(collection.id, { color }); setIsColorPopoverOpen(false); }} className="w-full bg-primary">Set Color</Button>
                                             </div>
                                         </PopoverContent>
                                     </Popover>
@@ -1230,7 +1228,7 @@ export function BadgeManagement({ tab, page, isActive }: { tab: AppTab; page: Ap
                                     key={collection.id}
                                     collection={collection}
                                     allBadges={allBadges}
-                                    allBadgeCollections={allBadgeCollections}
+                                    allCollections={allBadgeCollections}
                                     predefinedColors={predefinedColors}
                                     onUpdateCollection={updateBadgeCollection}
                                     onDeleteCollection={handleDeleteCollection}
@@ -1252,7 +1250,7 @@ export function BadgeManagement({ tab, page, isActive }: { tab: AppTab; page: Ap
                             <CardHeader>
                                 <div className="flex items-center justify-between">
                                     <CardTitle className="font-headline font-thin text-xl">Shared Collections</CardTitle>
-                                    <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." tooltipText="Search Shared" />
+                                    <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." tooltipText="Search Shared Collections" />
                                 </div>
                                 <CardDescription>Drag a collection you own here to share it. Drag a collection to your board to link it.</CardDescription>
                             </CardHeader>
@@ -1265,7 +1263,7 @@ export function BadgeManagement({ tab, page, isActive }: { tab: AppTab; page: Ap
                                                     key={collection.id}
                                                     collection={collection}
                                                     allBadges={allBadges}
-                                                    allBadgeCollections={allBadgeCollections}
+                                                    allCollections={allBadgeCollections}
                                                     predefinedColors={predefinedColors}
                                                     onUpdateCollection={updateBadgeCollection}
                                                     onDeleteCollection={handleDeleteCollection}
