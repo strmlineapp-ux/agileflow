@@ -224,21 +224,21 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
             </div>
             
             <div className="flex flex-col lg:flex-row gap-6">
-                <div className="lg:w-1/3 lg:max-w-sm space-y-4">
-                    {isEditingAdminsLabel ? (
-                        <Input
-                            ref={adminsLabelInputRef}
-                            defaultValue={teamAdminsLabel}
-                            onBlur={handleSaveAdminsLabel}
-                            onKeyDown={handleAdminsLabelKeyDown}
-                            className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                        />
-                    ) : (
-                         <h3 className="font-headline font-thin text-xl cursor-text" onClick={() => setIsEditingAdminsLabel(true)}>
-                            {teamAdminsLabel}
-                         </h3>
-                    )}
-                    {admins.length > 0 ? (
+                {admins.length > 0 && (
+                    <div className="lg:w-1/3 lg:max-w-sm space-y-4">
+                        {isEditingAdminsLabel ? (
+                            <Input
+                                ref={adminsLabelInputRef}
+                                defaultValue={teamAdminsLabel}
+                                onBlur={handleSaveAdminsLabel}
+                                onKeyDown={handleAdminsLabelKeyDown}
+                                className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                            />
+                        ) : (
+                            <h3 className="font-headline font-thin text-xl cursor-text" onClick={() => setIsEditingAdminsLabel(true)}>
+                                {teamAdminsLabel}
+                            </h3>
+                        )}
                         <SortableContext items={adminIds} strategy={verticalListSortingStrategy}>
                             <div className="space-y-4">
                                 {admins.map((member) => (
@@ -246,10 +246,8 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                                 ))}
                             </div>
                         </SortableContext>
-                    ) : (
-                        <div className="text-sm text-muted-foreground p-4 border border-dashed rounded-lg text-center">No team admins assigned.</div>
-                    )}
-                </div>
+                    </div>
+                )}
 
                 <div className="flex-1 space-y-4">
                      {isEditingMembersLabel ? (
