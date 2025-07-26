@@ -927,8 +927,7 @@ function SortableCollectionCard({ collection, allCollections, ...props }: { coll
     const { isDragModifierPressed } = useUser();
     const [isEditingName, setIsEditingName] = useState(false);
     const [isEditingDescription, setIsEditingDescription] = useState(false);
-    const { isExpanded, onToggleExpand } = props;
-
+    
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: collection.id,
         data: { type: 'collection-card', collection, isSharedPreview: props.isSharedPreview },
@@ -961,8 +960,6 @@ function SortableCollectionCard({ collection, allCollections, ...props }: { coll
                 setIsEditingName={setIsEditingName}
                 isEditingDescription={isEditingDescription}
                 setIsEditingDescription={setIsEditingDescription}
-                isExpanded={isExpanded}
-                onToggleExpand={onToggleExpand}
             />
         </div>
     );

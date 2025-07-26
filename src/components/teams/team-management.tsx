@@ -451,7 +451,6 @@ function TeamCard({
 function SortableTeamCard({team, ...props}: {team: Team, [key: string]: any}) {
     const { isDragModifierPressed } = useUser();
     const [isEditingName, setIsEditingName] = useState(false);
-    const { isExpanded, onToggleExpand } = props;
     
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: team.id,
@@ -479,8 +478,6 @@ function SortableTeamCard({team, ...props}: {team: Team, [key: string]: any}) {
                 setIsEditingName={setIsEditingName} 
                 dragHandleProps={{...attributes, ...listeners}} 
                 isDragging={isDragging} 
-                isExpanded={isExpanded}
-                onToggleExpand={onToggleExpand}
             />
         </div>
     )
