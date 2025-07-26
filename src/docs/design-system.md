@@ -45,7 +45,7 @@ This pattern provides a clean, minimal interface for search functionality, espec
   - Clicking the button reveals the input field.
   - **Crucially, the input must have a transparent background and no borders or box-shadow**, ensuring it blends seamlessly into the UI.
 - **Behavior:**
-  - **Automatic Focus**: For specific single-view pages like **Account Settings**, an `autoFocus={true}` prop can be passed to the `<input>` element to focus it on initial load. This is managed within the component receiving the search input.
+  - **Automatic Focus**: For specific single-view pages like **Account Settings**, an `autoFocus={true}` prop can be passed to focus the input on initial load.
   - **Manual Focus**: Clicking the search icon will always expand the input and focus it.
   - **Collapse on Blur**: The input always collapses back to its icon-only state when it loses focus (`onBlur`) and the field is empty.
 - **Application:** Used for filtering lists of icons, users, or other filterable content within popovers and management pages like the Admin screen.
@@ -299,7 +299,7 @@ The application supports two distinct color themes, `light` and `dark`, which ca
 
 - **Custom Primary Color**: Users can select a custom primary color using a color picker popover, as defined in the **Icon & Color Editing Flow** pattern. This custom color overrides the theme's default primary color.
 - **Primary Button Gradient**: Primary buttons have a special gradient effect on hover, which is unique to each theme. This provides a subtle but polished visual feedback for key actions.
-- **Button Hover**: For all non-primary button variants (`outline`, `secondary`, `ghost`, `link`), the hover state applies **no background change**. The hover and focus state for these buttons is indicated *only* by the text/icon color changing to the primary theme color.
+- **Button Hover**: For all non-primary button variants (`outline`, `secondary`, `ghost`, `link`), the hover state applies **no background change**.
 
 ### Global Focus & Highlight Style
 This is the single source of truth for indicating user interaction state across the entire application.
@@ -308,7 +308,7 @@ This is the single source of truth for indicating user interaction state across 
 -   **Selected/Highlighted State**: To indicate a persistently selected or highlighted state (e.g., the designated "Team Admin" in a list), a clear icon badge (e.g., a "key" icon) is used, typically overlaid on the user's avatar. This avoids visually noisy outlines and provides a clear, universally understood symbol for elevated status.
 
 ### List Item States (Dropdowns & Popovers)
-- **Hover & Focus**: When hovering over or navigating to list items (like in dropdowns or popovers) using the keyboard, the item's text color changes to `text-primary`. **No background highlight is applied**, ensuring a clean and consistent look across the application.
+- **Hover & Focus**: When hovering over or navigating to list items (like in dropdowns or popovers) using the keyboard, the item's text color changes to `text-foreground`. **No background highlight is applied**, ensuring a clean and consistent look across the application.
 - **Selection**: The currently selected item within a list is indicated by a checkmark icon, which also uses the `primary` color.
 
 ### User Notifications
