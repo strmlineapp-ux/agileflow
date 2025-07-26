@@ -20,10 +20,10 @@ import { CompactSearchInput } from '../common/compact-search-input';
 import { ScrollArea } from '../ui/scroll-area';
 import { toast } from '@/hooks/use-toast';
 import { Badge as UiBadge } from '../ui/badge';
-import { useDraggable, useDroppable } from '@dnd-kit/core';
+import { useDroppable } from '@dnd-kit/core';
 
 function DraggableBadgeFromPool({ badge, canManage }: { badge: Badge; canManage: boolean }) {
-    const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    const { attributes, listeners, setNodeRef, isDragging, transform, transition } = useSortable({
         id: `pool-badge-${badge.id}`,
         data: {
             type: 'pool-badge',
@@ -32,9 +32,16 @@ function DraggableBadgeFromPool({ badge, canManage }: { badge: Badge; canManage:
         disabled: !canManage,
     });
 
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+    };
+
     return (
         <div
             ref={setNodeRef}
+            style={style}
             {...listeners}
             {...attributes}
             className={cn('cursor-grab', isDragging && 'opacity-50')}
@@ -175,11 +182,8 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
-            onActivation: ({ event }) => {
-                if (!isDragModifierPressed) {
-                    return false;
-                }
-                return true;
+            activationConstraint: {
+                distance: isDragModifierPressed ? 0 : 10000 // Effectively disable pointer drag without modifier
             },
         }),
         useSensor(KeyboardSensor, {
@@ -380,6 +384,8 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         id: 'badge-pool',
     });
 
+    const assignableBadgeIds = useMemo(() => userAssignableBadges.map(b => `pool-badge-${b.id}`), [userAssignableBadges]);
+
     return (
       <div className="flex h-full gap-4">
         <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
@@ -498,21 +504,25 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                         <CardDescription>Drag a badge onto a team member to assign it.</CardDescription>
                     </CardHeader>
                     <CardContent ref={badgePoolRef} className={cn("flex-1 p-2 overflow-hidden min-h-0 rounded-md", isBadgePoolOver && "ring-1 ring-destructive ring-inset")}>
-                        <ScrollArea className="h-full">
-                            <div className="space-y-4">
-                                {groupedAssignableBadges.map(({ collectionName, badges }) => (
-                                    <div key={collectionName}>
-                                        <p className="text-xs tracking-wider mb-2 text-muted-foreground">{collectionName}</p>
-                                        <div className="flex flex-wrap gap-2">
-                                            {badges.map(badge => (
-                                                <DraggableBadgeFromPool key={badge.id} badge={badge} canManage={canManage} />
-                                            ))}
-                                        </div>
+                        <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
+                            <ScrollArea className="h-full">
+                                <SortableContext items={assignableBadgeIds} strategy={verticalListSortingStrategy}>
+                                    <div className="space-y-4">
+                                        {groupedAssignableBadges.map(({ collectionName, badges }) => (
+                                            <div key={collectionName}>
+                                                <p className="text-xs tracking-wider mb-2 text-muted-foreground">{collectionName}</p>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {badges.map(badge => (
+                                                        <DraggableBadgeFromPool key={badge.id} badge={badge} canManage={canManage} />
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ))}
+                                        {userAssignableBadges.length === 0 && <p className="text-xs text-muted-foreground text-center p-4 w-full">No badges available to assign. Activate badge collections in the "Badges" tab.</p>}
                                     </div>
-                                ))}
-                                {userAssignableBadges.length === 0 && <p className="text-xs text-muted-foreground text-center p-4 w-full">No badges available to assign. Activate badge collections in the "Badges" tab.</p>}
-                            </div>
-                        </ScrollArea>
+                                </SortableContext>
+                            </ScrollArea>
+                        </DndContext>
                     </CardContent>
                 </Card>
             </div>
