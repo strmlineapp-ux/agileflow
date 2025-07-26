@@ -37,31 +37,22 @@ function DraggableBadgeFromPool({ badge, canManage }: { badge: Badge; canManage:
             ref={setNodeRef}
             {...listeners}
             {...attributes}
-            className={cn(isDragging && 'opacity-50', canManage && 'cursor-grab')}
+            className={cn('cursor-grab', isDragging && 'opacity-50')}
+            title={badge.description || badge.name}
         >
-            <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <UiBadge
-                            variant={'outline'}
-                            style={{ color: badge.color, borderColor: badge.color }}
-                            className={cn(
-                                'flex items-center gap-1.5 p-1 pl-2 rounded-full text-sm h-8 font-thin'
-                            )}
-                        >
-                            <GoogleSymbol name={badge.icon} style={{ fontSize: '20px' }} weight={100} />
-                            <span>{badge.name}</span>
-                        </UiBadge>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p>{badge.description || badge.name}</p>
-                    </TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
+            <UiBadge
+                variant={'outline'}
+                style={{ color: badge.color, borderColor: badge.color }}
+                className={cn(
+                    'flex items-center gap-1.5 p-1 pl-2 rounded-full text-sm h-8 font-thin'
+                )}
+            >
+                <GoogleSymbol name={badge.icon} style={{ fontSize: '20px' }} weight={100} />
+                <span>{badge.name}</span>
+            </UiBadge>
         </div>
     );
 }
-
 
 function SortableTeamMember({ member, team, isViewer, onSetAdmin, onRemoveUser }: { member: User, team: Team, isViewer: boolean, onSetAdmin: () => void, onRemoveUser: () => void }) {
   const { isDragModifierPressed } = useUser();
@@ -306,9 +297,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
     
     const handleSetAdmin = useCallback((teamId: string, userId: string) => {
         if (isViewer) return;
-        const teamData = users.find(u => u.userId === teamId);
-        if(!teamData) return;
-
+        
         const currentAdmins = new Set(team.teamAdmins || []);
         if (currentAdmins.has(userId)) {
             currentAdmins.delete(userId);
@@ -513,7 +502,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                             <div className="space-y-4">
                                 {groupedAssignableBadges.map(({ collectionName, badges }) => (
                                     <div key={collectionName}>
-                                        <p className="text-xs text-muted-foreground tracking-wider mb-2">{collectionName}</p>
+                                        <p className="text-xs tracking-wider mb-2 text-muted-foreground">{collectionName}</p>
                                         <div className="flex flex-wrap gap-2">
                                             {badges.map(badge => (
                                                 <DraggableBadgeFromPool key={badge.id} badge={badge} canManage={canManage} />

@@ -248,7 +248,7 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin, canManage }
                     <>
                        {groupedBadges.map(({ collectionName, badges }) => (
                             <div key={collectionName}>
-                                <p className="text-xs text-muted-foreground tracking-wider mb-1.5">{collectionName}</p>
+                                <p className="text-xs tracking-wider mb-1.5 text-muted-foreground">{collectionName}</p>
                                 <SortableContext items={badges.map(b => b.id)} strategy={verticalListSortingStrategy}>
                                 <div className="flex flex-wrap gap-1.5">
                                     {badges.map(badge => (
