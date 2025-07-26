@@ -22,7 +22,7 @@ import { toast } from '@/hooks/use-toast';
 import { Badge as UiBadge } from '../ui/badge';
 import { useDroppable, useDraggable } from '@dnd-kit/core';
 
-function DraggableBadgeFromPool({ badge, canManage }: { badge: Badge, canManage: boolean }) {
+function DraggableBadgeFromPool({ badge, canManage }: { badge: Badge; canManage: boolean }) {
     const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
         id: `pool-badge-${badge.id}`,
         data: {
