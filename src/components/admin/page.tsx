@@ -130,7 +130,7 @@ function UserDropZone({ id, users, children, onDeleteRequest }: { id: string, us
   )
 }
 
-export const AdminsManagement = ({ tab, isSingleTabPage, isActive, activeTab, page }: { tab: AppTab; isSingleTabPage?: boolean, isActive?: boolean, activeTab?: string, page: AppPage }) => {
+export const AdminsManagement = ({ isActive }: { isActive?: boolean }) => {
   const { toast } = useToast();
   const { viewAsUser, users, updateUser, deleteUser, isDragModifierPressed } = useUser();
   const [is2faDialogOpen, setIs2faDialogOpen] = useState(false);
@@ -283,7 +283,7 @@ export const AdminsManagement = ({ tab, isSingleTabPage, isActive, activeTab, pa
                         <div className="flex items-center justify-between gap-4">
                             <CardTitle className="font-thin text-base">Users ({filteredNonAdminUsers.length})</CardTitle>
                              <div className="flex items-center gap-1">
-                                <CompactSearchInput searchTerm={userSearch} setSearchTerm={setUserSearch} placeholder="Search users..." tooltipText="Search Users" />
+                                <CompactSearchInput searchTerm={userSearch} setSearchTerm={setUserSearch} placeholder="Search users..." tooltipText="Search Users" autoFocus={isActive} />
                             </div>
                         </div>
                     </CardHeader>
@@ -845,7 +845,7 @@ function DuplicateZone({ onAdd }: { onAdd: () => void; }) {
   );
 }
 
-export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab; isSingleTabPage?: boolean, isActive?: boolean }) => {
+export const PagesManagement = ({ isActive }: { isActive?: boolean }) => {
     const { viewAsUser, appSettings, updateAppSettings, isDragModifierPressed } = useUser();
     const { toast } = useToast();
     const [searchTerm, setSearchTerm] = useState('');
@@ -980,7 +980,7 @@ export const PagesManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTa
                 <div className="flex items-center justify-between">
                     <DuplicateZone onAdd={handleAddPage} />
                     <div className="flex items-center">
-                        <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search pages..." inputRef={searchInputRef} />
+                        <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search pages..." inputRef={searchInputRef} autoFocus={isActive} />
                     </div>
                 </div>
                 
@@ -1228,7 +1228,7 @@ function SortableTabCard({ id, tab, onUpdate }: { id: string, tab: AppTab, onUpd
 }
 
 
-export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab; isSingleTabPage?: boolean, isActive?: boolean }) => {
+export const TabsManagement = ({ isActive }: { isActive?: boolean }) => {
     const { viewAsUser, appSettings, updateAppSettings, updateAppTab, isDragModifierPressed } = useUser();
     const [searchTerm, setSearchTerm] = useState('');
     const searchInputRef = useRef<HTMLInputElement>(null);
@@ -1283,7 +1283,7 @@ export const TabsManagement = ({ tab, isSingleTabPage, isActive }: { tab: AppTab
             <div className="space-y-8">
                 <div className="flex items-center justify-end">
                      <div className="flex items-center">
-                        <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search by name or desc..." inputRef={searchInputRef} />
+                        <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search by name or desc..." inputRef={searchInputRef} autoFocus={isActive} />
                     </div>
                 </div>
                 <SortableContext items={tabIds} strategy={verticalListSortingStrategy}>

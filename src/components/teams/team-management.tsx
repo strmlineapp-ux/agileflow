@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
@@ -259,7 +258,7 @@ function TeamCard({
     return (
         <Card className="flex flex-col h-full bg-transparent relative" {...props}>
             <div {...props.dragHandleProps}>
-                <CardHeader className="group p-2 pt-0">
+                <CardHeader className="group p-2">
                      {!isSharedPreview && (
                         <TooltipProvider>
                             <Tooltip>
@@ -420,7 +419,7 @@ function TeamCard({
                 </CardHeader>
             </div>
             {!isDragging && isExpanded && (
-                <CardContent className="flex-grow flex flex-col p-2 pt-0">
+                <CardContent className="flex-grow p-2 pt-0 flex flex-col min-h-0">
                     <ScrollArea className="max-h-48 pr-2 flex-grow">
                         <SortableContext items={teamMembers.map(m => `user-sort:${team.id}:${m.userId}`)} strategy={verticalListSortingStrategy}>
                             <div ref={setUsersDroppableRef} className={cn("min-h-[60px] rounded-md p-2 -m-2 space-y-1 transition-colors", isUsersDroppableOver && "ring-1 ring-border ring-inset")}>
@@ -514,7 +513,7 @@ function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
   );
 }
 
-export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: AppTab; page: AppPage; isSingleTabPage?: boolean }) {
+export function TeamManagement({ tab, page, isActive, isSingleTabPage = false }: { tab: AppTab; page: AppPage; isActive?: boolean, isSingleTabPage?: boolean }) {
     const { viewAsUser, users, teams, appSettings, addTeam, updateTeam, deleteTeam, reorderTeams, updateAppTab, updateUser, isDragModifierPressed } = useUser();
     const router = useRouter();
     const pathname = usePathname();
@@ -798,7 +797,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                                 <DuplicateZone id="duplicate-team-zone" onAdd={() => handleAddTeam()} />
                             </div>
                             <div className="flex items-center gap-1">
-                                <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search teams..." />
+                                <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search teams..." autoFocus={isActive} />
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>

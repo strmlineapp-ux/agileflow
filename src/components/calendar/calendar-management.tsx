@@ -526,7 +526,7 @@ function CalendarDropZone({ id, type, children, className }: { id: string; type:
 }
 
 
-export function CalendarManagement({ tab }: { tab: AppTab }) {
+export function CalendarManagement({ tab, isActive }: { tab: AppTab, isActive?: boolean }) {
   const { viewAsUser, calendars, addCalendar, updateCalendar, deleteCalendar, updateAppTab, appSettings, updateUser, isDragModifierPressed } = useUser();
   const { toast } = useToast();
   const sharedSearchInputRef = useRef<HTMLInputElement>(null);
@@ -681,7 +681,7 @@ export function CalendarManagement({ tab }: { tab: AppTab }) {
                 <DuplicateZone id="duplicate-calendar-zone" onAdd={() => handleAddCalendar()} />
               </div>
               <div className="flex items-center gap-2">
-                <CompactSearchInput searchTerm={mainSearchTerm} setSearchTerm={setMainSearchTerm} placeholder="Search calendars..." autoFocus={true} tooltipText="Search Calendars" />
+                <CompactSearchInput searchTerm={mainSearchTerm} setSearchTerm={setMainSearchTerm} placeholder="Search calendars..." autoFocus={isActive} tooltipText="Search Calendars" />
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>

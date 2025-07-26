@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -1025,7 +1024,7 @@ function CollectionDropZone({ id, type, children, className }: { id: string; typ
   );
 }
 
-export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; page: AppPage; }) {
+export function BadgeManagement({ tab, page, team, isActive }: { team: Team; tab: AppTab; page: AppPage; isActive?: boolean }) {
     const { viewAsUser, users, appSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors, updateUser, isDragModifierPressed, teams } = useUser();
     const { toast } = useToast();
     const sharedSearchInputRef = useRef<HTMLInputElement>(null);
@@ -1237,7 +1236,7 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
                           <DuplicateZone id="duplicate-collection-zone" onAdd={() => addBadgeCollection(viewAsUser)} />
                       </div>
                       <div className="flex items-center gap-1">
-                          <CompactSearchInput searchTerm={mainSearchTerm} setSearchTerm={setMainSearchTerm} placeholder="Search collections..." />
+                          <CompactSearchInput searchTerm={mainSearchTerm} setSearchTerm={setMainSearchTerm} placeholder="Search collections..." autoFocus={isActive} />
                           <TooltipProvider>
                               <Tooltip>
                                   <TooltipTrigger asChild>
