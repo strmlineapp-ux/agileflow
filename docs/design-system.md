@@ -200,7 +200,7 @@ This pattern is **deprecated**. All deletion confirmations now use the **Compact
 - **Appearance**:
   - Each tab trigger includes both an icon and a text label.
   - The icon is `text-4xl` with a `weight={100}` for a large but light appearance.
-  - The active tab is indicated by colored text (`text-primary`).
+  - The active tab is indicated by a bolder font weight (`font-normal`) and the standard foreground text color.
   - The entire tab list has a subtle divider underneath it, separating it from the content below.
 - **Reordering**: On pages where it is enabled (like the Admin page), users can reorder tabs by holding their drag modifier key and dragging them to a new position.
 - **Application**: Used for all main page-level tab navigation, such as on the Admin, Service Delivery, and Team Management pages.
@@ -299,7 +299,7 @@ The application supports two distinct color themes, `light` and `dark`, which ca
 
 - **Custom Primary Color**: Users can select a custom primary color using a color picker popover, as defined in the **Icon & Color Editing Flow** pattern. This custom color overrides the theme's default primary color.
 - **Primary Button Gradient**: Primary buttons have a special gradient effect on hover, which is unique to each theme. This provides a subtle but polished visual feedback for key actions.
-- **Button Hover**: For all non-primary button variants (`outline`, `secondary`, `ghost`, `link`), the hover state applies **no background change**. The hover and focus state for these buttons is indicated *only* by the text/icon color changing to the primary theme color.
+- **Button Hover**: For all non-primary button variants (`outline`, `secondary`, `ghost`, `link`), the hover state applies **no background change**.
 
 ### Global Focus & Highlight Style
 This is the single source of truth for indicating user interaction state across the entire application.
@@ -308,8 +308,8 @@ This is the single source of truth for indicating user interaction state across 
 -   **Selected/Highlighted State**: To indicate a persistently selected or highlighted state (e.g., the designated "Team Admin" in a list), a clear icon badge (e.g., a "key" icon) is used, typically overlaid on the user's avatar. This avoids visually noisy outlines and provides a clear, universally understood symbol for elevated status.
 
 ### List Item States (Dropdowns & Popovers)
-- **Hover & Focus**: When hovering over or navigating to list items (like in dropdowns or popovers) using the keyboard, the item's text color changes to `text-primary`. **No background highlight is applied**, ensuring a clean and consistent look across the application.
-- **Selection**: The currently selected item within a list is indicated by a checkmark icon, which also uses the `primary` color.
+- **Hover & Focus**: When hovering over or navigating to list items (like in dropdowns or popovers) using the keyboard, the item's text color changes to `text-foreground` and its font weight becomes `font-normal`. **No background highlight is applied**, ensuring a clean and consistent look.
+- **Selection**: The currently selected item within a list is indicated by a checkmark icon, which also uses the standard foreground color.
 
 ### User Notifications
 
@@ -330,4 +330,3 @@ This is the single source of truth for indicating user interaction state across 
       - **Ownership Status**: `absolute -top-0 -right-3`.
     - **Icon Size (Ownership Status)**: The `GoogleSymbol` inside an ownership status badge should have its size set via `style={{fontSize: '16px'}}`.
 -   **Badges in Compact View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
-
