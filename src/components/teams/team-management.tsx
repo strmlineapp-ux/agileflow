@@ -613,14 +613,13 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
         const team = teams.find(t => t.id === teamId);
         if (!team || !canManageTeam(team)) return;
         
-        const currentAdmins = team.teamAdmins || [];
-        const isAlreadyAdmin = currentAdmins.includes(userId);
-        
-        const newAdmins = isAlreadyAdmin
-            ? currentAdmins.filter(id => id !== userId)
-            : [...currentAdmins, userId];
-            
-        updateTeam(teamId, { teamAdmins: newAdmins });
+        const currentAdmins = new Set(team.teamAdmins || []);
+        if (currentAdmins.has(userId)) {
+            currentAdmins.delete(userId);
+        } else {
+            currentAdmins.add(userId);
+        }
+        updateTeam(teamId, { teamAdmins: Array.from(currentAdmins) });
     }, [teams, updateTeam, canManageTeam, toast]);
 
     const handleRemoveUserFromTeam = useCallback((teamId: string, userId: string) => {
@@ -657,7 +656,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
             .filter(t => 
                 canManageTeam(t) || 
                 (viewAsUser.linkedTeamIds || []).includes(t.id) ||
-                t.members.includes(viewAsUser.userId)
+                (viewAsUser.memberOfTeamIds || []).includes(t.id)
             )
             .filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase()));
     }, [teams, viewAsUser, searchTerm, canManageTeam]);
