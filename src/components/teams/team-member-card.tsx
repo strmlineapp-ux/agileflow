@@ -117,36 +117,67 @@ export function TeamMemberCard({ member, team, isViewer }: { member: User, team:
     };
   }, [isEditingLabel, handleSaveLabel]);
 
-  const renderBadge = (badge: Badge, isAssigned: boolean) => (
-    <TooltipProvider key={badge.id}>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <UiBadge
-            variant={'outline'}
-            style={{
-                borderColor: isAssigned ? badge.color : 'hsl(var(--muted-foreground))',
-                backgroundColor: 'transparent',
-                borderStyle: isAssigned ? 'solid' : 'dashed',
-            }}
-            className={cn(
-              'gap-1 p-1 pl-2 rounded-full h-7 text-sm font-thin',
-              canManageRoles && 'cursor-pointer'
-            )}
-            onClick={() => canManageRoles && handleToggleRole(badge.name)}
-          >
-            <GoogleSymbol 
-                name={badge.icon} 
-                style={{ fontSize: '20px', color: isAssigned ? badge.color : 'hsl(var(--muted-foreground))' }} 
-                weight={100} />
-            <span style={{color: isAssigned ? badge.color : 'hsl(var(--muted-foreground))' }}>{badge.name}</span>
-          </UiBadge>
-        </TooltipTrigger>
-        <TooltipContent>
-          {canManageRoles ? (isAssigned ? 'Click to unassign' : 'Click to assign') : badge.description || badge.name}
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  );
+  const renderBadge = (badge: Badge, isAssigned: boolean) => {
+    if (!isAssigned) {
+      return (
+        <TooltipProvider key={badge.id}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <UiBadge
+                variant={'outline'}
+                style={{
+                  borderColor: 'hsl(var(--muted-foreground))',
+                  backgroundColor: 'transparent',
+                  borderStyle: 'dashed',
+                }}
+                className={cn(
+                  'gap-1 p-1 pl-2 rounded-full h-7 text-sm font-thin',
+                  canManageRoles && 'cursor-pointer'
+                )}
+                onClick={() => canManageRoles && handleToggleRole(badge.name)}
+              >
+                <GoogleSymbol 
+                    name={badge.icon} 
+                    style={{ fontSize: '20px', color: 'hsl(var(--muted-foreground))' }} 
+                    weight={100} />
+                <span style={{color: 'hsl(var(--muted-foreground))' }}>{badge.name}</span>
+              </UiBadge>
+            </TooltipTrigger>
+            <TooltipContent>
+              {canManageRoles ? 'Click to assign' : badge.description || badge.name}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      );
+    }
+
+    // Assigned badge, icon-only
+    return (
+      <TooltipProvider key={badge.id}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={() => canManageRoles && handleToggleRole(badge.name)}
+              className={cn(
+                'h-7 w-7 rounded-full border flex items-center justify-center bg-transparent',
+                canManageRoles && 'cursor-pointer'
+              )}
+              style={{ borderColor: badge.color }}
+            >
+              <GoogleSymbol
+                name={badge.icon}
+                style={{ fontSize: '20px', color: badge.color }}
+                weight={100}
+              />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{badge.name}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  };
 
   return (
     <>
