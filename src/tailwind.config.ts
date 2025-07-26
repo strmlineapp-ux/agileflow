@@ -18,8 +18,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        body: ['var(--font-roboto)', 'sans-serif'],
-        headline: ['var(--font-roboto)', 'sans-serif'],
+        body: ['"PT Sans"', 'sans-serif'],
+        headline: ['"Space Grotesk"', 'sans-serif'],
       },
       fontWeight: {
           light: '300',

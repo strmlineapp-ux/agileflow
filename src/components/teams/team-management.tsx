@@ -494,7 +494,7 @@ function TeamManagementDropZone({id, type, children, className}: {id: string, ty
 }
 
 function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
-  const { isOver, setNodeRef } = useDroppable({ id });
+  const { setNodeRef, isOver } = useDroppable({ id });
   
   return (
     <div
