@@ -611,27 +611,27 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isCollapsed,
 
     return (
         <Card className="group relative">
-            {!isPinned && (
-              <TooltipProvider>
-                  <Tooltip>
-                      <TooltipTrigger asChild>
-                          <Button
-                              variant="ghost"
-                              size="icon"
-                              className={cn("absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity z-10", isDragModifierPressed && "hidden")}
-                              onPointerDown={(e) => {
-                                  e.stopPropagation();
-                                  setIsDeleteDialogOpen(true);
-                              }}
-                          >
-                              <GoogleSymbol name="cancel" className="text-lg" weight={100} opticalSize={20} />
-                          </Button>
-                      </TooltipTrigger>
-                      <TooltipContent><p>Delete Page</p></TooltipContent>
-                  </Tooltip>
-              </TooltipProvider>
-            )}
             <CardHeader className="p-2" {...dragHandleProps}>
+                {!isPinned && (
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className={cn("absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity z-10", isDragModifierPressed && "hidden")}
+                                onPointerDown={(e) => {
+                                    e.stopPropagation();
+                                    setIsDeleteDialogOpen(true);
+                                }}
+                            >
+                                <GoogleSymbol name="cancel" className="text-lg" weight={100} opticalSize={20} />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent><p>Delete Page</p></TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+                )}
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                         <div className="relative">
@@ -1072,7 +1072,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
         descriptionTextareaRef.current?.focus();
         descriptionTextareaRef.current?.select();
         return () => {
-            document.removeEventListener("mousedown", handleOutsideClick);
+            document.removeEventListener("mousedown", handleSaveDescription);
         };
     }, [isEditingDescription, handleSaveDescription]);
 

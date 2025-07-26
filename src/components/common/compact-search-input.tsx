@@ -33,9 +33,10 @@ export function CompactSearchInput({
   useEffect(() => {
     if (isActive) {
       setIsSearching(true);
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         inputRef.current?.focus();
-      }, 50);
+      }, 50); // Small delay to ensure the input is rendered
+      return () => clearTimeout(timer);
     }
   }, [isActive, inputRef]);
 
