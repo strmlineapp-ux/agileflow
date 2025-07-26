@@ -45,7 +45,7 @@ This pattern provides a clean, minimal interface for search functionality, espec
   - Clicking the button reveals the input field.
   - **Crucially, the input must have a transparent background and no borders or box-shadow**, ensuring it blends seamlessly into the UI.
 - **Behavior:**
-  - **Automatic Focus**: For specific single-view pages like **Account Settings**, an `autoFocus={true}` prop can be passed to focus the input on initial load. When a tab in a management interface becomes active, an `isActive={true}` prop should be passed to the component to reliably trigger focus.
+  - **Automatic Focus**: For specific single-view pages like **Account Settings**, an `autoFocus={true}` prop can be passed to focus the input on initial load.
   - **Manual Focus**: Clicking the search icon will always expand the input and focus it.
   - **Collapse on Blur**: The input always collapses back to its icon-only state when it loses focus (`onBlur`) and the field is empty.
 - **Application:** Used for filtering lists of icons, users, or other filterable content within popovers and management pages like the Admin screen.
@@ -253,7 +253,7 @@ This pattern describes the user interface for assigning and unassigning badges t
     - **Click to Toggle**: A user with the correct permissions can click on any badge to toggle its state for that team member.
     - **Reordering**: A user with permission can reorder a member's **assigned** badges by holding down their drag modifier key and dragging an icon-only badge to a new position within that member's assigned list.
 - **Visual States**:
-    - **Assigned Badges**: Appear as icon-only buttons with a solid, colored border and a transparent background. The icon inside matches the border color. The name of the badge is revealed in a tooltip on hover.
+    - **Assigned Badges**: Appear as icon-only `28px` buttons with a solid, colored border and a transparent background. The `20px` icon inside matches the border color. The name of the badge is revealed in a tooltip on hover.
     - **Unassigned Badges**: Appear as full pills with a dashed, muted border. The text and icon inside are also muted, using the `--muted-foreground` color. This indicates an "available" but unselected state.
 - **Application**: Used on the **Team Members** tab within each team's management page.
 
@@ -333,3 +333,4 @@ This is the single source of truth for indicating user interaction state across 
       - **Ownership Status**: `absolute -top-0 -right-3`.
     - **Icon Size (Ownership Status)**: The `GoogleSymbol` inside an ownership status badge should have its size set via `style={{fontSize: '16px'}}`.
 -   **Badges in Compact View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
+
