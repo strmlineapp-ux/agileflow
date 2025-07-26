@@ -21,10 +21,9 @@ import { ScrollArea } from '../ui/scroll-area';
 import { toast } from '@/hooks/use-toast';
 import { Badge as UiBadge } from '../ui/badge';
 import { useDroppable } from '@dnd-kit/core';
-import { BadgeCollectionCard } from './badge-management';
 
 
-function DraggableUserList({ id, children, className }: { id: string, children: React.ReactNode, className?: string }) {
+function DroppableUserList({ id, children, className }: { id: string, children: React.ReactNode, className?: string }) {
     const { setNodeRef, isOver } = useDroppable({ id, data: { type: 'user-list-container', id } });
     return (
         <div ref={setNodeRef} className={cn(className, "transition-colors rounded-md", isOver && "bg-primary/5")}>
@@ -88,7 +87,7 @@ function SortableTeamMember({ member, team, isViewer, onSetAdmin, onRemoveUser }
 }
 
 export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
-    const { viewAsUser, users, updateAppTab, updateTeam, isDragModifierPressed, allBadges, handleBadgeAssignment, handleBadgeUnassignment, allBadgeCollections, updateBadge, deleteBadge, addBadge, updateBadgeCollection, deleteBadgeCollection, predefinedColors } = useUser();
+    const { viewAsUser, users, updateAppTab, updateTeam, isDragModifierPressed, allBadges, handleBadgeAssignment, handleBadgeUnassignment } = useUser();
     const [activeDragItem, setActiveDragItem] = useState<{type: string, id: string, data: any} | null>(null);
 
     if (!team) return null;
@@ -259,21 +258,19 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         const activeType = active.data.current?.type;
         const overType = over.data.current?.type;
     
-        if (activeType === 'badge') {
+        if (activeType === 'badge-assigned') {
             const badge = active.data.current?.badge as Badge;
-            if (!badge) return;
-
-            const sourceContext = active.data.current?.context;
             const sourceMemberId = active.data.current?.memberId;
+            if (!badge || !sourceMemberId) return;
     
             if (overType === 'member-card') {
                 const targetMemberId = over.data.current?.memberId;
                 if (!targetMemberId) return;
 
-                if (sourceContext === 'member' && sourceMemberId && sourceMemberId !== targetMemberId) {
+                if (sourceMemberId !== targetMemberId) {
                     handleBadgeUnassignment(badge, sourceMemberId);
+                    handleBadgeAssignment(badge, targetMemberId);
                 }
-                handleBadgeAssignment(badge, targetMemberId);
                 return;
             }
             return;
@@ -311,7 +308,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         setActiveDragItem({ type: active.data.current?.type, id: active.id as string, data: active.data.current });
     }
 
-    const activeBadge = (activeDragItem?.type === 'badge') ? activeDragItem.data.badge : null;
+    const activeBadge = (activeDragItem?.type === 'badge-assigned') ? activeDragItem.data.badge : null;
     
     return (
       <div className="flex h-full gap-4">
@@ -354,13 +351,13 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                                         {teamAdminsLabel}
                                     </h3>
                                 )}
-                                <DraggableUserList id="admins" className="space-y-4">
+                                <DroppableUserList id="admins" className="space-y-4">
                                     <SortableContext items={adminIds} strategy={verticalListSortingStrategy}>
                                         {admins.map((member) => (
                                             <SortableTeamMember key={member.userId} member={member} team={team} isViewer={isViewer} onSetAdmin={() => handleSetAdmin(team.id, member.userId)} onRemoveUser={() => handleRemoveUser(member.userId)} />
                                         ))}
                                     </SortableContext>
-                                </DraggableUserList>
+                                </DroppableUserList>
                             </div>
                         )}
 
@@ -379,7 +376,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                                 </h3>
                             )}
                             {members.length > 0 && (
-                                <DraggableUserList id="members">
+                                <DroppableUserList id="members">
                                     <SortableContext items={memberIds} strategy={verticalListSortingStrategy}>
                                         <div className="flex flex-wrap -m-3">
                                         {members.map((member) => (
@@ -389,7 +386,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                                         ))}
                                         </div>
                                     </SortableContext>
-                                </DraggableUserList>
+                                </DroppableUserList>
                             )}
                         </div>
                     </div>
