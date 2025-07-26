@@ -53,13 +53,13 @@ export interface User {
   title?: string;
   roles?: string[]; // Contains IDs of Badges assigned to the user
   directReports?: string[];
+  memberOfTeamIds?: string[];
   theme?: 'light' | 'dark';
   primaryColor?: string; // HEX value string e.g., "#4A90E2"
   defaultCalendarView?: 'month' | 'week' | 'day' | 'production-schedule';
   easyBooking?: boolean;
   timeFormat?: '12h' | '24h';
   linkedTeamIds?: string[];
-  memberOfTeamIds?: string[]; // New: List of team IDs the user is a member of
   linkedCollectionIds?: string[];
   linkedCalendarIds?: string[];
   dragActivationKey?: 'alt' | 'ctrl' | 'meta' | 'shift';
@@ -112,6 +112,8 @@ export interface Team {
   membersLabel?: string;
   locationCheckManagers: string[]; // array of userIds who can manage check locations
   userBadgesLabel?: string;
+  allBadges?: Badge[];
+  badgeCollections?: BadgeCollection[];
   activeBadgeCollections?: string[];
   collectionViewModes?: Record<string, 'compact' | 'grid' | 'list'>;
   pinnedLocations?: string[]; // array of location names
