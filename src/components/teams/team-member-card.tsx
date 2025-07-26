@@ -104,21 +104,16 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin, canManage }
   }, [member.roles, userAssignableBadges]);
 
   const groupedBadges = useMemo(() => {
-    const groups: { [collectionId: string]: { collectionName: string; badges: Badge[] } } = {};
+    const groups: { [collectionName: string]: Badge[] } = {};
     assignedBadges.forEach(badge => {
         const collection = allBadgeCollections.find(c => c.badgeIds.includes(badge.id));
-        if (collection) {
-            const collectionId = collection.id;
-            if (!groups[collectionId]) {
-                groups[collectionId] = {
-                    collectionName: collection.name,
-                    badges: [],
-                };
-            }
-            groups[collectionId].badges.push(badge);
+        const collectionName = collection?.name || "Other Badges";
+        if (!groups[collectionName]) {
+            groups[collectionName] = [];
         }
+        groups[collectionName].push(badge);
     });
-    return Object.values(groups);
+    return Object.entries(groups).map(([collectionName, badges]) => ({ collectionName, badges }));
   }, [assignedBadges, allBadgeCollections]);
 
   const sensors = useSensors(
@@ -185,13 +180,13 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin, canManage }
 
   return (
     <>
-      <Card ref={setNodeRef} className={cn("bg-transparent", isOver && "ring-2 ring-primary ring-inset")}>
+      <Card ref={setNodeRef} className={cn("bg-transparent", isOver && "ring-1 ring-inset ring-primary")}>
         <CardHeader>
           <div className="flex items-center gap-4">
              <div 
                 className={cn("relative")}
             >
-                <Avatar className="h-12 w-12 cursor-pointer" onClick={(e) => {
+                <Avatar className="h-12 w-12" onClick={(e) => {
                     if (canManage && !isDragModifierPressed) {
                         e.stopPropagation();
                         onSetAdmin();

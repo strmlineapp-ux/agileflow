@@ -182,8 +182,11 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
-            activationConstraint: {
-                distance: isDragModifierPressed ? 0 : 10000 // Effectively disable pointer drag without modifier
+            onActivation: ({ event }) => {
+                if (!isDragModifierPressed) {
+                    return false;
+                }
+                return true;
             },
         }),
         useSensor(KeyboardSensor, {
@@ -522,6 +525,13 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                                     </div>
                                 </SortableContext>
                             </ScrollArea>
+                             <DragOverlay modifiers={[snapCenterToCursor]}>
+                                {activeDragItem?.type === 'pool-badge' && activeDragItem?.data.badge ? (
+                                    <div className="h-9 w-9 rounded-full border-2 flex items-center justify-center bg-card" style={{ borderColor: activeDragItem.data.badge.color }}>
+                                        <GoogleSymbol name={activeDragItem.data.badge.icon} style={{ fontSize: '28px', color: activeDragItem.data.badge.color }} weight={100} />
+                                    </div>
+                                ) : null}
+                            </DragOverlay>
                         </DndContext>
                     </CardContent>
                 </Card>
