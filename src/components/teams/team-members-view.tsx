@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useUser } from '@/context/user-context';
@@ -23,13 +22,10 @@ import { toast } from '@/hooks/use-toast';
 import { Badge as UiBadge } from '../ui/badge';
 import { useDroppable } from '@dnd-kit/core';
 
-function DraggableBadge({ badge, canManage, context }: { badge: Badge; canManage: boolean, context: 'pool' | 'member' }) {
+function DraggableBadgeFromPool({ badge, canManage }: { badge: Badge; canManage: boolean }) {
     const { attributes, listeners, setNodeRef, isDragging, transform, transition } = useSortable({
-        id: `badge-${context}:${badge.id}`,
-        data: {
-            type: 'badge',
-            badge: badge,
-        },
+        id: `badge-pool:${badge.id}`,
+        data: { type: 'badge', badge: badge, context: 'pool' },
         disabled: !canManage,
     });
 
@@ -39,38 +35,32 @@ function DraggableBadge({ badge, canManage, context }: { badge: Badge; canManage
         opacity: isDragging ? 0.5 : 1,
     };
 
-    const badgeContent = (
-      <UiBadge
-          variant={'outline'}
-          style={{ color: badge.color, borderColor: badge.color }}
-          className={cn('flex items-center gap-1.5 p-1 pl-2 rounded-full text-sm h-8 font-thin', canManage && 'cursor-grab')}
-      >
-          <GoogleSymbol name={badge.icon} style={{ fontSize: '20px' }} weight={100} />
-          <span>{badge.name}</span>
-      </UiBadge>
-    )
-
     return (
         <div ref={setNodeRef} style={style} {...listeners} {...attributes}>
-            {badgeContent}
+            <UiBadge
+                variant={'outline'}
+                style={{ color: badge.color, borderColor: badge.color }}
+                className={cn('flex items-center gap-1.5 p-1 pl-2 rounded-full text-sm h-8 font-thin', canManage && 'cursor-grab')}
+            >
+                <GoogleSymbol name={badge.icon} style={{ fontSize: '20px' }} weight={100} />
+                <span>{badge.name}</span>
+            </UiBadge>
         </div>
     );
 }
+
 
 function SortableTeamMember({ member, team, isViewer, onSetAdmin, onRemoveUser }: { member: User, team: Team, isViewer: boolean, onSetAdmin: () => void, onRemoveUser: () => void }) {
   const { isDragModifierPressed } = useUser();
   
   const { attributes, listeners, setNodeRef, isDragging, transform, transition } = useSortable({
-    id: member.userId,
-    data: { 
-        type: 'member-card',
-        member: member 
-    },
+    id: `member:${member.userId}`,
+    data: { type: 'member-card', member: member },
     disabled: isViewer || !isDragModifierPressed
   });
   
   const { isOver, setNodeRef: droppableSetNodeRef } = useDroppable({
-    id: member.userId,
+    id: `member-card:${member.userId}`,
     data: { type: 'member-card', memberId: member.userId }
   });
 
@@ -114,22 +104,11 @@ function SortableTeamMember({ member, team, isViewer, onSetAdmin, onRemoveUser }
   );
 }
 
-function DroppableUserList({ id, children, className }: { id: string; children: React.ReactNode; className?: string }) {
-    const { setNodeRef, isOver } = useDroppable({ id });
-    return (
-        <div ref={setNodeRef} className={cn(className, "rounded-md p-2 transition-colors", isOver && "ring-1 ring-border ring-inset")}>
-            {children}
-        </div>
-    );
-}
-
 export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
-    const { viewAsUser, users, updateAppTab, updateTeam, isDragModifierPressed, allBadges, updateUser, allBadgeCollections, handleBadgeUnassignment, handleBadgeAssignment } = useUser();
+    const { viewAsUser, users, updateAppTab, updateTeam, isDragModifierPressed, allBadges, handleBadgeAssignment, handleBadgeUnassignment, allBadgeCollections } = useUser();
     const [activeDragItem, setActiveDragItem] = useState<{type: string, id: string, data: any} | null>(null);
 
-    if (!team) {
-      return null;
-    }
+    if (!team) return null;
 
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const titleInputRef = useRef<HTMLInputElement>(null);
@@ -162,8 +141,8 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
     const admins = useMemo(() => teamMembers.filter(m => team.teamAdmins?.includes(m.userId)), [teamMembers, team.teamAdmins]);
     const members = useMemo(() => teamMembers.filter(m => !team.teamAdmins?.includes(m.userId)), [teamMembers, team.teamAdmins]);
 
-    const adminIds = useMemo(() => admins.map(a => a.userId), [admins]);
-    const memberIds = useMemo(() => members.map(m => m.userId), [members]);
+    const adminIds = useMemo(() => admins.map(a => `member:${a.userId}`), [admins]);
+    const memberIds = useMemo(() => members.map(m => `member:${m.userId}`), [members]);
     
     const userAssignableBadges = useMemo(() => {
         const activeAndApplicableCollections = allBadgeCollections.filter(
@@ -266,7 +245,6 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         };
     }, [isEditingAdminsLabel, handleSaveAdminsLabel]);
 
-
     const handleAdminsLabelKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') handleSaveAdminsLabel();
         else if (e.key === 'Escape') setIsEditingAdminsLabel(false);
@@ -329,45 +307,54 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         const activeType = active.data.current?.type;
         const overType = over.data.current?.type;
     
-        // Dragging a badge
         if (activeType === 'badge') {
             const badge = active.data.current?.badge as Badge;
+            const sourceContext = active.data.current?.context;
+            const sourceMemberId = active.data.current?.memberId;
+
             if (!badge) return;
     
+            // Case 1: Drop onto a member card (Assign or Re-assign)
             if (overType === 'member-card') {
                 const targetMemberId = over.data.current?.memberId;
-                if (targetMemberId) {
-                    handleBadgeAssignment(badge, targetMemberId);
+                if (!targetMemberId) return;
+
+                // Un-assign from source first if it's a re-assignment
+                if (sourceContext === 'member' && sourceMemberId && sourceMemberId !== targetMemberId) {
+                    handleBadgeUnassignment(badge, sourceMemberId);
                 }
-            } else if (overType === 'badge-pool') {
-                const memberWithBadge = teamMembers.find(m => m.roles?.includes(badge.id));
-                if (memberWithBadge) {
-                    handleBadgeUnassignment(badge, memberWithBadge.userId);
-                }
+                handleBadgeAssignment(badge, targetMemberId);
+                return;
+            }
+            
+            // Case 2: Drop into the badge pool (Un-assign)
+            if (overType === 'badge-pool' && sourceContext === 'member' && sourceMemberId) {
+                handleBadgeUnassignment(badge, sourceMemberId);
+                return;
             }
             return;
         }
     
-        // Dragging a team member
         if (activeType === 'member-card') {
             const user = active.data.current?.member as User;
-            const activeIsAdmin = adminIds.includes(user.userId);
-            const overIsAdminList = over.id === 'admins';
-    
-            if (activeIsAdmin !== overIsAdminList) {
+            const sourceList = adminIds.includes(`member:${user.userId}`) ? 'admins' : 'members';
+            const destinationList = over.id === 'admins' ? 'admins' : 'members';
+
+            if (sourceList !== destinationList) {
                 handleSetAdmin(team.id, user.userId);
             } else {
                 if (active.id === over.id) return;
-                const list = activeIsAdmin ? admins : members;
-                const oldIndex = list.findIndex(item => item.userId === active.id);
+
+                const list = sourceList === 'admins' ? admins : members;
+                const oldIndex = list.findIndex(item => `member:${item.userId}` === active.id);
                 const overItem = over.data.current?.member as User | undefined;
                 if (!overItem) return;
                 const newIndex = list.findIndex(item => item.userId === overItem.userId);
     
                 if (oldIndex !== -1 && newIndex !== -1) {
                     const reorderedList = arrayMove(list, oldIndex, newIndex);
-                    const newAdmins = activeIsAdmin ? reorderedList : admins;
-                    const newMembers = !activeIsAdmin ? reorderedList : members;
+                    const newAdmins = sourceList === 'admins' ? reorderedList : admins;
+                    const newMembers = sourceList !== 'admins' ? reorderedList : members;
                     const newMemberIds = [...newAdmins, ...newMembers].map(m => m.userId);
                     updateTeam(team.id, { members: newMemberIds });
                 }
@@ -477,7 +464,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                     </div>
                 </div>
             </div>
-             <DragOverlay modifiers={[snapCenterToCursor]}>
+            <DragOverlay modifiers={[snapCenterToCursor]}>
                 {activeDragItem?.type === 'member-card' && activeDragItem?.data?.member ? (
                     <Avatar className="h-12 w-12">
                         <AvatarImage src={activeDragItem.data.member.avatarUrl} alt={activeDragItem.data.member.displayName} data-ai-hint="user avatar" />
@@ -492,6 +479,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         </DndContext>
         <div className={cn("transition-all duration-300", isBadgePoolOpen ? "w-96" : "w-0")}>
             <div className={cn("h-full rounded-lg transition-all", isBadgePoolOpen ? "p-2" : "p-0")}>
+                <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
                  <Card ref={badgePoolRef} className={cn("transition-opacity duration-300 h-full bg-transparent flex flex-col", isBadgePoolOpen ? "opacity-100" : "opacity-0", isBadgePoolOver && 'ring-1 ring-border ring-inset')}>
                     <CardHeader>
                         <div className="flex items-center justify-between">
@@ -501,37 +489,35 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                         <CardDescription>Drag a badge onto a team member to assign it.</CardDescription>
                     </CardHeader>
                     <CardContent className="flex-1 p-2 overflow-hidden min-h-0 rounded-md">
-                        <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
+                        <SortableContext items={assignableBadgeIds}>
                             <ScrollArea className="h-full">
-                                <SortableContext items={assignableBadgeIds} strategy={verticalListSortingStrategy}>
-                                    <div className="space-y-4">
-                                        {groupedAssignableBadges.map(({ collectionName, badges }) => (
-                                            <div key={collectionName}>
-                                                <p className="text-xs tracking-wider mb-2">{collectionName}</p>
-                                                <div className="flex flex-wrap gap-2">
-                                                    {badges.map(badge => (
-                                                        <DraggableBadge key={badge.id} badge={badge} canManage={canManage} context="pool" />
-                                                    ))}
-                                                </div>
+                                <div className="space-y-4">
+                                    {groupedAssignableBadges.map(({ collectionName, badges }) => (
+                                        <div key={collectionName}>
+                                            <p className="text-xs tracking-wider mb-2">{collectionName}</p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {badges.map(badge => (
+                                                    <DraggableBadgeFromPool key={badge.id} badge={badge} canManage={canManage} />
+                                                ))}
                                             </div>
-                                        ))}
-                                        {userAssignableBadges.length === 0 && <p className="text-xs text-muted-foreground text-center p-4 w-full">No badges available to assign. Activate badge collections in the "Badges" tab.</p>}
-                                    </div>
-                                </SortableContext>
+                                        </div>
+                                    ))}
+                                    {userAssignableBadges.length === 0 && <p className="text-xs text-muted-foreground text-center p-4 w-full">No badges available to assign. Activate badge collections in the "Badges" tab.</p>}
+                                </div>
                             </ScrollArea>
-                             <DragOverlay modifiers={[snapCenterToCursor]}>
-                                {activeBadge ? (
-                                    <div className="h-7 w-7 rounded-full border-2 flex items-center justify-center bg-card" style={{ borderColor: activeBadge.color }}>
-                                        <GoogleSymbol name={activeBadge.icon} style={{ fontSize: '20px', color: activeBadge.color }} weight={100} />
-                                    </div>
-                                ) : null}
-                            </DragOverlay>
-                        </DndContext>
+                        </SortableContext>
                     </CardContent>
                 </Card>
+                 <DragOverlay modifiers={[snapCenterToCursor]}>
+                    {activeBadge ? (
+                        <div className="h-7 w-7 rounded-full border-2 flex items-center justify-center bg-card" style={{ borderColor: activeBadge.color }}>
+                            <GoogleSymbol name={activeBadge.icon} style={{ fontSize: '20px', color: activeBadge.color }} weight={100} />
+                        </div>
+                    ) : null}
+                </DragOverlay>
+                </DndContext>
             </div>
         </div>
       </div>
     );
 }
-

@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useMemo } from 'react';
@@ -10,17 +9,17 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
-import { useSortable, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+import { useSortable, SortableContext } from '@dnd-kit/sortable';
 import { useDroppable } from '@dnd-kit/core';
-
 
 function AssignedBadge({ badge, canManage, contextId }: { badge: Badge, canManage: boolean, contextId: string }) {
     const { attributes, listeners, setNodeRef, isDragging, transform, transition } = useSortable({
-        id: `badge-member:${contextId}:${badge.id}`,
+        id: `badge-assigned:${contextId}:${badge.id}`,
         data: {
             type: 'badge',
             badge: badge,
+            context: 'member',
+            memberId: contextId,
         },
         disabled: !canManage,
     });
@@ -41,7 +40,7 @@ function AssignedBadge({ badge, canManage, contextId }: { badge: Badge, canManag
                     {...listeners}
                     {...attributes}
                     className={cn(
-                        'h-7 w-7 rounded-full border flex items-center justify-center bg-transparent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50',
+                        'h-7 w-7 rounded-full border flex items-center justify-center bg-card focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50',
                         canManage && 'cursor-grab',
                         isDragging && 'opacity-50'
                     )}
@@ -62,10 +61,8 @@ function AssignedBadge({ badge, canManage, contextId }: { badge: Badge, canManag
     );
 }
 
-
 export function TeamMemberCard({ member, team, isViewer, onSetAdmin, isOver }: { member: User, team: Team, isViewer: boolean, onSetAdmin: () => void, isOver: boolean }) {
   const { allBadges } = useUser();
-
   const canManage = !isViewer;
 
   const assignedBadges = useMemo(() => {
@@ -74,10 +71,10 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin, isOver }: {
       .filter((b): b is Badge => !!b);
   }, [member.roles, allBadges]);
 
-  const assignedBadgeIds = useMemo(() => assignedBadges.map(b => `badge-member:${member.userId}:${b.id}`), [assignedBadges, member.userId]);
+  const assignedBadgeIds = useMemo(() => assignedBadges.map(b => `badge-assigned:${member.userId}:${b.id}`), [assignedBadges, member.userId]);
   
   const { setNodeRef } = useDroppable({
-    id: member.userId,
+    id: `member-card:${member.userId}`,
     data: { type: 'member-card', memberId: member.userId }
   });
 
@@ -122,7 +119,7 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin, isOver }: {
         {!isViewer && (
             <CardContent ref={setNodeRef} className="p-2 pt-0 mt-2">
                 <div className="transition-colors min-h-[48px] rounded-md border p-2 bg-muted/20 flex flex-wrap gap-1.5 items-center">
-                    <SortableContext items={assignedBadgeIds} strategy={verticalListSortingStrategy}>
+                    <SortableContext items={assignedBadgeIds}>
                         {assignedBadges.length > 0 ? (
                             assignedBadges.map(badge => (
                                 <AssignedBadge key={badge.id} badge={badge} canManage={canManage} contextId={member.userId} />
