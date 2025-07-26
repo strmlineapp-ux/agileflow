@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
@@ -512,7 +513,7 @@ function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
 }
 
 export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: AppTab; page: AppPage; isSingleTabPage?: boolean }) {
-    const { viewAsUser, users, teams, appSettings, addTeam, updateTeam, deleteTeam, reorderTeams, updateAppTab, updateUser, isDragModifierPressed } = useUser();
+    const { viewAsUser, users, teams, appSettings, addTeam, updateTeam, deleteTeam, reorderTeams, updateAppTab, updateUser, isDragModifierPressed, searchSharedTeams } = useUser();
     const router = useRouter();
     const pathname = usePathname();
     const { toast } = useToast();
@@ -522,6 +523,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
     const titleInputRef = useRef<HTMLInputElement>(null);
     const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
     const [sharedSearchTerm, setSharedSearchTerm] = useState('');
+    const [sharedTeams, setSharedTeams] = useState<Team[]>([]);
     
     const [searchTerm, setSearchTerm] = useState('');
     const [activeDragItem, setActiveDragItem] = useState<{type: string, data: any} | null>(null);
@@ -661,12 +663,11 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
     }, [teams, viewAsUser, searchTerm, canManageTeam]);
 
 
-    const sharedTeams = useMemo(() => {
-        const teamsOnBoard = new Set(displayedTeams.map(t => t.id));
-        return teams
-            .filter(t => t.isShared && !teamsOnBoard.has(t.id) && t.owner.id !== viewAsUser.userId)
-            .filter(t => t.name.toLowerCase().includes(sharedSearchTerm.toLowerCase()));
-    }, [teams, displayedTeams, sharedSearchTerm, viewAsUser.userId]);
+    useEffect(() => {
+        if (isSharedPanelOpen) {
+            searchSharedTeams(sharedSearchTerm).then(setSharedTeams);
+        }
+    }, [isSharedPanelOpen, sharedSearchTerm, searchSharedTeams]);
     
     const onDragEnd = (result: DragEndEvent) => {
         setActiveDragItem(null);
