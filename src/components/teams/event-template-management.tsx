@@ -9,9 +9,9 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { type Team, type EventTemplate, type AppTab } from '@/types';
+import { type Team, type EventTemplate, type AppTab, type Badge } from '@/types';
 import { GoogleSymbol } from '../icons/google-symbol';
-import { Badge } from '../ui/badge';
+import { Badge as UiBadge } from '../ui/badge';
 import { Popover, PopoverTrigger, PopoverContent } from '../ui/popover';
 import { ScrollArea } from '../ui/scroll-area';
 import { googleSymbolNames } from '@/lib/google-symbols';
@@ -29,6 +29,7 @@ function EventTemplateForm({
   onClose: () => void;
 }) {
   const { toast } = useToast();
+  const { allBadges } = useUser();
   const [name, setName] = useState(template?.name || '');
   const [icon, setIcon] = useState(template?.icon || 'label');
   const [requestedRoles, setRequestedRoles] = useState<string[]>(template?.requestedRoles || []);
@@ -39,7 +40,17 @@ function EventTemplateForm({
   const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
   const [iconSearch, setIconSearch] = useState('');
   
-  const availableBadges = (team.allBadges || []).filter(badge => !requestedRoles.includes(badge.name) && badge.name.toLowerCase().includes(roleSearch.toLowerCase()));
+  const teamBadges = useMemo(() => {
+    const activeBadgeIds = new Set(
+      team.activeBadgeCollections?.flatMap(collectionId => {
+        const collection = allBadges.find(c => c.id === collectionId);
+        return collection ? collection.badgeIds : [];
+      }) || []
+    );
+    return allBadges.filter(badge => activeBadgeIds.has(badge.id));
+  }, [team.activeBadgeCollections, allBadges]);
+  
+  const availableBadges = teamBadges.filter(badge => !requestedRoles.includes(badge.name) && badge.name.toLowerCase().includes(roleSearch.toLowerCase()));
 
   const filteredIcons = googleSymbolNames.filter(iconName =>
     iconName.toLowerCase().includes(iconSearch.toLowerCase())
@@ -128,7 +139,7 @@ function EventTemplateForm({
             <p className="text-sm text-muted-foreground">Requested Badges</p>
             <div className="flex flex-wrap gap-2 items-center min-h-[40px] p-2 border rounded-md bg-muted/50">
               {requestedRoles.map(role => (
-                <Badge key={role} variant="outline" className="group text-base py-1 pl-3 pr-1 rounded-full">
+                <UiBadge key={role} variant="outline" className="group text-base py-1 pl-3 pr-1 rounded-full">
                     <span className="font-medium">{role}</span>
                     <button 
                         type="button" 
@@ -138,7 +149,7 @@ function EventTemplateForm({
                         <GoogleSymbol name="cancel" className="text-sm" weight={100} opticalSize={20} />
                         <span className="sr-only">Remove {role}</span>
                     </button>
-                </Badge>
+                </UiBadge>
               ))}
               <Popover open={isAddRolePopoverOpen} onOpenChange={setIsAddRolePopoverOpen}>
                 <PopoverTrigger asChild>
@@ -321,7 +332,7 @@ export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab
                     <CardHeader>
                         <div className="flex items-start justify-between">
                              <CardTitle className="flex-1 min-w-0">
-                                <Badge className="text-base py-1 px-3 gap-2">
+                                <UiBadge className="text-base py-1 px-3 gap-2">
                                     <GoogleSymbol name={template.icon} opticalSize={20} />
                                     {editingTemplateNameId === template.id ? (
                                         <Input
@@ -339,7 +350,7 @@ export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab
                                             {template.name}
                                         </span>
                                     )}
-                                </Badge>
+                                </UiBadge>
                             </CardTitle>
                             <div className="flex items-center -mr-4 -mt-2">
                                 <Button
@@ -370,7 +381,7 @@ export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab
                         <p className="text-sm font-medium text-muted-foreground mb-2">Requested Badges</p>
                         <div className="flex flex-wrap gap-1 min-h-[24px]">
                           {template.requestedRoles.length > 0 ? (
-                            template.requestedRoles.map(role => <Badge key={role} variant="outline" className="rounded-full">{role}</Badge>)
+                            template.requestedRoles.map(role => <UiBadge key={role} variant="outline" className="rounded-full">{role}</UiBadge>)
                           ) : (
                             <p className="text-xs text-muted-foreground italic">No badges requested.</p>
                           )}
@@ -401,7 +412,7 @@ export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab
       <Dialog open={!!deletingTemplate} onOpenChange={(isOpen) => !isOpen && setDeletingTemplate(null)}>
         <DialogContent className="max-w-md">
             <div className="absolute top-4 right-4">
-                <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10 p-0" onClick={handleDeleteTemplate}>
+                <Button variant="ghost" size="icon" className="hover:text-destructive p-0 hover:bg-transparent" onClick={handleDeleteTemplate}>
                     <GoogleSymbol name="delete" className="text-4xl" weight={100} opticalSize={20} />
                     <span className="sr-only">Delete Template</span>
                 </Button>

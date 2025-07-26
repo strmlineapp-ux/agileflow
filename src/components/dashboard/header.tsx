@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -20,7 +21,7 @@ export function Header() {
   const unreadCount = notifications.filter((n) => !n.read).length;
   
   const orderedNavItems = useMemo(() => {
-    const visiblePages = appSettings.pages.filter(page => hasAccess(viewAsUser, page, teams));
+    const visiblePages = appSettings.pages.filter(page => hasAccess(viewAsUser, page));
 
     return visiblePages.flatMap(page => {
       if (!page.associatedTabs || page.associatedTabs.length === 0) {
@@ -28,10 +29,13 @@ export function Header() {
       }
       
       if (page.isDynamic) {
-        const relevantTeams = teams.filter(team => {
-            const isMemberOrAdmin = team.members.includes(viewAsUser.userId) || (team.teamAdmins || []).includes(viewAsUser.userId);
+        // For dynamic pages, we now rely on the user's team memberships stored on their object
+        const relevantTeams = (viewAsUser.memberOfTeamIds || [])
+          .map(teamId => teams.find(t => t.id === teamId))
+          .filter((t): t is NonNullable<typeof t> => !!t)
+          .filter(team => {
             const teamHasAccessToThisPage = page.access.teams.includes(team.id);
-            return isMemberOrAdmin && teamHasAccessToThisPage;
+            return teamHasAccessToThisPage;
         });
 
         return relevantTeams.map(team => ({

@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -26,7 +27,7 @@ export function Sidebar() {
 
     const visiblePages = appSettings.pages
         .filter(page => page.id !== 'page-settings') // Explicitly hide Settings from main nav
-        .filter(page => hasAccess(viewAsUser, page, teams));
+        .filter(page => hasAccess(viewAsUser, page));
 
     return visiblePages.flatMap(page => {
       if (!page.associatedTabs || page.associatedTabs.length === 0) {
@@ -34,10 +35,13 @@ export function Sidebar() {
       }
       
       if (page.isDynamic) {
-        const relevantTeams = teams.filter(team => {
-            const isMemberOrAdmin = team.members.includes(viewAsUser.userId) || (team.teamAdmins || []).includes(viewAsUser.userId);
+        // For dynamic pages, we now rely on the user's team memberships stored on their object
+        const relevantTeams = (viewAsUser.memberOfTeamIds || [])
+          .map(teamId => teams.find(t => t.id === teamId))
+          .filter((t): t is NonNullable<typeof t> => !!t)
+          .filter(team => {
             const teamHasAccessToThisPage = page.access.teams.includes(team.id);
-            return isMemberOrAdmin && teamHasAccessToThisPage;
+            return teamHasAccessToThisPage;
         });
 
         return relevantTeams.map(team => ({
