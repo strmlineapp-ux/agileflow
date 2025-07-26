@@ -2,7 +2,7 @@
 'use client';
 
 import { useUser } from '@/context/user-context';
-import { type Team, type AppTab, type User } from '@/types';
+import { type Team, type AppTab, type User, type Badge } from '@/types';
 import { TeamMemberCard } from './team-member-card';
 import React, { useRef, useState, useEffect, useMemo, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,13 @@ import { cn } from '@/lib/utils';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { snapCenterToCursor } from '@dnd-kit/modifiers';
 import { Avatar, AvatarImage, AvatarFallback } from '../ui/avatar';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import { Button } from '../ui/button';
+import { CompactSearchInput } from '../common/compact-search-input';
+import { ScrollArea } from '../ui/scroll-area';
+import { toast } from '@/hooks/use-toast';
+import { Badge as UiBadge } from '../ui/badge';
+
 
 function SortableTeamMember({ member, team, isViewer }: { member: User, team: Team, isViewer: boolean }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: member.userId, disabled: isViewer });
@@ -34,10 +41,9 @@ function SortableTeamMember({ member, team, isViewer }: { member: User, team: Te
 
 
 export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
-    const { viewAsUser, users, updateAppTab, updateTeam, isDragModifierPressed, allBadges, updateUser } = useUser();
+    const { viewAsUser, users, updateAppTab, updateTeam, isDragModifierPressed, allBadges, updateUser, allBadgeCollections } = useUser();
     const [activeDragItem, setActiveDragItem] = useState<{type: string, id: string, data: any} | null>(null);
     
-    // Safeguard to prevent rendering if team data is not available.
     if (!team) {
       return null;
     }
@@ -49,6 +55,9 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
     const [isEditingMembersLabel, setIsEditingMembersLabel] = useState(false);
     const adminsLabelInputRef = useRef<HTMLInputElement>(null);
     const membersLabelInputRef = useRef<HTMLInputElement>(null);
+
+    const [isBadgePoolOpen, setIsBadgePoolOpen] = useState(false);
+    const [badgePoolSearch, setBadgePoolSearch] = useState('');
 
     const teamAdminsLabel = team.teamAdminsLabel || 'Team Admins';
     const membersLabel = team.membersLabel || 'Members';
@@ -70,6 +79,31 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
 
     const adminIds = useMemo(() => admins.map(a => a.userId), [admins]);
     const memberIds = useMemo(() => members.map(m => m.userId), [members]);
+    
+    const userAssignableBadges = useMemo(() => {
+        const activeAndApplicableCollections = allBadgeCollections.filter(
+          (c) =>
+            (team.activeBadgeCollections || []).includes(c.id) &&
+            c.applications?.includes('team members')
+        );
+        const badgeIds = new Set(activeAndApplicableCollections.flatMap(c => c.badgeIds));
+        return allBadges.filter(badge => badgeIds.has(badge.id) && badge.name.toLowerCase().includes(badgePoolSearch.toLowerCase()));
+    }, [team.activeBadgeCollections, allBadgeCollections, allBadges, badgePoolSearch]);
+
+    const handleAssignBadgeToAll = (badge: Badge) => {
+        if (isViewer) return;
+        team.members.forEach(memberId => {
+            const member = users.find(u => u.userId === memberId);
+            if (member && !member.roles?.includes(badge.name)) {
+                const updatedRoles = [...(member.roles || []), badge.name];
+                updateUser(memberId, { roles: updatedRoles });
+            }
+        });
+        toast({
+            title: "Badge Assigned",
+            description: `"${badge.name}" has been assigned to all eligible team members.`
+        });
+    };
     
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -186,7 +220,6 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
             return;
         }
 
-        // Logic for reordering members
         const activeList = adminIds.includes(active.id as string) ? 'admins' : 'members';
         const overList = adminIds.includes(over.id as string) ? 'admins' : 'members';
 
@@ -214,89 +247,146 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
     const activeMember = activeDragItem?.type === 'member' ? users.find(u => u.userId === activeDragItem.id) : null;
 
     return (
-      <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
-        <div className="space-y-6">
-            <div className="flex items-center gap-2 mb-6">
-                {isEditingTitle ? (
-                  <Input ref={titleInputRef} defaultValue={tab.name} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
-                ) : (
-                  <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
-                        </TooltipTrigger>
-                         {tab.description && (
-                            <TooltipContent>
-                                <p className="max-w-xs">{tab.description}</p>
-                            </TooltipContent>
-                        )}
-                    </Tooltip>
-                  </TooltipProvider>
+      <div className="flex h-full gap-4">
+        <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between mb-6 shrink-0">
+                <div className="flex items-center gap-2">
+                    {isEditingTitle ? (
+                    <Input ref={titleInputRef} defaultValue={tab.name} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
+                    ) : (
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
+                            </TooltipTrigger>
+                            {tab.description && (
+                                <TooltipContent>
+                                    <p className="max-w-xs">{tab.description}</p>
+                                </TooltipContent>
+                            )}
+                        </Tooltip>
+                    </TooltipProvider>
+                    )}
+                </div>
+                {!isViewer && (
+                     <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" onClick={() => setIsBadgePoolOpen(!isBadgePoolOpen)}>
+                                    <GoogleSymbol name="style" weight={100} opticalSize={20} />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent><p>Show Assignable Badges</p></TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
                 )}
             </div>
-            
-            <div className="flex flex-col lg:flex-row gap-6">
-                {admins.length > 0 && (
-                    <div className="lg:w-1/3 lg:max-w-sm space-y-4">
-                        {isEditingAdminsLabel ? (
+            <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
+              <div className="flex-1 overflow-y-auto pr-2 -mr-2">
+                <div className="flex flex-col lg:flex-row gap-6">
+                    {admins.length > 0 && (
+                        <div className="lg:w-1/3 lg:max-w-sm space-y-4">
+                            {isEditingAdminsLabel ? (
+                                <Input
+                                    ref={adminsLabelInputRef}
+                                    defaultValue={teamAdminsLabel}
+                                    onBlur={handleSaveAdminsLabel}
+                                    onKeyDown={handleAdminsLabelKeyDown}
+                                    className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                                />
+                            ) : (
+                                <h3 className="font-headline font-thin text-xl cursor-text" onClick={() => setIsEditingAdminsLabel(true)}>
+                                    {teamAdminsLabel}
+                                </h3>
+                            )}
+                            <SortableContext items={adminIds} strategy={verticalListSortingStrategy}>
+                                <div className="space-y-4">
+                                    {admins.map((member) => (
+                                        <SortableTeamMember key={member.userId} member={member} team={team} isViewer={isViewer} />
+                                    ))}
+                                </div>
+                            </SortableContext>
+                        </div>
+                    )}
+
+                    <div className="flex-1 space-y-4">
+                        {isEditingMembersLabel ? (
                             <Input
-                                ref={adminsLabelInputRef}
-                                defaultValue={teamAdminsLabel}
-                                onBlur={handleSaveAdminsLabel}
-                                onKeyDown={handleAdminsLabelKeyDown}
+                                ref={membersLabelInputRef}
+                                defaultValue={membersLabel}
+                                onBlur={handleSaveMembersLabel}
+                                onKeyDown={handleMembersLabelKeyDown}
                                 className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
                             />
                         ) : (
-                            <h3 className="font-headline font-thin text-xl cursor-text" onClick={() => setIsEditingAdminsLabel(true)}>
-                                {teamAdminsLabel}
+                            <h3 className="font-headline font-thin text-xl cursor-text" onClick={() => setIsEditingMembersLabel(true)}>
+                                {membersLabel}
                             </h3>
                         )}
-                        <SortableContext items={adminIds} strategy={verticalListSortingStrategy}>
-                            <div className="space-y-4">
-                                {admins.map((member) => (
-                                    <SortableTeamMember key={member.userId} member={member} team={team} isViewer={isViewer} />
+                        {members.length > 0 && (
+                            <SortableContext items={memberIds} strategy={verticalListSortingStrategy}>
+                                <div className="flex flex-wrap -m-3">
+                                {members.map((member) => (
+                                    <div key={member.userId} className="p-3 basis-full md:basis-1/2 flex-grow-0 flex-shrink-0">
+                                        <SortableTeamMember member={member} team={team} isViewer={isViewer} />
+                                    </div>
                                 ))}
-                            </div>
-                        </SortableContext>
-                    </div>
-                )}
-
-                <div className="flex-1 space-y-4">
-                     {isEditingMembersLabel ? (
-                        <Input
-                            ref={membersLabelInputRef}
-                            defaultValue={membersLabel}
-                            onBlur={handleSaveMembersLabel}
-                            onKeyDown={handleMembersLabelKeyDown}
-                            className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                        />
-                    ) : (
-                         <h3 className="font-headline font-thin text-xl cursor-text" onClick={() => setIsEditingMembersLabel(true)}>
-                            {membersLabel}
-                         </h3>
-                    )}
-                    {members.length > 0 && (
-                        <SortableContext items={memberIds} strategy={verticalListSortingStrategy}>
-                            <div className="flex flex-wrap -m-3">
-                            {members.map((member) => (
-                                <div key={member.userId} className="p-3 basis-full md:basis-1/2 flex-grow-0 flex-shrink-0">
-                                    <SortableTeamMember member={member} team={team} isViewer={isViewer} />
                                 </div>
-                            ))}
-                            </div>
-                        </SortableContext>
-                    )}
+                            </SortableContext>
+                        )}
+                    </div>
                 </div>
+              </div>
+              <DragOverlay modifiers={[snapCenterToCursor]}>
+                  {activeMember ? (
+                      <Avatar className="h-12 w-12">
+                          <AvatarImage src={activeMember.avatarUrl} alt={activeMember.displayName} data-ai-hint="user avatar" />
+                          <AvatarFallback>{activeMember.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                  ) : null}
+              </DragOverlay>
+            </DndContext>
+        </div>
+        <div className={cn("transition-all duration-300", isBadgePoolOpen ? "w-96" : "w-0")}>
+            <div className={cn("h-full rounded-lg transition-all", isBadgePoolOpen ? "p-2" : "p-0")}>
+                <Card className={cn("transition-opacity duration-300 h-full bg-transparent flex flex-col", isBadgePoolOpen ? "opacity-100" : "opacity-0")}>
+                    <CardHeader>
+                        <div className="flex items-center justify-between">
+                            <CardTitle className="font-headline font-thin text-xl">Assignable Badges</CardTitle>
+                             <CompactSearchInput searchTerm={badgePoolSearch} setSearchTerm={setBadgePoolSearch} placeholder="Search badges..." />
+                        </div>
+                        <CardDescription>Click a badge to assign it to all team members.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex-1 p-2 overflow-hidden min-h-0">
+                        <ScrollArea className="h-full">
+                            <div className="flex flex-wrap gap-2">
+                                {userAssignableBadges.map(badge => (
+                                    <TooltipProvider key={badge.id}>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <UiBadge
+                                                    variant={'outline'}
+                                                    style={{ color: badge.color, borderColor: badge.color }}
+                                                    className="flex items-center gap-1.5 p-1 pl-2 rounded-full text-sm h-8 font-thin cursor-pointer"
+                                                    onClick={() => handleAssignBadgeToAll(badge)}
+                                                >
+                                                    <GoogleSymbol name={badge.icon} style={{ fontSize: '20px' }} weight={100} />
+                                                    <span>{badge.name}</span>
+                                                </UiBadge>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>{badge.description || badge.name}</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                ))}
+                                {userAssignableBadges.length === 0 && <p className="text-xs text-muted-foreground text-center p-4 w-full">No badges available to assign. Activate badge collections in the "Badges" tab.</p>}
+                            </div>
+                        </ScrollArea>
+                    </CardContent>
+                </Card>
             </div>
         </div>
-        <DragOverlay modifiers={[snapCenterToCursor]}>
-            {activeMember ? (
-                <Avatar className="h-12 w-12">
-                    <AvatarImage src={activeMember.avatarUrl} alt={activeMember.displayName} data-ai-hint="user avatar" />
-                    <AvatarFallback>{activeMember.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                </Avatar>
-            ) : null}
-        </DragOverlay>
-      </DndContext>
+      </div>
     );
 }
