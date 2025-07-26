@@ -38,11 +38,11 @@ export function OverviewContent({ tab: pageConfig, isSingleTabPage }: { tab: App
         {stats.map((stat) => (
           <Card key={stat.title}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-thin text-muted-foreground">{stat.title}</CardTitle>
+              <CardTitle className="text-sm font-light text-muted-foreground">{stat.title}</CardTitle>
               <GoogleSymbol name={stat.icon} className="text-2xl text-muted-foreground" weight={100} />
             </CardHeader>
             <CardContent className="p-4 pt-0">
-              <div className="text-2xl font-thin text-muted-foreground">{stat.value}</div>
+              <div className="text-2xl font-light text-muted-foreground">{stat.value}</div>
               <p className="text-xs text-muted-foreground">this month</p>
             </CardContent>
           </Card>

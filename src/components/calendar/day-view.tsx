@@ -68,8 +68,8 @@ const DayViewLocationRow = React.memo(({
                 className="w-[160px] shrink-0 p-2 border-r flex items-start justify-start bg-muted sticky left-0 z-30 gap-1 cursor-pointer"
                 onClick={() => toggleLocationCollapse(location)}
             >
-                {isCollapsed ? <GoogleSymbol name="chevron_right" className="text-lg mt-1" weight={100} /> : <GoogleSymbol name="expand_more" className="text-lg mt-1" weight={100} />}
-                <p className="font-normal text-sm">{location}</p>
+                <GoogleSymbol name={isCollapsed ? "chevron_right" : "expand_more"} className="text-lg mt-1 text-muted-foreground" weight={100} />
+                <p className="font-light text-sm text-muted-foreground">{location}</p>
             </div>
             <div className={cn("relative flex-1", isCollapsed ? "h-10" : "min-h-[5rem] py-1")} onClick={(e) => handleEasyBookingClick(e, 'standard', day, location)}>
                 {Array.from({ length: 23 }).map((_, hour) => (
@@ -330,7 +330,7 @@ export const DayView = React.memo(({ date, events, containerRef, zoomLevel, axis
             <div className="overflow-y-hidden" ref={timelineScrollerRef}>
                 <div style={{ width: `${LOCATION_LABEL_WIDTH_PX + (24 * hourWidth)}px`}} className="flex flex-col flex-1 h-full">
                     <CardHeader className="p-0 border-b sticky top-0 bg-muted z-20 flex flex-row">
-                        <div className="w-[160px] shrink-0 border-r p-2 flex items-center font-normal text-sm sticky left-0 bg-muted z-30">Location</div>
+                        <div className="w-[160px] shrink-0 border-r p-2 flex items-center font-normal text-sm sticky left-0 bg-muted z-30 text-muted-foreground">Location</div>
                         {hours.map(hour => (
                             <div key={hour} className="shrink-0 text-left p-2 border-r" style={{ width: `${hourWidth}px` }}>
                                 <span className="text-xs text-muted-foreground">{format(addHours(startOfDay(date), hour), timeFormatTimeline)}</span>

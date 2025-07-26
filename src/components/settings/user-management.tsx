@@ -196,7 +196,7 @@ function UserCard({ user, isCurrentUser, canEditPreferences, className }: { user
                             </Tooltip>
                         </TooltipProvider>
                         <div>
-                            <p className="font-semibold text-lg">{user.displayName}</p>
+                            <p className="font-semibold text-lg text-muted-foreground">{user.displayName}</p>
                             <p className="text-sm text-muted-foreground">{user.title || <span className="italic">Not provided</span>}</p>
                             <p className="text-sm text-muted-foreground">{user.email}</p>
                         </div>

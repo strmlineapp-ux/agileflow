@@ -55,7 +55,7 @@ export function TaskList({ tasks, limit, onEdit, onDelete }: { tasks: Task[], li
           <TableHeader>
             <TableRow>
               <TableHead>
-                <Button variant="ghost" className="-ml-4">
+                <Button variant="ghost" className="-ml-4 text-muted-foreground">
                   Task
                   <GoogleSymbol name="swap_vert" className="ml-2" weight={100} />
                 </Button>
@@ -72,9 +72,9 @@ export function TaskList({ tasks, limit, onEdit, onDelete }: { tasks: Task[], li
           <TableBody>
             {tasksToRender.map((task) => (
               <TableRow key={task.taskId}>
-                <TableCell className="font-normal text-muted-foreground">{task.title}</TableCell>
+                <TableCell className="font-light text-muted-foreground">{task.title}</TableCell>
                 <TableCell>
-                  <div className="text-muted-foreground">
+                  <div className="text-muted-foreground font-light">
                     {task.assignedTo.map((user) => {
                       const nameParts = user.displayName.split(' ');
                       const formattedName = nameParts.length > 1 ? `${nameParts[0]} ${nameParts[1].charAt(0)}.` : nameParts[0];
@@ -88,7 +88,7 @@ export function TaskList({ tasks, limit, onEdit, onDelete }: { tasks: Task[], li
                 <TableCell>
                   <PriorityBadge priorityId={task.priority} />
                 </TableCell>
-                <TableCell className="text-muted-foreground">{isToday(task.dueDate) ? 'Today' : format(task.dueDate, 'MMM dd, yyyy')}</TableCell>
+                <TableCell className="text-muted-foreground font-light">{isToday(task.dueDate) ? 'Today' : format(task.dueDate, 'MMM dd, yyyy')}</TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -141,7 +141,7 @@ export function TaskList({ tasks, limit, onEdit, onDelete }: { tasks: Task[], li
 
                 return (
                     <div key={status}>
-                        <h3 className="text-xl font-normal mb-4 flex items-center gap-2">
+                        <h3 className="text-xl font-light mb-4 flex items-center gap-2 text-muted-foreground">
                            <span>{statusLabels[status]}</span>
                            <UiBadge variant="secondary">{tasksInGroup.length}</UiBadge>
                         </h3>

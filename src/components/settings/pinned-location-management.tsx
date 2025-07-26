@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useUser } from '@/context/user-context';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -153,12 +153,12 @@ export function PinnedLocationManagement({ team, tab }: { team: Team, tab: AppTa
       <LocationCheckManagerManagement team={team} />
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-muted-foreground">
               <GoogleSymbol name="push_pin" />
               Pinned & Check Locations
                <Popover open={isAddPopoverOpen} onOpenChange={setIsAddPopoverOpen}>
                 <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon" className="p-0" disabled={!canManage}>
+                  <Button variant="ghost" size="icon" className="p-0 text-muted-foreground" disabled={!canManage}>
                     <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
                     <span className="sr-only">Pin a location</span>
                   </Button>

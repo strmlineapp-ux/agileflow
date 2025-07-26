@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -84,9 +85,9 @@ export const MonthView = React.memo(({ date, events, containerRef, onEventClick 
                 { "bg-muted/50": !isDayToday && (isWeekend || isDayHoliday) && isSameMonth(day, date) }
             )}>
                 <span className={cn(
-                    "font-semibold h-6 w-6 flex items-center justify-center rounded-full text-sm",
+                    "font-light h-6 w-6 flex items-center justify-center rounded-full text-sm text-muted-foreground",
                     { "bg-primary text-primary-foreground": isDayToday },
-                    { "text-muted-foreground": !isSameMonth(day, date) },
+                    { "text-muted-foreground/50": !isSameMonth(day, date) },
                     { "text-muted-foreground/50": (isWeekend || isDayHoliday) }
                 )}>
                     {format(day, 'd')}
@@ -148,7 +149,7 @@ export const MonthView = React.memo(({ date, events, containerRef, onEventClick 
         <Card className="flex flex-col h-full flex-1">
             <div className={cn("grid border-b border-t sticky top-0 bg-muted z-10", gridColsClass)}>
                 {displayedWeekdays.map((day, index) => (
-                    <div key={day} className={cn("text-center font-medium p-2 text-sm border-r last:border-r-0 relative", 
+                    <div key={day} className={cn("text-center font-light p-2 text-sm border-r last:border-r-0 relative text-muted-foreground", 
                         { "bg-muted": (day === 'Sat' || day === 'Sun') },
                         { "text-muted-foreground": !(day === 'Sat' || day === 'Sun') }
                     )}>
