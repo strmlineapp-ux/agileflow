@@ -12,7 +12,7 @@ import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { Input } from '../ui/input';
-import { DndContext, type DragEndEvent, DragOverlay, type DragStartEvent, useSensors, useSensor, PointerSensor, KeyboardSensor, closestCenter } from '@dnd-kit/core';
+import { DndContext, type DragEndEvent, DragOverlay, type DragStartEvent, useSensors, useSensor, PointerSensor, KeyboardSensor, closestCenter, useDroppable } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { snapCenterToCursor } from '@dnd-kit/modifiers';
@@ -73,6 +73,14 @@ export function TeamMemberCard({ member, team, isViewer }: { member: User, team:
 
   const canManageRoles = !isViewer && (viewAsUser.isAdmin || team.teamAdmins?.includes(viewAsUser.userId));
   const teamBadgesLabel = team.userBadgesLabel || 'Team Badges';
+
+  const { setNodeRef, isOver } = useDroppable({
+    id: `member-card-${member.userId}`,
+    data: {
+        type: 'member-card',
+        member: member,
+    }
+  });
   
   const userAssignableBadges = useMemo(() => {
     const activeAndApplicableCollections = allBadgeCollections.filter(
@@ -117,7 +125,11 @@ export function TeamMemberCard({ member, team, isViewer }: { member: User, team:
   }, [userAssignableBadges, member.roles]);
   
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
@@ -131,17 +143,19 @@ export function TeamMemberCard({ member, team, isViewer }: { member: User, team:
     setActiveBadge(null);
     const { active, over } = event;
 
-    if (over && active.id !== over.id) {
-        const oldIndex = assignedBadges.findIndex(b => b.id === active.id);
-        const newIndex = assignedBadges.findIndex(b => b.id === over.id);
+    if (!over || active.id === over.id) {
+        return;
+    }
 
-        if (oldIndex !== -1 && newIndex !== -1) {
-            const newBadgeOrder = arrayMove(assignedBadges, oldIndex, newIndex);
-            const newRoles = newBadgeOrder.map(b => b.name);
-            const nonTeamRoles = (member.roles || []).filter(role => !teamBadgeNames.has(role));
-            const finalRoles = [...new Set([...nonTeamRoles, ...newRoles])];
-            updateUser(member.userId, { roles: finalRoles });
-        }
+    const oldIndex = assignedBadges.findIndex(b => b.id === active.id);
+    const newIndex = assignedBadges.findIndex(b => b.id === over.id);
+
+    if (oldIndex !== -1 && newIndex !== -1) {
+        const newBadgeOrder = arrayMove(assignedBadges, oldIndex, newIndex);
+        const newRoles = newBadgeOrder.map(b => b.name);
+        const nonTeamRoles = (member.roles || []).filter(role => !teamBadgeNames.has(role));
+        const finalRoles = [...new Set([...nonTeamRoles, ...newRoles])];
+        updateUser(member.userId, { roles: finalRoles });
     }
   }
 
@@ -235,7 +249,7 @@ export function TeamMemberCard({ member, team, isViewer }: { member: User, team:
 
   return (
     <>
-      <Card className="bg-transparent">
+      <Card ref={setNodeRef} className={cn("bg-transparent", isOver && "ring-2 ring-primary ring-inset")}>
         <CardHeader>
           <div className="flex items-center gap-4">
             <Avatar className="h-12 w-12">
@@ -312,5 +326,3 @@ export function TeamMemberCard({ member, team, isViewer }: { member: User, team:
     </>
   );
 }
-
-    
