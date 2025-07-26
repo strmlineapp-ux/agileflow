@@ -179,9 +179,11 @@ type EventDetailsDialogProps = {
   event: Event | null;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
+  onUpdate: (eventId: string, eventData: Partial<Omit<Event, 'eventId'>>) => void;
+  onDelete: (eventId: string) => void;
 };
 
-export function EventDetailsDialog({ event, isOpen, onOpenChange }: EventDetailsDialogProps) {
+export function EventDetailsDialog({ event, isOpen, onOpenChange, onUpdate, onDelete }: EventDetailsDialogProps) {
   const { viewAsUser, calendars } = useUser();
 
   if (!event) return null;
@@ -195,7 +197,12 @@ export function EventDetailsDialog({ event, isOpen, onOpenChange }: EventDetails
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         {canManage ? (
-            <EventForm event={event} onFinished={() => onOpenChange(false)} />
+            <EventForm 
+              event={event} 
+              onFinished={() => onOpenChange(false)} 
+              onUpdate={onUpdate}
+              onDelete={onDelete}
+            />
         ) : (
             <EventDisplayView event={event} />
         )}
@@ -203,3 +210,4 @@ export function EventDetailsDialog({ event, isOpen, onOpenChange }: EventDetails
     </Dialog>
   );
 }
+

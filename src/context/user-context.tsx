@@ -61,9 +61,10 @@ interface UserDataContextType {
   addCalendar: (newCalendar: Omit<SharedCalendar, 'id'>) => Promise<void>;
   updateCalendar: (calendarId: string, calendarData: Partial<SharedCalendar>) => Promise<void>;
   deleteCalendar: (calendarId: string) => Promise<void>;
-  addEvent: (newEventData: Omit<Event, 'eventId'>) => Promise<void>;
-  updateEvent: (eventId: string, eventData: Partial<Omit<Event, 'eventId'>>) => Promise<void>;
-  deleteEvent: (eventId: string) => Promise<void>;
+  fetchEvents: (start: Date, end: Date) => Promise<Event[]>;
+  addEvent: (currentEvents: Event[], newEventData: Omit<Event, 'eventId'>) => Promise<Event[]>;
+  updateEvent: (currentEvents: Event[], eventId: string, eventData: Partial<Omit<Event, 'eventId'>>) => Promise<Event[]>;
+  deleteEvent: (currentEvents: Event[], eventId: string) => Promise<Event[]>;
   locations: BookableLocation[];
   allBookableLocations: BookableLocation[];
   addLocation: (locationName: string) => Promise<void>;
@@ -307,26 +308,40 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   }, [calendars]);
 
-  const addEvent = useCallback(async (newEventData: Omit<Event, 'eventId'>) => {
+  const fetchEvents = useCallback(async (start: Date, end: Date): Promise<Event[]> => {
+    await simulateApi(); // Simulate network delay
+    // In a real app, this would be an API call, e.g., fetch(`/api/events?start=${start}&end=${end}`)
+    const filteredEvents = mockEvents.filter(event => {
+        const eventTime = event.startTime.getTime();
+        return eventTime >= start.getTime() && eventTime < end.getTime();
+    });
+    return filteredEvents;
+  }, []);
+
+  const addEvent = useCallback(async (currentEvents: Event[], newEventData: Omit<Event, 'eventId'>) => {
     const event: Event = { ...newEventData, eventId: crypto.randomUUID() };
     await simulateApi();
-    mockEvents.push(event); // In a real app, this would be an API call
+    mockEvents.push(event); // In a real app, this would be a POST API call
     triggerGoogleCalendarSync(event.calendarId);
+    return [...currentEvents, event]; // Return the updated list for local state
   }, [triggerGoogleCalendarSync]);
   
-  const updateEvent = useCallback(async (eventId: string, eventData: Partial<Omit<Event, 'eventId'>>) => {
+  const updateEvent = useCallback(async (currentEvents: Event[], eventId: string, eventData: Partial<Omit<Event, 'eventId'>>) => {
       await simulateApi();
       const eventIndex = mockEvents.findIndex(e => e.eventId === eventId);
+      let updatedEvent: Event | undefined;
       if (eventIndex > -1) {
-          const updatedEvent = { ...mockEvents[eventIndex], ...eventData, lastUpdated: new Date() } as Event;
+          updatedEvent = { ...mockEvents[eventIndex], ...eventData, lastUpdated: new Date() } as Event;
           mockEvents[eventIndex] = updatedEvent;
           triggerGoogleCalendarSync(updatedEvent.calendarId);
       }
+      // Return the updated list for local state
+      return currentEvents.map(e => e.eventId === eventId ? updatedEvent! : e);
   }, [triggerGoogleCalendarSync]);
   
-  const deleteEvent = useCallback(async (eventId: string) => {
+  const deleteEvent = useCallback(async (currentEvents: Event[], eventId: string) => {
       const eventToDelete = mockEvents.find(e => e.eventId === eventId);
-      if (!eventToDelete) return;
+      if (!eventToDelete) return currentEvents;
   
       await simulateApi();
       const eventIndex = mockEvents.findIndex(e => e.eventId === eventId);
@@ -334,6 +349,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           mockEvents.splice(eventIndex, 1);
           triggerGoogleCalendarSync(eventToDelete.calendarId);
       }
+      // Return the updated list for local state
+      return currentEvents.filter(e => e.eventId !== eventId);
   }, [triggerGoogleCalendarSync]);
 
   const addLocation = useCallback(async (locationName: string) => {
@@ -555,8 +572,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }), [realUser, viewAsUser, users]);
 
   const dataValue = useMemo(() => ({
-    loading, isDragModifierPressed, tasks, holidays, teams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, deleteUser, notifications, setNotifications, userStatusAssignments, setUserStatusAssignments, addUser, linkGoogleCalendar, calendars, reorderCalendars, addCalendar, updateCalendar, deleteCalendar, addEvent, updateEvent, deleteEvent, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors,
-  }), [loading, isDragModifierPressed, tasks, holidays, teams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, deleteUser, notifications, userStatusAssignments, addUser, linkGoogleCalendar, calendars, reorderCalendars, addCalendar, updateCalendar, deleteCalendar, addEvent, updateEvent, deleteEvent, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges]);
+    loading, isDragModifierPressed, tasks, holidays, teams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, deleteUser, notifications, setNotifications, userStatusAssignments, setUserStatusAssignments, addUser, linkGoogleCalendar, calendars, reorderCalendars, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors,
+  }), [loading, isDragModifierPressed, tasks, holidays, teams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, deleteUser, notifications, userStatusAssignments, addUser, linkGoogleCalendar, calendars, reorderCalendars, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges]);
 
   if (!realUser || !viewAsUser) {
     return null; // Or a loading spinner
@@ -591,3 +608,4 @@ export function useUser() {
     const data = useUserData();
     return { ...session, ...data };
 }
+

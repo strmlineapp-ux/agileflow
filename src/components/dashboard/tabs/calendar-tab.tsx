@@ -17,10 +17,9 @@ import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { type Event, type AppPage } from '@/types';
 import { EventDetailsDialog } from '@/components/calendar/event-details-dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { mockEvents } from '@/lib/mock-data';
 
 export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
-  const { realUser, viewAsUser, calendars } = useUser();
+  const { realUser, viewAsUser, calendars, fetchEvents, addEvent, updateEvent, deleteEvent } = useUser();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'month' | 'week' | 'day' | 'production-schedule'>(realUser.defaultCalendarView || 'day');
   const [zoomLevel, setZoomLevel] = useState<'normal' | 'fit'>('normal');
@@ -30,12 +29,13 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [triggerScroll, setTriggerScroll] = useState(0);
   const [viewEvents, setViewEvents] = useState<Event[]>([]);
+  const [isDataLoading, setIsDataLoading] = useState(true);
 
   const viewContainerRef = useRef<HTMLDivElement>(null);
   
   const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars);
 
-  // Simulate fetching data for the current view
+  // This effect fetches events whenever the date or view changes.
   useEffect(() => {
     let start: Date;
     let end: Date;
@@ -56,14 +56,13 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
         break;
     }
     
-    // In a real app, this would be an API call, e.g., fetch(`/api/events?start=${start}&end=${end}`)
-    const filteredEvents = mockEvents.filter(event => {
-        const eventTime = event.startTime.getTime();
-        return eventTime >= start.getTime() && eventTime < end.getTime();
+    setIsDataLoading(true);
+    fetchEvents(start, end).then(events => {
+        setViewEvents(events);
+        setIsDataLoading(false);
     });
-    setViewEvents(filteredEvents);
 
-  }, [currentDate, view]);
+  }, [currentDate, view, fetchEvents]);
   
   const handlePrev = useCallback(() => {
     switch (view) {
@@ -140,7 +139,12 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
     return `Week ${weekNumber} · ${range}`;
   }, [view, currentDate]);
 
-  const closeNewEventDialog = useCallback(() => {
+  const handleEventMutation = useCallback(async (mutationFn: () => Promise<Event[]>) => {
+    const updatedEvents = await mutationFn();
+    setViewEvents(updatedEvents);
+  }, []);
+
+  const closeNewEventDialog = useCallback((mutatedEvent?: Event) => {
     setIsNewEventOpen(false);
     setInitialEventData(null);
   }, []);
@@ -150,6 +154,8 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
   }, []);
 
   const renderCurrentView = () => {
+    if (isDataLoading) return <div className="flex-1 flex items-center justify-center"><GoogleSymbol name="progress_activity" className="animate-spin text-4xl text-muted-foreground" /></div>;
+
     switch (view) {
         case 'month':
             return <MonthView date={currentDate} events={viewEvents} containerRef={viewContainerRef} onEventClick={onEventClick} />;
@@ -185,7 +191,11 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
                   </TooltipProvider>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-xl">
-                  <EventForm onFinished={closeNewEventDialog} initialData={initialEventData} />
+                  <EventForm 
+                    onFinished={closeNewEventDialog} 
+                    initialData={initialEventData} 
+                    onAdd={(newEventData) => handleEventMutation(() => addEvent(viewEvents, newEventData))}
+                  />
                 </DialogContent>
               </Dialog>
             )}
@@ -239,7 +249,10 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
         event={selectedEvent}
         isOpen={!!selectedEvent}
         onOpenChange={(isOpen) => !isOpen && setSelectedEvent(null)}
+        onUpdate={(eventId, eventData) => handleEventMutation(() => updateEvent(viewEvents, eventId, eventData))}
+        onDelete={(eventId) => handleEventMutation(() => deleteEvent(viewEvents, eventId))}
       />
     </>
   );
 }
+
