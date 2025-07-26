@@ -59,7 +59,11 @@ function DraggableBadgeFromPool({ badge, canManage }: { badge: Badge; canManage:
 }
 
 function SortableTeamMember({ member, team, isViewer }: { member: User, team: Team, isViewer: boolean }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: member.userId, disabled: isViewer });
+  const { isDragModifierPressed } = useUser();
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ 
+    id: member.userId, 
+    disabled: isViewer || !isDragModifierPressed 
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -447,3 +451,5 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
       </div>
     );
 }
+
+    
