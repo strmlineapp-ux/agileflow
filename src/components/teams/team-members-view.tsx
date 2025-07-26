@@ -49,7 +49,6 @@ function DraggableBadgeFromPool({ badge, canManage }: { badge: Badge; canManage:
     );
 }
 
-
 function SortableTeamMember({ member, team, isViewer, onSetAdmin, onRemoveUser }: { member: User, team: Team, isViewer: boolean, onSetAdmin: () => void, onRemoveUser: () => void }) {
   const { isDragModifierPressed } = useUser();
   
@@ -153,28 +152,18 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
     const adminIds = useMemo(() => admins.map(a => `member:${a.userId}`), [admins]);
     const memberIds = useMemo(() => members.map(m => `member:${m.userId}`), [members]);
     
-    const userAssignableBadges = useMemo(() => {
-        const activeAndApplicableCollections = allBadgeCollections.filter(
-          (c) =>
-            (team.activeBadgeCollections || []).includes(c.id) &&
-            c.applications?.includes('team members')
-        );
-        const badgeIds = new Set(activeAndApplicableCollections.flatMap(c => c.badgeIds));
-        return allBadges.filter(badge => badgeIds.has(badge.id) && badge.name.toLowerCase().includes(badgePoolSearch.toLowerCase()));
-    }, [team.activeBadgeCollections, allBadgeCollections, allBadges, badgePoolSearch]);
-
     const groupedAssignableBadges = useMemo(() => {
-        const groups: { [collectionName: string]: Badge[] } = {};
-        userAssignableBadges.forEach(badge => {
-            const collection = allBadgeCollections.find(c => c.badgeIds.includes(badge.id) && (team.activeBadgeCollections || []).includes(c.id));
-            const collectionName = collection?.name || "Other Badges";
-            if (!groups[collectionName]) {
-                groups[collectionName] = [];
-            }
-            groups[collectionName].push(badge);
-        });
-        return Object.entries(groups).map(([collectionName, badges]) => ({ collectionName, badges }));
-    }, [userAssignableBadges, allBadgeCollections, team.activeBadgeCollections]);
+        return allBadgeCollections
+            .filter(c => (team.activeBadgeCollections || []).includes(c.id) && c.applications?.includes('team members'))
+            .map(collection => {
+                const badges = collection.badgeIds
+                    .map(badgeId => allBadges.find(b => b.id === badgeId))
+                    .filter((b): b is Badge => !!b && b.name.toLowerCase().includes(badgePoolSearch.toLowerCase()));
+
+                return { ...collection, badges };
+            })
+            .filter(collection => collection.badges.length > 0);
+    }, [team.activeBadgeCollections, allBadgeCollections, allBadges, badgePoolSearch]);
     
     const { setNodeRef: badgePoolRef, isOver: isBadgePoolOver } = useDroppable({
         id: 'badge-pool',
@@ -374,8 +363,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
     }
 
     const activeBadge = (activeDragItem?.type === 'badge') ? activeDragItem.data.badge : null;
-    const assignableBadgeIds = useMemo(() => userAssignableBadges.map(b => `badge-pool:${b.id}`), [userAssignableBadges]);
-
+    
     return (
       <div className="flex h-full gap-4">
         <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
@@ -495,23 +483,23 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                         <CardDescription>Drag a badge onto a team member to assign it.</CardDescription>
                     </CardHeader>
                     <CardContent className="flex-1 p-2 overflow-hidden min-h-0 rounded-md">
-                        <SortableContext items={assignableBadgeIds}>
-                            <ScrollArea className="h-full">
-                                <div className="space-y-4">
-                                    {groupedAssignableBadges.map(({ collectionName, badges }) => (
-                                        <div key={collectionName}>
-                                            <p className="text-xs tracking-wider mb-2">{collectionName}</p>
-                                            <div className="flex flex-wrap gap-2">
+                        <ScrollArea className="h-full">
+                            <div className="space-y-4">
+                                {groupedAssignableBadges.map(({ collectionName, badges }) => (
+                                    <div key={collectionName}>
+                                        <p className="text-xs tracking-wider mb-2">{collectionName}</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            <SortableContext items={badges.map(b => `badge-pool:${b.id}`)} strategy={verticalListSortingStrategy}>
                                                 {badges.map(badge => (
                                                     <DraggableBadgeFromPool key={badge.id} badge={badge} canManage={canManage} />
                                                 ))}
-                                            </div>
+                                            </SortableContext>
                                         </div>
-                                    ))}
-                                    {userAssignableBadges.length === 0 && <p className="text-xs text-muted-foreground text-center p-4 w-full">No badges available to assign. Activate badge collections in the "Badges" tab.</p>}
-                                </div>
-                            </ScrollArea>
-                        </SortableContext>
+                                    </div>
+                                ))}
+                                {groupedAssignableBadges.length === 0 && <p className="text-xs text-muted-foreground text-center p-4 w-full">No badges available to assign. Activate badge collections in the "Badges" tab.</p>}
+                            </div>
+                        </ScrollArea>
                     </CardContent>
                 </Card>
                  <DragOverlay modifiers={[snapCenterToCursor]}>
