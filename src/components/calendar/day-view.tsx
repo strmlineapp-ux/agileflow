@@ -141,8 +141,8 @@ const DayViewLocationRow = React.memo(({
 });
 DayViewLocationRow.displayName = 'DayViewLocationRow';
 
-export const DayView = React.memo(({ date, containerRef, zoomLevel, axisView, onEasyBooking, onEventClick, triggerScroll }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', axisView: 'standard' | 'reversed', onEasyBooking: (data: { startTime: Date, location?: string }) => void, onEventClick: (event: Event) => void, triggerScroll: number }) => {
-    const { viewAsUser, events, calendars, users, allBadges } = useUser();
+export const DayView = React.memo(({ date, events, containerRef, zoomLevel, axisView, onEasyBooking, onEventClick, triggerScroll }: { date: Date, events: Event[], containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', axisView: 'standard' | 'reversed', onEasyBooking: (data: { startTime: Date, location?: string }) => void, onEventClick: (event: Event) => void, triggerScroll: number }) => {
+    const { viewAsUser, calendars, users, allBadges } = useUser();
     const [now, setNow] = useState<Date | null>(null);
     const nowMarkerRef = useRef<HTMLDivElement>(null);
     const timelineScrollerRef = useRef<HTMLDivElement>(null);

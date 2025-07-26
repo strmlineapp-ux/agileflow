@@ -28,8 +28,8 @@ const isAllDayEvent = (event: Event) => {
            end.getHours() === 23 && end.getMinutes() === 59;
 }
 
-export const WeekView = React.memo(({ date, containerRef, zoomLevel, onEasyBooking, onEventClick, triggerScroll }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', onEasyBooking: (data: { startTime: Date, location?: string }) => void, onEventClick: (event: Event) => void, triggerScroll: number }) => {
-    const { viewAsUser, events, calendars, users, allBadges, holidays } = useUser();
+export const WeekView = React.memo(({ date, events, containerRef, zoomLevel, onEasyBooking, onEventClick, triggerScroll }: { date: Date, events: Event[], containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', onEasyBooking: (data: { startTime: Date, location?: string }) => void, onEventClick: (event: Event) => void, triggerScroll: number }) => {
+    const { viewAsUser, calendars, users, allBadges, holidays } = useUser();
     const [now, setNow] = useState<Date | null>(null);
     const nowMarkerRef = useRef<HTMLDivElement>(null);
     const timelineScrollerRef = useRef<HTMLDivElement>(null);

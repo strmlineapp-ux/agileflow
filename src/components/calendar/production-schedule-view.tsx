@@ -321,8 +321,8 @@ const ProductionScheduleLocationRow = React.memo(({
 ProductionScheduleLocationRow.displayName = 'ProductionScheduleLocationRow';
 
 
-export const ProductionScheduleView = React.memo(({ date, containerRef, zoomLevel, onEasyBooking, onEventClick, triggerScroll }: { date: Date, containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', onEasyBooking: (data: { startTime: Date, location?: string }) => void, onEventClick: (event: Event) => void, triggerScroll: number }) => {
-    const { users, teams, viewAsUser, events, calendars, userStatusAssignments, setUserStatusAssignments, appSettings, allBadges } = useUser();
+export const ProductionScheduleView = React.memo(({ date, events, containerRef, zoomLevel, onEasyBooking, onEventClick, triggerScroll }: { date: Date, events: Event[], containerRef: React.RefObject<HTMLDivElement>, zoomLevel: 'normal' | 'fit', onEasyBooking: (data: { startTime: Date, location?: string }) => void, onEventClick: (event: Event) => void, triggerScroll: number }) => {
+    const { users, teams, viewAsUser, calendars, userStatusAssignments, setUserStatusAssignments, appSettings, allBadges } = useUser();
 
     const [now, setNow] = useState<Date | null>(null);
     const [hourWidth, setHourWidth] = useState(DEFAULT_HOUR_WIDTH_PX);

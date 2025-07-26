@@ -1,14 +1,14 @@
 
 'use client';
 
-import { useState, useRef, useMemo, useCallback } from 'react';
+import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { MonthView } from '@/components/calendar/month-view';
 import { WeekView } from '@/components/calendar/week-view';
 import { DayView } from '@/components/calendar/day-view';
 import { ProductionScheduleView } from '@/components/calendar/production-schedule-view';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { format, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays, startOfWeek, getWeek, isToday } from 'date-fns';
+import { format, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays, startOfWeek, getWeek, isToday, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
 import { useUser } from '@/context/user-context';
 import { canCreateAnyEvent } from '@/lib/permissions';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
@@ -17,7 +17,7 @@ import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { type Event, type AppPage } from '@/types';
 import { EventDetailsDialog } from '@/components/calendar/event-details-dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Card } from '@/components/ui/card';
+import { mockEvents } from '@/lib/mock-data';
 
 export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
   const { realUser, viewAsUser, calendars } = useUser();
@@ -29,10 +29,41 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
   const [initialEventData, setInitialEventData] = useState<any>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [triggerScroll, setTriggerScroll] = useState(0);
-  
+  const [viewEvents, setViewEvents] = useState<Event[]>([]);
+
   const viewContainerRef = useRef<HTMLDivElement>(null);
   
   const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars);
+
+  // Simulate fetching data for the current view
+  useEffect(() => {
+    let start: Date;
+    let end: Date;
+    switch (view) {
+      case 'month':
+        start = startOfMonth(currentDate);
+        end = endOfMonth(currentDate);
+        break;
+      case 'week':
+      case 'production-schedule':
+        start = startOfWeek(currentDate, { weekStartsOn: 1 });
+        end = addDays(start, 7);
+        break;
+      case 'day':
+      default:
+        start = startOfDay(currentDate);
+        end = addDays(start, 1);
+        break;
+    }
+    
+    // In a real app, this would be an API call, e.g., fetch(`/api/events?start=${start}&end=${end}`)
+    const filteredEvents = mockEvents.filter(event => {
+        const eventTime = event.startTime.getTime();
+        return eventTime >= start.getTime() && eventTime < end.getTime();
+    });
+    setViewEvents(filteredEvents);
+
+  }, [currentDate, view]);
   
   const handlePrev = useCallback(() => {
     switch (view) {
@@ -121,13 +152,13 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
   const renderCurrentView = () => {
     switch (view) {
         case 'month':
-            return <MonthView date={currentDate} containerRef={viewContainerRef} onEventClick={onEventClick} />;
+            return <MonthView date={currentDate} events={viewEvents} containerRef={viewContainerRef} onEventClick={onEventClick} />;
         case 'week':
-            return <WeekView date={currentDate} containerRef={viewContainerRef} zoomLevel={zoomLevel} onEasyBooking={handleEasyBooking} onEventClick={onEventClick} triggerScroll={triggerScroll} />;
+            return <WeekView date={currentDate} events={viewEvents} containerRef={viewContainerRef} zoomLevel={zoomLevel} onEasyBooking={handleEasyBooking} onEventClick={onEventClick} triggerScroll={triggerScroll} />;
         case 'day':
-            return <DayView date={currentDate} containerRef={viewContainerRef} zoomLevel={zoomLevel} axisView={dayViewAxis} onEasyBooking={handleEasyBooking} onEventClick={onEventClick} triggerScroll={triggerScroll} />;
+            return <DayView date={currentDate} events={viewEvents} containerRef={viewContainerRef} zoomLevel={zoomLevel} axisView={dayViewAxis} onEasyBooking={handleEasyBooking} onEventClick={onEventClick} triggerScroll={triggerScroll} />;
         case 'production-schedule':
-            return <ProductionScheduleView date={currentDate} containerRef={viewContainerRef} zoomLevel={zoomLevel} onEasyBooking={handleEasyBooking} onEventClick={onEventClick} triggerScroll={triggerScroll} />;
+            return <ProductionScheduleView date={currentDate} events={viewEvents} containerRef={viewContainerRef} zoomLevel={zoomLevel} onEasyBooking={handleEasyBooking} onEventClick={onEventClick} triggerScroll={triggerScroll} />;
         default:
             return null;
     }

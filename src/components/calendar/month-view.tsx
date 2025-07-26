@@ -14,9 +14,9 @@ const isHoliday = (day: Date, holidays: Date[]) => {
     return holidays.some(holiday => isSameDay(day, holiday));
 }
 
-export const MonthView = React.memo(({ date, containerRef, onEventClick }: { date: Date; containerRef: React.RefObject<HTMLDivElement>; onEventClick: (event: Event) => void; }) => {
+export const MonthView = React.memo(({ date, events, containerRef, onEventClick }: { date: Date; events: Event[], containerRef: React.RefObject<HTMLDivElement>; onEventClick: (event: Event) => void; }) => {
     const todayRef = useRef<HTMLDivElement>(null);
-    const { events, calendars, getPriorityDisplay, holidays } = useUser();
+    const { calendars, getPriorityDisplay, holidays } = useUser();
 
     const firstDayOfMonth = startOfMonth(date);
     const lastDayOfMonth = endOfMonth(date);
