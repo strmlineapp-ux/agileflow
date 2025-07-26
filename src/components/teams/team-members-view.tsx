@@ -83,7 +83,7 @@ function SortableTeamMember({ member, team, isViewer, onSetAdmin, onRemoveUser }
 }
 
 export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
-    const { viewAsUser, users, updateAppTab, updateTeam, isDragModifierPressed, handleBadgeAssignment, handleBadgeUnassignment } = useUser();
+    const { viewAsUser, users, allBadges, updateAppTab, updateTeam, isDragModifierPressed, handleBadgeAssignment, handleBadgeUnassignment } = useUser();
     const [activeDragItem, setActiveDragItem] = useState<{type: string, id: string, data: any} | null>(null);
 
     if (!team) return null;
@@ -274,9 +274,20 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         if (activeType === 'member-card') {
             const user = active.data.current?.member as User;
             const sourceList = adminIds.includes(`member:${user.userId}`) ? 'admins' : 'members';
-            const destinationList = over.id === 'admins' ? 'admins' : 'members';
+            
+            const overId = over.id.toString();
+            let destinationListId;
 
-            if (sourceList !== destinationList) {
+            if (overId === 'admins' || overId === 'members') {
+                destinationListId = overId;
+            } else if (over.data.current?.type === 'member-card') {
+                const overUser = over.data.current?.member as User;
+                destinationListId = adminIds.includes(`member:${overUser.userId}`) ? 'admins' : 'members';
+            }
+
+            if (!destinationListId) return;
+
+            if (sourceList !== destinationListId) {
                 handleSetAdmin(team.id, user.userId);
             } else {
                 if (active.id === over.id) return;
@@ -394,8 +405,8 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                         <AvatarFallback>{activeDragItem.data.member.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
                     </Avatar>
                 ) : activeBadge ? (
-                     <div className="h-7 w-7 rounded-full border-2 flex items-center justify-center bg-card" style={{ borderColor: activeBadge.color }}>
-                        <GoogleSymbol name={activeBadge.icon} style={{ fontSize: '20px', color: activeBadge.color }} weight={100} />
+                     <div className="h-9 w-9 rounded-full border-2 flex items-center justify-center bg-card shadow-lg" style={{ borderColor: activeBadge.color }}>
+                        <GoogleSymbol name={activeBadge.icon} style={{ fontSize: '28px', color: activeBadge.color }} weight={100} />
                     </div>
                 ) : null}
             </DragOverlay>
@@ -403,4 +414,3 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
       </div>
     );
 }
-
