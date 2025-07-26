@@ -674,7 +674,7 @@ function BadgeCollectionCard({
         : APPLICATIONS.filter(app => collection.applications?.includes(app.key));
 
     return (
-        <Card className={cn("h-full flex flex-col bg-transparent relative")} {...props}>
+        <Card className="h-full flex flex-col bg-transparent relative">
             <CardHeader className="group p-2" {...dragHandleProps}>
                  {!isSharedPreview && (
                   <TooltipProvider>
@@ -1030,6 +1030,7 @@ export function BadgeManagement({ tab, page, isActive }: { tab: AppTab; page: Ap
     const title = tab.name;
 
     const displayedCollections = useMemo(() => {
+        if (!viewAsUser) return [];
         const owned = allBadgeCollections.filter(c => c.owner.id === viewAsUser.userId);
         const linked = (viewAsUser.linkedCollectionIds || [])
             .map(id => allBadgeCollections.find(c => c.id === id))
@@ -1039,11 +1040,12 @@ export function BadgeManagement({ tab, page, isActive }: { tab: AppTab; page: Ap
     }, [allBadgeCollections, viewAsUser, mainSearchTerm]);
 
     const sharedCollections = useMemo(() => {
+        if (!viewAsUser) return [];
         const displayedIds = new Set(displayedCollections.map(c => c.id));
         return allBadgeCollections
             .filter(c => c.isShared && c.owner.id !== viewAsUser.userId && !displayedIds.has(c.id))
             .filter(c => c.name.toLowerCase().includes(sharedSearchTerm.toLowerCase()));
-    }, [allBadgeCollections, displayedCollections, sharedSearchTerm, viewAsUser.userId]);
+    }, [allBadgeCollections, displayedCollections, sharedSearchTerm, viewAsUser]);
 
     const currentUserBadgeIds = useMemo(() => {
         const badgeIds = new Set<string>();
@@ -1055,6 +1057,7 @@ export function BadgeManagement({ tab, page, isActive }: { tab: AppTab; page: Ap
 
 
     const handleDeleteCollection = useCallback((collection: BadgeCollection) => {
+        if (!viewAsUser) return;
         const isOwner = collection.owner.id === viewAsUser.userId;
         if (isOwner) {
             deleteBadgeCollection(collection.id);
@@ -1067,6 +1070,7 @@ export function BadgeManagement({ tab, page, isActive }: { tab: AppTab; page: Ap
     }, [viewAsUser, deleteBadgeCollection, updateUser, toast]);
 
     const handleDeleteBadge = useCallback((badgeId: string, collectionId: string) => {
+        if (!viewAsUser) return;
         const badge = allBadges.find(b => b.id === badgeId);
         const isOwner = badge?.owner.id === viewAsUser.userId;
         
@@ -1084,6 +1088,8 @@ export function BadgeManagement({ tab, page, isActive }: { tab: AppTab; page: Ap
 
     const onDragEnd = useCallback((event: DragEndEvent) => {
         setActiveDragItem(null);
+        if (!viewAsUser) return;
+
         const { active, over } = event;
         if (!over) return;
         
@@ -1196,6 +1202,8 @@ export function BadgeManagement({ tab, page, isActive }: { tab: AppTab; page: Ap
           }
         })
     );
+
+    if (!viewAsUser) return null;
 
     return (
         <DndContext sensors={sensors} onDragStart={(e) => setActiveDragItem({ type: e.active.data.current?.type, data: e.active.data.current || {} })} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
