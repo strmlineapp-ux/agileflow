@@ -75,14 +75,6 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin, canManage }
   const canManageRoles = !isViewer && (viewAsUser.isAdmin || team.teamAdmins?.includes(viewAsUser.userId));
   const teamBadgesLabel = team.userBadgesLabel || 'Team Badges';
 
-  const { setNodeRef, isOver } = useDroppable({
-    id: `member-card-${member.userId}`,
-    data: {
-        type: 'member-card',
-        member: member,
-    }
-  });
-
   const userAssignableBadges = useMemo(() => {
     const activeAndApplicableCollections = allBadgeCollections.filter(
       (c) =>
@@ -180,7 +172,7 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin, canManage }
 
   return (
     <>
-      <Card ref={setNodeRef} className={cn("bg-transparent", isOver && "ring-1 ring-inset ring-primary")}>
+      <Card className="bg-transparent">
         <CardHeader>
           <div className="flex items-center gap-4">
              <div 

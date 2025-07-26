@@ -65,8 +65,19 @@ function SortableTeamMember({ member, team, isViewer, onSetAdmin, onRemoveUser }
   const { isDragModifierPressed } = useUser();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: member.userId,
-    data: { type: 'member', user: member },
+    data: { 
+        type: 'member-card', // The draggable item itself is the member card drop zone
+        user: member 
+    },
     disabled: isViewer || !isDragModifierPressed
+  });
+  
+  const { isOver } = useDroppable({
+    id: member.userId, // The droppable ID must match the sortable ID
+    data: {
+        type: 'member-card',
+        member: member,
+    },
   });
 
   const style = {
@@ -79,7 +90,7 @@ function SortableTeamMember({ member, team, isViewer, onSetAdmin, onRemoveUser }
   const canManage = !isViewer;
 
   return (
-    <div ref={setNodeRef} style={style} className={cn(isDragging && "shadow-xl", "rounded-md")}>
+    <div ref={setNodeRef} style={style} className={cn("rounded-md", isDragging && "shadow-xl", isOver && "ring-1 ring-inset ring-primary")}>
       <div {...attributes} {...listeners} className="relative group">
         <TeamMemberCard member={member} team={team} isViewer={isViewer} onSetAdmin={onSetAdmin} canManage={canManage} />
         {canManage && (
@@ -182,16 +193,11 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
-            onActivation: ({ event }) => {
-                if (!isDragModifierPressed) {
-                    return false;
-                }
-                return true;
+            activationConstraint: {
+                distance: 8,
             },
         }),
-        useSensor(KeyboardSensor, {
-          coordinateGetter: sortableKeyboardCoordinates,
-        })
+        useSensor(KeyboardSensor)
     );
 
     useEffect(() => {
@@ -333,7 +339,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         
         if (activeType === 'pool-badge' && overType === 'member-card') {
             const badge = active.data.current?.badge as Badge;
-            const member = over.data.current?.member as User;
+            const member = over.data.current?.user as User;
             if (badge && member) {
                 handleBadgeAssignment(badge, member.userId);
             }
@@ -349,7 +355,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
             return;
         }
 
-        if (activeType === 'member') {
+        if (activeType === 'member-card') {
             const user = active.data.current?.user as User;
             const activeIsAdmin = adminIds.includes(user.userId);
             const overIsAdminList = over.id === 'admins';
@@ -484,7 +490,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                 </div>
             </div>
             <DragOverlay modifiers={[snapCenterToCursor]}>
-                {activeDragItem?.type === 'member' ? (
+                {activeDragItem?.type === 'member-card' ? (
                     <Avatar className="h-12 w-12">
                         <AvatarImage src={activeDragItem.data.user.avatarUrl} alt={activeDragItem.data.user.displayName} data-ai-hint="user avatar" />
                         <AvatarFallback>{activeDragItem.data.user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
