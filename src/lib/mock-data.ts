@@ -1,4 +1,5 @@
 
+
 import { type Event, type User, type Task, type Notification, type SharedCalendar, type BookableLocation, type Attendee, type Team, type AppSettings, type Badge, type BadgeCollection, type AppTab, type AppPage, type BadgeCollectionOwner, type Holiday } from '@/types';
 import { corePages, coreTabs } from './core-data';
 
@@ -15,7 +16,7 @@ const dynamicPages: AppPage[] = [
         color: '#EC4899',
         path: '/dashboard/teams',
         isDynamic: true,
-        associatedTabs: ['tab-team-roles', 'tab-badges', 'tab-locations', 'tab-workstations', 'tab-templates'],
+        associatedTabs: ['tab-team-members', 'tab-badges', 'tab-locations', 'tab-workstations', 'tab-templates', 'tab-calendars', 'tab-service-teams'],
         access: {
             users: [],
             teams: ['video-production', 'live-events', 'production'], // This page is visible only to members of these teams.
@@ -256,101 +257,8 @@ const userToAttendee = (user: User): Attendee => ({
     avatarUrl: user.avatarUrl,
 });
 
-export const mockTasks: Task[] = [
-  { taskId: '1', title: 'Design new dashboard layout', assignedTo: [mockUsers[0]], dueDate: new Date(), priority: 'task-high', status: 'in_progress', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
-  { taskId: '2', title: 'Develop authentication API', assignedTo: [mockUsers[1], mockUsers[2]], dueDate: new Date(new Date().setDate(new Date().getDate() + 1)), priority: 'task-high', status: 'awaiting_review', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
-  { taskId: '3', title: 'Write documentation for components', assignedTo: [mockUsers[2]], dueDate: new Date(new Date().setDate(new Date().getDate() + 7)), priority: 'task-medium', status: 'not_started', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
-  { taskId: '4', title: 'Fix login page CSS bug', assignedTo: [mockUsers[1]], dueDate: new Date(new Date().setDate(new Date().getDate() - 2)), priority: 'task-low', status: 'completed', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
-  { taskId: '5', title: 'Setup CI/CD pipeline', assignedTo: [mockUsers[0], mockUsers[1]], dueDate: new Date(new Date().setDate(new Date().getDate() + 2)), priority: 'task-high', status: 'blocked', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
-];
-
-const today = new Date();
-const tomorrow = new Date(new Date().setDate(today.getDate() + 1));
-const yesterday = new Date(new Date().setDate(today.getDate() - 1));
-
-export const mockEvents: Event[] = [
-    { 
-        eventId: '1', 
-        title: 'Morning Briefing', 
-        calendarId: 'dreamtek',
-        startTime: new Date(new Date(today).setHours(9, 0, 0, 0)), 
-        endTime: new Date(new Date(today).setHours(9, 30, 0, 0)), 
-        attendees: [mockUsers[0], mockUsers[1], mockUsers[2]].map(userToAttendee), 
-        location: 'ACR',
-        priority: 'p2',
-        attachments: [],
-        roleAssignments: {},
-        createdBy: '2', 
-        createdAt: new Date(), 
-        lastUpdated: new Date() 
-    },
-    { 
-        eventId: '2', 
-        title: 'Product Demo Rehearsal', 
-        calendarId: 'live-events',
-        startTime: new Date(new Date(today).setHours(10, 0, 0, 0)), 
-        endTime: new Date(new Date(today).setHours(12, 0, 0, 0)), 
-        attendees: [], 
-        location: 'Event Space 1 (S2)',
-        priority: 'p1',
-        templateId: 'template-4',
-        roleAssignments: { 'TD': '9', 'Content Op': '10' },
-        createdBy: '3', 
-        createdAt: new Date(), 
-        lastUpdated: new Date() 
-    },
-    { 
-        eventId: '3', 
-        title: 'Client Photoshoot', 
-        calendarId: 'video-production',
-        startTime: new Date(new Date(today).setHours(14, 0, 0, 0)), 
-        endTime: new Date(new Date(today).setHours(17, 30, 0, 0)), 
-        attendees: [mockUsers[5], mockUsers[6]].map(userToAttendee), 
-        location: 'Studio',
-        priority: 'p0',
-        attachments: [],
-        templateId: 'template-1',
-        roleAssignments: { 'Video Director': '1', 'Camera Op.': '11', 'Audio Engineer': '8' },
-        createdBy: '1', 
-        createdAt: new Date(), 
-        lastUpdated: new Date() 
-    },
-    { 
-        eventId: '5', 
-        title: 'UX Feedback Session', 
-        calendarId: 'production',
-        startTime: new Date(new Date(tomorrow).setHours(15, 0, 0, 0)),
-        endTime: new Date(new Date(tomorrow).setHours(16, 30, 0, 0)),
-        attendees: [mockUsers[3]].map(userToAttendee), 
-        location: 'Event Space 3 (R7)',
-        priority: 'p3',
-        attachments: [],
-        roleAssignments: {},
-        createdBy: '4', 
-        createdAt: new Date(), 
-        lastUpdated: new Date() 
-    },
-    { 
-        eventId: '6', 
-        title: 'Weekly Retrospective', 
-        calendarId: 'dreamtek',
-        startTime: new Date(new Date(yesterday).setHours(16, 0, 0, 0)),
-        endTime: new Date(new Date(yesterday).setHours(17, 0, 0, 0)),
-        attendees: mockUsers.map(userToAttendee), 
-        location: 'Event Space 4 (R7)',
-        priority: 'p4',
-        attachments: [],
-        roleAssignments: {},
-        createdBy: '2', 
-        createdAt: new Date(), 
-        lastUpdated: new Date() 
-    },
-];
-
-const currentYear = new Date().getFullYear();
-
 export const mockHolidays: Holiday[] = [
-    new Date(currentYear, 0, 1), // New Year's Day
-    new Date(currentYear, 6, 4), // Independence Day
-    new Date(currentYear, 11, 25), // Christmas Day
+    new Date(new Date().getFullYear(), 0, 1), // New Year's Day
+    new Date(new Date().getFullYear(), 6, 4), // Independence Day
+    new Date(new Date().getFullYear(), 11, 25), // Christmas Day
 ];

@@ -12,7 +12,7 @@ import { type Team, type Badge, type BadgeCollection, type User, type BadgeAppli
 import { GoogleSymbol } from '../icons/google-symbol';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { ScrollArea } from '../ui/scroll-area';
-import { cn } from '@/lib/utils';
+import { cn, getContrastColor } from '@/lib/utils';
 import { Textarea } from '../ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle as UIDialogTitle } from '@/components/ui/dialog';
@@ -548,7 +548,7 @@ function BadgeCollectionCard({
     const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
     
     const isOwner = useMemo(() => collection.owner.id === viewAsUser.userId, [collection.owner.id, viewAsUser.userId]);
-    const showDetails = isExpanded;
+    const showDetails = isExpanded || isSharedPreview;
 
     const handleSaveName = useCallback(() => {
         const newName = nameInputRef.current?.value.trim() || '';
@@ -677,7 +677,7 @@ function BadgeCollectionCard({
     ];
 
     return (
-        <Card className={cn("h-full flex flex-col bg-transparent relative", !isActive && !!contextTeam && "opacity-50")} {...props}>
+        <Card className={cn("h-full flex flex-col bg-transparent relative", !isSharedPreview && !isActive && !!contextTeam && "opacity-50")} {...props}>
             <div {...dragHandleProps}>
                 <CardHeader className="group">
                      {!isSharedPreview && (
@@ -787,7 +787,7 @@ function BadgeCollectionCard({
                                 </div>
                             </div>
                         </div>
-                        <div className="flex items-center" onPointerDown={(e) => e.stopPropagation()}>
+                        <div className={cn("flex items-center", isDragModifierPressed && "hidden")} onPointerDown={(e) => e.stopPropagation()}>
                            {!isSharedPreview && isOwner && (
                                 <div className={cn(isDragModifierPressed && "opacity-0 pointer-events-none")}>
                                     <DuplicateBadgeZone
@@ -885,7 +885,7 @@ function BadgeCollectionCard({
                     </CardContent>
                     {!isSharedPreview && (
                         <CardFooter className={cn("flex items-center justify-between gap-2 p-2 mt-auto", isDragModifierPressed && "hidden")}>
-                            <div className="flex items-center gap-2">
+                            <div className={cn("flex items-center gap-2", !isOwner && "invisible")}>
                                 {APPLICATIONS.map(app => (
                                     <TooltipProvider key={app.key}>
                                         <Tooltip>
@@ -928,13 +928,11 @@ function BadgeCollectionCard({
                     )}
                 </>
              )}
-            {!isSharedPreview && (
-                 <div className={cn("absolute -bottom-1 right-0", isDragModifierPressed && "hidden")}>
-                    <Button variant="ghost" size="icon" onClick={onToggleExpand} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
-                        <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} opticalSize={20} />
-                    </Button>
-                </div>
-            )}
+            <div className={cn("absolute -bottom-1 right-0", isDragModifierPressed && "hidden")}>
+                <Button variant="ghost" size="icon" onClick={onToggleExpand} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
+                    <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} opticalSize={20} />
+                </Button>
+            </div>
         </Card>
     );
 }
@@ -1342,4 +1340,3 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
         </DndContext>
     );
 }
-
