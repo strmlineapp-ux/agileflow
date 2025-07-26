@@ -11,8 +11,9 @@ This document outlines the established UI patterns and design choices that ensur
 ### 1. Card & Content Padding
 The application favors a compact, information-dense layout. Card components are the primary building block for displaying content.
 
--   **Gold Standard**: The login form (`/login`) serves as the ideal example of "perfect" padding. It has a larger header area and tighter content padding (`p-2`) which makes the card feel like a single, cohesive unit.
--   **Global Default**: To align with this, the global default `CardContent` padding has been reduced from `p-6` to a tighter `p-4`. This affects all cards in the app, creating a more consistent look.
+-   **Standard Implementation**: The `CalendarCard` (`/src/components/calendar/calendar-management.tsx`) and `TeamCard` (`/src/components/teams/team-management.tsx`) serve as the ideal examples of the compact card pattern.
+-   **Header Padding**: The `<CardHeader>` for these cards must use a compact `p-2` padding.
+-   **Content Padding**: The `<CardContent>` should use `p-2 pt-0` to keep vertical spacing tight and aligned with the header.
 -   **Card Backgrounds**: Cards use a `bg-transparent` background, relying on their `border` for definition. This creates a lighter, more modern UI.
 -   **Text Wrapping**: Card titles and descriptions should gracefully handle long text by wrapping. The `break-words` utility should be used on titles to prevent layout issues from long, unbroken strings.
 
@@ -251,8 +252,8 @@ This pattern describes the user interface for assigning and unassigning badges t
 - **Interaction**:
     - **Click to Toggle**: A user with the correct permissions can click on any badge pill—assigned or unassigned—to toggle its state for that team member.
 - **Visual States**:
-    - **Assigned Badges**: Appear with a **solid, colored border**, with the icon and text also matching the badge's color. The background is transparent. This indicates an active "selected" state.
-    - **Unassigned Badges**: Appear with a **dashed, muted border**, with the icon and text also using the muted foreground color. The background is transparent. This indicates an "available" but unselected state, minimizing visual noise.
+    - **Assigned Badges**: Appear with a solid, colored border and a filled background, indicating a "selected" state.
+    - **Unassigned Badges**: Appear with a solid border with reduced opacity and a transparent background, indicating an "available" but unselected state.
 - **Application**: Used on the **Team Members** tab within each team's management page.
 
 ---
@@ -331,9 +332,3 @@ This is the single source of truth for indicating user interaction state across 
       - **Ownership Status**: `absolute -top-0 -right-3`.
     - **Icon Size (Ownership Status)**: The `GoogleSymbol` inside an ownership status badge should have its size set via `style={{fontSize: '16px'}}`.
 -   **Badges in Compact View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
-
-
-
-
-
-    

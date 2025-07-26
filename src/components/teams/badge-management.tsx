@@ -683,7 +683,7 @@ function BadgeCollectionCard({
     return (
         <Card className={cn("h-full flex flex-col bg-transparent relative", !isSharedPreview && !isActive && !!contextTeam && "opacity-50")} {...props}>
             <div {...dragHandleProps}>
-                <CardHeader className="group">
+                <CardHeader className="group p-2">
                      {!isSharedPreview && (
                       <TooltipProvider>
                         <Tooltip>
@@ -776,14 +776,14 @@ function BadgeCollectionCard({
                                 )}
                             </div>
                              <div className="flex-1 min-w-0">
-                                <div onClick={() => { if(isOwner && !isDragModifierPressed) setIsEditingName(true);}} onPointerDown={(e) => { if(isOwner && !isDragModifierPressed) e.stopPropagation(); }} className={cn("font-headline text-2xl font-thin break-words", isOwner && !isDragModifierPressed && "cursor-pointer")}>
+                                <div onClick={() => { if(isOwner && !isDragModifierPressed) setIsEditingName(true);}} onPointerDown={(e) => { if(isOwner && !isDragModifierPressed) e.stopPropagation(); }} className={cn("font-headline text-xl font-thin break-words", isOwner && !isDragModifierPressed && "cursor-pointer")}>
                                 {isEditingName ? (
                                     <Input
                                         ref={nameInputRef}
                                         defaultValue={collection.name}
                                         onBlur={handleSaveName}
                                         onKeyDown={handleNameKeyDown}
-                                        className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
+                                        className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
                                     />
                                 ) : (
                                     <CardTitle>{collection.name}</CardTitle>
@@ -846,7 +846,7 @@ function BadgeCollectionCard({
             </div>
              {showDetails && (
                 <>
-                    <CardContent className="flex-grow pt-0 flex flex-col min-h-0">
+                    <CardContent className="flex-grow pt-0 p-2 flex flex-col min-h-0">
                          <div className={cn(isOwner && !isDragModifierPressed && "cursor-text")} onClick={() => { if(isOwner && !isDragModifierPressed) setIsEditingDescription(true);}} onPointerDown={(e) => { if(isOwner && !isDragModifierPressed) e.stopPropagation(); }}>
                             {isEditingDescription ? (
                             <Textarea 
@@ -1344,4 +1344,3 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
         </DndContext>
     );
 }
-

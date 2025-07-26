@@ -631,7 +631,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isCollapsed,
                   </Tooltip>
               </TooltipProvider>
             )}
-            <div className="p-2" {...dragHandleProps}>
+            <CardHeader className="p-2" {...dragHandleProps}>
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                         <div className="relative">
@@ -736,7 +736,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isCollapsed,
                         )}
                     </div>
                 </div>
-            </div>
+            </CardHeader>
             {showDetails && (
                 <CardContent className="p-2 pt-0">
                     <p className={cn("text-xs text-muted-foreground truncate font-thin", !isPinned && !isDragModifierPressed && "cursor-pointer")} onClick={handlePathClick}>
