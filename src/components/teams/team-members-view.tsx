@@ -57,12 +57,12 @@ function DraggableBadgeFromPool({ badge, canManage }: { badge: Badge; canManage:
     );
 }
 
-function SortableTeamMember({ member, team, isViewer }: { member: User, team: Team, isViewer: boolean }) {
+function SortableTeamMember({ member, team, isViewer, onSetAdmin, onRemoveUser }: { member: User, team: Team, isViewer: boolean, onSetAdmin: () => void, onRemoveUser: () => void }) {
   const { isDragModifierPressed } = useUser();
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ 
-    id: member.userId, 
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: member.userId,
     data: { type: 'member', user: member },
-    disabled: isViewer || !isDragModifierPressed 
+    disabled: isViewer || !isDragModifierPressed
   });
 
   const style = {
@@ -71,10 +71,32 @@ function SortableTeamMember({ member, team, isViewer }: { member: User, team: Te
     opacity: isDragging ? 0.8 : 1,
     zIndex: isDragging ? 10 : 'auto',
   };
+  
+  const canManage = !isViewer;
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className={cn(isDragging && "shadow-xl", "rounded-md")}>
-      <TeamMemberCard member={member} team={team} isViewer={isViewer} />
+    <div ref={setNodeRef} style={style} className={cn(isDragging && "shadow-xl", "rounded-md")}>
+      <div {...attributes} {...listeners} className="relative group">
+        <TeamMemberCard member={member} team={team} isViewer={isViewer} onSetAdmin={onSetAdmin} canManage={canManage} />
+        {canManage && (
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className={cn("absolute top-0 right-0 h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity", isDragModifierPressed && "hidden")}
+                            onClick={(e) => { e.stopPropagation(); onRemoveUser();}}
+                            onPointerDown={(e) => e.stopPropagation()}
+                        >
+                            <GoogleSymbol name="cancel" className="text-lg" weight={100} opticalSize={20} />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent><p>Remove User</p></TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+        )}
+      </div>
     </div>
   );
 }
@@ -92,14 +114,14 @@ function DroppableUserList({ id, children, className }: { id: string; children: 
 export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
     const { viewAsUser, users, updateAppTab, updateTeam, isDragModifierPressed, allBadges, updateUser, allBadgeCollections } = useUser();
     const [activeDragItem, setActiveDragItem] = useState<{type: string, id: string, data: any} | null>(null);
-    
+
     if (!team) {
       return null;
     }
 
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const titleInputRef = useRef<HTMLInputElement>(null);
-    
+
     const [isEditingAdminsLabel, setIsEditingAdminsLabel] = useState(false);
     const [isEditingMembersLabel, setIsEditingMembersLabel] = useState(false);
     const adminsLabelInputRef = useRef<HTMLInputElement>(null);
@@ -110,12 +132,14 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
 
     const teamAdminsLabel = team.teamAdminsLabel || 'Team Admins';
     const membersLabel = team.membersLabel || 'Members';
-    
+
     const isViewer = useMemo(() => {
         if (viewAsUser.isAdmin) return false;
         if (!team.teamAdmins?.length) return !team.members.includes(viewAsUser.userId);
         return !team.teamAdmins.includes(viewAsUser.userId);
     }, [viewAsUser, team]);
+    
+    const canManage = !isViewer;
 
     const teamMembers = useMemo(() => {
         return team.members
@@ -128,7 +152,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
 
     const adminIds = useMemo(() => admins.map(a => a.userId), [admins]);
     const memberIds = useMemo(() => members.map(m => m.userId), [members]);
-    
+
     const userAssignableBadges = useMemo(() => {
         const activeAndApplicableCollections = allBadgeCollections.filter(
           (c) =>
@@ -138,9 +162,12 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         const badgeIds = new Set(activeAndApplicableCollections.flatMap(c => c.badgeIds));
         return allBadges.filter(badge => badgeIds.has(badge.id) && badge.name.toLowerCase().includes(badgePoolSearch.toLowerCase()));
     }, [team.activeBadgeCollections, allBadgeCollections, allBadges, badgePoolSearch]);
-    
+
     const sensors = useSensors(
         useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 8,
+            },
             onActivation: ({ event }) => {
                 if (!isDragModifierPressed) {
                     return false;
@@ -182,7 +209,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         if (e.key === 'Enter') handleSaveTitle();
         else if (e.key === 'Escape') setIsEditingTitle(false);
     };
-    
+
     const handleSaveAdminsLabel = useCallback(() => {
         const newLabel = adminsLabelInputRef.current?.value.trim();
         if (newLabel && newLabel !== teamAdminsLabel) {
@@ -211,7 +238,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         if (e.key === 'Enter') handleSaveAdminsLabel();
         else if (e.key === 'Escape') setIsEditingAdminsLabel(false);
     };
-    
+
     const handleSaveMembersLabel = useCallback(() => {
         const newLabel = membersLabelInputRef.current?.value.trim();
         if (newLabel && newLabel !== membersLabel) {
@@ -239,11 +266,11 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         if (e.key === 'Enter') handleSaveMembersLabel();
         else if (e.key === 'Escape') setIsEditingMembersLabel(false);
     };
-    
+
     const handleBadgeAssignment = (badge: Badge, memberId: string) => {
         const member = users.find(u => u.userId === memberId);
         if (!member || isViewer) return;
-        
+
         const currentRoles = new Set(member.roles || []);
         if (currentRoles.has(badge.name)) return; // Already has it
 
@@ -260,16 +287,38 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         updateUser(memberId, { roles: updatedRoles });
         toast({ title: "Badge Unassigned", description: `"${badge.name}" unassigned from ${member.displayName}.` });
     };
+    
+    const handleSetAdmin = useCallback((teamId: string, userId: string) => {
+        if (isViewer) return;
+        const team = users.find(u => u.userId === teamId);
+        if(!team) return;
+
+        const currentAdmins = new Set(team.teamAdmins || []);
+        if (currentAdmins.has(userId)) {
+            currentAdmins.delete(userId);
+        } else {
+            currentAdmins.add(userId);
+        }
+        updateTeam(teamId, { teamAdmins: Array.from(currentAdmins) });
+    }, [isViewer, users, updateTeam]);
+    
+    const handleRemoveUser = useCallback((userId: string) => {
+        if (isViewer) return;
+        const newMembers = team.members.filter(id => id !== userId);
+        const newAdmins = (team.teamAdmins || []).filter(id => id !== userId);
+        updateTeam(team.id, { members: newMembers, teamAdmins: newAdmins });
+        toast({ title: 'User Removed from Team' });
+    }, [isViewer, team, updateTeam, toast]);
 
     const onDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
         setActiveDragItem(null);
-    
+
         if (!over) return;
-    
+
         const activeType = active.data.current?.type;
         const overType = over.data.current?.type;
-    
+        
         if (activeType === 'pool-badge' && overType === 'member-card') {
             const badge = active.data.current?.badge as Badge;
             const member = over.data.current?.member as User;
@@ -278,7 +327,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
             }
             return;
         }
-        
+
         if (activeType === 'assigned-badge' && over.id === 'badge-pool') {
             const badge = active.data.current?.badge as Badge;
             const sourceMember = active.data.current?.member as User;
@@ -287,20 +336,23 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
              }
             return;
         }
-    
-        if (activeType === 'member' && overType === 'member-list') {
-            if (active.id === over.id) return;
-            
-            const activeIsAdmin = adminIds.includes(active.id as string);
-            const overListId = over.id as string;
-            
-            if ((activeIsAdmin && overListId === 'admins') || (!activeIsAdmin && overListId === 'members')) {
-                // Reordering within the same list
+
+        if (activeType === 'member') {
+            const user = active.data.current?.user as User;
+            const activeIsAdmin = adminIds.includes(user.userId);
+            const overIsAdminList = over.id === 'admins';
+
+            if (activeIsAdmin !== overIsAdminList) {
+                handleSetAdmin(team.id, user.userId);
+            } else {
+                 if (active.id === over.id) return;
                 const list = activeIsAdmin ? admins : members;
                 const oldIndex = list.findIndex(item => item.userId === active.id);
-                const overItem = over.data.current?.item as User | undefined;
-                const newIndex = overItem ? list.findIndex(item => item.userId === overItem.userId) : list.length;
+                const overItem = over.data.current?.user as User | undefined;
+                if (!overItem) return;
                 
+                const newIndex = list.findIndex(item => item.userId === overItem.userId);
+
                 if (oldIndex !== -1 && newIndex !== -1) {
                     const reorderedList = arrayMove(list, oldIndex, newIndex);
                     const newAdmins = activeIsAdmin ? reorderedList : admins;
@@ -316,9 +368,9 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         const { active } = event;
         setActiveDragItem({ type: active.data.current?.type, id: active.id as string, data: active.data.current });
     }
-    
+
     const activeBadge = activeDragItem?.type?.includes('badge') ? activeDragItem.data.badge : null;
-    
+
     const { setNodeRef: badgePoolRef, isOver: isBadgePoolOver } = useDroppable({
         id: 'badge-pool',
     });
@@ -346,7 +398,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                         </TooltipProvider>
                         )}
                     </div>
-                    {!isViewer && (
+                    {canManage && (
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
@@ -379,7 +431,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                                 <DroppableUserList id="admins" className="space-y-4">
                                     <SortableContext items={adminIds} strategy={verticalListSortingStrategy}>
                                         {admins.map((member) => (
-                                            <SortableTeamMember key={member.userId} member={member} team={team} isViewer={isViewer} />
+                                            <SortableTeamMember key={member.userId} member={member} team={team} isViewer={isViewer} onSetAdmin={() => handleSetAdmin(team.id, member.userId)} onRemoveUser={() => handleRemoveUser(member.userId)} />
                                         ))}
                                     </SortableContext>
                                 </DroppableUserList>
@@ -406,7 +458,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                                         <div className="flex flex-wrap -m-3">
                                         {members.map((member) => (
                                             <div key={member.userId} className="p-3 basis-full md:basis-1/2 flex-grow-0 flex-shrink-0">
-                                                <SortableTeamMember member={member} team={team} isViewer={isViewer} />
+                                                <SortableTeamMember member={member} team={team} isViewer={isViewer} onSetAdmin={() => handleSetAdmin(team.id, member.userId)} onRemoveUser={() => handleRemoveUser(member.userId)} />
                                             </div>
                                         ))}
                                         </div>
@@ -418,7 +470,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                 </div>
             </div>
             <DragOverlay modifiers={[snapCenterToCursor]}>
-                {activeDragItem?.type === 'member' && activeDragItem?.data?.user ? (
+                {activeDragItem?.type === 'member' ? (
                     <Avatar className="h-12 w-12">
                         <AvatarImage src={activeDragItem.data.user.avatarUrl} alt={activeDragItem.data.user.displayName} data-ai-hint="user avatar" />
                         <AvatarFallback>{activeDragItem.data.user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
@@ -444,7 +496,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                         <ScrollArea className="h-full">
                             <div className="flex flex-wrap gap-2">
                                 {userAssignableBadges.map(badge => (
-                                    <DraggableBadgeFromPool key={badge.id} badge={badge} canManage={!isViewer} />
+                                    <DraggableBadgeFromPool key={badge.id} badge={badge} canManage={canManage} />
                                 ))}
                                 {userAssignableBadges.length === 0 && <p className="text-xs text-muted-foreground text-center p-4 w-full">No badges available to assign. Activate badge collections in the "Badges" tab.</p>}
                             </div>

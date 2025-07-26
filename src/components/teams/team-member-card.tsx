@@ -20,7 +20,7 @@ import { useDroppable } from '@dnd-kit/core';
 
 function SortableAssignedBadge({ badge, canManageRoles, member }: { badge: Badge, canManageRoles: boolean, member: User }) {
     const { isDragModifierPressed } = useUser();
-    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ 
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: badge.id,
         disabled: !isDragModifierPressed,
         data: {
@@ -29,7 +29,7 @@ function SortableAssignedBadge({ badge, canManageRoles, member }: { badge: Badge
             member: member,
         },
      });
-    
+
     const style = {
         transform: CSS.Transform.toString(transform),
         transition,
@@ -64,7 +64,7 @@ function SortableAssignedBadge({ badge, canManageRoles, member }: { badge: Badge
     );
 }
 
-export function TeamMemberCard({ member, team, isViewer }: { member: User, team: Team, isViewer: boolean }) {
+export function TeamMemberCard({ member, team, isViewer, onSetAdmin, canManage }: { member: User, team: Team, isViewer: boolean, onSetAdmin: () => void, canManage: boolean }) {
   const { viewAsUser, updateUser, updateTeam, allBadges, allBadgeCollections, isDragModifierPressed } = useUser();
   const { toast } = useToast();
 
@@ -82,21 +82,21 @@ export function TeamMemberCard({ member, team, isViewer }: { member: User, team:
         member: member,
     }
   });
-  
+
   const userAssignableBadges = useMemo(() => {
     const activeAndApplicableCollections = allBadgeCollections.filter(
       (c) =>
         (team.activeBadgeCollections || []).includes(c.id) &&
         c.applications?.includes('team members')
     );
-    
+
     const badgeIds = new Set(activeAndApplicableCollections.flatMap(c => c.badgeIds));
 
     return allBadges.filter(badge => badgeIds.has(badge.id));
   }, [team.activeBadgeCollections, allBadgeCollections, allBadges]);
-  
+
   const teamBadgeNames = useMemo(() => new Set(userAssignableBadges.map(b => b.name)), [userAssignableBadges]);
-  
+
   const assignedBadges = useMemo(() => {
     return (member.roles || [])
       .map(roleName => userAssignableBadges.find(b => b.name === roleName))
@@ -118,7 +118,7 @@ export function TeamMemberCard({ member, team, isViewer }: { member: User, team:
     });
     return Object.values(groups);
   }, [assignedBadges, allBadgeCollections]);
-  
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -127,11 +127,11 @@ export function TeamMemberCard({ member, team, isViewer }: { member: User, team:
     }),
     useSensor(KeyboardSensor)
   );
-  
+
   const handleBadgeDragStart = (event: DragStartEvent) => {
     setActiveBadge(event.active.data.current?.badge);
   }
-  
+
   const handleBadgeDragEnd = (event: DragEndEvent) => {
     setActiveBadge(null);
     const { active, over } = event;
@@ -151,7 +151,7 @@ export function TeamMemberCard({ member, team, isViewer }: { member: User, team:
         updateUser(member.userId, { roles: finalRoles });
     }
   }
-  
+
   const handleSaveLabel = useCallback(() => {
     if (!canManageRoles) return;
     const newLabel = labelInputRef.current?.value.trim();
@@ -169,25 +169,49 @@ export function TeamMemberCard({ member, team, isViewer }: { member: User, team:
         handleSaveLabel();
       }
     };
-    
+
     document.addEventListener("mousedown", handleOutsideClick);
     labelInputRef.current?.focus();
     labelInputRef.current?.select();
-    
+
     return () => {
       document.removeEventListener("mousedown", handleOutsideClick);
     };
   }, [isEditingLabel, handleSaveLabel]);
+  
+  const isTeamAdmin = (team.teamAdmins || []).includes(member.userId);
 
   return (
     <>
       <Card ref={setNodeRef} className={cn("bg-transparent", isOver && "ring-2 ring-primary ring-inset")}>
         <CardHeader>
           <div className="flex items-center gap-4">
-            <Avatar className="h-12 w-12">
-              <AvatarImage src={member.avatarUrl} alt={member.displayName} data-ai-hint="user avatar" />
-              <AvatarFallback>{member.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-            </Avatar>
+             <div 
+                className={cn("relative", canManage && !isDragModifierPressed && "cursor-pointer")}
+                onClick={(e) => { 
+                    if (canManage && !isDragModifierPressed) {
+                        e.stopPropagation();
+                        onSetAdmin(); 
+                    }
+                }}
+            >
+                <Avatar className="h-12 w-12">
+                <AvatarImage src={member.avatarUrl} alt={member.displayName} data-ai-hint="user avatar" />
+                <AvatarFallback>{member.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                </Avatar>
+                {isTeamAdmin && (
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card flex items-center justify-center bg-primary text-primary-foreground">
+                                    <GoogleSymbol name="key" style={{fontSize: '10px'}} opticalSize={20} />
+                                </div>
+                            </TooltipTrigger>
+                            <TooltipContent><p>Team Admin</p></TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                )}
+            </div>
             <div>
               <CardTitle className="text-lg font-headline font-thin">{member.displayName}</CardTitle>
               <p className="text-sm text-muted-foreground">{member.title}</p>
