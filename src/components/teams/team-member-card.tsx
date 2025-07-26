@@ -9,8 +9,10 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
-import { useDroppable, useSortable } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { useDroppable } from '@dnd-kit/core';
+import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
 
 function AssignedBadge({ badge, canManage, contextId }: { badge: Badge, canManage: boolean, contextId: string }) {
     const { attributes, listeners, setNodeRef, isDragging, transform, transition } = useSortable({
@@ -74,7 +76,7 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin, isOver }: {
   const assignedBadgeIds = useMemo(() => assignedBadges.map(b => `assigned-badge:${member.userId}:${b.id}`), [assignedBadges, member.userId]);
   
   const { setNodeRef } = useDroppable({
-    id: `member-card:${member.userId}`,
+    id: `member-card-droppable:${member.userId}`,
     data: {
         type: 'member-card',
         memberId: member.userId,
@@ -120,7 +122,7 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin, isOver }: {
           </div>
         </CardHeader>
         {!isViewer && (
-            <CardContent ref={setNodeRef}>
+            <CardContent ref={setNodeRef} className="p-0">
                 <div className="mt-2 space-y-2">
                     <div className={cn("transition-colors min-h-[48px] rounded-md border p-2 bg-muted/20 flex flex-wrap gap-1.5 items-center")}>
                         <SortableContext items={assignedBadgeIds} strategy={verticalListSortingStrategy}>
