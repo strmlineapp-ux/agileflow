@@ -637,7 +637,7 @@ function BadgeCollectionCard({
 
     let shareIcon: string | null = null;
     let shareIconTitle: string = '';
-    let shareIconColor = '#64748B'; // Consistent muted color
+    const shareIconColor = '#64748B'; // Consistent muted color
     
     if (isOwner && collection.isShared) {
         shareIcon = 'change_circle';
@@ -696,7 +696,7 @@ function BadgeCollectionCard({
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                     <PopoverTrigger asChild disabled={!isOwner || isDragModifierPressed} onPointerDown={(e) => e.stopPropagation()}>
-                                        <Button variant="ghost" className="h-10 w-12 flex items-center justify-center p-0">
+                                        <Button variant="ghost" className="h-10 w-12 flex items-center justify-center p-0 text-muted-foreground">
                                         <GoogleSymbol name={collection.icon} weight={100} grade={-25} opticalSize={20} style={{ fontSize: '36px' }} />
                                         </Button>
                                     </PopoverTrigger>
@@ -1201,7 +1201,7 @@ export function BadgeManagement({ tab, page, isActive }: { tab: AppTab; page: Ap
     if (!viewAsUser) return null;
 
     return (
-        <DndContext sensors={sensors} onDragStart={(e) => setActiveDragItem({ type: e.active.data.current?.type, data: e.active.data.current || {} })} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
+        <DndContext sensors={sensors} onDragStart={(e) => setActiveDragItem({ type: e.active.data.current?.type, id: e.active.id as string, data: e.active.data.current || {} })} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
            <div className="flex h-full gap-4">
                 <div className="flex-1 flex flex-col overflow-hidden">
                   <div className="flex items-center justify-between mb-6 shrink-0">
