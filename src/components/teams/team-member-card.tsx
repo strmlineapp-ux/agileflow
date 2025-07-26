@@ -12,7 +12,6 @@ import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { Input } from '../ui/input';
-import { useDroppable } from '@dnd-kit/core';
 
 
 function AssignedBadge({ badge }: { badge: Badge }) {
@@ -22,9 +21,10 @@ function AssignedBadge({ badge }: { badge: Badge }) {
                 <TooltipTrigger asChild>
                 <div
                     className={cn(
-                    'h-7 w-7 rounded-full border flex items-center justify-center bg-transparent'
+                    'h-7 w-7 rounded-full border flex items-center justify-center bg-transparent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50'
                     )}
                     style={{ borderColor: badge.color }}
+                    tabIndex={0}
                 >
                     <GoogleSymbol
                     name={badge.icon}
@@ -43,7 +43,6 @@ function AssignedBadge({ badge }: { badge: Badge }) {
 
 export function TeamMemberCard({ member, team, isViewer, onSetAdmin, canManage }: { member: User, team: Team, isViewer: boolean, onSetAdmin: () => void, canManage: boolean }) {
   const { viewAsUser, updateTeam, allBadges, allBadgeCollections, isDragModifierPressed } = useUser();
-  const { toast } = useToast();
 
   const [isEditingLabel, setIsEditingLabel] = useState(false);
   const labelInputRef = useRef<HTMLInputElement>(null);
@@ -116,14 +115,15 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin, canManage }
         <CardHeader>
           <div className="flex items-center gap-4">
              <div 
-                className={cn("relative")}
-            >
-                <Avatar className="h-12 w-12" onClick={(e) => {
+                className={cn("relative cursor-pointer")}
+                 onClick={(e) => {
                     if (canManage && !isDragModifierPressed) {
                         e.stopPropagation();
                         onSetAdmin();
                     }
-                }}>
+                }}
+            >
+                <Avatar className="h-12 w-12">
                 <AvatarImage src={member.avatarUrl} alt={member.displayName} data-ai-hint="user avatar" />
                 <AvatarFallback>{member.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
@@ -174,7 +174,7 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin, canManage }
                     <>
                        {groupedBadges.map(({ collectionName, badges }) => (
                             <div key={collectionName}>
-                                <p className="text-xs tracking-wider mb-1.5 text-muted-foreground">{collectionName}</p>
+                                <p className="text-xs tracking-wider mb-1.5">{collectionName}</p>
                                 <div className="flex flex-wrap gap-1.5">
                                     {badges.map(badge => (
                                         <AssignedBadge key={badge.id} badge={badge} />

@@ -317,15 +317,6 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         updateUser(memberId, { roles: updatedRoles });
         toast({ title: "Badge Assigned", description: `"${badge.name}" assigned to ${member.displayName}.` });
     };
-
-    const handleBadgeUnassignment = (badge: Badge, memberId: string) => {
-        const member = users.find(u => u.userId === memberId);
-        if (!member || isViewer) return;
-
-        const updatedRoles = (member.roles || []).filter(r => r !== badge.name);
-        updateUser(memberId, { roles: updatedRoles });
-        toast({ title: "Badge Unassigned", description: `"${badge.name}" unassigned from ${member.displayName}.` });
-    };
     
     const handleSetAdmin = useCallback((teamId: string, userId: string) => {
         if (isViewer) return;
@@ -358,7 +349,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         
         if (activeType === 'pool-badge' && overType === 'member-card') {
             const badge = active.data.current?.badge as Badge;
-            const member = over.data.current?.user as User;
+            const member = over.data.current?.member as User;
             if (badge && member) {
                 handleBadgeAssignment(badge, member.userId);
             }
@@ -450,7 +441,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                                         className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
                                     />
                                 ) : (
-                                    <h3 className="font-headline font-thin text-xl cursor-text" onClick={() => setIsEditingAdminsLabel(true)}>
+                                    <h3 className="font-headline font-thin text-xl cursor-text" onClick={() => canManage && setIsEditingAdminsLabel(true)}>
                                         {teamAdminsLabel}
                                     </h3>
                                 )}
@@ -474,7 +465,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                                     className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
                                 />
                             ) : (
-                                <h3 className="font-headline font-thin text-xl cursor-text" onClick={() => setIsEditingMembersLabel(true)}>
+                                <h3 className="font-headline font-thin text-xl cursor-text" onClick={() => canManage && setIsEditingMembersLabel(true)}>
                                     {membersLabel}
                                 </h3>
                             )}
@@ -501,9 +492,9 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                         <AvatarImage src={activeDragItem.data.user.avatarUrl} alt={activeDragItem.data.user.displayName} data-ai-hint="user avatar" />
                         <AvatarFallback>{activeDragItem.data.user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
                     </Avatar>
-                ) : activeBadge ? (
-                    <div className="h-9 w-9 rounded-full border-2 flex items-center justify-center bg-card" style={{ borderColor: activeBadge.color }}>
-                        <GoogleSymbol name={activeBadge.icon} style={{ fontSize: '28px', color: activeBadge.color }} weight={100} />
+                ) : activeDragItem?.type === 'pool-badge' ? (
+                    <div className="h-9 w-9 rounded-full border-2 flex items-center justify-center bg-card" style={{ borderColor: activeDragItem.data.badge.color }}>
+                        <GoogleSymbol name={activeDragItem.data.badge.icon} style={{ fontSize: '28px', color: activeDragItem.data.badge.color }} weight={100} />
                     </div>
                 ) : null}
             </DragOverlay>
@@ -525,7 +516,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                                     <div className="space-y-4">
                                         {groupedAssignableBadges.map(({ collectionName, badges }) => (
                                             <div key={collectionName}>
-                                                <p className="text-xs tracking-wider mb-2 text-muted-foreground">{collectionName}</p>
+                                                <p className="text-xs tracking-wider mb-2">{collectionName}</p>
                                                 <div className="flex flex-wrap gap-2">
                                                     {badges.map(badge => (
                                                         <DraggableBadgeFromPool key={badge.id} badge={badge} canManage={canManage} />
