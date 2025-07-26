@@ -51,7 +51,7 @@ export interface User {
   avatarUrl?: string;
   location?: string;
   title?: string;
-  roles?: string[]; // Contains names of Badges assigned to the user
+  roles?: string[]; // Contains IDs of Badges assigned to the user
   directReports?: string[];
   theme?: 'light' | 'dark';
   primaryColor?: string; // HEX value string e.g., "#4A90E2"

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
@@ -85,6 +86,7 @@ interface UserDataContextType {
   deleteBadge: (badgeId: string) => void;
   reorderBadges: (collectionId: string, badgeIds: string[]) => void;
   predefinedColors: string[];
+  handleBadgeAssignment: (badge: Badge, memberId: string) => void;
   handleBadgeUnassignment: (badge: Badge, memberId: string) => void;
 }
 const UserDataContext = createContext<UserDataContextType | null>(null);
@@ -558,11 +560,23 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setAllBadgeCollections(current => current.map(c => c.id === collectionId ? { ...c, badgeIds } : c));
   }, []);
 
+  const handleBadgeAssignment = useCallback((badge: Badge, memberId: string) => {
+    const member = users.find(u => u.userId === memberId);
+    if (!member) return;
+
+    const currentRoles = new Set(member.roles || []);
+    if (currentRoles.has(badge.id)) return; // Already has it
+
+    const updatedRoles = [...currentRoles, badge.id];
+    updateUser(memberId, { roles: updatedRoles });
+    toast({ title: "Badge Assigned", description: `"${badge.name}" assigned to ${member.displayName}.` });
+  }, [users, updateUser, toast]);
+
   const handleBadgeUnassignment = useCallback((badge: Badge, memberId: string) => {
     const member = users.find(u => u.userId === memberId);
     if (!member) return;
 
-    const updatedRoles = (member.roles || []).filter(roleName => roleName !== badge.name);
+    const updatedRoles = (member.roles || []).filter(roleId => roleId !== badge.id);
     updateUser(memberId, { roles: updatedRoles });
     toast({ title: 'Badge Un-assigned', description: `"${badge.name}" removed from ${member.displayName}.`});
   }, [users, updateUser, toast]);
@@ -600,8 +614,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }), [realUser, viewAsUser, users]);
 
   const dataValue = useMemo(() => ({
-    loading, isDragModifierPressed, holidays, teams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, deleteUser, notifications, setNotifications, userStatusAssignments, setUserStatusAssignments, addUser, linkGoogleCalendar, calendars, reorderCalendars, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, fetchTasks, addTask, updateTask, deleteTask, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors, handleBadgeUnassignment
-  }), [loading, isDragModifierPressed, holidays, teams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, deleteUser, notifications, userStatusAssignments, addUser, linkGoogleCalendar, calendars, reorderCalendars, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, fetchTasks, addTask, updateTask, deleteTask, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, handleBadgeUnassignment]);
+    loading, isDragModifierPressed, holidays, teams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, deleteUser, notifications, setNotifications, userStatusAssignments, setUserStatusAssignments, addUser, linkGoogleCalendar, calendars, reorderCalendars, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, fetchTasks, addTask, updateTask, deleteTask, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors, handleBadgeAssignment, handleBadgeUnassignment
+  }), [loading, isDragModifierPressed, holidays, teams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, deleteUser, notifications, userStatusAssignments, addUser, linkGoogleCalendar, calendars, reorderCalendars, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, fetchTasks, addTask, updateTask, deleteTask, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, handleBadgeAssignment, handleBadgeUnassignment]);
 
   if (!realUser || !viewAsUser) {
     return null; // Or a loading spinner

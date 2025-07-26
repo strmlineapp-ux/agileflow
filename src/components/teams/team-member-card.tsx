@@ -11,15 +11,16 @@ import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { useSortable, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useDroppable } from '@dnd-kit/core';
 
 
-function AssignedBadge({ badge, canManage, memberId }: { badge: Badge, canManage: boolean, memberId: string }) {
+function AssignedBadge({ badge, canManage, contextId }: { badge: Badge, canManage: boolean, contextId: string }) {
     const { attributes, listeners, setNodeRef, isDragging, transform, transition } = useSortable({
-        id: `assigned-badge:${memberId}:${badge.id}`,
+        id: `assigned-badge:${contextId}:${badge.id}`,
         data: {
             type: 'assigned-badge',
             badge: badge,
-            memberId: memberId,
+            memberId: contextId,
         },
         disabled: !canManage,
     });
@@ -69,12 +70,17 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin, isOver }: {
 
   const assignedBadges = useMemo(() => {
     return (member.roles || [])
-      .map(roleName => allBadges.find(b => b.name === roleName))
+      .map(roleId => allBadges.find(b => b.id === roleId))
       .filter((b): b is Badge => !!b);
   }, [member.roles, allBadges]);
 
   const assignedBadgeIds = useMemo(() => assignedBadges.map(b => `assigned-badge:${member.userId}:${b.id}`), [assignedBadges, member.userId]);
   
+  const { setNodeRef } = useDroppable({
+    id: `member-card-droppable:${member.userId}`,
+    data: { type: 'member-card', memberId: member.userId }
+  });
+
   const isTeamAdmin = (team.teamAdmins || []).includes(member.userId);
 
   return (
@@ -116,11 +122,11 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin, isOver }: {
         {!isViewer && (
             <CardContent className="p-0">
                 <div className="mt-2 space-y-2">
-                    <div className={cn("transition-colors min-h-[48px] rounded-md border p-2 bg-muted/20 flex flex-wrap gap-1.5 items-center")}>
+                    <div ref={setNodeRef} className={cn("transition-colors min-h-[48px] rounded-md border p-2 bg-muted/20 flex flex-wrap gap-1.5 items-center")}>
                         <SortableContext items={assignedBadgeIds} strategy={verticalListSortingStrategy}>
                             {assignedBadges.length > 0 ? (
                                 assignedBadges.map(badge => (
-                                    <AssignedBadge key={badge.id} badge={badge} canManage={canManage} memberId={member.userId} />
+                                    <AssignedBadge key={badge.id} badge={badge} canManage={canManage} contextId={member.userId} />
                                 ))
                             ) : (
                                 <p className="text-xs text-muted-foreground italic w-full text-center py-2">Drag badges here to assign.</p>
