@@ -144,7 +144,6 @@ export interface SharedCalendar {
   isShared?: boolean;
   defaultEventTitle?: string;
   roleAssignmentsLabel?: string;
-  managers?: string[];
 }
 
 export type AttachmentType = 'drive' | 'docs' | 'sheets' | 'slides' | 'forms' | 'meet' | 'local' | 'link';

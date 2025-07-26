@@ -150,7 +150,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       }
       setAppSettings({
         pages: finalPages,
-        tabs: [...coreTabs],
+        tabs: [...coreTabs, ...mockAppSettings.tabs],
       });
       
       // Only set loading to false after all state is initialized
@@ -640,4 +640,3 @@ export function useUser() {
     const data = useUserData();
     return { ...session, ...data };
 }
-

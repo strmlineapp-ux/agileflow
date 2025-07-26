@@ -45,7 +45,7 @@ This pattern provides a clean, minimal interface for search functionality, espec
   - Clicking the button reveals the input field.
   - **Crucially, the input must have a transparent background and no borders or box-shadow**, ensuring it blends seamlessly into the UI.
 - **Behavior:**
-  - **Automatic Focus**: The `CompactSearchInput` itself doesn't take an `autoFocus` prop, but this behavior can be achieved by passing a `ref` to its `inputRef` prop and managing focus from the parent component.
+  - **Automatic Focus**: For specific single-view pages like **Account Settings**, an `autoFocus={true}` prop can be passed to focus the input on initial load.
   - **Manual Focus**: Clicking the search icon will always expand the input and focus it.
   - **Collapse on Blur**: The input always collapses back to its icon-only state when it loses focus (`onBlur`) and the field is empty.
 - **Application:** Used for filtering lists of icons, users, or other filterable content within popovers and management pages like the Admin screen.
@@ -269,7 +269,7 @@ This pattern provides a dense, icon-driven interface for managing a series of us
 ## Visual & Theming Elements
 
 ### Typography
-- **Font**: The application exclusively uses the **Roboto** font family for a clean and consistent look for both headlines and body text.
+- **Font**: The application exclusively uses the **Roboto** font family for a clean and consistent look.
 - **Headline Font**: All major titles (pages, tabs, prominent cards) use the `font-headline` utility class, which is configured to use a `font-thin` weight (`font-weight: 100`) from the Roboto family.
 - **Body Font**: All standard body text, labels, and buttons now use a `font-thin` weight.
 
