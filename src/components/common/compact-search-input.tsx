@@ -13,7 +13,7 @@ interface CompactSearchInputProps {
   placeholder?: string;
   className?: string;
   inputRef?: React.RefObject<HTMLInputElement>;
-  autoFocus?: boolean;
+  isActive?: boolean;
   tooltipText?: string;
 }
 
@@ -23,21 +23,21 @@ export function CompactSearchInput({
   placeholder = "Search...", 
   className,
   inputRef: externalInputRef,
-  autoFocus = false,
+  isActive = false,
   tooltipText,
 }: CompactSearchInputProps) {
-  const [isSearching, setIsSearching] = useState(autoFocus || !!searchTerm);
+  const [isSearching, setIsSearching] = useState(!!searchTerm);
   const internalInputRef = useRef<HTMLInputElement>(null);
   const inputRef = externalInputRef || internalInputRef;
 
   useEffect(() => {
-    if (autoFocus) {
+    if (isActive) {
       setIsSearching(true);
       setTimeout(() => {
         inputRef.current?.focus();
       }, 50);
     }
-  }, [autoFocus, inputRef]);
+  }, [isActive, inputRef]);
 
   const handleIconClick = () => {
     setIsSearching(true);

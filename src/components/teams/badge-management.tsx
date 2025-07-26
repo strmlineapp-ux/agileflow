@@ -194,7 +194,7 @@ function BadgeDisplayItem({
                     setSearchTerm={setIconSearch}
                     placeholder="Search icons..."
                     inputRef={iconSearchInputRef}
-                    autoFocus={true}
+                    isActive={isIconPopoverOpen}
                 />
             </div>
             <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{googleSymbolNames.slice(0, 300).map((iconName) => (
@@ -723,7 +723,7 @@ function BadgeCollectionCard({
                                         setSearchTerm={setIconSearch}
                                         placeholder="Search icons..."
                                         inputRef={iconSearchInputRef}
-                                        autoFocus={true}
+                                        isActive={isIconPopoverOpen}
                                         />
                                     </div>
                                     <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (
@@ -1027,7 +1027,6 @@ function CollectionDropZone({ id, type, children, className }: { id: string; typ
 export function BadgeManagement({ tab, page, team, isActive }: { team: Team; tab: AppTab; page: AppPage; isActive?: boolean }) {
     const { viewAsUser, users, appSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors, updateUser, isDragModifierPressed, teams } = useUser();
     const { toast } = useToast();
-    const sharedSearchInputRef = useRef<HTMLInputElement>(null);
 
     const [activeDragItem, setActiveDragItem] = useState<{type: string, data: any} | null>(null);
     const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -1037,12 +1036,6 @@ export function BadgeManagement({ tab, page, team, isActive }: { team: Team; tab
     const [sharedSearchTerm, setSharedSearchTerm] = useState('');
     const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
     const [expandedCollections, setExpandedCollections] = useState<Set<string>>(new Set());
-    
-    useEffect(() => {
-        if (isSharedPanelOpen) {
-            setTimeout(() => sharedSearchInputRef.current?.focus(), 100);
-        }
-    }, [isSharedPanelOpen]);
     
     const onToggleExpand = useCallback((collectionId: string) => {
         setExpandedCollections(prev => {
@@ -1236,7 +1229,7 @@ export function BadgeManagement({ tab, page, team, isActive }: { team: Team; tab
                           <DuplicateZone id="duplicate-collection-zone" onAdd={() => addBadgeCollection(viewAsUser)} />
                       </div>
                       <div className="flex items-center gap-1">
-                          <CompactSearchInput searchTerm={mainSearchTerm} setSearchTerm={setMainSearchTerm} placeholder="Search collections..." autoFocus={isActive} />
+                          <CompactSearchInput searchTerm={mainSearchTerm} setSearchTerm={setMainSearchTerm} placeholder="Search collections..." isActive={isActive} />
                           <TooltipProvider>
                               <Tooltip>
                                   <TooltipTrigger asChild>
@@ -1279,7 +1272,7 @@ export function BadgeManagement({ tab, page, team, isActive }: { team: Team; tab
                             <CardHeader>
                                 <div className="flex items-center justify-between">
                                     <CardTitle className="font-headline font-thin text-xl">Shared Collections</CardTitle>
-                                    <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." inputRef={sharedSearchInputRef} autoFocus={isSharedPanelOpen} tooltipText="Search Shared" />
+                                    <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." isActive={isSharedPanelOpen} tooltipText="Search Shared" />
                                 </div>
                                 <CardDescription>Drag a collection you own here to share it. Drag a collection to your board to link it.</CardDescription>
                             </CardHeader>

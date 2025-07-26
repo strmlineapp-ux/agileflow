@@ -283,7 +283,7 @@ export const AdminsManagement = ({ isActive }: { isActive?: boolean }) => {
                         <div className="flex items-center justify-between gap-4">
                             <CardTitle className="font-thin text-base">Users ({filteredNonAdminUsers.length})</CardTitle>
                              <div className="flex items-center gap-1">
-                                <CompactSearchInput searchTerm={userSearch} setSearchTerm={setUserSearch} placeholder="Search users..." tooltipText="Search Users" autoFocus={isActive} />
+                                <CompactSearchInput searchTerm={userSearch} setSearchTerm={setUserSearch} placeholder="Search users..." tooltipText="Search Users" isActive={isActive} />
                             </div>
                         </div>
                     </CardHeader>
@@ -850,7 +850,6 @@ export const PagesManagement = ({ isActive }: { isActive?: boolean }) => {
     const { toast } = useToast();
     const [searchTerm, setSearchTerm] = useState('');
     const [activePage, setActivePage] = useState<AppPage | null>(null);
-    const searchInputRef = useRef<HTMLInputElement>(null);
     
     const pinnedIds = useMemo(() => new Set(corePages.map(p => p.id)), []);
     
@@ -980,7 +979,7 @@ export const PagesManagement = ({ isActive }: { isActive?: boolean }) => {
                 <div className="flex items-center justify-between">
                     <DuplicateZone onAdd={handleAddPage} />
                     <div className="flex items-center">
-                        <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search pages..." inputRef={searchInputRef} autoFocus={isActive} />
+                        <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search pages..." isActive={isActive} />
                     </div>
                 </div>
                 
@@ -1231,7 +1230,6 @@ function SortableTabCard({ id, tab, onUpdate }: { id: string, tab: AppTab, onUpd
 export const TabsManagement = ({ isActive }: { isActive?: boolean }) => {
     const { viewAsUser, appSettings, updateAppSettings, updateAppTab, isDragModifierPressed } = useUser();
     const [searchTerm, setSearchTerm] = useState('');
-    const searchInputRef = useRef<HTMLInputElement>(null);
 
     const handleUpdateTab = useCallback((tabId: string, data: Partial<AppTab>) => {
         const newTabs = appSettings.tabs.map(t => t.id === tabId ? { ...t, ...data } : t);
@@ -1283,7 +1281,7 @@ export const TabsManagement = ({ isActive }: { isActive?: boolean }) => {
             <div className="space-y-8">
                 <div className="flex items-center justify-end">
                      <div className="flex items-center">
-                        <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search by name or desc..." inputRef={searchInputRef} autoFocus={isActive} />
+                        <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search by name or desc..." isActive={isActive} />
                     </div>
                 </div>
                 <SortableContext items={tabIds} strategy={verticalListSortingStrategy}>

@@ -529,7 +529,6 @@ function CalendarDropZone({ id, type, children, className }: { id: string; type:
 export function CalendarManagement({ tab, isActive }: { tab: AppTab, isActive?: boolean }) {
   const { viewAsUser, calendars, addCalendar, updateCalendar, deleteCalendar, updateAppTab, appSettings, updateUser, isDragModifierPressed } = useUser();
   const { toast } = useToast();
-  const sharedSearchInputRef = useRef<HTMLInputElement>(null);
 
   const [activeCalendar, setActiveCalendar] = useState<SharedCalendar | null>(null);
   
@@ -538,12 +537,6 @@ export function CalendarManagement({ tab, isActive }: { tab: AppTab, isActive?: 
   const [mainSearchTerm, setMainSearchTerm] = useState('');
 
   const title = appSettings.calendarManagementLabel || tab.name;
-  
-  useEffect(() => {
-    if (isSharedPanelOpen) {
-        setTimeout(() => sharedSearchInputRef.current?.focus(), 100);
-    }
-  }, [isSharedPanelOpen]);
   
   const handleAddCalendar = (sourceCalendar?: SharedCalendar) => {
     const calendarCount = calendars.length;
@@ -681,7 +674,7 @@ export function CalendarManagement({ tab, isActive }: { tab: AppTab, isActive?: 
                 <DuplicateZone id="duplicate-calendar-zone" onAdd={() => handleAddCalendar()} />
               </div>
               <div className="flex items-center gap-2">
-                <CompactSearchInput searchTerm={mainSearchTerm} setSearchTerm={setMainSearchTerm} placeholder="Search calendars..." autoFocus={isActive} tooltipText="Search Calendars" />
+                <CompactSearchInput searchTerm={mainSearchTerm} setSearchTerm={setMainSearchTerm} placeholder="Search calendars..." isActive={isActive} tooltipText="Search Calendars" />
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -721,7 +714,7 @@ export function CalendarManagement({ tab, isActive }: { tab: AppTab, isActive?: 
                 <CardHeader>
                     <div className="flex items-center justify-between">
                     <CardTitle className="font-headline font-thin text-xl">Shared Calendars</CardTitle>
-                    <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." inputRef={sharedSearchInputRef} autoFocus={isSharedPanelOpen} tooltipText="Search Shared Calendars" />
+                    <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." isActive={isSharedPanelOpen} tooltipText="Search Shared Calendars" />
                     </div>
                     <UICardDescription>Drag a calendar to your board to link it.</UICardDescription>
                 </CardHeader>

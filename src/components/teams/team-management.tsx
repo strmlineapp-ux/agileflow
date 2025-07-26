@@ -518,7 +518,6 @@ export function TeamManagement({ tab, page, isActive, isSingleTabPage = false }:
     const router = useRouter();
     const pathname = usePathname();
     const { toast } = useToast();
-    const sharedSearchInputRef = useRef<HTMLInputElement>(null);
 
     const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
     const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -542,12 +541,6 @@ export function TeamManagement({ tab, page, isActive, isSingleTabPage = false }:
     useEffect(() => {
         if (isEditingTitle) titleInputRef.current?.focus();
     }, [isEditingTitle]);
-
-    useEffect(() => {
-        if (isSharedPanelOpen) {
-            setTimeout(() => sharedSearchInputRef.current?.focus(), 100);
-        }
-    }, [isSharedPanelOpen]);
 
     const handleSaveTitle = () => {
         const newName = titleInputRef.current?.value.trim();
@@ -797,7 +790,7 @@ export function TeamManagement({ tab, page, isActive, isSingleTabPage = false }:
                                 <DuplicateZone id="duplicate-team-zone" onAdd={() => handleAddTeam()} />
                             </div>
                             <div className="flex items-center gap-1">
-                                <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search teams..." autoFocus={isActive} />
+                                <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search teams..." isActive={isActive} />
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
@@ -843,7 +836,7 @@ export function TeamManagement({ tab, page, isActive, isSingleTabPage = false }:
                             <CardHeader>
                                 <div className="flex items-center justify-between">
                                     <CardTitle className="font-headline font-thin text-xl">Shared Teams</CardTitle>
-                                    <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." inputRef={sharedSearchInputRef} autoFocus={isSharedPanelOpen} tooltipText="Search Shared Teams" />
+                                    <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." isActive={isSharedPanelOpen} tooltipText="Search Shared Teams" />
                                 </div>
                                 <CardDescription>Drag a team you own here to share it. Drag a team to your board to link it.</CardDescription>
                             </CardHeader>
