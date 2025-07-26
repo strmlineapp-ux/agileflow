@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useUser } from '@/context/user-context';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,7 +29,7 @@ function EventTemplateForm({
   onClose: () => void;
 }) {
   const { toast } = useToast();
-  const { allBadges } = useUser();
+  const { allBadges, allBadgeCollections } = useUser();
   const [name, setName] = useState(template?.name || '');
   const [icon, setIcon] = useState(template?.icon || 'label');
   const [requestedRoles, setRequestedRoles] = useState<string[]>(template?.requestedRoles || []);
@@ -43,12 +43,12 @@ function EventTemplateForm({
   const teamBadges = useMemo(() => {
     const activeBadgeIds = new Set(
       team.activeBadgeCollections?.flatMap(collectionId => {
-        const collection = allBadges.find(c => c.id === collectionId);
+        const collection = allBadgeCollections.find(c => c.id === collectionId);
         return collection ? collection.badgeIds : [];
       }) || []
     );
     return allBadges.filter(badge => activeBadgeIds.has(badge.id));
-  }, [team.activeBadgeCollections, allBadges]);
+  }, [team.activeBadgeCollections, allBadges, allBadgeCollections]);
   
   const availableBadges = teamBadges.filter(badge => !requestedRoles.includes(badge.name) && badge.name.toLowerCase().includes(roleSearch.toLowerCase()));
 
@@ -413,7 +413,7 @@ export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab
         <DialogContent className="max-w-md">
             <div className="absolute top-4 right-4">
                 <Button variant="ghost" size="icon" className="hover:text-destructive p-0 hover:bg-transparent" onClick={handleDeleteTemplate}>
-                    <GoogleSymbol name="delete" className="text-4xl" weight={100} opticalSize={20} />
+                    <GoogleSymbol name="delete" className="text-4xl" weight={100} />
                     <span className="sr-only">Delete Template</span>
                 </Button>
             </div>

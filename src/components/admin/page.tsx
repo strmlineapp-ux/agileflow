@@ -265,7 +265,7 @@ export const AdminsManagement = () => {
     <div className="space-y-6">
         <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card className="flex flex-col h-full bg-transparent border-0">
+                <Card className="flex flex-col h-full bg-transparent border-0 shadow-none">
                     <CardHeader>
                         <div className="flex items-center justify-between gap-4">
                             <CardTitle className="font-thin text-base">Admins ({filteredAdminUsers.length})</CardTitle>
@@ -278,7 +278,7 @@ export const AdminsManagement = () => {
                         <UserDropZone id="admin-list" users={filteredAdminUsers} />
                     </CardContent>
                   </Card>
-                  <Card className="flex flex-col h-full bg-transparent border-0">
+                  <Card className="flex flex-col h-full bg-transparent border-0 shadow-none">
                     <CardHeader>
                         <div className="flex items-center justify-between gap-4">
                             <CardTitle className="font-thin text-base">Users ({filteredNonAdminUsers.length})</CardTitle>

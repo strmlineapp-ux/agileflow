@@ -110,10 +110,10 @@ export interface Team {
   teamAdmins?: string[]; // array of userIds who are admins for this team
   teamAdminsLabel?: string;
   membersLabel?: string;
-  locationCheckManagers?: string[]; // array of userIds who can manage check locations
   userBadgesLabel?: string;
   activeBadgeCollections?: string[];
   collectionViewModes?: Record<string, 'compact' | 'grid' | 'list'>;
+  locationCheckManagers?: string[]; // array of userIds who can manage check locations
   pinnedLocations?: string[]; // array of location names
   checkLocations?: string[]; // subset of pinnedLocations designated for daily checks
   locationAliases?: { [key:string]: string };
