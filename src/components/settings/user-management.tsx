@@ -294,9 +294,6 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
     const [searchTerm, setSearchTerm] = useState('');
     
     const { currentUser, otherUsers } = useMemo(() => {
-        if (!viewAsUser) {
-            return { currentUser: null, otherUsers: [] };
-        }
         const currentUser = users.find(u => u.userId === viewAsUser.userId);
         
         const otherUsers = users
@@ -304,25 +301,21 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
             .filter(user => user.displayName.toLowerCase().includes(searchTerm.toLowerCase()));
 
         return { currentUser, otherUsers };
-    }, [users, viewAsUser, searchTerm]);
+    }, [users, viewAsUser.userId, searchTerm]);
 
-    if (!viewAsUser || !currentUser) {
-        return null; // or a loading skeleton
-    }
-    
-    const isCurrentUser = realUser ? realUser.userId === viewAsUser.userId : false;
-    const canEditPreferences = isCurrentUser || (realUser ? realUser.isAdmin : false);
+    const isCurrentUser = realUser.userId === viewAsUser.userId;
+    const canEditPreferences = isCurrentUser || realUser.isAdmin;
 
     return (
         <div className="space-y-6">
-          <UserCard user={currentUser} isCurrentUser={isCurrentUser} canEditPreferences={canEditPreferences} className="border-0" />
+          {currentUser && <UserCard user={currentUser} isCurrentUser={isCurrentUser} canEditPreferences={canEditPreferences} className="border-0" />}
 
           {showSearch && (
               <div className="flex justify-end mb-4">
                   <CompactSearchInput 
                     searchTerm={searchTerm} 
                     setSearchTerm={setSearchTerm} 
-                    placeholder="Search users..."
+                    placeholder="Search users..." 
                     autoFocus={true} 
                   />
               </div>

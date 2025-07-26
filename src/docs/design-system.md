@@ -269,8 +269,9 @@ This pattern provides a dense, icon-driven interface for managing a series of us
 ## Visual & Theming Elements
 
 ### Typography
-- **Headline Font**: Headlines use **Space Grotesk** for an avant-garde look.
-- **Body Font**: Body text uses **PT Sans** for readability and a modern feel.
+- **Font**: The application exclusively uses the **Roboto** font family for a clean and consistent look for both headlines and body text.
+- **Headline Font**: All major titles (pages, tabs, prominent cards) use the `font-headline` utility class, which is configured to use a `font-thin` weight (`font-weight: 100`) from the Roboto family.
+- **Body Font**: All standard body text, labels, and buttons now use a `font-thin` weight.
 
 ### Icons & Hover Effects
 - **Icon Set**: We exclusively use **Google Material Symbols** via the `<GoogleSymbol />` component. This ensures a consistent visual language. The font library is a variable font, which means we can adjust its properties.
