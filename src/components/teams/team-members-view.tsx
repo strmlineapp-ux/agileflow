@@ -14,12 +14,8 @@ import { cn } from '@/lib/utils';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { snapCenterToCursor } from '@dnd-kit/modifiers';
 import { Avatar, AvatarImage, AvatarFallback } from '../ui/avatar';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
-import { CompactSearchInput } from '../common/compact-search-input';
-import { ScrollArea } from '../ui/scroll-area';
 import { toast } from '@/hooks/use-toast';
-import { Badge as UiBadge } from '../ui/badge';
 import { useDroppable } from '@dnd-kit/core';
 
 
@@ -87,7 +83,7 @@ function SortableTeamMember({ member, team, isViewer, onSetAdmin, onRemoveUser }
 }
 
 export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
-    const { viewAsUser, users, updateAppTab, updateTeam, isDragModifierPressed, allBadges, handleBadgeAssignment, handleBadgeUnassignment } = useUser();
+    const { viewAsUser, users, updateAppTab, updateTeam, isDragModifierPressed, handleBadgeAssignment, handleBadgeUnassignment } = useUser();
     const [activeDragItem, setActiveDragItem] = useState<{type: string, id: string, data: any} | null>(null);
 
     if (!team) return null;
@@ -271,7 +267,6 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                     handleBadgeUnassignment(badge, sourceMemberId);
                     handleBadgeAssignment(badge, targetMemberId);
                 }
-                return;
             }
             return;
         }
@@ -408,3 +403,4 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
       </div>
     );
 }
+
