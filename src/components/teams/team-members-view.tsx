@@ -7,7 +7,7 @@ import { TeamMemberCard } from './team-member-card';
 import React, { useRef, useState, useEffect, useMemo, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent, DragOverlay, type DragStartEvent, useDraggable } from '@dnd-kit/core';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent, DragOverlay, type DragStartEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/utils';
@@ -20,7 +20,7 @@ import { CompactSearchInput } from '../common/compact-search-input';
 import { ScrollArea } from '../ui/scroll-area';
 import { toast } from '@/hooks/use-toast';
 import { Badge as UiBadge } from '../ui/badge';
-import { useDroppable } from '@dnd-kit/core';
+import { useDroppable, useDraggable } from '@dnd-kit/core';
 
 function DraggableBadgeFromPool({ badge, canManage }: { badge: Badge, canManage: boolean }) {
     const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
