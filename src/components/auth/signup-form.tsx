@@ -101,7 +101,7 @@ export function SignUpForm() {
                   )}
                   onClick={() => !isEditingEmail && setIsEditingEmail(true)}
                 >
-                  <GoogleSymbol name="email" className="text-lg" />
+                  <GoogleSymbol name="email" className="text-lg text-muted-foreground" />
                   {isEditingEmail ? (
                     <FormControl>
                       <Input

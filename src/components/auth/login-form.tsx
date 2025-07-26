@@ -94,7 +94,7 @@ export function LoginForm() {
                 )}
                 onClick={() => !isEmailEditing && setIsEmailEditing(true)}
               >
-                <GoogleSymbol name="email" className="text-lg" weight={100} />
+                <GoogleSymbol name="email" className="text-lg text-muted-foreground" weight={100} />
                 {isEmailEditing ? (
                   <FormControl>
                     <Input
@@ -125,7 +125,7 @@ export function LoginForm() {
                 )}
                 onClick={() => !isPasswordEditing && setIsPasswordEditing(true)}
               >
-                <GoogleSymbol name="lock" className="text-lg" weight={100} />
+                <GoogleSymbol name="lock" className="text-lg text-muted-foreground" weight={100} />
                 {isPasswordEditing ? (
                   <FormControl>
                     <Input
