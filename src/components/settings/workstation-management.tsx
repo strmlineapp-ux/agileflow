@@ -6,7 +6,6 @@ import { useUser } from '@/context/user-context';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { type Team, type AppTab } from '@/types';
@@ -14,6 +13,10 @@ import { GoogleSymbol } from '../icons/google-symbol';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }) {
+  if (!team) {
+    return null;
+  }
+  
   const { updateTeam, updateAppTab } = useUser();
   const { toast } = useToast();
 
@@ -179,32 +182,34 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
       </Card>
 
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
            <div className="absolute top-4 right-4">
-              <Button variant="ghost" size="icon" className="p-0" onClick={handleSaveNew}>
-                  <GoogleSymbol name="check" className="text-4xl" weight={100} />
-                  <span className="sr-only">Save</span>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSaveNew}>
+                <GoogleSymbol name="check" className="text-xl" weight={100} opticalSize={20} />
+                <span className="sr-only">Save New Workstation</span>
               </Button>
           </div>
           <DialogHeader>
             <DialogTitle>Add New Workstation</DialogTitle>
+            <DialogDescription>Enter the name for the new workstation or machine.</DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-4 pt-4">
             <Input
               id="workstation-name"
               value={newWorkstationName}
               onChange={(e) => setNewWorkstationName(e.target.value)}
               placeholder="e.g., Edit Suite 1 or VFX-PC-05"
               onKeyDown={(e) => e.key === 'Enter' && handleSaveNew()}
+              className="border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent"
             />
           </div>
         </DialogContent>
       </Dialog>
 
       <Dialog open={!!workstationToDelete} onOpenChange={(isOpen) => !isOpen && setWorkstationToDelete(null)}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md" onPointerDownCapture={(e) => e.stopPropagation()}>
             <div className="absolute top-4 right-4">
-                <Button variant="ghost" size="icon" className="p-0 text-destructive hover:bg-destructive/10" onClick={handleDelete}>
+                <Button variant="ghost" size="icon" className="hover:text-destructive p-0 hover:bg-transparent" onClick={handleDelete}>
                     <GoogleSymbol name="delete" className="text-4xl" weight={100} />
                     <span className="sr-only">Delete Workstation</span>
                 </Button>

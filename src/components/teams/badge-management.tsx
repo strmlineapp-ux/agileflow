@@ -119,7 +119,7 @@ function BadgeDisplayItem({
         document.addEventListener('mousedown', handleOutsideClick);
         nameInputRef.current?.focus();
         nameInputRef.current?.select();
-        return () => document.removeEventListener('mousedown', handleOutsideClick);
+        return () => document.removeEventListener('mousedown', handleSaveName);
     }, [isEditingName, handleSaveName]);
     
     useEffect(() => {
@@ -991,9 +991,7 @@ export function BadgeManagement({ tab, page, team, isActive }: { team: Team; tab
     const { toast } = useToast();
 
     const [activeDragItem, setActiveDragItem] = useState<{type: string, data: any} | null>(null);
-    const [isEditingTitle, setIsEditingTitle] = useState(false);
-    const titleInputRef = useRef<HTMLInputElement>(null);
-
+    
     const [mainSearchTerm, setMainSearchTerm] = useState('');
     const [sharedSearchTerm, setSharedSearchTerm] = useState('');
     const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
@@ -1011,7 +1009,7 @@ export function BadgeManagement({ tab, page, team, isActive }: { team: Team; tab
         });
     }, []);
 
-    const title = appSettings.teamManagementLabel || tab.name;
+    const title = tab.name;
 
     const displayedCollections = useMemo(() => {
         const owned = allBadgeCollections.filter(c => c.owner.id === viewAsUser.userId);

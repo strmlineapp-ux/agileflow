@@ -1,5 +1,4 @@
 
-
 import type React from 'react';
 
 export interface AppTab {
@@ -9,7 +8,6 @@ export interface AppTab {
   color: string;
   description?: string;
   componentKey: 'team_members' | 'badges' | 'locations' | 'workstations' | 'templates' | 'admins' | 'pages' | 'tabs' | 'overview' | 'tasks' | 'notifications' | 'settings' | 'calendar' | 'calendars' | 'teams';
-  contextTeamId?: string; // Optional teamId to provide context for a tab on a non-dynamic page
 }
 
 export interface AppPage {
@@ -110,9 +108,7 @@ export interface Team {
   teamAdmins?: string[]; // array of userIds who are admins for this team
   teamAdminsLabel?: string;
   membersLabel?: string;
-  userBadgesLabel?: string;
   activeBadgeCollections?: string[];
-  collectionViewModes?: Record<string, 'compact' | 'grid' | 'list'>;
   locationCheckManagers?: string[]; // array of userIds who can manage check locations
   pinnedLocations?: string[]; // array of location names
   checkLocations?: string[]; // subset of pinnedLocations designated for daily checks
