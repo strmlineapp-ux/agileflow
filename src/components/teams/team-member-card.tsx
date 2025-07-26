@@ -11,7 +11,7 @@ import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { Input } from '../ui/input';
-import { useDraggable } from '@dnd-kit/core';
+import { useDraggable, useDroppable } from '@dnd-kit/core';
 
 
 function AssignedBadge({ badge, memberId, teamId, canManage }: { badge: Badge, memberId: string, teamId: string, canManage: boolean }) {
@@ -29,7 +29,7 @@ function AssignedBadge({ badge, memberId, teamId, canManage }: { badge: Badge, m
         <TooltipProvider>
             <Tooltip>
                 <TooltipTrigger asChild>
-                <div
+                <button
                     ref={setNodeRef}
                     {...listeners}
                     {...attributes}
@@ -39,14 +39,13 @@ function AssignedBadge({ badge, memberId, teamId, canManage }: { badge: Badge, m
                         isDragging && 'opacity-50'
                     )}
                     style={{ borderColor: badge.color }}
-                    tabIndex={0}
                 >
                     <GoogleSymbol
                     name={badge.icon}
                     style={{ fontSize: '20px', color: badge.color }}
                     weight={100}
                     />
-                </div>
+                </button>
                 </TooltipTrigger>
                 <TooltipContent>
                 <p>{badge.name}</p>
@@ -56,13 +55,22 @@ function AssignedBadge({ badge, memberId, teamId, canManage }: { badge: Badge, m
     );
 }
 
-export function TeamMemberCard({ member, team, isViewer, onSetAdmin, canManage, isOver }: { member: User, team: Team, isViewer: boolean, onSetAdmin: () => void, canManage: boolean, isOver: boolean }) {
+export function TeamMemberCard({ member, team, isViewer, onSetAdmin }: { member: User, team: Team, isViewer: boolean, onSetAdmin: () => void }) {
   const { viewAsUser, updateTeam, allBadges, allBadgeCollections, isDragModifierPressed } = useUser();
 
   const [isEditingLabel, setIsEditingLabel] = useState(false);
   const labelInputRef = useRef<HTMLInputElement>(null);
   
+  const { setNodeRef, isOver } = useDroppable({
+    id: member.userId,
+    data: {
+      type: 'member-card',
+      member: member
+    }
+  });
+  
   const teamBadgesLabel = team.userBadgesLabel || 'Team Badges';
+  const canManage = !isViewer;
 
   const assignedBadges = useMemo(() => {
     return (member.roles || [])
@@ -113,8 +121,7 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin, canManage, 
   const isTeamAdmin = (team.teamAdmins || []).includes(member.userId);
 
   return (
-    <>
-      <Card className={cn("bg-transparent", isOver && "ring-1 ring-inset ring-primary")}>
+      <Card ref={setNodeRef} className={cn("bg-transparent", isOver && "ring-1 ring-inset ring-primary")}>
         <CardHeader>
           <div className="flex items-center gap-4">
              <div 
@@ -194,6 +201,5 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin, canManage, 
             </CardContent>
         )}
       </Card>
-    </>
   );
 }

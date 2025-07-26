@@ -21,14 +21,13 @@ import { toast } from '@/hooks/use-toast';
 import { Badge as UiBadge } from '../ui/badge';
 import { useDroppable } from '@dnd-kit/core';
 
-function DraggableBadgeFromPool({ badge, canManage }: { badge: Badge; canManage: boolean }) {
-    const { attributes, listeners, setNodeRef, isDragging, transform } = useSortable({
+function DraggableBadgeFromPool({ badge }: { badge: Badge }) {
+    const { attributes, listeners, setNodeRef, isDragging } = useSortable({
         id: `pool-badge-${badge.id}`,
         data: {
             type: 'pool-badge',
             badge: badge,
         },
-        disabled: !canManage,
     });
 
     const style = {
@@ -37,14 +36,11 @@ function DraggableBadgeFromPool({ badge, canManage }: { badge: Badge; canManage:
     };
     
     return (
-        <div ref={setNodeRef} style={style} {...listeners} {...attributes}>
+        <div ref={setNodeRef} style={style} {...listeners} {...attributes} title={badge.description || badge.name}>
             <UiBadge
                 variant={'outline'}
                 style={{ color: badge.color, borderColor: badge.color }}
-                className={cn(
-                    'flex items-center gap-1.5 p-1 pl-2 rounded-full text-sm h-8 font-thin cursor-grab'
-                )}
-                 title={badge.description || badge.name}
+                className={cn('flex items-center gap-1.5 p-1 pl-2 rounded-full text-sm h-8 font-thin cursor-grab')}
             >
                 <GoogleSymbol name={badge.icon} style={{ fontSize: '20px' }} weight={100} />
                 <span>{badge.name}</span>
@@ -55,14 +51,6 @@ function DraggableBadgeFromPool({ badge, canManage }: { badge: Badge; canManage:
 
 function SortableTeamMember({ member, team, isViewer, onSetAdmin, onRemoveUser }: { member: User, team: Team, isViewer: boolean, onSetAdmin: () => void, onRemoveUser: () => void }) {
   const { isDragModifierPressed } = useUser();
-  const { setNodeRef: droppableRef, isOver } = useDroppable({
-    id: member.userId,
-    data: {
-      type: 'member-card',
-      member: member
-    }
-  });
-  
   const { attributes, listeners, setNodeRef: sortableRef, transform, transition, isDragging } = useSortable({
     id: member.userId,
     data: { 
@@ -71,11 +59,6 @@ function SortableTeamMember({ member, team, isViewer, onSetAdmin, onRemoveUser }
     },
     disabled: isViewer || !isDragModifierPressed
   });
-
-  const setNodeRef = (node: HTMLElement | null) => {
-    droppableRef(node);
-    sortableRef(node);
-  };
   
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -88,12 +71,12 @@ function SortableTeamMember({ member, team, isViewer, onSetAdmin, onRemoveUser }
 
   return (
     <div 
-        ref={setNodeRef}
+        ref={sortableRef}
         style={style} 
         className={cn("rounded-md", isDragging && "shadow-xl")}
     >
       <div {...attributes} {...listeners} className="relative group">
-        <TeamMemberCard member={member} team={team} isViewer={isViewer} onSetAdmin={onSetAdmin} canManage={canManage} isOver={isOver}/>
+        <TeamMemberCard member={member} team={team} isViewer={isViewer} onSetAdmin={onSetAdmin}/>
         {canManage && (
             <TooltipProvider>
                 <Tooltip>
@@ -526,7 +509,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                                                 <p className="text-xs tracking-wider mb-2">{collectionName}</p>
                                                 <div className="flex flex-wrap gap-2">
                                                     {badges.map(badge => (
-                                                        <DraggableBadgeFromPool key={badge.id} badge={badge} canManage={canManage} />
+                                                        <DraggableBadgeFromPool key={badge.id} badge={badge} />
                                                     ))}
                                                 </div>
                                             </div>
