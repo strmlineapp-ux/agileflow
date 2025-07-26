@@ -17,7 +17,7 @@ function AssignedBadge({ badge, canManage, contextId }: { badge: Badge, canManag
     const { attributes, listeners, setNodeRef, isDragging, transform, transition } = useSortable({
         id: `badge-assigned:${contextId}:${badge.id}`,
         data: {
-            type: 'badge',
+            type: 'badge-assigned',
             badge: badge,
             context: 'member',
             memberId: contextId,
