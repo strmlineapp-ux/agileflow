@@ -43,7 +43,7 @@ function SortableAssignedBadge({ badge, canManageRoles, member }: { badge: Badge
                     <TooltipTrigger asChild>
                     <button
                         className={cn(
-                        'h-7 w-7 rounded-full border flex items-center justify-center bg-transparent',
+                        'h-7 w-7 rounded-full border flex items-center justify-center bg-transparent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50',
                         canManageRoles && isDragModifierPressed ? 'cursor-grabbing' : 'cursor-default'
                         )}
                         style={{ borderColor: badge.color }}
@@ -106,15 +106,17 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin, canManage }
   const groupedBadges = useMemo(() => {
     const groups: { [collectionId: string]: { collectionName: string; badges: Badge[] } } = {};
     assignedBadges.forEach(badge => {
-        const collectionId = badge.ownerCollectionId;
-        if (!groups[collectionId]) {
-            const collection = allBadgeCollections.find(c => c.id === collectionId);
-            groups[collectionId] = {
-                collectionName: collection?.name || "Other Badges",
-                badges: [],
-            };
+        const collection = allBadgeCollections.find(c => c.badgeIds.includes(badge.id));
+        if (collection) {
+            const collectionId = collection.id;
+            if (!groups[collectionId]) {
+                groups[collectionId] = {
+                    collectionName: collection.name,
+                    badges: [],
+                };
+            }
+            groups[collectionId].badges.push(badge);
         }
-        groups[collectionId].badges.push(badge);
     });
     return Object.values(groups);
   }, [assignedBadges, allBadgeCollections]);
@@ -187,15 +189,14 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin, canManage }
         <CardHeader>
           <div className="flex items-center gap-4">
              <div 
-                className={cn("relative", canManage && !isDragModifierPressed && "cursor-pointer")}
-                onClick={(e) => { 
+                className={cn("relative")}
+            >
+                <Avatar className="h-12 w-12 cursor-pointer" onClick={(e) => {
                     if (canManage && !isDragModifierPressed) {
                         e.stopPropagation();
-                        onSetAdmin(); 
+                        onSetAdmin();
                     }
-                }}
-            >
-                <Avatar className="h-12 w-12">
+                }}>
                 <AvatarImage src={member.avatarUrl} alt={member.displayName} data-ai-hint="user avatar" />
                 <AvatarFallback>{member.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
@@ -247,7 +248,7 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin, canManage }
                     <>
                        {groupedBadges.map(({ collectionName, badges }) => (
                             <div key={collectionName}>
-                                <p className="text-xs font-semibold text-muted-foreground tracking-wider mb-1.5">{collectionName}</p>
+                                <p className="text-xs text-muted-foreground tracking-wider mb-1.5">{collectionName}</p>
                                 <SortableContext items={badges.map(b => b.id)} strategy={verticalListSortingStrategy}>
                                 <div className="flex flex-wrap gap-1.5">
                                     {badges.map(badge => (

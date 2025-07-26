@@ -164,17 +164,16 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
     }, [team.activeBadgeCollections, allBadgeCollections, allBadges, badgePoolSearch]);
 
     const groupedAssignableBadges = useMemo(() => {
-        const groups: { [collectionId: string]: { collectionName: string; badges: Badge[] } } = {};
+        const groups: { [collectionName: string]: Badge[] } = {};
         userAssignableBadges.forEach(badge => {
             const collection = allBadgeCollections.find(c => c.badgeIds.includes(badge.id) && (team.activeBadgeCollections || []).includes(c.id));
-            if (collection) {
-                if (!groups[collection.id]) {
-                    groups[collection.id] = { collectionName: collection.name, badges: [] };
-                }
-                groups[collection.id].badges.push(badge);
+            const collectionName = collection?.name || "Other Badges";
+            if (!groups[collectionName]) {
+                groups[collectionName] = [];
             }
+            groups[collectionName].push(badge);
         });
-        return Object.values(groups);
+        return Object.entries(groups).map(([collectionName, badges]) => ({ collectionName, badges }));
     }, [userAssignableBadges, allBadgeCollections, team.activeBadgeCollections]);
 
     const sensors = useSensors(
@@ -508,7 +507,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                             <div className="space-y-4">
                                 {groupedAssignableBadges.map(({ collectionName, badges }) => (
                                     <div key={collectionName}>
-                                        <p className="text-xs font-semibold text-muted-foreground tracking-wider mb-2">{collectionName}</p>
+                                        <p className="text-xs text-muted-foreground tracking-wider mb-2">{collectionName}</p>
                                         <div className="flex flex-wrap gap-2">
                                             {badges.map(badge => (
                                                 <DraggableBadgeFromPool key={badge.id} badge={badge} canManage={canManage} />
