@@ -119,9 +119,8 @@ export function TeamMemberCard({ member, team, isViewer }: { member: User, team:
   }, [isEditingLabel, handleSaveLabel]);
 
   const renderBadge = (badge: Badge, isAssigned: boolean) => {
-    const textColor = getContrastColor(badge.color);
-    const badgeStyle = isAssigned 
-      ? { backgroundColor: badge.color, color: textColor, borderColor: badge.color } 
+    const badgeStyle = isAssigned
+      ? { color: badge.color, borderColor: badge.color, backgroundColor: 'transparent' }
       : { borderColor: 'hsl(var(--border))', borderStyle: 'dashed' as const };
 
     return (
@@ -129,18 +128,18 @@ export function TeamMemberCard({ member, team, isViewer }: { member: User, team:
         <Tooltip>
           <TooltipTrigger asChild>
             <UiBadge
-                variant={'outline'}
-                style={badgeStyle}
-                className={cn(
-                    'gap-1 p-1 pl-2 rounded-full h-7 text-sm font-thin',
-                    !isAssigned && 'bg-transparent text-muted-foreground',
-                    isAssigned && 'border-transparent',
-                    canManageRoles && 'cursor-pointer'
-                )}
-                onClick={() => canManageRoles && handleToggleRole(badge.name)}
+              variant={'outline'}
+              style={badgeStyle}
+              className={cn(
+                'gap-1 p-1 pl-2 rounded-full h-7 text-sm font-thin',
+                !isAssigned && 'bg-transparent text-muted-foreground',
+                isAssigned && 'border-solid',
+                canManageRoles && 'cursor-pointer'
+              )}
+              onClick={() => canManageRoles && handleToggleRole(badge.name)}
             >
-                <GoogleSymbol name={badge.icon} style={{ fontSize: '20px' }} weight={100} />
-                {badge.name}
+              <GoogleSymbol name={badge.icon} style={{ fontSize: '20px' }} weight={100} />
+              {badge.name}
             </UiBadge>
           </TooltipTrigger>
           <TooltipContent>
@@ -183,7 +182,7 @@ export function TeamMemberCard({ member, team, isViewer }: { member: User, team:
                         />
                     ) : (
                         <span
-                            className={cn(canManageRoles && "cursor-text border-b border-dashed border-transparent")}
+                            className={cn(canManageRoles && "cursor-text")}
                             onClick={() => canManageRoles && setIsEditingLabel(true)}
                         >
                             {teamBadgesLabel}

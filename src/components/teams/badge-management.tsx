@@ -548,7 +548,7 @@ function BadgeCollectionCard({
     const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
     
     const isOwner = useMemo(() => collection.owner.id === viewAsUser.userId, [collection.owner.id, viewAsUser.userId]);
-    const showDetails = isExpanded || isSharedPreview;
+    const showDetails = isExpanded || (isSharedPreview && isExpanded);
 
     const handleSaveName = useCallback(() => {
         const newName = nameInputRef.current?.value.trim() || '';
@@ -883,9 +883,9 @@ function BadgeCollectionCard({
                             })}
                         </DroppableCollectionContent>
                     </CardContent>
-                    {!isSharedPreview && (
+                    {!isSharedPreview && !isOwner && (
                         <CardFooter className={cn("flex items-center justify-between gap-2 p-2 mt-auto", isDragModifierPressed && "hidden")}>
-                            <div className={cn("flex items-center gap-2", !isOwner && "invisible")}>
+                            <div className={cn("flex items-center gap-2 invisible")}>
                                 {APPLICATIONS.map(app => (
                                     <TooltipProvider key={app.key}>
                                         <Tooltip>
@@ -928,7 +928,7 @@ function BadgeCollectionCard({
                     )}
                 </>
              )}
-            <div className={cn("absolute -bottom-1 right-0", isDragModifierPressed && "hidden")}>
+            <div className={cn("absolute -bottom-1 right-0", isDragModifierPressed && "hidden", (isViewer && !isSharedPreview) && 'hidden' )}>
                 <Button variant="ghost" size="icon" onClick={onToggleExpand} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
                     <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} opticalSize={20} />
                 </Button>
@@ -1034,6 +1034,7 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
     const [sharedSearchTerm, setSharedSearchTerm] = useState('');
     const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
     const [expandedCollections, setExpandedCollections] = useState<Set<string>>(new Set());
+    const [expandedSharedCollections, setExpandedSharedCollections] = useState<Set<string>>(new Set());
     
     useEffect(() => {
         if (isSharedPanelOpen) {
@@ -1043,6 +1044,18 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
     
     const onToggleExpand = useCallback((collectionId: string) => {
         setExpandedCollections(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(collectionId)) {
+                newSet.delete(collectionId);
+            } else {
+                newSet.add(collectionId);
+            }
+            return newSet;
+        });
+    }, []);
+
+     const onToggleSharedExpand = useCallback((collectionId: string) => {
+        setExpandedSharedCollections(prev => {
             const newSet = new Set(prev);
             if (newSet.has(collectionId)) {
                 newSet.delete(collectionId);
@@ -1298,8 +1311,8 @@ export function BadgeManagement({ tab, page, team }: { team: Team; tab: AppTab; 
                                                     isSharedPreview={true}
                                                     isViewer={true}
                                                     currentUserBadgeIds={currentUserBadgeIds}
-                                                    isExpanded={expandedCollections.has(collection.id)}
-                                                    onToggleExpand={() => onToggleExpand(collection.id)}
+                                                    isExpanded={expandedSharedCollections.has(collection.id)}
+                                                    onToggleExpand={() => onToggleSharedExpand(collection.id)}
                                                 />
                                             ))}
                                             {sharedCollections.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">No other collections are currently shared.</p>}
