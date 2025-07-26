@@ -33,10 +33,15 @@ function DraggableBadgeFromPool({ badge, canManage }: { badge: Badge; canManage:
     });
 
     return (
-        <TooltipProvider>
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <div ref={setNodeRef} {...listeners} {...attributes} className={cn(isDragging && "opacity-50", canManage && "cursor-grab")}>
+        <div
+            ref={setNodeRef}
+            {...listeners}
+            {...attributes}
+            className={cn(isDragging && 'opacity-50', canManage && 'cursor-grab')}
+        >
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
                         <UiBadge
                             variant={'outline'}
                             style={{ color: badge.color, borderColor: badge.color }}
@@ -47,15 +52,16 @@ function DraggableBadgeFromPool({ badge, canManage }: { badge: Badge; canManage:
                             <GoogleSymbol name={badge.icon} style={{ fontSize: '20px' }} weight={100} />
                             <span>{badge.name}</span>
                         </UiBadge>
-                    </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                    <p>{badge.description || badge.name}</p>
-                </TooltipContent>
-            </Tooltip>
-        </TooltipProvider>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>{badge.description || badge.name}</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+        </div>
     );
 }
+
 
 function SortableTeamMember({ member, team, isViewer, onSetAdmin, onRemoveUser }: { member: User, team: Team, isViewer: boolean, onSetAdmin: () => void, onRemoveUser: () => void }) {
   const { isDragModifierPressed } = useUser();
