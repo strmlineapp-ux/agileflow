@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -61,14 +62,6 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin }: { member:
   const [isEditingLabel, setIsEditingLabel] = useState(false);
   const labelInputRef = useRef<HTMLInputElement>(null);
   
-  const { setNodeRef, isOver } = useDroppable({
-    id: member.userId,
-    data: {
-      type: 'member-card',
-      member: member
-    }
-  });
-  
   const teamBadgesLabel = team.userBadgesLabel || 'Team Badges';
   const canManage = !isViewer;
 
@@ -121,7 +114,7 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin }: { member:
   const isTeamAdmin = (team.teamAdmins || []).includes(member.userId);
 
   return (
-      <Card ref={setNodeRef} className={cn("bg-transparent", isOver && "ring-1 ring-inset ring-primary")}>
+      <Card>
         <CardHeader>
           <div className="flex items-center gap-4">
              <div 

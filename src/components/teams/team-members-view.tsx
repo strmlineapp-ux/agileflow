@@ -59,10 +59,23 @@ function SortableTeamMember({ member, team, isViewer, onSetAdmin, onRemoveUser }
     id: member.userId,
     data: { 
         type: 'member-card',
-        user: member 
+        member: member 
     },
     disabled: isViewer || !isDragModifierPressed
   });
+  
+  const { setNodeRef: droppableRef, isOver } = useDroppable({
+    id: member.userId,
+    data: {
+      type: 'member-card',
+      member: member
+    }
+  });
+
+  const setNodeRef = (node: HTMLElement | null) => {
+    sortableRef(node);
+    droppableRef(node);
+  };
   
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -75,9 +88,9 @@ function SortableTeamMember({ member, team, isViewer, onSetAdmin, onRemoveUser }
 
   return (
     <div 
-        ref={sortableRef}
+        ref={setNodeRef}
         style={style} 
-        className={cn("rounded-md", isDragging && "shadow-xl")}
+        className={cn("rounded-md", isDragging && "shadow-xl", isOver && "ring-1 ring-inset ring-primary")}
     >
       <div {...attributes} {...listeners} className="relative group">
         <TeamMemberCard member={member} team={team} isViewer={isViewer} onSetAdmin={onSetAdmin}/>
@@ -115,7 +128,7 @@ function DroppableUserList({ id, children, className }: { id: string; children: 
 
 
 export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
-    const { viewAsUser, users, updateAppTab, updateTeam, isDragModifierPressed, allBadges, updateUser, allBadgeCollections } = useUser();
+    const { viewAsUser, users, updateAppTab, updateTeam, isDragModifierPressed, allBadges, updateUser, allBadgeCollections, handleBadgeUnassignment } = useUser();
     const [activeDragItem, setActiveDragItem] = useState<{type: string, id: string, data: any} | null>(null);
 
     if (!team) {
@@ -334,7 +347,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         
         if (activeType === 'pool-badge' && overType === 'member-card') {
             const badge = active.data.current?.badge as Badge;
-            const member = over.data.current?.user as User;
+            const member = over.data.current?.member as User;
             if (badge && member) {
                 handleBadgeAssignment(badge, member.userId);
             }
@@ -344,12 +357,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         if (activeType === 'assigned-badge' && overType === 'badge-pool') {
             const badge = active.data.current?.badge as Badge;
             const memberId = active.data.current?.memberId as string;
-            const member = users.find(u => u.userId === memberId);
-            if (badge && member) {
-                const updatedRoles = (member.roles || []).filter(roleName => roleName !== badge.name);
-                updateUser(memberId, { roles: updatedRoles });
-                toast({ title: 'Badge Un-assigned', description: `"${badge.name}" removed from ${member.displayName}.`});
-            }
+            handleBadgeUnassignment(badge, memberId);
             return;
         }
 
