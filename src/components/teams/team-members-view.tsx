@@ -65,7 +65,7 @@ function SortableTeamMember({ member, team, isViewer, onSetAdmin, onRemoveUser }
   });
   
   const { isOver, setNodeRef: droppableSetNodeRef } = useDroppable({
-    id: `member-card:${member.userId}`,
+    id: `member-card-droppable:${member.userId}`,
     data: { type: 'member-card', memberId: member.userId }
   });
 
@@ -119,7 +119,7 @@ function DroppableUserList({ id, children, className }: { id: string; children: 
 }
 
 export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
-    const { viewAsUser, users, updateAppTab, updateTeam, isDragModifierPressed, allBadges, updateUser, allBadgeCollections, handleBadgeUnassignment } = useUser();
+    const { viewAsUser, users, updateAppTab, updateTeam, isDragModifierPressed, allBadges, updateUser, allBadgeCollections, handleBadgeUnassignment, handleBadgeAssignment } = useUser();
     const [activeDragItem, setActiveDragItem] = useState<{type: string, id: string, data: any} | null>(null);
 
     if (!team) {
@@ -295,18 +295,6 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         else if (e.key === 'Escape') setIsEditingMembersLabel(false);
     };
 
-    const handleBadgeAssignment = (badge: Badge, memberId: string) => {
-        const member = users.find(u => u.userId === memberId);
-        if (!member || isViewer) return;
-
-        const currentRoles = new Set(member.roles || []);
-        if (currentRoles.has(badge.name)) return; // Already has it
-
-        const updatedRoles = [...currentRoles, badge.name];
-        updateUser(memberId, { roles: updatedRoles });
-        toast({ title: "Badge Assigned", description: `"${badge.name}" assigned to ${member.displayName}.` });
-    };
-    
     const handleSetAdmin = useCallback((teamId: string, userId: string) => {
         if (isViewer) return;
         
@@ -344,7 +332,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                 if (activeType !== 'assigned-badge') return;
                 const sourceMemberId = active.data.current?.memberId;
                 if (sourceMemberId) {
-                    handleBadgeUnassignment(badge, sourceMemberId);
+                    handleBadgeUnassignment(badge.id, sourceMemberId);
                 }
                 return;
             }
@@ -353,12 +341,12 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                 const targetMemberId = over.data.current?.memberId;
                 if (!targetMemberId) return;
     
-                handleBadgeAssignment(badge, targetMemberId);
+                handleBadgeAssignment(badge.id, targetMemberId);
     
                 if (activeType === 'assigned-badge') {
                     const sourceMemberId = active.data.current?.memberId;
                     if (sourceMemberId && sourceMemberId !== targetMemberId) {
-                        handleBadgeUnassignment(badge, sourceMemberId);
+                        handleBadgeUnassignment(badge.id, sourceMemberId);
                     }
                 }
             }
