@@ -55,8 +55,15 @@ function DraggableBadgeFromPool({ badge, canManage }: { badge: Badge; canManage:
 
 function SortableTeamMember({ member, team, isViewer, onSetAdmin, onRemoveUser }: { member: User, team: Team, isViewer: boolean, onSetAdmin: () => void, onRemoveUser: () => void }) {
   const { isDragModifierPressed } = useUser();
+  const { setNodeRef: droppableRef, isOver } = useDroppable({
+    id: member.userId,
+    data: {
+      type: 'member-card',
+      member: member
+    }
+  });
   
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+  const { attributes, listeners, setNodeRef: sortableRef, transform, transition, isDragging } = useSortable({
     id: member.userId,
     data: { 
         type: 'member-card',
@@ -65,6 +72,11 @@ function SortableTeamMember({ member, team, isViewer, onSetAdmin, onRemoveUser }
     disabled: isViewer || !isDragModifierPressed
   });
 
+  const setNodeRef = (node: HTMLElement | null) => {
+    droppableRef(node);
+    sortableRef(node);
+  };
+  
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -81,7 +93,7 @@ function SortableTeamMember({ member, team, isViewer, onSetAdmin, onRemoveUser }
         className={cn("rounded-md", isDragging && "shadow-xl")}
     >
       <div {...attributes} {...listeners} className="relative group">
-        <TeamMemberCard member={member} team={team} isViewer={isViewer} onSetAdmin={onSetAdmin} canManage={canManage} />
+        <TeamMemberCard member={member} team={team} isViewer={isViewer} onSetAdmin={onSetAdmin} canManage={canManage} isOver={isOver}/>
         {canManage && (
             <TooltipProvider>
                 <Tooltip>
@@ -488,7 +500,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                         <AvatarFallback>{activeDragItem.data.user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
                     </Avatar>
                 ) : activeBadge ? (
-                    <div className="h-9 w-9 rounded-full border-2 flex items-center justify-center bg-card" style={{ borderColor: activeBadge.color }}>
+                     <div className="h-9 w-9 rounded-full border-2 flex items-center justify-center bg-card" style={{ borderColor: activeBadge.color }}>
                         <GoogleSymbol name={activeBadge.icon} style={{ fontSize: '28px', color: activeBadge.color }} weight={100} />
                     </div>
                 ) : null}

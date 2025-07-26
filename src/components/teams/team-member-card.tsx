@@ -11,7 +11,7 @@ import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { Input } from '../ui/input';
-import { useDraggable, useDroppable } from '@dnd-kit/core';
+import { useDraggable } from '@dnd-kit/core';
 
 
 function AssignedBadge({ badge, memberId, teamId, canManage }: { badge: Badge, memberId: string, teamId: string, canManage: boolean }) {
@@ -56,33 +56,13 @@ function AssignedBadge({ badge, memberId, teamId, canManage }: { badge: Badge, m
     );
 }
 
-export function TeamMemberCard({ member, team, isViewer, onSetAdmin, canManage }: { member: User, team: Team, isViewer: boolean, onSetAdmin: () => void, canManage: boolean }) {
+export function TeamMemberCard({ member, team, isViewer, onSetAdmin, canManage, isOver }: { member: User, team: Team, isViewer: boolean, onSetAdmin: () => void, canManage: boolean, isOver: boolean }) {
   const { viewAsUser, updateTeam, allBadges, allBadgeCollections, isDragModifierPressed } = useUser();
 
   const [isEditingLabel, setIsEditingLabel] = useState(false);
   const labelInputRef = useRef<HTMLInputElement>(null);
   
   const teamBadgesLabel = team.userBadgesLabel || 'Team Badges';
-  
-  const { isOver, setNodeRef: droppableRef } = useDroppable({
-    id: member.userId,
-    data: {
-        type: 'member-card',
-        member: member,
-    },
-  });
-
-  const userAssignableBadges = useMemo(() => {
-    const activeAndApplicableCollections = allBadgeCollections.filter(
-      (c) =>
-        (team.activeBadgeCollections || []).includes(c.id) &&
-        c.applications?.includes('team members')
-    );
-
-    const badgeIds = new Set(activeAndApplicableCollections.flatMap(c => c.badgeIds));
-
-    return allBadges.filter(badge => badgeIds.has(badge.id));
-  }, [team.activeBadgeCollections, allBadgeCollections, allBadges]);
 
   const assignedBadges = useMemo(() => {
     return (member.roles || [])
@@ -134,7 +114,7 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin, canManage }
 
   return (
     <>
-      <Card className={cn("bg-transparent", isOver && "ring-1 ring-inset ring-primary")} ref={droppableRef}>
+      <Card className={cn("bg-transparent", isOver && "ring-1 ring-inset ring-primary")}>
         <CardHeader>
           <div className="flex items-center gap-4">
              <div 
