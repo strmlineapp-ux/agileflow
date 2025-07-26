@@ -109,7 +109,7 @@ function DraggableUserCard({ user, onRemove, isTeamAdmin, onSetAdmin, canManage,
                 )}
             </div>
             <div>
-                <p className="font-normal text-sm">{user.displayName}</p>
+                <p className="font-normal text-sm text-muted-foreground">{user.displayName}</p>
                 <p className="text-xs text-muted-foreground">{user.title}</p>
             </div>
             {canManage && (
@@ -197,7 +197,7 @@ function TeamCard({
 
     let shareIcon: string | null = null;
     let shareIconTitle: string = '';
-    let shareIconColor = '#64748B'; // Consistent muted color
+    const shareIconColor = '#64748B'; // Consistent muted color
     
     if (team.owner.id === viewAsUser.userId && team.isShared) {
         shareIcon = 'change_circle';
@@ -284,7 +284,7 @@ function TeamCard({
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={!canManageTeam || isDragModifierPressed}>
-                                                <Button variant="ghost" className="h-10 w-12 flex items-center justify-center p-0">
+                                                <Button variant="ghost" className="h-10 w-12 flex items-center justify-center p-0 text-muted-foreground">
                                                     <GoogleSymbol name={team.icon} opticalSize={20} grade={-25} style={{ fontSize: '36px' }} weight={100} />
                                                 </Button>
                                             </PopoverTrigger>
@@ -381,7 +381,7 @@ function TeamCard({
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild disabled={!canManageTeam || isDragModifierPressed} onPointerDown={(e) => e.stopPropagation()}>
-                                                <Button variant="ghost" size="icon" className={cn("h-8 w-8 text-muted-foreground hover:text-primary", isDragModifierPressed && "hidden")}><GoogleSymbol name="group_add" weight={100} opticalSize={20} /></Button>
+                                                <Button variant="ghost" size="icon" className={cn("h-8 w-8 text-muted-foreground", isDragModifierPressed && "hidden")}><GoogleSymbol name="group_add" weight={100} opticalSize={20} /></Button>
                                             </PopoverTrigger>
                                         </TooltipTrigger>
                                         <TooltipContent><p>Add User</p></TooltipContent>
@@ -405,7 +405,7 @@ function TeamCard({
                                             {availableUsersToAdd.map(user => (
                                                 <div key={user.userId} onPointerDown={() => {onAddUser(team.id, user.userId); setIsAddUserPopoverOpen(false);}} className="flex items-center gap-2 p-2 rounded-md hover:text-primary cursor-pointer">
                                                     <Avatar className="h-8 w-8"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0,2)}</AvatarFallback></Avatar>
-                                                    <p className="font-normal text-sm">{user.displayName}</p>
+                                                    <p className="font-normal text-sm text-muted-foreground">{user.displayName}</p>
                                                 </div>
                                             ))}
                                             {availableUsersToAdd.length === 0 && <p className="text-center text-xs text-muted-foreground py-4">No users found.</p>}
@@ -925,3 +925,5 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
         </DndContext>
     );
 }
+
+    
