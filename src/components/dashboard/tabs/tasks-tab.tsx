@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -11,12 +10,17 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useUser } from '@/context/user-context';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+// A new form component will be needed for adding/editing tasks. Let's assume its creation.
+// For now, we'll imagine a placeholder. A real implementation would require a TaskForm component.
 
 export function TasksContent({ tab: pageConfig, isSingleTabPage }: { tab: AppPage, isSingleTabPage?: boolean }) {
   const [activeTab, setActiveTab] = useState<'my-tasks' | 'all'>('my-tasks');
-  const { viewAsUser, fetchTasks } = useUser();
+  const { viewAsUser, fetchTasks, addTask, updateTask, deleteTask } = useUser();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
 
   const loadTasks = useCallback(async () => {
     setLoading(true);
@@ -28,6 +32,35 @@ export function TasksContent({ tab: pageConfig, isSingleTabPage }: { tab: AppPag
   useEffect(() => {
     loadTasks();
   }, [loadTasks]);
+
+  const handleTaskAdded = async (newTaskData: Omit<Task, 'taskId' | 'createdAt' | 'lastUpdated'>) => {
+    const updatedTasks = await addTask(tasks, newTaskData);
+    setTasks(updatedTasks);
+    setIsFormOpen(false);
+  };
+  
+  const handleTaskUpdated = async (taskId: string, updatedData: Partial<Task>) => {
+    const updatedTasks = await updateTask(tasks, taskId, updatedData);
+    setTasks(updatedTasks);
+    setEditingTask(null);
+    setIsFormOpen(false);
+  };
+  
+  const handleTaskDeleted = async (taskId: string) => {
+    const updatedTasks = await deleteTask(tasks, taskId);
+    setTasks(updatedTasks);
+  };
+  
+  const openNewTaskForm = () => {
+    setEditingTask(null);
+    setIsFormOpen(true);
+  };
+  
+  const openEditTaskForm = (task: Task) => {
+    setEditingTask(task);
+    setIsFormOpen(true);
+  };
+
 
   const filteredTasks = activeTab === 'my-tasks'
     ? tasks.filter(task => task.assignedTo.some(user => user.userId === viewAsUser.userId))
@@ -58,19 +91,32 @@ export function TasksContent({ tab: pageConfig, isSingleTabPage }: { tab: AppPag
         </Tabs>
       </div>
       <div className="flex">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
-                <span className="sr-only">New Task</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>New Task</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+            <DialogTrigger asChild>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="rounded-full" onClick={openNewTaskForm}>
+                        <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
+                        <span className="sr-only">New Task</span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>New Task</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+            </DialogTrigger>
+            <DialogContent>
+                {/* A proper TaskForm component would go here, this is a conceptual placeholder */}
+                <p>Task Form Placeholder</p>
+                <p>{editingTask ? `Editing: ${editingTask.title}` : 'Creating new task'}</p>
+            </DialogContent>
+        </Dialog>
       </div>
-      <TaskList tasks={filteredTasks} />
+      <TaskList 
+        tasks={filteredTasks} 
+        onEdit={openEditTaskForm}
+        onDelete={handleTaskDeleted}
+      />
     </div>
   );
 }

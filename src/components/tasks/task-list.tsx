@@ -40,7 +40,7 @@ const statusLabels: Record<Task['status'], string> = {
   completed: 'Completed',
 };
 
-export function TaskList({ tasks, limit }: { tasks: Task[], limit?: number }) {
+export function TaskList({ tasks, limit, onEdit, onDelete }: { tasks: Task[], limit?: number, onEdit?: (task: Task) => void, onDelete?: (taskId: string) => void }) {
   const { allBadgeCollections, allBadges } = useUser();
 
   const taskPriorities = React.useMemo(() => {
@@ -100,10 +100,10 @@ export function TaskList({ tasks, limit }: { tasks: Task[], limit?: number }) {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem>Edit</DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => onEdit?.(task)}>Edit</DropdownMenuItem>
                       <DropdownMenuItem>View Details</DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+                      <DropdownMenuItem className="text-destructive" onSelect={() => onDelete?.(task.taskId)}>Delete</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>

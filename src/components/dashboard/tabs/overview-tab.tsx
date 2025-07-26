@@ -7,6 +7,7 @@ import { TaskList } from '@/components/tasks/task-list';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { type AppPage, type Task } from '@/types';
 import { useUser } from '@/context/user-context';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const stats = [
   { title: 'Active Tasks', value: '12', icon: 'checklist' },
@@ -23,6 +24,7 @@ export function OverviewContent({ tab: pageConfig, isSingleTabPage }: { tab: App
   useEffect(() => {
     const loadTasks = async () => {
       setLoading(true);
+      // Fetch all tasks and then slice, a real app might have a dedicated endpoint for recent tasks
       const fetchedTasks = await fetchTasks();
       setTasks(fetchedTasks);
       setLoading(false);
@@ -35,10 +37,10 @@ export function OverviewContent({ tab: pageConfig, isSingleTabPage }: { tab: App
       <div className="flex flex-col gap-6">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {[...Array(4)].map((_, i) => (
-            <Card key={i}><CardHeader className="h-24"></CardHeader></Card>
+            <Card key={i}><CardHeader className="h-24"><Skeleton className="h-full w-full" /></CardHeader></Card>
           ))}
         </div>
-        <Card><CardHeader className="h-64"></CardHeader></Card>
+        <Card><CardHeader className="h-64"><Skeleton className="h-full w-full" /></CardHeader></Card>
       </div>
     );
   }
